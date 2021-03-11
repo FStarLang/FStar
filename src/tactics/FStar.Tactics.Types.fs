@@ -76,12 +76,13 @@ let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let rename_binders subst bs =
-    bs |> List.map (function (x, imp) ->
+    bs |> List.map (function b ->
+        let x = b.binder_bv in
         let y = SS.subst subst (S.bv_to_name x) in
         match (SS.compress y).n with
         | Tm_name y ->
             // We don't want to change the type
-            ({ y with sort = SS.subst subst x.sort }, imp)
+            { b with binder_bv = { b.binder_bv with sort = SS.subst subst x.sort } }
         | _ -> failwith "Not a renaming")
 
 (* This is only for show: this goal becomes ill-formed since it does

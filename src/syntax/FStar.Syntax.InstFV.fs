@@ -101,7 +101,10 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_meta(t, tag) ->
         mk (Tm_meta(inst s t, tag))
 
-and inst_binders s bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp)
+and inst_binders s bs = bs |> List.map (fun b ->
+  { b with
+    binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
+    binder_attrs = b.binder_attrs |> List.map (inst s) })
 
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
@@ -111,7 +114,7 @@ and inst_comp s c = match c.n with
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function
-                                        | DECREASES t -> DECREASES (inst s t)
+                                        | DECREASES l -> DECREASES (l |> List.map (inst s))
                                         | f -> f)} in
                  S.mk_Comp ct
 

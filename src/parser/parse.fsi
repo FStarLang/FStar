@@ -93,6 +93,7 @@ type token =
   | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
+  | LBRACE_BAR
   | LBRACE
   | LAYERED_EFFECT
   | LARROW
@@ -134,6 +135,7 @@ type token =
   | DOLLAR
   | DISJUNCTION
   | DEFAULT
+  | DECREASES
   | CONJUNCTION
   | COMMA
   | COLON_EQUALS
@@ -146,6 +148,7 @@ type token =
   | BY
   | BEGIN
   | BAR_RBRACK
+  | BAR_RBRACE
   | BAR
   | BANG_LBRACE
   | BACKTICK_PERC
@@ -249,6 +252,7 @@ type tokenId =
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
+    | TOKEN_LBRACE_BAR
     | TOKEN_LBRACE
     | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
@@ -290,6 +294,7 @@ type tokenId =
     | TOKEN_DOLLAR
     | TOKEN_DISJUNCTION
     | TOKEN_DEFAULT
+    | TOKEN_DECREASES
     | TOKEN_CONJUNCTION
     | TOKEN_COMMA
     | TOKEN_COLON_EQUALS
@@ -302,6 +307,7 @@ type tokenId =
     | TOKEN_BY
     | TOKEN_BEGIN
     | TOKEN_BAR_RBRACK
+    | TOKEN_BAR_RBRACE
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK_PERC
@@ -327,17 +333,18 @@ type nonTerminalId =
     | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
+    | NONTERM_option_binders_
     | NONTERM_option_fsTypeArgs_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_option_term_
+    | NONTERM_option_typars_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
-    | NONTERM_list___anonymous_4_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
@@ -346,8 +353,9 @@ type nonTerminalId =
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_nonempty_list_aqualified_lident__
-    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list___anonymous_4_
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lident__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
@@ -384,6 +392,7 @@ type nonTerminalId =
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
     | NONTERM_effectDefinition
+    | NONTERM_layeredEffectDefinition
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_polymonadic_bind
@@ -393,6 +402,7 @@ type nonTerminalId =
     | NONTERM_letqualifier
     | NONTERM_aqual
     | NONTERM_aqualUniverses
+    | NONTERM_newAttributes
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -402,8 +412,6 @@ type nonTerminalId =
     | NONTERM_binder
     | NONTERM_multiBinder
     | NONTERM_binders
-    | NONTERM_aqualified_lident_
-    | NONTERM_aqualified_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
     | NONTERM_path_lident_

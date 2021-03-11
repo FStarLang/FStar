@@ -817,9 +817,9 @@ let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let (bv, q) = inspect_binder b in
+  let bv, (q, attrs) = inspect_binder b in
   let bv = on_sort_bv f bv in
-  let b = pack_binder bv q in
+  let b = pack_binder bv q attrs in
   b
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
@@ -880,20 +880,12 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
     match cv with
     | C_Total ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_Total ret decr
 
     | C_GTotal ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_GTotal ret decr
 
     | C_Lemma pre post pats ->
@@ -980,3 +972,11 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
   try ignore (visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')

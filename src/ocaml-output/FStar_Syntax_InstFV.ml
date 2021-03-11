@@ -160,20 +160,29 @@ and (inst_binders :
     fun bs ->
       FStar_All.pipe_right bs
         (FStar_List.map
-           (fun uu___ ->
-              match uu___ with
-              | (x, imp) ->
-                  let uu___1 =
-                    let uu___2 = x in
-                    let uu___3 = inst s x.FStar_Syntax_Syntax.sort in
-                    {
-                      FStar_Syntax_Syntax.ppname =
-                        (uu___2.FStar_Syntax_Syntax.ppname);
-                      FStar_Syntax_Syntax.index =
-                        (uu___2.FStar_Syntax_Syntax.index);
-                      FStar_Syntax_Syntax.sort = uu___3
-                    } in
-                  (uu___1, imp)))
+           (fun b ->
+              let uu___ = b in
+              let uu___1 =
+                let uu___2 = b.FStar_Syntax_Syntax.binder_bv in
+                let uu___3 =
+                  inst s
+                    (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                {
+                  FStar_Syntax_Syntax.ppname =
+                    (uu___2.FStar_Syntax_Syntax.ppname);
+                  FStar_Syntax_Syntax.index =
+                    (uu___2.FStar_Syntax_Syntax.index);
+                  FStar_Syntax_Syntax.sort = uu___3
+                } in
+              let uu___2 =
+                FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_attrs
+                  (FStar_List.map (inst s)) in
+              {
+                FStar_Syntax_Syntax.binder_bv = uu___1;
+                FStar_Syntax_Syntax.binder_qual =
+                  (uu___.FStar_Syntax_Syntax.binder_qual);
+                FStar_Syntax_Syntax.binder_attrs = uu___2
+              }))
 and (inst_args :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -216,8 +225,9 @@ and (inst_comp :
                 (FStar_List.map
                    (fun uu___4 ->
                       match uu___4 with
-                      | FStar_Syntax_Syntax.DECREASES t ->
-                          let uu___5 = inst s t in
+                      | FStar_Syntax_Syntax.DECREASES l ->
+                          let uu___5 =
+                            FStar_All.pipe_right l (FStar_List.map (inst s)) in
                           FStar_Syntax_Syntax.DECREASES uu___5
                       | f -> f)) in
             {

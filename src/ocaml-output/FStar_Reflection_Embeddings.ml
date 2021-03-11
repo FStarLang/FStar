@@ -175,16 +175,7 @@ let (e_aqualv :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_Q_Meta.FStar_Reflection_Data.t uu___
-            FStar_Range.dummyRange
-      | FStar_Reflection_Data.Q_Meta_attr t ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = embed e_term rng t in
-              FStar_Syntax_Syntax.as_arg uu___2 in
-            [uu___1] in
-          FStar_Syntax_Syntax.mk_Tm_app
-            FStar_Reflection_Data.ref_Q_Meta_attr.FStar_Reflection_Data.t
-            uu___ FStar_Range.dummyRange in
+            FStar_Range.dummyRange in
     let uu___ = r in
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
@@ -219,15 +210,6 @@ let (e_aqualv :
                (fun t3 ->
                   FStar_Pervasives_Native.Some
                     (FStar_Reflection_Data.Q_Meta t3))
-         | (FStar_Syntax_Syntax.Tm_fvar fv, (t2, uu___2)::[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Reflection_Data.ref_Q_Meta_attr.FStar_Reflection_Data.lid
-             ->
-             let uu___3 = unembed' w e_term t2 in
-             FStar_Util.bind_opt uu___3
-               (fun t3 ->
-                  FStar_Pervasives_Native.Some
-                    (FStar_Reflection_Data.Q_Meta_attr t3))
          | uu___2 ->
              (if w
               then
@@ -1219,7 +1201,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_term in
+                let uu___5 = FStar_Syntax_Embeddings.e_list e_term in
                 embed uu___5 rng md in
               FStar_Syntax_Syntax.as_arg uu___4 in
             [uu___3] in
@@ -1234,7 +1216,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_term in
+                let uu___5 = FStar_Syntax_Embeddings.e_list e_term in
                 embed uu___5 rng md in
               FStar_Syntax_Syntax.as_arg uu___4 in
             [uu___3] in
@@ -1306,7 +1288,7 @@ let (e_comp_view :
              FStar_Util.bind_opt uu___4
                (fun t3 ->
                   let uu___5 =
-                    let uu___6 = FStar_Syntax_Embeddings.e_option e_term in
+                    let uu___6 = FStar_Syntax_Embeddings.e_list e_term in
                     unembed' w uu___6 md in
                   FStar_Util.bind_opt uu___5
                     (fun md1 ->
@@ -1322,7 +1304,7 @@ let (e_comp_view :
              FStar_Util.bind_opt uu___4
                (fun t3 ->
                   let uu___5 =
-                    let uu___6 = FStar_Syntax_Embeddings.e_option e_term in
+                    let uu___6 = FStar_Syntax_Embeddings.e_list e_term in
                     unembed' w uu___6 md in
                   FStar_Util.bind_opt uu___5
                     (fun md1 ->
@@ -1733,14 +1715,15 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
               else ();
               FStar_Pervasives_Native.None)) in
   mk_emb embed_exp unembed_exp FStar_Reflection_Data.fstar_refl_exp
-let (e_binder_view :
-  FStar_Reflection_Data.binder_view FStar_Syntax_Embeddings.embedding) =
-  FStar_Syntax_Embeddings.e_tuple2 e_bv e_aqualv
 let (e_attribute :
   FStar_Syntax_Syntax.attribute FStar_Syntax_Embeddings.embedding) = e_term
 let (e_attributes :
   FStar_Syntax_Syntax.attribute Prims.list FStar_Syntax_Embeddings.embedding)
   = FStar_Syntax_Embeddings.e_list e_attribute
+let (e_binder_view :
+  FStar_Reflection_Data.binder_view FStar_Syntax_Embeddings.embedding) =
+  let uu___ = FStar_Syntax_Embeddings.e_tuple2 e_aqualv e_attributes in
+  FStar_Syntax_Embeddings.e_tuple2 e_bv uu___
 let (e_qualifier :
   FStar_Reflection_Data.qualifier FStar_Syntax_Embeddings.embedding) =
   let embed1 rng q =
@@ -2072,7 +2055,7 @@ let (unfold_lazy_binder :
     let binder = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ = FStar_Reflection_Basic.inspect_binder binder in
     match uu___ with
-    | (bv, aq) ->
+    | (bv, (aq, attrs)) ->
         let uu___1 =
           let uu___2 =
             let uu___3 = embed e_bv i.FStar_Syntax_Syntax.rng bv in
@@ -2081,7 +2064,13 @@ let (unfold_lazy_binder :
             let uu___4 =
               let uu___5 = embed e_aqualv i.FStar_Syntax_Syntax.rng aq in
               FStar_Syntax_Syntax.as_arg uu___5 in
-            [uu___4] in
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  embed e_attributes i.FStar_Syntax_Syntax.rng attrs in
+                FStar_Syntax_Syntax.as_arg uu___7 in
+              [uu___6] in
+            uu___4 :: uu___5 in
           uu___2 :: uu___3 in
         FStar_Syntax_Syntax.mk_Tm_app
           FStar_Reflection_Data.fstar_refl_pack_binder.FStar_Reflection_Data.t

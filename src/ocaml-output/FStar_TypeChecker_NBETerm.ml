@@ -101,7 +101,7 @@ and cflag =
   | SHOULD_NOT_INLINE 
   | LEMMA 
   | CPS 
-  | DECREASES of t 
+  | DECREASES of t Prims.list 
 and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
@@ -312,7 +312,7 @@ let (uu___is_CPS : cflag -> Prims.bool) =
 let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee ->
     match projectee with | DECREASES _0 -> true | uu___ -> false
-let (__proj__DECREASES__item___0 : cflag -> t) =
+let (__proj__DECREASES__item___0 : cflag -> t Prims.list) =
   fun projectee -> match projectee with | DECREASES _0 -> _0
 let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
@@ -616,6 +616,8 @@ let rec (t_to_string : t -> Prims.string) =
             FStar_Syntax_Print.fv_to_string uu___5 in
           FStar_String.op_Hat uu___4 ")" in
         FStar_String.op_Hat "TopLevelRec (" uu___3
+    | Meta (t1, uu___) ->
+        let uu___1 = t_to_string t1 in FStar_String.op_Hat "Meta " uu___1
 and (atom_to_string : atom -> Prims.string) =
   fun a ->
     match a with
@@ -1262,7 +1264,12 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
             as_arg uu___3 in
           [uu___2] in
-        mkFV uu___ [] uu___1 in
+        mkFV uu___ [] uu___1
+    | FStar_Syntax_Embeddings.ZetaFull ->
+        let uu___ =
+          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_zeta_full
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        mkFV uu___ [] [] in
   let un cb t0 =
     match t0.nbe_t with
     | FV (fv, uu___, []) when

@@ -24,6 +24,13 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1916,
+    F* has a revised treatment for the lexicographic tuples. This is a breaking change
+    and may require some additional annotations in the decreases clauses, see for example:
+    https://github.com/FStarLang/FStar/pull/2218/commits/0baf2277cd1e2c83ba71c4bc9659f1a84837a33a.
+    F* tries to give a warning for such cases that the proof may require type annotations on
+    these decreases clause elements.
+
   * The expected type of the `if_then_else` combinator for layered effects is now
     `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
     Previously, the `p` parameter used to have type `Type0`. It only needs
@@ -77,6 +84,21 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
+     specialization axiom1) is unsound when instantiated across
+     different universe levels. The issue and fix is discussed in
+     detail here: https://github.com/FStarLang/FStar/issues/2069
+
+     In summary, `FStar.WellFounded.axiom1_dep`,
+     `FStar.WellFounded.axiom1`, and `FStar.WellFounded.apply` have
+     all been removed. The user-facing universe polymorphic axiom is
+     no longer needed---you should just be able to remove calls to it
+     in your programs. Instead, we have enhanced F*'s SMT encoding of
+     inductive types to include additional, more targeted
+     well-foundedness axioms.
+     tests/micro-benchmarks/TestWellFoundedRecursion.fst provides
+     several small representative examples.
+
    * Two core axioms were discovered by Aseem Rastogi to be formulated
      in an unsound manner.
 
@@ -105,6 +127,11 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * Support for binder attributes in the reflection APIs `pack_binder`
+     and `inspect_binder`. This is a breaking change, see
+     https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
+     commit for how to fix the breaking code.
+
    * `abstract` qualifier and the related option `--use_extracted_interfaces`
      are no longer supported. Use interfaces instead.
 
@@ -120,6 +147,10 @@ Guidelines for the changelog:
      a semicolon separated list of terms. The old syntax will soon
      be deprecated.
 
+   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e., 
+     @@@ instead of @@. This is a breaking change that enables 
+     using attributes on explicit binders, record fields and more. See 
+     https://github.com/FStarLang/FStar/pull/2192 for more details. 
 
 ## Extraction
 
@@ -271,6 +302,8 @@ Guidelines for the changelog:
 # Version 0.9.6.0
 
 ## Command line options
+
+   `--use_two_phase_tc` is no longer a command line option.
 
    F* reads .checked files by default unless the `--cache_off` option is provided.
    To write .checked files, provide `--cache_checked_modules`

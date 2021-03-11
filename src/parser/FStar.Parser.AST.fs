@@ -74,6 +74,7 @@ type term' =
   | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
+  | LexList   of list<term>
   | Decreases of term * option<string>
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
@@ -99,15 +100,15 @@ and binder' =
   | TAnnotated of ident * term
   | NoName of term
 
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
+and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
 
 and pattern' =
-  | PatWild     of aqual
+  | PatWild     of aqual * attributes_
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * aqual
+  | PatVar      of ident * aqual * attributes_
   | PatName     of lid
-  | PatTvar     of ident * aqual
+  | PatTvar     of ident * aqual * attributes_
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -120,10 +121,7 @@ and branch = (pattern * option<term> * term)
 and arg_qualifier =
     | Implicit
     | Equality
-    | Meta of arg_qualifier_meta_t
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term
+    | Meta of term
 and aqual = option<arg_qualifier>
 and imp =
     | FsTypApp
@@ -141,7 +139,7 @@ type expr = term
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * aqual * attributes_ * term)>
   | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
@@ -250,7 +248,8 @@ let mk_decl d r decorations =
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
 
-let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
+let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
+let mk_binder b r l i = mk_binder_with_attrs b r l i []
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t rminus r l =
   let t =
@@ -268,7 +267,7 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
-  mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
+  mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
@@ -279,15 +278,12 @@ let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
-let mkLexList r elts =
-  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
-  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
+let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
     let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
@@ -323,8 +319,6 @@ let mkExplicitApp t args r = match args with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
-let unit_const r = mk_term(Const Const_unit) r Expr
-
 let mkAdmitMagic r =
     let admit =
         let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
@@ -335,7 +329,7 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern (PatWild None) r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
@@ -375,17 +369,17 @@ let mkDTuple args r =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit : binder =
-  let b = mk_binder (Annotated(id, t)) m Type_level implicit in
+let mkRefinedBinder id t should_bind_var refopt m implicit attrs : binder =
+  let b = mk_binder_with_attrs (Annotated(id, t)) m Type_level implicit attrs in
   match refopt with
     | None -> b
     | Some phi ->
         if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+        then mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
         else
             let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m Type_level implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+            let b = mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs in
+            mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
     let t = match phi_opt with
@@ -394,8 +388,8 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
             if should_bind_pat
             then
                 begin match pat.pat with
-                | PatVar (x,_) ->
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
+                | PatVar (x,_,attrs) ->
+                    mk_term (Refine(mk_binder_with_attrs (Annotated(x, t)) t_range Type_level None attrs, phi)) range Type_level
                 | _ ->
                     let x = gen t_range in
                     let phi =
@@ -403,7 +397,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
-                            (mk_pattern (PatWild None) phi.range, None,
+                            (mk_pattern (PatWild (None, [])) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
@@ -525,6 +519,11 @@ let imp_to_string = function
     | _ -> ""
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
+  | LexList l -> Util.format1 "%[%s]"
+    (match l with
+     | [] -> " "
+     | hd::tl ->
+       tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
   | Decreases (t, _) -> Util.format1 "(decreases %s)" (term_to_string t)
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
@@ -670,22 +669,31 @@ and binder_to_string x =
   | TAnnotated(i,t)
   | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
-  Util.format2 "%s%s" (aqual_to_string x.aqual) s
+  Util.format3 "%s%s%s"
+    (aqual_to_string x.aqual)
+    (attr_list_to_string x.battributes)
+    s
 
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | Some (Meta (Arg_qualifier_meta_tac t)) -> "#[" ^ term_to_string t ^ "]"
-  | Some (Meta (Arg_qualifier_meta_attr t)) -> "[@@" ^ term_to_string t ^ "]"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]"
   | None -> ""
 
+and attr_list_to_string = function
+  | [] -> ""
+  | l -> attrs_opt_to_string (Some l)
+
 and pat_to_string x = match x.pat with
-  | PatWild None -> "_"
-  | PatWild _ -> "#_"
+  | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
+  | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, aq)
-  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) (string_of_id i)
+  | PatTvar (i, aq, attrs)
+  | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"
+    (aqual_to_string aq)
+    (attr_list_to_string attrs)
+    (string_of_id i)
   | PatName l -> (string_of_lid l)
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
@@ -702,7 +710,7 @@ and attrs_opt_to_string = function
 
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
-  | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+  | PatVar (i, _, _) -> [FStar.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []
@@ -752,7 +760,7 @@ let decl_is_val id decl =
     | _ -> false
 
 let thunk (ens : term) : term =
-    let wildpat = mk_pattern (PatWild None) ens.range in
+    let wildpat = mk_pattern (PatWild (None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
 let idents_of_binders bs r =

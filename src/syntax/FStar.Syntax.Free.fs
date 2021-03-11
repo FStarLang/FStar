@@ -77,7 +77,7 @@ let rec free_univs u = match Subst.compress_univ u with
 //this flag is propagated, and is used in the function should_invalidate_cache below
 let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
     let aux_binders (bs : binders) (from_body : free_vars_and_fvars) =
-        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
+        let from_binders = bs |> List.fold_left (fun n b -> union n (free_names_and_uvars b.binder_bv.sort use_cache)) no_free_vars in
         union from_binders from_body
     in
     let t = Subst.compress tm in
@@ -112,7 +112,7 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
         aux_binders bs (free_names_and_uvars_comp c use_cache)
 
       | Tm_refine(bv, t) ->
-        aux_binders [bv, None] (free_names_and_uvars t use_cache)
+        aux_binders [mk_binder bv] (free_names_and_uvars t use_cache)
 
       | Tm_app(t, args) ->
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
@@ -198,8 +198,20 @@ and free_names_and_uvars_comp c use_cache =
               union (free_univs u) (free_names_and_uvars t use_cache)
 
             | Comp ct ->
-              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ use_cache) use_cache in
-              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
+              //collect from the decreases clause
+              let decreases_vars =
+                match List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags with
+                | None -> no_free_vars
+                | Some (DECREASES l) ->
+                  l |> List.fold_left (fun acc t -> union acc (free_names_and_uvars t use_cache)) no_free_vars
+              in
+              //decreases clause + return type
+              let us = union (free_names_and_uvars ct.result_typ use_cache) decreases_vars in
+              //decreases clause + return type + effect args
+              let us = free_names_and_uvars_args ct.effect_args us use_cache in
+              //decreases clause + return type + effect args + comp_univs
+              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs
+         in
          c.vars := Some (fst n);
          n
 
@@ -216,7 +228,7 @@ and should_invalidate_cache n use_cache =
       )
 
 let free_names_and_uvars_binders (bs:binders) acc use_cache =
-    bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
+    bs |> List.fold_left (fun n b -> union n (free_names_and_uvars b.binder_bv.sort use_cache)) acc
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above

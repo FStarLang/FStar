@@ -776,7 +776,10 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t) -> collect_term t) identterms
+            List.iter (fun (_, aq, attrs, t) -> 
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
@@ -796,6 +799,7 @@ let collect_one
 
       and collect_binder b =
         collect_aqual b.aqual;
+        b.battributes |> List.iter collect_term;
         match b with
         | { b = Annotated (_, t) }
         | { b = TAnnotated (_, t) }
@@ -803,8 +807,7 @@ let collect_one
         | _ -> ()
 
       and collect_aqual = function
-        | Some (Meta (Arg_qualifier_meta_tac t))
-        | Some (Meta (Arg_qualifier_meta_attr t)) -> collect_term t
+        | Some (Meta t) -> collect_term t
         | _ -> ()
 
       and collect_term t =
@@ -906,9 +909,10 @@ let collect_one
             collect_term t
         | Requires (t, _)
         | Ensures (t, _)
-        | Decreases (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->
@@ -933,10 +937,11 @@ let collect_one
         collect_pattern' p.pat
 
       and collect_pattern' = function
-        | PatVar (_, aqual)
-        | PatTvar (_, aqual)
-        | PatWild aqual ->
-            collect_aqual aqual
+        | PatVar (_, aqual, attrs)
+        | PatTvar (_, aqual, attrs)
+        | PatWild (aqual, attrs) ->
+            collect_aqual aqual;
+            attrs |> List.iter collect_term
 
         | PatOp _
         | PatConst _ ->

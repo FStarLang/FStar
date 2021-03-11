@@ -331,7 +331,7 @@ let rec inline_closure_env cfg (env:env) stack t =
       | Tm_refine(x, phi) ->
         let x, env = close_binders cfg env [mk_binder x] in
         let phi = non_tail_inline_closure_env cfg env phi in
-        let t = mk (Tm_refine(List.hd x |> fst, phi)) t.pos in
+        let t = mk (Tm_refine((List.hd x).binder_bv, phi)) t.pos in
         rebuild_closure cfg env stack t
 
       | Tm_ascribed(t1, (annot,tacopt), lopt) ->
@@ -496,16 +496,16 @@ and rebuild_closure cfg env stack t =
 
 and close_imp cfg env imp =
     match imp with
-    | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac(inline_closure_env cfg env [] t)))
-    | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (inline_closure_env cfg env [] t)))
+    | Some (S.Meta t) -> Some (S.Meta (inline_closure_env cfg env [] t))
     | i -> i
 
 and close_binders cfg env bs =
-    let env, bs = bs |> List.fold_left (fun (env, out) (b, imp) ->
+    let env, bs = bs |> List.fold_left (fun (env, out) ({binder_bv=b; binder_qual=imp; binder_attrs=attrs}) ->
             let b = {b with sort = inline_closure_env cfg env [] b.sort} in
             let imp = close_imp cfg env imp in
+            let attrs = List.map (non_tail_inline_closure_env cfg env) attrs in
             let env = dummy::env in
-            env, ((b,imp)::out)) (env, []) in
+            env, ((S.mk_binder_with_attrs b imp attrs)::out)) (env, []) in
     List.rev bs, env
 
 and close_comp cfg env c =
@@ -530,7 +530,8 @@ and close_comp cfg env c =
         let flags =
             c.flags |>
             List.map (function
-                | DECREASES t -> DECREASES (inline_closure_env cfg env [] t)
+                | DECREASES l ->
+                  DECREASES (l |> List.map (inline_closure_env cfg env []))
                 | f -> f)
         in
         mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
@@ -568,15 +569,15 @@ let mk_psc_subst cfg env =
             match binder_opt, closure with
             | Some b, Clos(env, term, _, _) ->
                 // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
-                let bv,_ = b in
+                let bv = b.binder_bv in
                 if not (U.is_constructed_typ bv.sort PC.binder_lid)
                 then subst
                 else let term = closure_as_term cfg env term in
                      begin match unembed_binder term with
                      | None -> subst
                      | Some x ->
-                         let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
-                         let b_for_x = S.NT(fst x, S.bv_to_name b) in
+                         let b = S.freshen_bv ({bv with sort=SS.subst subst x.binder_bv.sort}) in
+                         let b_for_x = S.NT(x.binder_bv, S.bv_to_name b) in
                          //remove names shadowed by b
                          let subst = List.filter (function NT(_, {n=Tm_name b'}) ->
                                                                   not (Ident.ident_equals b.ppname b'.ppname)
@@ -1316,7 +1317,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       rebuild cfg env stack t
                     | _ -> rebuild cfg env stack (closure_as_term cfg env t)
             else let t_x = norm cfg env [] x.sort in
-                 let closing, f = open_term [(x, None)] f in
+                 let closing, f = open_term [mk_binder x] f in
                  let f = norm cfg (dummy::env) [] f in
                  let t = mk (Tm_refine({x with sort=t_x}, close closing f)) t.pos in
                  rebuild cfg env stack t
@@ -1411,7 +1412,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
-                    let x = fst (List.hd bs) in
+                    let x = (List.hd bs).binder_bv in
                     Inl ({x with sort=ty}) in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- definiens\n");
                  let lb = {lb with lbname=lbname;
@@ -1974,7 +1975,8 @@ and norm_comp : cfg -> env -> comp -> comp =
                 (if cfg.steps.for_extraction
                  then List.map (fun _ -> S.unit_const |> S.as_arg)
                  else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
-              let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
+              let flags = ct.flags |> List.map (function DECREASES l ->
+                DECREASES (l |> List.map (norm cfg env [])) | f -> f) in
               let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
               { comp with n = Comp ({ct with comp_univs  = comp_univs;
@@ -1983,14 +1985,12 @@ and norm_comp : cfg -> env -> comp -> comp =
                                              flags       = flags}) }
 
 and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
-    let (x, imp) = b in
-    let x = { x with sort = norm cfg env [] x.sort } in
-    let imp = match imp with
-              | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac (closure_as_term cfg env t)))
-              | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (closure_as_term cfg env t)))
-              | i -> i
-    in
-    (x, imp)
+    let x = { b.binder_bv with sort = norm cfg env [] b.binder_bv.sort } in
+    let imp = match b.binder_qual with
+              | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
+              | i -> i in
+    let attrs = List.map (norm cfg env []) b.binder_attrs in
+    S.mk_binder_with_attrs x imp attrs
 
 and norm_binders : cfg -> env -> binders -> binders =
     fun cfg env bs ->
@@ -2046,9 +2046,9 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     in
     let rec args_are_binders args bs =
         match args, bs with
-        | (t, _)::args, (bv, _)::bs ->
+        | (t, _)::args, b::bs ->
             begin match (SS.compress t).n with
-            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
+            | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
             | _ -> false
             end
         | [], [] -> true
@@ -2144,10 +2144,10 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     in
     let is_forall_const (phi : term) : option<term> =
         match U.destruct_typ_as_formula phi with
-        | Some (QAll ([(bv, _)], _, phi')) ->
+        | Some (QAll ([b], _, phi')) ->
             if cfg.debug.wpe then
-                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string bv) (Print.term_to_string phi');
-            is_quantified_const bv phi'
+                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string b.binder_bv) (Print.term_to_string phi');
+            is_quantified_const b.binder_bv phi'
         | _ -> None
     in
     let is_const_match (phi : term) : option<bool> =
@@ -2741,6 +2741,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 let reflection_env_hook = BU.mk_ref None
 
 let normalize_with_primitive_steps ps s e t =
+  Profiling.profile (fun () ->
     let c = config' ps s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
@@ -2764,13 +2765,17 @@ let normalize_with_primitive_steps ps s e t =
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
+  )
+  (Some (Ident.string_of_lid (Env.current_module e)))
+  "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
 
 let normalize s e t =
     Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
                       (Some (Ident.string_of_lid (Env.current_module e)))
-                      "FStar.TypeChecker.Normalize"
+                      "FStar.TypeChecker.Normalize.normalize"
 
 let normalize_comp s e c =
+  Profiling.profile (fun () ->
     let cfg = config s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
@@ -2781,7 +2786,10 @@ let normalize_comp s e c =
                       norm_comp cfg [] c))
     in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
-    c
+    c)
+  (Some (Ident.string_of_lid (Env.current_module e)))
+  "FStar.TypeChecker.Normalize.normalize_comp"
+    
 
 let normalize_universe env u = norm_universe (config [] env) [] u
 

@@ -48,7 +48,6 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
@@ -74,14 +73,14 @@ type term_view =
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
-  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> decr:(option term) -> comp_view
-  | C_GTotal    : ret:typ -> decr:(option term) -> comp_view
+  | C_Total     : ret:typ -> decr:(list term) -> comp_view
+  | C_GTotal    : ret:typ -> decr:(list term) -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:(list unit) -> (* TODO: expose universes properly,
                                              pass them back as obtained for now, or [] *)
@@ -114,6 +113,12 @@ type sigelt_view =
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list ctor) ->        // the constructors, opened with univs and applied to params already
+      sigelt_view
+
+  | Sg_Val :
+      (nm:name) ->
+      (univs:list univ_name) ->
+      (typ:typ) ->
       sigelt_view
 
   | Unk
@@ -197,10 +202,9 @@ let smaller (tv:term_view) (t:term) : Type0 =
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
-    | C_Total t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+    | C_Total t md -> t << c /\ md << c
     | C_GTotal t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+        t << c /\ md << c
     | C_Lemma pre post pats ->
         pre << c /\ post << c /\ pats << c
     | C_Eff us eff res args ->

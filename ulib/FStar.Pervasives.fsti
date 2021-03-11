@@ -702,6 +702,17 @@ val erasable : unit
     the code should not be extracted *)
 val allow_informative_binders : unit
 
+(** Use this attribute for subcomp binders of a layered effect that are irrelevant
+    for the proof of soundness of the if_then_else combinator
+
+    Put another way, these binders may be unconstrained in subcomp
+    (e.g. instantiated using a tactic), and this attribute says that to
+    prove the soundness of if_then_else, use fresh names for these binders
+
+    See examples/layeredeffects/IteSoundness.fst *)
+val ite_soundness_forall : unit
+
+
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 

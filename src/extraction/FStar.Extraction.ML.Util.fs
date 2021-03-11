@@ -48,6 +48,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
+let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -101,6 +102,10 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     match c with
     | Const_range r ->
         mlexpr_of_range r
+
+    | Const_real s ->
+        let str = mlconst_of_const p (Const_string(s, p)) in
+        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
 
     | _ ->
         MLE_Const (mlconst_of_const p c)
@@ -539,7 +544,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
 
         | Tm_arrow ([b], c) when U.is_pure_comp c ->
           let bs, c = FStar.Syntax.Subst.open_comp [b] c in
-          let t0 = (fst (List.hd bs)).sort in
+          let t0 = (List.hd bs).binder_bv.sort in
           let t1 = U.comp_result c in
           emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
 
@@ -665,7 +670,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let type_vars, bs =
         match
             BU.prefix_until
-                (fun (b, _) ->
+                (fun ({binder_bv=b}) ->
                     match (Subst.compress b.sort).n with
                     | Tm_type _ -> false
                     | _ -> true)
@@ -684,7 +689,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> fst b, nm) type_vars tvar_names in
+    let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
 
@@ -748,7 +753,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           end
           else raise (NoTacticEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
 
-        | (b, _)::bs ->
+        | ({binder_bv=b})::bs ->
           aux loc (mk_embedding loc tvar_context b.sort::accum_embeddings) bs
     in
     try

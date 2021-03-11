@@ -67,8 +67,7 @@ let get_env () : Env.env =
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta (Arg_qualifier_meta_tac t)) -> Data.Q_Meta t
-    | Some (Meta (Arg_qualifier_meta_attr t)) -> Data.Q_Meta_attr t
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -77,8 +76,7 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
-    | Data.Q_Meta t   -> Some (Meta (Arg_qualifier_meta_tac t))
-    | Data.Q_Meta_attr t   -> Some (Meta (Arg_qualifier_meta_attr t))
+    | Data.Q_Meta t   -> Some (Meta t)
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
@@ -230,15 +228,15 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list<cflag>) : option<term> =
+    let get_dec (flags : list<cflag>) : list<term> =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
-        | None -> None
-        | Some (DECREASES t) -> Some t
+        | None -> []
+        | Some (DECREASES ts) -> ts
         | _ -> failwith "impossible"
     in
     match c.n with
-    | Total (t, _) -> C_Total (t, None)
-    | GTotal (t, _) -> C_GTotal (t, None)
+    | Total (t, _) -> C_Total (t, [])
+    | GTotal (t, _) -> C_GTotal (t, [])
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -262,23 +260,23 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, None) -> mk_Total t
-    | C_Total (t, Some d) ->
+    | C_Total (t, []) -> mk_Total t
+    | C_Total (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, None) -> mk_GTotal t
-    | C_GTotal (t, Some d) ->
+    | C_GTotal (t, []) -> mk_GTotal t
+    | C_GTotal (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
@@ -524,7 +522,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
             (* Substitute the parameters of the constructor to match
              * those of the inductive opened above, and return the type
              * of the constructor already instantiated. *)
-            let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
+            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
                                param_ctor_bs param_bs
             in
             let cty = SS.subst s' cty in
@@ -536,6 +534,11 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
             failwith "impossible: inspect_sigelt: did not find ctor"
         in
         Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
+
+    | Sig_declare_typ (lid, us, ty) ->
+        let nm = Ident.path_of_lid lid in
+        let us, ty = SS.open_univ_vars us ty in
+        Sg_Val (nm, us, ty)
 
     | _ ->
         Unk
@@ -578,6 +581,11 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
       { se with sigquals = Noeq::se.sigquals }
 
+    | Sg_Val (nm, us_names, ty) ->
+        let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        let typ = SS.close_univ_vars us_names ty in
+        mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
+
     | Unk ->
         failwith "packing Unk, sorry"
 
@@ -595,12 +603,11 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * aqualv =
-    let bv, aq = b in
-    bv, inspect_aqual aq
+let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    bv, pack_aqual aqv
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =

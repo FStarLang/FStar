@@ -176,7 +176,11 @@ and pat = withinfo_t<pat'>
 and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = {
+  binder_bv    : bv;
+  binder_qual  : aqual;
+  binder_attrs : list<attribute>
+}                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
@@ -188,7 +192,7 @@ and cflag =                                                      (* flags applic
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
-  | DECREASES of term
+  | DECREASES of list<term>
 and metadata =
   | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -284,11 +288,8 @@ and tscheme = list<univ_name> * typ
 and gamma = list<binding>
 and arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of arg_qualifier_meta_t
+  | Meta of term  //meta-argument that specifies a tactic term
   | Equality
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
@@ -580,6 +581,8 @@ val binders_of_freenames: freenames -> binders
 val binders_of_list:      list<bv> -> binders
 
 val null_bv:        term -> bv
+val mk_binder_with_attrs
+           :        bv -> aqual -> list<attribute> -> binder
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg

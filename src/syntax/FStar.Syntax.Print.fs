@@ -115,26 +115,18 @@ let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
 let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
 let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 
-let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
-let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
-let filter_imp a =
+let filter_imp aq =
    (* keep typeclass args *)
-   a |> List.filter (function | (_, Some (Meta (Arg_qualifier_meta_tac t))) when SU.is_fvar C.tcresolve_lid t -> true
-                              | (_, Some (Implicit _))
-                              | (_, Some (Meta _)) -> false
-                              | _ -> true)
-let rec reconstruct_lex (e:exp) =
-  match (compress e).n with
-  | Tm_app (f, args) ->
-      let args = filter_imp args in
-      let exps = List.map fst args in
-      if is_lex_cons f && List.length exps = 2 then
-        match reconstruct_lex (List.nth exps 1) with
-        | Some xs -> Some (List.nth exps 0 :: xs)
-        | None    -> None
-      else None
-  | _ -> if is_lex_top e then Some [] else None
+   match aq with
+   | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
+   | Some (Implicit _)
+   | Some (Meta _) -> false
+   | _ -> true
+let filter_imp_args args =
+  args |> List.filter (fun a -> a |> snd |> filter_imp)
+let filter_imp_binders bs =
+  bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
 let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with
@@ -446,9 +438,8 @@ and aqual_to_string' s = function
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
-  | Some (Meta (Arg_qualifier_meta_tac t)) when SU.is_fvar C.tcresolve_lid t -> "{|" ^ s ^ "|}"
-  | Some (Meta (Arg_qualifier_meta_tac t)) -> "#[" ^ term_to_string t ^ "]" ^ s
-  | Some (Meta (Arg_qualifier_meta_attr t)) -> "#[@@" ^ term_to_string t ^ "]" ^ s
+  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "{|" ^ s ^ "|}"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
 and imp_to_string s aq =
@@ -462,18 +453,22 @@ and binder_to_string' is_arrow b =
       let d = ToDocument.binder_to_document e in
       Pp.pretty_string (float_of_string "1.0") 100 d
   else
-    let (a, imp) = b in
+    let attrs = attrs_to_string b.binder_attrs in
     if is_null_binder b
-    then ("_:" ^ term_to_string a.sort)
-    else if not is_arrow && not (Options.print_bound_var_types()) then imp_to_string (nm_to_string a) imp
-    else imp_to_string (nm_to_string a ^ ":" ^ term_to_string a.sort) imp
+    then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
+    else if not is_arrow && not (Options.print_bound_var_types())
+    then imp_to_string (attrs ^ nm_to_string b.binder_bv) b.binder_qual
+    else imp_to_string (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
 
 and binder_to_string b =  binder_to_string' false b
 
 and arrow_binder_to_string b = binder_to_string' true b
 
 and binders_to_string sep bs =
-    let bs = if (Options.print_implicits()) then bs else filter_imp bs in
+    let bs =
+      if (Options.print_implicits())
+      then bs
+      else filter_imp_binders bs in
     if sep = " -> "
     then bs |> List.map arrow_binder_to_string |> String.concat sep
     else bs |> List.map binder_to_string |> String.concat sep
@@ -482,7 +477,10 @@ and arg_to_string = function
    | a, imp -> imp_to_string (term_to_string a) imp
 
 and args_to_string args =
-    let args = if (Options.print_implicits()) then args else filter_imp args in
+    let args =
+      if (Options.print_implicits())
+      then args
+      else filter_imp_args args in
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string c =
@@ -529,7 +527,15 @@ and comp_to_string c =
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
           then U.format1 "ALL %s" (term_to_string c.result_typ)
           else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
-      let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
+      let dec = c.flags
+        |> List.collect (function DECREASES l ->
+           [U.format1 " (decreases [%s])"
+             (match l with
+              | [] -> ""
+              | hd::tl ->
+                tl |> List.fold_left (fun s t ->
+                  s ^ ";" ^ term_to_string t) (term_to_string hd))] | _ -> [])
+        |> String.concat " " in
       U.format2 "%s%s" basic dec
     )
 
@@ -589,9 +595,8 @@ let term_to_string' env x =
        Pp.pretty_string (float_of_string "1.0") 100 d
 
 let binder_to_json env b =
-    let (a, imp) = b in
-    let n = JsonStr (imp_to_string (nm_to_string a) imp) in
-    let t = JsonStr (term_to_string' env a.sort) in
+    let n = JsonStr (imp_to_string (nm_to_string b.binder_bv) b.binder_qual) in
+    let t = JsonStr (term_to_string' env b.binder_bv.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
 let binders_to_json env bs =

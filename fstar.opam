@@ -15,11 +15,11 @@ depends: [
   "fileutils"
   "menhir" {>= "20161115" build}
   "pprint" {build}
-  "ulex" {build}
+  "sedlex" {build}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
-  "ocaml-migrate-parsetree"
+  "ocaml-migrate-parsetree" {< "2.1.0"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [

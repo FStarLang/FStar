@@ -60,50 +60,57 @@ let (load_native_tactics : unit -> unit) =
     let modules_to_load =
       let uu___1 = FStar_Options.load () in
       FStar_All.pipe_right uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
+    let cmxs_to_load =
+      let uu___1 = FStar_Options.load_cmxs () in
+      FStar_All.pipe_right uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
     let ml_module_name m = FStar_Extraction_ML_Util.ml_module_name_of_lid m in
     let ml_file m =
       let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
     let cmxs_file m =
       let cmxs = let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".cmxs" in
-      let uu___1 =
-        let uu___2 =
-          FStar_All.pipe_right cmxs FStar_Options.prepend_output_dir in
-        FStar_Options.find_file uu___2 in
+      let uu___1 = FStar_Options.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f
       | FStar_Pervasives_Native.None ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = ml_file m in
-              FStar_All.pipe_right uu___4 FStar_Options.prepend_output_dir in
-            FStar_Options.find_file uu___3 in
-          (match uu___2 with
-           | FStar_Pervasives_Native.None ->
-               let uu___3 =
+          if FStar_List.contains m cmxs_to_load
+          then
+            let uu___2 =
+              let uu___3 =
+                FStar_Util.format1 "Could not find %s to load" cmxs in
+              (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___3) in
+            FStar_Errors.raise_err uu___2
+          else
+            (let uu___3 =
+               let uu___4 = ml_file m in FStar_Options.find_file uu___4 in
+             match uu___3 with
+             | FStar_Pervasives_Native.None ->
                  let uu___4 =
-                   let uu___5 = ml_file m in
-                   FStar_Util.format1
-                     "Failed to compile native tactic; extracted module %s not found"
-                     uu___5 in
-                 (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___4) in
-               FStar_Errors.raise_err uu___3
-           | FStar_Pervasives_Native.Some ml ->
-               let dir = FStar_Util.dirname ml in
-               ((let uu___4 = let uu___5 = ml_module_name m in [uu___5] in
-                 FStar_Tactics_Load.compile_modules dir uu___4);
-                (let uu___4 = FStar_Options.find_file cmxs in
-                 match uu___4 with
-                 | FStar_Pervasives_Native.None ->
-                     let uu___5 =
+                   let uu___5 =
+                     let uu___6 = ml_file m in
+                     FStar_Util.format1
+                       "Failed to compile native tactic; extracted module %s not found"
+                       uu___6 in
+                   (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___5) in
+                 FStar_Errors.raise_err uu___4
+             | FStar_Pervasives_Native.Some ml ->
+                 let dir = FStar_Util.dirname ml in
+                 ((let uu___5 = let uu___6 = ml_module_name m in [uu___6] in
+                   FStar_Tactics_Load.compile_modules dir uu___5);
+                  (let uu___5 = FStar_Options.find_file cmxs in
+                   match uu___5 with
+                   | FStar_Pervasives_Native.None ->
                        let uu___6 =
-                         FStar_Util.format1
-                           "Failed to compile native tactic; compiled object %s not found"
-                           cmxs in
-                       (FStar_Errors.Fatal_FailToCompileNativeTactic, uu___6) in
-                     FStar_Errors.raise_err uu___5
-                 | FStar_Pervasives_Native.Some f -> f))) in
+                         let uu___7 =
+                           FStar_Util.format1
+                             "Failed to compile native tactic; compiled object %s not found"
+                             cmxs in
+                         (FStar_Errors.Fatal_FailToCompileNativeTactic,
+                           uu___7) in
+                       FStar_Errors.raise_err uu___6
+                   | FStar_Pervasives_Native.Some f -> f))) in
     let cmxs_files =
-      FStar_All.pipe_right modules_to_load (FStar_List.map cmxs_file) in
+      FStar_All.pipe_right (FStar_List.append modules_to_load cmxs_to_load)
+        (FStar_List.map cmxs_file) in
     (let uu___2 = FStar_Options.debug_any () in
      if uu___2
      then
