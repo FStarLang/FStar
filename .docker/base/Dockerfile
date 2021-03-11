@@ -16,7 +16,7 @@ USER build
 WORKDIR /home/build
 
 # Prepare and build OPAM and OCaml
-RUN opam init -y --disable-sandboxing --compiler=4.07.0
+RUN opam init -y --disable-sandboxing
 RUN opam update
 RUN opam install -y ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process pprint visitors fix wasm ppxlib=0.22.0
 
