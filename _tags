@@ -26,7 +26,7 @@ true: \
   package(sedlex), \
   package(stdint), \
   package(yojson), \
-  package(ocaml-migrate-parsetree), \
+  package(ppxlib), \
   package(process)
 
 # This ensures that main.native bundles its dependencies, which dynlinked tactics might need.
