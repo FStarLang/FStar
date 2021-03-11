@@ -2260,7 +2260,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let t_last_arg = env.type_of_well_typed ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
+              let t_last_arg = env.type_of_well_typed_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
               //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
@@ -2918,7 +2918,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_eta t =
             if is_abs t then t
             else begin
-                let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                let _, ty, _ = env.type_of_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in  //AR: TODO: type_of_well_typed?
                 (* Find the WHNF ignoring refinements. Otherwise consider
                  *
                  * let myty1 = a -> Tot b
@@ -3496,8 +3496,18 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                           (Print.lid_to_string c1.effect_name)
                                           (Print.lid_to_string c2.effect_name))) env.range
              in
+             let univ_sub_probs, wl = [], wl in
+               // List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
+               //   let p, wl = sub_prob wl
+               //     (S.mk (S.Tm_type u1) Range.dummyRange)
+               //     EQ
+               //     (S.mk (S.Tm_type u2) Range.dummyRange)
+               //     "effect universes" in
+               //   (univ_sub_probs@[p]), wl) ([], wl) c1.comp_univs c2.comp_univs in
              if BU.physical_equality wpc1 wpc2
-             then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
+             then
+               let tprob = TProb (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") in
+               solve env (attempt (univ_sub_probs@[tprob]) wl)
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
@@ -3517,7 +3527,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                                     (Print.term_to_string c2_repr))
                        in
                        let wl = solve_prob orig (Some (p_guard prob)) [] wl in
-                       solve env (attempt [prob] wl)
+                       solve env (attempt (univ_sub_probs@[prob]) wl)
                   else
                       let g =
                          if env.lax then
@@ -3544,7 +3554,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
-                      solve env (attempt [base_prob] wl)
+                      solve env (attempt (univ_sub_probs@[base_prob]) wl)
     in
 
     if BU.physical_equality c1 c2
@@ -3555,36 +3565,55 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
+         let univ_subprobs, wl_univs = [], wl in
+           // let c1_univs, c2_univs =
+           //   (U.comp_to_comp_typ_nouniv c1).comp_univs,
+           //   (U.comp_to_comp_typ_nouniv c2).comp_univs in
+           // if List.length c1_univs = List.length c2_univs
+           // then
+           //   List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
+           //     let p, wl = sub_prob wl
+           //       (S.mk (S.Tm_type u1) Range.dummyRange)
+           //       EQ
+           //       (S.mk (S.Tm_type u2) Range.dummyRange)
+           //       "effect universes" in
+           //     univ_sub_probs@[p], wl) ([], wl) c1_univs c2_univs
+           // else [], wl in
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
-            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
+           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
 
          | GTotal _, Total _ ->
-            giveup env (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
+           giveup env (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
 
          | Total  (t1, _), Total  (t2, _)
          | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
-            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
+           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
 
          | Total  (t1, _), GTotal (t2, _) when problem.relation = SUB ->
-            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
+           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
 
          | Total  (t1, _), GTotal (t2, _) ->
-            giveup env (Thunk.mkv "GTot =/= Tot") orig
+           giveup env (Thunk.mkv "GTot =/= Tot") orig
 
          | GTotal _, Comp _
          | Total _,  Comp _ ->
-            solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
+           solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
 
          | Comp _, GTotal _
          | Comp _, Total _ ->
-            solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
+           solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
 
          | Comp _, Comp _ ->
             if (U.is_ml_comp c1 && U.is_ml_comp c2)
             || (U.is_total_comp c1 && U.is_total_comp c2)
             || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
-            then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
+            then
+              let tprob = TProb (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") in
+              solve env (attempt (univ_subprobs@[tprob]) wl_univs)
             else let c1_comp = Env.comp_to_comp_typ env c1 in
                  let c2_comp = Env.comp_to_comp_typ env c2 in
                  if problem.relation=EQ
@@ -4090,10 +4119,6 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
   
 let resolve_implicits' env is_tac g =
-  let must_total =
-    if is_tac then false
-    else (not env.phase1 && not env.lax) in
-
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
     | Some r ->
@@ -4165,8 +4190,9 @@ let resolve_implicits' env is_tac g =
               |> BU.set_elements
               |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved) in
             if is_tac then if tm_ok_for_tac tm
-                           then until_fixpoint (out, true) tl  //Move on to the next imp
+                           then until_fixpoint (out, true) tl        //Move on to the next imp
                            else until_fixpoint (hd::out, changed) tl  //Move hd to out
+            //else if env.phase1 then until_fixpoint (out, true) tl
             else begin
               if Env.debug env <| Options.Other "Rel"
               then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
@@ -4175,12 +4201,13 @@ let resolve_implicits' env is_tac g =
                               (Print.term_to_string ctx_u.ctx_uvar_typ)
                               reason
                               (Range.string_of_range r);
+
               let g =
                 Errors.with_ctx (BU.format3 "While checking implicit %s set to %s of expected type %s"
                                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                               (N.term_to_string env tm)
                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
-                                (fun () -> env.check_type_of must_total env tm ctx_u.ctx_uvar_typ)
+                                (fun () -> env.check_type_and_effect_of_well_typed_tot_or_gtot_term env tm ctx_u.ctx_uvar_typ (not env.phase1 && not env.lax))
               in
               let g' =
                 match discharge_guard' (Some (fun () ->
