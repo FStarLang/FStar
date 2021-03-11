@@ -134,7 +134,7 @@ let solve_deferred_to_tactic_goals env g =
             if is_flex tp.lhs then tp.lhs
             else tp.rhs
           in
-          env.type_of env_lax t
+          env.type_of_tot_or_gtot_term env_lax t true  //AR: TODO: can we call type_of_well_typed?
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
