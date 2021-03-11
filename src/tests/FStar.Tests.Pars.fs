@@ -54,10 +54,10 @@ let init_once () : unit =
   let env = TcEnv.initial_env
                 FStar.Parser.Dep.empty_deps
                 TcTerm.tc_term
-                TcTerm.type_of_tot_term
-                TcTerm.type_of_well_typed_term
+                TcTerm.type_of_tot_or_gtot_term
+                TcTerm.type_of_well_typed_tot_or_gtot_term
                 TcTerm.universe_of
-                TcTerm.check_type_of_well_typed_term
+                TcTerm.check_type_and_effect_of_well_typed_tot_or_gtot_term
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in
