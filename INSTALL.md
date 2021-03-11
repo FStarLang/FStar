@@ -77,7 +77,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
         $ fstar.exe --version
         F* 0.9.7.0-alpha1
         platform=Linux_x86_64
-        compiler=OCaml 4.09.1
+        compiler=OCaml 4.12.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -180,8 +180,7 @@ but first we explain how to get a working OCaml setup on your machine.
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.09.X should work.
-Versions outside this range are known not to work.
+The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.12.X should work.
 
 #### Instructions for Windows ####
 
@@ -192,7 +191,7 @@ Versions outside this range are known not to work.
   ```sh
   $ opam update
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.09.1+mingw64c
+  $ opam switch create ocaml-variants.4.12.0+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
