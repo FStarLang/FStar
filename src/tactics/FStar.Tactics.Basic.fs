@@ -340,7 +340,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (TcTerm.type_of_tot_term e t)
+    try ret (TcTerm.type_of_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -846,8 +846,8 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
-                            true env term ctx_uvar.ctx_uvar_typ
+                  FStar.TypeChecker.TcTerm.check_type_and_effect_of_well_typed_tot_or_gtot_term'
+                            env term ctx_uvar.ctx_uvar_typ false true
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
