@@ -3496,18 +3496,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                           (Print.lid_to_string c1.effect_name)
                                           (Print.lid_to_string c2.effect_name))) env.range
              in
-             let univ_sub_probs, wl = [], wl in
-               // List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
-               //   let p, wl = sub_prob wl
-               //     (S.mk (S.Tm_type u1) Range.dummyRange)
-               //     EQ
-               //     (S.mk (S.Tm_type u2) Range.dummyRange)
-               //     "effect universes" in
-               //   (univ_sub_probs@[p]), wl) ([], wl) c1.comp_univs c2.comp_univs in
              if BU.physical_equality wpc1 wpc2
-             then
-               let tprob = TProb (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") in
-               solve env (attempt (univ_sub_probs@[tprob]) wl)
+             then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
@@ -3527,7 +3517,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                                     (Print.term_to_string c2_repr))
                        in
                        let wl = solve_prob orig (Some (p_guard prob)) [] wl in
-                       solve env (attempt (univ_sub_probs@[prob]) wl)
+                       solve env (attempt [prob] wl)
                   else
                       let g =
                          if env.lax then
@@ -3554,7 +3544,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
-                      solve env (attempt (univ_sub_probs@[base_prob]) wl)
+                      solve env (attempt [base_prob] wl)
     in
 
     if BU.physical_equality c1 c2
@@ -3565,36 +3555,19 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
-         let univ_subprobs, wl_univs = [], wl in
-           // let c1_univs, c2_univs =
-           //   (U.comp_to_comp_typ_nouniv c1).comp_univs,
-           //   (U.comp_to_comp_typ_nouniv c2).comp_univs in
-           // if List.length c1_univs = List.length c2_univs
-           // then
-           //   List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
-           //     let p, wl = sub_prob wl
-           //       (S.mk (S.Tm_type u1) Range.dummyRange)
-           //       EQ
-           //       (S.mk (S.Tm_type u2) Range.dummyRange)
-           //       "effect universes" in
-           //     univ_sub_probs@[p], wl) ([], wl) c1_univs c2_univs
-           // else [], wl in
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
-           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
-           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
+           solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | GTotal _, Total _ ->
            giveup env (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
 
          | Total  (t1, _), Total  (t2, _)
          | GTotal (t1, _), GTotal (t2, _) -> //rigid-rigid 1
-           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
-           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
+           solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | Total  (t1, _), GTotal (t2, _) when problem.relation = SUB ->
-           let tprob = TProb (problem_using_guard orig t1 problem.relation t2 None "result type") in
-           solve env (attempt (univ_subprobs@[tprob]) wl_univs)
+           solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | Total  (t1, _), GTotal (t2, _) ->
            giveup env (Thunk.mkv "GTot =/= Tot") orig
@@ -3611,9 +3584,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             if (U.is_ml_comp c1 && U.is_ml_comp c2)
             || (U.is_total_comp c1 && U.is_total_comp c2)
             || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
-            then
-              let tprob = TProb (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") in
-              solve env (attempt (univ_subprobs@[tprob]) wl_univs)
+            then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
             else let c1_comp = Env.comp_to_comp_typ env c1 in
                  let c2_comp = Env.comp_to_comp_typ env c2 in
                  if problem.relation=EQ

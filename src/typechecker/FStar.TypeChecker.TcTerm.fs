@@ -4052,7 +4052,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
     | Some k' ->
       if not (continue_fast_path k')
       then slow_path "k' has uvars" (Some k')
-      else if N.non_info_norm env k || not must_tot
+      else if (not must_tot) || N.non_info_norm env k
       then TcUtil.check_has_type env t k' k
       else
         let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
