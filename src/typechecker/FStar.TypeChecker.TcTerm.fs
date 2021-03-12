@@ -4072,6 +4072,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   
   let continue_fast_path t = uvars_ok || (t |> Free.uvars |> set_is_empty && t |> Free.univs |> set_is_empty) in
 
+  if not uvars_ok then slow_path "" None else
   if uvars_ok && env.phase1
   then Env.trivial_guard
   else
