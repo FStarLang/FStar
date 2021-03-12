@@ -11772,8 +11772,9 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
                           (FStar_Pervasives_Native.Some k')
                       else
                         (let uu___7 =
-                           (FStar_TypeChecker_Normalize.non_info_norm env1 k)
-                             || (Prims.op_Negation must_tot) in
+                           (Prims.op_Negation must_tot) ||
+                             (FStar_TypeChecker_Normalize.non_info_norm env1
+                                k) in
                          if uu___7
                          then
                            FStar_TypeChecker_Util.check_has_type env1 t k' k
