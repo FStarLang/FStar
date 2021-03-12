@@ -11366,13 +11366,13 @@ let rec (type_of_well_typed_term :
           -> type_of_well_typed_term env t2
       | FStar_Syntax_Syntax.Tm_app (hd, args) ->
           let t_hd = type_of_well_typed_term env hd in
-          let rec aux t_hd1 =
+          let rec aux args1 t_hd1 =
             let uu___ =
               let uu___1 = FStar_TypeChecker_Normalize.unfold_whnf env t_hd1 in
               uu___1.FStar_Syntax_Syntax.n in
             match uu___ with
             | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-                let n_args = FStar_List.length args in
+                let n_args = FStar_List.length args1 in
                 let n_bs = FStar_List.length bs in
                 let bs_t_opt =
                   if n_args < n_bs
@@ -11390,25 +11390,28 @@ let rec (type_of_well_typed_term :
                         (match uu___2 with
                          | (bs2, c1) ->
                              FStar_Pervasives_Native.Some
-                               (bs2, (FStar_Syntax_Util.comp_result c1)))
+                               (bs2, args1,
+                                 (FStar_Syntax_Util.comp_result c1), []))
                   else
-                    if n_args = n_bs
-                    then
-                      (let uu___2 = FStar_Syntax_Subst.open_comp bs c in
-                       match uu___2 with
-                       | (bs1, c1) ->
-                           let uu___3 =
-                             FStar_Syntax_Util.is_tot_or_gtot_comp c1 in
-                           if uu___3
-                           then
-                             FStar_Pervasives_Native.Some
-                               (bs1, (FStar_Syntax_Util.comp_result c1))
-                           else FStar_Pervasives_Native.None)
-                    else FStar_Pervasives_Native.None in
+                    (let uu___2 = FStar_Syntax_Subst.open_comp bs c in
+                     match uu___2 with
+                     | (bs1, c1) ->
+                         let uu___3 =
+                           FStar_Syntax_Util.is_tot_or_gtot_comp c1 in
+                         if uu___3
+                         then
+                           let uu___4 = FStar_List.splitAt n_bs args1 in
+                           (match uu___4 with
+                            | (args2, remaining_args) ->
+                                FStar_Pervasives_Native.Some
+                                  (bs1, args2,
+                                    (FStar_Syntax_Util.comp_result c1),
+                                    remaining_args))
+                         else FStar_Pervasives_Native.None) in
                 FStar_Util.bind_opt bs_t_opt
                   (fun uu___1 ->
                      match uu___1 with
-                     | (bs1, t2) ->
+                     | (bs1, args2, t2, remaining_args) ->
                          let subst =
                            FStar_List.map2
                              (fun b ->
@@ -11416,14 +11419,17 @@ let rec (type_of_well_typed_term :
                                   FStar_Syntax_Syntax.NT
                                     ((b.FStar_Syntax_Syntax.binder_bv),
                                       (FStar_Pervasives_Native.fst a))) bs1
-                             args in
-                         let uu___2 = FStar_Syntax_Subst.subst subst t2 in
-                         FStar_Pervasives_Native.Some uu___2)
+                             args2 in
+                         let t3 = FStar_Syntax_Subst.subst subst t2 in
+                         if remaining_args = []
+                         then FStar_Pervasives_Native.Some t3
+                         else aux remaining_args t3)
             | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
-                aux x.FStar_Syntax_Syntax.sort
-            | FStar_Syntax_Syntax.Tm_ascribed (t2, uu___1, uu___2) -> aux t2
+                aux args1 x.FStar_Syntax_Syntax.sort
+            | FStar_Syntax_Syntax.Tm_ascribed (t2, uu___1, uu___2) ->
+                aux args1 t2
             | uu___1 -> FStar_Pervasives_Native.None in
-          FStar_Util.bind_opt t_hd aux
+          FStar_Util.bind_opt t_hd (aux args)
       | FStar_Syntax_Syntax.Tm_ascribed
           (uu___, (FStar_Util.Inl t2, uu___1), uu___2) ->
           FStar_Pervasives_Native.Some t2
