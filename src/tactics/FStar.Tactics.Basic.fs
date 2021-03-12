@@ -845,6 +845,10 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
+                  if Env.debug env <| Options.Other "FastImplicits"
+                  then BU.print2 "From tactics, checking that implicit %s has type %s, and is Tot or GTot\n"
+                         (Print.term_to_string term)
+                         (Print.term_to_string ctx_uvar.ctx_uvar_typ);
                   FStar.TypeChecker.TcTerm.check_well_typed_term_is_tot_or_gtot_at_type
                             env term ctx_uvar.ctx_uvar_typ false true
                 in

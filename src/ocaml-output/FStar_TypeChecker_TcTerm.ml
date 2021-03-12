@@ -11749,10 +11749,28 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
                      (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
                  }) k in
             let slow_path reason topt =
-              let uu___1 =
-                env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term env1 t
-                  must_tot in
-              match uu___1 with | (uu___2, uu___3, g) -> g in
+              if reason <> ""
+              then
+                (let uu___1 = FStar_Syntax_Print.term_to_string t in
+                 let uu___2 = FStar_Syntax_Print.term_to_string k in
+                 let uu___3 =
+                   FStar_Range.string_of_range t.FStar_Syntax_Syntax.pos in
+                 let uu___4 =
+                   match topt with
+                   | FStar_Pervasives_Native.None -> ""
+                   | FStar_Pervasives_Native.Some t1 ->
+                       let uu___5 =
+                         let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                         Prims.op_Hat uu___6 ")" in
+                       Prims.op_Hat "(" uu___5 in
+                 FStar_Util.print5
+                   "Fast check for (%s <: %s) at %s failed because %s %s\n"
+                   uu___1 uu___2 uu___3 reason uu___4)
+              else ();
+              (let uu___1 =
+                 env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term env1 t
+                   must_tot in
+               match uu___1 with | (uu___2, uu___3, g) -> g) in
             let continue_fast_path t1 =
               uvars_ok ||
                 ((let uu___ = FStar_All.pipe_right t1 FStar_Syntax_Free.uvars in

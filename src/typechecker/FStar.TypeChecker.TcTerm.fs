@@ -4056,7 +4056,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
 
   let slow_path (reason:string) (topt:option<term>) =
-    if false //reason <> "" //Env.debug env <| Options.Other "FastImplicits"
+    if reason <> "" //Env.debug env <| Options.Other "FastImplicits"
     then BU.print5 "Fast check for (%s <: %s) at %s failed because %s %s\n"
            (Print.term_to_string t)
            (Print.term_to_string k)
