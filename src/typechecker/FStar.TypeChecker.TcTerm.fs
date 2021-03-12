@@ -3941,29 +3941,30 @@ let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
 
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
-  | Tm_name _ -> Const.effect_Tot_lid |> Some
-  | Tm_lazy _ -> Const.effect_Tot_lid |> Some
-  | Tm_fvar _ -> Const.effect_Tot_lid |> Some
-  | Tm_uinst _ -> Const.effect_Tot_lid |> Some
-  | Tm_constant _ -> Const.effect_Tot_lid |> Some
-  | Tm_type _ -> Const.effect_Tot_lid |> Some
-  | Tm_abs _ -> Const.effect_Tot_lid |> Some
-  | Tm_arrow _ -> Const.effect_Tot_lid |> Some
-  | Tm_refine _ -> Const.effect_Tot_lid |> Some
+  | Tm_name _ -> Const.effect_PURE_lid |> Some
+  | Tm_lazy _ -> Const.effect_PURE_lid |> Some
+  | Tm_fvar _ -> Const.effect_PURE_lid |> Some
+  | Tm_uinst _ -> Const.effect_PURE_lid |> Some
+  | Tm_constant _ -> Const.effect_PURE_lid |> Some
+  | Tm_type _ -> Const.effect_PURE_lid |> Some
+  | Tm_abs _ -> Const.effect_PURE_lid |> Some
+  | Tm_arrow _ -> Const.effect_PURE_lid |> Some
+  | Tm_refine _ -> Const.effect_PURE_lid |> Some
   | Tm_app (hd, args) ->
     let join_effects eff1_opt eff2_opt =
       if eff1_opt |> is_none || eff2_opt |> is_none then
         (* let _ = BU.print_string "One of the effects to join is None\n" in *) None
       else
         let Some eff1, Some eff2 = eff1_opt, eff2_opt in
+        let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in
         // BU.print2 "Joining effects %s and %s\n" (Ident.string_of_lid eff1) (Ident.string_of_lid eff2);
-        let tot, gtot = Const.effect_Tot_lid, Const.effect_GTot_lid in
+        let pure, ghost = Const.effect_PURE_lid, Const.effect_GHOST_lid in
 
-        if lid_equals eff1 tot && lid_equals eff2 tot then Some tot
-        else if (lid_equals eff1 gtot ||
-                 lid_equals eff1 tot)
-             && (lid_equals eff2 gtot ||
-                 lid_equals eff2 tot) then Some gtot
+        if lid_equals eff1 pure && lid_equals eff2 pure then Some pure
+        else if (lid_equals eff1 ghost ||
+                 lid_equals eff1 pure)
+             && (lid_equals eff2 ghost ||
+                 lid_equals eff2 pure) then Some ghost
         else None in
 
     let eff_hd = effect_of_well_typed_term env hd in
@@ -4005,9 +4006,9 @@ let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
         | _ -> (* BU.print_string "Arrow type did not turn out to be an arrow?\n"; *) None)
   | Tm_ascribed (t, (Inl _, _), _) -> effect_of_well_typed_term env t
   | Tm_ascribed (_, (Inr c, _), _) ->
-    let c_eff = U.comp_effect_name c in
-    if lid_equals c_eff Const.effect_Tot_lid ||
-       lid_equals c_eff Const.effect_GTot_lid
+    let c_eff = c |> U.comp_effect_name |> Env.norm_eff_name env in
+    if lid_equals c_eff Const.effect_PURE_lid ||
+       lid_equals c_eff Const.effect_GHOST_lid
     then Some c_eff
     else None
   | Tm_uvar _ -> None
@@ -4056,7 +4057,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
 
   let slow_path (reason:string) (topt:option<term>) =
-    if reason <> "" //Env.debug env <| Options.Other "FastImplicits"
+    if false //reason <> "" //Env.debug env <| Options.Other "FastImplicits"
     then BU.print5 "Fast check for (%s <: %s) at %s failed because %s %s\n"
            (Print.term_to_string t)
            (Print.term_to_string k)
@@ -4072,7 +4073,6 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   
   let continue_fast_path t = uvars_ok || (t |> Free.uvars |> set_is_empty && t |> Free.univs |> set_is_empty) in
 
-  if not uvars_ok then slow_path "" None else
   if uvars_ok && env.phase1
   then Env.trivial_guard
   else
@@ -4087,14 +4087,14 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
         if not (continue_fast_path k')
         then slow_path "" (Some k')
         else if env.phase1 then Env.trivial_guard
+        else if not must_tot then TcUtil.check_has_type env t k' k
+        else if N.non_info_norm env k then TcUtil.check_has_type env t k' k
         else
           let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
           match eff_opt with
           | None -> slow_path "could not compute the effect" None
           | Some eff ->
-            if not must_tot ||
-               lid_equals eff Const.effect_Tot_lid ||
-               N.non_info_norm env k
+            if lid_equals eff Const.effect_PURE_lid
             then (* let _ = BU.print_string "Finishing on fast path!\n" in *) TcUtil.check_has_type env t k' k
             else raise_error (Errors.Fatal_UnexpectedImplictArgument,
                    (BU.format1 "Implicit argument %s is GTot, expected a Tot" (Print.term_to_string t)))
