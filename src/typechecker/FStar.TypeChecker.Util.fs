@@ -302,10 +302,10 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
            && Options.ml_ish() //NS: Disabling this optimization temporarily
            then S.tun
            else let ret_wp = ed |> U.get_return_vc_combinator in
-                N.normalize [Env.Beta; Env.NoFullNorm] env
-                            (mk_Tm_app (inst_effect_fun_with [u_a] env ed ret_wp)
-                                       [S.as_arg a; S.as_arg e]
-                                       e.pos) in
+                mk_Tm_app
+                  (inst_effect_fun_with [u_a] env ed ret_wp)
+                  [S.as_arg a; S.as_arg e]
+                  e.pos in
          mk_comp ed u_a a wp [RETURN]
   in
   if debug env <| Options.Other "Return"
@@ -1773,8 +1773,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
     let should_coerce =
-         not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
-      || env.phase1 // otherwise only on phase1
+        env.phase1
       || env.lax
       || Options.lax ()
     in
