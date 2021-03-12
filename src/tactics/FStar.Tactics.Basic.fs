@@ -147,8 +147,7 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
     try
         let res =
           if allow_guards
-          then let env = { env with unif_allow_ref_guards = allow_guards } in
-               Rel.try_teq false env t1 t2
+          then Rel.try_teq true env t1 t2
           else Rel.teq_nosmt env t1 t2
         in
         if dbg then
@@ -160,7 +159,7 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
         match res with
         | None ->
           ret None
-        | Some g -> 
+        | Some g ->
           bind (add_implicits g.implicits) (fun () ->
           ret (Some g))
 
