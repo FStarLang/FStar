@@ -3876,7 +3876,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
 
   | Tm_app(hd, args) ->
     let t_hd = type_of_well_typed_term env hd in
-    let rec aux t_hd =
+    let rec aux args t_hd =
       match (N.unfold_whnf env t_hd).n with
       | Tm_arrow(bs, c) ->
         let n_args = List.length args in
@@ -3886,22 +3886,23 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
           then let bs, rest = BU.first_N n_args bs in
                let t = S.mk (Tm_arrow (rest, c)) t_hd.pos in
                let bs, c = SS.open_comp bs (S.mk_Total t) in
-               Some (bs, U.comp_result c)
-          else if n_args = n_bs
-          then let bs, c = SS.open_comp bs c in
-               if U.is_tot_or_gtot_comp c
-               then Some (bs, U.comp_result c)
+               Some (bs, args, U.comp_result c, [])
+          else let bs, c = SS.open_comp bs c in
+               if U.is_tot_or_gtot_comp c  //AR: TODO: why are we checking this?
+               then let args, remaining_args = List.splitAt n_bs args in
+                    Some (bs, args, U.comp_result c, remaining_args)
                else None
-          else None
         in
-        bind_opt bs_t_opt (fun (bs, t) ->
+        bind_opt bs_t_opt (fun (bs, args, t, remaining_args) ->
           let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
-          Some (SS.subst subst t))
-      | Tm_refine(x, _) -> aux x.sort
-      | Tm_ascribed(t, _, _) -> aux t
+          let t = SS.subst subst t in
+          if remaining_args = [] then Some t
+          else aux remaining_args t)
+      | Tm_refine(x, _) -> aux args x.sort
+      | Tm_ascribed(t, _, _) -> aux args t
       | _ -> None
     in
-    bind_opt t_hd aux
+    bind_opt t_hd (aux args)
 
   | Tm_ascribed(_, (Inl t, _), _) -> Some t
   | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
