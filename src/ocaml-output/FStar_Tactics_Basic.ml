@@ -2621,30 +2621,6 @@ let (t_apply_lemma :
                                                                     ->
                                                                     let g_typ
                                                                     =
-                                                                    (
-                                                                    let uu___21
-                                                                    =
-                                                                    FStar_All.pipe_left
-                                                                    (FStar_TypeChecker_Env.debug
-                                                                    env1)
-                                                                    (FStar_Options.Other
-                                                                    "FastImplicits") in
-                                                                    if
-                                                                    uu___21
-                                                                    then
-                                                                    let uu___22
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    term in
-                                                                    let uu___23
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                                    FStar_Util.print2
-                                                                    "From tactics, checking that implicit %s has type %s, and is Tot or GTot\n"
-                                                                    uu___22
-                                                                    uu___23
-                                                                    else ());
                                                                     FStar_TypeChecker_TcTerm.check_well_typed_term_is_tot_or_gtot_at_type
                                                                     env1 term
                                                                     ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ
