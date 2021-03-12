@@ -3807,7 +3807,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | Tm_type u ->
     Some (mk_tm_type (U_succ u))
 
-  | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=Some tbody})) ->
+  | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=tbody})) ->
     let mk_comp =
       if Ident.lid_equals eff Const.effect_Tot_lid
       then Some S.mk_Total'
@@ -3816,8 +3816,15 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
       else None
     in
     BU.bind_opt mk_comp (fun f ->
-    BU.bind_opt (universe_of_well_typed_term env tbody) (fun u ->
-    Some (S.mk (Tm_arrow(bs, f tbody (Some u))) t.pos)))
+      let tbody =
+        match tbody with
+        | Some _ -> tbody
+        | None ->
+          let bs, body = SS.open_term bs body in
+          BU.map_opt (type_of_well_typed_term (Env.push_binders env bs) body) (SS.close bs) in
+    BU.bind_opt tbody (fun tbody ->
+      BU.bind_opt (universe_of_well_typed_term env tbody) (fun u ->
+      Some (S.mk (Tm_arrow(bs, f tbody (Some u))) t.pos))))
 
   | Tm_arrow(bs, c) ->
     let bs, c = SS.open_comp bs c in
@@ -3913,9 +3920,17 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | _ -> failwith "Impossible!"
 
 and universe_of_well_typed_term env t =
-  match type_of_well_typed_term env t with
-  | Some ({n=Tm_type u}) -> Some u
-  | _ -> None
+  bind_opt (type_of_well_typed_term env t) (fun k ->
+    let rec aux (maybe_norm:bool) (k:typ) =
+      match (SS.compress k).n with
+      | Tm_type u -> Some u
+      | Tm_meta (k, _) -> aux maybe_norm k
+      | Tm_refine (x, _) -> aux maybe_norm x.sort
+      | Tm_ascribed (k, _, _) -> aux maybe_norm k
+      | _ ->
+        if maybe_norm then aux false (N.unfold_whnf env k)
+        else None in
+    aux true k)
 
 let type_of_well_typed_tot_or_gtot_term env t = type_of_well_typed_term env t
 
@@ -4040,7 +4055,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
 
   let slow_path (reason:string) (topt:option<term>) =
-    if Env.debug env <| Options.Other "FastImplicits"
+    if false //reason <> "" //Env.debug env <| Options.Other "FastImplicits"
     then BU.print5 "Fast check for (%s <: %s) at %s failed because %s %s\n"
            (Print.term_to_string t)
            (Print.term_to_string k)
@@ -4057,15 +4072,15 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   let continue_fast_path t = uvars_ok || (t |> Free.uvars |> set_is_empty && t |> Free.univs |> set_is_empty) in
 
   if not (continue_fast_path t)
-  then slow_path "t has uvars" (Some t)
+  then slow_path "" (Some t)
   else if not (continue_fast_path k)
-  then slow_path "k has uvars" (Some k)
+  then slow_path "" (Some k)
   else
     match type_of_well_typed_tot_or_gtot_term env t with
     | None -> slow_path "could not compute the type" None
     | Some k' ->
       if not (continue_fast_path k')
-      then slow_path "k' has uvars" (Some k')
+      then slow_path "" (Some k')
       else
         let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
         match eff_opt with
@@ -4074,7 +4089,7 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
           if not must_tot ||
              lid_equals eff Const.effect_Tot_lid ||
              N.non_info_norm env k
-          then TcUtil.check_has_type env t k' k
+          then (* let _ = BU.print_string "Finishing on fast path!\n" in *) TcUtil.check_has_type env t k' k
           else raise_error (Errors.Fatal_UnexpectedImplictArgument,
                  (BU.format1 "Implicit argument %s is GTot, expected a Tot" (Print.term_to_string t)))
                  t.pos
