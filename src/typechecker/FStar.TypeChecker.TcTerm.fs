@@ -3920,6 +3920,9 @@ and universe_of_well_typed_term env t =
 let type_of_well_typed_tot_or_gtot_term env t = type_of_well_typed_term env t
 
 let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
+  // if Env.debug env <| Options.Other "FastImplicits"
+  // then BU.print1 "Computing effect of well-typed term: %s\n" (Print.term_to_string t);
+
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
   | Tm_name _ -> Const.effect_Tot_lid |> Some
@@ -3933,16 +3936,18 @@ let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
   | Tm_refine _ -> Const.effect_Tot_lid |> Some
   | Tm_app (hd, args) ->
     let join_effects eff1_opt eff2_opt =
-      if eff1_opt |> is_none || eff2_opt |> is_none then None
+      if eff1_opt |> is_none || eff2_opt |> is_none then
+        (* let _ = BU.print_string "One of the effects to join is None\n" in *) None
       else
         let Some eff1, Some eff2 = eff1_opt, eff2_opt in
+        // BU.print2 "Joining effects %s and %s\n" (Ident.string_of_lid eff1) (Ident.string_of_lid eff2);
         let tot, gtot = Const.effect_Tot_lid, Const.effect_GTot_lid in
 
         if lid_equals eff1 tot && lid_equals eff2 tot then Some tot
         else if (lid_equals eff1 gtot ||
                  lid_equals eff1 tot)
              && (lid_equals eff2 gtot ||
-                 lid_equals eff2 gtot) then Some gtot
+                 lid_equals eff2 tot) then Some gtot
         else None in
 
     let eff_hd = effect_of_well_typed_term env hd in
@@ -3950,10 +3955,19 @@ let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
       args
       |> List.map fst
       |> List.map (effect_of_well_typed_term env) in
+    // BU.print4 "Effect of hd %s is %s, and effects for args %s are %s\n"
+    //   (Print.term_to_string hd)
+    //   (match eff_hd with | None -> "None" | Some l -> Ident.string_of_lid l)
+    //   (Print.args_to_string args)
+    //   (List.fold_left (fun acc l -> acc ^ "; " ^ (match l with | None -> "None" | Some l -> Ident.string_of_lid l)) "" eff_args);
     let eff_hd_and_args = List.fold_left join_effects eff_hd eff_args in
-    if eff_hd_and_args |> is_none then None
+    if eff_hd_and_args |> is_none then
+      (* let _ = BU.print_string "eff_hd_and_args turned out to be None\n" in *) None
     else
       let t_hd = type_of_well_typed_term env hd in
+      // if Env.debug env <| Options.Other "FastImplicits"
+      // then BU.print2 "Computing type of hd %s to be %s\n" (Print.term_to_string hd)
+      //        (match t_hd with | None -> "None" | Some k -> Print.term_to_string k);
       if t_hd = None then None
       else
         let Some t_hd = t_hd in
@@ -3972,8 +3986,8 @@ let rec effect_of_well_typed_term (env:env) (t:term) : option<lident> =
             else U.comp_effect_name c |> Some in
           join_effects eff_hd_and_args eff_app
 
-        | _ -> None)
-  | Tm_ascribed (_, (Inl t, _), _) -> None
+        | _ -> (* BU.print_string "Arrow type did not turn out to be an arrow?\n"; *) None)
+  | Tm_ascribed (t, (Inl _, _), _) -> effect_of_well_typed_term env t
   | Tm_ascribed (_, (Inr c, _), _) ->
     let c_eff = U.comp_effect_name c in
     if lid_equals c_eff Const.effect_Tot_lid ||
@@ -4052,17 +4066,17 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
     | Some k' ->
       if not (continue_fast_path k')
       then slow_path "k' has uvars" (Some k')
-      else if (not must_tot) || N.non_info_norm env k
-      then TcUtil.check_has_type env t k' k
       else
         let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
         match eff_opt with
         | None -> slow_path "could not compute the effect" None
         | Some eff ->
-          if lid_equals eff Const.effect_GTot_lid
-          then raise_error (Errors.Fatal_UnexpectedImplictArgument,
+          if not must_tot ||
+             lid_equals eff Const.effect_Tot_lid ||
+             N.non_info_norm env k
+          then TcUtil.check_has_type env t k' k
+          else raise_error (Errors.Fatal_UnexpectedImplictArgument,
                  (BU.format1 "Implicit argument %s is GTot, expected a Tot" (Print.term_to_string t)))
                  t.pos
-          else TcUtil.check_has_type env t k' k
-
+        
 let check_type_and_effect_of_well_typed_tot_or_gtot_term env t k must_total = check_well_typed_term_is_tot_or_gtot_at_type env t k must_total false
