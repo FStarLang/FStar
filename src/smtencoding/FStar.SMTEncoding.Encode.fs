@@ -1518,7 +1518,21 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
-                        let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
+                        let binder_t = norm_with_steps [Env.AllowUnboundUniverses;
+                                                        Env.Beta;
+                                                       (* we don't know if this will terminate; so don't do recursive steps *)
+                                                        Env.Exclude Env.Zeta;
+                                                        Env.UnfoldUntil delta_constant;
+                                                        Env.EraseUniverses;
+                                                        Env.Unascribe]
+                                                        env''.tcenv
+                                                        formal.binder_bv.sort
+                        in
+                        if Env.debug env''.tcenv <| Options.Other "WFF"
+                        then BU.print2 "Normalized %s to %s\n"
+                               (Print.term_to_string                                                         formal.binder_bv.sort)
+                               (Print.term_to_string (U.unrefine binder_t));
+                        let bs, c = U.arrow_formals_comp (U.unrefine binder_t) in
                         match bs with
                         | [] -> codomain_prec_l, cod_decls
                         | _ when not (U.is_tot_or_gtot_comp c) -> codomain_prec_l, cod_decls

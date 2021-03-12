@@ -110,3 +110,14 @@ let wf_test1 (#a:_) (x:test1 a) (y:nat)
 let rec map_test2 (#a #b:Type) (t:test2 a) (f: a -> b) : test2 b =
     let Test2 (Test1 g) = t in
     Test2 (Test1 (fun (x:nat) -> wf_test1 (Test1 g) x; map_test2 #a #b (g x) f))
+
+//////////////////////////////////////////////////////////////////////////////////////////
+module F = FStar.FunctionalExtensionality
+open FStar.FunctionalExtensionality
+noeq
+type tf =
+  | TF: f:(nat ^-> tf) -> tf
+
+let rec test_tf (f:tf) =
+    match f with
+    | TF g -> TF (on_dom nat (fun x -> test_tf (g x)))
