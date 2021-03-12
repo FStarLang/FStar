@@ -11222,8 +11222,7 @@ let rec (type_of_well_typed_term :
       | FStar_Syntax_Syntax.Tm_abs
           (bs, body, FStar_Pervasives_Native.Some
            { FStar_Syntax_Syntax.residual_effect = eff;
-             FStar_Syntax_Syntax.residual_typ = FStar_Pervasives_Native.Some
-               tbody;
+             FStar_Syntax_Syntax.residual_typ = tbody;
              FStar_Syntax_Syntax.residual_flags = uu___;_})
           ->
           let mk_comp =
@@ -11241,19 +11240,34 @@ let rec (type_of_well_typed_term :
                else FStar_Pervasives_Native.None) in
           FStar_Util.bind_opt mk_comp
             (fun f ->
-               let uu___1 = universe_of_well_typed_term env tbody in
-               FStar_Util.bind_opt uu___1
-                 (fun u ->
-                    let uu___2 =
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 =
-                            f tbody (FStar_Pervasives_Native.Some u) in
-                          (bs, uu___5) in
-                        FStar_Syntax_Syntax.Tm_arrow uu___4 in
-                      FStar_Syntax_Syntax.mk uu___3
-                        t1.FStar_Syntax_Syntax.pos in
-                    FStar_Pervasives_Native.Some uu___2))
+               let tbody1 =
+                 match tbody with
+                 | FStar_Pervasives_Native.Some uu___1 -> tbody
+                 | FStar_Pervasives_Native.None ->
+                     let uu___1 = FStar_Syntax_Subst.open_term bs body in
+                     (match uu___1 with
+                      | (bs1, body1) ->
+                          let uu___2 =
+                            let uu___3 =
+                              FStar_TypeChecker_Env.push_binders env bs1 in
+                            type_of_well_typed_term uu___3 body1 in
+                          FStar_Util.map_opt uu___2
+                            (FStar_Syntax_Subst.close bs1)) in
+               FStar_Util.bind_opt tbody1
+                 (fun tbody2 ->
+                    let uu___1 = universe_of_well_typed_term env tbody2 in
+                    FStar_Util.bind_opt uu___1
+                      (fun u ->
+                         let uu___2 =
+                           let uu___3 =
+                             let uu___4 =
+                               let uu___5 =
+                                 f tbody2 (FStar_Pervasives_Native.Some u) in
+                               (bs, uu___5) in
+                             FStar_Syntax_Syntax.Tm_arrow uu___4 in
+                           FStar_Syntax_Syntax.mk uu___3
+                             t1.FStar_Syntax_Syntax.pos in
+                         FStar_Pervasives_Native.Some uu___2)))
       | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
           let uu___ = FStar_Syntax_Subst.open_comp bs c in
           (match uu___ with
@@ -11437,13 +11451,28 @@ and (universe_of_well_typed_term :
   fun env ->
     fun t ->
       let uu___ = type_of_well_typed_term env t in
-      match uu___ with
-      | FStar_Pervasives_Native.Some
-          { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_type u;
-            FStar_Syntax_Syntax.pos = uu___1;
-            FStar_Syntax_Syntax.vars = uu___2;_}
-          -> FStar_Pervasives_Native.Some u
-      | uu___1 -> FStar_Pervasives_Native.None
+      FStar_Util.bind_opt uu___
+        (fun k ->
+           let rec aux maybe_norm k1 =
+             let uu___1 =
+               let uu___2 = FStar_Syntax_Subst.compress k1 in
+               uu___2.FStar_Syntax_Syntax.n in
+             match uu___1 with
+             | FStar_Syntax_Syntax.Tm_type u ->
+                 FStar_Pervasives_Native.Some u
+             | FStar_Syntax_Syntax.Tm_meta (k2, uu___2) -> aux maybe_norm k2
+             | FStar_Syntax_Syntax.Tm_refine (x, uu___2) ->
+                 aux maybe_norm x.FStar_Syntax_Syntax.sort
+             | FStar_Syntax_Syntax.Tm_ascribed (k2, uu___2, uu___3) ->
+                 aux maybe_norm k2
+             | uu___2 ->
+                 if maybe_norm
+                 then
+                   let uu___3 =
+                     FStar_TypeChecker_Normalize.unfold_whnf env k1 in
+                   aux false uu___3
+                 else FStar_Pervasives_Native.None in
+           aux true k)
 let (type_of_well_typed_tot_or_gtot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -11714,31 +11743,10 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
                      (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
                  }) k in
             let slow_path reason topt =
-              (let uu___1 =
-                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env1)
-                   (FStar_Options.Other "FastImplicits") in
-               if uu___1
-               then
-                 let uu___2 = FStar_Syntax_Print.term_to_string t in
-                 let uu___3 = FStar_Syntax_Print.term_to_string k in
-                 let uu___4 =
-                   FStar_Range.string_of_range t.FStar_Syntax_Syntax.pos in
-                 let uu___5 =
-                   match topt with
-                   | FStar_Pervasives_Native.None -> ""
-                   | FStar_Pervasives_Native.Some t1 ->
-                       let uu___6 =
-                         let uu___7 = FStar_Syntax_Print.term_to_string t1 in
-                         Prims.op_Hat uu___7 ")" in
-                       Prims.op_Hat "(" uu___6 in
-                 FStar_Util.print5
-                   "Fast check for (%s <: %s) at %s failed because %s %s\n"
-                   uu___2 uu___3 uu___4 reason uu___5
-               else ());
-              (let uu___1 =
-                 env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term env1 t
-                   must_tot in
-               match uu___1 with | (uu___2, uu___3, g) -> g) in
+              let uu___1 =
+                env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term env1 t
+                  must_tot in
+              match uu___1 with | (uu___2, uu___3, g) -> g in
             let continue_fast_path t1 =
               uvars_ok ||
                 ((let uu___ = FStar_All.pipe_right t1 FStar_Syntax_Free.uvars in
@@ -11749,13 +11757,13 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
             let uu___ =
               let uu___1 = continue_fast_path t in Prims.op_Negation uu___1 in
             if uu___
-            then slow_path "t has uvars" (FStar_Pervasives_Native.Some t)
+            then slow_path "" (FStar_Pervasives_Native.Some t)
             else
               (let uu___2 =
                  let uu___3 = continue_fast_path k in
                  Prims.op_Negation uu___3 in
                if uu___2
-               then slow_path "k has uvars" (FStar_Pervasives_Native.Some k)
+               then slow_path "" (FStar_Pervasives_Native.Some k)
                else
                  (let uu___4 = type_of_well_typed_tot_or_gtot_term env1 t in
                   match uu___4 with
@@ -11767,9 +11775,7 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
                         let uu___6 = continue_fast_path k' in
                         Prims.op_Negation uu___6 in
                       if uu___5
-                      then
-                        slow_path "k' has uvars"
-                          (FStar_Pervasives_Native.Some k')
+                      then slow_path "" (FStar_Pervasives_Native.Some k')
                       else
                         (let eff_opt =
                            effect_of_well_typed_tot_or_gtot_term env1 t in
