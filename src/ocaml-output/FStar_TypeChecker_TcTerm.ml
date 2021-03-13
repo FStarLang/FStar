@@ -11396,12 +11396,10 @@ let rec (type_of_well_typed_term :
                     (let uu___2 = FStar_Syntax_Subst.open_comp bs c in
                      match uu___2 with
                      | (bs1, c1) ->
-                         let uu___3 =
-                           FStar_Syntax_Util.is_tot_or_gtot_comp c1 in
-                         if uu___3
+                         if true
                          then
-                           let uu___4 = FStar_List.splitAt n_bs args1 in
-                           (match uu___4 with
+                           let uu___3 = FStar_List.splitAt n_bs args1 in
+                           (match uu___3 with
                             | (args2, remaining_args) ->
                                 FStar_Pervasives_Native.Some
                                   (bs1, args2,
@@ -11779,13 +11777,14 @@ let (check_well_typed_term_is_tot_or_gtot_at_type :
                  let uu___2 = continue_fast_path t in
                  Prims.op_Negation uu___2 in
                if uu___1
-               then slow_path "" (FStar_Pervasives_Native.Some t)
+               then slow_path "t has uvars" (FStar_Pervasives_Native.Some t)
                else
                  (let uu___3 =
                     let uu___4 = continue_fast_path k in
                     Prims.op_Negation uu___4 in
                   if uu___3
-                  then slow_path "" (FStar_Pervasives_Native.Some k)
+                  then
+                    slow_path "k has uvars" (FStar_Pervasives_Native.Some k)
                   else
                     (let uu___5 = type_of_well_typed_tot_or_gtot_term env1 t in
                      match uu___5 with
