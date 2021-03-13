@@ -3888,7 +3888,7 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
                let bs, c = SS.open_comp bs (S.mk_Total t) in
                Some (bs, args, U.comp_result c, [])
           else let bs, c = SS.open_comp bs c in
-               if U.is_tot_or_gtot_comp c  //AR: TODO: why are we checking this?
+               if true //U.is_tot_or_gtot_comp c  //AR: TODO: why are we checking this?
                then let args, remaining_args = List.splitAt n_bs args in
                     Some (bs, args, U.comp_result c, remaining_args)
                else None
@@ -4077,9 +4077,9 @@ let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (mus
   then Env.trivial_guard
   else
     if not (continue_fast_path t)
-    then slow_path "" (Some t)
+    then slow_path "t has uvars" (Some t)
     else if not (continue_fast_path k)
-    then slow_path "" (Some k)
+    then slow_path "k has uvars" (Some k)
     else
       match type_of_well_typed_tot_or_gtot_term env t with
       | None -> slow_path "could not compute the type" None
