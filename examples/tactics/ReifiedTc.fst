@@ -50,6 +50,6 @@ let test1 =
     assert (reify (test_return ()) === return_elab true)
         by (apply_lemma (`eq_any))
 
-// let test2 =
-//     assert (set_range_of 1 (range_of 2) === 1)
-//         by (apply_lemma (`eq_any))
+let test2 =
+    assert (set_range_of 1 (range_of 2) === 1)
+        by (apply_lemma (`eq_any))
