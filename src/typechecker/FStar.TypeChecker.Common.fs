@@ -262,6 +262,7 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
+  g_type_probs_for_solved_probs:    list<(typ * typ)>;
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
@@ -270,6 +271,7 @@ let trivial_guard = {
   guard_f=Trivial;
   deferred_to_tac=[];
   deferred=[];
+  g_type_probs_for_solved_probs=[];
   univ_ineqs=([], []);
   implicits=[]
 }
@@ -292,7 +294,8 @@ let imp_guard_f g1 g2 = match g1, g2 with
 let binop_guard f g1 g2 = {
   guard_f=f g1.guard_f g2.guard_f;
   deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
-  deferred=g1.deferred@g2.deferred;
+  deferred=g1.deferred@g2.deferred; 
+g_type_probs_for_solved_probs=g1.g_type_probs_for_solved_probs@g2.g_type_probs_for_solved_probs;
   univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
               snd g1.univ_ineqs@snd g2.univ_ineqs);
   implicits=g1.implicits@g2.implicits

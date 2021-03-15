@@ -135,6 +135,7 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
+  g_type_probs_for_solved_probs:    list<(typ * typ)>;
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
@@ -175,3 +176,4 @@ val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
 val simplify : debug:bool -> term -> term
+
