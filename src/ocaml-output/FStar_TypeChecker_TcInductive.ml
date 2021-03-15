@@ -2424,6 +2424,9 @@ let (check_inductive_well_typedness :
                                  (uu___5.FStar_TypeChecker_Common.deferred_to_tac);
                                FStar_TypeChecker_Common.deferred =
                                  (uu___5.FStar_TypeChecker_Common.deferred);
+                               FStar_TypeChecker_Common.g_type_probs_for_solved_probs
+                                 =
+                                 (uu___5.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (tc_universe_vars,
                                    (FStar_Pervasives_Native.snd

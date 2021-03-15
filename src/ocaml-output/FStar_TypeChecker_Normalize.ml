@@ -8038,7 +8038,7 @@ let (eta_expand :
                          then t
                          else
                            (let uu___5 =
-                              env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term
+                              env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
                                 (let uu___6 = env1 in
                                  {
                                    FStar_TypeChecker_Env.solver =
@@ -8094,17 +8094,17 @@ let (eta_expand :
                                      (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
                                    FStar_TypeChecker_Env.tc_term =
                                      (uu___6.FStar_TypeChecker_Env.tc_term);
-                                   FStar_TypeChecker_Env.type_of_tot_or_gtot_term
+                                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term
                                      =
-                                     (uu___6.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
-                                   FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term
+                                     (uu___6.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+                                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term_fastpath
                                      =
-                                     (uu___6.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
+                                     (uu___6.FStar_TypeChecker_Env.typeof_tot_or_gtot_term_fastpath);
                                    FStar_TypeChecker_Env.universe_of =
                                      (uu___6.FStar_TypeChecker_Env.universe_of);
-                                   FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+                                   FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                      =
-                                     (uu___6.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
+                                     (uu___6.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
                                    FStar_TypeChecker_Env.use_bv_sorts = true;
                                    FStar_TypeChecker_Env.qtbl_name_and_index
                                      =
@@ -8151,7 +8151,7 @@ let (eta_expand :
                                 eta_expand_with_type env1 t ty))
                 | uu___3 ->
                     let uu___4 =
-                      env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term
+                      env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
                         (let uu___5 = env1 in
                          {
                            FStar_TypeChecker_Env.solver =
@@ -8207,16 +8207,16 @@ let (eta_expand :
                              (uu___5.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
                              (uu___5.FStar_TypeChecker_Env.tc_term);
-                           FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
-                             (uu___5.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
-                           FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term
+                           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
+                             (uu___5.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+                           FStar_TypeChecker_Env.typeof_tot_or_gtot_term_fastpath
                              =
-                             (uu___5.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
+                             (uu___5.FStar_TypeChecker_Env.typeof_tot_or_gtot_term_fastpath);
                            FStar_TypeChecker_Env.universe_of =
                              (uu___5.FStar_TypeChecker_Env.universe_of);
-                           FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+                           FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                              =
-                             (uu___5.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
+                             (uu___5.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
                            FStar_TypeChecker_Env.use_bv_sorts = true;
                            FStar_TypeChecker_Env.qtbl_name_and_index =
                              (uu___5.FStar_TypeChecker_Env.qtbl_name_and_index);
