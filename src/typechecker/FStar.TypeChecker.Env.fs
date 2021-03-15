@@ -175,10 +175,10 @@ and env = {
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  typeof_tot_or_gtot_term:env -> term -> must_tot:bool -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  typeof_tot_or_gtot_term:env -> term -> bool -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   typeof_tot_or_gtot_term_fastpath  :env -> term -> option<typ>;       (* a callback to the type-checker, uses fast path *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> must_tot:bool -> uvars_ok:bool -> guard_t;
+  tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> bool -> bool -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
