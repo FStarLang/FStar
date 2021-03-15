@@ -22,13 +22,11 @@ val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t
 val tc_comp: env -> comp -> comp * universe * guard_t
 val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * list<term> * Env.env * term * term * guard_t * bool
-val type_of_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard_t
+val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard_t
 val universe_of: env -> term -> universe
-val type_of_well_typed_tot_or_gtot_term: env -> term -> option<typ>
+val typeof_tot_or_gtot_term_fastpath: env -> term -> option<typ>
 
-val check_well_typed_term_is_tot_or_gtot_at_type: env -> term -> typ -> bool -> bool -> guard_t
-val check_type_and_effect_of_well_typed_tot_or_gtot_term: env -> term -> typ -> bool -> guard_t
-//val check_type_of_well_typed_term': bool -> env -> term -> typ -> guard_t // always fast
+val tc_check_tot_or_gtot_term_maybe_fastpath: env -> term -> typ -> must_tot:bool -> uvars_ok:bool -> guard_t
 
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
 //the last string argument is the reason to be printed in the error message
