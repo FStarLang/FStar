@@ -150,10 +150,10 @@ and env = {
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of_tot_or_gtot_term:env -> term ->must_tot:bool->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
-  type_of_well_typed_tot_or_gtot_term :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
+  typeof_tot_or_gtot_term:env -> term -> must_tot:bool ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
+  typeof_tot_or_gtot_term_fastpath :env -> term -> option<typ>;    (* a callback to the type-checker, uses fast path *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_and_effect_of_well_typed_tot_or_gtot_term:env -> term -> typ -> bool -> guard_t;
+  tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> must_tot:bool -> uvars_ok:bool -> guard_t;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -201,12 +201,13 @@ val preprocess : env -> term -> term -> term
 val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
+
 val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*lcomp*guard_t) ->
                   (env -> term -> bool -> term*typ*guard_t) ->
                   (env -> term -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (env -> term -> typ -> bool -> guard_t) ->
+                  (env -> term -> typ -> bool -> bool -> guard_t) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 
@@ -441,3 +442,5 @@ val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.
 for either not a recursive let, or one that does not need the totality
 check. *)
 val get_letrec_arity : env -> lbname -> option<int>
+
+val tc_tot_or_gtot_term_maybe_fastpath : env -> term -> typ
