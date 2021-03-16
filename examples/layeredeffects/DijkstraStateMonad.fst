@@ -158,18 +158,18 @@ let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m 
   = match f with
     | Ret x ->
       assert (bind_m f g == g x);
-      assert_norm (wp_of #a #s (Ret x) `F.feq` (fun s0 post -> post (x, s0))); admit ()
-      // assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
-      //      by (T.dump "A";
-      //          T.norm [zeta; iota; delta];
-      //          T.dump "B";
-      //          let x = T.forall_intro () in
-      //          T.dump "C";
-      //          // This should just be T.mapply (`eta), but the unifier
-      //          // will eagerly solve universe constraints and compute a
-      //          // wrong for the first universe level.
-      //          T.mapply (quote (eta u#(max bb 1) u#1));
-      //          T.dump "D")
+      assert_norm (wp_of #a #s (Ret x) `F.feq` (fun s0 post -> post (x, s0)));
+      assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
+           by (T.dump "A";
+               T.norm [zeta; iota; delta];
+               T.dump "B";
+               let x = T.forall_intro () in
+               T.dump "C";
+               // This should just be T.mapply (`eta), but the unifier
+               // will eagerly solve universe constraints and compute a
+               // wrong for the first universe level.
+               T.mapply (quote (eta u#(max bb 1) u#1));
+               T.dump "D")
 
     | Put s k ->
       bind_wp_lem' k g;
