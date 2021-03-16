@@ -864,11 +864,11 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
          | None -> (*BU.print1 "Rel returning None since could not compute type of %s" (Print.term_to_string t);*) l  //AR: TODO: why would we get None here?
          | Some t1 ->
            let t2 = ctx_uvar.ctx_uvar_typ in
-           BU.print4 "Setting %s to %s, adding a sub problem %s <: %s\n"
-             (Print.ctx_uvar_to_string ctx_uvar)
-             (Print.term_to_string t)
-             (Print.term_to_string t1)
-             (Print.term_to_string t2);
+           // BU.print4 "Setting %s to %s, adding a sub problem %s <: %s\n"
+           //   (Print.ctx_uvar_to_string ctx_uvar)
+           //   (Print.term_to_string t)
+           //   (Print.term_to_string t1)
+           //   (Print.term_to_string t2);
            //BU.print2 "Rel adding %s <: %s to list l\n" (Print.term_to_string t1) (Print.term_to_string t2);
            (t1, t2)::l)
       | _ -> l) [] uvis in
@@ -4237,8 +4237,8 @@ let rec resolve_implicits' env is_tac g =
     else if not (no_uvars t1 || no_uvars t2)
     then ()
     else
-      let _ = BU.print2 "resolve_implicits found a problem that could benefit: %s <: %s\n"
-                (Print.term_to_string t1) (Print.term_to_string t2) in
+      // let _ = BU.print2 "resolve_implicits found a problem that could benefit: %s <: %s\n"
+      //           (Print.term_to_string t1) (Print.term_to_string t2) in
       match subtype_nosmt env t1 t2 with
       | None -> ()
       | Some g -> force_trivial_guard env g;

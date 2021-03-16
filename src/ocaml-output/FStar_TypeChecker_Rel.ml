@@ -2073,21 +2073,7 @@ let (solve_prob' :
                             | FStar_Pervasives_Native.Some t11 ->
                                 let t2 =
                                   ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                ((let uu___3 =
-                                    FStar_Syntax_Print.ctx_uvar_to_string
-                                      ctx_uvar in
-                                  let uu___4 =
-                                    FStar_Syntax_Print.term_to_string t in
-                                  let uu___5 =
-                                    FStar_Syntax_Print.term_to_string t11 in
-                                  let uu___6 =
-                                    FStar_Syntax_Print.term_to_string t2 in
-                                  FStar_Util.print4
-                                    "Setting %s to %s, adding a sub problem %s <: %s\n"
-                                    uu___3 uu___4 uu___5 uu___6);
-                                 (t11, t2)
-                                 ::
-                                 l))
+                                (t11, t2) :: l)
                        | uu___2 -> l) [] uvis in
               let ts =
                 FStar_List.append wl1.type_probs_for_solved_probs typ_tuples in
@@ -12470,17 +12456,12 @@ let rec (resolve_implicits' :
                     if uu___4
                     then ()
                     else
-                      ((let uu___7 = FStar_Syntax_Print.term_to_string t1 in
-                        let uu___8 = FStar_Syntax_Print.term_to_string t2 in
-                        FStar_Util.print2
-                          "resolve_implicits found a problem that could benefit: %s <: %s\n"
-                          uu___7 uu___8);
-                       (let uu___7 = subtype_nosmt env t1 t2 in
-                        match uu___7 with
-                        | FStar_Pervasives_Native.None -> ()
-                        | FStar_Pervasives_Native.Some g1 ->
-                            (force_trivial_guard env g1;
-                             FStar_Util.print_string "")))))
+                      (let uu___6 = subtype_nosmt env t1 t2 in
+                       match uu___6 with
+                       | FStar_Pervasives_Native.None -> ()
+                       | FStar_Pervasives_Native.Some g1 ->
+                           (force_trivial_guard env g1;
+                            FStar_Util.print_string ""))))
           g.FStar_TypeChecker_Common.g_type_probs_for_solved_probs;
         (let g1 =
            let uu___1 = g in
