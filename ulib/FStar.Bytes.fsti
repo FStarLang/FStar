@@ -144,7 +144,7 @@ val slice:
   -> s:u32
   -> e:u32{U32.(s <=^ e) /\ U32.v e <= length b}
   -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
-let slice_ b (s:nat) (e:nat{s <= e /\ e <= length b}) = slice b (U32.uint_to_t e) (U32.uint_to_t e)
+let slice_ b (s:nat) (e:nat{s <= e /\ e <= length b}) = slice b (U32.uint_to_t s) (U32.uint_to_t e)
 
 val sub:
     b:bytes
