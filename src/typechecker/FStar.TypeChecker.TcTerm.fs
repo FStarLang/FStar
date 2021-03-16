@@ -4097,6 +4097,14 @@ let tc_check_tot_or_gtot_term_maybe_fastpath (env:env) (t:term) (k:typ) (must_to
     if env.phase1 then Env.trivial_guard
     else TcUtil.check_has_type env t k' k in
 
+  if uvars_ok
+  then (match typeof_tot_or_gtot_term_fastpath env t with
+        | None -> slow_path "" None
+        | Some k' ->
+          (match Rel.subtype_nosmt env k' k with
+           | None -> slow_path "" None
+           | Some g -> g))
+  else
   if uvars_ok && env.phase1
   then Env.trivial_guard
   else

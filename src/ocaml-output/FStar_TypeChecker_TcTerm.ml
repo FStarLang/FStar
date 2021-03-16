@@ -11803,70 +11803,86 @@ let (tc_check_tot_or_gtot_term_maybe_fastpath :
               if env2.FStar_TypeChecker_Env.phase1
               then FStar_TypeChecker_Env.trivial_guard
               else FStar_TypeChecker_Util.check_has_type env2 t1 k' k1 in
-            if uvars_ok && env1.FStar_TypeChecker_Env.phase1
-            then FStar_TypeChecker_Env.trivial_guard
+            if uvars_ok
+            then
+              let uu___ = typeof_tot_or_gtot_term_fastpath env1 t in
+              match uu___ with
+              | FStar_Pervasives_Native.None ->
+                  slow_path "" FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some k' ->
+                  let uu___1 = FStar_TypeChecker_Rel.subtype_nosmt env1 k' k in
+                  (match uu___1 with
+                   | FStar_Pervasives_Native.None ->
+                       slow_path "" FStar_Pervasives_Native.None
+                   | FStar_Pervasives_Native.Some g -> g)
             else
-              (let uu___1 =
-                 let uu___2 = continue_fast_path t in
-                 Prims.op_Negation uu___2 in
-               if uu___1
-               then slow_path "t has uvars" (FStar_Pervasives_Native.Some t)
-               else
-                 (let uu___3 =
-                    let uu___4 = continue_fast_path k in
-                    Prims.op_Negation uu___4 in
-                  if uu___3
-                  then
-                    slow_path "k has uvars" (FStar_Pervasives_Native.Some k)
-                  else
-                    (let uu___5 = typeof_tot_or_gtot_term_fastpath env1 t in
-                     match uu___5 with
-                     | FStar_Pervasives_Native.None ->
-                         slow_path "could not compute the type"
-                           FStar_Pervasives_Native.None
-                     | FStar_Pervasives_Native.Some k' ->
-                         let uu___6 =
-                           let uu___7 = continue_fast_path k' in
-                           Prims.op_Negation uu___7 in
-                         if uu___6
-                         then slow_path "" (FStar_Pervasives_Native.Some k')
-                         else
-                           if env1.FStar_TypeChecker_Env.phase1
-                           then finish_fast_path env1 t k' k
+              if uvars_ok && env1.FStar_TypeChecker_Env.phase1
+              then FStar_TypeChecker_Env.trivial_guard
+              else
+                (let uu___2 =
+                   let uu___3 = continue_fast_path t in
+                   Prims.op_Negation uu___3 in
+                 if uu___2
+                 then
+                   slow_path "t has uvars" (FStar_Pervasives_Native.Some t)
+                 else
+                   (let uu___4 =
+                      let uu___5 = continue_fast_path k in
+                      Prims.op_Negation uu___5 in
+                    if uu___4
+                    then
+                      slow_path "k has uvars"
+                        (FStar_Pervasives_Native.Some k)
+                    else
+                      (let uu___6 = typeof_tot_or_gtot_term_fastpath env1 t in
+                       match uu___6 with
+                       | FStar_Pervasives_Native.None ->
+                           slow_path "could not compute the type"
+                             FStar_Pervasives_Native.None
+                       | FStar_Pervasives_Native.Some k' ->
+                           let uu___7 =
+                             let uu___8 = continue_fast_path k' in
+                             Prims.op_Negation uu___8 in
+                           if uu___7
+                           then
+                             slow_path "" (FStar_Pervasives_Native.Some k')
                            else
-                             if Prims.op_Negation must_tot
+                             if env1.FStar_TypeChecker_Env.phase1
                              then finish_fast_path env1 t k' k
                              else
-                               (let uu___10 =
-                                  FStar_TypeChecker_Normalize.non_info_norm
-                                    env1 k in
-                                if uu___10
-                                then finish_fast_path env1 t k' k
-                                else
-                                  (let eff_opt =
-                                     effect_of_well_typed_tot_or_gtot_term
-                                       env1 t in
-                                   match eff_opt with
-                                   | FStar_Pervasives_Native.None ->
-                                       slow_path
-                                         "could not compute the effect"
-                                         FStar_Pervasives_Native.None
-                                   | FStar_Pervasives_Native.Some eff ->
-                                       let uu___12 =
-                                         FStar_Ident.lid_equals eff
-                                           FStar_Parser_Const.effect_PURE_lid in
-                                       if uu___12
-                                       then finish_fast_path env1 t k' k
-                                       else
-                                         (let uu___14 =
-                                            let uu___15 =
+                               if Prims.op_Negation must_tot
+                               then finish_fast_path env1 t k' k
+                               else
+                                 (let uu___11 =
+                                    FStar_TypeChecker_Normalize.non_info_norm
+                                      env1 k in
+                                  if uu___11
+                                  then finish_fast_path env1 t k' k
+                                  else
+                                    (let eff_opt =
+                                       effect_of_well_typed_tot_or_gtot_term
+                                         env1 t in
+                                     match eff_opt with
+                                     | FStar_Pervasives_Native.None ->
+                                         slow_path
+                                           "could not compute the effect"
+                                           FStar_Pervasives_Native.None
+                                     | FStar_Pervasives_Native.Some eff ->
+                                         let uu___13 =
+                                           FStar_Ident.lid_equals eff
+                                             FStar_Parser_Const.effect_PURE_lid in
+                                         if uu___13
+                                         then finish_fast_path env1 t k' k
+                                         else
+                                           (let uu___15 =
                                               let uu___16 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  t in
-                                              FStar_Util.format1
-                                                "Implicit argument %s is GTot, expected a Tot"
-                                                uu___16 in
-                                            (FStar_Errors.Fatal_UnexpectedImplictArgument,
-                                              uu___15) in
-                                          FStar_Errors.raise_error uu___14
-                                            t.FStar_Syntax_Syntax.pos))))))
+                                                let uu___17 =
+                                                  FStar_Syntax_Print.term_to_string
+                                                    t in
+                                                FStar_Util.format1
+                                                  "Implicit argument %s is GTot, expected a Tot"
+                                                  uu___17 in
+                                              (FStar_Errors.Fatal_UnexpectedImplictArgument,
+                                                uu___16) in
+                                            FStar_Errors.raise_error uu___15
+                                              t.FStar_Syntax_Syntax.pos))))))
