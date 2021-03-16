@@ -2466,7 +2466,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
              fail (BU.format1
                      "Pattern matching a constant that does not have decidable equality: %s"
                      (Print.const_to_string c)));
-          let _, e_c, _, _ = PatternUtils.pat_as_exp false env p in
+          let _, e_c, _, _ = PatternUtils.pat_as_exp false false env p in
           let e_c, lc, g = tc_tot_or_gtot_term env e_c in
           Rel.force_trivial_guard env g;
           let expected_t = expected_pat_typ env p0.p t in
@@ -2499,7 +2499,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             | _ -> true)
           in
           let simple_bvs, simple_pat_e, g0, simple_pat_elab =
-              PatternUtils.pat_as_exp false env simple_pat
+              PatternUtils.pat_as_exp false false env simple_pat
           in
           if List.length simple_bvs <> List.length sub_pats
           then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
@@ -3832,8 +3832,15 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
     let rec aux env us bs =
       match bs with
       | [] ->
-        bind_opt (universe_of_well_typed_term env (U.comp_result c)) (fun uc ->
-        Some (mk_tm_type (S.U_max (uc::us))))
+        bind_opt
+          (if c
+              |> U.comp_effect_name
+              |> Env.norm_eff_name env
+              |> Env.lookup_effect_quals env
+              |> List.existsb (fun q -> q = S.TotalEffect)
+           then universe_of_well_typed_term env (U.comp_result c)
+           else Some S.U_zero)
+          (fun uc -> Some (mk_tm_type (S.U_max (uc::us))))
 
       | ({binder_bv=x;binder_qual=imp})::bs ->
         // BU.print2 "type_of_well_typed_term computed universe of %s as : %s\n"
@@ -3911,7 +3918,11 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
 
   | Tm_ascribed(_, (Inl t, _), _) -> Some t
   | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
-  | Tm_uvar (u, s) -> Some (SS.subst' s u.ctx_uvar_typ)
+  | Tm_uvar (u, s) ->
+    // BU.print2 "type of well typed term %s, ctx uvar typ is %s\n"
+    //   (Print.term_to_string t)
+    //   (Print.term_to_string u.ctx_uvar_typ);
+    Some (SS.subst' s u.ctx_uvar_typ)
 
   | Tm_quoted (tm, qi) ->
     Some (S.t_term)
