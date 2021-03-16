@@ -7194,7 +7194,8 @@ and (tc_pat :
                          uu___4 in
                      fail uu___3);
                 (let uu___2 =
-                   FStar_TypeChecker_PatternUtils.pat_as_exp false env1 p in
+                   FStar_TypeChecker_PatternUtils.pat_as_exp false false env1
+                     p in
                  match uu___2 with
                  | (uu___3, e_c, uu___4, uu___5) ->
                      let uu___6 = tc_tot_or_gtot_term env1 e_c in
@@ -7265,7 +7266,7 @@ and (tc_pat :
                                   false
                               | uu___3 -> true))) in
                let uu___1 =
-                 FStar_TypeChecker_PatternUtils.pat_as_exp false env1
+                 FStar_TypeChecker_PatternUtils.pat_as_exp false false env1
                    simple_pat in
                (match uu___1 with
                 | (simple_bvs, simple_pat_e, g0, simple_pat_elab) ->
@@ -11286,8 +11287,26 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                  match bs2 with
                  | [] ->
                      let uu___1 =
-                       universe_of_well_typed_term env1
-                         (FStar_Syntax_Util.comp_result c1) in
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_All.pipe_right c1
+                                 FStar_Syntax_Util.comp_effect_name in
+                             FStar_All.pipe_right uu___5
+                               (FStar_TypeChecker_Env.norm_eff_name env1) in
+                           FStar_All.pipe_right uu___4
+                             (FStar_TypeChecker_Env.lookup_effect_quals env1) in
+                         FStar_All.pipe_right uu___3
+                           (FStar_List.existsb
+                              (fun q -> q = FStar_Syntax_Syntax.TotalEffect)) in
+                       if uu___2
+                       then
+                         universe_of_well_typed_term env1
+                           (FStar_Syntax_Util.comp_result c1)
+                       else
+                         FStar_Pervasives_Native.Some
+                           FStar_Syntax_Syntax.U_zero in
                      FStar_Util.bind_opt uu___1
                        (fun uc ->
                           let uu___2 =
