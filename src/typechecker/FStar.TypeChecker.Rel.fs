@@ -864,11 +864,11 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
          | None -> (*BU.print1 "Rel returning None since could not compute type of %s" (Print.term_to_string t);*) l  //AR: TODO: why would we get None here?
          | Some t1 ->
            let t2 = ctx_uvar.ctx_uvar_typ in
-           // BU.print4 "Setting %s to %s, adding a sub problem %s <: %s\n"
-           //   (Print.ctx_uvar_to_string ctx_uvar)
-           //   (Print.term_to_string t)
-           //   (Print.term_to_string t1)
-           //   (Print.term_to_string t2);
+           BU.print4 "Setting %s to %s, adding a sub problem %s <: %s\n"
+             (Print.ctx_uvar_to_string ctx_uvar)
+             (Print.term_to_string t)
+             (Print.term_to_string t1)
+             (Print.term_to_string t2);
            //BU.print2 "Rel adding %s <: %s to list l\n" (Print.term_to_string t1) (Print.term_to_string t2);
            (t1, t2)::l)
       | _ -> l) [] uvis in
@@ -2659,7 +2659,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (Flex (_t, uv, _args), wl) = destruct_flex_t scrutinee wl  in
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p in
+            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in
@@ -4237,8 +4237,8 @@ let rec resolve_implicits' env is_tac g =
     else if not (no_uvars t1 || no_uvars t2)
     then ()
     else
-      // let _ = BU.print2 "resolve_implicits found a problem that could benefit: %s <: %s\n"
-      //           (Print.term_to_string t1) (Print.term_to_string t2) in
+      let _ = BU.print2 "resolve_implicits found a problem that could benefit: %s <: %s\n"
+                (Print.term_to_string t1) (Print.term_to_string t2) in
       match subtype_nosmt env t1 t2 with
       | None -> ()
       | Some g -> force_trivial_guard env g;
