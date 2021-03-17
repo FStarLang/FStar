@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing
 include ../Makefile.include
 
-NO_VERIFY=Buffers.fst GTWP.fst GT.fst DM4F_layered.fst DM4F_layered5.fst
+NO_VERIFY=Buffers.fst
 
 ROOTS=$(wildcard *.fst)
 
