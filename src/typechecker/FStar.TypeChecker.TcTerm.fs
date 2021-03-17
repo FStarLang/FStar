@@ -3905,7 +3905,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
         bind_opt bs_t_opt (fun (bs, args, t, remaining_args) ->
           let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
           let t = SS.subst subst t in
-          if remaining_args = [] then Some t else aux remaining_args t)
+          if List.length remaining_args = 0 then Some t else aux remaining_args t)
       | Tm_refine(x, _) -> aux args x.sort
       | Tm_ascribed(t, _, _) -> aux args t
       | _ -> None
