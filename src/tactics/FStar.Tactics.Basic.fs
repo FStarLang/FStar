@@ -845,6 +845,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
+                  // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
                   FStar.TypeChecker.TcTerm.tc_check_tot_or_gtot_term_maybe_fastpath
                             env term ctx_uvar.ctx_uvar_typ false true
                 in

@@ -26,7 +26,7 @@ val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard_
 val universe_of: env -> term -> universe
 val typeof_tot_or_gtot_term_fastpath: env -> term -> option<typ>
 
-val tc_check_tot_or_gtot_term_maybe_fastpath: env -> term -> typ -> must_tot:bool -> uvars_ok:bool -> guard_t
+val tc_check_tot_or_gtot_term_maybe_fastpath: env -> term -> typ -> must_tot:bool -> from_tac:bool -> guard_t
 
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
 //the last string argument is the reason to be printed in the error message
