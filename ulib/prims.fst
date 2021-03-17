@@ -603,7 +603,7 @@ val magic: #a: Type -> unit -> Tot a
     [b].  *)
 [@@ warn_on_use "uses an axiom"]
 irreducible
-let unsafe_coerce (#a #b: Type u#a) (x: a) : b =
+let unsafe_coerce (#a #b:Type) (x: a) : b =
   admit ();
   x
 
