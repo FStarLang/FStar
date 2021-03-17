@@ -12422,16 +12422,13 @@ let rec (resolve_implicits' :
                     FStar_All.pipe_right uu___2 FStar_Util.set_is_empty) &&
                      (let uu___2 = FStar_Syntax_Free.univs t in
                       FStar_All.pipe_right uu___2 FStar_Util.set_is_empty) in
-                 let uu___2 = (no_uvars t1) && (no_uvars t2) in
+                 let uu___2 =
+                   ((no_uvars t1) && (no_uvars t2)) ||
+                     (let uu___3 = (no_uvars t1) || (no_uvars t2) in
+                      Prims.op_Negation uu___3) in
                  if uu___2
                  then ()
-                 else
-                   (let uu___4 =
-                      let uu___5 = (no_uvars t1) || (no_uvars t2) in
-                      Prims.op_Negation uu___5 in
-                    if uu___4
-                    then ()
-                    else (let uu___6 = subtype_nosmt_force env t1 t2 in ())))
+                 else (let uu___4 = subtype_nosmt_force env t1 t2 in ()))
           g.FStar_TypeChecker_Common.solution_types;
         (let g1 =
            let uu___1 = g in

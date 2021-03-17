@@ -4239,11 +4239,15 @@ let rec resolve_implicits' env is_tac g =
         end
   in
 
+  (*
+   * Try to solve solution_types subtyping problems,
+   *   but only if they would help,
+   *   specifically only of one of the sides has uvars
+   *)
   List.iter (fun (t1, t2) ->
     let no_uvars t = Free.uvars t |> set_is_empty && Free.univs t |> set_is_empty in
-    if no_uvars t1 && no_uvars t2
-    then ()
-    else if not (no_uvars t1 || no_uvars t2)
+    if (no_uvars t1 && no_uvars t2) ||  //both don't have uvars
+       (not (no_uvars t1 || no_uvars t2))  //both have uvars
     then ()
     else ignore (subtype_nosmt_force env t1 t2)) g.solution_types;
 
