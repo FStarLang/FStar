@@ -131,7 +131,7 @@ let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
   : GTot (s:seq a{p s})
   = HS.sel h m
 
-let i_read (#a:Type) (#p:Seq.seq a -> Type0) (#r:rid) (m:i_seq r a p)
+let i_read (#a:Type) (#p:Seq.seq a -> Type) (#r:rid) (m:i_seq r a p)
   : ST (s:seq a{p s})
        (requires (fun h -> True))
        (ensures (fun h0 x h1 -> h0==h1 /\ x == i_sel h0 m))
