@@ -78,9 +78,8 @@ let (close_guard_implicits :
                          FStar_TypeChecker_Common.deferred_to_tac =
                            (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                          FStar_TypeChecker_Common.deferred = solve_now;
-                         FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                           =
-                           (uu___3.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                         FStar_TypeChecker_Common.solution_types =
+                           (uu___3.FStar_TypeChecker_Common.solution_types);
                          FStar_TypeChecker_Common.univ_ineqs =
                            (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                          FStar_TypeChecker_Common.implicits =
@@ -94,9 +93,8 @@ let (close_guard_implicits :
                       FStar_TypeChecker_Common.deferred_to_tac =
                         (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                       FStar_TypeChecker_Common.deferred = defer;
-                      FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                        =
-                        (uu___3.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                      FStar_TypeChecker_Common.solution_types =
+                        (uu___3.FStar_TypeChecker_Common.solution_types);
                       FStar_TypeChecker_Common.univ_ineqs =
                         (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                       FStar_TypeChecker_Common.implicits =
@@ -811,8 +809,8 @@ let (label_guard :
                 (uu___.FStar_TypeChecker_Common.deferred_to_tac);
               FStar_TypeChecker_Common.deferred =
                 (uu___.FStar_TypeChecker_Common.deferred);
-              FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+              FStar_TypeChecker_Common.solution_types =
+                (uu___.FStar_TypeChecker_Common.solution_types);
               FStar_TypeChecker_Common.univ_ineqs =
                 (uu___.FStar_TypeChecker_Common.univ_ineqs);
               FStar_TypeChecker_Common.implicits =
@@ -1951,8 +1949,8 @@ let (strengthen_precondition :
                       (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                     FStar_TypeChecker_Common.deferred =
                       (uu___3.FStar_TypeChecker_Common.deferred);
-                    FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                      (uu___3.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                    FStar_TypeChecker_Common.solution_types =
+                      (uu___3.FStar_TypeChecker_Common.solution_types);
                     FStar_TypeChecker_Common.univ_ineqs =
                       (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                     FStar_TypeChecker_Common.implicits =
@@ -4161,9 +4159,8 @@ let (weaken_result_typ :
                           (uu___2.FStar_TypeChecker_Common.deferred_to_tac);
                         FStar_TypeChecker_Common.deferred =
                           (uu___2.FStar_TypeChecker_Common.deferred);
-                        FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                          =
-                          (uu___2.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                        FStar_TypeChecker_Common.solution_types =
+                          (uu___2.FStar_TypeChecker_Common.solution_types);
                         FStar_TypeChecker_Common.univ_ineqs =
                           (uu___2.FStar_TypeChecker_Common.univ_ineqs);
                         FStar_TypeChecker_Common.implicits =
@@ -4368,9 +4365,8 @@ let (weaken_result_typ :
                           (uu___2.FStar_TypeChecker_Common.deferred_to_tac);
                         FStar_TypeChecker_Common.deferred =
                           (uu___2.FStar_TypeChecker_Common.deferred);
-                        FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                          =
-                          (uu___2.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                        FStar_TypeChecker_Common.solution_types =
+                          (uu___2.FStar_TypeChecker_Common.solution_types);
                         FStar_TypeChecker_Common.univ_ineqs =
                           (uu___2.FStar_TypeChecker_Common.univ_ineqs);
                         FStar_TypeChecker_Common.implicits =

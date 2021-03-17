@@ -5721,7 +5721,7 @@ let (guard_of_guard_formula :
       FStar_TypeChecker_Common.guard_f = g;
       FStar_TypeChecker_Common.deferred_to_tac = [];
       FStar_TypeChecker_Common.deferred = [];
-      FStar_TypeChecker_Common.g_type_probs_for_solved_probs = [];
+      FStar_TypeChecker_Common.solution_types = [];
       FStar_TypeChecker_Common.univ_ineqs = ([], []);
       FStar_TypeChecker_Common.implicits = []
     }
@@ -5733,7 +5733,7 @@ let (is_trivial : guard_t -> Prims.bool) =
     | { FStar_TypeChecker_Common.guard_f = FStar_TypeChecker_Common.Trivial;
         FStar_TypeChecker_Common.deferred_to_tac = uu___;
         FStar_TypeChecker_Common.deferred = [];
-        FStar_TypeChecker_Common.g_type_probs_for_solved_probs = uu___1;
+        FStar_TypeChecker_Common.solution_types = uu___1;
         FStar_TypeChecker_Common.univ_ineqs = ([], []);
         FStar_TypeChecker_Common.implicits = i;_} ->
         FStar_All.pipe_right i
@@ -5755,7 +5755,7 @@ let (is_trivial_guard_formula : guard_t -> Prims.bool) =
     | { FStar_TypeChecker_Common.guard_f = FStar_TypeChecker_Common.Trivial;
         FStar_TypeChecker_Common.deferred_to_tac = uu___;
         FStar_TypeChecker_Common.deferred = uu___1;
-        FStar_TypeChecker_Common.g_type_probs_for_solved_probs = uu___2;
+        FStar_TypeChecker_Common.solution_types = uu___2;
         FStar_TypeChecker_Common.univ_ineqs = uu___3;
         FStar_TypeChecker_Common.implicits = uu___4;_} -> true
     | uu___ -> false
@@ -5779,8 +5779,8 @@ let (abstract_guard_n :
               (uu___.FStar_TypeChecker_Common.deferred_to_tac);
             FStar_TypeChecker_Common.deferred =
               (uu___.FStar_TypeChecker_Common.deferred);
-            FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-              (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+            FStar_TypeChecker_Common.solution_types =
+              (uu___.FStar_TypeChecker_Common.solution_types);
             FStar_TypeChecker_Common.univ_ineqs =
               (uu___.FStar_TypeChecker_Common.univ_ineqs);
             FStar_TypeChecker_Common.implicits =
@@ -5891,8 +5891,8 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
               (uu___.FStar_TypeChecker_Common.deferred_to_tac);
             FStar_TypeChecker_Common.deferred =
               (uu___.FStar_TypeChecker_Common.deferred);
-            FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-              (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+            FStar_TypeChecker_Common.solution_types =
+              (uu___.FStar_TypeChecker_Common.solution_types);
             FStar_TypeChecker_Common.univ_ineqs =
               (uu___.FStar_TypeChecker_Common.univ_ineqs);
             FStar_TypeChecker_Common.implicits =
@@ -5916,8 +5916,8 @@ let (map_guard :
               (uu___.FStar_TypeChecker_Common.deferred_to_tac);
             FStar_TypeChecker_Common.deferred =
               (uu___.FStar_TypeChecker_Common.deferred);
-            FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-              (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+            FStar_TypeChecker_Common.solution_types =
+              (uu___.FStar_TypeChecker_Common.solution_types);
             FStar_TypeChecker_Common.univ_ineqs =
               (uu___.FStar_TypeChecker_Common.univ_ineqs);
             FStar_TypeChecker_Common.implicits =
@@ -5941,8 +5941,8 @@ let (always_map_guard :
               (uu___.FStar_TypeChecker_Common.deferred_to_tac);
             FStar_TypeChecker_Common.deferred =
               (uu___.FStar_TypeChecker_Common.deferred);
-            FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-              (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+            FStar_TypeChecker_Common.solution_types =
+              (uu___.FStar_TypeChecker_Common.solution_types);
             FStar_TypeChecker_Common.univ_ineqs =
               (uu___.FStar_TypeChecker_Common.univ_ineqs);
             FStar_TypeChecker_Common.implicits =
@@ -5958,8 +5958,8 @@ let (always_map_guard :
               (uu___.FStar_TypeChecker_Common.deferred_to_tac);
             FStar_TypeChecker_Common.deferred =
               (uu___.FStar_TypeChecker_Common.deferred);
-            FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-              (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+            FStar_TypeChecker_Common.solution_types =
+              (uu___.FStar_TypeChecker_Common.solution_types);
             FStar_TypeChecker_Common.univ_ineqs =
               (uu___.FStar_TypeChecker_Common.univ_ineqs);
             FStar_TypeChecker_Common.implicits =
@@ -6008,8 +6008,8 @@ let (close_guard_univs :
                 (uu___.FStar_TypeChecker_Common.deferred_to_tac);
               FStar_TypeChecker_Common.deferred =
                 (uu___.FStar_TypeChecker_Common.deferred);
-              FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+              FStar_TypeChecker_Common.solution_types =
+                (uu___.FStar_TypeChecker_Common.solution_types);
               FStar_TypeChecker_Common.univ_ineqs =
                 (uu___.FStar_TypeChecker_Common.univ_ineqs);
               FStar_TypeChecker_Common.implicits =
@@ -6053,8 +6053,8 @@ let (close_guard : env -> FStar_Syntax_Syntax.binders -> guard_t -> guard_t)
                 (uu___.FStar_TypeChecker_Common.deferred_to_tac);
               FStar_TypeChecker_Common.deferred =
                 (uu___.FStar_TypeChecker_Common.deferred);
-              FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+              FStar_TypeChecker_Common.solution_types =
+                (uu___.FStar_TypeChecker_Common.solution_types);
               FStar_TypeChecker_Common.univ_ineqs =
                 (uu___.FStar_TypeChecker_Common.univ_ineqs);
               FStar_TypeChecker_Common.implicits =
@@ -6137,9 +6137,8 @@ let (new_implicit_var_aux :
                            (uu___4.FStar_TypeChecker_Common.deferred_to_tac);
                          FStar_TypeChecker_Common.deferred =
                            (uu___4.FStar_TypeChecker_Common.deferred);
-                         FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                           =
-                           (uu___4.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                         FStar_TypeChecker_Common.solution_types =
+                           (uu___4.FStar_TypeChecker_Common.solution_types);
                          FStar_TypeChecker_Common.univ_ineqs =
                            (uu___4.FStar_TypeChecker_Common.univ_ineqs);
                          FStar_TypeChecker_Common.implicits = [imp]

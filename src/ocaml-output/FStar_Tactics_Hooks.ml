@@ -625,7 +625,7 @@ let (synthesize :
                                      FStar_TypeChecker_Common.deferred_to_tac
                                        = [];
                                      FStar_TypeChecker_Common.deferred = [];
-                                     FStar_TypeChecker_Common.g_type_probs_for_solved_probs
+                                     FStar_TypeChecker_Common.solution_types
                                        = [];
                                      FStar_TypeChecker_Common.univ_ineqs =
                                        ([], []);
@@ -687,8 +687,8 @@ let (solve_implicits :
                                    FStar_TypeChecker_Common.deferred_to_tac =
                                      [];
                                    FStar_TypeChecker_Common.deferred = [];
-                                   FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                                     = [];
+                                   FStar_TypeChecker_Common.solution_types =
+                                     [];
                                    FStar_TypeChecker_Common.univ_ineqs =
                                      ([], []);
                                    FStar_TypeChecker_Common.implicits = []
@@ -903,7 +903,7 @@ let (postprocess :
                                               = [];
                                             FStar_TypeChecker_Common.deferred
                                               = [];
-                                            FStar_TypeChecker_Common.g_type_probs_for_solved_probs
+                                            FStar_TypeChecker_Common.solution_types
                                               = [];
                                             FStar_TypeChecker_Common.univ_ineqs
                                               = ([], []);

@@ -27,7 +27,7 @@ let (__proj__UNIV__item___0 :
 type worklist =
   {
   attempting: FStar_TypeChecker_Common.probs ;
-  type_probs_for_solved_probs:
+  wl_solution_types:
     (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ) Prims.list ;
   wl_deferred:
     (Prims.int * lstring * FStar_TypeChecker_Common.prob) Prims.list ;
@@ -44,81 +44,80 @@ let (__proj__Mkworklist__item__attempting :
   worklist -> FStar_TypeChecker_Common.probs) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> attempting
-let (__proj__Mkworklist__item__type_probs_for_solved_probs :
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> attempting
+let (__proj__Mkworklist__item__wl_solution_types :
   worklist -> (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} ->
-        type_probs_for_solved_probs
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> wl_solution_types
 let (__proj__Mkworklist__item__wl_deferred :
   worklist ->
     (Prims.int * lstring * FStar_TypeChecker_Common.prob) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> wl_deferred
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> wl_deferred
 let (__proj__Mkworklist__item__wl_deferred_to_tac :
   worklist ->
     (Prims.int * lstring * FStar_TypeChecker_Common.prob) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> wl_deferred_to_tac
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> wl_deferred_to_tac
 let (__proj__Mkworklist__item__ctr : worklist -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> ctr
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> ctr
 let (__proj__Mkworklist__item__defer_ok : worklist -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> defer_ok
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> defer_ok
 let (__proj__Mkworklist__item__smt_ok : worklist -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> smt_ok
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> smt_ok
 let (__proj__Mkworklist__item__umax_heuristic_ok : worklist -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> umax_heuristic_ok
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> umax_heuristic_ok
 let (__proj__Mkworklist__item__tcenv : worklist -> FStar_TypeChecker_Env.env)
   =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> tcenv
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> tcenv
 let (__proj__Mkworklist__item__wl_implicits :
   worklist -> FStar_TypeChecker_Common.implicits) =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> wl_implicits
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> wl_implicits
 let (__proj__Mkworklist__item__repr_subcomp_allowed : worklist -> Prims.bool)
   =
   fun projectee ->
     match projectee with
-    | { attempting; type_probs_for_solved_probs; wl_deferred;
-        wl_deferred_to_tac; ctr; defer_ok; smt_ok; umax_heuristic_ok; 
-        tcenv; wl_implicits; repr_subcomp_allowed;_} -> repr_subcomp_allowed
+    | { attempting; wl_solution_types; wl_deferred; wl_deferred_to_tac; 
+        ctr; defer_ok; smt_ok; umax_heuristic_ok; tcenv; wl_implicits;
+        repr_subcomp_allowed;_} -> repr_subcomp_allowed
 let (as_deferred :
   (Prims.int * lstring * FStar_TypeChecker_Common.prob) Prims.list ->
     FStar_TypeChecker_Common.deferred)
@@ -203,8 +202,7 @@ let (new_uvar :
                      ((let uu___2 = wl in
                        {
                          attempting = (uu___2.attempting);
-                         type_probs_for_solved_probs =
-                           (uu___2.type_probs_for_solved_probs);
+                         wl_solution_types = (uu___2.wl_solution_types);
                          wl_deferred = (uu___2.wl_deferred);
                          wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                          ctr = (uu___2.ctr);
@@ -364,15 +362,14 @@ let (extend_wl :
   fun wl ->
     fun defer_to_tac ->
       fun imps ->
-        fun tprobs ->
+        fun l ->
           let uu___ = wl in
           let uu___1 =
             let uu___2 = as_wl_deferred wl defer_to_tac in
             FStar_List.append wl.wl_deferred_to_tac uu___2 in
           {
             attempting = (uu___.attempting);
-            type_probs_for_solved_probs =
-              (FStar_List.append wl.type_probs_for_solved_probs tprobs);
+            wl_solution_types = (FStar_List.append wl.wl_solution_types l);
             wl_deferred = (uu___.wl_deferred);
             wl_deferred_to_tac = uu___1;
             ctr = (uu___.ctr);
@@ -504,7 +501,7 @@ let (empty_worklist : FStar_TypeChecker_Env.env -> worklist) =
   fun env ->
     {
       attempting = [];
-      type_probs_for_solved_probs = [];
+      wl_solution_types = [];
       wl_deferred = [];
       wl_deferred_to_tac = [];
       ctr = Prims.int_zero;
@@ -815,7 +812,7 @@ let (singleton :
         let uu___ = wl in
         {
           attempting = [prob];
-          type_probs_for_solved_probs = (uu___.type_probs_for_solved_probs);
+          wl_solution_types = (uu___.wl_solution_types);
           wl_deferred = (uu___.wl_deferred);
           wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
           ctr = (uu___.ctr);
@@ -837,7 +834,7 @@ let wl_of_guard :
       let uu___1 = FStar_List.map FStar_Pervasives_Native.snd g in
       {
         attempting = uu___1;
-        type_probs_for_solved_probs = (uu___.type_probs_for_solved_probs);
+        wl_solution_types = (uu___.wl_solution_types);
         wl_deferred = (uu___.wl_deferred);
         wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
         ctr = (uu___.ctr);
@@ -856,7 +853,7 @@ let (defer :
         let uu___ = wl in
         {
           attempting = (uu___.attempting);
-          type_probs_for_solved_probs = (uu___.type_probs_for_solved_probs);
+          wl_solution_types = (uu___.wl_solution_types);
           wl_deferred = (((wl.ctr), reason, prob) :: (wl.wl_deferred));
           wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
           ctr = (uu___.ctr);
@@ -880,7 +877,7 @@ let (attempt :
       (let uu___1 = wl in
        {
          attempting = (FStar_List.append probs wl.attempting);
-         type_probs_for_solved_probs = (uu___1.type_probs_for_solved_probs);
+         wl_solution_types = (uu___1.wl_solution_types);
          wl_deferred = (uu___1.wl_deferred);
          wl_deferred_to_tac = (uu___1.wl_deferred_to_tac);
          ctr = (uu___1.ctr);
@@ -1094,8 +1091,7 @@ let new_problem :
                       (let uu___2 = wl in
                        {
                          attempting = (uu___2.attempting);
-                         type_probs_for_solved_probs =
-                           (uu___2.type_probs_for_solved_probs);
+                         wl_solution_types = (uu___2.wl_solution_types);
                          wl_deferred = (uu___2.wl_deferred);
                          wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                          ctr = (uu___2.ctr);
@@ -1953,7 +1949,7 @@ let (solve_prob' :
                         assign_solution uu___6 uv1 phi);
                        wl2)) in
              commit uvis;
-             (let typ_tuples =
+             (let typs =
                 FStar_List.fold_left
                   (fun l ->
                      fun uvi1 ->
@@ -2075,12 +2071,11 @@ let (solve_prob' :
                                   ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
                                 (t11, t2) :: l)
                        | uu___2 -> l) [] uvis in
-              let ts =
-                FStar_List.append wl1.type_probs_for_solved_probs typ_tuples in
               let uu___2 = wl1 in
               {
                 attempting = (uu___2.attempting);
-                type_probs_for_solved_probs = ts;
+                wl_solution_types =
+                  (FStar_List.append wl1.wl_solution_types typs);
                 wl_deferred = (uu___2.wl_deferred);
                 wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                 ctr = (wl1.ctr + Prims.int_one);
@@ -2109,7 +2104,7 @@ let (extend_universe_solution :
         (let uu___2 = wl in
          {
            attempting = (uu___2.attempting);
-           type_probs_for_solved_probs = (uu___2.type_probs_for_solved_probs);
+           wl_solution_types = (uu___2.wl_solution_types);
            wl_deferred = (uu___2.wl_deferred);
            wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
            ctr = (wl.ctr + Prims.int_one);
@@ -3845,8 +3840,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
              let uu___3 = probs in
              {
                attempting = tl;
-               type_probs_for_solved_probs =
-                 (uu___3.type_probs_for_solved_probs);
+               wl_solution_types = (uu___3.wl_solution_types);
                wl_deferred = (uu___3.wl_deferred);
                wl_deferred_to_tac = (uu___3.wl_deferred_to_tac);
                ctr = (uu___3.ctr);
@@ -3919,7 +3913,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                 let uu___3 =
                   let uu___4 = as_deferred probs.wl_deferred_to_tac in
                   ([], uu___4, (probs.wl_implicits),
-                    (probs.type_probs_for_solved_probs)) in
+                    (probs.wl_solution_types)) in
                 Success uu___3
             | uu___3 ->
                 let uu___4 =
@@ -3936,7 +3930,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                             let uu___6 = as_deferred probs.wl_deferred in
                             let uu___7 = as_deferred probs.wl_deferred_to_tac in
                             (uu___6, uu___7, (probs.wl_implicits),
-                              (probs.type_probs_for_solved_probs)) in
+                              (probs.wl_solution_types)) in
                           Success uu___5
                       | uu___5 ->
                           let uu___6 =
@@ -3949,8 +3943,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                                       | (uu___10, uu___11, y) -> y)) in
                             {
                               attempting = uu___8;
-                              type_probs_for_solved_probs =
-                                (uu___7.type_probs_for_solved_probs);
+                              wl_solution_types = (uu___7.wl_solution_types);
                               wl_deferred = rest;
                               wl_deferred_to_tac =
                                 (uu___7.wl_deferred_to_tac);
@@ -4072,8 +4065,7 @@ and (defer_to_user_tac :
                uu___3 :: (wl1.wl_deferred_to_tac) in
              {
                attempting = (uu___1.attempting);
-               type_probs_for_solved_probs =
-                 (uu___1.type_probs_for_solved_probs);
+               wl_solution_types = (uu___1.wl_solution_types);
                wl_deferred = (uu___1.wl_deferred);
                wl_deferred_to_tac = uu___2;
                ctr = (uu___1.ctr);
@@ -4244,8 +4236,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   let uu___8 = wl4 in
                                                   {
                                                     attempting = probs;
-                                                    type_probs_for_solved_probs
-                                                      = [];
+                                                    wl_solution_types = [];
                                                     wl_deferred = [];
                                                     wl_deferred_to_tac =
                                                       (uu___8.wl_deferred_to_tac);
@@ -4266,15 +4257,14 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                 (match uu___8 with
                                                  | Success
                                                      (uu___9, defer_to_tac,
-                                                      imps,
-                                                      type_probs_for_solved_probs)
+                                                      imps, typs)
                                                      ->
                                                      (FStar_Syntax_Unionfind.commit
                                                         tx;
                                                       (let uu___11 =
                                                          extend_wl wl4
                                                            defer_to_tac imps
-                                                           type_probs_for_solved_probs in
+                                                           typs in
                                                        FStar_Pervasives_Native.Some
                                                          uu___11))
                                                  | Failed uu___9 ->
@@ -4633,9 +4623,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                         ((FStar_TypeChecker_Common.TProb
                                                             eq_prob) ::
                                                         sub_probs);
-                                                      type_probs_for_solved_probs
-                                                        =
-                                                        (uu___13.type_probs_for_solved_probs);
+                                                      wl_solution_types =
+                                                        (uu___13.wl_solution_types);
                                                       wl_deferred =
                                                         (uu___13.wl_deferred);
                                                       wl_deferred_to_tac =
@@ -4667,8 +4656,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                     (let uu___13 = wl' in
                                                      {
                                                        attempting = sub_probs;
-                                                       type_probs_for_solved_probs
-                                                         = [];
+                                                       wl_solution_types = [];
                                                        wl_deferred =
                                                          (uu___13.wl_deferred);
                                                        wl_deferred_to_tac =
@@ -4688,15 +4676,14 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                 match uu___12 with
                                                 | Success
                                                     (uu___13, defer_to_tac,
-                                                     imps, tprobs)
+                                                     imps, typs)
                                                     ->
                                                     let wl2 =
                                                       let uu___14 = wl' in
                                                       {
                                                         attempting = rest;
-                                                        type_probs_for_solved_probs
-                                                          =
-                                                          (uu___14.type_probs_for_solved_probs);
+                                                        wl_solution_types =
+                                                          (uu___14.wl_solution_types);
                                                         wl_deferred =
                                                           (uu___14.wl_deferred);
                                                         wl_deferred_to_tac =
@@ -4719,7 +4706,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                     let wl3 =
                                                       extend_wl wl2
                                                         defer_to_tac imps
-                                                        tprobs in
+                                                        typs in
                                                     let g =
                                                       FStar_List.fold_left
                                                         (fun g1 ->
@@ -5302,7 +5289,7 @@ and (try_solve_without_smt_or_else :
             let uu___ = wl in
             {
               attempting = [];
-              type_probs_for_solved_probs = [];
+              wl_solution_types = [];
               wl_deferred = [];
               wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
               ctr = (uu___.ctr);
@@ -5316,9 +5303,9 @@ and (try_solve_without_smt_or_else :
           let tx = FStar_Syntax_Unionfind.new_transaction () in
           let uu___ = try_solve env wl' in
           match uu___ with
-          | Success (uu___1, defer_to_tac, imps, tprobs) ->
+          | Success (uu___1, defer_to_tac, imps, typs) ->
               (FStar_Syntax_Unionfind.commit tx;
-               (let wl1 = extend_wl wl defer_to_tac imps tprobs in
+               (let wl1 = extend_wl wl defer_to_tac imps typs in
                 solve env wl1))
           | Failed (p, s) ->
               (FStar_Syntax_Unionfind.rollback tx; else_solve env wl (p, s))
@@ -6547,7 +6534,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                   {
                                     attempting =
                                       [FStar_TypeChecker_Common.TProb prob];
-                                    type_probs_for_solved_probs = [];
+                                    wl_solution_types = [];
                                     wl_deferred = [];
                                     wl_deferred_to_tac =
                                       (uu___7.wl_deferred_to_tac);
@@ -6565,14 +6552,14 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                   FStar_Syntax_Unionfind.new_transaction () in
                                 let uu___7 = solve env1 wl' in
                                 (match uu___7 with
-                                 | Success
-                                     (uu___8, defer_to_tac, imps, tprobs) ->
+                                 | Success (uu___8, defer_to_tac, imps, typs)
+                                     ->
                                      let wl'1 =
                                        let uu___9 = wl' in
                                        {
                                          attempting = [orig];
-                                         type_probs_for_solved_probs =
-                                           (uu___9.type_probs_for_solved_probs);
+                                         wl_solution_types =
+                                           (uu___9.wl_solution_types);
                                          wl_deferred = (uu___9.wl_deferred);
                                          wl_deferred_to_tac =
                                            (uu___9.wl_deferred_to_tac);
@@ -6590,7 +6577,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                      (match uu___9 with
                                       | Success
                                           (uu___10, defer_to_tac', imps',
-                                           tprobs')
+                                           typs')
                                           ->
                                           (FStar_Syntax_Unionfind.commit tx;
                                            (let uu___12 =
@@ -6598,8 +6585,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                 (FStar_List.append
                                                    defer_to_tac defer_to_tac')
                                                 (FStar_List.append imps imps')
-                                                (FStar_List.append tprobs
-                                                   tprobs') in
+                                                (FStar_List.append typs typs') in
                                             FStar_Pervasives_Native.Some
                                               uu___12))
                                       | Failed uu___10 ->
@@ -8050,8 +8036,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                   (let uu___14 = wl2 in
                                                    {
                                                      attempting = [ref_prob];
-                                                     type_probs_for_solved_probs
-                                                       = [];
+                                                     wl_solution_types = [];
                                                      wl_deferred = [];
                                                      wl_deferred_to_tac =
                                                        (uu___14.wl_deferred_to_tac);
@@ -8084,7 +8069,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                     else fallback ())
                                                | Success
                                                    (uu___14, defer_to_tac,
-                                                    imps, tprobs)
+                                                    imps, typs)
                                                    ->
                                                    (FStar_Syntax_Unionfind.commit
                                                       tx;
@@ -8106,9 +8091,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                        {
                                                          attempting =
                                                            (uu___16.attempting);
-                                                         type_probs_for_solved_probs
-                                                           =
-                                                           (uu___16.type_probs_for_solved_probs);
+                                                         wl_solution_types =
+                                                           (uu___16.wl_solution_types);
                                                          wl_deferred =
                                                            (uu___16.wl_deferred);
                                                          wl_deferred_to_tac =
@@ -8133,7 +8117,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                      let wl5 =
                                                        extend_wl wl4
                                                          defer_to_tac imps
-                                                         tprobs in
+                                                         typs in
                                                      let uu___16 =
                                                        attempt [base_prob]
                                                          wl5 in
@@ -8559,8 +8543,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                   (let uu___12 = wl3 in
                                    {
                                      attempting = (uu___12.attempting);
-                                     type_probs_for_solved_probs =
-                                       (uu___12.type_probs_for_solved_probs);
+                                     wl_solution_types =
+                                       (uu___12.wl_solution_types);
                                      wl_deferred = (uu___12.wl_deferred);
                                      wl_deferred_to_tac =
                                        (uu___12.wl_deferred_to_tac);
@@ -9781,8 +9765,8 @@ and (solve_c :
                                 let uu___7 = wl3 in
                                 {
                                   attempting = (uu___7.attempting);
-                                  type_probs_for_solved_probs =
-                                    (uu___7.type_probs_for_solved_probs);
+                                  wl_solution_types =
+                                    (uu___7.wl_solution_types);
                                   wl_deferred = (uu___7.wl_deferred);
                                   wl_deferred_to_tac =
                                     (uu___7.wl_deferred_to_tac);
@@ -9928,8 +9912,7 @@ and (solve_c :
                       let uu___4 = wl in
                       {
                         attempting = (uu___4.attempting);
-                        type_probs_for_solved_probs =
-                          (uu___4.type_probs_for_solved_probs);
+                        wl_solution_types = (uu___4.wl_solution_types);
                         wl_deferred = (uu___4.wl_deferred);
                         wl_deferred_to_tac = (uu___4.wl_deferred_to_tac);
                         ctr = (uu___4.ctr);
@@ -10079,8 +10062,8 @@ and (solve_c :
                                          let uu___8 = wl3 in
                                          {
                                            attempting = (uu___8.attempting);
-                                           type_probs_for_solved_probs =
-                                             (uu___8.type_probs_for_solved_probs);
+                                           wl_solution_types =
+                                             (uu___8.wl_solution_types);
                                            wl_deferred = (uu___8.wl_deferred);
                                            wl_deferred_to_tac =
                                              (uu___8.wl_deferred_to_tac);
@@ -11162,8 +11145,8 @@ let (simplify_guard :
                  (uu___2.FStar_TypeChecker_Common.deferred_to_tac);
                FStar_TypeChecker_Common.deferred =
                  (uu___2.FStar_TypeChecker_Common.deferred);
-               FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                 (uu___2.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+               FStar_TypeChecker_Common.solution_types =
+                 (uu___2.FStar_TypeChecker_Common.solution_types);
                FStar_TypeChecker_Common.univ_ineqs =
                  (uu___2.FStar_TypeChecker_Common.univ_ineqs);
                FStar_TypeChecker_Common.implicits =
@@ -11183,7 +11166,7 @@ let (with_guard :
         match dopt with
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
         | FStar_Pervasives_Native.Some
-            (deferred, defer_to_tac, implicits, tprobs) ->
+            (deferred, defer_to_tac, implicits, typs) ->
             let uu___ =
               let uu___1 =
                 let uu___2 =
@@ -11193,8 +11176,7 @@ let (with_guard :
                   FStar_TypeChecker_Common.guard_f = uu___2;
                   FStar_TypeChecker_Common.deferred_to_tac = defer_to_tac;
                   FStar_TypeChecker_Common.deferred = deferred;
-                  FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                    tprobs;
+                  FStar_TypeChecker_Common.solution_types = typs;
                   FStar_TypeChecker_Common.univ_ineqs = ([], []);
                   FStar_TypeChecker_Common.implicits = implicits
                 } in
@@ -11382,8 +11364,7 @@ let (sub_comp :
                     let uu___4 = wl in
                     {
                       attempting = (uu___4.attempting);
-                      type_probs_for_solved_probs =
-                        (uu___4.type_probs_for_solved_probs);
+                      wl_solution_types = (uu___4.wl_solution_types);
                       wl_deferred = (uu___4.wl_deferred);
                       wl_deferred_to_tac = (uu___4.wl_deferred_to_tac);
                       ctr = (uu___4.ctr);
@@ -11486,8 +11467,7 @@ let (solve_universe_inequalities' :
                 let uu___2 = empty_worklist env in
                 {
                   attempting = (uu___2.attempting);
-                  type_probs_for_solved_probs =
-                    (uu___2.type_probs_for_solved_probs);
+                  wl_solution_types = (uu___2.wl_solution_types);
                   wl_deferred = (uu___2.wl_deferred);
                   wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                   ctr = (uu___2.ctr);
@@ -11624,8 +11604,7 @@ let (try_solve_deferred_constraints :
                      wl_of_guard env g.FStar_TypeChecker_Common.deferred in
                    {
                      attempting = (uu___2.attempting);
-                     type_probs_for_solved_probs =
-                       (uu___2.type_probs_for_solved_probs);
+                     wl_solution_types = (uu___2.wl_solution_types);
                      wl_deferred = (uu___2.wl_deferred);
                      wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                      ctr = (uu___2.ctr);
@@ -11660,7 +11639,7 @@ let (try_solve_deferred_constraints :
                         failwith
                           "Impossible: Unexpected deferred constraints remain"
                     | FStar_Pervasives_Native.Some
-                        (deferred, defer_to_tac, imps, tprobs) ->
+                        (deferred, defer_to_tac, imps, typs) ->
                         let uu___4 = g in
                         {
                           FStar_TypeChecker_Common.guard_f =
@@ -11670,11 +11649,9 @@ let (try_solve_deferred_constraints :
                                g.FStar_TypeChecker_Common.deferred_to_tac
                                defer_to_tac);
                           FStar_TypeChecker_Common.deferred = deferred;
-                          FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                            =
+                          FStar_TypeChecker_Common.solution_types =
                             (FStar_List.append
-                               g.FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                               tprobs);
+                               g.FStar_TypeChecker_Common.solution_types typs);
                           FStar_TypeChecker_Common.univ_ineqs =
                             (uu___4.FStar_TypeChecker_Common.univ_ineqs);
                           FStar_TypeChecker_Common.implicits =
@@ -11710,9 +11687,8 @@ let (try_solve_deferred_constraints :
                         (uu___5.FStar_TypeChecker_Common.deferred_to_tac);
                       FStar_TypeChecker_Common.deferred =
                         (uu___5.FStar_TypeChecker_Common.deferred);
-                      FStar_TypeChecker_Common.g_type_probs_for_solved_probs
-                        =
-                        (uu___5.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                      FStar_TypeChecker_Common.solution_types =
+                        (uu___5.FStar_TypeChecker_Common.solution_types);
                       FStar_TypeChecker_Common.univ_ineqs = ([], []);
                       FStar_TypeChecker_Common.implicits =
                         (uu___5.FStar_TypeChecker_Common.implicits)
@@ -11782,8 +11758,8 @@ let (discharge_guard' :
                  (uu___1.FStar_TypeChecker_Common.deferred_to_tac);
                FStar_TypeChecker_Common.deferred =
                  (uu___1.FStar_TypeChecker_Common.deferred);
-               FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                 (uu___1.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+               FStar_TypeChecker_Common.solution_types =
+                 (uu___1.FStar_TypeChecker_Common.solution_types);
                FStar_TypeChecker_Common.univ_ineqs =
                  (uu___1.FStar_TypeChecker_Common.univ_ineqs);
                FStar_TypeChecker_Common.implicits =
@@ -12455,14 +12431,8 @@ let rec (resolve_implicits' :
                       Prims.op_Negation uu___5 in
                     if uu___4
                     then ()
-                    else
-                      (let uu___6 = subtype_nosmt env t1 t2 in
-                       match uu___6 with
-                       | FStar_Pervasives_Native.None -> ()
-                       | FStar_Pervasives_Native.Some g1 ->
-                           (force_trivial_guard env g1;
-                            FStar_Util.print_string ""))))
-          g.FStar_TypeChecker_Common.g_type_probs_for_solved_probs;
+                    else (let uu___6 = subtype_nosmt_force env t1 t2 in ())))
+          g.FStar_TypeChecker_Common.solution_types;
         (let g1 =
            let uu___1 = g in
            {
@@ -12472,7 +12442,7 @@ let rec (resolve_implicits' :
                (uu___1.FStar_TypeChecker_Common.deferred_to_tac);
              FStar_TypeChecker_Common.deferred =
                (uu___1.FStar_TypeChecker_Common.deferred);
-             FStar_TypeChecker_Common.g_type_probs_for_solved_probs = [];
+             FStar_TypeChecker_Common.solution_types = [];
              FStar_TypeChecker_Common.univ_ineqs =
                (uu___1.FStar_TypeChecker_Common.univ_ineqs);
              FStar_TypeChecker_Common.implicits =
@@ -12488,8 +12458,8 @@ let rec (resolve_implicits' :
              (uu___1.FStar_TypeChecker_Common.deferred_to_tac);
            FStar_TypeChecker_Common.deferred =
              (uu___1.FStar_TypeChecker_Common.deferred);
-           FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-             (uu___1.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+           FStar_TypeChecker_Common.solution_types =
+             (uu___1.FStar_TypeChecker_Common.solution_types);
            FStar_TypeChecker_Common.univ_ineqs =
              (uu___1.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = uu___2
@@ -12550,6 +12520,17 @@ and (force_trivial_guard :
              (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu___3) in
            FStar_Errors.raise_error uu___2
              imp.FStar_TypeChecker_Common.imp_range)
+and (subtype_nosmt_force :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> Prims.bool)
+  =
+  fun env ->
+    fun t1 ->
+      fun t2 ->
+        let uu___ = subtype_nosmt env t1 t2 in
+        match uu___ with
+        | FStar_Pervasives_Native.None -> false
+        | FStar_Pervasives_Native.Some g -> (force_trivial_guard env g; true)
 let (teq_force :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit)
@@ -12609,8 +12590,8 @@ let (universe_inequality :
           (uu___.FStar_TypeChecker_Common.deferred_to_tac);
         FStar_TypeChecker_Common.deferred =
           (uu___.FStar_TypeChecker_Common.deferred);
-        FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-          (uu___.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+        FStar_TypeChecker_Common.solution_types =
+          (uu___.FStar_TypeChecker_Common.solution_types);
         FStar_TypeChecker_Common.univ_ineqs = ([], [(u1, u2)]);
         FStar_TypeChecker_Common.implicits =
           (uu___.FStar_TypeChecker_Common.implicits)
@@ -12712,14 +12693,3 @@ let (get_subtyping_prop :
                 let uu___3 = FStar_Syntax_Syntax.mk_binder x in [uu___3] in
               FStar_TypeChecker_Env.close_guard env uu___2 g in
             FStar_Pervasives_Native.Some uu___1
-let (subtype_nosmt_force :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> Prims.bool)
-  =
-  fun env ->
-    fun t1 ->
-      fun t2 ->
-        let uu___ = subtype_nosmt env t1 t2 in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> false
-        | FStar_Pervasives_Native.Some g -> (force_trivial_guard env g; true)

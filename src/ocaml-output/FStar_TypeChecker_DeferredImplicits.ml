@@ -667,8 +667,8 @@ let (solve_deferred_to_tactic_goals :
                  FStar_TypeChecker_Common.deferred_to_tac = [];
                  FStar_TypeChecker_Common.deferred =
                    (uu___3.FStar_TypeChecker_Common.deferred);
-                 FStar_TypeChecker_Common.g_type_probs_for_solved_probs =
-                   (uu___3.FStar_TypeChecker_Common.g_type_probs_for_solved_probs);
+                 FStar_TypeChecker_Common.solution_types =
+                   (uu___3.FStar_TypeChecker_Common.solution_types);
                  FStar_TypeChecker_Common.univ_ineqs =
                    (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                  FStar_TypeChecker_Common.implicits = imps
