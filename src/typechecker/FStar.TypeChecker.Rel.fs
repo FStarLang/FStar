@@ -74,7 +74,7 @@ type uvi =
 (* The set of problems currently being addressed *)
 type worklist = {
     attempting:   probs;
-    type_probs_for_solved_probs:    list<(typ * typ)>;
+    wl_solution_types:    list<(typ * typ)>;  //for every assigned solution (?u <- t), maintain (k1, k2), where t:k1 and ?u:k2
     wl_deferred:  list<(int * lstring * prob)>; //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
     wl_deferred_to_tac: list<(int * lstring * prob)>; //problems that should be dispatched to a user-provided tactics
     ctr:          int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
@@ -132,14 +132,26 @@ let copy_uvar u (bs:binders) t wl =
 (* --------------------------------------------------------- *)
 
 (* Types used in the output of the solver *)
+
+(*
+ * In the Success case: deferred problems, deferred to tactics, implicits,
+ *   the last component is a list (k1, k2), where for every assigned solution
+ *   ?u <- t, we record t:k1 and ?u:k2
+ *
+ * Finally when discharging the guard, we solve k1 <: k2, if it allows us to
+ *   solve some more uvars
+ *
+ * This allows us to take fast path for checking implicits more often
+ *)
+
 type solution =
   | Success of deferred * deferred * implicits * list<(typ * typ)>
   | Failed  of prob * lstring
 
-let extend_wl (wl:worklist) (defer_to_tac:deferred) (imps:implicits) tprobs =
+let extend_wl (wl:worklist) (defer_to_tac:deferred) (imps:implicits) (l:list<(typ * typ)>) =
   {wl with wl_deferred_to_tac=wl.wl_deferred_to_tac@(as_wl_deferred wl defer_to_tac);
            wl_implicits=wl.wl_implicits@imps;
-           type_probs_for_solved_probs=wl.type_probs_for_solved_probs@tprobs}
+           wl_solution_types=wl.wl_solution_types@l}
 
 type variance =
     | COVARIANT
@@ -212,7 +224,7 @@ let args_to_string args = args |> List.map (fun (x, _) -> Print.term_to_string x
 (* ------------------------------------------------*)
 let empty_worklist env = {
     attempting=[];
-    type_probs_for_solved_probs=[];
+    wl_solution_types=[];
     wl_deferred=[];
     wl_deferred_to_tac=[];
     ctr=0;
@@ -855,27 +867,20 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
              wl
     in
     commit uvis;
-    //BU.print1 "Computing type tupes on list of size %s\n" (string_of_int (List.length uvis));
-    let typ_tuples = List.fold_left (fun l uvi ->
+    //record type of the uvar and its solution in the worklist
+    let typs = List.fold_left (fun l uvi ->
       match uvi with
       | TERM (ctx_uvar, t) ->
-        let t1 = wl.tcenv.typeof_tot_or_gtot_term_fastpath ({wl.tcenv with gamma=ctx_uvar.ctx_uvar_gamma}) t in
-        (match t1 with
-         | None -> (*BU.print1 "Rel returning None since could not compute type of %s" (Print.term_to_string t);*) l  //AR: TODO: why would we get None here?
+        let t1 = wl.tcenv.typeof_tot_or_gtot_term_fastpath
+          ({wl.tcenv with gamma=ctx_uvar.ctx_uvar_gamma})
+          t in
+        (match t1 with  //could not compute the type of the term on fastpath
+         | None -> l
          | Some t1 ->
            let t2 = ctx_uvar.ctx_uvar_typ in
-           // BU.print4 "Setting %s to %s, adding a sub problem %s <: %s\n"
-           //   (Print.ctx_uvar_to_string ctx_uvar)
-           //   (Print.term_to_string t)
-           //   (Print.term_to_string t1)
-           //   (Print.term_to_string t2);
-           //BU.print2 "Rel adding %s <: %s to list l\n" (Print.term_to_string t1) (Print.term_to_string t2);
            (t1, t2)::l)
       | _ -> l) [] uvis in
-    //BU.print_string "Sone computing\n";
-    let ts = wl.type_probs_for_solved_probs@typ_tuples in
-    //BU.print1 "Done appending, list length : %s\n" (string_of_int (List.length ts));
-    {wl with ctr=wl.ctr + 1; type_probs_for_solved_probs=ts}
+    {wl with ctr=wl.ctr + 1; wl_solution_types=wl.wl_solution_types@typs}
 
 let extend_universe_solution pid sol wl =
     if Env.debug wl.tcenv <| Options.Other "Rel"
@@ -1691,7 +1696,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
          begin
          match probs.wl_deferred with
          | [] ->
-           Success ([], as_deferred probs.wl_deferred_to_tac, probs.wl_implicits, probs.type_probs_for_solved_probs) //Yay ... done!
+           Success ([], as_deferred probs.wl_deferred_to_tac, probs.wl_implicits, probs.wl_solution_types) //Yay ... done!
 
          | _ ->
            let attempt, rest = probs.wl_deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
@@ -1700,7 +1705,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
               Success(as_deferred probs.wl_deferred,
                       as_deferred probs.wl_deferred_to_tac,
                       probs.wl_implicits,
-                      probs.type_probs_for_solved_probs)
+                      probs.wl_solution_types)
 
             | _ ->
               solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
@@ -1850,12 +1855,12 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                                      attempting=probs;
                                      wl_deferred=[];
                                      wl_implicits=[];
-                                     type_probs_for_solved_probs=[]} in
+                                     wl_solution_types=[]} in
                   let tx = UF.new_transaction () in
                   match solve env wl' with
-                  | Success (_, defer_to_tac, imps, type_probs_for_solved_probs) ->
+                  | Success (_, defer_to_tac, imps, typs) ->
                     UF.commit tx;
-                    Some (extend_wl wl defer_to_tac imps type_probs_for_solved_probs)
+                    Some (extend_wl wl defer_to_tac imps typs)
 
                   | Failed _ ->
                     UF.rollback tx;
@@ -2010,10 +2015,13 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl' with defer_ok=false; wl_implicits = []; attempting=sub_probs; type_probs_for_solved_probs=[]}) with  //AR: TODO: can we set deferred_to_tac [] here?
-      | Success (_, defer_to_tac, imps, tprobs) ->
+      match solve_t env eq_prob ({wl' with defer_ok=false;
+                                           wl_implicits = [];
+                                           attempting=sub_probs;
+                                           wl_solution_types=[]}) with  //AR: can we set deferred_to_tac [] here?
+      | Success (_, defer_to_tac, imps, typs) ->
          let wl = {wl' with attempting=rest} in
-         let wl = extend_wl wl defer_to_tac imps tprobs in
+         let wl = extend_wl wl defer_to_tac imps typs in
          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
                                  eq_prob.logical_guard
                                  sub_probs in
@@ -2204,12 +2212,12 @@ and try_solve_without_smt_or_else
                        attempting=[];
                        wl_deferred=[];
                        wl_implicits=[];
-                       type_probs_for_solved_probs=[]} in  //AR: TODO: defer to tac [] here?
+                       wl_solution_types=[]} in  //AR: defer to tac [] here?
     let tx = UF.new_transaction () in
     match try_solve env wl' with
-    | Success (_, defer_to_tac, imps, tprobs) ->
+    | Success (_, defer_to_tac, imps, typs) ->
       UF.commit tx;
-      let wl = extend_wl wl defer_to_tac imps tprobs in
+      let wl = extend_wl wl defer_to_tac imps typs in
       solve env wl
     | Failed (p, s) ->
       UF.rollback tx;
@@ -2680,15 +2688,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 attempting=[TProb prob];
                                 wl_deferred=[];
                                 wl_implicits=[];
-                                type_probs_for_solved_probs=[]} in  //AR: TODO: defer to tac [] here?
+                                wl_solution_types=[]} in  //AR: defer to tac [] here?
             let tx = UF.new_transaction () in
             match solve env wl' with
-            | Success (_, defer_to_tac, imps, tprobs) ->
+            | Success (_, defer_to_tac, imps, typs) ->
                 let wl' = {wl' with attempting=[orig]} in
                 (match solve env wl' with
-                | Success (_, defer_to_tac', imps', tprobs') ->
+                | Success (_, defer_to_tac', imps', typs') ->
                   UF.commit tx;
-                  Some (extend_wl wl (defer_to_tac@defer_to_tac') (imps@imps') (tprobs@tprobs'))
+                  Some (extend_wl wl (defer_to_tac@defer_to_tac') (imps@imps') (typs@typs'))
 
                 | Failed _ ->
                   UF.rollback tx;
@@ -3049,8 +3057,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              (* We set wl_implicits to false, since in the success case we will
               * extend the original wl with the extra implicits we get, and we
               * do not want to duplicate the existing ones. *)
-             match solve env ({wl with defer_ok=false; wl_implicits=[];
-                                       attempting=[ref_prob]; wl_deferred=[]; type_probs_for_solved_probs=[]}) with  //AR: TODO: defer to tac [] here?
+             match solve env ({wl with defer_ok=false;
+                                       wl_implicits=[];
+                                       attempting=[ref_prob];
+                                       wl_deferred=[];
+                                       wl_solution_types=[]}) with  //AR: defer to tac [] here?
              | Failed (prob, msg) ->
                UF.rollback tx;
                if ((not env.uvar_subtyping && has_uvars)
@@ -3059,14 +3070,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                then giveup env msg prob
                else fallback()
 
-             | Success (_, defer_to_tac, imps, tprobs) ->
+             | Success (_, defer_to_tac, imps, typs) ->
                UF.commit tx;
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
                let wl = solve_prob orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
-               let wl = extend_wl wl defer_to_tac imps tprobs in
+               let wl = extend_wl wl defer_to_tac imps typs in
                solve env (attempt [base_prob] wl)
         else fallback()
 
@@ -3731,12 +3742,12 @@ let simplify_guard env g = match g.guard_f with
 let with_guard env prob dopt =
     match dopt with
     | None -> None
-    | Some (deferred, defer_to_tac, implicits, tprobs) ->
+    | Some (deferred, defer_to_tac, implicits, typs) ->
       Some <| simplify_guard env
                 ({guard_f=(p_guard prob |> NonTrivial);
                   deferred=deferred;
                   deferred_to_tac=defer_to_tac;
-                  g_type_probs_for_solved_probs=tprobs;
+                  solution_types=typs;
                   univ_ineqs=([], []);
                   implicits=implicits})
 
@@ -3907,8 +3918,11 @@ let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:gua
      | Some (_::_, _, _, _) when not defer_ok ->
        failwith "Impossible: Unexpected deferred constraints remain"
 
-     | Some (deferred, defer_to_tac, imps, tprobs) ->
-       {g with deferred=deferred; deferred_to_tac=g.deferred_to_tac@defer_to_tac; implicits=g.implicits@imps; g_type_probs_for_solved_probs=g.g_type_probs_for_solved_probs@tprobs}
+     | Some (deferred, defer_to_tac, imps, typs) ->
+       {g with deferred=deferred;
+               deferred_to_tac=g.deferred_to_tac@defer_to_tac;
+               implicits=g.implicits@imps;
+               solution_types=g.solution_types@typs}
 
      | _ ->
        failwith "Impossible: should have raised a failure already"
@@ -4224,26 +4238,16 @@ let rec resolve_implicits' env is_tac g =
           end
         end
   in
-  // BU.print1 "resolve_implicits' starting the fix point loop with type tuples: \n%s\n"
-  //   (List.fold_left (fun s (t1, t2) ->
-  //     s ^ "\n" ^ Print.term_to_string t1 ^ "<:" ^ Print.term_to_string t2) "" g.g_type_probs_for_solved_probs);
 
   List.iter (fun (t1, t2) ->
-    // let _ = BU.print2 "resolve_implicits considering: %s <: %s{\n"
-    //             (Print.term_to_string t1) (Print.term_to_string t2) in
     let no_uvars t = Free.uvars t |> set_is_empty && Free.univs t |> set_is_empty in
     if no_uvars t1 && no_uvars t2
     then ()
     else if not (no_uvars t1 || no_uvars t2)
     then ()
-    else
-      // let _ = BU.print2 "resolve_implicits found a problem that could benefit: %s <: %s\n"
-      //           (Print.term_to_string t1) (Print.term_to_string t2) in
-      match subtype_nosmt env t1 t2 with
-      | None -> ()
-      | Some g -> force_trivial_guard env g;
-                 BU.print_string "" (*"solved problem}\n"*)) g.g_type_probs_for_solved_probs;
-  let g = {g with g_type_probs_for_solved_probs=[]} in
+    else ignore (subtype_nosmt_force env t1 t2)) g.solution_types;
+
+  let g = {g with solution_types=[]} in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
 and resolve_implicits env g =
@@ -4269,6 +4273,13 @@ and force_trivial_guard env g =
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                 (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                 imp.imp_reason) imp.imp_range
+
+and subtype_nosmt_force env t1 t2 =
+    match subtype_nosmt env t1 t2 with
+    | None -> false
+    | Some g ->
+        force_trivial_guard env g;
+        true
 
 let teq_force (env:env) (t1:typ) (t2:typ) : unit =
     force_trivial_guard env (teq env t1 t2)
@@ -4323,10 +4334,3 @@ let get_subtyping_prop env t1 t2 =
     | None -> None
     | Some (x, g) ->
       Some (close_guard env [S.mk_binder x] g)
-
-let subtype_nosmt_force env t1 t2 =
-    match subtype_nosmt env t1 t2 with
-    | None -> false
-    | Some g ->
-        force_trivial_guard env g;
-        true

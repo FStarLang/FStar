@@ -310,7 +310,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []
-                        ; g_type_probs_for_solved_probs = []
+                        ; solution_types = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
@@ -340,7 +340,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []
-                        ; g_type_probs_for_solved_probs = []
+                        ; solution_types = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
@@ -420,7 +420,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []
-                        ; g_type_probs_for_solved_probs = []
+                        ; solution_types = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard

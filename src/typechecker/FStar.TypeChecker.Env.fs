@@ -1744,7 +1744,7 @@ let guard_of_guard_formula g = {
   guard_f=g;
   deferred=[];
   deferred_to_tac=[];
-  g_type_probs_for_solved_probs=[];
+  solution_types=[];
   univ_ineqs=([], []);
   implicits=[]
 }
