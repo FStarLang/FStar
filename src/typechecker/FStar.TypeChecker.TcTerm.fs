@@ -3827,7 +3827,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
           BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
-        bind_opt (universe_of_well_typed_term (Env.push_binders env bs) tbody) (fun u ->
+        bind_opt (universeof_fastpath (Env.push_binders env bs) tbody) (fun u ->
           Some (U.arrow bs (f tbody (Some u))))))
 
   | Tm_arrow(bs, c) ->
@@ -3841,12 +3841,12 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
               |> Env.norm_eff_name env
               |> Env.lookup_effect_quals env
               |> List.existsb (fun q -> q = S.TotalEffect)
-           then universe_of_well_typed_term env (U.comp_result c)  //AR: Why not get comp univ here if available?
+           then universeof_fastpath env (U.comp_result c)  //AR: Why not get comp univ here if available?
            else Some S.U_zero)
           (fun uc -> Some (mk_tm_type (S.U_max (uc::us))))
 
       | ({binder_bv=x;binder_qual=imp})::bs ->
-        bind_opt (universe_of_well_typed_term env x.sort) (fun u_x ->
+        bind_opt (universeof_fastpath env x.sort) (fun u_x ->
           let env = Env.push_bv env x in
           aux env (u_x::us) bs)
     in
@@ -3855,7 +3855,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
   | Tm_abs _ -> None
 
   | Tm_refine(x, _) ->
-    bind_opt (universe_of_well_typed_term env x.sort) (fun u_x ->
+    bind_opt (universeof_fastpath env x.sort) (fun u_x ->
       Some (mk_tm_type u_x))
 
   (* Not doing anything smart with these, so we don't even associate
@@ -3927,7 +3927,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
   | Tm_uinst _ -> None
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 
-and universe_of_well_typed_term env t =
+and universeof_fastpath env t =
   bind_opt (typeof_tot_or_gtot_term_fastpath env t) (fun k ->
     let rec aux (maybe_norm:bool) (k:typ) =
       match (SS.compress k).n with
