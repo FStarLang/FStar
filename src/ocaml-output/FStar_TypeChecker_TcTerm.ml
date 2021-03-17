@@ -11444,7 +11444,9 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                                       (FStar_Pervasives_Native.fst a))) bs1
                              args2 in
                          let t3 = FStar_Syntax_Subst.subst subst t2 in
-                         if remaining_args = []
+                         if
+                           (FStar_List.length remaining_args) =
+                             Prims.int_zero
                          then FStar_Pervasives_Native.Some t3
                          else aux remaining_args t3)
             | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
