@@ -1869,6 +1869,19 @@ and solve_rigid_flex_or_flex_rigid_subtyping
               let combine t1 t2 wl =
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
+                  (*
+                   * AR: before applying op, we need to squash phi if required
+                   *     refinement formulas in F* may be in higher universe,
+                   *       meaning that if we apply op (l_and or l_or) directly, we may be
+                   *       unifying the universe of phi to zero, leading to errors
+                   *)
+                  let apply_op op phi1 phi2 =
+                    let squash phi =
+                      match env.universeof_fastpath env phi with
+                      | Some U_zero -> phi
+                      | Some u -> U.mk_squash u phi
+                      | None -> U.mk_squash (Env.new_u_univ ()) phi in
+                    op (squash phi1) (squash phi2) in
                   let combine_refinements t_base p1_opt p2_opt =
                       let refine x t =
                           if U.is_t_true t then x.sort
@@ -1880,14 +1893,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                         let subst = [DB(0, x)] in
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
-                        refine x (op phi1 phi2)
+                        refine x (apply_op op phi1 phi2)
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
                         let x = freshen_bv x in
                         let subst = [DB(0, x)] in
                         let phi = SS.subst subst phi in
-                        refine x (op U.t_true phi)
+                        refine x (apply_op op U.t_true phi)
 
                       | _ ->
                         t_base
