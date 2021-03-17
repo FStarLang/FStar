@@ -179,6 +179,7 @@ and env = {
   typeof_tot_or_gtot_term_fastpath  :env -> term -> option<typ>;       (* a callback to the type-checker, uses fast path *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> bool -> bool -> guard_t;
+  universeof_fastpath    :env -> term -> option<universe>;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -263,7 +264,14 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term typeof_tot_or_gtot_term typeof_tot_or_gtot_term_fastpath universe_of tc_check_tot_or_gtot_term_maybe_fastpath solver module_lid nbe : env =
+let initial_env deps
+  tc_term
+  typeof_tot_or_gtot_term
+  typeof_tot_or_gtot_term_fastpath
+  universe_of
+  tc_check_tot_or_gtot_term_maybe_fastpath
+  universeof_fastpath
+  solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -296,6 +304,7 @@ let initial_env deps tc_term typeof_tot_or_gtot_term typeof_tot_or_gtot_term_fas
     tc_check_tot_or_gtot_term_maybe_fastpath =
       tc_check_tot_or_gtot_term_maybe_fastpath;
     universe_of=universe_of;
+    universeof_fastpath=universeof_fastpath;
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?

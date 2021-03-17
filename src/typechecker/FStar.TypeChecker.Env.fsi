@@ -154,6 +154,7 @@ and env = {
   typeof_tot_or_gtot_term_fastpath :env -> term -> option<typ>;    (* a callback to the type-checker, uses fast path *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> bool -> bool -> guard_t;  (* the first boolean is must_tot for enforcing that the term is Tot, the second boolean is from_tac, Tactics code sets it and Rel doesn't *)
+  universeof_fastpath    :env -> term -> option<universe>;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -208,6 +209,7 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> option<typ>) ->
                   (env -> term -> universe) ->
                   (env -> term -> typ -> bool -> bool -> guard_t) ->
+                  (env -> term -> option<universe>) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 
