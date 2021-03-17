@@ -216,6 +216,8 @@ let (goal_of_implicit :
              (uu___1.FStar_TypeChecker_Env.universe_of);
            FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath =
              (uu___1.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+           FStar_TypeChecker_Env.universeof_fastpath =
+             (uu___1.FStar_TypeChecker_Env.universeof_fastpath);
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qtbl_name_and_index =

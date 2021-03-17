@@ -49,6 +49,8 @@ let (instantiate_both :
         (uu___.FStar_TypeChecker_Env.universe_of);
       FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath =
         (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+      FStar_TypeChecker_Env.universeof_fastpath =
+        (uu___.FStar_TypeChecker_Env.universeof_fastpath);
       FStar_TypeChecker_Env.use_bv_sorts =
         (uu___.FStar_TypeChecker_Env.use_bv_sorts);
       FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -130,6 +132,8 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (uu___.FStar_TypeChecker_Env.universe_of);
       FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath =
         (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+      FStar_TypeChecker_Env.universeof_fastpath =
+        (uu___.FStar_TypeChecker_Env.universeof_fastpath);
       FStar_TypeChecker_Env.use_bv_sorts =
         (uu___.FStar_TypeChecker_Env.use_bv_sorts);
       FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -963,6 +967,8 @@ let (guard_letrecs :
                 FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                   =
                   (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                FStar_TypeChecker_Env.universeof_fastpath =
+                  (uu___.FStar_TypeChecker_Env.universeof_fastpath);
                 FStar_TypeChecker_Env.use_bv_sorts =
                   (uu___.FStar_TypeChecker_Env.use_bv_sorts);
                 FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1455,6 +1461,8 @@ let rec (tc_term :
                    FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                      =
                      (uu___3.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                   FStar_TypeChecker_Env.universeof_fastpath =
+                     (uu___3.FStar_TypeChecker_Env.universeof_fastpath);
                    FStar_TypeChecker_Env.use_bv_sorts =
                      (uu___3.FStar_TypeChecker_Env.use_bv_sorts);
                    FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1745,6 +1753,8 @@ and (tc_maybe_toplevel_term :
                             FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                               =
                               (uu___4.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                            FStar_TypeChecker_Env.universeof_fastpath =
+                              (uu___4.FStar_TypeChecker_Env.universeof_fastpath);
                             FStar_TypeChecker_Env.use_bv_sorts =
                               (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                             FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -3309,6 +3319,8 @@ and (tc_tactic :
               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                 =
                 (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+              FStar_TypeChecker_Env.universeof_fastpath =
+                (uu___.FStar_TypeChecker_Env.universeof_fastpath);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -3969,6 +3981,8 @@ and (tc_comp :
                  FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                    =
                    (uu___1.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                 FStar_TypeChecker_Env.universeof_fastpath =
+                   (uu___1.FStar_TypeChecker_Env.universeof_fastpath);
                  FStar_TypeChecker_Env.use_bv_sorts =
                    (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
                  FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -4378,6 +4392,8 @@ and (tc_abs_expected_function_typ :
                                FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                  =
                                  (uu___2.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                               FStar_TypeChecker_Env.universeof_fastpath =
+                                 (uu___2.FStar_TypeChecker_Env.universeof_fastpath);
                                FStar_TypeChecker_Env.use_bv_sorts =
                                  (uu___2.FStar_TypeChecker_Env.use_bv_sorts);
                                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -4534,6 +4550,8 @@ and (tc_abs_expected_function_typ :
                              FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                =
                                (uu___2.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                             FStar_TypeChecker_Env.universeof_fastpath =
+                               (uu___2.FStar_TypeChecker_Env.universeof_fastpath);
                              FStar_TypeChecker_Env.use_bv_sorts =
                                (uu___2.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -4644,6 +4662,8 @@ and (tc_abs_expected_function_typ :
                                   FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                     =
                                     (uu___3.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                  FStar_TypeChecker_Env.universeof_fastpath =
+                                    (uu___3.FStar_TypeChecker_Env.universeof_fastpath);
                                   FStar_TypeChecker_Env.use_bv_sorts =
                                     (uu___3.FStar_TypeChecker_Env.use_bv_sorts);
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5122,6 +5142,9 @@ and (tc_abs :
                                    FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                      =
                                      (uu___8.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                   FStar_TypeChecker_Env.universeof_fastpath
+                                     =
+                                     (uu___8.FStar_TypeChecker_Env.universeof_fastpath);
                                    FStar_TypeChecker_Env.use_bv_sorts =
                                      (uu___8.FStar_TypeChecker_Env.use_bv_sorts);
                                    FStar_TypeChecker_Env.qtbl_name_and_index
@@ -5265,6 +5288,9 @@ and (tc_abs :
                                                FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                                  =
                                                  (uu___10.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                               FStar_TypeChecker_Env.universeof_fastpath
+                                                 =
+                                                 (uu___10.FStar_TypeChecker_Env.universeof_fastpath);
                                                FStar_TypeChecker_Env.use_bv_sorts
                                                  =
                                                  (uu___10.FStar_TypeChecker_Env.use_bv_sorts);
@@ -6228,6 +6254,9 @@ and (check_application_args :
                                      FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                        =
                                        (uu___6.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                     FStar_TypeChecker_Env.universeof_fastpath
+                                       =
+                                       (uu___6.FStar_TypeChecker_Env.universeof_fastpath);
                                      FStar_TypeChecker_Env.use_bv_sorts =
                                        (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                                      FStar_TypeChecker_Env.qtbl_name_and_index
@@ -7539,6 +7568,8 @@ and (tc_pat :
                FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                  =
                  (uu___3.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+               FStar_TypeChecker_Env.universeof_fastpath =
+                 (uu___3.FStar_TypeChecker_Env.universeof_fastpath);
                FStar_TypeChecker_Env.use_bv_sorts =
                  (uu___3.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -8363,6 +8394,9 @@ and (tc_eqn :
                                                                 FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                                                   =
                                                                   (uu___15.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                                                FStar_TypeChecker_Env.universeof_fastpath
+                                                                  =
+                                                                  (uu___15.FStar_TypeChecker_Env.universeof_fastpath);
                                                                 FStar_TypeChecker_Env.use_bv_sorts
                                                                   =
                                                                   (uu___15.FStar_TypeChecker_Env.use_bv_sorts);
@@ -8999,6 +9033,8 @@ and (check_inner_let :
               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                 =
                 (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+              FStar_TypeChecker_Env.universeof_fastpath =
+                (uu___.FStar_TypeChecker_Env.universeof_fastpath);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -9688,6 +9724,9 @@ and (build_let_rec_env :
                                       FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                         =
                                         (uu___7.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                      FStar_TypeChecker_Env.universeof_fastpath
+                                        =
+                                        (uu___7.FStar_TypeChecker_Env.universeof_fastpath);
                                       FStar_TypeChecker_Env.use_bv_sorts =
                                         (uu___7.FStar_TypeChecker_Env.use_bv_sorts);
                                       FStar_TypeChecker_Env.qtbl_name_and_index
@@ -9844,6 +9883,9 @@ and (build_let_rec_env :
                                          FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                            =
                                            (uu___6.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                         FStar_TypeChecker_Env.universeof_fastpath
+                                           =
+                                           (uu___6.FStar_TypeChecker_Env.universeof_fastpath);
                                          FStar_TypeChecker_Env.use_bv_sorts =
                                            (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                                          FStar_TypeChecker_Env.qtbl_name_and_index
@@ -10118,6 +10160,8 @@ and (check_let_bound_def :
                           FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                             =
                             (uu___6.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                          FStar_TypeChecker_Env.universeof_fastpath =
+                            (uu___6.FStar_TypeChecker_Env.universeof_fastpath);
                           FStar_TypeChecker_Env.use_bv_sorts =
                             (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                           FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -10599,6 +10643,8 @@ let (typeof_tot_or_gtot_term :
                (uu___1.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath =
                (uu___1.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+             FStar_TypeChecker_Env.universeof_fastpath =
+               (uu___1.FStar_TypeChecker_Env.universeof_fastpath);
              FStar_TypeChecker_Env.use_bv_sorts =
                (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -10775,6 +10821,8 @@ let (level_of_type :
                          FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                            =
                            (uu___4.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                         FStar_TypeChecker_Env.universeof_fastpath =
+                           (uu___4.FStar_TypeChecker_Env.universeof_fastpath);
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -11052,6 +11100,8 @@ let rec (universe_of_aux :
                          FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                            =
                            (uu___4.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                         FStar_TypeChecker_Env.universeof_fastpath =
+                           (uu___4.FStar_TypeChecker_Env.universeof_fastpath);
                          FStar_TypeChecker_Env.use_bv_sorts = true;
                          FStar_TypeChecker_Env.qtbl_name_and_index =
                            (uu___4.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -11270,7 +11320,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                         let uu___2 =
                           let uu___3 =
                             FStar_TypeChecker_Env.push_binders env bs1 in
-                          universe_of_well_typed_term uu___3 tbody3 in
+                          universeof_fastpath uu___3 tbody3 in
                         FStar_Util.bind_opt uu___2
                           (fun u ->
                              let uu___3 =
@@ -11301,7 +11351,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                               (fun q -> q = FStar_Syntax_Syntax.TotalEffect)) in
                        if uu___2
                        then
-                         universe_of_well_typed_term env1
+                         universeof_fastpath env1
                            (FStar_Syntax_Util.comp_result c1)
                        else
                          FStar_Pervasives_Native.Some
@@ -11315,8 +11365,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                      FStar_Syntax_Syntax.binder_qual = imp;
                      FStar_Syntax_Syntax.binder_attrs = uu___1;_}::bs3 ->
                      let uu___2 =
-                       universe_of_well_typed_term env1
-                         x.FStar_Syntax_Syntax.sort in
+                       universeof_fastpath env1 x.FStar_Syntax_Syntax.sort in
                      FStar_Util.bind_opt uu___2
                        (fun u_x ->
                           let env2 = FStar_TypeChecker_Env.push_bv env1 x in
@@ -11324,8 +11373,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                aux env [] bs1)
       | FStar_Syntax_Syntax.Tm_abs uu___ -> FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Tm_refine (x, uu___) ->
-          let uu___1 =
-            universe_of_well_typed_term env x.FStar_Syntax_Syntax.sort in
+          let uu___1 = universeof_fastpath env x.FStar_Syntax_Syntax.sort in
           FStar_Util.bind_opt uu___1
             (fun u_x ->
                let uu___2 = mk_tm_type u_x in
@@ -11480,7 +11528,7 @@ let rec (typeof_tot_or_gtot_term_fastpath :
               Prims.op_Hat uu___3 ")" in
             Prims.op_Hat "Impossible! (" uu___2 in
           failwith uu___1
-and (universe_of_well_typed_term :
+and (universeof_fastpath :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
@@ -11726,6 +11774,8 @@ let (tc_check_tot_or_gtot_term_maybe_fastpath_aux :
                      FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                        =
                        (uu___1.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                     FStar_TypeChecker_Env.universeof_fastpath =
+                       (uu___1.FStar_TypeChecker_Env.universeof_fastpath);
                      FStar_TypeChecker_Env.use_bv_sorts = true;
                      FStar_TypeChecker_Env.qtbl_name_and_index =
                        (uu___1.FStar_TypeChecker_Env.qtbl_name_and_index);

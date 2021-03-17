@@ -258,6 +258,8 @@ let solve_goals_with_tac :
               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                 =
                 (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+              FStar_TypeChecker_Env.universeof_fastpath =
+                (uu___.FStar_TypeChecker_Env.universeof_fastpath);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -383,6 +385,8 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                =
                                (uu___4.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                             FStar_TypeChecker_Env.universeof_fastpath =
+                               (uu___4.FStar_TypeChecker_Env.universeof_fastpath);
                              FStar_TypeChecker_Env.use_bv_sorts =
                                (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -486,6 +490,8 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                =
                                (uu___4.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                             FStar_TypeChecker_Env.universeof_fastpath =
+                               (uu___4.FStar_TypeChecker_Env.universeof_fastpath);
                              FStar_TypeChecker_Env.use_bv_sorts = true;
                              FStar_TypeChecker_Env.qtbl_name_and_index =
                                (uu___4.FStar_TypeChecker_Env.qtbl_name_and_index);

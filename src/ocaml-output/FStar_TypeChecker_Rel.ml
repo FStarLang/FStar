@@ -290,6 +290,8 @@ let (copy_uvar :
               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                 =
                 (uu___.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+              FStar_TypeChecker_Env.universeof_fastpath =
+                (uu___.FStar_TypeChecker_Env.universeof_fastpath);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -2024,6 +2026,8 @@ let (solve_prob' :
                                   FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                     =
                                     (uu___2.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                  FStar_TypeChecker_Env.universeof_fastpath =
+                                    (uu___2.FStar_TypeChecker_Env.universeof_fastpath);
                                   FStar_TypeChecker_Env.use_bv_sorts =
                                     (uu___2.FStar_TypeChecker_Env.use_bv_sorts);
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -4282,6 +4286,29 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                         env1 t22 in
                                     (match uu___5 with
                                      | (t2_base, p2_opt) ->
+                                         let apply_op op1 phi1 phi2 =
+                                           let squash phi =
+                                             let uu___6 =
+                                               env1.FStar_TypeChecker_Env.universeof_fastpath
+                                                 env1 phi in
+                                             match uu___6 with
+                                             | FStar_Pervasives_Native.Some
+                                                 (FStar_Syntax_Syntax.U_zero)
+                                                 -> phi
+                                             | FStar_Pervasives_Native.Some u
+                                                 ->
+                                                 FStar_Syntax_Util.mk_squash
+                                                   u phi
+                                             | FStar_Pervasives_Native.None
+                                                 ->
+                                                 let uu___7 =
+                                                   FStar_TypeChecker_Env.new_u_univ
+                                                     () in
+                                                 FStar_Syntax_Util.mk_squash
+                                                   uu___7 phi in
+                                           let uu___6 = squash phi1 in
+                                           let uu___7 = squash phi2 in
+                                           op1 uu___6 uu___7 in
                                          let combine_refinements t_base
                                            p1_opt1 p2_opt1 =
                                            let refine x t =
@@ -4308,7 +4335,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                let phi21 =
                                                  FStar_Syntax_Subst.subst
                                                    subst phi2 in
-                                               let uu___6 = op phi11 phi21 in
+                                               let uu___6 =
+                                                 apply_op op phi11 phi21 in
                                                refine x1 uu___6
                                            | (FStar_Pervasives_Native.None,
                                               FStar_Pervasives_Native.Some
@@ -4323,7 +4351,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                  FStar_Syntax_Subst.subst
                                                    subst phi in
                                                let uu___6 =
-                                                 op FStar_Syntax_Util.t_true
+                                                 apply_op op
+                                                   FStar_Syntax_Util.t_true
                                                    phi1 in
                                                refine x1 uu___6
                                            | (FStar_Pervasives_Native.Some
@@ -4340,7 +4369,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                  FStar_Syntax_Subst.subst
                                                    subst phi in
                                                let uu___6 =
-                                                 op FStar_Syntax_Util.t_true
+                                                 apply_op op
+                                                   FStar_Syntax_Util.t_true
                                                    phi1 in
                                                refine x1 uu___6
                                            | uu___6 -> t_base in
@@ -5494,6 +5524,9 @@ and (solve_t_flex_rigid_eq :
                                          FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                            =
                                            (uu___7.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                         FStar_TypeChecker_Env.universeof_fastpath
+                                           =
+                                           (uu___7.FStar_TypeChecker_Env.universeof_fastpath);
                                          FStar_TypeChecker_Env.use_bv_sorts =
                                            true;
                                          FStar_TypeChecker_Env.qtbl_name_and_index
@@ -7378,6 +7411,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                 =
                                 (uu___11.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                              FStar_TypeChecker_Env.universeof_fastpath =
+                                (uu___11.FStar_TypeChecker_Env.universeof_fastpath);
                               FStar_TypeChecker_Env.use_bv_sorts = true;
                               FStar_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___11.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -7657,6 +7692,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                 =
                                 (uu___11.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                              FStar_TypeChecker_Env.universeof_fastpath =
+                                (uu___11.FStar_TypeChecker_Env.universeof_fastpath);
                               FStar_TypeChecker_Env.use_bv_sorts = true;
                               FStar_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___11.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -12272,6 +12309,9 @@ let rec (resolve_implicits' :
                                     FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath
                                       =
                                       (uu___6.FStar_TypeChecker_Env.tc_check_tot_or_gtot_term_maybe_fastpath);
+                                    FStar_TypeChecker_Env.universeof_fastpath
+                                      =
+                                      (uu___6.FStar_TypeChecker_Env.universeof_fastpath);
                                     FStar_TypeChecker_Env.use_bv_sorts =
                                       (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index
