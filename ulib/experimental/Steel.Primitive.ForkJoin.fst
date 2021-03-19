@@ -108,20 +108,7 @@ let fork (#p #q #r #s:slprop)
     h_elim_emp_l s
 
 let pre (#p:slprop) (t:thread p) (b:bool) : slprop = lock_inv_pred t.r p b
-let post (p:slprop) (b:bool) (_:unit) : slprop = p
-
-let join_case_true (#p:slprop) (t:thread p) (_:unit)
-  : SteelT unit (pre t true) (post p true)
-  = h_commute _ (maybe_p p true);
-    h_assert (maybe_p p true `star` pts_to t.r full true);
-    h_affine (maybe_p p true) (pts_to t.r full true);
-    h_assert (maybe_p p true)
-
-let join_case_false (#p:slprop) (t:thread p) (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
-  : SteelT unit (pre t false) (post p false)
-  = intro_h_exists false (lock_inv_pred t.r p);
-    L.release t.l;
-    loop t
+let post (p:slprop) (_:unit) : slprop = p
 
 let rec join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
@@ -129,4 +116,15 @@ let rec join (#p:slprop) (t:thread p)
     let b = read_refine (maybe_p p) t.r in
     h_assert (pts_to t.r full b `star` maybe_p p b);
     h_assert (pre t b);
-    cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
+    if b returning SteelT unit (pre t b) (post p)
+    then begin
+      h_commute _ (maybe_p p true);
+      h_assert (maybe_p p true `star` pts_to t.r full true);
+      h_affine (maybe_p p true) (pts_to t.r full true);
+      h_assert (maybe_p p true)
+    end
+    else begin
+      intro_h_exists false (lock_inv_pred t.r p);
+      L.release t.l;
+      join #p t
+    end
