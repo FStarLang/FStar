@@ -500,7 +500,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
-    | Tm_match(scrut, branches) ->
+    | Tm_match(scrut, _, branches) ->
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list<branch> =
         let cfg = zeta_false cfg in
@@ -1066,10 +1066,10 @@ and translate_monadic (m, ty) cfg bs e : t =
         fallback1 ()
      end
 
-   | Tm_match (sc, branches) ->
+   | Tm_match (sc, asc_opt, branches) ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-     let tm = S.mk (Tm_match(sc, branches)) e.pos in
+     let tm = S.mk (Tm_match(sc, asc_opt, branches)) e.pos in
      translate (reifying_false cfg) bs tm
 
    | Tm_meta (t, Meta_monadic _) ->
@@ -1271,7 +1271,7 @@ and readback (cfg:config) (x:t) : term =
       let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, branches_new)) scrut.nbe_r
+        S.mk (Tm_match (scrut_new, None, branches_new)) scrut.nbe_r  //AR: TODO: should we preserve the annotation?
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.

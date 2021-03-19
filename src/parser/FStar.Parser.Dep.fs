@@ -866,11 +866,15 @@ let collect_one
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, t2, t3) ->
+        | If (t1, ret_opt, t2, t3) ->
             collect_term t1;
+            iter_opt ret_opt collect_term;
             collect_term t2;
             collect_term t3
-        | Match (t, bs)
+        | Match (t, ret_opt, bs) ->
+            collect_term t;
+            iter_opt ret_opt collect_term;
+            collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;
             collect_branches bs

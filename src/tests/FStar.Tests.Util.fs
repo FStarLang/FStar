@@ -75,7 +75,7 @@ let rec term_eq' t1 t2 =
               && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
       | Tm_app(t, args), Tm_app(s, args') -> term_eq' t s && args_eq args args'
-      | Tm_match(t, pats), Tm_match(t', pats') ->
+      | Tm_match(t, _, pats), Tm_match(t', _, pats') ->  //AR: TODO: check annotation?
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq' e e') pats pats'
         && term_eq' t t'

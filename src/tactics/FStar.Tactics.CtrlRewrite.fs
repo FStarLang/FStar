@@ -237,7 +237,7 @@ and on_subterms
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
        * and do not go into patterns. *)
-      | Tm_match (hd, brs) ->
+      | Tm_match (hd, asc_opt, brs) ->  //AR: TODO: rewrite in the annotation?
         let c_branch (br:S.branch) : tac<(S.branch * ctrl_flag)> =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
@@ -246,7 +246,7 @@ and on_subterms
           ret (br, flag))
         in
         bind (par_ctac rr (map_ctac c_branch) (hd, brs)) (fun ((hd, brs), flag) ->
-        ret (Tm_match (hd, brs), flag))
+        ret (Tm_match (hd, asc_opt, brs), flag))
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)

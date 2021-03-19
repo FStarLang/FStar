@@ -537,7 +537,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let body = resugar_term' env (decomp body) in
             let handler = resugar_term' env (decomp handler) in
             let rec resugar_body t = match (t.tm) with
-              | A.Match(e, [(_,_,b)]) -> b
+              | A.Match(e, None, [(_,_,b)]) -> b
               | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
               | A.Ascribed(t1, t2, t3) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -545,7 +545,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               | _ -> failwith("unexpected body format to try_with") in
             let e = resugar_body body in
             let rec resugar_branches t = match (t.tm) with
-              | A.Match(e, branches) -> branches
+              | A.Match(e, None, branches) -> branches
               | A.Ascribed(t1, t2, t3) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
                 (* TODO: where should we keep the information stored in Ascribed? *)
@@ -659,7 +659,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           end
     end
 
-    | Tm_match(e, [(pat, wopt, t)]) ->
+    | Tm_match(e, None, [(pat, wopt, t)]) ->
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
@@ -669,10 +669,18 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
-    | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
-      mk (A.If(resugar_term' env e, resugar_term' env t1, resugar_term' env t2))
+    //AR: TODO: fix it when if has return annotation too
+    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
+      let asc_opt = match asc_opt with
+                    | None -> None
+                    | Some (asc, _) ->
+                      asc |> resugar_ascription env |> Some in
+      mk (A.If(resugar_term' env e,
+               asc_opt,
+               resugar_term' env t1,
+               resugar_term' env t2))
 
-    | Tm_match(e, branches) ->
+    | Tm_match(e, asc_opt, branches) ->
       let resugar_branch (pat, wopt,b) =
         let pat, wopt, b = SS.open_branch (pat, wopt, b) in
         let branch_bv = FStar.Syntax.Free.names b in
@@ -682,14 +690,16 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | Some e -> Some (resugar_term' env e) in
         let b = resugar_term' env b in
         (pat, wopt, b) in
-      mk (A.Match(resugar_term' env e, List.map resugar_branch branches))
+      let asc_opt = match asc_opt with
+                    | None -> None
+                    | Some (asc, _) ->
+                      asc |> resugar_ascription env |> Some in
+      mk (A.Match(resugar_term' env e,
+                  asc_opt,
+                  List.map resugar_branch branches))
 
     | Tm_ascribed(e, (asc, tac_opt), _) ->
-      let term = match asc with
-          | Inl n -> (* term *)
-            resugar_term' env n
-          | Inr n -> (* comp *)
-            resugar_comp' env n in
+      let term = resugar_ascription env asc in
       let tac_opt = Option.map (resugar_term' env) tac_opt in
       mk (A.Ascribed(resugar_term' env e, term, tac_opt))
 
@@ -802,6 +812,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       end
 
     | Tm_unknown -> mk A.Wild
+
+and resugar_ascription env asc =
+  match asc with
+  | Inl n -> (* term *)
+    resugar_term' env n
+  | Inr n -> (* comp *)
+    resugar_comp' env n 
 
 (* This entire function is of course very tied to the the desugaring
 of calc expressions in ToSyntax. This only really works for fully

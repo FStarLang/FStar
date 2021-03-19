@@ -387,11 +387,8 @@ let rec push_subst s t =
 
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
-    | Tm_ascribed(t0, (annot, topt), lopt) ->
-      let annot = match annot with
-        | Inl t -> Inl (subst' s t)
-        | Inr c -> Inr (subst_comp' s c) in
-      mk (Tm_ascribed(subst' s t0, (annot, U.map_opt topt (subst' s)), lopt))
+    | Tm_ascribed(t0, asc, lopt) ->
+      mk (Tm_ascribed(subst' s t0, push_subst_ascription s asc, lopt))
 
     | Tm_abs(bs, body, lopt) ->
         let n = List.length bs in
@@ -407,7 +404,7 @@ let rec push_subst s t =
         let phi = subst' (shift_subst' 1 s) phi in
         mk (Tm_refine(x, phi))
 
-    | Tm_match(t0, pats) ->
+    | Tm_match(t0, asc_opt, pats) ->
         let t0 = subst' s t0 in
         let pats = pats |> List.map (fun (pat, wopt, branch) ->
         let pat, n = subst_pat' s pat in
@@ -417,7 +414,7 @@ let rec push_subst s t =
             | Some w -> Some (subst' s w) in
         let branch = subst' s branch in
         (pat, wopt, branch)) in
-        mk (Tm_match(t0, pats))
+        mk (Tm_match(t0, U.map_opt asc_opt (push_subst_ascription s), pats))
 
     | Tm_let((is_rec, lbs), body) ->
         let n = List.length lbs in
@@ -455,6 +452,13 @@ let rec push_subst s t =
 
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))
+
+and push_subst_ascription s asc =
+  let annot, topt = asc in
+  let annot = match annot with
+              | Inl t -> Inl (subst' s t)
+              | Inr c -> Inr (subst_comp' s c) in
+   annot, U.map_opt topt (subst' s)
 
 (* compress:
       This is used pervasively, throughout the codebase
@@ -821,7 +825,7 @@ let rec deep_compress (t:term) : term =
     | Tm_app(t, args) ->
       mk (Tm_app(deep_compress t, deep_compress_args args))
 
-    | Tm_match(t, branches) ->
+    | Tm_match(t, asc_opt, branches) ->
       let rec elim_pat (p:pat) =
         match p.v with
         | Pat_var x ->
@@ -842,15 +846,9 @@ let rec deep_compress (t:term) : term =
            map_opt wopt deep_compress,
            deep_compress t)
       in
-      mk (Tm_match(deep_compress t, List.map elim_branch branches))
+      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches))
 
     | Tm_ascribed(t, a, lopt) ->
-      let elim_ascription (tc, topt) =
-        (match tc with
-         | Inl t -> Inl (deep_compress t)
-         | Inr c -> Inr (deep_compress_comp c)),
-        map_opt topt deep_compress
-      in
       mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
 
     | Tm_let(lbs, t) ->
@@ -883,6 +881,12 @@ let rec deep_compress (t:term) : term =
 
     | Tm_meta(t, md) ->
       mk (Tm_meta(deep_compress t, deep_compress_meta md))
+
+and elim_ascription (tc, topt) =
+  (match tc with
+   | Inl t -> Inl (deep_compress t)
+   | Inr c -> Inr (deep_compress_comp c)),
+  map_opt topt deep_compress
 
 and deep_compress_cflags flags =
     List.map

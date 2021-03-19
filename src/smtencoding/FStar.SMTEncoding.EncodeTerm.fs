@@ -1290,7 +1290,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, pats) ->
+      | Tm_match(e, _, pats) ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1538,7 +1538,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, pats) ->
+        | Tm_match(e, _, pats) ->
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 
