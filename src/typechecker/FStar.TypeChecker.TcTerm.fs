@@ -356,6 +356,19 @@ let check_smt_pat env t bs c =
             check_no_smt_theory_symbols env pats
         | _ -> failwith "Impossible"
 
+let check_match_return_annotation (scrutinee:term) (asc_opt:option<ascription>) (r:Range.range)
+  : option<comp>
+  = BU.map_opt asc_opt (fun asc ->
+      let error msg = raise_error (Errors.Fatal_UnexpectedTerm, msg) r in
+      match asc with
+      | _, Some _ -> error "tactics are not yet supported with match-return"
+      | Inl _, _  -> error "match-return annotation must be a comp"
+      | Inr c, _  ->
+        match (scrutinee |> U.unascribe |> SS.compress).n with
+        | Tm_name _ -> c
+        | _ -> error "the scrutinee must be a variable when a return annotation is supplied with a match")
+
+
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
 (* guards the recursively bound names with a termination check                                              *)
@@ -1005,7 +1018,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
 and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
   match (SS.compress top).n with
-  | Tm_match(e1, eqns) ->
+  | Tm_match(e1, asc_opt, eqns) ->
     let env1, topt = Env.clear_expected_typ env in
     let env1 = instantiate_both env1 in
     let e1, c1, g1 = tc_term env1 e1 in
@@ -1017,19 +1030,33 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         | Some (e1, c1) -> (e1, c1, eqns)
         | None -> (e1, c1, eqns)
     in
-    let env_branches, res_t, g1 =
-      match topt with
-      | Some t -> env, t, g1
+    let env_branches, return_comp_opt, res_t, g1 =
+      match check_match_return_annotation e1 asc_opt (Env.get_range env) with
       | None ->
-        let k, _ = U.type_u() in
-        let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
-        Env.set_expected_typ env res_t, res_t, Env.conj_guard g1 g in
+        (match topt with
+         | Some t -> env, None, t, g1
+         | None ->
+           let k, _ = U.type_u() in
+           let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
+           Env.set_expected_typ env res_t, None, res_t, Env.conj_guard g1 g)
+      | Some c ->
+        let c, u_c, g_c = tc_comp env c in
+        Env.clear_expected_typ env |> fst,
+        Some c,
+        U.comp_result c,
+        Env.conj_guard g1 g_c in
 
     if Env.debug env Options.Extreme
     then BU.print1 "Tm_match: expected type of branches is %s\n" (Print.term_to_string res_t);
 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
-    let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
+    let t_eqns =
+      let return_comp_opt = BU.map_opt return_comp_opt (fun c ->
+        match (e1 |> U.unascribe |> SS.compress).n with
+        | Tm_name e1 -> SS.subst_comp [NT (e1, S.bv_to_name guard_x)] c
+        | _ -> failwith "Impossible!") in        
+      eqns |> List.map (tc_eqn guard_x env_branches return_comp_opt) in
+
     let c_branches, g_branches, erasable =
       let cases, g, erasable =
           List.fold_right
@@ -1061,10 +1088,13 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
               (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name res_t))
         in
-        let e = mk (Tm_match(scrutinee, branches)) top.pos in
+        let asc_opt = BU.map_opt return_comp_opt (fun c -> Inr c, None) in
+        let e = mk (Tm_match(scrutinee, asc_opt, branches)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-        mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
+        match return_comp_opt with
+        | None -> mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
+        | Some _ -> e
       in
       //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
       //                to protect it from the normalizer optimizing it away
@@ -1077,10 +1107,16 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) top.pos in
         TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
     in
+
+    let e, cres, g_expected_type =
+      match return_comp_opt with
+      | None -> e, cres, Env.trivial_guard
+      | Some c -> comp_check_expected_typ env e (TcComm.lcomp_of_comp c) in
+
     if debug env Options.Extreme
     then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
                       (Range.string_of_range top.pos) (TcComm.lcomp_to_string cres);
-    e, cres, Env.conj_guard g1 g_branches
+    e, cres, Env.conj_guards [g1; g_branches; g_expected_type]
 
   | _ ->
     failwith (BU.format1 "tc_match called on %s\n" (Print.tag_of_term top))
@@ -2594,7 +2630,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 (* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
 (* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
 (********************************************************************************************************************)
-and tc_eqn scrutinee env branch
+and tc_eqn scrutinee env return_comp_opt branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
         * lident                                                                 (* effect label of the lcomp below *)
@@ -2634,7 +2670,22 @@ and tc_eqn scrutinee env branch
              Some e, g in
 
   (* 3. Check the branch *)
-  let branch_exp, c, g_branch = tc_term pat_env branch_exp in
+  let branch_exp, c, g_branch =
+    let branch_exp =
+      match return_comp_opt with
+      | None -> branch_exp
+      | Some c ->  //AR: TODO: check that expected type in env is None?
+        let c = SS.subst_comp [NT (scrutinee, norm_pat_exp)] c in
+        U.ascribe branch_exp (Inr c, None) in
+    let branch_exp, c, g_branch = tc_term pat_env branch_exp in
+    let branch_exp =
+      match return_comp_opt with
+      | None -> branch_exp
+      | Some _ ->
+        match (SS.compress branch_exp).n with
+        | Tm_ascribed (branch_exp, _, _) -> branch_exp
+        | _ -> failwith "Impossible!" in
+    branch_exp, c, g_branch in
 
   Env.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
 
@@ -3715,7 +3766,7 @@ let rec universe_of_aux env e =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, hd::_) ->
+        | Tm_match(_, _, hd::_) ->  //AR: TODO: use annotation?
           let (_, _, hd) = SS.open_branch hd in
           let hd, args' = U.head_and_args hd in
           type_of_head retry hd (args'@args)
@@ -3747,10 +3798,10 @@ let rec universe_of_aux env e =
      then let subst = U.subst_of_list bs args in
           SS.subst subst res
      else level_of_type_fail env e (Print.term_to_string res)
-   | Tm_match(_, hd::_) ->
+   | Tm_match(_, _, hd::_) ->  //AR: TODO: use annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
-   | Tm_match(_, []) ->
+   | Tm_match(_, _, []) ->  //AR: TODO: use annotation?
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e =
