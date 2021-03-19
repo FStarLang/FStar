@@ -130,7 +130,9 @@ let acquire' (#p:slprop) (l:lock p)
 
 let rec acquire #p l =
   let b = acquire' l in
-  cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
+  if b returning SteelT unit (if b then p else emp) (fun _ -> p)
+  then noop ()
+  else acquire l
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable

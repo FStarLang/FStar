@@ -448,7 +448,10 @@ let channel_cases (r:ref chan_val) (#p:prot{more p}) #q (c:chan q) (x:msg_t p) (
     = let cc = c.chan_chan in
       h_assert (send_pre r p cc vs vr);
       h_assert (send_pre_split r p cc vs vr (vs.chan_ctr = vr.chan_ctr));
-      cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
+      let b = vs.chan_ctr = vr.chan_ctr in
+      if b returning SteelT unit (send_pre_split r p cc vs vr b) _ //(fun _ -> in_state r (step p x))
+      then then_ ()
+      else else_ ()
 
 let gather (#a:Type) (#v0 #v1:Ghost.erased a) (r:ref a)
   : SteelT unit
@@ -765,7 +768,10 @@ let channel_cases_recv
     = let cc = c.chan_chan in
       h_assert (send_pre r p cc vs vr);
       h_assert (send_pre_split r p cc vs vr (vs.chan_ctr = vr.chan_ctr));
-      cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
+      let b = vs.chan_ctr = vr.chan_ctr in
+      if b returning SteelT _ (send_pre_split r p cc vs vr b) _
+      then then_ ()
+      else else_ ()
 
 
 let recv_blocked (#p:prot{more p}) #q (cc:chan q) (vs vr:chan_val)
