@@ -1335,10 +1335,15 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1, t2) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.If (t1, t2, t3) ->
-                 (collect_term t1; collect_term t2; collect_term t3)
-             | FStar_Parser_AST.Match (t, bs) ->
-                 (collect_term t; collect_branches bs)
+             | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
+                 (collect_term t1;
+                  FStar_Util.iter_opt ret_opt collect_term;
+                  collect_term t2;
+                  collect_term t3)
+             | FStar_Parser_AST.Match (t, ret_opt, bs) ->
+                 (collect_term t;
+                  FStar_Util.iter_opt ret_opt collect_term;
+                  collect_branches bs)
              | FStar_Parser_AST.TryWith (t, bs) ->
                  (collect_term t; collect_branches bs)
              | FStar_Parser_AST.Ascribed

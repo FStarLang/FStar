@@ -116,7 +116,9 @@ let (mk_match :
       let branches1 =
         FStar_All.pipe_right branches
           (FStar_List.map FStar_Syntax_Util.branch) in
-      FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_match (h, branches1))
+      FStar_Syntax_Syntax.mk
+        (FStar_Syntax_Syntax.Tm_match
+           (h, FStar_Pervasives_Native.None, branches1))
         FStar_Range.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

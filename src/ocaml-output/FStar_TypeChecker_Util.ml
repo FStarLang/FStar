@@ -3716,35 +3716,36 @@ let rec (check_erased :
                 -> Yes a
             | (FStar_Syntax_Syntax.Tm_uvar uu___2, uu___3) -> Maybe
             | (FStar_Syntax_Syntax.Tm_unknown, uu___2) -> Maybe
-            | (FStar_Syntax_Syntax.Tm_match (uu___2, branches), uu___3) ->
+            | (FStar_Syntax_Syntax.Tm_match (uu___2, uu___3, branches),
+               uu___4) ->
                 FStar_All.pipe_right branches
                   (FStar_List.fold_left
                      (fun acc ->
                         fun br ->
                           match acc with
-                          | Yes uu___4 -> Maybe
+                          | Yes uu___5 -> Maybe
                           | Maybe -> Maybe
                           | No ->
-                              let uu___4 = FStar_Syntax_Subst.open_branch br in
-                              (match uu___4 with
-                               | (uu___5, uu___6, br_body) ->
-                                   let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
-                                           let uu___11 =
+                              let uu___5 = FStar_Syntax_Subst.open_branch br in
+                              (match uu___5 with
+                               | (uu___6, uu___7, br_body) ->
+                                   let uu___8 =
+                                     let uu___9 =
+                                       let uu___10 =
+                                         let uu___11 =
+                                           let uu___12 =
                                              FStar_All.pipe_right br_body
                                                FStar_Syntax_Free.names in
-                                           FStar_All.pipe_right uu___11
+                                           FStar_All.pipe_right uu___12
                                              FStar_Util.set_elements in
-                                         FStar_All.pipe_right uu___10
+                                         FStar_All.pipe_right uu___11
                                            (FStar_TypeChecker_Env.push_bvs
                                               env) in
-                                       check_erased uu___9 in
-                                     FStar_All.pipe_right br_body uu___8 in
-                                   (match uu___7 with
+                                       check_erased uu___10 in
+                                     FStar_All.pipe_right br_body uu___9 in
+                                   (match uu___8 with
                                     | No -> No
-                                    | uu___8 -> Maybe))) No)
+                                    | uu___9 -> Maybe))) No)
             | uu___2 -> No in
           r
 let (maybe_coerce_lc :

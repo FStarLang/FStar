@@ -3053,7 +3053,7 @@ and (encode_term :
                          let uu___11 = FStar_Syntax_Syntax.range_of_bv x in
                          (uu___10, uu___11))) in
            FStar_Exn.raise (FStar_SMTEncoding_Env.Inner_let_rec names)
-       | FStar_Syntax_Syntax.Tm_match (e, pats) ->
+       | FStar_Syntax_Syntax.Tm_match (e, uu___1, pats) ->
            encode_match e pats FStar_SMTEncoding_Term.mk_Term_unit env
              encode_term)
 and (encode_let :
@@ -3689,11 +3689,11 @@ and (encode_formula :
         | FStar_Syntax_Syntax.Tm_meta uu___ ->
             let uu___1 = FStar_Syntax_Util.unmeta phi1 in
             encode_formula uu___1 env
-        | FStar_Syntax_Syntax.Tm_match (e, pats) ->
-            let uu___ =
+        | FStar_Syntax_Syntax.Tm_match (e, uu___, pats) ->
+            let uu___1 =
               encode_match e pats FStar_SMTEncoding_Util.mkFalse env
                 encode_formula in
-            (match uu___ with | (t, decls) -> (t, decls))
+            (match uu___1 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let
             ((false,
               { FStar_Syntax_Syntax.lbname = FStar_Util.Inl x;

@@ -1110,26 +1110,26 @@ let rec (ty_strictly_positive_in_type :
                           "Checking strict positivity in an Tm_refine, recur in the bv sort)");
                      ty_strictly_positive_in_type ty_lid
                        bv.FStar_Syntax_Syntax.sort unfolded env)
-                | FStar_Syntax_Syntax.Tm_match (uu___4, branches) ->
+                | FStar_Syntax_Syntax.Tm_match (uu___4, uu___5, branches) ->
                     (debug_log env
-                       (fun uu___6 ->
+                       (fun uu___7 ->
                           "Checking strict positivity in an Tm_match, recur in the branches)");
                      FStar_List.for_all
-                       (fun uu___6 ->
-                          match uu___6 with
-                          | (p, uu___7, t) ->
+                       (fun uu___7 ->
+                          match uu___7 with
+                          | (p, uu___8, t) ->
                               let bs =
-                                let uu___8 = FStar_Syntax_Syntax.pat_bvs p in
+                                let uu___9 = FStar_Syntax_Syntax.pat_bvs p in
                                 FStar_List.map FStar_Syntax_Syntax.mk_binder
-                                  uu___8 in
-                              let uu___8 = FStar_Syntax_Subst.open_term bs t in
-                              (match uu___8 with
+                                  uu___9 in
+                              let uu___9 = FStar_Syntax_Subst.open_term bs t in
+                              (match uu___9 with
                                | (bs1, t1) ->
-                                   let uu___9 =
+                                   let uu___10 =
                                      FStar_TypeChecker_Env.push_binders env
                                        bs1 in
                                    ty_strictly_positive_in_type ty_lid t1
-                                     unfolded uu___9)) branches)
+                                     unfolded uu___10)) branches)
                 | FStar_Syntax_Syntax.Tm_ascribed (t, uu___4, uu___5) ->
                     (debug_log env
                        (fun uu___7 ->
@@ -2895,7 +2895,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                    pat_false in
                                                [uu___9] in
                                              uu___7 :: uu___8 in
-                                           (arg_exp, uu___6) in
+                                           (arg_exp,
+                                             FStar_Pervasives_Native.None,
+                                             uu___6) in
                                          FStar_Syntax_Syntax.Tm_match uu___5 in
                                        FStar_Syntax_Syntax.mk uu___4 p) in
                                   let dd =
@@ -3232,7 +3234,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                           FStar_Syntax_Util.branch
                                                             pat in
                                                         [uu___9] in
-                                                      (arg_exp, uu___8) in
+                                                      (arg_exp,
+                                                        FStar_Pervasives_Native.None,
+                                                        uu___8) in
                                                     FStar_Syntax_Syntax.Tm_match
                                                       uu___7 in
                                                   FStar_Syntax_Syntax.mk

@@ -2405,7 +2405,7 @@ and (p_noSeqTerm' :
               let uu___2 = FStar_Pprint.separate_map break1 p_atomicTerm es in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
-        | FStar_Parser_AST.If (e1, e2, e3) ->
+        | FStar_Parser_AST.If (e1, ret_opt, e2, e3) ->
             if is_unit e3
             then
               let uu___ =
@@ -2422,10 +2422,10 @@ and (p_noSeqTerm' :
             else
               (let e2_doc =
                  match e2.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.If (uu___1, uu___2, e31) when is_unit e31
-                     ->
-                     let uu___3 = p_noSeqTermAndComment false false e2 in
-                     soft_parens_with_nesting uu___3
+                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, e31) when
+                     is_unit e31 ->
+                     let uu___4 = p_noSeqTermAndComment false false e2 in
+                     soft_parens_with_nesting uu___4
                  | uu___1 -> p_noSeqTermAndComment false false e2 in
                let uu___1 =
                  let uu___2 =
@@ -2434,12 +2434,21 @@ and (p_noSeqTerm' :
                    op_Hat_Slash_Plus_Hat uu___3 uu___4 in
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 = str "then" in
-                     op_Hat_Slash_Plus_Hat uu___5 e2_doc in
+                     match ret_opt with
+                     | FStar_Pervasives_Native.None -> str ""
+                     | FStar_Pervasives_Native.Some ret ->
+                         let uu___5 = str "returning" in
+                         let uu___6 = p_tmIff ret in
+                         op_Hat_Slash_Plus_Hat uu___5 uu___6 in
                    let uu___5 =
-                     let uu___6 = str "else" in
-                     let uu___7 = p_noSeqTermAndComment ps pb e3 in
-                     op_Hat_Slash_Plus_Hat uu___6 uu___7 in
+                     let uu___6 =
+                       let uu___7 = str "then" in
+                       op_Hat_Slash_Plus_Hat uu___7 e2_doc in
+                     let uu___7 =
+                       let uu___8 = str "else" in
+                       let uu___9 = p_noSeqTermAndComment ps pb e3 in
+                       op_Hat_Slash_Plus_Hat uu___8 uu___9 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                    FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                  FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                FStar_Pprint.group uu___1)
@@ -2459,18 +2468,27 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if (ps || pb) in uu___1 uu___
-        | FStar_Parser_AST.Match (e1, branches) ->
+        | FStar_Parser_AST.Match (e1, ret_opt, branches) ->
             let uu___ =
               let uu___1 =
                 let uu___2 =
                   let uu___3 = str "match" in
                   let uu___4 = p_noSeqTermAndComment false false e1 in
-                  let uu___5 = str "with" in
+                  let uu___5 =
+                    match ret_opt with
+                    | FStar_Pervasives_Native.None -> str ""
+                    | FStar_Pervasives_Native.Some ret ->
+                        let uu___6 = str " ret " in
+                        let uu___7 = p_tmIff ret in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                   FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
                     uu___3 uu___4 uu___5 in
                 let uu___3 =
-                  separate_map_last FStar_Pprint.hardline p_patternBranch
-                    branches in
+                  let uu___4 = str "with" in
+                  let uu___5 =
+                    separate_map_last FStar_Pprint.hardline p_patternBranch
+                      branches in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if (ps || pb) in uu___1 uu___
@@ -2559,7 +2577,7 @@ and (p_noSeqTerm' :
                FStar_Parser_AST.prange = uu___1;_}::[],
              {
                FStar_Parser_AST.tm = FStar_Parser_AST.Match
-                 (maybe_x, branches);
+                 (maybe_x, FStar_Pervasives_Native.None, branches);
                FStar_Parser_AST.range = uu___2;
                FStar_Parser_AST.level = uu___3;_})
             when matches_var maybe_x x ->

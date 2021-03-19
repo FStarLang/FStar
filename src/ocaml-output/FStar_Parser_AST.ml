@@ -47,9 +47,9 @@ type term' =
   | LetOpen of (FStar_Ident.lid * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
-  | If of (term * term * term) 
-  | Match of (term * (pattern * term FStar_Pervasives_Native.option * term)
-  Prims.list) 
+  | If of (term * term FStar_Pervasives_Native.option * term * term) 
+  | Match of (term * term FStar_Pervasives_Native.option * (pattern * term
+  FStar_Pervasives_Native.option * term) Prims.list) 
   | TryWith of (term * (pattern * term FStar_Pervasives_Native.option * term)
   Prims.list) 
   | Ascribed of (term * term * term FStar_Pervasives_Native.option) 
@@ -192,14 +192,15 @@ let (__proj__Bind__item___0 : term' -> (FStar_Ident.ident * term * term)) =
   fun projectee -> match projectee with | Bind _0 -> _0
 let (uu___is_If : term' -> Prims.bool) =
   fun projectee -> match projectee with | If _0 -> true | uu___ -> false
-let (__proj__If__item___0 : term' -> (term * term * term)) =
+let (__proj__If__item___0 :
+  term' -> (term * term FStar_Pervasives_Native.option * term * term)) =
   fun projectee -> match projectee with | If _0 -> _0
 let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
 let (__proj__Match__item___0 :
   term' ->
-    (term * (pattern * term FStar_Pervasives_Native.option * term)
-      Prims.list))
+    (term * term FStar_Pervasives_Native.option * (pattern * term
+      FStar_Pervasives_Native.option * term) Prims.list))
   = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_TryWith : term' -> Prims.bool) =
   fun projectee -> match projectee with | TryWith _0 -> true | uu___ -> false
@@ -931,7 +932,7 @@ let (mk_function :
                     let uu___6 =
                       let uu___7 = FStar_Ident.lid_of_ids [x] in Var uu___7 in
                     mk_term uu___6 r1 Expr in
-                  (uu___5, branches) in
+                  (uu___5, FStar_Pervasives_Native.None, branches) in
                 Match uu___4 in
               mk_term uu___3 r2 Expr in
             ([mk_pattern (PatVar (x, FStar_Pervasives_Native.None, [])) r1],
@@ -1269,7 +1270,9 @@ let (mkRefinedPattern :
                                    phi.range), FStar_Pervasives_Native.None,
                                  uu___1) in
                              mk_term
-                               (Match (x_var, [pat_branch; otherwise_branch]))
+                               (Match
+                                  (x_var, FStar_Pervasives_Native.None,
+                                    [pat_branch; otherwise_branch]))
                                phi.range Formula in
                            mk_term
                              (Refine
@@ -1538,57 +1541,22 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___1 = term_to_string t1 in
         let uu___2 = term_to_string t2 in
         FStar_Util.format3 "%s <- %s; %s" uu___ uu___1 uu___2
-    | If (t1, t2, t3) ->
+    | If (t1, ret_opt, t2, t3) ->
         let uu___ = FStar_All.pipe_right t1 term_to_string in
-        let uu___1 = FStar_All.pipe_right t2 term_to_string in
-        let uu___2 = FStar_All.pipe_right t3 term_to_string in
-        FStar_Util.format3 "if %s then %s else %s" uu___ uu___1 uu___2
-    | Match (t, branches) ->
-        let s =
-          match x.tm with
-          | Match uu___ -> "match"
-          | TryWith uu___ -> "try"
-          | uu___ -> failwith "impossible" in
-        let uu___ = FStar_All.pipe_right t term_to_string in
         let uu___1 =
-          to_string_l " | "
-            (fun uu___2 ->
-               match uu___2 with
-               | (p, w, e) ->
-                   let uu___3 = FStar_All.pipe_right p pat_to_string in
-                   let uu___4 =
-                     match w with
-                     | FStar_Pervasives_Native.None -> ""
-                     | FStar_Pervasives_Native.Some e1 ->
-                         let uu___5 = term_to_string e1 in
-                         FStar_Util.format1 "when %s" uu___5 in
-                   let uu___5 = FStar_All.pipe_right e term_to_string in
-                   FStar_Util.format3 "%s %s -> %s" uu___3 uu___4 uu___5)
-            branches in
-        FStar_Util.format3 "%s %s with %s" s uu___ uu___1
+          match ret_opt with
+          | FStar_Pervasives_Native.None -> ""
+          | FStar_Pervasives_Native.Some ret ->
+              let uu___2 = term_to_string ret in
+              FStar_Util.format1 "returning %s" uu___2 in
+        let uu___2 = FStar_All.pipe_right t2 term_to_string in
+        let uu___3 = FStar_All.pipe_right t3 term_to_string in
+        FStar_Util.format4 "if %s %s then %s else %s" uu___ uu___1 uu___2
+          uu___3
+    | Match (t, ret_opt, branches) ->
+        try_or_match_to_string x t branches ret_opt
     | TryWith (t, branches) ->
-        let s =
-          match x.tm with
-          | Match uu___ -> "match"
-          | TryWith uu___ -> "try"
-          | uu___ -> failwith "impossible" in
-        let uu___ = FStar_All.pipe_right t term_to_string in
-        let uu___1 =
-          to_string_l " | "
-            (fun uu___2 ->
-               match uu___2 with
-               | (p, w, e) ->
-                   let uu___3 = FStar_All.pipe_right p pat_to_string in
-                   let uu___4 =
-                     match w with
-                     | FStar_Pervasives_Native.None -> ""
-                     | FStar_Pervasives_Native.Some e1 ->
-                         let uu___5 = term_to_string e1 in
-                         FStar_Util.format1 "when %s" uu___5 in
-                   let uu___5 = FStar_All.pipe_right e term_to_string in
-                   FStar_Util.format3 "%s %s -> %s" uu___3 uu___4 uu___5)
-            branches in
-        FStar_Util.format3 "%s %s with %s" s uu___ uu___1
+        try_or_match_to_string x t branches FStar_Pervasives_Native.None
     | Ascribed (t1, t2, FStar_Pervasives_Native.None) ->
         let uu___ = FStar_All.pipe_right t1 term_to_string in
         let uu___1 = FStar_All.pipe_right t2 term_to_string in
@@ -1700,6 +1668,44 @@ let rec (term_to_string : term -> Prims.string) =
           let uu___3 = FStar_List.map calc_step_to_string steps in
           FStar_All.pipe_left (FStar_String.concat " ") uu___3 in
         FStar_Util.format3 "calc (%s) { %s %s }" uu___ uu___1 uu___2
+and (try_or_match_to_string :
+  term ->
+    term ->
+      (pattern * term FStar_Pervasives_Native.option * term) Prims.list ->
+        term FStar_Pervasives_Native.option -> Prims.string)
+  =
+  fun x ->
+    fun scrutinee ->
+      fun branches ->
+        fun ret_opt ->
+          let s =
+            match x.tm with
+            | Match uu___ -> "match"
+            | TryWith uu___ -> "try"
+            | uu___ -> failwith "impossible" in
+          let uu___ = FStar_All.pipe_right scrutinee term_to_string in
+          let uu___1 =
+            match ret_opt with
+            | FStar_Pervasives_Native.None -> ""
+            | FStar_Pervasives_Native.Some ret ->
+                let uu___2 = term_to_string ret in
+                FStar_Util.format1 "returning %s" uu___2 in
+          let uu___2 =
+            to_string_l " | "
+              (fun uu___3 ->
+                 match uu___3 with
+                 | (p, w, e) ->
+                     let uu___4 = FStar_All.pipe_right p pat_to_string in
+                     let uu___5 =
+                       match w with
+                       | FStar_Pervasives_Native.None -> ""
+                       | FStar_Pervasives_Native.Some e1 ->
+                           let uu___6 = term_to_string e1 in
+                           FStar_Util.format1 "when %s" uu___6 in
+                     let uu___6 = FStar_All.pipe_right e term_to_string in
+                     FStar_Util.format3 "%s %s -> %s" uu___4 uu___5 uu___6)
+              branches in
+          FStar_Util.format4 "%s %s %s with %s" s uu___ uu___1 uu___2
 and (calc_step_to_string : calc_step -> Prims.string) =
   fun uu___ ->
     match uu___ with

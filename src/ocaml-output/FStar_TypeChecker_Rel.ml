@@ -6441,282 +6441,282 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                  | ((uu___3,
                      {
                        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_match
-                         (scrutinee, branches);
-                       FStar_Syntax_Syntax.pos = uu___4;
-                       FStar_Syntax_Syntax.vars = uu___5;_}),
+                         (scrutinee, uu___4, branches);
+                       FStar_Syntax_Syntax.pos = uu___5;
+                       FStar_Syntax_Syntax.vars = uu___6;_}),
                     (s, t)) ->
-                     let uu___6 =
-                       let uu___7 = is_flex scrutinee in
-                       Prims.op_Negation uu___7 in
-                     if uu___6
+                     let uu___7 =
+                       let uu___8 = is_flex scrutinee in
+                       Prims.op_Negation uu___8 in
+                     if uu___7
                      then
-                       ((let uu___8 =
+                       ((let uu___9 =
                            FStar_All.pipe_left
                              (FStar_TypeChecker_Env.debug env1)
                              (FStar_Options.Other "Rel") in
-                         if uu___8
+                         if uu___9
                          then
-                           let uu___9 =
+                           let uu___10 =
                              FStar_Syntax_Print.term_to_string scrutinee in
                            FStar_Util.print1
-                             "match head %s is not a flex term\n" uu___9
+                             "match head %s is not a flex term\n" uu___10
                          else ());
                         FStar_Util.Inr FStar_Pervasives_Native.None)
                      else
                        if wl1.defer_ok
                        then
-                         ((let uu___9 =
-                             FStar_All.pipe_left
-                               (FStar_TypeChecker_Env.debug env1)
-                               (FStar_Options.Other "Rel") in
-                           if uu___9
-                           then FStar_Util.print_string "Deferring ... \n"
-                           else ());
-                          FStar_Util.Inl "defer")
-                       else
                          ((let uu___10 =
                              FStar_All.pipe_left
                                (FStar_TypeChecker_Env.debug env1)
                                (FStar_Options.Other "Rel") in
                            if uu___10
+                           then FStar_Util.print_string "Deferring ... \n"
+                           else ());
+                          FStar_Util.Inl "defer")
+                       else
+                         ((let uu___11 =
+                             FStar_All.pipe_left
+                               (FStar_TypeChecker_Env.debug env1)
+                               (FStar_Options.Other "Rel") in
+                           if uu___11
                            then
-                             let uu___11 =
-                               FStar_Syntax_Print.term_to_string scrutinee in
                              let uu___12 =
+                               FStar_Syntax_Print.term_to_string scrutinee in
+                             let uu___13 =
                                FStar_Syntax_Print.term_to_string t in
                              FStar_Util.print2
                                "Heuristic applicable with scrutinee %s and other side = %s\n"
-                               uu___11 uu___12
+                               uu___12 uu___13
                            else ());
-                          (let pat_discriminates uu___10 =
-                             match uu___10 with
+                          (let pat_discriminates uu___11 =
+                             match uu___11 with
                              | ({
                                   FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_constant uu___11;
-                                  FStar_Syntax_Syntax.p = uu___12;_},
-                                FStar_Pervasives_Native.None, uu___13) ->
+                                    FStar_Syntax_Syntax.Pat_constant uu___12;
+                                  FStar_Syntax_Syntax.p = uu___13;_},
+                                FStar_Pervasives_Native.None, uu___14) ->
                                  true
                              | ({
                                   FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_cons uu___11;
-                                  FStar_Syntax_Syntax.p = uu___12;_},
-                                FStar_Pervasives_Native.None, uu___13) ->
+                                    FStar_Syntax_Syntax.Pat_cons uu___12;
+                                  FStar_Syntax_Syntax.p = uu___13;_},
+                                FStar_Pervasives_Native.None, uu___14) ->
                                  true
-                             | uu___11 -> false in
+                             | uu___12 -> false in
                            let head_matching_branch =
                              FStar_All.pipe_right branches
                                (FStar_Util.try_find
                                   (fun b ->
                                      if pat_discriminates b
                                      then
-                                       let uu___10 =
+                                       let uu___11 =
                                          FStar_Syntax_Subst.open_branch b in
-                                       match uu___10 with
-                                       | (uu___11, uu___12, t') ->
-                                           let uu___13 =
+                                       match uu___11 with
+                                       | (uu___12, uu___13, t') ->
+                                           let uu___14 =
                                              head_matches_delta env1 wl1 s t' in
-                                           (match uu___13 with
-                                            | (FullMatch, uu___14) -> true
-                                            | (HeadMatch uu___14, uu___15) ->
+                                           (match uu___14 with
+                                            | (FullMatch, uu___15) -> true
+                                            | (HeadMatch uu___15, uu___16) ->
                                                 true
-                                            | uu___14 -> false)
+                                            | uu___15 -> false)
                                      else false)) in
                            match head_matching_branch with
                            | FStar_Pervasives_Native.None ->
-                               ((let uu___11 =
+                               ((let uu___12 =
                                    FStar_All.pipe_left
                                      (FStar_TypeChecker_Env.debug env1)
                                      (FStar_Options.Other "Rel") in
-                                 if uu___11
+                                 if uu___12
                                  then
                                    FStar_Util.print_string
                                      "No head_matching branch\n"
                                  else ());
                                 (let try_branches =
-                                   let uu___11 =
+                                   let uu___12 =
                                      FStar_Util.prefix_until
                                        (fun b ->
                                           Prims.op_Negation
                                             (pat_discriminates b)) branches in
-                                   match uu___11 with
+                                   match uu___12 with
                                    | FStar_Pervasives_Native.Some
-                                       (branches1, uu___12, uu___13) ->
+                                       (branches1, uu___13, uu___14) ->
                                        branches1
-                                   | uu___12 -> branches in
-                                 let uu___11 =
+                                   | uu___13 -> branches in
+                                 let uu___12 =
                                    FStar_Util.find_map try_branches
                                      (fun b ->
-                                        let uu___12 =
+                                        let uu___13 =
                                           FStar_Syntax_Subst.open_branch b in
-                                        match uu___12 with
-                                        | (p, uu___13, uu___14) ->
+                                        match uu___13 with
+                                        | (p, uu___14, uu___15) ->
                                             try_solve_branch scrutinee p) in
                                  FStar_All.pipe_left
-                                   (fun uu___12 -> FStar_Util.Inr uu___12)
-                                   uu___11))
+                                   (fun uu___13 -> FStar_Util.Inr uu___13)
+                                   uu___12))
                            | FStar_Pervasives_Native.Some b ->
-                               let uu___10 = FStar_Syntax_Subst.open_branch b in
-                               (match uu___10 with
-                                | (p, uu___11, e) ->
-                                    ((let uu___13 =
+                               let uu___11 = FStar_Syntax_Subst.open_branch b in
+                               (match uu___11 with
+                                | (p, uu___12, e) ->
+                                    ((let uu___14 =
                                         FStar_All.pipe_left
                                           (FStar_TypeChecker_Env.debug env1)
                                           (FStar_Options.Other "Rel") in
-                                      if uu___13
+                                      if uu___14
                                       then
-                                        let uu___14 =
-                                          FStar_Syntax_Print.pat_to_string p in
                                         let uu___15 =
+                                          FStar_Syntax_Print.pat_to_string p in
+                                        let uu___16 =
                                           FStar_Syntax_Print.term_to_string e in
                                         FStar_Util.print2
                                           "Found head matching branch %s -> %s\n"
-                                          uu___14 uu___15
+                                          uu___15 uu___16
                                       else ());
-                                     (let uu___13 =
+                                     (let uu___14 =
                                         try_solve_branch scrutinee p in
                                       FStar_All.pipe_left
-                                        (fun uu___14 ->
-                                           FStar_Util.Inr uu___14) uu___13)))))
+                                        (fun uu___15 ->
+                                           FStar_Util.Inr uu___15) uu___14)))))
                  | ((s, t),
                     (uu___3,
                      {
                        FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_match
-                         (scrutinee, branches);
-                       FStar_Syntax_Syntax.pos = uu___4;
-                       FStar_Syntax_Syntax.vars = uu___5;_}))
+                         (scrutinee, uu___4, branches);
+                       FStar_Syntax_Syntax.pos = uu___5;
+                       FStar_Syntax_Syntax.vars = uu___6;_}))
                      ->
-                     let uu___6 =
-                       let uu___7 = is_flex scrutinee in
-                       Prims.op_Negation uu___7 in
-                     if uu___6
+                     let uu___7 =
+                       let uu___8 = is_flex scrutinee in
+                       Prims.op_Negation uu___8 in
+                     if uu___7
                      then
-                       ((let uu___8 =
+                       ((let uu___9 =
                            FStar_All.pipe_left
                              (FStar_TypeChecker_Env.debug env1)
                              (FStar_Options.Other "Rel") in
-                         if uu___8
+                         if uu___9
                          then
-                           let uu___9 =
+                           let uu___10 =
                              FStar_Syntax_Print.term_to_string scrutinee in
                            FStar_Util.print1
-                             "match head %s is not a flex term\n" uu___9
+                             "match head %s is not a flex term\n" uu___10
                          else ());
                         FStar_Util.Inr FStar_Pervasives_Native.None)
                      else
                        if wl1.defer_ok
                        then
-                         ((let uu___9 =
-                             FStar_All.pipe_left
-                               (FStar_TypeChecker_Env.debug env1)
-                               (FStar_Options.Other "Rel") in
-                           if uu___9
-                           then FStar_Util.print_string "Deferring ... \n"
-                           else ());
-                          FStar_Util.Inl "defer")
-                       else
                          ((let uu___10 =
                              FStar_All.pipe_left
                                (FStar_TypeChecker_Env.debug env1)
                                (FStar_Options.Other "Rel") in
                            if uu___10
+                           then FStar_Util.print_string "Deferring ... \n"
+                           else ());
+                          FStar_Util.Inl "defer")
+                       else
+                         ((let uu___11 =
+                             FStar_All.pipe_left
+                               (FStar_TypeChecker_Env.debug env1)
+                               (FStar_Options.Other "Rel") in
+                           if uu___11
                            then
-                             let uu___11 =
-                               FStar_Syntax_Print.term_to_string scrutinee in
                              let uu___12 =
+                               FStar_Syntax_Print.term_to_string scrutinee in
+                             let uu___13 =
                                FStar_Syntax_Print.term_to_string t in
                              FStar_Util.print2
                                "Heuristic applicable with scrutinee %s and other side = %s\n"
-                               uu___11 uu___12
+                               uu___12 uu___13
                            else ());
-                          (let pat_discriminates uu___10 =
-                             match uu___10 with
+                          (let pat_discriminates uu___11 =
+                             match uu___11 with
                              | ({
                                   FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_constant uu___11;
-                                  FStar_Syntax_Syntax.p = uu___12;_},
-                                FStar_Pervasives_Native.None, uu___13) ->
+                                    FStar_Syntax_Syntax.Pat_constant uu___12;
+                                  FStar_Syntax_Syntax.p = uu___13;_},
+                                FStar_Pervasives_Native.None, uu___14) ->
                                  true
                              | ({
                                   FStar_Syntax_Syntax.v =
-                                    FStar_Syntax_Syntax.Pat_cons uu___11;
-                                  FStar_Syntax_Syntax.p = uu___12;_},
-                                FStar_Pervasives_Native.None, uu___13) ->
+                                    FStar_Syntax_Syntax.Pat_cons uu___12;
+                                  FStar_Syntax_Syntax.p = uu___13;_},
+                                FStar_Pervasives_Native.None, uu___14) ->
                                  true
-                             | uu___11 -> false in
+                             | uu___12 -> false in
                            let head_matching_branch =
                              FStar_All.pipe_right branches
                                (FStar_Util.try_find
                                   (fun b ->
                                      if pat_discriminates b
                                      then
-                                       let uu___10 =
+                                       let uu___11 =
                                          FStar_Syntax_Subst.open_branch b in
-                                       match uu___10 with
-                                       | (uu___11, uu___12, t') ->
-                                           let uu___13 =
+                                       match uu___11 with
+                                       | (uu___12, uu___13, t') ->
+                                           let uu___14 =
                                              head_matches_delta env1 wl1 s t' in
-                                           (match uu___13 with
-                                            | (FullMatch, uu___14) -> true
-                                            | (HeadMatch uu___14, uu___15) ->
+                                           (match uu___14 with
+                                            | (FullMatch, uu___15) -> true
+                                            | (HeadMatch uu___15, uu___16) ->
                                                 true
-                                            | uu___14 -> false)
+                                            | uu___15 -> false)
                                      else false)) in
                            match head_matching_branch with
                            | FStar_Pervasives_Native.None ->
-                               ((let uu___11 =
+                               ((let uu___12 =
                                    FStar_All.pipe_left
                                      (FStar_TypeChecker_Env.debug env1)
                                      (FStar_Options.Other "Rel") in
-                                 if uu___11
+                                 if uu___12
                                  then
                                    FStar_Util.print_string
                                      "No head_matching branch\n"
                                  else ());
                                 (let try_branches =
-                                   let uu___11 =
+                                   let uu___12 =
                                      FStar_Util.prefix_until
                                        (fun b ->
                                           Prims.op_Negation
                                             (pat_discriminates b)) branches in
-                                   match uu___11 with
+                                   match uu___12 with
                                    | FStar_Pervasives_Native.Some
-                                       (branches1, uu___12, uu___13) ->
+                                       (branches1, uu___13, uu___14) ->
                                        branches1
-                                   | uu___12 -> branches in
-                                 let uu___11 =
+                                   | uu___13 -> branches in
+                                 let uu___12 =
                                    FStar_Util.find_map try_branches
                                      (fun b ->
-                                        let uu___12 =
+                                        let uu___13 =
                                           FStar_Syntax_Subst.open_branch b in
-                                        match uu___12 with
-                                        | (p, uu___13, uu___14) ->
+                                        match uu___13 with
+                                        | (p, uu___14, uu___15) ->
                                             try_solve_branch scrutinee p) in
                                  FStar_All.pipe_left
-                                   (fun uu___12 -> FStar_Util.Inr uu___12)
-                                   uu___11))
+                                   (fun uu___13 -> FStar_Util.Inr uu___13)
+                                   uu___12))
                            | FStar_Pervasives_Native.Some b ->
-                               let uu___10 = FStar_Syntax_Subst.open_branch b in
-                               (match uu___10 with
-                                | (p, uu___11, e) ->
-                                    ((let uu___13 =
+                               let uu___11 = FStar_Syntax_Subst.open_branch b in
+                               (match uu___11 with
+                                | (p, uu___12, e) ->
+                                    ((let uu___14 =
                                         FStar_All.pipe_left
                                           (FStar_TypeChecker_Env.debug env1)
                                           (FStar_Options.Other "Rel") in
-                                      if uu___13
+                                      if uu___14
                                       then
-                                        let uu___14 =
-                                          FStar_Syntax_Print.pat_to_string p in
                                         let uu___15 =
+                                          FStar_Syntax_Print.pat_to_string p in
+                                        let uu___16 =
                                           FStar_Syntax_Print.term_to_string e in
                                         FStar_Util.print2
                                           "Found head matching branch %s -> %s\n"
-                                          uu___14 uu___15
+                                          uu___15 uu___16
                                       else ());
-                                     (let uu___13 =
+                                     (let uu___14 =
                                         try_solve_branch scrutinee p in
                                       FStar_All.pipe_left
-                                        (fun uu___14 ->
-                                           FStar_Util.Inr uu___14) uu___13)))))
+                                        (fun uu___15 ->
+                                           FStar_Util.Inr uu___15) uu___14)))))
                  | uu___3 ->
                      ((let uu___5 =
                          FStar_All.pipe_left
@@ -8186,38 +8186,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                        FStar_TypeChecker_Common.rank =
                          (uu___9.FStar_TypeChecker_Common.rank)
                      }) wl
-              | (FStar_Syntax_Syntax.Tm_match (s1, brs1),
-                 FStar_Syntax_Syntax.Tm_match (s2, brs2)) ->
-                  let by_smt uu___7 =
-                    let uu___8 = guard_of_prob env wl problem t1 t2 in
-                    match uu___8 with
+              | (FStar_Syntax_Syntax.Tm_match (s1, uu___7, brs1),
+                 FStar_Syntax_Syntax.Tm_match (s2, uu___8, brs2)) ->
+                  let by_smt uu___9 =
+                    let uu___10 = guard_of_prob env wl problem t1 t2 in
+                    match uu___10 with
                     | (guard, wl1) ->
-                        let uu___9 =
+                        let uu___11 =
                           solve_prob orig
                             (FStar_Pervasives_Native.Some guard) [] wl1 in
-                        solve env uu___9 in
+                        solve env uu___11 in
                   let rec solve_branches wl1 brs11 brs21 =
                     match (brs11, brs21) with
                     | (br1::rs1, br2::rs2) ->
-                        let uu___7 = br1 in
-                        (match uu___7 with
-                         | (p1, w1, uu___8) ->
-                             let uu___9 = br2 in
-                             (match uu___9 with
-                              | (p2, w2, uu___10) ->
-                                  let uu___11 =
-                                    let uu___12 =
+                        let uu___9 = br1 in
+                        (match uu___9 with
+                         | (p1, w1, uu___10) ->
+                             let uu___11 = br2 in
+                             (match uu___11 with
+                              | (p2, w2, uu___12) ->
+                                  let uu___13 =
+                                    let uu___14 =
                                       FStar_Syntax_Syntax.eq_pat p1 p2 in
-                                    Prims.op_Negation uu___12 in
-                                  if uu___11
+                                    Prims.op_Negation uu___14 in
+                                  if uu___13
                                   then FStar_Pervasives_Native.None
                                   else
-                                    (let uu___13 =
+                                    (let uu___15 =
                                        FStar_Syntax_Subst.open_branch' br1 in
-                                     match uu___13 with
+                                     match uu___15 with
                                      | ((p11, w11, e1), s) ->
-                                         let uu___14 = br2 in
-                                         (match uu___14 with
+                                         let uu___16 = br2 in
+                                         (match uu___16 with
                                           | (p21, w21, e2) ->
                                               let w22 =
                                                 FStar_Util.map_opt w21
@@ -8225,23 +8225,23 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                               let e21 =
                                                 FStar_Syntax_Subst.subst s e2 in
                                               let scope =
-                                                let uu___15 =
+                                                let uu___17 =
                                                   FStar_Syntax_Syntax.pat_bvs
                                                     p11 in
                                                 FStar_All.pipe_left
                                                   (FStar_List.map
                                                      FStar_Syntax_Syntax.mk_binder)
-                                                  uu___15 in
-                                              let uu___15 =
+                                                  uu___17 in
+                                              let uu___17 =
                                                 match (w11, w22) with
                                                 | (FStar_Pervasives_Native.Some
-                                                   uu___16,
+                                                   uu___18,
                                                    FStar_Pervasives_Native.None)
                                                     ->
                                                     FStar_Pervasives_Native.None
                                                 | (FStar_Pervasives_Native.None,
                                                    FStar_Pervasives_Native.Some
-                                                   uu___16) ->
+                                                   uu___18) ->
                                                     FStar_Pervasives_Native.None
                                                 | (FStar_Pervasives_Native.None,
                                                    FStar_Pervasives_Native.None)
@@ -8252,59 +8252,59 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                    w12,
                                                    FStar_Pervasives_Native.Some
                                                    w23) ->
-                                                    let uu___16 =
+                                                    let uu___18 =
                                                       mk_t_problem wl1 scope
                                                         orig w12
                                                         FStar_TypeChecker_Common.EQ
                                                         w23
                                                         FStar_Pervasives_Native.None
                                                         "when clause" in
-                                                    (match uu___16 with
+                                                    (match uu___18 with
                                                      | (p, wl2) ->
                                                          FStar_Pervasives_Native.Some
                                                            ([(scope, p)],
                                                              wl2)) in
-                                              FStar_Util.bind_opt uu___15
-                                                (fun uu___16 ->
-                                                   match uu___16 with
+                                              FStar_Util.bind_opt uu___17
+                                                (fun uu___18 ->
+                                                   match uu___18 with
                                                    | (wprobs, wl2) ->
-                                                       let uu___17 =
+                                                       let uu___19 =
                                                          mk_t_problem wl2
                                                            scope orig e1
                                                            FStar_TypeChecker_Common.EQ
                                                            e21
                                                            FStar_Pervasives_Native.None
                                                            "branch body" in
-                                                       (match uu___17 with
+                                                       (match uu___19 with
                                                         | (prob, wl3) ->
-                                                            ((let uu___19 =
+                                                            ((let uu___21 =
                                                                 FStar_All.pipe_left
                                                                   (FStar_TypeChecker_Env.debug
                                                                     wl3.tcenv)
                                                                   (FStar_Options.Other
                                                                     "Rel") in
-                                                              if uu___19
+                                                              if uu___21
                                                               then
-                                                                let uu___20 =
+                                                                let uu___22 =
                                                                   prob_to_string
                                                                     env prob in
-                                                                let uu___21 =
+                                                                let uu___23 =
                                                                   FStar_Syntax_Print.binders_to_string
                                                                     ", "
                                                                     scope in
                                                                 FStar_Util.print2
                                                                   "Created problem for branches %s with scope %s\n"
-                                                                  uu___20
-                                                                  uu___21
+                                                                  uu___22
+                                                                  uu___23
                                                               else ());
-                                                             (let uu___19 =
+                                                             (let uu___21 =
                                                                 solve_branches
                                                                   wl3 rs1 rs2 in
                                                               FStar_Util.bind_opt
-                                                                uu___19
-                                                                (fun uu___20
+                                                                uu___21
+                                                                (fun uu___22
                                                                    ->
-                                                                   match uu___20
+                                                                   match uu___22
                                                                    with
                                                                    | 
                                                                    (r1, wl4)
@@ -8316,75 +8316,75 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                                     wprobs r1)),
                                                                     wl4))))))))))
                     | ([], []) -> FStar_Pervasives_Native.Some ([], wl1)
-                    | uu___7 -> FStar_Pervasives_Native.None in
-                  let uu___7 = solve_branches wl brs1 brs2 in
-                  (match uu___7 with
+                    | uu___9 -> FStar_Pervasives_Native.None in
+                  let uu___9 = solve_branches wl brs1 brs2 in
+                  (match uu___9 with
                    | FStar_Pervasives_Native.None ->
                        if wl.smt_ok
                        then by_smt ()
                        else
-                         (let uu___9 =
+                         (let uu___11 =
                             FStar_Thunk.mkv "Tm_match branches don't match" in
-                          giveup env uu___9 orig)
+                          giveup env uu___11 orig)
                    | FStar_Pervasives_Native.Some (sub_probs, wl1) ->
-                       let uu___8 =
+                       let uu___10 =
                          mk_t_problem wl1 [] orig s1
                            FStar_TypeChecker_Common.EQ s2
                            FStar_Pervasives_Native.None "match scrutinee" in
-                       (match uu___8 with
+                       (match uu___10 with
                         | (sc_prob, wl2) ->
                             let sub_probs1 = ([], sc_prob) :: sub_probs in
                             let formula =
-                              let uu___9 =
+                              let uu___11 =
                                 FStar_List.map
-                                  (fun uu___10 ->
-                                     match uu___10 with
+                                  (fun uu___12 ->
+                                     match uu___12 with
                                      | (scope, p) ->
                                          FStar_TypeChecker_Env.close_forall
                                            wl2.tcenv scope (p_guard p))
                                   sub_probs1 in
-                              FStar_Syntax_Util.mk_conj_l uu___9 in
+                              FStar_Syntax_Util.mk_conj_l uu___11 in
                             let tx =
                               FStar_Syntax_Unionfind.new_transaction () in
                             let wl3 =
                               solve_prob orig
                                 (FStar_Pervasives_Native.Some formula) [] wl2 in
-                            let uu___9 =
-                              let uu___10 =
-                                let uu___11 =
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
                                   FStar_List.map FStar_Pervasives_Native.snd
                                     sub_probs1 in
-                                attempt uu___11
-                                  (let uu___12 = wl3 in
+                                attempt uu___13
+                                  (let uu___14 = wl3 in
                                    {
-                                     attempting = (uu___12.attempting);
-                                     wl_deferred = (uu___12.wl_deferred);
+                                     attempting = (uu___14.attempting);
+                                     wl_deferred = (uu___14.wl_deferred);
                                      wl_deferred_to_tac =
-                                       (uu___12.wl_deferred_to_tac);
-                                     ctr = (uu___12.ctr);
-                                     defer_ok = (uu___12.defer_ok);
+                                       (uu___14.wl_deferred_to_tac);
+                                     ctr = (uu___14.ctr);
+                                     defer_ok = (uu___14.defer_ok);
                                      smt_ok = false;
                                      umax_heuristic_ok =
-                                       (uu___12.umax_heuristic_ok);
-                                     tcenv = (uu___12.tcenv);
-                                     wl_implicits = (uu___12.wl_implicits);
+                                       (uu___14.umax_heuristic_ok);
+                                     tcenv = (uu___14.tcenv);
+                                     wl_implicits = (uu___14.wl_implicits);
                                      repr_subcomp_allowed =
-                                       (uu___12.repr_subcomp_allowed)
+                                       (uu___14.repr_subcomp_allowed)
                                    }) in
-                              solve env uu___10 in
-                            (match uu___9 with
+                              solve env uu___12 in
+                            (match uu___11 with
                              | Success (ds, ds', imp) ->
                                  (FStar_Syntax_Unionfind.commit tx;
                                   Success (ds, ds', imp))
-                             | Failed uu___10 ->
+                             | Failed uu___12 ->
                                  (FStar_Syntax_Unionfind.rollback tx;
                                   if wl3.smt_ok
                                   then by_smt ()
                                   else
-                                    (let uu___13 =
+                                    (let uu___15 =
                                        FStar_Thunk.mkv
                                          "Could not unify matches without SMT" in
-                                     giveup env uu___13 orig)))))
+                                     giveup env uu___15 orig)))))
               | (FStar_Syntax_Syntax.Tm_match uu___7, uu___8) ->
                   let head1 =
                     let uu___9 = FStar_Syntax_Util.head_and_args t1 in

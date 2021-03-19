@@ -428,7 +428,7 @@ and (on_subterms :
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue)
-                | FStar_Syntax_Syntax.Tm_match (hd, brs) ->
+                | FStar_Syntax_Syntax.Tm_match (hd, asc_opt, brs) ->
                     let c_branch br =
                       let uu___1 = FStar_Syntax_Subst.open_branch br in
                       match uu___1 with
@@ -455,8 +455,8 @@ and (on_subterms :
                          match uu___2 with
                          | ((hd1, brs1), flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_match (hd1, brs1)),
-                                 flag))
+                               ((FStar_Syntax_Syntax.Tm_match
+                                   (hd1, asc_opt, brs1)), flag))
                 | FStar_Syntax_Syntax.Tm_let
                     ((false,
                       { FStar_Syntax_Syntax.lbname = FStar_Util.Inl bv;

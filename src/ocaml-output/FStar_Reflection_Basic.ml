@@ -182,22 +182,22 @@ let rec (inspect_ln :
                FStar_Reflection_Data.Tv_Let
                  (true, (lb.FStar_Syntax_Syntax.lbattrs), bv,
                    (lb.FStar_Syntax_Syntax.lbdef), t21))
-    | FStar_Syntax_Syntax.Tm_match (t4, brs) ->
+    | FStar_Syntax_Syntax.Tm_match (t4, uu___, brs) ->
         let rec inspect_pat p =
           match p.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_constant c ->
-              let uu___ = inspect_const c in
-              FStar_Reflection_Data.Pat_Constant uu___
+              let uu___1 = inspect_const c in
+              FStar_Reflection_Data.Pat_Constant uu___1
           | FStar_Syntax_Syntax.Pat_cons (fv, ps) ->
-              let uu___ =
-                let uu___1 =
+              let uu___1 =
+                let uu___2 =
                   FStar_List.map
-                    (fun uu___2 ->
-                       match uu___2 with
+                    (fun uu___3 ->
+                       match uu___3 with
                        | (p1, b) ->
-                           let uu___3 = inspect_pat p1 in (uu___3, b)) ps in
-                (fv, uu___1) in
-              FStar_Reflection_Data.Pat_Cons uu___
+                           let uu___4 = inspect_pat p1 in (uu___4, b)) ps in
+                (fv, uu___2) in
+              FStar_Reflection_Data.Pat_Cons uu___1
           | FStar_Syntax_Syntax.Pat_var bv ->
               FStar_Reflection_Data.Pat_Var bv
           | FStar_Syntax_Syntax.Pat_wild bv ->
@@ -206,10 +206,10 @@ let rec (inspect_ln :
               FStar_Reflection_Data.Pat_Dot_Term (bv, t5) in
         let brs1 =
           FStar_List.map
-            (fun uu___ ->
-               match uu___ with
-               | (pat, uu___1, t5) ->
-                   let uu___2 = inspect_pat pat in (uu___2, t5)) brs in
+            (fun uu___1 ->
+               match uu___1 with
+               | (pat, uu___2, t5) ->
+                   let uu___3 = inspect_pat pat in (uu___3, t5)) brs in
         FStar_Reflection_Data.Tv_Match (t4, brs1)
     | FStar_Syntax_Syntax.Tm_unknown -> FStar_Reflection_Data.Tv_Unknown
     | uu___ ->
@@ -447,8 +447,9 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                | (pat, t1) ->
                    let uu___1 = pack_pat pat in
                    (uu___1, FStar_Pervasives_Native.None, t1)) brs in
-        FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_match (t, brs1))
-          FStar_Range.dummyRange
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_match
+             (t, FStar_Pervasives_Native.None, brs1)) FStar_Range.dummyRange
     | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed

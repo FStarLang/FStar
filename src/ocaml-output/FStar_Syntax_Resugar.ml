@@ -922,7 +922,9 @@ let rec (resugar_term' :
                               let rec resugar_body t1 =
                                 match t1.FStar_Parser_AST.tm with
                                 | FStar_Parser_AST.Match
-                                    (e1, (uu___5, uu___6, b)::[]) -> b
+                                    (e1, FStar_Pervasives_Native.None,
+                                     (uu___5, uu___6, b)::[])
+                                    -> b
                                 | FStar_Parser_AST.Let (uu___5, uu___6, b) ->
                                     b
                                 | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
@@ -938,8 +940,10 @@ let rec (resugar_term' :
                               let e1 = resugar_body body1 in
                               let rec resugar_branches t1 =
                                 match t1.FStar_Parser_AST.tm with
-                                | FStar_Parser_AST.Match (e2, branches) ->
-                                    branches
+                                | FStar_Parser_AST.Match
+                                    (e2, FStar_Pervasives_Native.None,
+                                     branches)
+                                    -> branches
                                 | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
                                     resugar_branches t11
                                 | uu___5 -> [] in
@@ -1128,7 +1132,8 @@ let rec (resugar_term' :
                       FStar_Parser_AST.Op uu___3 in
                     mk uu___2
                 | uu___2 -> resugar_as_app e args1))
-      | FStar_Syntax_Syntax.Tm_match (e, (pat, wopt, t1)::[]) ->
+      | FStar_Syntax_Syntax.Tm_match
+          (e, FStar_Pervasives_Native.None, (pat, wopt, t1)::[]) ->
           let uu___1 = FStar_Syntax_Subst.open_branch (pat, wopt, t1) in
           (match uu___1 with
            | (pat1, wopt1, t2) ->
@@ -1145,16 +1150,25 @@ let rec (resugar_term' :
                  (FStar_Parser_AST.Let
                     (FStar_Parser_AST.NoLetQualifier, bnds, body)))
       | FStar_Syntax_Syntax.Tm_match
-          (e, (pat1, uu___1, t1)::(pat2, uu___2, t2)::[]) when
+          (e, asc_opt, (pat1, uu___1, t1)::(pat2, uu___2, t2)::[]) when
           (is_true_pat pat1) && (is_wild_pat pat2) ->
+          let asc_opt1 =
+            match asc_opt with
+            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+            | FStar_Pervasives_Native.Some (asc, uu___3) ->
+                let uu___4 =
+                  FStar_All.pipe_right asc (resugar_ascription env) in
+                FStar_All.pipe_right uu___4
+                  (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) in
           let uu___3 =
             let uu___4 =
               let uu___5 = resugar_term' env e in
               let uu___6 = resugar_term' env t1 in
-              let uu___7 = resugar_term' env t2 in (uu___5, uu___6, uu___7) in
+              let uu___7 = resugar_term' env t2 in
+              (uu___5, asc_opt1, uu___6, uu___7) in
             FStar_Parser_AST.If uu___4 in
           mk uu___3
-      | FStar_Syntax_Syntax.Tm_match (e, branches) ->
+      | FStar_Syntax_Syntax.Tm_match (e, asc_opt, branches) ->
           let resugar_branch uu___1 =
             match uu___1 with
             | (pat, wopt, b) ->
@@ -1171,18 +1185,23 @@ let rec (resugar_term' :
                            let uu___3 = resugar_term' env e1 in
                            FStar_Pervasives_Native.Some uu___3 in
                      let b2 = resugar_term' env b1 in (pat2, wopt2, b2)) in
+          let asc_opt1 =
+            match asc_opt with
+            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+            | FStar_Pervasives_Native.Some (asc, uu___1) ->
+                let uu___2 =
+                  FStar_All.pipe_right asc (resugar_ascription env) in
+                FStar_All.pipe_right uu___2
+                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) in
           let uu___1 =
             let uu___2 =
               let uu___3 = resugar_term' env e in
               let uu___4 = FStar_List.map resugar_branch branches in
-              (uu___3, uu___4) in
+              (uu___3, asc_opt1, uu___4) in
             FStar_Parser_AST.Match uu___2 in
           mk uu___1
       | FStar_Syntax_Syntax.Tm_ascribed (e, (asc, tac_opt), uu___1) ->
-          let term =
-            match asc with
-            | FStar_Util.Inl n -> resugar_term' env n
-            | FStar_Util.Inr n -> resugar_comp' env n in
+          let term = resugar_ascription env asc in
           let tac_opt1 = FStar_Option.map (resugar_term' env) tac_opt in
           let uu___2 =
             let uu___3 =
@@ -1383,6 +1402,17 @@ let rec (resugar_term' :
            | FStar_Syntax_Syntax.Meta_monadic_lift (uu___1, uu___2, t1) ->
                resugar_term' env e)
       | FStar_Syntax_Syntax.Tm_unknown -> mk FStar_Parser_AST.Wild
+and (resugar_ascription :
+  FStar_Syntax_DsEnv.env ->
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
+      -> FStar_Parser_AST.term)
+  =
+  fun env ->
+    fun asc ->
+      match asc with
+      | FStar_Util.Inl n -> resugar_term' env n
+      | FStar_Util.Inr n -> resugar_comp' env n
 and (resugar_calc :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.term ->
