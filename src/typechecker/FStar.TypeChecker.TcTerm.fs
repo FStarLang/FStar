@@ -1086,7 +1086,8 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
       | Some (Inr c, _) ->
         let g_exhaustiveness =
           List.fold_right
-            (fun (f, _, _, _) g -> U.mk_disj (U.b2t f) g)
+            (fun (f, _, _, _) g ->
+             U.mk_disj (f |> SS.subst [NT (guard_x, e1)] |> U.b2t) g)
             cases U.t_false
           |> TcUtil.label Err.exhaustiveness_check (Env.get_range env)
           |> (fun f -> Env.guard_of_guard_formula (NonTrivial f)) in
