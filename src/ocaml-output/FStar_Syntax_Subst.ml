@@ -441,6 +441,28 @@ let (subst_comp' :
            | FStar_Syntax_Syntax.Comp ct ->
                let uu___1 = subst_comp_typ' s ct in
                FStar_Syntax_Syntax.mk_Comp uu___1)
+let (subst_ascription' :
+  FStar_Syntax_Syntax.subst_ts ->
+    ((FStar_Syntax_Syntax.term,
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
+      * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) ->
+      ((FStar_Syntax_Syntax.term,
+        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+        FStar_Util.either * FStar_Syntax_Syntax.term
+        FStar_Pervasives_Native.option))
+  =
+  fun s ->
+    fun asc ->
+      let uu___ = asc in
+      match uu___ with
+      | (annot, topt) ->
+          let annot1 =
+            match annot with
+            | FStar_Util.Inl t ->
+                let uu___1 = subst' s t in FStar_Util.Inl uu___1
+            | FStar_Util.Inr c ->
+                let uu___1 = subst_comp' s c in FStar_Util.Inr uu___1 in
+          let uu___1 = FStar_Util.map_opt topt (subst' s) in (annot1, uu___1)
 let (shift :
   Prims.int -> FStar_Syntax_Syntax.subst_elt -> FStar_Syntax_Syntax.subst_elt)
   =
@@ -761,8 +783,7 @@ let rec (push_subst :
           let uu___ =
             let uu___1 =
               let uu___2 = subst' s t0 in
-              let uu___3 = push_subst_ascription s asc in
-              (uu___2, uu___3, lopt) in
+              let uu___3 = subst_ascription' s asc in (uu___2, uu___3, lopt) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) ->
@@ -821,8 +842,7 @@ let rec (push_subst :
                              (pat1, wopt1, branch1)))) in
           let uu___ =
             let uu___1 =
-              let uu___2 =
-                FStar_Util.map_opt asc_opt (push_subst_ascription s) in
+              let uu___2 = FStar_Util.map_opt asc_opt (subst_ascription' s) in
               (t01, uu___2, pats1) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk uu___
@@ -924,29 +944,6 @@ let rec (push_subst :
             let uu___1 = let uu___2 = subst' s t1 in (uu___2, m) in
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk uu___
-and (push_subst_ascription :
-  FStar_Syntax_Syntax.subst_ts ->
-    ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
-      * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-      FStar_Pervasives_Native.option) ->
-      ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-        FStar_Util.either * FStar_Syntax_Syntax.term'
-        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
-  =
-  fun s ->
-    fun asc ->
-      let uu___ = asc in
-      match uu___ with
-      | (annot, topt) ->
-          let annot1 =
-            match annot with
-            | FStar_Util.Inl t ->
-                let uu___1 = subst' s t in FStar_Util.Inl uu___1
-            | FStar_Util.Inr c ->
-                let uu___1 = subst_comp' s c in FStar_Util.Inr uu___1 in
-          let uu___1 = FStar_Util.map_opt topt (subst' s) in (annot1, uu___1)
 let rec (compress_slow :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -990,6 +987,12 @@ let (subst_imp :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual)
   = fun s -> fun imp -> subst_imp' ([s], FStar_Syntax_Syntax.NoUseRange) imp
+let (subst_ascription :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.ascription -> FStar_Syntax_Syntax.ascription)
+  =
+  fun s ->
+    fun asc -> subst_ascription' ([s], FStar_Syntax_Syntax.NoUseRange) asc
 let (closing_subst :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun bs ->
