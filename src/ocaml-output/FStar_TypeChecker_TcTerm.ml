@@ -3233,8 +3233,16 @@ and (tc_match :
                                                  | (f, uu___10, uu___11,
                                                     uu___12) ->
                                                      let uu___13 =
-                                                       FStar_Syntax_Util.b2t
-                                                         f in
+                                                       let uu___14 =
+                                                         FStar_All.pipe_right
+                                                           f
+                                                           (FStar_Syntax_Subst.subst
+                                                              [FStar_Syntax_Syntax.NT
+                                                                 (guard_x,
+                                                                   e12)]) in
+                                                       FStar_All.pipe_right
+                                                         uu___14
+                                                         FStar_Syntax_Util.b2t in
                                                      FStar_Syntax_Util.mk_disj
                                                        uu___13 g2) cases
                                             FStar_Syntax_Util.t_false in
