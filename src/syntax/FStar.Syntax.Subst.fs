@@ -259,6 +259,13 @@ let subst_comp' s t =
       | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
+let subst_ascription' s asc =
+  let annot, topt = asc in
+  let annot = match annot with
+              | Inl t -> Inl (subst' s t)
+              | Inr c -> Inr (subst_comp' s c) in
+  annot, U.map_opt topt (subst' s)
+
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
     | UN(i, t) -> UN(i+n, t)
@@ -388,7 +395,7 @@ let rec push_subst s t =
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
     | Tm_ascribed(t0, asc, lopt) ->
-      mk (Tm_ascribed(subst' s t0, push_subst_ascription s asc, lopt))
+      mk (Tm_ascribed(subst' s t0, subst_ascription' s asc, lopt))
 
     | Tm_abs(bs, body, lopt) ->
         let n = List.length bs in
@@ -414,7 +421,7 @@ let rec push_subst s t =
             | Some w -> Some (subst' s w) in
         let branch = subst' s branch in
         (pat, wopt, branch)) in
-        mk (Tm_match(t0, U.map_opt asc_opt (push_subst_ascription s), pats))
+        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats))
 
     | Tm_let((is_rec, lbs), body) ->
         let n = List.length lbs in
@@ -452,13 +459,6 @@ let rec push_subst s t =
 
     | Tm_meta(t, m) ->
         mk (Tm_meta(subst' s t,  m))
-
-and push_subst_ascription s asc =
-  let annot, topt = asc in
-  let annot = match annot with
-              | Inl t -> Inl (subst' s t)
-              | Inr c -> Inr (subst_comp' s c) in
-   annot, U.map_opt topt (subst' s)
 
 (* compress:
       This is used pervasively, throughout the codebase
@@ -510,6 +510,7 @@ let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
+let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
