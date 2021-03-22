@@ -1278,26 +1278,37 @@ and p_noSeqTerm' ps pb e = match e.tm with
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
-          in group (
-              (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
-              (match ret_opt with
-               | None -> empty
-               | Some ret -> str "ret" ^/+^ p_tmIff ret) ^/^
-              (str "then" ^/+^ e2_doc) ^/^
-              (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
+          in 
+          (match ret_opt with
+           | None ->
+             group (
+               (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
+               (str "then" ^/+^ e2_doc) ^/^
+               (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
+           | Some ret ->
+              group (
+                (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
+                (str "ret" ^/+^ p_tmIff ret) ^/^
+                (str "then" ^/+^ e2_doc) ^/^
+                (str "else" ^/+^ p_noSeqTermAndComment ps pb e3)))
   | TryWith(e, branches) ->
       paren_if (ps || pb) (
           group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
   | Match (e, ret_opt, branches) ->
       paren_if (ps || pb) (
+
+      (match ret_opt with
+       | None ->
+        group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
+       | Some ret ->
         group (surround 2 1 (str "match")
-                            (p_noSeqTermAndComment false false e)
-                            (match ret_opt with
-                             | None -> empty
-                             | Some ret -> str "ret" ^/+^ p_tmIff ret) ^/^
-                            (str "with") ^/^
-        separate_map_last hardline p_patternBranch branches))
+                            ((p_noSeqTermAndComment false false e) ^/+^ (str "ret" ^/+^ p_tmIff ret))
+                            (str "with")))
+        
+      ^/^
+       
+      separate_map_last hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       paren_if ps (
         group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term false pb e)
