@@ -116,7 +116,7 @@ let rec join (#p:slprop) (t:thread p)
     let b = read_refine (maybe_p p) t.r in
     h_assert (pts_to t.r full b `star` maybe_p p b);
     h_assert (pre t b);
-    if b returning SteelT unit (pre t b) (post p)
+    if b returns SteelT unit (pre t b) (post p)
     then begin
       h_commute _ (maybe_p p true);
       h_assert (maybe_p p true `star` pts_to t.r full true);
