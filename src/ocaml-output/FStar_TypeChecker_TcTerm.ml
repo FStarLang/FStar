@@ -3075,8 +3075,7 @@ and (tc_match :
                           let uu___4 = FStar_TypeChecker_Env.expected_typ env in
                           (match uu___4 with
                            | FStar_Pervasives_Native.Some t ->
-                               (env, FStar_Pervasives_Native.None,
-                                 (FStar_Pervasives_Native.Some t), g1)
+                               (env, (FStar_Util.Inr t), g1)
                            | FStar_Pervasives_Native.None ->
                                let uu___5 = FStar_Syntax_Util.type_u () in
                                (match uu___5 with
@@ -3093,10 +3092,8 @@ and (tc_match :
                                          let uu___10 =
                                            FStar_TypeChecker_Env.conj_guard
                                              g1 g in
-                                         (uu___9,
-                                           FStar_Pervasives_Native.None,
-                                           (FStar_Pervasives_Native.Some
-                                              res_t), uu___10))))
+                                         (uu___9, (FStar_Util.Inr res_t),
+                                           uu___10))))
                       | FStar_Pervasives_Native.Some
                           (t_or_c, FStar_Pervasives_Native.None) ->
                           let uu___4 =
@@ -3125,10 +3122,10 @@ and (tc_match :
                                     let uu___7 =
                                       FStar_TypeChecker_Env.conj_guard g1 g in
                                     (env1,
-                                      (FStar_Pervasives_Native.Some
+                                      (FStar_Util.Inl
                                          (t_or_c1,
                                            FStar_Pervasives_Native.None)),
-                                      FStar_Pervasives_Native.None, uu___7)))
+                                      uu___7)))
                       | uu___4 ->
                           let uu___5 = FStar_TypeChecker_Env.get_range env in
                           FStar_Errors.raise_error
@@ -3136,46 +3133,53 @@ and (tc_match :
                               "Tactic is not yet supported with match return")
                             uu___5 in
                     (match uu___3 with
-                     | (env_branches, asc_opt, res_t_opt, g11) ->
+                     | (env_branches, ret_or_res_typ, g11) ->
                          let guard_x =
                            FStar_Syntax_Syntax.new_bv
                              (FStar_Pervasives_Native.Some
                                 (e12.FStar_Syntax_Syntax.pos))
                              c11.FStar_TypeChecker_Common.res_typ in
                          let t_eqns =
-                           let asc_opt1 =
-                             FStar_Util.map_opt asc_opt
-                               (fun asc ->
-                                  let uu___4 =
-                                    let uu___5 =
-                                      let uu___6 =
-                                        FStar_All.pipe_right e12
-                                          FStar_Syntax_Util.unascribe in
-                                      FStar_All.pipe_right uu___6
-                                        FStar_Syntax_Subst.compress in
-                                    uu___5.FStar_Syntax_Syntax.n in
-                                  match uu___4 with
+                           let ret_opt1 =
+                             match ret_or_res_typ with
+                             | FStar_Util.Inl ret ->
+                                 let uu___4 =
+                                   let uu___5 =
+                                     let uu___6 =
+                                       FStar_All.pipe_right e12
+                                         FStar_Syntax_Util.unascribe in
+                                     FStar_All.pipe_right uu___6
+                                       FStar_Syntax_Subst.compress in
+                                   uu___5.FStar_Syntax_Syntax.n in
+                                 (match uu___4 with
                                   | FStar_Syntax_Syntax.Tm_name scrutinee_bv
                                       ->
                                       let uu___5 =
                                         let uu___6 =
                                           let uu___7 =
                                             let uu___8 =
-                                              FStar_Syntax_Syntax.bv_to_name
-                                                guard_x in
-                                            (scrutinee_bv, uu___8) in
-                                          FStar_Syntax_Syntax.NT uu___7 in
-                                        [uu___6] in
-                                      FStar_Syntax_Subst.subst_ascription
-                                        uu___5 asc
+                                              let uu___9 =
+                                                FStar_Syntax_Syntax.bv_to_name
+                                                  guard_x in
+                                              (scrutinee_bv, uu___9) in
+                                            FStar_Syntax_Syntax.NT uu___8 in
+                                          [uu___7] in
+                                        FStar_Syntax_Subst.subst_ascription
+                                          uu___6 ret in
+                                      FStar_All.pipe_right uu___5
+                                        (fun uu___6 ->
+                                           FStar_Pervasives_Native.Some
+                                             uu___6)
                                   | uu___5 ->
                                       FStar_Errors.raise_error
                                         (FStar_Errors.Fatal_UnexpectedTerm,
                                           "The scrutinee must be a variable when a return annotation is supplied with a match")
-                                        e12.FStar_Syntax_Syntax.pos) in
+                                        e12.FStar_Syntax_Syntax.pos)
+                             | FStar_Util.Inr uu___4 ->
+                                 FStar_Pervasives_Native.None in
                            FStar_All.pipe_right eqns
                              (FStar_List.map
-                                (tc_eqn guard_x env_branches asc_opt1)) in
+                                (tc_eqn guard_x env_branches ret_opt1)) in
                          let uu___4 =
                            let uu___5 =
                              FStar_List.fold_right
@@ -3196,17 +3200,14 @@ and (tc_match :
                                  false) in
                            match uu___5 with
                            | (cases, g, erasable) ->
-                               (match asc_opt with
-                                | FStar_Pervasives_Native.None ->
+                               (match ret_or_res_typ with
+                                | FStar_Util.Inr res_t ->
                                     let uu___6 =
-                                      let uu___7 =
-                                        FStar_All.pipe_right res_t_opt
-                                          FStar_Util.must in
                                       FStar_TypeChecker_Util.bind_cases env
-                                        uu___7 cases guard_x in
+                                        res_t cases guard_x in
                                     (uu___6, g, erasable)
-                                | FStar_Pervasives_Native.Some
-                                    (FStar_Util.Inl t, uu___6) ->
+                                | FStar_Util.Inl (FStar_Util.Inl t, uu___6)
+                                    ->
                                     let cases1 =
                                       FStar_List.map
                                         (fun uu___7 ->
@@ -3221,8 +3222,8 @@ and (tc_match :
                                       FStar_TypeChecker_Util.bind_cases env t
                                         cases1 guard_x in
                                     (uu___7, g, erasable)
-                                | FStar_Pervasives_Native.Some
-                                    (FStar_Util.Inr c, uu___6) ->
+                                | FStar_Util.Inl (FStar_Util.Inr c, uu___6)
+                                    ->
                                     let g_exhaustiveness =
                                       let uu___7 =
                                         let uu___8 =
@@ -3291,6 +3292,12 @@ and (tc_match :
                                     (FStar_Pervasives_Native.None, cres)
                                 else cres in
                               let e =
+                                let return_annotation =
+                                  match ret_or_res_typ with
+                                  | FStar_Util.Inl asc ->
+                                      FStar_Pervasives_Native.Some asc
+                                  | FStar_Util.Inr uu___5 ->
+                                      FStar_Pervasives_Native.None in
                                 let mk_match scrutinee =
                                   let branches =
                                     FStar_All.pipe_right t_eqns
@@ -3309,15 +3316,16 @@ and (tc_match :
                                   let e2 =
                                     FStar_Syntax_Syntax.mk
                                       (FStar_Syntax_Syntax.Tm_match
-                                         (scrutinee, asc_opt, branches))
+                                         (scrutinee, return_annotation,
+                                           branches))
                                       top.FStar_Syntax_Syntax.pos in
                                   let e3 =
                                     FStar_TypeChecker_Util.maybe_monadic env
                                       e2
                                       cres1.FStar_TypeChecker_Common.eff_name
                                       cres1.FStar_TypeChecker_Common.res_typ in
-                                  match asc_opt with
-                                  | FStar_Pervasives_Native.None ->
+                                  match ret_or_res_typ with
+                                  | FStar_Util.Inr uu___5 ->
                                       FStar_Syntax_Syntax.mk
                                         (FStar_Syntax_Syntax.Tm_ascribed
                                            (e3,
@@ -3327,7 +3335,7 @@ and (tc_match :
                                              (FStar_Pervasives_Native.Some
                                                 (cres1.FStar_TypeChecker_Common.eff_name))))
                                         e3.FStar_Syntax_Syntax.pos
-                                  | FStar_Pervasives_Native.Some uu___5 -> e3 in
+                                  | FStar_Util.Inl uu___5 -> e3 in
                                 let uu___5 =
                                   FStar_TypeChecker_Util.is_pure_or_ghost_effect
                                     env c11.FStar_TypeChecker_Common.eff_name in
@@ -3368,11 +3376,11 @@ and (tc_match :
                                      cres1.FStar_TypeChecker_Common.eff_name
                                      cres1.FStar_TypeChecker_Common.res_typ) in
                               let uu___5 =
-                                match asc_opt with
-                                | FStar_Pervasives_Native.None ->
+                                match ret_or_res_typ with
+                                | FStar_Util.Inl uu___6 ->
                                     (e, cres1,
                                       FStar_TypeChecker_Env.trivial_guard)
-                                | uu___6 ->
+                                | FStar_Util.Inr uu___6 ->
                                     comp_check_expected_typ env e cres1 in
                               (match uu___5 with
                                | (e2, cres2, g_expected_type) ->
@@ -7846,7 +7854,7 @@ and (tc_eqn :
   =
   fun scrutinee ->
     fun env ->
-      fun asc_opt ->
+      fun ret_opt ->
         fun branch ->
           let uu___ = FStar_Syntax_Subst.open_branch branch in
           match uu___ with
@@ -7923,7 +7931,7 @@ and (tc_eqn :
                                | (when_clause1, g_when) ->
                                    let uu___8 =
                                      let branch_exp1 =
-                                       match asc_opt with
+                                       match ret_opt with
                                        | FStar_Pervasives_Native.None ->
                                            branch_exp
                                        | FStar_Pervasives_Native.Some asc ->
@@ -7940,7 +7948,7 @@ and (tc_eqn :
                                      match uu___9 with
                                      | (branch_exp2, c, g_branch) ->
                                          let branch_exp3 =
-                                           match asc_opt with
+                                           match ret_opt with
                                            | FStar_Pervasives_Native.None ->
                                                branch_exp2
                                            | FStar_Pervasives_Native.Some
@@ -7956,7 +7964,8 @@ and (tc_eqn :
                                                      uu___13)
                                                     -> branch_exp4
                                                 | uu___12 ->
-                                                    failwith "Impossible!") in
+                                                    failwith
+                                                      "Impossible (expected the match branch with an ascription)") in
                                          (branch_exp3, c, g_branch) in
                                    (match uu___8 with
                                     | (branch_exp1, c, g_branch) ->
