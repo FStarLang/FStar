@@ -167,7 +167,7 @@ let none_to_empty_list x =
 %token REIFIABLE
 %token REIFY
 %token REQUIRES
-%token RETURNING
+%token RETURNS
 %token RPAREN
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
@@ -1393,9 +1393,9 @@ term:
       ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}
 
 match_returning:
-  RETURNING tmIff
+  RETURNS tmIff
     {let (_1, t) = ((), $2) in
-                      (t)}
+                    (t)}
 
 noSeqTerm:
   typ
