@@ -5426,34 +5426,33 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                         FStar_Syntax_Subst.compress uu___6 in
                       uu___5.FStar_Syntax_Syntax.n in
                     (match uu___4 with
-                     | FStar_Syntax_Syntax.Tm_match (e, uu___5, brs) ->
+                     | FStar_Syntax_Syntax.Tm_match (e, asc_opt, brs) ->
                          let brs' =
                            FStar_List.map
-                             (fun uu___6 ->
-                                match uu___6 with
+                             (fun uu___5 ->
+                                match uu___5 with
                                 | (p, w, e1) ->
-                                    let uu___7 =
+                                    let uu___6 =
                                       FStar_Syntax_Util.mk_app e1 las in
-                                    (p, w, uu___7)) brs in
+                                    (p, w, uu___6)) brs in
                          let l' =
                            FStar_Syntax_Syntax.mk
-                             (FStar_Syntax_Syntax.Tm_match
-                                (e, FStar_Pervasives_Native.None, brs'))
+                             (FStar_Syntax_Syntax.Tm_match (e, asc_opt, brs'))
                              l.FStar_Syntax_Syntax.pos in
-                         let uu___6 =
-                           let uu___7 = FStar_Tactics_Types.goal_env g in
-                           do_unify' false uu___7 l' r in
-                         FStar_Tactics_Monad.bind uu___6
-                           (fun uu___7 ->
-                              match uu___7 with
+                         let uu___5 =
+                           let uu___6 = FStar_Tactics_Types.goal_env g in
+                           do_unify' false uu___6 l' r in
+                         FStar_Tactics_Monad.bind uu___5
+                           (fun uu___6 ->
+                              match uu___6 with
                               | FStar_Pervasives_Native.None ->
                                   FStar_Tactics_Monad.fail
                                     "discharging the equality failed"
                               | FStar_Pervasives_Native.Some guard ->
-                                  let uu___8 =
+                                  let uu___7 =
                                     FStar_TypeChecker_Env.is_trivial_guard_formula
                                       guard in
-                                  if uu___8
+                                  if uu___7
                                   then solve g FStar_Syntax_Util.exp_unit
                                   else
                                     failwith

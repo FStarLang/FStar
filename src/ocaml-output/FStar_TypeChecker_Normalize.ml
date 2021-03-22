@@ -7329,35 +7329,26 @@ and (rebuild :
                                               FStar_Syntax_Util.branch
                                                 (p1, wopt1, e1)))) in
                        let maybe_commute_matches uu___6 =
-                         let can_commute asc_opt1 asc_opt' =
-                           ((FStar_All.pipe_right asc_opt1 FStar_Util.is_none)
-                              &&
-                              (FStar_All.pipe_right asc_opt'
-                                 FStar_Util.is_none))
-                             &&
-                             (match branches1 with
-                              | ({
-                                   FStar_Syntax_Syntax.v =
-                                     FStar_Syntax_Syntax.Pat_cons
-                                     (fv, uu___7);
-                                   FStar_Syntax_Syntax.p = uu___8;_},
-                                 uu___9, uu___10)::uu___11 ->
-                                  FStar_TypeChecker_Env.fv_has_attr
-                                    cfg1.FStar_TypeChecker_Cfg.tcenv fv
-                                    FStar_Parser_Const.commute_nested_matches_lid
-                              | uu___7 -> false) in
+                         let can_commute =
+                           match branches1 with
+                           | ({
+                                FStar_Syntax_Syntax.v =
+                                  FStar_Syntax_Syntax.Pat_cons (fv, uu___7);
+                                FStar_Syntax_Syntax.p = uu___8;_},
+                              uu___9, uu___10)::uu___11 ->
+                               FStar_TypeChecker_Env.fv_has_attr
+                                 cfg1.FStar_TypeChecker_Cfg.tcenv fv
+                                 FStar_Parser_Const.commute_nested_matches_lid
+                           | uu___7 -> false in
                          let uu___7 =
                            let uu___8 = FStar_Syntax_Util.unascribe scrutinee in
                            uu___8.FStar_Syntax_Syntax.n in
                          match uu___7 with
                          | FStar_Syntax_Syntax.Tm_match
-                             (sc0, asc_opt0, branches0) when
-                             can_commute asc_opt asc_opt0 ->
+                             (sc0, asc_opt0, branches0) ->
                              let reduce_branch b =
                                let stack3 =
-                                 [Match
-                                    (env', FStar_Pervasives_Native.None,
-                                      branches1, cfg1, r)] in
+                                 [Match (env', asc_opt, branches1, cfg1, r)] in
                                let uu___8 = FStar_Syntax_Subst.open_branch b in
                                match uu___8 with
                                | (p, wopt, e) ->
@@ -7382,8 +7373,7 @@ and (rebuild :
                              let uu___8 =
                                FStar_Syntax_Syntax.mk
                                  (FStar_Syntax_Syntax.Tm_match
-                                    (sc0, FStar_Pervasives_Native.None,
-                                      branches01)) r in
+                                    (sc0, asc_opt0, branches01)) r in
                              rebuild cfg1 env2 stack2 uu___8
                          | uu___8 ->
                              let scrutinee1 =

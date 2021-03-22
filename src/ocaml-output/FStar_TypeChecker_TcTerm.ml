@@ -882,38 +882,6 @@ let (check_smt_pat :
                  check_no_smt_theory_symbols env pats)
             | uu___1 -> failwith "Impossible"
           else ()
-let (check_match_return_annotation :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option ->
-      FStar_Range.range ->
-        FStar_Syntax_Syntax.comp FStar_Pervasives_Native.option)
-  =
-  fun scrutinee ->
-    fun asc_opt ->
-      fun r ->
-        FStar_Util.map_opt asc_opt
-          (fun asc ->
-             let error msg =
-               FStar_Errors.raise_error
-                 (FStar_Errors.Fatal_UnexpectedTerm, msg) r in
-             match asc with
-             | (uu___, FStar_Pervasives_Native.Some uu___1) ->
-                 error "tactics are not yet supported with match-return"
-             | (FStar_Util.Inl uu___, uu___1) ->
-                 error "match-return annotation must be a comp"
-             | (FStar_Util.Inr c, uu___) ->
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 =
-                       FStar_All.pipe_right scrutinee
-                         FStar_Syntax_Util.unascribe in
-                     FStar_All.pipe_right uu___3 FStar_Syntax_Subst.compress in
-                   uu___2.FStar_Syntax_Syntax.n in
-                 (match uu___1 with
-                  | FStar_Syntax_Syntax.Tm_name uu___2 -> c
-                  | uu___2 ->
-                      error
-                        "the scrutinee must be a variable when a return annotation is supplied with a match"))
 let (guard_letrecs :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
