@@ -1017,54 +1017,88 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
+
+  (*
+   * AR: Typechecking of match expression:
+   *
+   * match expressions may be optionally annotated with a `return` annotation
+   *   for dependent pattern matching
+   *
+   * When the return annotation is not supplied, we:
+   *   -- typecheck the scrutinee
+   *   -- typecheck the branches with
+   *      -- if the expected type is not set in the env, then create a new uvar for it
+   *      -- a new bv, guard_x below, as the scrutinee expression
+   *   -- combine the computation types of the branches (TcUtil.bind_cases)
+   *      -- with the if_the_else combinator, also adding pattern exhaustiveness checks
+   *   -- bind the scrutinee computation type with the combined branches (using guard_x as the bv in bind)
+   *
+   * When the return annotation is supplied:
+   *   -- typecheck the scrutinee
+   *   -- typecheck the return annotation
+   *   -- typecheck the branches with
+   *      -- env with expected type unset
+   *      -- a new bv, guard_x, as the scrutinee expression
+   *      -- substituting scrutinee bv by guard_x in the return annotation
+   *      -- in tc_eqn: substituting guard_x with the pattern expression, and ascribing it on the branch exp
+   *   -- if the return annotation was a type:
+   *      -- TcUtil.bind_cases as before
+   *   -- if the return annotation was a computation type:
+   *      -- no need to bind cases, take the comp annotation as is
+   *      -- but add the pattern exhaustiveness check in the guard
+   *      -- need to substitute guard_x by scrutinee bv back
+   *   -- bind the scrutinee computation type with the combined branches (using guard_x as the bv in bind)
+   *)
+
   match (SS.compress top).n with
-  | Tm_match(e1, ret_opt, eqns) ->
+  | Tm_match(e1, ret_opt, eqns) ->  //ret_opt is the return annotation
     let e1, c1, g1 = tc_term
       ({(env |> Env.clear_expected_typ |> fst) with instantiate_imp = true})
       e1 in
-    // GM: for some reason, without this annotation on eqns,
-    //     F* fails to do inference. A uvar at type Type gets
-    //     solved to `list u#0`, which is ill-typed.
+
     let e1, c1 =
         match TcUtil.coerce_views env e1 c1 with
         | Some (e1, c1) -> e1, c1
         | None -> e1, c1 in
 
-    let env_branches, asc_opt, res_t_opt, g1 =
+    let env_branches, ret_or_res_typ, g1 =  //ret_or_res_typ has type either<ascription, typ>
       match ret_opt with
-      | None ->
+      | None ->  //no return annotation, set an expected type either from env or a new uvar
         (match Env.expected_typ env with
-         | Some t -> env, None, Some t, g1
+         | Some t -> env, Inr t, g1
          | None ->
            let k, _ = U.type_u() in
            let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
-           Env.set_expected_typ env res_t, None, Some res_t, Env.conj_guard g1 g)
+           Env.set_expected_typ env res_t, Inr res_t, Env.conj_guard g1 g)
       | Some (t_or_c, None) ->
+        //typecheck the return annotation and unset expected type in the env if exists
+        //the branch typechecking (tc_eqn) will typecheck the branch with an ascription
         let env, _ = Env.clear_expected_typ env in
         let t_or_c, g =
           match t_or_c with
-           | Inl t ->
-             let k, _ = U.type_u () in
-             let t, _, g = tc_check_tot_or_gtot_term env t k "" in
-             Inl t, g
-           | Inr c ->
-             let c, _, g = tc_comp env c in
-             Inr c, g in
-        env, Some (t_or_c, None), None, Env.conj_guard g1 g
+           | Inl t -> let k, _ = U.type_u () in
+                     let t, _, g = tc_check_tot_or_gtot_term env t k "" in
+                     Inl t, g
+           | Inr c -> let c, _, g = tc_comp env c in
+                     Inr c, g in
+        env, Inl (t_or_c, None), Env.conj_guard g1 g
       | _ ->
         raise_error (Errors.Fatal_UnexpectedTerm,
           "Tactic is not yet supported with match return") (Env.get_range env) in
 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns =
-      let asc_opt = BU.map_opt asc_opt (fun asc ->
-        match (e1 |> U.unascribe |> SS.compress).n with
-        | Tm_name scrutinee_bv ->
-          SS.subst_ascription [NT (scrutinee_bv, S.bv_to_name guard_x)] asc
-        | _ ->
-          raise_error (Errors.Fatal_UnexpectedTerm,
-            "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos) in
-      eqns |> List.map (tc_eqn guard_x env_branches asc_opt) in
+      let ret_opt = match ret_or_res_typ with
+                    | Inl ret ->
+                      (match (e1 |> U.unascribe |> SS.compress).n with
+                       | Tm_name scrutinee_bv ->
+                         //substitute scrutinee_bv with guard_x in the return annotation, if exists
+                         SS.subst_ascription [NT (scrutinee_bv, S.bv_to_name guard_x)] ret |> Some
+                       | _ ->
+                         raise_error (Errors.Fatal_UnexpectedTerm,
+                         "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos)
+                    | Inr _ -> None in
+      eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
 
     let c_branches, g_branches, erasable =
       let cases, g, erasable =
@@ -1075,25 +1109,33 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
                      erasable || erasable_branch)
                 t_eqns
                 ([], Env.trivial_guard, false) in
-      (* bind_cases adds an exhaustiveness check *)
-      match asc_opt with
-      | None -> TcUtil.bind_cases env (res_t_opt |> must) cases guard_x, g, erasable
-      | Some (Inl t, _) ->
+
+      (* note that bind_cases adds an exhaustiveness check *)
+      
+      match ret_or_res_typ with
+      | Inr res_t -> TcUtil.bind_cases env res_t cases guard_x, g, erasable
+
+      | Inl (Inl t, _) ->  //a return annotation, with type
+        //set the type in the lcomp of the branches
         let cases = List.map
           (fun (f, eff_label, cflags, c) ->
              (f, eff_label, cflags, (fun b -> TcComm.set_result_typ_lc (c b) t))) cases in
-          TcUtil.bind_cases env t cases guard_x, g, erasable
-      | Some (Inr c, _) ->
+        
+        TcUtil.bind_cases env t cases guard_x, g, erasable
+
+      | Inl (Inr c, _) ->  //a return annotation, with computation type
         let g_exhaustiveness =
           List.fold_right
-            (fun (f, _, _, _) g ->
+            (fun (f, _, _, _) g ->  //first substitute guard_x with scrutinee bv in f
              U.mk_disj (f |> SS.subst [NT (guard_x, e1)] |> U.b2t) g)
             cases U.t_false
-          |> TcUtil.label Err.exhaustiveness_check (Env.get_range env)
+          |> TcUtil.label Err.exhaustiveness_check (Env.get_range env)  //label
           |> (fun f -> Env.guard_of_guard_formula (NonTrivial f)) in
         TcComm.lcomp_of_comp c, Env.conj_guard g g_exhaustiveness, erasable in
 
+    //combine with e1's computation type
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
+
     let cres =
       if erasable
       then (* promote cres to ghost *)
@@ -1102,19 +1144,26 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
            TcUtil.bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
       else cres
     in
+
     let e =
+      let return_annotation = match ret_or_res_typ with
+                              | Inl asc -> Some asc
+                              | Inr _ -> None in
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
-              (pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ)) in
-        let e = mk (Tm_match(scrutinee, asc_opt, branches)) top.pos in
+          pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
+        ) in
+        let e = mk (Tm_match(scrutinee, return_annotation, branches)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-        match asc_opt with
-        | None -> mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
-        | Some _ -> e
+        //AR: TODO: revisit, for now doing only if return annotation is not provided
+        match ret_or_res_typ with
+        | Inr _ -> mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
+        | Inl _ -> e
       in
+
       //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
       //                to protect it from the normalizer optimizing it away
       if TcUtil.is_pure_or_ghost_effect env c1.eff_name
@@ -1127,14 +1176,17 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
     in
 
+    //AR: finally, if we typechecked with the return annotation,
+    //    we need to make sure that we check the expected type in the env
     let e, cres, g_expected_type =
-      match asc_opt with
-      | None -> e, cres, Env.trivial_guard
-      | _ -> comp_check_expected_typ env e cres in
+      match ret_or_res_typ with
+      | Inl _ -> e, cres, Env.trivial_guard
+      | Inr _ -> comp_check_expected_typ env e cres in
 
     if debug env Options.Extreme
     then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
                       (Range.string_of_range top.pos) (TcComm.lcomp_to_string cres);
+
     e, cres, Env.conj_guards [g1; g_branches; g_expected_type]
 
   | _ ->
@@ -2648,8 +2700,14 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 (*           but it is in scope for the VC of the branch                                                            *)
 (* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
 (* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
+
+(*
+ * ret_opt is the optional return annotation on the match
+ * if this is set, then ascribe it on the branches for typechecking
+ * but unascribe it before returning to the caller
+ *)
 (********************************************************************************************************************)
-and tc_eqn scrutinee env asc_opt branch
+and tc_eqn scrutinee env ret_opt branch
         : (pat * option<term> * term)                                                             (* checked branch *)
         * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
         * lident                                                                 (* effect label of the lcomp below *)
@@ -2690,21 +2748,21 @@ and tc_eqn scrutinee env asc_opt branch
 
   (* 3. Check the branch *)
   let branch_exp, c, g_branch =
-    let branch_exp =
-      match asc_opt with
+    let branch_exp =  //ascribe with the return annotation, if it exists
+      match ret_opt with
       | None -> branch_exp
       | Some asc ->
         asc
         |> SS.subst_ascription [NT (scrutinee, norm_pat_exp)]
         |> U.ascribe branch_exp in
     let branch_exp, c, g_branch = tc_term pat_env branch_exp in
-    let branch_exp =
-      match asc_opt with
+    let branch_exp =  //unascribe if we added ascription
+      match ret_opt with
       | None -> branch_exp
       | Some _ ->
         match (SS.compress branch_exp).n with
         | Tm_ascribed (branch_exp, _, _) -> branch_exp
-        | _ -> failwith "Impossible!" in
+        | _ -> failwith "Impossible (expected the match branch with an ascription)" in
     branch_exp, c, g_branch in
 
   Env.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
