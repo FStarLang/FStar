@@ -656,6 +656,7 @@ let (ref_C_Lemma : refl_constant) = fstar_refl_data_const "C_Lemma"
 let (ref_C_Eff : refl_constant) = fstar_refl_data_const "C_Eff"
 let (ref_Sg_Let : refl_constant) = fstar_refl_data_const "Sg_Let"
 let (ref_Sg_Inductive : refl_constant) = fstar_refl_data_const "Sg_Inductive"
+let (ref_Sg_Val : refl_constant) = fstar_refl_data_const "Sg_Val"
 let (ref_Unk : refl_constant) = fstar_refl_data_const "Unk"
 let (ref_qual_Assumption : refl_constant) =
   fstar_refl_data_const "Assumption"
