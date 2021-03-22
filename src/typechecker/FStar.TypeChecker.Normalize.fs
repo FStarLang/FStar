@@ -2618,7 +2618,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
                 | _ -> false in
             match (U.unascribe scrutinee).n with
-            | Tm_match (sc0, asc_opt0, branches0) ->
+            | Tm_match (sc0, asc_opt0, branches0) when can_commute ->
               (* We have a blocked match, because of something like
 
                   (match (match sc0 with P1 -> e1 | ... | Pn -> en) with

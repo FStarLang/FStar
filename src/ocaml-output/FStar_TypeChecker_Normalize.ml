@@ -7345,7 +7345,7 @@ and (rebuild :
                            uu___8.FStar_Syntax_Syntax.n in
                          match uu___7 with
                          | FStar_Syntax_Syntax.Tm_match
-                             (sc0, asc_opt0, branches0) ->
+                             (sc0, asc_opt0, branches0) when can_commute ->
                              let reduce_branch b =
                                let stack3 =
                                  [Match (env', asc_opt, branches1, cfg1, r)] in
