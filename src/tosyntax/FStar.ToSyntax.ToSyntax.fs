@@ -1455,7 +1455,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
-      mk (Tm_match(t1', asc_opt,  //AR: TODO: ascription in if?
+      mk (Tm_match(t1', asc_opt,
                     [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
                      (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq0;aq2;aq3]
 

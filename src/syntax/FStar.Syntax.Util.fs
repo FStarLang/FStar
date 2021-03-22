@@ -607,7 +607,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
-    | Tm_match (t1, None, bs1), Tm_match (t2, None, bs2) ->  //AR: TODO: what about the return annotations?
+    | Tm_match (t1, None, bs1), Tm_match (t2, None, bs2) ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
                              (List.zip bs1 bs2)
@@ -1279,9 +1279,6 @@ let is_wild_pat p =
     | Pat_wild _ -> true
     | _ -> false
 
-(*
- * AR: TODO: May be it should also have a return annotation
- *)
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
@@ -1711,7 +1708,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
 
-  | Tm_match (t1,None,bs1), Tm_match (t2,None,bs2) ->
+  | Tm_match (t1,None,bs1), Tm_match (t2,None,bs2) ->  //AR: note: no return annotations
     (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
 

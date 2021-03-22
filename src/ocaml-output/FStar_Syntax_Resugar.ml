@@ -1153,13 +1153,15 @@ let rec (resugar_term' :
           (e, asc_opt, (pat1, uu___1, t1)::(pat2, uu___2, t2)::[]) when
           (is_true_pat pat1) && (is_wild_pat pat2) ->
           let asc_opt1 =
-            match asc_opt with
+            let uu___3 = FStar_Util.map_opt asc_opt (resugar_ascription env) in
+            match uu___3 with
             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-            | FStar_Pervasives_Native.Some (asc, uu___3) ->
-                let uu___4 =
-                  FStar_All.pipe_right asc (resugar_ascription env) in
-                FStar_All.pipe_right uu___4
-                  (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) in
+            | FStar_Pervasives_Native.Some
+                (asc, FStar_Pervasives_Native.None) ->
+                FStar_Pervasives_Native.Some asc
+            | uu___4 ->
+                failwith
+                  "resugaring does not support match return annotation with a tactic" in
           let uu___3 =
             let uu___4 =
               let uu___5 = resugar_term' env e in
@@ -1186,13 +1188,15 @@ let rec (resugar_term' :
                            FStar_Pervasives_Native.Some uu___3 in
                      let b2 = resugar_term' env b1 in (pat2, wopt2, b2)) in
           let asc_opt1 =
-            match asc_opt with
+            let uu___1 = FStar_Util.map_opt asc_opt (resugar_ascription env) in
+            match uu___1 with
             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-            | FStar_Pervasives_Native.Some (asc, uu___1) ->
-                let uu___2 =
-                  FStar_All.pipe_right asc (resugar_ascription env) in
-                FStar_All.pipe_right uu___2
-                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) in
+            | FStar_Pervasives_Native.Some
+                (asc, FStar_Pervasives_Native.None) ->
+                FStar_Pervasives_Native.Some asc
+            | uu___2 ->
+                failwith
+                  "resugaring does not support match return annotation with a tactic" in
           let uu___1 =
             let uu___2 =
               let uu___3 = resugar_term' env e in
@@ -1200,14 +1204,16 @@ let rec (resugar_term' :
               (uu___3, asc_opt1, uu___4) in
             FStar_Parser_AST.Match uu___2 in
           mk uu___1
-      | FStar_Syntax_Syntax.Tm_ascribed (e, (asc, tac_opt), uu___1) ->
-          let term = resugar_ascription env asc in
-          let tac_opt1 = FStar_Option.map (resugar_term' env) tac_opt in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = resugar_term' env e in (uu___4, term, tac_opt1) in
-            FStar_Parser_AST.Ascribed uu___3 in
-          mk uu___2
+      | FStar_Syntax_Syntax.Tm_ascribed (e, asc, uu___1) ->
+          let uu___2 = resugar_ascription env asc in
+          (match uu___2 with
+           | (asc1, tac_opt) ->
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = resugar_term' env e in
+                   (uu___5, asc1, tac_opt) in
+                 FStar_Parser_AST.Ascribed uu___4 in
+               mk uu___3)
       | FStar_Syntax_Syntax.Tm_let ((is_rec, source_lbs), body) ->
           let mk_pat a =
             FStar_Parser_AST.mk_pattern a t.FStar_Syntax_Syntax.pos in
@@ -1404,15 +1410,23 @@ let rec (resugar_term' :
       | FStar_Syntax_Syntax.Tm_unknown -> mk FStar_Parser_AST.Wild
 and (resugar_ascription :
   FStar_Syntax_DsEnv.env ->
-    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
+    ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
-      -> FStar_Parser_AST.term)
+      * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Pervasives_Native.option) ->
+      (FStar_Parser_AST.term * FStar_Parser_AST.term
+        FStar_Pervasives_Native.option))
   =
   fun env ->
-    fun asc ->
-      match asc with
-      | FStar_Util.Inl n -> resugar_term' env n
-      | FStar_Util.Inr n -> resugar_comp' env n
+    fun uu___ ->
+      match uu___ with
+      | (asc, tac_opt) ->
+          let uu___1 =
+            match asc with
+            | FStar_Util.Inl n -> resugar_term' env n
+            | FStar_Util.Inr n -> resugar_comp' env n in
+          let uu___2 = FStar_Util.map_opt tac_opt (resugar_term' env) in
+          (uu___1, uu___2)
 and (resugar_calc :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.term ->

@@ -669,12 +669,12 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
-    //AR: TODO: fix it when if has return annotation too
     | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
-      let asc_opt = match asc_opt with
-                    | None -> None
-                    | Some (asc, _) ->
-                      asc |> resugar_ascription env |> Some in
+      let asc_opt =
+        match BU.map_opt asc_opt (resugar_ascription env) with
+        | None -> None
+        | Some (asc, None) -> Some asc
+        | _ -> failwith "resugaring does not support match return annotation with a tactic" in
       mk (A.If(resugar_term' env e,
                asc_opt,
                resugar_term' env t1,
@@ -690,18 +690,18 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | Some e -> Some (resugar_term' env e) in
         let b = resugar_term' env b in
         (pat, wopt, b) in
-      let asc_opt = match asc_opt with
-                    | None -> None
-                    | Some (asc, _) ->
-                      asc |> resugar_ascription env |> Some in
+      let asc_opt =
+        match BU.map_opt asc_opt (resugar_ascription env) with
+        | None -> None
+        | Some (asc, None) -> Some asc
+        | _ -> failwith "resugaring does not support match return annotation with a tactic" in
       mk (A.Match(resugar_term' env e,
                   asc_opt,
                   List.map resugar_branch branches))
 
-    | Tm_ascribed(e, (asc, tac_opt), _) ->
-      let term = resugar_ascription env asc in
-      let tac_opt = Option.map (resugar_term' env) tac_opt in
-      mk (A.Ascribed(resugar_term' env e, term, tac_opt))
+    | Tm_ascribed(e, asc, _) ->
+      let (asc, tac_opt) = resugar_ascription env asc in
+      mk (A.Ascribed(resugar_term' env e, asc, tac_opt))
 
     | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
@@ -813,12 +813,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
     | Tm_unknown -> mk A.Wild
 
-and resugar_ascription env asc =
-  match asc with
-  | Inl n -> (* term *)
-    resugar_term' env n
-  | Inr n -> (* comp *)
-    resugar_comp' env n 
+and resugar_ascription env (asc, tac_opt) =
+  (match asc with
+   | Inl n -> (* term *)
+     resugar_term' env n
+   | Inr n -> (* comp *)
+     resugar_comp' env n),
+  BU.map_opt tac_opt (resugar_term' env)
 
 (* This entire function is of course very tied to the the desugaring
 of calc expressions in ToSyntax. This only really works for fully

@@ -3106,7 +3106,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: TODO: what about annotations?
+      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in

@@ -361,7 +361,7 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, None, brs)) Range.dummyRange
+        S.mk (Tm_match (t, None, brs)) Range.dummyRange  //AR: once we have return annotation in the reflection, this should change
 
     | Tv_AscribedT(e, t, tacopt) ->
         S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange

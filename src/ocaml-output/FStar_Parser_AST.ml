@@ -1548,10 +1548,10 @@ let rec (term_to_string : term -> Prims.string) =
           | FStar_Pervasives_Native.None -> ""
           | FStar_Pervasives_Native.Some ret ->
               let uu___2 = term_to_string ret in
-              FStar_Util.format1 "returning %s" uu___2 in
+              FStar_Util.format1 "ret %s " uu___2 in
         let uu___2 = FStar_All.pipe_right t2 term_to_string in
         let uu___3 = FStar_All.pipe_right t3 term_to_string in
-        FStar_Util.format4 "if %s %s then %s else %s" uu___ uu___1 uu___2
+        FStar_Util.format4 "if %s %sthen %s else %s" uu___ uu___1 uu___2
           uu___3
     | Match (t, ret_opt, branches) ->
         try_or_match_to_string x t branches ret_opt
@@ -1689,7 +1689,7 @@ and (try_or_match_to_string :
             | FStar_Pervasives_Native.None -> ""
             | FStar_Pervasives_Native.Some ret ->
                 let uu___2 = term_to_string ret in
-                FStar_Util.format1 "returning %s" uu___2 in
+                FStar_Util.format1 "ret %s " uu___2 in
           let uu___2 =
             to_string_l " | "
               (fun uu___3 ->
@@ -1705,7 +1705,7 @@ and (try_or_match_to_string :
                      let uu___6 = FStar_All.pipe_right e term_to_string in
                      FStar_Util.format3 "%s %s -> %s" uu___4 uu___5 uu___6)
               branches in
-          FStar_Util.format4 "%s %s %s with %s" s uu___ uu___1 uu___2
+          FStar_Util.format4 "%s %s %swith %s" s uu___ uu___1 uu___2
 and (calc_step_to_string : calc_step -> Prims.string) =
   fun uu___ ->
     match uu___ with

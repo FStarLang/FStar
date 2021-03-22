@@ -1281,8 +1281,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
           in group (
               (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
               (match ret_opt with
-               | None -> str ""
-               | Some ret -> str "returning" ^/+^ p_tmIff ret) ^/^
+               | None -> empty
+               | Some ret -> str "ret" ^/+^ p_tmIff ret) ^/^
               (str "then" ^/+^ e2_doc) ^/^
               (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
   | TryWith(e, branches) ->
@@ -1294,8 +1294,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "match")
                             (p_noSeqTermAndComment false false e)
                             (match ret_opt with
-                             | None -> str ""
-                             | Some ret -> str " ret " ^/^ p_tmIff ret) ^/^
+                             | None -> empty
+                             | Some ret -> str "ret" ^/+^ p_tmIff ret) ^/^
                             (str "with") ^/^
         separate_map_last hardline p_patternBranch branches))
   | LetOpen (uid, e) ->

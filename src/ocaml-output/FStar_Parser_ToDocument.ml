@@ -2435,9 +2435,9 @@ and (p_noSeqTerm' :
                  let uu___3 =
                    let uu___4 =
                      match ret_opt with
-                     | FStar_Pervasives_Native.None -> str ""
+                     | FStar_Pervasives_Native.None -> FStar_Pprint.empty
                      | FStar_Pervasives_Native.Some ret ->
-                         let uu___5 = str "returning" in
+                         let uu___5 = str "ret" in
                          let uu___6 = p_tmIff ret in
                          op_Hat_Slash_Plus_Hat uu___5 uu___6 in
                    let uu___5 =
@@ -2476,11 +2476,11 @@ and (p_noSeqTerm' :
                   let uu___4 = p_noSeqTermAndComment false false e1 in
                   let uu___5 =
                     match ret_opt with
-                    | FStar_Pervasives_Native.None -> str ""
+                    | FStar_Pervasives_Native.None -> FStar_Pprint.empty
                     | FStar_Pervasives_Native.Some ret ->
-                        let uu___6 = str " ret " in
+                        let uu___6 = str "ret" in
                         let uu___7 = p_tmIff ret in
-                        FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                        op_Hat_Slash_Plus_Hat uu___6 uu___7 in
                   FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
                     uu___3 uu___4 uu___5 in
                 let uu___3 =

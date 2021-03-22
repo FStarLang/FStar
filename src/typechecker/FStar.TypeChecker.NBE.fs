@@ -1271,7 +1271,7 @@ and readback (cfg:config) (x:t) : term =
       let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, None, branches_new)) scrut.nbe_r  //AR: TODO: should we preserve the annotation?
+        S.mk (Tm_match (scrut_new, None, branches_new)) scrut.nbe_r  //AR: not preserving the return annotation
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.

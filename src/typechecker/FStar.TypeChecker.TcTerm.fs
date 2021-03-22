@@ -356,19 +356,6 @@ let check_smt_pat env t bs c =
             check_no_smt_theory_symbols env pats
         | _ -> failwith "Impossible"
 
-let check_match_return_annotation (scrutinee:term) (asc_opt:option<ascription>) (r:Range.range)
-  : option<comp>
-  = BU.map_opt asc_opt (fun asc ->
-      let error msg = raise_error (Errors.Fatal_UnexpectedTerm, msg) r in
-      match asc with
-      | _, Some _ -> error "tactics are not yet supported with match-return"
-      | Inl _, _  -> error "match-return annotation must be a comp"
-      | Inr c, _  ->
-        match (scrutinee |> U.unascribe |> SS.compress).n with
-        | Tm_name _ -> c
-        | _ -> error "the scrutinee must be a variable when a return annotation is supplied with a match")
-
-
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
 (* guards the recursively bound names with a termination check                                              *)
@@ -3844,7 +3831,7 @@ let rec universe_of_aux env e =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, _, hd::_) ->  //AR: TODO: use annotation?
+        | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
           let (_, _, hd) = SS.open_branch hd in
           let hd, args' = U.head_and_args hd in
           type_of_head retry hd (args'@args)
@@ -3876,10 +3863,10 @@ let rec universe_of_aux env e =
      then let subst = U.subst_of_list bs args in
           SS.subst subst res
      else level_of_type_fail env e (Print.term_to_string res)
-   | Tm_match(_, _, hd::_) ->  //AR: TODO: use annotation?
+   | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
-   | Tm_match(_, _, []) ->  //AR: TODO: use annotation?
+   | Tm_match(_, _, []) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e =

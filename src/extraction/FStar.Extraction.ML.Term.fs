@@ -1209,7 +1209,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           branches |> List.map (fun (pat, when_opt, body) ->
             pat, when_opt, { body with n = Tm_app (body, args) }
           ) in
-        { head with n = Tm_match (scrutinee, None, branches) }
+        { head with n = Tm_match (scrutinee, None, branches) }  //AR: dropping the return annotation, should be fine?
       | _ -> failwith "Impossible! cannot apply args to match branches if head is not a match" in
 
     let t = SS.compress top in

@@ -59,7 +59,7 @@ type term' =
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option<term> * term * term
+  | If        of term * option<term> * term * term  //option<term> here and in Match is the return annotation
   | Match     of term * option<term> * list<branch>
   | TryWith   of term * list<branch>
   | Ascribed  of term * term * option<term>
@@ -576,11 +576,11 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
   | If(t1, ret_opt, t2, t3) ->
-    Util.format4 "if %s %s then %s else %s"
+    Util.format4 "if %s %sthen %s else %s"
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
-       | Some ret -> Util.format1 "returning %s" (term_to_string ret))
+       | Some ret -> Util.format1 "ret %s " (term_to_string ret))
       (t2|> term_to_string)
       (t3|> term_to_string)
 
@@ -658,12 +658,12 @@ and try_or_match_to_string (x:term) scrutinee branches ret_opt =
     | Match _ -> "match"
     | TryWith _ -> "try"
     | _ -> failwith "impossible" in
-  Util.format4 "%s %s %s with %s"
+  Util.format4 "%s %s %swith %s"
     s
     (scrutinee|> term_to_string)
     (match ret_opt with
      | None -> ""
-     | Some ret -> Util.format1 "returning %s" (term_to_string ret))
+     | Some ret -> Util.format1 "ret %s " (term_to_string ret))
     (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
       (p |> pat_to_string)
       (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))

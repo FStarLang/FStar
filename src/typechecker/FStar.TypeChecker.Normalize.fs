@@ -74,7 +74,7 @@ type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
- | Match    of env * option<ascription> * branches * cfg * Range.range
+ | Match    of env * option<ascription> * branches * cfg * Range.range  //ascription is the return annotation
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
  | CBVApp   of env * term * aqual * Range.range
@@ -2612,16 +2612,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               U.branch (p, wopt, e))
           in
           let maybe_commute_matches () =
-            let can_commute asc_opt asc_opt' =
-                asc_opt |> is_none &&
-                asc_opt' |> is_none &&
-                (match branches with
-                 | ({v=Pat_cons(fv, _)}, _, _)::_ ->
-                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
-                 | _ -> false)
-            in
+            let can_commute =
+                match branches with
+                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                  Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
+                | _ -> false in
             match (U.unascribe scrutinee).n with
-            | Tm_match (sc0, asc_opt0, branches0) when can_commute asc_opt asc_opt0 ->
+            | Tm_match (sc0, asc_opt0, branches0) ->
               (* We have a blocked match, because of something like
 
                   (match (match sc0 with P1 -> e1 | ... | Pn -> en) with
@@ -2640,7 +2637,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
              let reduce_branch (b:S.branch) =
                //reduce the inner branch `b` while setting the continuation
                //stack to be the outer match
-               let stack = [Match(env', None, branches, cfg, r)] in
+               let stack = [Match(env', asc_opt, branches, cfg, r)] in
                let p, wopt, e = SS.open_branch b in
                //It's important to normalize all the sorts within the pat!
                let p, branch_env = norm_pat scrutinee_env p in
@@ -2651,7 +2648,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                U.branch (p, wopt, e)
              in
              let branches0 = List.map reduce_branch branches0 in
-             rebuild cfg env stack (mk (Tm_match(sc0, None, branches0)) r)
+             rebuild cfg env stack (mk (Tm_match(sc0, asc_opt0, branches0)) r)
             | _ ->
               let scrutinee =
                 if cfg.steps.iota

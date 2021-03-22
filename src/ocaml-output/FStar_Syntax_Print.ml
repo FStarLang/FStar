@@ -628,14 +628,14 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                        | FStar_Pervasives_Native.None -> ""
                        | FStar_Pervasives_Native.Some tac ->
                            let uu___7 = term_to_string tac in
-                           FStar_Util.format1 "by %s" uu___7 in
-                     FStar_Util.format2 "ret %s %s" uu___5 uu___6 in
+                           FStar_Util.format1 " by %s" uu___7 in
+                     FStar_Util.format2 "ret %s%s " uu___5 uu___6 in
                let uu___5 =
                  let uu___6 =
                    FStar_All.pipe_right branches
                      (FStar_List.map branch_to_string) in
                  FStar_Util.concat_l "\n\t|" uu___6 in
-               FStar_Util.format3 "(match %s %s with\n\t| %s)" uu___3 uu___4
+               FStar_Util.format3 "(match %s %swith\n\t| %s)" uu___3 uu___4
                  uu___5
            | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
                let uu___3 = FStar_Options.print_universes () in
