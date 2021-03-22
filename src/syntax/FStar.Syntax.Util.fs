@@ -913,7 +913,7 @@ let has_decreases (c:comp) : bool =
   match c.n with
   | Comp ct ->
     begin match ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false) with
-    | Some (DECREASES d) -> true
+    | Some (DECREASES _) -> true
     | _ -> false
     end
   | _ -> false
@@ -991,10 +991,10 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
     let n_univs = List.length lb.lbunivs in
     n_univs + List.length bs,
     U.map_opt dopt (fun d ->
-       let d_bvs = FStar.Syntax.Free.names d in
+       let d_bvs = d |> List.fold_left (fun s t ->
+         set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv) in
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
-
 
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
@@ -1215,6 +1215,12 @@ let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     let eq_inst = mk_Tm_uinst teq [u] in
     mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 
+let teq3 = fvar_const PC.eq3_lid
+let mk_eq3_no_univ t1 t2 e1 e2 =
+  mk (Tm_app(teq3, [iarg t1; iarg t2; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+let mk_untyped_eq3 e1 e2 = mk (Tm_app(teq3, [as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+
+
 let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
@@ -1225,9 +1231,6 @@ let mk_with_type u t e =
     let t_with_type = mk (Tm_uinst(t_with_type, [u])) dummyRange in
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
-let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) dummyRange //NS delta: ok
-let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: ok
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 

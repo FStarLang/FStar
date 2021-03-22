@@ -14,7 +14,7 @@ true: \
   package(ppx_deriving_yojson)
 
 # ADL: the new unicode lexer
-"src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
+"src/parser/ml/FStar_Parser_LexFStar.ml": package(sedlex.ppx)
 
 # ADL: Please do not enable compiler-libs unless absolutely necessary
 <src/*/ml/*> or <src/ocaml-output/*.ml>: \
@@ -23,7 +23,7 @@ true: \
   package(menhirLib), \
   package(dynlink), \
   package(pprint), \
-  package(ulex), \
+  package(sedlex), \
   package(stdint), \
   package(yojson), \
   package(ocaml-migrate-parsetree), \

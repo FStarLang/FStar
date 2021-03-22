@@ -1112,6 +1112,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             List.flatten decls2, env
 
      | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
+        //precedes is added in the prelude, see FStar.SMTEncoding.Term.fs
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
@@ -1364,8 +1365,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                         Some "name-token correspondence",
                                                         ("token_correspondence_"^ttok)) in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
-            if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
-            else tname_decl@tok_decls, env in
+            tname_decl@tok_decls, env in
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =
@@ -1389,8 +1389,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @binder_decls
                 @aux in
         g, env
-
-    | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, _, t, _, n_tps, mutuals) ->
         let quals = se.sigquals in

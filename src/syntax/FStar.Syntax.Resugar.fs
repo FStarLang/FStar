@@ -986,8 +986,9 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | [] -> l
        | hd::tl ->
           match hd with
-          | DECREASES e ->
-            let e = mk (Decreases (resugar_term' env e, None)) in
+          | DECREASES ts ->
+            let lexlist = mk (LexList (ts |> List.map (resugar_term' env))) in
+            let e = mk (Decreases (lexlist, None)) in
             aux (e::l) tl
           | _ -> aux l tl
       in
@@ -1002,9 +1003,9 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | [] -> l
        | hd::tl ->
           match hd with
-          | DECREASES e ->
-            let e = (resugar_term' env e, A.Nothing) in
-            aux (e::l) tl
+          | DECREASES ts ->
+            let es = ts |> List.map (fun e -> resugar_term' env e, A.Nothing) in
+            aux (es@l) tl
           | _ -> aux l tl
       in
       let decrease = aux [] c.flags in
@@ -1216,7 +1217,15 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow(bs, _) ->
-                  let mfields = bs |> List.map (fun b -> (bv_as_unique_ident b.binder_bv, resugar_term' env b.binder_bv.sort)) in
+                  let mfields = 
+                    bs 
+                    |> List.map (fun b -> 
+                        let q = 
+                            match resugar_arg_qual env b.binder_qual with
+                            | Some q -> q
+                            | None -> failwith "Unexpected inaccesible implicit argument of a data constructor while resugaring a record field"
+                        in
+                        (bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end

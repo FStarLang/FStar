@@ -380,20 +380,16 @@ let (mk_wp_return :
                              FStar_All.pipe_right ed
                                FStar_Syntax_Util.get_return_vc_combinator in
                            let uu___6 =
-                             let uu___7 =
-                               FStar_TypeChecker_Env.inst_effect_fun_with
-                                 [u_a] env ed ret_wp in
-                             let uu___8 =
-                               let uu___9 = FStar_Syntax_Syntax.as_arg a in
-                               let uu___10 =
-                                 let uu___11 = FStar_Syntax_Syntax.as_arg e in
-                                 [uu___11] in
-                               uu___9 :: uu___10 in
-                             FStar_Syntax_Syntax.mk_Tm_app uu___7 uu___8
-                               e.FStar_Syntax_Syntax.pos in
-                           FStar_TypeChecker_Normalize.normalize
-                             [FStar_TypeChecker_Env.Beta;
-                             FStar_TypeChecker_Env.NoFullNorm] env uu___6) in
+                             FStar_TypeChecker_Env.inst_effect_fun_with 
+                               [u_a] env ed ret_wp in
+                           let uu___7 =
+                             let uu___8 = FStar_Syntax_Syntax.as_arg a in
+                             let uu___9 =
+                               let uu___10 = FStar_Syntax_Syntax.as_arg e in
+                               [uu___10] in
+                             uu___8 :: uu___9 in
+                           FStar_Syntax_Syntax.mk_Tm_app uu___6 uu___7
+                             e.FStar_Syntax_Syntax.pos) in
                       mk_comp ed u_a a wp [FStar_Syntax_Syntax.RETURN])) in
               (let uu___1 =
                  FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -3764,9 +3760,8 @@ let (maybe_coerce_lc :
       fun lc ->
         fun exp_t ->
           let should_coerce =
-            (((let uu___ = FStar_Options.use_two_phase_tc () in
-               Prims.op_Negation uu___) || env.FStar_TypeChecker_Env.phase1)
-               || env.FStar_TypeChecker_Env.lax)
+            (env.FStar_TypeChecker_Env.phase1 ||
+               env.FStar_TypeChecker_Env.lax)
               || (FStar_Options.lax ()) in
           if Prims.op_Negation should_coerce
           then (e, lc, FStar_TypeChecker_Env.trivial_guard)

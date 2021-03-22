@@ -2134,54 +2134,6 @@ and (encode_term :
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.exists_lid))
                           -> encode_deeply_embedded_quantifier t0 env
-                      | (FStar_Syntax_Syntax.Tm_uinst
-                         ({
-                            FStar_Syntax_Syntax.n =
-                              FStar_Syntax_Syntax.Tm_fvar fv;
-                            FStar_Syntax_Syntax.pos = uu___5;
-                            FStar_Syntax_Syntax.vars = uu___6;_},
-                          uu___7),
-                         (v0, uu___8)::(v1, uu___9)::(v2, uu___10)::[]) when
-                          FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.lexcons_lid
-                          ->
-                          let uu___11 = encode_term v0 env in
-                          (match uu___11 with
-                           | (v01, decls0) ->
-                               let uu___12 = encode_term v1 env in
-                               (match uu___12 with
-                                | (v11, decls1) ->
-                                    let uu___13 = encode_term v2 env in
-                                    (match uu___13 with
-                                     | (v21, decls2) ->
-                                         let uu___14 =
-                                           FStar_SMTEncoding_Util.mk_LexCons
-                                             v01 v11 v21 in
-                                         (uu___14,
-                                           (FStar_List.append decls0
-                                              (FStar_List.append decls1
-                                                 decls2))))))
-                      | (FStar_Syntax_Syntax.Tm_fvar fv,
-                         (v0, uu___5)::(v1, uu___6)::(v2, uu___7)::[]) when
-                          FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.lexcons_lid
-                          ->
-                          let uu___8 = encode_term v0 env in
-                          (match uu___8 with
-                           | (v01, decls0) ->
-                               let uu___9 = encode_term v1 env in
-                               (match uu___9 with
-                                | (v11, decls1) ->
-                                    let uu___10 = encode_term v2 env in
-                                    (match uu___10 with
-                                     | (v21, decls2) ->
-                                         let uu___11 =
-                                           FStar_SMTEncoding_Util.mk_LexCons
-                                             v01 v11 v21 in
-                                         (uu___11,
-                                           (FStar_List.append decls0
-                                              (FStar_List.append decls1
-                                                 decls2))))))
                       | (FStar_Syntax_Syntax.Tm_constant
                          (FStar_Const.Const_range_of), (arg, uu___5)::[]) ->
                           encode_const
