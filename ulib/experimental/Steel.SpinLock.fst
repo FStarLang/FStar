@@ -130,7 +130,7 @@ let acquire' (#p:slprop) (l:lock p)
 
 let rec acquire #p l =
   let b = acquire' l in
-  if b returning SteelT unit (if b then p else emp) (fun _ -> p)
+  if b returns SteelT unit (if b then p else emp) (fun _ -> p)
   then noop ()
   else acquire l
 
