@@ -280,6 +280,7 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Val         = fstar_refl_data_const "Sg_Val"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)
