@@ -1533,6 +1533,24 @@ let (e_sigelt_view :
         FStar_Syntax_Syntax.mk_Tm_app
           FStar_Reflection_Data.ref_Sg_Inductive.FStar_Reflection_Data.t
           uu___ rng
+    | FStar_Reflection_Data.Sg_Val (nm, univs, t) ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = embed FStar_Syntax_Embeddings.e_string_list rng nm in
+            FStar_Syntax_Syntax.as_arg uu___2 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = embed e_univ_names rng univs in
+              FStar_Syntax_Syntax.as_arg uu___4 in
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = embed e_term rng t in
+                FStar_Syntax_Syntax.as_arg uu___6 in
+              [uu___5] in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        FStar_Syntax_Syntax.mk_Tm_app
+          FStar_Reflection_Data.ref_Sg_Val.FStar_Reflection_Data.t uu___ rng
     | FStar_Reflection_Data.Unk ->
         let uu___ = FStar_Reflection_Data.ref_Unk.FStar_Reflection_Data.t in
         {
