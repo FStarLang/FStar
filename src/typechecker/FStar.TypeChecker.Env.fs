@@ -121,6 +121,9 @@ type proof_namespace = list<(name_prefix * bool)>
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
+type must_tot = bool
+type from_tac = bool
+
 type lift_comp_t = env -> comp -> comp * guard_t
 
 and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
@@ -174,12 +177,14 @@ and env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
-  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  typeof_tot_or_gtot_term:env -> term -> bool -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
-  typeof_tot_or_gtot_term_fastpath  :env -> term -> option<typ>;       (* a callback to the type-checker, uses fast path *)
-  universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  tc_check_tot_or_gtot_term_maybe_fastpath :env -> term -> typ -> bool -> bool -> guard_t;
-  universeof_fastpath    :env -> term -> option<universe>;
+
+  tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
+  typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
+  universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> option<typ>; (* typechecker callback, uses fast path, returns None on failure *)
+  tc_check_well_typed_tot_or_gtot_term_with_fallback :env -> term -> typ -> must_tot -> from_tac -> guard_t; (* typechecker callback, tries fastpath, falls back on slow path if that fails *)
+  universeof_well_typed_term :env -> term -> option<universe>; (* typechecker callback, uses fast path returns None on failure *)
+
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -298,13 +303,15 @@ let initial_env deps
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
+
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
-    typeof_tot_or_gtot_term_fastpath = typeof_tot_or_gtot_term_fastpath;
-    tc_check_tot_or_gtot_term_maybe_fastpath =
+    typeof_well_typed_tot_or_gtot_term = typeof_tot_or_gtot_term_fastpath;
+    tc_check_well_typed_tot_or_gtot_term_with_fallback =
       tc_check_tot_or_gtot_term_maybe_fastpath;
     universe_of=universe_of;
-    universeof_fastpath=universeof_fastpath;
+    universeof_well_typed_term=universeof_fastpath;
+
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
@@ -2000,8 +2007,8 @@ let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
   | None -> None
 
 let tc_tot_or_gtot_term_maybe_fastpath env t =
-  match env.typeof_tot_or_gtot_term_fastpath env t with
+  match env.typeof_well_typed_tot_or_gtot_term env t with
   | None ->
-    let _, ty, _ = env.typeof_tot_or_gtot_term env t false in  //AR:TODO: why insist Tot here?
+    let _, ty, _ = env.typeof_tot_or_gtot_term env t false in
     ty
   | Some ty -> ty

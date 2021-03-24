@@ -871,7 +871,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let typs = List.fold_left (fun l uvi ->
       match uvi with
       | TERM (ctx_uvar, t) ->
-        let t1 = wl.tcenv.typeof_tot_or_gtot_term_fastpath
+        let t1 = wl.tcenv.typeof_well_typed_tot_or_gtot_term
           ({wl.tcenv with gamma=ctx_uvar.ctx_uvar_gamma})
           t in
         (match t1 with  //could not compute the type of the term on fastpath
@@ -1877,7 +1877,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                    *)
                   let apply_op op phi1 phi2 =
                     let squash phi =
-                      match env.universeof_fastpath env phi with
+                      match env.universeof_well_typed_term env phi with
                       | Some U_zero -> phi
                       | Some u -> U.mk_squash u phi
                       | None -> U.mk_squash (Env.new_u_univ ()) phi in
@@ -4235,7 +4235,7 @@ let rec resolve_implicits' env is_tac g =
                                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                               (N.term_to_string env tm)
                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
-                                (fun () -> env.tc_check_tot_or_gtot_term_maybe_fastpath env tm ctx_u.ctx_uvar_typ (not env.phase1 && not env.lax) false)
+                                (fun () -> env.tc_check_well_typed_tot_or_gtot_term_with_fallback env tm ctx_u.ctx_uvar_typ (not env.phase1 && not env.lax) false)
               in
               let g' =
                 match discharge_guard' (Some (fun () ->
