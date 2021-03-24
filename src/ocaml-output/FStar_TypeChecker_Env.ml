@@ -176,6 +176,8 @@ type cached_elt =
       FStar_Pervasives_Native.option))
     FStar_Util.either * FStar_Range.range)
 type goal = FStar_Syntax_Syntax.term
+type must_tot = Prims.bool
+type from_tac = Prims.bool
 type mlift =
   {
   mlift_wp:
@@ -261,24 +263,24 @@ and env =
   typeof_tot_or_gtot_term:
     env ->
       FStar_Syntax_Syntax.term ->
-        Prims.bool ->
+        must_tot ->
           (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
             FStar_TypeChecker_Common.guard_t)
     ;
-  typeof_tot_or_gtot_term_fastpath:
+  universe_of:
+    env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe ;
+  typeof_well_typed_tot_or_gtot_term:
     env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
     ;
-  universe_of:
-    env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe ;
-  tc_check_tot_or_gtot_term_maybe_fastpath:
+  tc_check_well_typed_tot_or_gtot_term_with_fallback:
     env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.typ ->
-          Prims.bool -> Prims.bool -> FStar_TypeChecker_Common.guard_t
+          must_tot -> from_tac -> FStar_TypeChecker_Common.guard_t
     ;
-  universeof_fastpath:
+  universeof_well_typed_term:
     env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
@@ -436,14 +438,15 @@ let (__proj__Mkenv__item__solver : env -> solver_t) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> solver
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        solver
 let (__proj__Mkenv__item__range : env -> FStar_Range.range) =
   fun projectee ->
     match projectee with
@@ -451,14 +454,15 @@ let (__proj__Mkenv__item__range : env -> FStar_Range.range) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> range
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        range
 let (__proj__Mkenv__item__curmodule : env -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
@@ -466,14 +470,15 @@ let (__proj__Mkenv__item__curmodule : env -> FStar_Ident.lident) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> curmodule
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        curmodule
 let (__proj__Mkenv__item__gamma :
   env -> FStar_Syntax_Syntax.binding Prims.list) =
   fun projectee ->
@@ -482,14 +487,15 @@ let (__proj__Mkenv__item__gamma :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> gamma
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        gamma
 let (__proj__Mkenv__item__gamma_sig : env -> sig_binding Prims.list) =
   fun projectee ->
     match projectee with
@@ -497,14 +503,15 @@ let (__proj__Mkenv__item__gamma_sig : env -> sig_binding Prims.list) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> gamma_sig
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        gamma_sig
 let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap) =
   fun projectee ->
     match projectee with
@@ -512,14 +519,15 @@ let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> gamma_cache
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        gamma_cache
 let (__proj__Mkenv__item__modules :
   env -> FStar_Syntax_Syntax.modul Prims.list) =
   fun projectee ->
@@ -528,14 +536,15 @@ let (__proj__Mkenv__item__modules :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> modules
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        modules
 let (__proj__Mkenv__item__expected_typ :
   env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -544,14 +553,15 @@ let (__proj__Mkenv__item__expected_typ :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> expected_typ
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        expected_typ
 let (__proj__Mkenv__item__sigtab :
   env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap) =
   fun projectee ->
@@ -560,14 +570,15 @@ let (__proj__Mkenv__item__sigtab :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> sigtab
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        sigtab
 let (__proj__Mkenv__item__attrtab :
   env -> FStar_Syntax_Syntax.sigelt Prims.list FStar_Util.smap) =
   fun projectee ->
@@ -576,14 +587,15 @@ let (__proj__Mkenv__item__attrtab :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> attrtab
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        attrtab
 let (__proj__Mkenv__item__instantiate_imp : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -591,14 +603,15 @@ let (__proj__Mkenv__item__instantiate_imp : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> instantiate_imp
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        instantiate_imp
 let (__proj__Mkenv__item__effects : env -> effects) =
   fun projectee ->
     match projectee with
@@ -606,14 +619,15 @@ let (__proj__Mkenv__item__effects : env -> effects) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> effects1
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        effects1
 let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -621,14 +635,15 @@ let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> generalize
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        generalize
 let (__proj__Mkenv__item__letrecs :
   env ->
     (FStar_Syntax_Syntax.lbname * Prims.int * FStar_Syntax_Syntax.typ *
@@ -640,14 +655,15 @@ let (__proj__Mkenv__item__letrecs :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> letrecs
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        letrecs
 let (__proj__Mkenv__item__top_level : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -655,14 +671,15 @@ let (__proj__Mkenv__item__top_level : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> top_level
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        top_level
 let (__proj__Mkenv__item__check_uvars : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -670,14 +687,15 @@ let (__proj__Mkenv__item__check_uvars : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> check_uvars
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        check_uvars
 let (__proj__Mkenv__item__use_eq : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -685,14 +703,15 @@ let (__proj__Mkenv__item__use_eq : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> use_eq
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        use_eq
 let (__proj__Mkenv__item__use_eq_strict : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -700,14 +719,15 @@ let (__proj__Mkenv__item__use_eq_strict : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> use_eq_strict
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        use_eq_strict
 let (__proj__Mkenv__item__is_iface : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -715,14 +735,15 @@ let (__proj__Mkenv__item__is_iface : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> is_iface
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        is_iface
 let (__proj__Mkenv__item__admit : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -730,14 +751,15 @@ let (__proj__Mkenv__item__admit : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> admit
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        admit
 let (__proj__Mkenv__item__lax : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -745,14 +767,15 @@ let (__proj__Mkenv__item__lax : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> lax
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        lax
 let (__proj__Mkenv__item__lax_universes : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -760,14 +783,15 @@ let (__proj__Mkenv__item__lax_universes : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> lax_universes
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        lax_universes
 let (__proj__Mkenv__item__phase1 : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -775,14 +799,15 @@ let (__proj__Mkenv__item__phase1 : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> phase1
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        phase1
 let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -790,14 +815,15 @@ let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> failhard
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        failhard
 let (__proj__Mkenv__item__nosynth : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -805,14 +831,15 @@ let (__proj__Mkenv__item__nosynth : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> nosynth
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        nosynth
 let (__proj__Mkenv__item__uvar_subtyping : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -820,14 +847,15 @@ let (__proj__Mkenv__item__uvar_subtyping : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> uvar_subtyping
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        uvar_subtyping
 let (__proj__Mkenv__item__tc_term :
   env ->
     env ->
@@ -841,19 +869,20 @@ let (__proj__Mkenv__item__tc_term :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> tc_term
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        tc_term
 let (__proj__Mkenv__item__typeof_tot_or_gtot_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        Prims.bool ->
+        must_tot ->
           (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ *
             FStar_TypeChecker_Common.guard_t))
   =
@@ -863,15 +892,33 @@ let (__proj__Mkenv__item__typeof_tot_or_gtot_term :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> typeof_tot_or_gtot_term
-let (__proj__Mkenv__item__typeof_tot_or_gtot_term_fastpath :
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        typeof_tot_or_gtot_term
+let (__proj__Mkenv__item__universe_of :
+  env -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) =
+  fun projectee ->
+    match projectee with
+    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+        expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
+        generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
+        is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        universe_of
+let (__proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
@@ -883,36 +930,22 @@ let (__proj__Mkenv__item__typeof_tot_or_gtot_term_fastpath :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> typeof_tot_or_gtot_term_fastpath
-let (__proj__Mkenv__item__universe_of :
-  env -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) =
-  fun projectee ->
-    match projectee with
-    | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-        expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-        generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
-        is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> universe_of
-let (__proj__Mkenv__item__tc_check_tot_or_gtot_term_maybe_fastpath :
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        typeof_well_typed_tot_or_gtot_term
+let (__proj__Mkenv__item__tc_check_well_typed_tot_or_gtot_term_with_fallback
+  :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.typ ->
-          Prims.bool -> Prims.bool -> FStar_TypeChecker_Common.guard_t)
+          must_tot -> from_tac -> FStar_TypeChecker_Common.guard_t)
   =
   fun projectee ->
     match projectee with
@@ -920,15 +953,16 @@ let (__proj__Mkenv__item__tc_check_tot_or_gtot_term_maybe_fastpath :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> tc_check_tot_or_gtot_term_maybe_fastpath
-let (__proj__Mkenv__item__universeof_fastpath :
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        tc_check_well_typed_tot_or_gtot_term_with_fallback
+let (__proj__Mkenv__item__universeof_well_typed_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
@@ -940,14 +974,15 @@ let (__proj__Mkenv__item__universeof_fastpath :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> universeof_fastpath
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        universeof_well_typed_term
 let (__proj__Mkenv__item__use_bv_sorts : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -955,14 +990,15 @@ let (__proj__Mkenv__item__use_bv_sorts : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> use_bv_sorts
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        use_bv_sorts
 let (__proj__Mkenv__item__qtbl_name_and_index :
   env ->
     (Prims.int FStar_Util.smap * (FStar_Ident.lident * Prims.int)
@@ -974,14 +1010,15 @@ let (__proj__Mkenv__item__qtbl_name_and_index :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> qtbl_name_and_index
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        qtbl_name_and_index
 let (__proj__Mkenv__item__normalized_eff_names :
   env -> FStar_Ident.lident FStar_Util.smap) =
   fun projectee ->
@@ -990,14 +1027,15 @@ let (__proj__Mkenv__item__normalized_eff_names :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> normalized_eff_names
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        normalized_eff_names
 let (__proj__Mkenv__item__fv_delta_depths :
   env -> FStar_Syntax_Syntax.delta_depth FStar_Util.smap) =
   fun projectee ->
@@ -1006,14 +1044,15 @@ let (__proj__Mkenv__item__fv_delta_depths :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> fv_delta_depths
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        fv_delta_depths
 let (__proj__Mkenv__item__proof_ns : env -> proof_namespace) =
   fun projectee ->
     match projectee with
@@ -1021,14 +1060,15 @@ let (__proj__Mkenv__item__proof_ns : env -> proof_namespace) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> proof_ns
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        proof_ns
 let (__proj__Mkenv__item__synth_hook :
   env ->
     env ->
@@ -1041,14 +1081,15 @@ let (__proj__Mkenv__item__synth_hook :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> synth_hook
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        synth_hook
 let (__proj__Mkenv__item__try_solve_implicits_hook :
   env ->
     env ->
@@ -1060,14 +1101,15 @@ let (__proj__Mkenv__item__try_solve_implicits_hook :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> try_solve_implicits_hook
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        try_solve_implicits_hook
 let (__proj__Mkenv__item__splice :
   env ->
     env ->
@@ -1080,14 +1122,15 @@ let (__proj__Mkenv__item__splice :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> splice
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        splice
 let (__proj__Mkenv__item__mpreprocess :
   env ->
     env ->
@@ -1100,14 +1143,15 @@ let (__proj__Mkenv__item__mpreprocess :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> mpreprocess
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        mpreprocess
 let (__proj__Mkenv__item__postprocess :
   env ->
     env ->
@@ -1121,14 +1165,15 @@ let (__proj__Mkenv__item__postprocess :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> postprocess
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        postprocess
 let (__proj__Mkenv__item__identifier_info :
   env -> FStar_TypeChecker_Common.id_info_table FStar_ST.ref) =
   fun projectee ->
@@ -1137,14 +1182,15 @@ let (__proj__Mkenv__item__identifier_info :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> identifier_info
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        identifier_info
 let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
   fun projectee ->
     match projectee with
@@ -1152,14 +1198,15 @@ let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> tc_hooks
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        tc_hooks
 let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
   fun projectee ->
     match projectee with
@@ -1167,14 +1214,15 @@ let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> dsenv
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        dsenv
 let (__proj__Mkenv__item__nbe :
   env ->
     step Prims.list ->
@@ -1186,14 +1234,15 @@ let (__proj__Mkenv__item__nbe :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> nbe
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        nbe
 let (__proj__Mkenv__item__strict_args_tab :
   env -> Prims.int Prims.list FStar_Pervasives_Native.option FStar_Util.smap)
   =
@@ -1203,14 +1252,15 @@ let (__proj__Mkenv__item__strict_args_tab :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> strict_args_tab
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        strict_args_tab
 let (__proj__Mkenv__item__erasable_types_tab :
   env -> Prims.bool FStar_Util.smap) =
   fun projectee ->
@@ -1219,14 +1269,15 @@ let (__proj__Mkenv__item__erasable_types_tab :
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> erasable_types_tab
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        erasable_types_tab
 let (__proj__Mkenv__item__enable_defer_to_tac : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1234,14 +1285,15 @@ let (__proj__Mkenv__item__enable_defer_to_tac : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> enable_defer_to_tac
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        enable_defer_to_tac
 let (__proj__Mkenv__item__unif_allow_ref_guards : env -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1249,14 +1301,15 @@ let (__proj__Mkenv__item__unif_allow_ref_guards : env -> Prims.bool) =
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq; use_eq_strict;
         is_iface; admit; lax; lax_universes; phase1; failhard; nosynth;
-        uvar_subtyping; tc_term; typeof_tot_or_gtot_term;
-        typeof_tot_or_gtot_term_fastpath; universe_of;
-        tc_check_tot_or_gtot_term_maybe_fastpath; universeof_fastpath;
-        use_bv_sorts; qtbl_name_and_index; normalized_eff_names;
-        fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
-        splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
-        dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-        unif_allow_ref_guards;_} -> unif_allow_ref_guards
+        uvar_subtyping; tc_term; typeof_tot_or_gtot_term; universe_of;
+        typeof_well_typed_tot_or_gtot_term;
+        tc_check_well_typed_tot_or_gtot_term_with_fallback;
+        universeof_well_typed_term; use_bv_sorts; qtbl_name_and_index;
+        normalized_eff_names; fv_delta_depths; proof_ns; synth_hook;
+        try_solve_implicits_hook; splice; mpreprocess; postprocess;
+        identifier_info; tc_hooks; dsenv; nbe; strict_args_tab;
+        erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;_} ->
+        unif_allow_ref_guards
 let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
@@ -1425,12 +1478,12 @@ let (rename_env : FStar_Syntax_Syntax.subst_t -> env -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -1486,12 +1539,12 @@ let (set_tc_hooks : env -> tcenv_hooks -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -1545,12 +1598,12 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -1695,10 +1748,12 @@ let (initial_env :
                         uvar_subtyping = true;
                         tc_term;
                         typeof_tot_or_gtot_term;
-                        typeof_tot_or_gtot_term_fastpath;
                         universe_of;
-                        tc_check_tot_or_gtot_term_maybe_fastpath;
-                        universeof_fastpath;
+                        typeof_well_typed_tot_or_gtot_term =
+                          typeof_tot_or_gtot_term_fastpath;
+                        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                          tc_check_tot_or_gtot_term_maybe_fastpath;
+                        universeof_well_typed_term = universeof_fastpath;
                         use_bv_sorts = false;
                         qtbl_name_and_index = uu___3;
                         normalized_eff_names = uu___4;
@@ -1837,12 +1892,12 @@ let (push_stack : env -> env) =
        uvar_subtyping = (uu___1.uvar_subtyping);
        tc_term = (uu___1.tc_term);
        typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-       typeof_tot_or_gtot_term_fastpath =
-         (uu___1.typeof_tot_or_gtot_term_fastpath);
        universe_of = (uu___1.universe_of);
-       tc_check_tot_or_gtot_term_maybe_fastpath =
-         (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-       universeof_fastpath = (uu___1.universeof_fastpath);
+       typeof_well_typed_tot_or_gtot_term =
+         (uu___1.typeof_well_typed_tot_or_gtot_term);
+       tc_check_well_typed_tot_or_gtot_term_with_fallback =
+         (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+       universeof_well_typed_term = (uu___1.universeof_well_typed_term);
        use_bv_sorts = (uu___1.use_bv_sorts);
        qtbl_name_and_index = uu___5;
        normalized_eff_names = uu___6;
@@ -1923,13 +1978,14 @@ let (snapshot : env -> Prims.string -> (tcenv_depth_t * env)) =
                                    tc_term = (uu___5.tc_term);
                                    typeof_tot_or_gtot_term =
                                      (uu___5.typeof_tot_or_gtot_term);
-                                   typeof_tot_or_gtot_term_fastpath =
-                                     (uu___5.typeof_tot_or_gtot_term_fastpath);
                                    universe_of = (uu___5.universe_of);
-                                   tc_check_tot_or_gtot_term_maybe_fastpath =
-                                     (uu___5.tc_check_tot_or_gtot_term_maybe_fastpath);
-                                   universeof_fastpath =
-                                     (uu___5.universeof_fastpath);
+                                   typeof_well_typed_tot_or_gtot_term =
+                                     (uu___5.typeof_well_typed_tot_or_gtot_term);
+                                   tc_check_well_typed_tot_or_gtot_term_with_fallback
+                                     =
+                                     (uu___5.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+                                   universeof_well_typed_term =
+                                     (uu___5.universeof_well_typed_term);
                                    use_bv_sorts = (uu___5.use_bv_sorts);
                                    qtbl_name_and_index =
                                      (uu___5.qtbl_name_and_index);
@@ -2049,12 +2105,13 @@ let (incr_query_index : env -> env) =
                  uvar_subtyping = (uu___3.uvar_subtyping);
                  tc_term = (uu___3.tc_term);
                  typeof_tot_or_gtot_term = (uu___3.typeof_tot_or_gtot_term);
-                 typeof_tot_or_gtot_term_fastpath =
-                   (uu___3.typeof_tot_or_gtot_term_fastpath);
                  universe_of = (uu___3.universe_of);
-                 tc_check_tot_or_gtot_term_maybe_fastpath =
-                   (uu___3.tc_check_tot_or_gtot_term_maybe_fastpath);
-                 universeof_fastpath = (uu___3.universeof_fastpath);
+                 typeof_well_typed_tot_or_gtot_term =
+                   (uu___3.typeof_well_typed_tot_or_gtot_term);
+                 tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                   (uu___3.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+                 universeof_well_typed_term =
+                   (uu___3.universeof_well_typed_term);
                  use_bv_sorts = (uu___3.use_bv_sorts);
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
@@ -2110,12 +2167,13 @@ let (incr_query_index : env -> env) =
                  uvar_subtyping = (uu___4.uvar_subtyping);
                  tc_term = (uu___4.tc_term);
                  typeof_tot_or_gtot_term = (uu___4.typeof_tot_or_gtot_term);
-                 typeof_tot_or_gtot_term_fastpath =
-                   (uu___4.typeof_tot_or_gtot_term_fastpath);
                  universe_of = (uu___4.universe_of);
-                 tc_check_tot_or_gtot_term_maybe_fastpath =
-                   (uu___4.tc_check_tot_or_gtot_term_maybe_fastpath);
-                 universeof_fastpath = (uu___4.universeof_fastpath);
+                 typeof_well_typed_tot_or_gtot_term =
+                   (uu___4.typeof_well_typed_tot_or_gtot_term);
+                 tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                   (uu___4.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+                 universeof_well_typed_term =
+                   (uu___4.universeof_well_typed_term);
                  use_bv_sorts = (uu___4.use_bv_sorts);
                  qtbl_name_and_index =
                    (tbl, (FStar_Pervasives_Native.Some (l, next)));
@@ -2177,12 +2235,12 @@ let (set_range : env -> FStar_Range.range -> env) =
            uvar_subtyping = (uu___1.uvar_subtyping);
            tc_term = (uu___1.tc_term);
            typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-           typeof_tot_or_gtot_term_fastpath =
-             (uu___1.typeof_tot_or_gtot_term_fastpath);
            universe_of = (uu___1.universe_of);
-           tc_check_tot_or_gtot_term_maybe_fastpath =
-             (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-           universeof_fastpath = (uu___1.universeof_fastpath);
+           typeof_well_typed_tot_or_gtot_term =
+             (uu___1.typeof_well_typed_tot_or_gtot_term);
+           tc_check_well_typed_tot_or_gtot_term_with_fallback =
+             (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+           universeof_well_typed_term = (uu___1.universeof_well_typed_term);
            use_bv_sorts = (uu___1.use_bv_sorts);
            qtbl_name_and_index = (uu___1.qtbl_name_and_index);
            normalized_eff_names = (uu___1.normalized_eff_names);
@@ -2272,12 +2330,12 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -4320,12 +4378,12 @@ let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
           uvar_subtyping = (uu___.uvar_subtyping);
           tc_term = (uu___.tc_term);
           typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-          typeof_tot_or_gtot_term_fastpath =
-            (uu___.typeof_tot_or_gtot_term_fastpath);
           universe_of = (uu___.universe_of);
-          tc_check_tot_or_gtot_term_maybe_fastpath =
-            (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-          universeof_fastpath = (uu___.universeof_fastpath);
+          typeof_well_typed_tot_or_gtot_term =
+            (uu___.typeof_well_typed_tot_or_gtot_term);
+          tc_check_well_typed_tot_or_gtot_term_with_fallback =
+            (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+          universeof_well_typed_term = (uu___.universeof_well_typed_term);
           use_bv_sorts = (uu___.use_bv_sorts);
           qtbl_name_and_index = (uu___.qtbl_name_and_index);
           normalized_eff_names = (uu___.normalized_eff_names);
@@ -4396,12 +4454,12 @@ let (push_new_effect :
             uvar_subtyping = (uu___1.uvar_subtyping);
             tc_term = (uu___1.tc_term);
             typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-            typeof_tot_or_gtot_term_fastpath =
-              (uu___1.typeof_tot_or_gtot_term_fastpath);
             universe_of = (uu___1.universe_of);
-            tc_check_tot_or_gtot_term_maybe_fastpath =
-              (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-            universeof_fastpath = (uu___1.universeof_fastpath);
+            typeof_well_typed_tot_or_gtot_term =
+              (uu___1.typeof_well_typed_tot_or_gtot_term);
+            tc_check_well_typed_tot_or_gtot_term_with_fallback =
+              (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+            universeof_well_typed_term = (uu___1.universeof_well_typed_term);
             use_bv_sorts = (uu___1.use_bv_sorts);
             qtbl_name_and_index = (uu___1.qtbl_name_and_index);
             normalized_eff_names = (uu___1.normalized_eff_names);
@@ -4856,12 +4914,12 @@ let (update_effect_lattice :
              uvar_subtyping = (uu___1.uvar_subtyping);
              tc_term = (uu___1.tc_term);
              typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-             typeof_tot_or_gtot_term_fastpath =
-               (uu___1.typeof_tot_or_gtot_term_fastpath);
              universe_of = (uu___1.universe_of);
-             tc_check_tot_or_gtot_term_maybe_fastpath =
-               (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-             universeof_fastpath = (uu___1.universeof_fastpath);
+             typeof_well_typed_tot_or_gtot_term =
+               (uu___1.typeof_well_typed_tot_or_gtot_term);
+             tc_check_well_typed_tot_or_gtot_term_with_fallback =
+               (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+             universeof_well_typed_term = (uu___1.universeof_well_typed_term);
              use_bv_sorts = (uu___1.use_bv_sorts);
              qtbl_name_and_index = (uu___1.qtbl_name_and_index);
              normalized_eff_names = (uu___1.normalized_eff_names);
@@ -4963,12 +5021,13 @@ let (add_polymonadic_bind :
                     tc_term = (uu___4.tc_term);
                     typeof_tot_or_gtot_term =
                       (uu___4.typeof_tot_or_gtot_term);
-                    typeof_tot_or_gtot_term_fastpath =
-                      (uu___4.typeof_tot_or_gtot_term_fastpath);
                     universe_of = (uu___4.universe_of);
-                    tc_check_tot_or_gtot_term_maybe_fastpath =
-                      (uu___4.tc_check_tot_or_gtot_term_maybe_fastpath);
-                    universeof_fastpath = (uu___4.universeof_fastpath);
+                    typeof_well_typed_tot_or_gtot_term =
+                      (uu___4.typeof_well_typed_tot_or_gtot_term);
+                    tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                      (uu___4.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+                    universeof_well_typed_term =
+                      (uu___4.universeof_well_typed_term);
                     use_bv_sorts = (uu___4.use_bv_sorts);
                     qtbl_name_and_index = (uu___4.qtbl_name_and_index);
                     normalized_eff_names = (uu___4.normalized_eff_names);
@@ -5070,12 +5129,13 @@ let (add_polymonadic_subcomp :
                   uvar_subtyping = (uu___4.uvar_subtyping);
                   tc_term = (uu___4.tc_term);
                   typeof_tot_or_gtot_term = (uu___4.typeof_tot_or_gtot_term);
-                  typeof_tot_or_gtot_term_fastpath =
-                    (uu___4.typeof_tot_or_gtot_term_fastpath);
                   universe_of = (uu___4.universe_of);
-                  tc_check_tot_or_gtot_term_maybe_fastpath =
-                    (uu___4.tc_check_tot_or_gtot_term_maybe_fastpath);
-                  universeof_fastpath = (uu___4.universeof_fastpath);
+                  typeof_well_typed_tot_or_gtot_term =
+                    (uu___4.typeof_well_typed_tot_or_gtot_term);
+                  tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                    (uu___4.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+                  universeof_well_typed_term =
+                    (uu___4.universeof_well_typed_term);
                   use_bv_sorts = (uu___4.use_bv_sorts);
                   qtbl_name_and_index = (uu___4.qtbl_name_and_index);
                   normalized_eff_names = (uu___4.normalized_eff_names);
@@ -5129,12 +5189,12 @@ let (push_local_binding : env -> FStar_Syntax_Syntax.binding -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -5198,12 +5258,13 @@ let (pop_bv :
                uvar_subtyping = (uu___.uvar_subtyping);
                tc_term = (uu___.tc_term);
                typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-               typeof_tot_or_gtot_term_fastpath =
-                 (uu___.typeof_tot_or_gtot_term_fastpath);
                universe_of = (uu___.universe_of);
-               tc_check_tot_or_gtot_term_maybe_fastpath =
-                 (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-               universeof_fastpath = (uu___.universeof_fastpath);
+               typeof_well_typed_tot_or_gtot_term =
+                 (uu___.typeof_well_typed_tot_or_gtot_term);
+               tc_check_well_typed_tot_or_gtot_term_with_fallback =
+                 (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+               universeof_well_typed_term =
+                 (uu___.universeof_well_typed_term);
                use_bv_sorts = (uu___.use_bv_sorts);
                qtbl_name_and_index = (uu___.qtbl_name_and_index);
                normalized_eff_names = (uu___.normalized_eff_names);
@@ -5313,12 +5374,12 @@ let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -5378,12 +5439,12 @@ let (clear_expected_typ :
         uvar_subtyping = (uu___1.uvar_subtyping);
         tc_term = (uu___1.tc_term);
         typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___1.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___1.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___1.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___1.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___1.universeof_well_typed_term);
         use_bv_sorts = (uu___1.use_bv_sorts);
         qtbl_name_and_index = (uu___1.qtbl_name_and_index);
         normalized_eff_names = (uu___1.normalized_eff_names);
@@ -5451,12 +5512,12 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
          uvar_subtyping = (uu___1.uvar_subtyping);
          tc_term = (uu___1.tc_term);
          typeof_tot_or_gtot_term = (uu___1.typeof_tot_or_gtot_term);
-         typeof_tot_or_gtot_term_fastpath =
-           (uu___1.typeof_tot_or_gtot_term_fastpath);
          universe_of = (uu___1.universe_of);
-         tc_check_tot_or_gtot_term_maybe_fastpath =
-           (uu___1.tc_check_tot_or_gtot_term_maybe_fastpath);
-         universeof_fastpath = (uu___1.universeof_fastpath);
+         typeof_well_typed_tot_or_gtot_term =
+           (uu___1.typeof_well_typed_tot_or_gtot_term);
+         tc_check_well_typed_tot_or_gtot_term_with_fallback =
+           (uu___1.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+         universeof_well_typed_term = (uu___1.universeof_well_typed_term);
          use_bv_sorts = (uu___1.use_bv_sorts);
          qtbl_name_and_index = (uu___1.qtbl_name_and_index);
          normalized_eff_names = (uu___1.normalized_eff_names);
@@ -5654,12 +5715,12 @@ let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
           uvar_subtyping = (uu___.uvar_subtyping);
           tc_term = (uu___.tc_term);
           typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-          typeof_tot_or_gtot_term_fastpath =
-            (uu___.typeof_tot_or_gtot_term_fastpath);
           universe_of = (uu___.universe_of);
-          tc_check_tot_or_gtot_term_maybe_fastpath =
-            (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-          universeof_fastpath = (uu___.universeof_fastpath);
+          typeof_well_typed_tot_or_gtot_term =
+            (uu___.typeof_well_typed_tot_or_gtot_term);
+          tc_check_well_typed_tot_or_gtot_term_with_fallback =
+            (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+          universeof_well_typed_term = (uu___.universeof_well_typed_term);
           use_bv_sorts = (uu___.use_bv_sorts);
           qtbl_name_and_index = (uu___.qtbl_name_and_index);
           normalized_eff_names = (uu___.normalized_eff_names);
@@ -5717,12 +5778,12 @@ let (set_proof_ns : proof_namespace -> env -> env) =
         uvar_subtyping = (uu___.uvar_subtyping);
         tc_term = (uu___.tc_term);
         typeof_tot_or_gtot_term = (uu___.typeof_tot_or_gtot_term);
-        typeof_tot_or_gtot_term_fastpath =
-          (uu___.typeof_tot_or_gtot_term_fastpath);
         universe_of = (uu___.universe_of);
-        tc_check_tot_or_gtot_term_maybe_fastpath =
-          (uu___.tc_check_tot_or_gtot_term_maybe_fastpath);
-        universeof_fastpath = (uu___.universeof_fastpath);
+        typeof_well_typed_tot_or_gtot_term =
+          (uu___.typeof_well_typed_tot_or_gtot_term);
+        tc_check_well_typed_tot_or_gtot_term_with_fallback =
+          (uu___.tc_check_well_typed_tot_or_gtot_term_with_fallback);
+        universeof_well_typed_term = (uu___.universeof_well_typed_term);
         use_bv_sorts = (uu___.use_bv_sorts);
         qtbl_name_and_index = (uu___.qtbl_name_and_index);
         normalized_eff_names = (uu___.normalized_eff_names);
@@ -6358,7 +6419,7 @@ let (tc_tot_or_gtot_term_maybe_fastpath :
   env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ) =
   fun env1 ->
     fun t ->
-      let uu___ = env1.typeof_tot_or_gtot_term_fastpath env1 t in
+      let uu___ = env1.typeof_well_typed_tot_or_gtot_term env1 t in
       match uu___ with
       | FStar_Pervasives_Native.None ->
           let uu___1 = env1.typeof_tot_or_gtot_term env1 t false in
