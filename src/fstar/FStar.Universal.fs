@@ -124,6 +124,7 @@ let init_env deps : TcEnv.env =
         TcTerm.universe_of
         TcTerm.tc_check_tot_or_gtot_term_maybe_fastpath
         TcTerm.universeof_fastpath
+        TcTerm.effectof_tot_or_gtot_term_fastpath
         solver
         Const.prims_lid
         (NBE.normalize
