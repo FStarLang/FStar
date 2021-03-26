@@ -135,7 +135,6 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
-  solution_types:    list<(typ * typ)>;  //AR: whenever we solve (?u <- t), we record (k1, k2), where t:k1 and ?u:k2, when discharging the guard, we try to solve k1 <: k2 if it can help us solve some uvars, see Rel.resolve_implicits' 
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
