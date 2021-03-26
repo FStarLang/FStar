@@ -211,7 +211,6 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> bool -> term*typ*guard_t) ->
                   (env -> term -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (env -> term -> typ -> bool -> bool -> guard_t) ->
                   (env -> term -> option<universe>) ->
                   (env -> term -> option<lident>) ->
                   solver_t -> lident ->

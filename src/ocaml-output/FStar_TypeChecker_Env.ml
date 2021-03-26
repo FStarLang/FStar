@@ -1616,138 +1616,125 @@ let (initial_env :
             ->
             (env ->
                FStar_Syntax_Syntax.term ->
-                 FStar_Syntax_Syntax.typ ->
-                   Prims.bool -> Prims.bool -> guard_t)
+                 FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
               ->
               (env ->
                  FStar_Syntax_Syntax.term ->
-                   FStar_Syntax_Syntax.universe
-                     FStar_Pervasives_Native.option)
+                   FStar_Ident.lident FStar_Pervasives_Native.option)
                 ->
-                (env ->
-                   FStar_Syntax_Syntax.term ->
-                     FStar_Ident.lident FStar_Pervasives_Native.option)
-                  ->
-                  solver_t ->
-                    FStar_Ident.lident ->
-                      (step Prims.list ->
-                         env ->
-                           FStar_Syntax_Syntax.term ->
-                             FStar_Syntax_Syntax.term)
-                        -> env)
+                solver_t ->
+                  FStar_Ident.lident ->
+                    (step Prims.list ->
+                       env ->
+                         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+                      -> env)
   =
   fun deps ->
     fun tc_term ->
       fun typeof_tot_or_gtot_term ->
         fun typeof_tot_or_gtot_term_fastpath ->
           fun universe_of ->
-            fun tc_check_tot_or_gtot_term_maybe_fastpath ->
-              fun universeof_fastpath ->
-                fun effectof_tot_or_gtot_term_fastpath ->
-                  fun solver ->
-                    fun module_lid ->
-                      fun nbe ->
-                        let uu___ = new_gamma_cache () in
-                        let uu___1 = new_sigtab () in
-                        let uu___2 = new_sigtab () in
-                        let uu___3 =
-                          let uu___4 =
-                            FStar_Util.smap_create (Prims.of_int (10)) in
-                          (uu___4, FStar_Pervasives_Native.None) in
+            fun universeof_fastpath ->
+              fun effectof_tot_or_gtot_term_fastpath ->
+                fun solver ->
+                  fun module_lid ->
+                    fun nbe ->
+                      let uu___ = new_gamma_cache () in
+                      let uu___1 = new_sigtab () in
+                      let uu___2 = new_sigtab () in
+                      let uu___3 =
                         let uu___4 =
-                          FStar_Util.smap_create (Prims.of_int (20)) in
-                        let uu___5 =
-                          FStar_Util.smap_create (Prims.of_int (50)) in
-                        let uu___6 = FStar_Options.using_facts_from () in
-                        let uu___7 =
-                          FStar_Util.mk_ref
-                            FStar_TypeChecker_Common.id_info_table_empty in
-                        let uu___8 = FStar_Syntax_DsEnv.empty_env deps in
-                        let uu___9 =
-                          FStar_Util.smap_create (Prims.of_int (20)) in
-                        let uu___10 =
-                          FStar_Util.smap_create (Prims.of_int (20)) in
-                        {
-                          solver;
-                          range = FStar_Range.dummyRange;
-                          curmodule = module_lid;
-                          gamma = [];
-                          gamma_sig = [];
-                          gamma_cache = uu___;
-                          modules = [];
-                          expected_typ = FStar_Pervasives_Native.None;
-                          sigtab = uu___1;
-                          attrtab = uu___2;
-                          instantiate_imp = true;
-                          effects =
-                            {
-                              decls = [];
-                              order = [];
-                              joins = [];
-                              polymonadic_binds = [];
-                              polymonadic_subcomps = []
-                            };
-                          generalize = true;
-                          letrecs = [];
-                          top_level = false;
-                          check_uvars = false;
-                          use_eq = false;
-                          use_eq_strict = false;
-                          is_iface = false;
-                          admit = false;
-                          lax = false;
-                          lax_universes = false;
-                          phase1 = false;
-                          failhard = false;
-                          nosynth = false;
-                          uvar_subtyping = true;
-                          tc_term;
-                          typeof_tot_or_gtot_term;
-                          universe_of;
-                          typeof_well_typed_tot_or_gtot_term =
-                            typeof_tot_or_gtot_term_fastpath;
-                          universeof_well_typed_term = universeof_fastpath;
-                          effectof_well_typed_tot_or_gtot_term =
-                            effectof_tot_or_gtot_term_fastpath;
-                          use_bv_sorts = false;
-                          qtbl_name_and_index = uu___3;
-                          normalized_eff_names = uu___4;
-                          fv_delta_depths = uu___5;
-                          proof_ns = uu___6;
-                          synth_hook =
-                            (fun e ->
-                               fun g ->
-                                 fun tau ->
-                                   failwith "no synthesizer available");
-                          try_solve_implicits_hook =
-                            (fun e ->
-                               fun tau ->
-                                 fun imps ->
-                                   failwith "no implicit hook available");
-                          splice =
-                            (fun e ->
-                               fun rng ->
-                                 fun tau -> failwith "no splicer available");
-                          mpreprocess =
-                            (fun e ->
-                               fun tau ->
+                          FStar_Util.smap_create (Prims.of_int (10)) in
+                        (uu___4, FStar_Pervasives_Native.None) in
+                      let uu___4 = FStar_Util.smap_create (Prims.of_int (20)) in
+                      let uu___5 = FStar_Util.smap_create (Prims.of_int (50)) in
+                      let uu___6 = FStar_Options.using_facts_from () in
+                      let uu___7 =
+                        FStar_Util.mk_ref
+                          FStar_TypeChecker_Common.id_info_table_empty in
+                      let uu___8 = FStar_Syntax_DsEnv.empty_env deps in
+                      let uu___9 = FStar_Util.smap_create (Prims.of_int (20)) in
+                      let uu___10 =
+                        FStar_Util.smap_create (Prims.of_int (20)) in
+                      {
+                        solver;
+                        range = FStar_Range.dummyRange;
+                        curmodule = module_lid;
+                        gamma = [];
+                        gamma_sig = [];
+                        gamma_cache = uu___;
+                        modules = [];
+                        expected_typ = FStar_Pervasives_Native.None;
+                        sigtab = uu___1;
+                        attrtab = uu___2;
+                        instantiate_imp = true;
+                        effects =
+                          {
+                            decls = [];
+                            order = [];
+                            joins = [];
+                            polymonadic_binds = [];
+                            polymonadic_subcomps = []
+                          };
+                        generalize = true;
+                        letrecs = [];
+                        top_level = false;
+                        check_uvars = false;
+                        use_eq = false;
+                        use_eq_strict = false;
+                        is_iface = false;
+                        admit = false;
+                        lax = false;
+                        lax_universes = false;
+                        phase1 = false;
+                        failhard = false;
+                        nosynth = false;
+                        uvar_subtyping = true;
+                        tc_term;
+                        typeof_tot_or_gtot_term;
+                        universe_of;
+                        typeof_well_typed_tot_or_gtot_term =
+                          typeof_tot_or_gtot_term_fastpath;
+                        universeof_well_typed_term = universeof_fastpath;
+                        effectof_well_typed_tot_or_gtot_term =
+                          effectof_tot_or_gtot_term_fastpath;
+                        use_bv_sorts = false;
+                        qtbl_name_and_index = uu___3;
+                        normalized_eff_names = uu___4;
+                        fv_delta_depths = uu___5;
+                        proof_ns = uu___6;
+                        synth_hook =
+                          (fun e ->
+                             fun g ->
+                               fun tau -> failwith "no synthesizer available");
+                        try_solve_implicits_hook =
+                          (fun e ->
+                             fun tau ->
+                               fun imps ->
+                                 failwith "no implicit hook available");
+                        splice =
+                          (fun e ->
+                             fun rng ->
+                               fun tau -> failwith "no splicer available");
+                        mpreprocess =
+                          (fun e ->
+                             fun tau ->
+                               fun tm -> failwith "no preprocessor available");
+                        postprocess =
+                          (fun e ->
+                             fun tau ->
+                               fun typ ->
                                  fun tm ->
-                                   failwith "no preprocessor available");
-                          postprocess =
-                            (fun e ->
-                               fun tau ->
-                                 fun typ ->
-                                   fun tm ->
-                                     failwith "no postprocessor available");
-                          identifier_info = uu___7;
-                          tc_hooks = default_tc_hooks;
-                          dsenv = uu___8;
-                          nbe;
-                          strict_args_tab = uu___9;
-                          erasable_types_tab = uu___10;
-                          enable_defer_to_tac = true;
-                          unif_allow_ref_guards = false
-                        }
+                                   failwith "no postprocessor available");
+                        identifier_info = uu___7;
+                        tc_hooks = default_tc_hooks;
+                        dsenv = uu___8;
+                        nbe;
+                        strict_args_tab = uu___9;
+                        erasable_types_tab = uu___10;
+                        enable_defer_to_tac = true;
+                        unif_allow_ref_guards = false
+                      }
 let (dsenv : env -> FStar_Syntax_DsEnv.env) = fun env1 -> env1.dsenv
 let (sigtab : env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap) =
   fun env1 -> env1.sigtab

@@ -75,7 +75,6 @@ let (init_once : unit -> unit) =
         FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
         FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term_fastpath
         FStar_TypeChecker_TcTerm.universe_of
-        FStar_TypeChecker_TcTerm.tc_check_tot_or_gtot_term_maybe_fastpath
         FStar_TypeChecker_TcTerm.universeof_fastpath
         FStar_TypeChecker_TcTerm.effectof_tot_or_gtot_term_fastpath solver
         FStar_Parser_Const.prims_lid

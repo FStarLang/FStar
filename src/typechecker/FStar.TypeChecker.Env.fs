@@ -273,7 +273,6 @@ let initial_env deps
   typeof_tot_or_gtot_term
   typeof_tot_or_gtot_term_fastpath
   universe_of
-  tc_check_tot_or_gtot_term_maybe_fastpath
   universeof_fastpath
   effectof_tot_or_gtot_term_fastpath
   solver module_lid nbe : env =
