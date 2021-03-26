@@ -484,51 +484,41 @@ type guard_t =
   guard_f: guard_formula ;
   deferred_to_tac: deferred ;
   deferred: deferred ;
-  solution_types:
-    (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ) Prims.list ;
   univ_ineqs:
     (FStar_Syntax_Syntax.universe Prims.list * univ_ineq Prims.list) ;
   implicits: implicits }
 let (__proj__Mkguard_t__item__guard_f : guard_t -> guard_formula) =
   fun projectee ->
     match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> guard_f
+    | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
+        implicits = implicits1;_} -> guard_f
 let (__proj__Mkguard_t__item__deferred_to_tac : guard_t -> deferred) =
   fun projectee ->
     match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> deferred_to_tac
+    | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
+        implicits = implicits1;_} -> deferred_to_tac
 let (__proj__Mkguard_t__item__deferred : guard_t -> deferred) =
   fun projectee ->
     match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> deferred1
-let (__proj__Mkguard_t__item__solution_types :
-  guard_t -> (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ) Prims.list)
-  =
-  fun projectee ->
-    match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> solution_types
+    | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
+        implicits = implicits1;_} -> deferred1
 let (__proj__Mkguard_t__item__univ_ineqs :
   guard_t -> (FStar_Syntax_Syntax.universe Prims.list * univ_ineq Prims.list))
   =
   fun projectee ->
     match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> univ_ineqs
+    | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
+        implicits = implicits1;_} -> univ_ineqs
 let (__proj__Mkguard_t__item__implicits : guard_t -> implicits) =
   fun projectee ->
     match projectee with
-    | { guard_f; deferred_to_tac; deferred = deferred1; solution_types;
-        univ_ineqs; implicits = implicits1;_} -> implicits1
+    | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
+        implicits = implicits1;_} -> implicits1
 let (trivial_guard : guard_t) =
   {
     guard_f = Trivial;
     deferred_to_tac = [];
     deferred = [];
-    solution_types = [];
     univ_ineqs = ([], []);
     implicits = []
   }
@@ -570,8 +560,6 @@ let (binop_guard :
           deferred_to_tac =
             (FStar_List.append g1.deferred_to_tac g2.deferred_to_tac);
           deferred = (FStar_List.append g1.deferred g2.deferred);
-          solution_types =
-            (FStar_List.append g1.solution_types g2.solution_types);
           univ_ineqs =
             ((FStar_List.append (FStar_Pervasives_Native.fst g1.univ_ineqs)
                 (FStar_Pervasives_Native.fst g2.univ_ineqs)),
@@ -599,7 +587,6 @@ let (weaken_guard_formula : guard_t -> FStar_Syntax_Syntax.typ -> guard_t) =
             guard_f = uu___1;
             deferred_to_tac = (uu___.deferred_to_tac);
             deferred = (uu___.deferred);
-            solution_types = (uu___.solution_types);
             univ_ineqs = (uu___.univ_ineqs);
             implicits = (uu___.implicits)
           }

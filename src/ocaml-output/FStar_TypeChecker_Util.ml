@@ -78,8 +78,6 @@ let (close_guard_implicits :
                          FStar_TypeChecker_Common.deferred_to_tac =
                            (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                          FStar_TypeChecker_Common.deferred = solve_now;
-                         FStar_TypeChecker_Common.solution_types =
-                           (uu___3.FStar_TypeChecker_Common.solution_types);
                          FStar_TypeChecker_Common.univ_ineqs =
                            (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                          FStar_TypeChecker_Common.implicits =
@@ -93,8 +91,6 @@ let (close_guard_implicits :
                       FStar_TypeChecker_Common.deferred_to_tac =
                         (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                       FStar_TypeChecker_Common.deferred = defer;
-                      FStar_TypeChecker_Common.solution_types =
-                        (uu___3.FStar_TypeChecker_Common.solution_types);
                       FStar_TypeChecker_Common.univ_ineqs =
                         (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                       FStar_TypeChecker_Common.implicits =
@@ -809,8 +805,6 @@ let (label_guard :
                 (uu___.FStar_TypeChecker_Common.deferred_to_tac);
               FStar_TypeChecker_Common.deferred =
                 (uu___.FStar_TypeChecker_Common.deferred);
-              FStar_TypeChecker_Common.solution_types =
-                (uu___.FStar_TypeChecker_Common.solution_types);
               FStar_TypeChecker_Common.univ_ineqs =
                 (uu___.FStar_TypeChecker_Common.univ_ineqs);
               FStar_TypeChecker_Common.implicits =
@@ -1949,8 +1943,6 @@ let (strengthen_precondition :
                       (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
                     FStar_TypeChecker_Common.deferred =
                       (uu___3.FStar_TypeChecker_Common.deferred);
-                    FStar_TypeChecker_Common.solution_types =
-                      (uu___3.FStar_TypeChecker_Common.solution_types);
                     FStar_TypeChecker_Common.univ_ineqs =
                       (uu___3.FStar_TypeChecker_Common.univ_ineqs);
                     FStar_TypeChecker_Common.implicits =
@@ -4159,8 +4151,6 @@ let (weaken_result_typ :
                           (uu___2.FStar_TypeChecker_Common.deferred_to_tac);
                         FStar_TypeChecker_Common.deferred =
                           (uu___2.FStar_TypeChecker_Common.deferred);
-                        FStar_TypeChecker_Common.solution_types =
-                          (uu___2.FStar_TypeChecker_Common.solution_types);
                         FStar_TypeChecker_Common.univ_ineqs =
                           (uu___2.FStar_TypeChecker_Common.univ_ineqs);
                         FStar_TypeChecker_Common.implicits =
@@ -4365,8 +4355,6 @@ let (weaken_result_typ :
                           (uu___2.FStar_TypeChecker_Common.deferred_to_tac);
                         FStar_TypeChecker_Common.deferred =
                           (uu___2.FStar_TypeChecker_Common.deferred);
-                        FStar_TypeChecker_Common.solution_types =
-                          (uu___2.FStar_TypeChecker_Common.solution_types);
                         FStar_TypeChecker_Common.univ_ineqs =
                           (uu___2.FStar_TypeChecker_Common.univ_ineqs);
                         FStar_TypeChecker_Common.implicits =
@@ -6359,11 +6347,10 @@ let (update_env_sub_eff :
                  (uu___1.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                  (uu___1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-               FStar_TypeChecker_Env.tc_check_well_typed_tot_or_gtot_term_with_fallback
-                 =
-                 (uu___1.FStar_TypeChecker_Env.tc_check_well_typed_tot_or_gtot_term_with_fallback);
                FStar_TypeChecker_Env.universeof_well_typed_term =
                  (uu___1.FStar_TypeChecker_Env.universeof_well_typed_term);
+               FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term =
+                 (uu___1.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                FStar_TypeChecker_Env.use_bv_sorts =
                  (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -6455,11 +6442,10 @@ let (update_env_sub_eff :
             (uu___.FStar_TypeChecker_Env.universe_of);
           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
             (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-          FStar_TypeChecker_Env.tc_check_well_typed_tot_or_gtot_term_with_fallback
-            =
-            (uu___.FStar_TypeChecker_Env.tc_check_well_typed_tot_or_gtot_term_with_fallback);
           FStar_TypeChecker_Env.universeof_well_typed_term =
             (uu___.FStar_TypeChecker_Env.universeof_well_typed_term);
+          FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term =
+            (uu___.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
           FStar_TypeChecker_Env.use_bv_sorts =
             (uu___.FStar_TypeChecker_Env.use_bv_sorts);
           FStar_TypeChecker_Env.qtbl_name_and_index =

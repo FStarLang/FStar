@@ -225,7 +225,7 @@ let (pat_as_exp :
                        let uu___4 = FStar_Syntax_Syntax.range_of_bv x in
                        FStar_TypeChecker_Env.new_implicit_var_aux
                          "pat_dot_term type" uu___4 env1 k
-                         FStar_Syntax_Syntax.Allow_untyped
+                         FStar_Syntax_Syntax.Allow_ghost
                          FStar_Pervasives_Native.None in
                      (match uu___3 with
                       | (t, uu___4, g) ->
@@ -242,7 +242,7 @@ let (pat_as_exp :
                             let uu___6 = FStar_Syntax_Syntax.range_of_bv x1 in
                             FStar_TypeChecker_Env.new_implicit_var_aux
                               "pat_dot_term" uu___6 env1 t
-                              FStar_Syntax_Syntax.Allow_untyped
+                              FStar_Syntax_Syntax.Allow_ghost
                               FStar_Pervasives_Native.None in
                           (match uu___5 with
                            | (e, uu___6, g') ->

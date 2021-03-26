@@ -1794,9 +1794,6 @@ let run_tactic_on_ps' :
                                            (uu___12.FStar_TypeChecker_Common.deferred_to_tac);
                                          FStar_TypeChecker_Common.deferred =
                                            (uu___12.FStar_TypeChecker_Common.deferred);
-                                         FStar_TypeChecker_Common.solution_types
-                                           =
-                                           (uu___12.FStar_TypeChecker_Common.solution_types);
                                          FStar_TypeChecker_Common.univ_ineqs
                                            =
                                            (uu___12.FStar_TypeChecker_Common.univ_ineqs);

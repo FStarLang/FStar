@@ -4175,7 +4175,7 @@ let check_implicit_solution_fastpath env t k must_tot : option<guard_t> =
   let check_subtype env t k' k : option<guard_t> =  //t has type k', expect k
     match get_subtyping_predicate env k' k with
     | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-    | Some f -> BU.print_string "Fast path\n"; Env.apply_guard f t |> Some in
+    | Some f -> Env.apply_guard f t |> Some in
   
   BU.bind_opt (env.typeof_well_typed_tot_or_gtot_term env t) (fun k' ->
     if not must_tot || N.non_info_norm env k
@@ -4192,7 +4192,6 @@ let check_implicit_solution_maybe_fastpath env t k must_tot : option<guard_t> = 
   match check_implicit_solution_fastpath env t k must_tot with
   | Some g -> Some g
   | None ->
-    BU.print_string "Slow path\n";
     let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
     let _, _, g = env.typeof_tot_or_gtot_term env t must_tot in
     Some g

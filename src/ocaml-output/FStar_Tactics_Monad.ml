@@ -664,8 +664,6 @@ let (compress_implicits : unit tac) =
              (uu___.FStar_TypeChecker_Common.deferred_to_tac);
            FStar_TypeChecker_Common.deferred =
              (uu___.FStar_TypeChecker_Common.deferred);
-           FStar_TypeChecker_Common.solution_types =
-             (uu___.FStar_TypeChecker_Common.solution_types);
            FStar_TypeChecker_Common.univ_ineqs =
              (uu___.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = imps
