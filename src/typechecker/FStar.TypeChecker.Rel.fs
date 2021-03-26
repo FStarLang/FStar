@@ -4156,45 +4156,47 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
 
     imps, b
 
-let check_implicit_solution_fastpath env t k must_tot : option<guard_t> =
-  (*
-   * AR: when we create lambda terms as solutions to implicits (in u_abs),
-   *       we set the type in the residual comp to be the type of the uvar
-   *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
-   *       it doesn't help since the two types are the same (the type of the uvar and its solution)
-   *     worse, this prevents some constraints to be generated between the actual type of the solution
-   *       and the type of the uvar
-   *     therefore, we unset the residual comp type in the solution before typechecking
-   *)
-  let t = match (SS.compress t).n with
-          | Tm_abs (bs, body, Some rc) -> {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
-          | _ -> t in
+let check_implicit_solution_maybe_fastpath env t k must_tot : guard_t =
 
-  let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+  let check_implicit_solution_fastpath env t k must_tot : option<guard_t> =
+    (*
+     * AR: when we create lambda terms as solutions to implicits (in u_abs),
+     *       we set the type in the residual comp to be the type of the uvar
+     *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
+     *       it doesn't help since the two types are the same (the type of the uvar and its solution)
+     *     worse, this prevents some constraints to be generated between the actual type of the solution
+     *       and the type of the uvar
+     *     therefore, we unset the residual comp type in the solution before typechecking
+     *)
+    let t = match (SS.compress t).n with
+            | Tm_abs (bs, body, Some rc) -> {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+            | _ -> t in
 
-  let check_subtype env t k' k : option<guard_t> =  //t has type k', expect k
-    match get_subtyping_predicate env k' k with
-    | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-    | Some f -> Env.apply_guard f t |> Some in
-  
-  BU.bind_opt (env.typeof_well_typed_tot_or_gtot_term env t) (fun k' ->
-    if not must_tot || N.non_info_norm env k
-    then check_subtype env t k' k
-    else match env.effectof_well_typed_tot_or_gtot_term env t with
-         | None -> failwith ("Effect checking failed for %s\n" ^ (Print.term_to_string t)) //None
-         | Some eff ->
-           if lid_equals eff Const.effect_PURE_lid
-           then check_subtype env t k' k
-           else raise_error (Errors.Error_UnexpectedGTotComputation,
-                             BU.format1 "Expected Tot, got a GTot computation : %s" (Print.term_to_string t)) t.pos)
+    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
 
-let check_implicit_solution_maybe_fastpath env t k must_tot : option<guard_t> =  //always returns a Some
+    let check_subtype env t k' k : option<guard_t> =  //t has type k', expect k
+      match get_subtyping_predicate env k' k with
+      | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
+      | Some f -> Env.apply_guard f t |> Some in
+
+    BU.bind_opt (env.typeof_well_typed_tot_or_gtot_term env t) (fun k' ->
+      if not must_tot || N.non_info_norm env k
+      then check_subtype env t k' k
+      else match env.effectof_well_typed_tot_or_gtot_term env t with
+           | None -> failwith ("Effect checking failed for %s\n" ^ (Print.term_to_string t)) //None
+           | Some eff ->
+             if lid_equals eff Const.effect_PURE_lid
+             then check_subtype env t k' k
+             else raise_error (Errors.Error_UnexpectedGTotComputation,
+                               BU.format1 "Expected Tot, got a GTot computation : %s" (Print.term_to_string t)) t.pos) in
+
   match check_implicit_solution_fastpath env t k must_tot with
-  | Some g -> Some g
+  | Some g -> g
   | None ->
     let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+    BU.print1 "Fast path failed for %s\n" (Print.term_to_string t);
     let _, _, g = env.typeof_tot_or_gtot_term env t must_tot in
-    Some g
+    g
 
 let resolve_implicits' env is_tac g =
   let rec unresolved ctx_u =
@@ -4215,21 +4217,20 @@ let resolve_implicits' env is_tac g =
         end
     | None -> true
   in
-  let rec until_fixpoint (f:Env.env -> term -> typ -> Env.must_tot -> option<guard_t>)  //use f to typecheck
-                         (acc: Env.implicits * bool)
+  let rec until_fixpoint (acc: Env.implicits * bool)
                          (implicits:Env.implicits) : Env.implicits =
     let out, changed = acc in
     match implicits with
     | [] ->
       if not changed
       then let out, changed = try_solve_single_valued_implicits env is_tac out in
-           if changed then until_fixpoint f ([], false) out
+           if changed then until_fixpoint ([], false) out
            else out
-      else until_fixpoint f ([], false) out
+      else until_fixpoint ([], false) out
     | hd::tl ->
           let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
-          then until_fixpoint f (out, true) tl
+          then until_fixpoint (out, true) tl
           else if unresolved ctx_u
           then begin match ctx_u.ctx_uvar_meta with
                | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
@@ -4249,13 +4250,13 @@ let resolve_implicits' env is_tac g =
                     in
                     let ctx_u = { ctx_u with ctx_uvar_meta = None } in
                     let hd = { hd with imp_uvar = ctx_u } in
-                    until_fixpoint f (out, true) (extra @ tl)
+                    until_fixpoint (out, true) (extra @ tl)
                | _ ->
-                    until_fixpoint f (hd::out, changed) tl
+                    until_fixpoint (hd::out, changed) tl
 
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
-          then until_fixpoint f (out, true) tl
+          then until_fixpoint (out, true) tl
           else begin
             let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
             let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
@@ -4270,8 +4271,8 @@ let resolve_implicits' env is_tac g =
               |> BU.set_elements
               |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved) in
             if is_tac then if tm_ok_for_tac tm
-                           then until_fixpoint f (out, true) tl        //Move on to the next imp
-                           else until_fixpoint f (hd::out, changed) tl  //Move hd to out
+                           then until_fixpoint (out, true) tl        //Move on to the next imp
+                           else until_fixpoint (hd::out, changed) tl  //Move hd to out
             else begin
               //typecheck the solution
               if Env.debug env <| Options.Other "Rel"
@@ -4282,35 +4283,28 @@ let resolve_implicits' env is_tac g =
                               reason
                               (Range.string_of_range r);
 
-              let g_opt =
+              let g =
                 let must_tot = not (env.phase1 || env.lax || ctx_u.ctx_uvar_should_check = Allow_ghost) in
                 Errors.with_ctx (BU.format3 "While checking implicit %s set to %s of expected type %s"
                                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                               (N.term_to_string env tm)
                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
-                                (fun () -> f env tm ctx_u.ctx_uvar_typ must_tot) in  //f is the argument passed to until_fixpoint
-              match g_opt with
-              | None -> until_fixpoint f (hd::out, changed) tl  //move hd to out, go to next uvar
-              | Some g ->
-                let g' =
-                  (match discharge_guard' (Some (fun () ->
-                           BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                             (Print.term_to_string tm)
-                             (Range.string_of_range r)
-                             reason
-                             (Range.string_of_range tm.pos))) env g true with
-                   | Some g -> g
-                   | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
-                until_fixpoint f (g'.implicits@out, true) tl
+                                (fun () -> check_implicit_solution_maybe_fastpath env tm ctx_u.ctx_uvar_typ must_tot) in
+              let g' =
+                (match discharge_guard' (Some (fun () ->
+                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                           (Print.term_to_string tm)
+                           (Range.string_of_range r)
+                           reason
+                           (Range.string_of_range tm.pos))) env g true with
+                 | Some g -> g
+                 | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
+                until_fixpoint (g'.implicits@out, true) tl
             end
         end
   in
 
-  let imps =
-    g.implicits
-    |> until_fixpoint check_implicit_solution_fastpath ([], false)
-    |> until_fixpoint check_implicit_solution_maybe_fastpath ([], false) in
-
+  let imps = g.implicits |> until_fixpoint ([], false) in
   {g with implicits=imps}
 
 let resolve_implicits env g =
