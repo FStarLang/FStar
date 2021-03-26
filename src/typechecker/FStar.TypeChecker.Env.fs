@@ -182,6 +182,7 @@ and env = {
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
   universeof_well_typed_term :env -> term -> option<universe>; (* typechecker callback, uses fast path returns None on failure *)
+  effectof_well_typed_tot_or_gtot_term :env -> term -> option<lident>;
 
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
@@ -274,6 +275,7 @@ let initial_env deps
   universe_of
   tc_check_tot_or_gtot_term_maybe_fastpath
   universeof_fastpath
+  effectof_tot_or_gtot_term_fastpath
   solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
@@ -307,6 +309,7 @@ let initial_env deps
     typeof_well_typed_tot_or_gtot_term = typeof_tot_or_gtot_term_fastpath;
     universe_of=universe_of;
     universeof_well_typed_term=universeof_fastpath;
+    effectof_well_typed_tot_or_gtot_term=effectof_tot_or_gtot_term_fastpath;
 
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
@@ -1756,7 +1759,6 @@ let guard_of_guard_formula g = {
   guard_f=g;
   deferred=[];
   deferred_to_tac=[];
-  solution_types=[];
   univ_ineqs=([], []);
   implicits=[]
 }
