@@ -25,6 +25,7 @@ val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * list<term> * Env.env * te
 val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard_t
 val universe_of: env -> term -> universe
 val typeof_tot_or_gtot_term_fastpath: env -> term -> option<typ>
+val effectof_tot_or_gtot_term_fastpath: env -> term -> option<lident>
 
 val tc_check_tot_or_gtot_term_maybe_fastpath: env -> term -> typ -> must_tot:bool -> from_tac:bool -> guard_t
 
