@@ -122,7 +122,6 @@ type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Rang
 type goal = term
 
 type must_tot = bool
-type from_tac = bool
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
@@ -181,8 +180,7 @@ and env = {
   tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
-  typeof_well_typed_tot_or_gtot_term :env -> term -> option<typ>; (* typechecker callback, uses fast path, returns None on failure *)
-  tc_check_well_typed_tot_or_gtot_term_with_fallback :env -> term -> typ -> must_tot -> from_tac -> guard_t; (* typechecker callback, tries fastpath, falls back on slow path if that fails *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
   universeof_well_typed_term :env -> term -> option<universe>; (* typechecker callback, uses fast path returns None on failure *)
 
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -307,8 +305,6 @@ let initial_env deps
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
     typeof_well_typed_tot_or_gtot_term = typeof_tot_or_gtot_term_fastpath;
-    tc_check_well_typed_tot_or_gtot_term_with_fallback =
-      tc_check_tot_or_gtot_term_maybe_fastpath;
     universe_of=universe_of;
     universeof_well_typed_term=universeof_fastpath;
 
@@ -2006,7 +2002,7 @@ let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
   | Some (_, arity, _, _) -> Some arity
   | None -> None
 
-let tc_tot_or_gtot_term_maybe_fastpath env t =
+let typeof_well_typed_tot_or_gtot_term_maybe_fastpath env t =
   match env.typeof_well_typed_tot_or_gtot_term env t with
   | None ->
     let _, ty, _ = env.typeof_tot_or_gtot_term env t false in
