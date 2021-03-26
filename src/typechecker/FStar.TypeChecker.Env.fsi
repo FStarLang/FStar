@@ -78,7 +78,6 @@ type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universe
 type goal = term
 
 type must_tot = bool
-type from_tac = bool
 
 (*
  * AR: The mlift record that maintains functions to lift 'source' computation types
