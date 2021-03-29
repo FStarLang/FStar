@@ -40,7 +40,7 @@ let (close_guard_implicits :
                 (FStar_List.partition
                    (fun uu___2 ->
                       match uu___2 with
-                      | (uu___3, p) ->
+                      | (uu___3, uu___4, p) ->
                           FStar_TypeChecker_Rel.flex_prob_closing env xs p)) in
             match uu___1 with
             | (solve_now, defer) ->
@@ -53,19 +53,19 @@ let (close_guard_implicits :
                      FStar_List.iter
                        (fun uu___6 ->
                           match uu___6 with
-                          | (s, p) ->
-                              let uu___7 =
+                          | (uu___7, s, p) ->
+                              let uu___8 =
                                 FStar_TypeChecker_Rel.prob_to_string env p in
-                              FStar_Util.print2 "%s: %s\n" s uu___7)
+                              FStar_Util.print2 "%s: %s\n" s uu___8)
                        solve_now;
                      FStar_Util.print_string " ...DEFERRED THE REST:\n";
                      FStar_List.iter
                        (fun uu___8 ->
                           match uu___8 with
-                          | (s, p) ->
-                              let uu___9 =
+                          | (uu___9, s, p) ->
+                              let uu___10 =
                                 FStar_TypeChecker_Rel.prob_to_string env p in
-                              FStar_Util.print2 "%s: %s\n" s uu___9) defer;
+                              FStar_Util.print2 "%s: %s\n" s uu___10) defer;
                      FStar_Util.print_string "END\n")
                   else ());
                  (let g1 =
