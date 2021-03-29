@@ -4343,6 +4343,14 @@ let rec resolve_implicits' env is_tac g =
         end
   in
 
+  (*
+   * We go over the implicits in two rounds
+   *   In the first round, we defer any implicit whose typechecking returns a deferred universe constraint
+   *   Usually these constraints are universe eq with U_max in them
+   *   If we solve them eagerly, then for some cases involving `Universe.raise_val`,
+   *     we end up applying the umax heuristic too eagerly, which fails later on, and requires annotations
+   *   With this 2-phase solving, we allow for more delay in these constraints
+   *)
   let imps =
     g.implicits
     |> until_fixpoint true ([], false)  //first round, don't solve deferred universe constraints
