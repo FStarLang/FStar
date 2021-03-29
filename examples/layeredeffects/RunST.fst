@@ -14,7 +14,7 @@ open FStar.Ghost
 let coerce #a #b (x:a{a == b}) : b = x
 
 let unreachable (#a:Type u#aa) () : Pure a (requires False) (ensures (fun _ -> False)) =
-  coerce (raise_val #string "whatever")
+  coerce (raise_val "whatever")
 
 type eff_label =
   | RD
