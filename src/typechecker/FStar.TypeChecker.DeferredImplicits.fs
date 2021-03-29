@@ -120,7 +120,7 @@ let solve_deferred_to_tactic_goals env g =
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
-    let prob_as_implicit (reason, prob)
+    let prob_as_implicit (_, reason, prob)
       : implicit * sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->

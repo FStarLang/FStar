@@ -72,9 +72,20 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-type deferred = list<(string * prob)>
-type univ_ineq = universe * universe
+type deferred_reason =
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
 
+type deferred = list<(deferred_reason * string * prob)>
+
+type univ_ineq = universe * universe
 
 module C = FStar.Parser.Const
 
