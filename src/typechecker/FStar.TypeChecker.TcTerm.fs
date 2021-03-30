@@ -3779,8 +3779,9 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
 
     Returns (Some k), if it can find k quickly
 *)
-let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
+let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option<typ> =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
+  let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
   let t = SS.compress t in
   match t.n with
   | Tm_delayed _
@@ -3790,7 +3791,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
     Some x.sort
 
   | Tm_lazy i ->
-    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i)
+    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_fvar fv ->
     bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->
@@ -3824,7 +3825,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
         | Some _ -> tbody
         | None ->
           let bs, body = SS.open_term bs body in
-          BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body) (SS.close bs) in
+          BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body must_tot) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
         bind_opt (universeof_fastpath (Env.push_binders env bs) tbody) (fun u ->
@@ -3869,7 +3870,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
     let unary_op, _ = U.head_and_args t in
     let head = mk (Tm_app(unary_op, [a])) (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app(head, rest)) t.pos in
-    typeof_tot_or_gtot_term_fastpath env t
+    typeof_tot_or_gtot_term_fastpath env t must_tot
 
   (* Binary operators *)
   | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
@@ -3877,16 +3878,17 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
     let unary_op, _ = U.head_and_args t in
     let head = mk (Tm_app(unary_op, [a1; a2])) (Range.union_ranges unary_op.pos (fst a1).pos) in
     let t = mk (Tm_app(head, rest)) t.pos in
-    typeof_tot_or_gtot_term_fastpath env t
+    typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_app({n=Tm_constant Const_range_of}, [_]) ->
     Some (t_range)
 
   | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); _]) ->
-    typeof_tot_or_gtot_term_fastpath env t
+    typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_app(hd, args) ->
-    let t_hd = typeof_tot_or_gtot_term_fastpath env hd in
+    let t_hd = typeof_tot_or_gtot_term_fastpath env hd must_tot in
+
     let rec aux args t_hd =
       match (N.unfold_whnf env t_hd).n with
       | Tm_arrow(bs, c) ->
@@ -3910,16 +3912,32 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
       | Tm_ascribed(t, _, _) -> aux args t
       | _ -> None
     in
-    bind_opt t_hd (aux args)
 
-  | Tm_ascribed(_, (Inl t, _), _) -> Some t
-  | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
-  | Tm_uvar (u, s) -> Some (SS.subst' s u.ctx_uvar_typ)
+    bind_opt t_hd (fun t_hd ->
+      bind_opt (aux args t_hd) (fun t ->
+        if (effect_ok t) ||
+           (List.for_all (fun (a, _) -> typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
+        then Some t
+        else None))
 
-  | Tm_quoted (tm, qi) ->
-    Some (S.t_term)
+  | Tm_ascribed(t, (Inl k, _), _) ->
+    if effect_ok k
+    then Some k
+    else typeof_tot_or_gtot_term_fastpath env t must_tot
 
-  | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t
+  | Tm_ascribed(_, (Inr c, _), _) ->
+    let k = U.comp_result c in
+    if (not must_tot) ||
+       (c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid) ||
+       (N.non_info_norm env k)
+    then Some k
+    else None
+
+  | Tm_uvar (u, s) -> if not must_tot then Some (SS.subst' s u.ctx_uvar_typ) else None
+
+  | Tm_quoted (tm, qi) -> if not must_tot then Some (S.t_term) else None
+
+  | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_match _
   | Tm_let _
@@ -3928,7 +3946,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<typ> =
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 
 and universeof_fastpath env t =
-  bind_opt (typeof_tot_or_gtot_term_fastpath env t) (fun k ->
+  bind_opt (typeof_tot_or_gtot_term_fastpath env t false) (fun k ->
     let rec aux (maybe_norm:bool) (k:typ) =
       match (SS.compress k).n with
       | Tm_type u -> Some u
@@ -3977,7 +3995,7 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
                                 bind_opt eff_opt (fun eff ->
                                   bind_opt (effectof_tot_or_gtot_term_fastpath env (fst arg))
                                     (join_effects eff))) (Some eff_hd) args) (fun eff_hd_and_args ->
-        bind_opt (typeof_tot_or_gtot_term_fastpath env hd) (fun t_hd ->
+        bind_opt (typeof_tot_or_gtot_term_fastpath env hd true) (fun t_hd ->
           let rec maybe_arrow t =
             let t = N.unfold_whnf env t in
             match t.n with

@@ -154,7 +154,7 @@ and env = {
   tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
-  typeof_well_typed_tot_or_gtot_term :env -> term -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
   universeof_well_typed_term :env -> term -> option<universe>; (* typechecker callback, uses fast path returns None on failure *)
   effectof_well_typed_tot_or_gtot_term :env -> term -> option<lident>;
 
@@ -208,8 +208,8 @@ type env_t = env
 
 val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*lcomp*guard_t) ->
-                  (env -> term -> bool -> term*typ*guard_t) ->
-                  (env -> term -> option<typ>) ->
+                  (env -> term -> must_tot -> term*typ*guard_t) ->
+                  (env -> term -> must_tot -> option<typ>) ->
                   (env -> term -> universe) ->
                   (env -> term -> option<universe>) ->
                   (env -> term -> option<lident>) ->

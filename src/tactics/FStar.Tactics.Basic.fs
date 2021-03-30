@@ -776,7 +776,7 @@ let check_lemma_implicits_solution env (t:term) (k:typ) : guard_t =
     let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
     g in
 
-  match TcTerm.typeof_tot_or_gtot_term_fastpath env t with
+  match TcTerm.typeof_tot_or_gtot_term_fastpath env t false with
   | None -> slow_path ()
   | Some k' ->
     match Rel.subtype_nosmt env k' k with
