@@ -155,7 +155,6 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
-  universeof_well_typed_term :env -> term -> option<universe>; (* typechecker callback, uses fast path returns None on failure *)
 
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
@@ -210,7 +209,6 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> must_tot -> term*typ*guard_t) ->
                   (env -> term -> must_tot -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (env -> term -> option<universe>) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 

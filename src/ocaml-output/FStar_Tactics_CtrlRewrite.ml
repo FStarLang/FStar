@@ -104,9 +104,6 @@ let (__do_rewrite :
                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                       =
                                       (uu___4.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                                    FStar_TypeChecker_Env.universeof_well_typed_term
-                                      =
-                                      (uu___4.FStar_TypeChecker_Env.universeof_well_typed_term);
                                     FStar_TypeChecker_Env.use_bv_sorts =
                                       (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index

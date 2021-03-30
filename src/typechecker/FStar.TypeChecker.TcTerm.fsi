@@ -26,8 +26,6 @@ val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard_
 val universe_of: env -> term -> universe
 val typeof_tot_or_gtot_term_fastpath: env -> term -> Env.must_tot -> option<typ>
 
-val universeof_fastpath: env -> term -> option<universe>
-
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
 //the last string argument is the reason to be printed in the error message
 //pass "" if NA

@@ -57,7 +57,6 @@ let init_once () : unit =
                 TcTerm.typeof_tot_or_gtot_term
                 TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
-                TcTerm.universeof_fastpath
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in
