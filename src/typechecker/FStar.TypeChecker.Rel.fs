@@ -853,19 +853,6 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
              wl
     in
     commit uvis;
-    //record type of the uvar and its solution in the worklist
-    // let typs = List.fold_left (fun l uvi ->
-    //   match uvi with
-    //   | TERM (ctx_uvar, t) ->
-    //     let t1 = wl.tcenv.typeof_well_typed_tot_or_gtot_term
-    //       ({wl.tcenv with gamma=ctx_uvar.ctx_uvar_gamma})
-    //       t in
-    //     (match t1 with  //could not compute the type of the term on fastpath
-    //      | None -> l
-    //      | Some t1 ->
-    //        let t2 = ctx_uvar.ctx_uvar_typ in
-    //        (t1, t2)::l)
-    //   | _ -> l) [] uvis in
     {wl with ctr=wl.ctr + 1}
 
 let extend_universe_solution pid sol wl =
