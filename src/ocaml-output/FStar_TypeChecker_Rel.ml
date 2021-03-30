@@ -287,8 +287,6 @@ let (copy_uvar :
                 (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
               FStar_TypeChecker_Env.universeof_well_typed_term =
                 (uu___.FStar_TypeChecker_Env.universeof_well_typed_term);
-              FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term =
-                (uu___.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5379,9 +5377,6 @@ and (solve_t_flex_rigid_eq :
                                          FStar_TypeChecker_Env.universeof_well_typed_term
                                            =
                                            (uu___7.FStar_TypeChecker_Env.universeof_well_typed_term);
-                                         FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                                           =
-                                           (uu___7.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                                          FStar_TypeChecker_Env.use_bv_sorts =
                                            true;
                                          FStar_TypeChecker_Env.qtbl_name_and_index
@@ -7281,9 +7276,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.universeof_well_typed_term
                                 =
                                 (uu___11.FStar_TypeChecker_Env.universeof_well_typed_term);
-                              FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                                =
-                                (uu___11.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                               FStar_TypeChecker_Env.use_bv_sorts = true;
                               FStar_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___11.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -7563,9 +7555,6 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.universeof_well_typed_term
                                 =
                                 (uu___11.FStar_TypeChecker_Env.universeof_well_typed_term);
-                              FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                                =
-                                (uu___11.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                               FStar_TypeChecker_Env.use_bv_sorts = true;
                               FStar_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___11.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -12162,9 +12151,6 @@ let (check_implicit_solution_maybe_fastpath :
                      (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
                    FStar_TypeChecker_Env.universeof_well_typed_term =
                      (uu___.FStar_TypeChecker_Env.universeof_well_typed_term);
-                   FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                     =
-                     (uu___.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                    FStar_TypeChecker_Env.use_bv_sorts = true;
                    FStar_TypeChecker_Env.qtbl_name_and_index =
                      (uu___.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -12290,9 +12276,6 @@ let (check_implicit_solution_maybe_fastpath :
                        (uu___1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
                      FStar_TypeChecker_Env.universeof_well_typed_term =
                        (uu___1.FStar_TypeChecker_Env.universeof_well_typed_term);
-                     FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                       =
-                       (uu___1.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                      FStar_TypeChecker_Env.use_bv_sorts = true;
                      FStar_TypeChecker_Env.qtbl_name_and_index =
                        (uu___1.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -12417,9 +12400,6 @@ let (check_implicit_solution_and_discharge :
                     (uu___1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
                   FStar_TypeChecker_Env.universeof_well_typed_term =
                     (uu___1.FStar_TypeChecker_Env.universeof_well_typed_term);
-                  FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                    =
-                    (uu___1.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                   FStar_TypeChecker_Env.use_bv_sorts =
                     (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -12793,9 +12773,6 @@ let (resolve_implicits' :
                                     FStar_TypeChecker_Env.universeof_well_typed_term
                                       =
                                       (uu___6.FStar_TypeChecker_Env.universeof_well_typed_term);
-                                    FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                                      =
-                                      (uu___6.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
                                     FStar_TypeChecker_Env.use_bv_sorts =
                                       (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index

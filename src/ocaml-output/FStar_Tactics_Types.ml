@@ -216,8 +216,6 @@ let (goal_of_implicit :
              (uu___1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
            FStar_TypeChecker_Env.universeof_well_typed_term =
              (uu___1.FStar_TypeChecker_Env.universeof_well_typed_term);
-           FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term =
-             (uu___1.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term);
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qtbl_name_and_index =

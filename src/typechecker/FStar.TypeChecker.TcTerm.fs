@@ -3825,7 +3825,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
         | Some _ -> tbody
         | None ->
           let bs, body = SS.open_term bs body in
-          BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body must_tot) (SS.close bs) in
+          BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
         bind_opt (universeof_fastpath (Env.push_binders env bs) tbody) (fun u ->

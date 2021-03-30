@@ -4201,15 +4201,6 @@ let check_implicit_solution_maybe_fastpath env t k (must_tot:bool) : guard_t =
     BU.bind_opt
       (env.typeof_well_typed_tot_or_gtot_term env t must_tot)
       (fun k' -> check_subtype env t k' k |> Some) in
-      // if not must_tot || N.non_info_norm env k
-      // then 
-      // else match env.effectof_well_typed_tot_or_gtot_term env t with
-      //      | None -> failwith ("Effect checking failed for %s\n" ^ (Print.term_to_string t)) //None
-      //      | Some eff ->
-      //        if lid_equals eff Const.effect_PURE_lid
-      //        then check_subtype env t k' k |> Some
-      //        else raise_error (Errors.Error_UnexpectedGTotComputation,
-      //                          BU.format1 "Expected Tot, got a GTot computation : %s" (Print.term_to_string t)) t.pos) in
 
   match check_implicit_solution_fastpath env t k must_tot with
   | Some g -> g
