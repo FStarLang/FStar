@@ -124,7 +124,57 @@ let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee -> match projectee with | NonTrivial _0 -> _0
-type deferred = (Prims.string * prob) Prims.list
+type deferred_reason =
+  | Deferred_univ_constraint 
+  | Deferred_occur_check_failed 
+  | Deferred_first_order_heuristic_failed 
+  | Deferred_flex 
+  | Deferred_free_names_check_failed 
+  | Deferred_not_a_pattern 
+  | Deferred_flex_flex_nonpattern 
+  | Deferred_delay_match_heuristic 
+  | Deferred_to_user_tac 
+let (uu___is_Deferred_univ_constraint : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_univ_constraint -> true | uu___ -> false
+let (uu___is_Deferred_occur_check_failed : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_occur_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_first_order_heuristic_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_first_order_heuristic_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_flex : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_flex -> true | uu___ -> false
+let (uu___is_Deferred_free_names_check_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_free_names_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_not_a_pattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
+let (uu___is_Deferred_flex_flex_nonpattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_flex_flex_nonpattern -> true
+    | uu___ -> false
+let (uu___is_Deferred_delay_match_heuristic : deferred_reason -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Deferred_delay_match_heuristic -> true
+    | uu___ -> false
+let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_to_user_tac -> true | uu___ -> false
+type deferred = (deferred_reason * Prims.string * prob) Prims.list
 type univ_ineq =
   (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 let (mk_by_tactic :
