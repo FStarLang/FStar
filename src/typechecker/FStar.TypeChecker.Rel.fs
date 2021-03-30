@@ -2292,7 +2292,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let t_last_arg = Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
+              let t_last_arg, _ = env.typeof_well_typed_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) false in  //AR: 03/30: WARNING: dropping the guard
               //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
@@ -4171,56 +4171,51 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
 
 (*
- * Check that an implicit solution t has expected uvar type k
+ * Check that an implicit solution t has an expected type k
  *   we know that G |- t : (G)Tot k', for some k'
  *
- * must_tot : if t must be a Tot (i.e. it must not be a GTot)
+ * must_tot : if t must be a Tot
  *)
-let check_implicit_solution_maybe_fastpath env t k (must_tot:bool) : guard_t =
-  let check_implicit_solution_fastpath env t k must_tot : option<guard_t> =
-    (*
-     * AR: when we create lambda terms as solutions to implicits (in u_abs),
-     *       we set the type in the residual comp to be the type of the uvar
-     *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
-     *       it doesn't help since the two types are the same (the type of the uvar and its solution)
-     *     worse, this prevents some constraints to be generated between the actual type of the solution
-     *       and the type of the uvar
-     *     therefore, we unset the residual comp type in the solution before typechecking
-     *)
-    let t = match (SS.compress t).n with
-            | Tm_abs (bs, body, Some rc) -> {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
-            | _ -> t in
+let check_implicit_solution env t k (must_tot:bool) : guard_t =
+  (*
+   * AR: when we create lambda terms as solutions to implicits (in u_abs),
+   *       we set the type in the residual comp to be the type of the uvar
+   *     while this ok for smt encoding etc., when we are typechecking the implicit solution using fastpath,
+   *       it doesn't help since the two types are the same (the type of the uvar and its solution)
+   *     worse, this prevents some constraints to be generated between the actual type of the solution
+   *       and the type of the uvar
+   *     therefore, we unset the residual comp type in the solution before typechecking
+   *)
+  let t = match (SS.compress t).n with
+          | Tm_abs (bs, body, Some rc) ->
+            {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+          | _ -> t in
 
-    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+  let k', g =
+    env.typeof_well_typed_tot_or_gtot_term
+    (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
+    t must_tot in
 
-    let check_subtype env t k' k : guard_t =  //t has type k', expect k
-      match get_subtyping_predicate env k' k with
-      | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-      | Some f -> Env.apply_guard f t in
+  match get_subtyping_predicate env k' k with
+  | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
+  | Some f -> Env.conj_guard (Env.apply_guard f t) g
 
-    BU.bind_opt
-      (env.typeof_well_typed_tot_or_gtot_term env t must_tot)
-      (fun k' -> check_subtype env t k' k |> Some) in
-
-  match check_implicit_solution_fastpath env t k must_tot with
-  | Some g -> g
-  | None ->
-    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-    BU.print1 "Fast path failed for %s\n" (Print.term_to_string t);
-    let _, _, g = env.typeof_tot_or_gtot_term env t must_tot in
-    g
-
-
-let check_implicit_solution_and_discharge env imp norm later_if_univ_constraint
+(*
+ * Return None if we did not typecheck the implicit because
+ *   typechecking it required solving deferred univ constraints,
+ *   and the flag force_univ_constraints is not set
+ *
+ * If force_univ_constraints is set, it always returns a Some
+ *)
+let check_implicit_solution_and_discharge_guard env imp norm_solution force_univ_constraints
   : option<Env.implicits> =
 
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = imp in
   let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
   let tm =
-    if norm 
+    if norm_solution
     then norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm
     else tm in
-
 
   if Env.debug env <| Options.Other "Rel"
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
@@ -4240,10 +4235,10 @@ let check_implicit_solution_and_discharge env imp norm later_if_univ_constraint
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
          (N.term_to_string env ctx_u.ctx_uvar_typ))
-      (fun () -> check_implicit_solution_maybe_fastpath env tm ctx_u.ctx_uvar_typ must_tot) in
+      (fun () -> check_implicit_solution env tm ctx_u.ctx_uvar_typ must_tot) in
 
-    if later_if_univ_constraint &&
-       List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred
+    if (not force_univ_constraints) &&
+       (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
     then None
     else let g' =
           (match discharge_guard'
@@ -4258,11 +4253,10 @@ let check_implicit_solution_and_discharge env imp norm later_if_univ_constraint
            | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
          g'.implicits |> Some
 
-type implicit_checking_status =
-  | Implicit_unresolved
-  | Implicit_checking_defers_univ_constraint
-
-let rec unresolved ctx_u =
+(*
+ * resolve_implicits' uses it to determine if a ctx uvar is unresolved
+ *)
+let rec unresolved ctx_u : bool =
   match (Unionfind.find ctx_u.ctx_uvar_head) with
   | Some r ->
     begin match ctx_u.ctx_uvar_meta with
@@ -4281,6 +4275,17 @@ let rec unresolved ctx_u =
   | None -> true
 
 
+type implicit_checking_status =
+  | Implicit_unresolved
+  | Implicit_checking_defers_univ_constraint
+
+
+(*
+ * In the fixpoint loop of resolve_implicits',
+ *   when we reach a fixpoint, with some implicits still remaining,
+ * try to pick an implicit whose typechecking generates a univ constraint,
+ *   force it, and then repeat the fixpoint loop
+ *)
 let pick_a_univ_deffered_implicit out : option<Env.implicit> * Env.implicits =
   let imps_with_deferred_univs, rest = List.partition
     (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
@@ -4300,18 +4305,24 @@ let resolve_implicits' env is_tac g =
     match implicits with
     | [] ->
       if not changed
-      then let imps, changed = try_solve_single_valued_implicits env is_tac out_imps in
+      then //Nothing changed in this iteration of the loop
+           //We will try to make progress by either solving a single valued implicit,
+           //  or solving an implicit that generates univ constraint, with force flag on
+           let imps, changed = try_solve_single_valued_implicits env is_tac out_imps in
            if changed then until_fixpoint ([], false) imps
-           else let imp_opt, out = pick_a_univ_deffered_implicit out in
-                if imp_opt |> is_some
-                then let imps =
-                       check_implicit_solution_and_discharge
-                         env
-                         (imp_opt |> must)
-                         true
-                         false |> must in
-                     until_fixpoint ([], false) (imps@out)
-                else out
+           else let imp_opt, rest = pick_a_univ_deffered_implicit out in
+                (match imp_opt with
+                 | None -> rest  //No such implicit exists, return remaining implicits
+                 | Some imp ->
+                   let norm_solution = true in
+                   let force_univ_constraints = true in
+                   let imps =
+                     check_implicit_solution_and_discharge_guard
+                       env
+                       imp
+                       norm_solution
+                       force_univ_constraints |> must in
+                   until_fixpoint ([], false) (imps@rest))
       else until_fixpoint ([], false) out_imps
 
     | hd::tl ->
@@ -4359,28 +4370,26 @@ let resolve_implicits' env is_tac g =
                        else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
         else begin
           //typecheck the solution
-          let imps_opt = check_implicit_solution_and_discharge
-            env
-            ({hd with imp_tm = tm})
-            false
-            true in
+          let norm_solution = false in //already norm-ed it above
+          let force_univ_constraints = false in
+          let imps_opt =
+            check_implicit_solution_and_discharge_guard
+              env
+              ({hd with imp_tm = tm})  //set the normed tm
+              norm_solution
+              force_univ_constraints in
 
           match imps_opt with
-          | None -> until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed) tl  //Move hd to out
-          | Some imps -> until_fixpoint ((imps |> List.map (fun imp -> (imp, Implicit_unresolved)))@out, true) tl
+          | None ->
+            until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed) tl  //Move hd to out
+          | Some imps ->
+            //add imps to out
+            until_fixpoint ((imps |> List.map (fun imp -> (imp, Implicit_unresolved)))@out, true) tl
         end
       end
   in
 
-  (*
-   * We go over the implicits in two rounds
-   *   In the first round, we defer any implicit whose typechecking returns a deferred universe constraint
-   *   Usually these constraints are universe eq with U_max in them
-   *   If we solve them eagerly, then for some cases involving `Universe.raise_val`,
-   *     we end up applying the umax heuristic too eagerly, which fails later on, and requires annotations
-   *   With this 2-phase solving, we allow for more delay in these constraints
-   *)
-  let imps = g.implicits |> until_fixpoint ([], false) in  //first round, don't solve deferred universe constraints
+  let imps = g.implicits |> until_fixpoint ([], false) in
   {g with implicits=imps}
 
 let resolve_implicits env g =

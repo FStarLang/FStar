@@ -271,7 +271,8 @@ and env =
   typeof_well_typed_tot_or_gtot_term:
     env ->
       FStar_Syntax_Syntax.term ->
-        must_tot -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
+        must_tot ->
+          (FStar_Syntax_Syntax.typ * FStar_TypeChecker_Common.guard_t)
     ;
   use_bv_sorts: Prims.bool ;
   qtbl_name_and_index:
@@ -852,7 +853,8 @@ let (__proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        must_tot -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+        must_tot ->
+          (FStar_Syntax_Syntax.typ * FStar_TypeChecker_Common.guard_t))
   =
   fun projectee ->
     match projectee with
@@ -1576,7 +1578,24 @@ let (initial_env :
                     typeof_tot_or_gtot_term;
                     universe_of;
                     typeof_well_typed_tot_or_gtot_term =
-                      typeof_tot_or_gtot_term_fastpath;
+                      (fun env1 ->
+                         fun t ->
+                           fun must_tot1 ->
+                             let uu___11 =
+                               typeof_tot_or_gtot_term_fastpath env1 t
+                                 must_tot1 in
+                             match uu___11 with
+                             | FStar_Pervasives_Native.Some k ->
+                                 (k, FStar_TypeChecker_Common.trivial_guard)
+                             | FStar_Pervasives_Native.None ->
+                                 ((let uu___13 =
+                                     FStar_Syntax_Print.term_to_string t in
+                                   FStar_Util.print1
+                                     "Fast path failed for %s\n" uu___13);
+                                  (let uu___13 =
+                                     typeof_tot_or_gtot_term env1 t must_tot1 in
+                                   match uu___13 with
+                                   | (uu___14, k, g) -> (k, g))));
                     use_bv_sorts = false;
                     qtbl_name_and_index = uu___3;
                     normalized_eff_names = uu___4;
@@ -6156,13 +6175,3 @@ let (get_letrec_arity :
       | FStar_Pervasives_Native.Some (uu___1, arity, uu___2, uu___3) ->
           FStar_Pervasives_Native.Some arity
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-let (typeof_well_typed_tot_or_gtot_term_maybe_fastpath :
-  env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ) =
-  fun env1 ->
-    fun t ->
-      let uu___ = env1.typeof_well_typed_tot_or_gtot_term env1 t false in
-      match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = env1.typeof_tot_or_gtot_term env1 t false in
-          (match uu___1 with | (uu___2, ty, uu___3) -> ty)
-      | FStar_Pervasives_Native.Some ty -> ty

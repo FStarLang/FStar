@@ -180,7 +180,7 @@ and env = {
   tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
-  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> option<typ>; (* typechecker callback, uses fast path, see Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath for a version that falls back on the slow path *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
 
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
@@ -301,7 +301,14 @@ let initial_env deps
 
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
-    typeof_well_typed_tot_or_gtot_term = typeof_tot_or_gtot_term_fastpath;
+    typeof_well_typed_tot_or_gtot_term =
+      (fun env t must_tot ->
+       match typeof_tot_or_gtot_term_fastpath env t must_tot with
+       | Some k -> k, trivial_guard
+       | None ->
+         BU.print1 "Fast path failed for %s\n" (Print.term_to_string t);
+         let _, k, g = typeof_tot_or_gtot_term env t must_tot in
+         k, g);
     universe_of=universe_of;
 
     use_bv_sorts=false;
@@ -1996,10 +2003,3 @@ let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
-
-let typeof_well_typed_tot_or_gtot_term_maybe_fastpath env t =
-  match env.typeof_well_typed_tot_or_gtot_term env t false with
-  | None ->
-    let _, ty, _ = env.typeof_tot_or_gtot_term env t false in
-    ty
-  | Some ty -> ty

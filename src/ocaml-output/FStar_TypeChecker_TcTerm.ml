@@ -1044,15 +1044,17 @@ let (guard_letrecs :
                 let type_of e1 e2 =
                   let t1 =
                     let uu___ =
-                      FStar_All.pipe_right e1
-                        (FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath
-                           env2) in
+                      let uu___1 =
+                        env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                          env2 e1 false in
+                      FStar_All.pipe_right uu___1 FStar_Pervasives_Native.fst in
                     FStar_All.pipe_right uu___ FStar_Syntax_Util.unrefine in
                   let t2 =
                     let uu___ =
-                      FStar_All.pipe_right e2
-                        (FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath
-                           env2) in
+                      let uu___1 =
+                        env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                          env2 e2 false in
+                      FStar_All.pipe_right uu___1 FStar_Pervasives_Native.fst in
                     FStar_All.pipe_right uu___ FStar_Syntax_Util.unrefine in
                   let rec warn t11 t21 =
                     let uu___ =

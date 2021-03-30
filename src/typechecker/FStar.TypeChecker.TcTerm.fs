@@ -402,8 +402,9 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
             *     as a check, if the types are not equal, we emit a warning so that
             *       the programmer may annotate explicitly if needed
             *)
-           let t1 = e1 |> Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath env |> U.unrefine in
-           let t2 = e2 |> Env.typeof_well_typed_tot_or_gtot_term_maybe_fastpath env |> U.unrefine in
+           //AR: 03/30: WARNING: dropping the guard in computing t1 and t2 below
+           let t1 = env.typeof_well_typed_tot_or_gtot_term env e1 false |> fst |> U.unrefine in
+           let t2 = env.typeof_well_typed_tot_or_gtot_term env e2 false |> fst |> U.unrefine in
            let rec warn t1 t2 =
              if U.eq_tm t1 t2 = Equal
              then false
