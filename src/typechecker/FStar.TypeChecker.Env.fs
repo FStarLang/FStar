@@ -306,7 +306,6 @@ let initial_env deps
        match typeof_tot_or_gtot_term_fastpath env t must_tot with
        | Some k -> k, trivial_guard
        | None ->
-         BU.print1 "Fast path failed for %s\n" (Print.term_to_string t);
          let _, k, g = typeof_tot_or_gtot_term env t must_tot in
          k, g);
     universe_of=universe_of;

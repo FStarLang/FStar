@@ -3772,13 +3772,18 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
 ////////////////////////////////////////////////////////////////////////////////
 
 (*
-    Pre-condition: exists k. env |- t : GTot k
-    i.e., t is well-typed in env at some time k
+    Pre-condition: exists k. env |- t : (G)Tot k
+    i.e., t is well-typed in env at some type k
 
     And t is Tot or GTot, meaning if it is PURE or GHOST, its wp has been accounted for
       (which is the case for the terms in the unifier)
 
-    Returns (Some k), if it can find k quickly
+    Returns (Some k), if it can find k quickly and the effect of t is consistent with must_tot
+
+    If either the type cannot be computed or effect does not match with must_tot, returns None
+
+    A possible restructuring would be to treat these two (type and effect) separately
+      in the return type
 *)
 let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option<typ> =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in

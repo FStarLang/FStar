@@ -4207,15 +4207,11 @@ let check_implicit_solution env t k (must_tot:bool) : guard_t =
  *
  * If force_univ_constraints is set, it always returns a Some
  *)
-let check_implicit_solution_and_discharge_guard env imp norm_solution force_univ_constraints
+let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
   : option<Env.implicits> =
 
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = imp in
   let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
-  let tm =
-    if norm_solution
-    then norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm
-    else tm in
 
   if Env.debug env <| Options.Other "Rel"
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
@@ -4314,13 +4310,11 @@ let resolve_implicits' env is_tac g =
                 (match imp_opt with
                  | None -> rest  //No such implicit exists, return remaining implicits
                  | Some imp ->
-                   let norm_solution = true in
                    let force_univ_constraints = true in
                    let imps =
                      check_implicit_solution_and_discharge_guard
                        env
                        imp
-                       norm_solution
                        force_univ_constraints |> must in
                    until_fixpoint ([], false) (imps@rest))
       else until_fixpoint ([], false) out_imps
@@ -4354,7 +4348,13 @@ let resolve_implicits' env is_tac g =
       then until_fixpoint (out, true) tl
       else begin
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
+        (*
+         * AR: Some opportunities for optimization here,
+         *       we may end up normalizing an implicit solution multiple times in
+         *       multiple until_fixpoint calls
+         *)
         let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
+        let hd = {hd with imp_tm=tm} in
         (*
          * AR: We do not retypecheck the solutions solved by a tactic
          *     However we still check that any uvars remaining in those solutions
@@ -4370,13 +4370,11 @@ let resolve_implicits' env is_tac g =
                        else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
         else begin
           //typecheck the solution
-          let norm_solution = false in //already norm-ed it above
           let force_univ_constraints = false in
           let imps_opt =
             check_implicit_solution_and_discharge_guard
               env
-              ({hd with imp_tm = tm})  //set the normed tm
-              norm_solution
+              hd
               force_univ_constraints in
 
           match imps_opt with
