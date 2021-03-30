@@ -72,9 +72,20 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-type deferred = list<(string * prob)>
-type univ_ineq = universe * universe
+type deferred_reason =
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
 
+type deferred = list<(deferred_reason * string * prob)>
+
+type univ_ineq = universe * universe
 
 module C = FStar.Parser.Const
 
@@ -292,7 +303,7 @@ let imp_guard_f g1 g2 = match g1, g2 with
 let binop_guard f g1 g2 = {
   guard_f=f g1.guard_f g2.guard_f;
   deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
-  deferred=g1.deferred@g2.deferred;
+  deferred=g1.deferred@g2.deferred; 
   univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
               snd g1.univ_ineqs@snd g2.univ_ineqs);
   implicits=g1.implicits@g2.implicits

@@ -448,7 +448,7 @@ let destr_repr_impl
   (#r_in: parser)
   (#r_out: parser)
   (#l: memory_invariant)
-  (f_destr_spec: unit -> TWrite a r_in r_out l)
+  ($f_destr_spec: unit -> TWrite a r_in r_out l)
 : Tot (repr_impl a r_in r_out (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l (destr_repr_spec f_destr_spec))
 = Repr?.impl (reify (f_destr_spec ()))
 

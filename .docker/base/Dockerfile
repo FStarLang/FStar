@@ -16,9 +16,9 @@ USER build
 WORKDIR /home/build
 
 # Prepare and build OPAM and OCaml
-RUN opam init -y --disable-sandboxing --compiler=4.07.0
+RUN opam init -y --disable-sandboxing
 RUN opam update
-RUN opam install -y ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process pprint visitors fix wasm
+RUN opam install -y ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process pprint visitors fix wasm ppxlib=0.22.0
 
 # Prepare and build Z3
 ENV z3=z3-4.8.5-x64-debian-8.11

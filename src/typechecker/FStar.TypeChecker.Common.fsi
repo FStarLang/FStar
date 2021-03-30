@@ -69,7 +69,19 @@ type guard_formula =
 
 val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
 
-type deferred = list<(string * prob)>
+type deferred_reason =
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
+
+type deferred = list<(deferred_reason * string * prob)>
+
 type univ_ineq = universe * universe
 
 val mk_by_tactic : term -> term -> term
@@ -175,3 +187,4 @@ val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
 val simplify : debug:bool -> term -> term
+

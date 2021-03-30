@@ -339,7 +339,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (TcTerm.type_of_tot_term e t)
+    try ret (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -767,6 +767,22 @@ let rec fold_left (f : ('a -> 'b -> tac<'b>)) (e : 'b) (xs : list<'a>) : tac<'b>
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
 
+let check_lemma_implicits_solution env (t:term) (k:typ) : guard_t =
+  let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+
+  let slow_path () =
+    let must_tot = false in  //since we are typechecking lemma implicits
+    //expected type is already set in the env
+    let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
+    g in
+
+  match TcTerm.typeof_tot_or_gtot_term_fastpath env t false with
+  | None -> slow_path ()
+  | Some k' ->
+    match Rel.subtype_nosmt env k' k with
+    | None -> slow_path ()
+    | Some g -> g
+
 let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
@@ -845,8 +861,8 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
-                            true env term ctx_uvar.ctx_uvar_typ
+                  // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
+                  check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
