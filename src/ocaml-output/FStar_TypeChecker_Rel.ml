@@ -12213,50 +12213,12 @@ let (check_implicit_solution_maybe_fastpath :
                   FStar_TypeChecker_Env.apply_guard f t3 in
             let uu___ =
               env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                env2 t2 in
+                env2 t2 must_tot1 in
             FStar_Util.bind_opt uu___
               (fun k' ->
-                 let uu___1 =
-                   (Prims.op_Negation must_tot1) ||
-                     (FStar_TypeChecker_Normalize.non_info_norm env2 k1) in
-                 if uu___1
-                 then
-                   let uu___2 = check_subtype env2 t2 k' k1 in
-                   FStar_All.pipe_right uu___2
-                     (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
-                 else
-                   (let uu___3 =
-                      env2.FStar_TypeChecker_Env.effectof_well_typed_tot_or_gtot_term
-                        env2 t2 in
-                    match uu___3 with
-                    | FStar_Pervasives_Native.None ->
-                        let uu___4 =
-                          let uu___5 = FStar_Syntax_Print.term_to_string t2 in
-                          Prims.op_Hat "Effect checking failed for %s\n"
-                            uu___5 in
-                        failwith uu___4
-                    | FStar_Pervasives_Native.Some eff ->
-                        let uu___4 =
-                          FStar_Ident.lid_equals eff
-                            FStar_Parser_Const.effect_PURE_lid in
-                        if uu___4
-                        then
-                          let uu___5 = check_subtype env2 t2 k' k1 in
-                          FStar_All.pipe_right uu___5
-                            (fun uu___6 ->
-                               FStar_Pervasives_Native.Some uu___6)
-                        else
-                          (let uu___6 =
-                             let uu___7 =
-                               let uu___8 =
-                                 FStar_Syntax_Print.term_to_string t2 in
-                               FStar_Util.format1
-                                 "Expected Tot, got a GTot computation : %s"
-                                 uu___8 in
-                             (FStar_Errors.Error_UnexpectedGTotComputation,
-                               uu___7) in
-                           FStar_Errors.raise_error uu___6
-                             t2.FStar_Syntax_Syntax.pos))) in
+                 let uu___1 = check_subtype env2 t2 k' k1 in
+                 FStar_All.pipe_right uu___1
+                   (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)) in
           let uu___ = check_implicit_solution_fastpath env t k must_tot in
           match uu___ with
           | FStar_Pervasives_Native.Some g -> g

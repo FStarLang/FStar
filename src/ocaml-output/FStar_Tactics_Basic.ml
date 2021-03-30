@@ -2418,7 +2418,8 @@ let (check_lemma_implicits_solution :
             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term env2 t must_tot in
           match uu___1 with | (uu___2, uu___3, g) -> g in
         let uu___ =
-          FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term_fastpath env2 t in
+          FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term_fastpath env2 t
+            false in
         match uu___ with
         | FStar_Pervasives_Native.None -> slow_path ()
         | FStar_Pervasives_Native.Some k' ->

@@ -271,7 +271,7 @@ and env =
   typeof_well_typed_tot_or_gtot_term:
     env ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
+        must_tot -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
     ;
   universeof_well_typed_term:
     env ->
@@ -891,7 +891,7 @@ let (__proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term :
   env ->
     env ->
       FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+        must_tot -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
   =
   fun projectee ->
     match projectee with
@@ -1605,12 +1605,13 @@ let (initial_env :
       ->
       (env ->
          FStar_Syntax_Syntax.term ->
-           Prims.bool ->
+           must_tot ->
              (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * guard_t))
         ->
         (env ->
            FStar_Syntax_Syntax.term ->
-             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+             must_tot ->
+               FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
           ->
           (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe)
             ->
@@ -6343,7 +6344,7 @@ let (typeof_well_typed_tot_or_gtot_term_maybe_fastpath :
   env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ) =
   fun env1 ->
     fun t ->
-      let uu___ = env1.typeof_well_typed_tot_or_gtot_term env1 t in
+      let uu___ = env1.typeof_well_typed_tot_or_gtot_term env1 t false in
       match uu___ with
       | FStar_Pervasives_Native.None ->
           let uu___1 = env1.typeof_tot_or_gtot_term env1 t false in
