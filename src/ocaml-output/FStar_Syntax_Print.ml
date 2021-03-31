@@ -629,7 +629,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                        | FStar_Pervasives_Native.Some tac ->
                            let uu___7 = term_to_string tac in
                            FStar_Util.format1 " by %s" uu___7 in
-                     FStar_Util.format2 "ret %s%s " uu___5 uu___6 in
+                     FStar_Util.format2 "returns %s%s " uu___5 uu___6 in
                let uu___5 =
                  let uu___6 =
                    FStar_All.pipe_right branches

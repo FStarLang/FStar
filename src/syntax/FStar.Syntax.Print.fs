@@ -345,7 +345,7 @@ and term_to_string x =
           (match asc_opt with
            | None -> ""
            | Some (asc, tacopt) ->
-             U.format2 "ret %s%s "
+             U.format2 "returns %s%s "
                (match asc with
                 | Inl t -> term_to_string t
                 | Inr c -> comp_to_string c)
