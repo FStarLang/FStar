@@ -38,7 +38,9 @@ let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
   fun projectee -> match projectee with | SConst _0 -> _0
 type atom =
   | Var of var 
-  | Match of (t * (unit -> FStar_Syntax_Syntax.branch Prims.list)) 
+  | Match of (t *
+  (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option) *
+  (unit -> FStar_Syntax_Syntax.branch Prims.list)) 
   | UnreducedLet of (var * t FStar_Thunk.t * t FStar_Thunk.t * t
   FStar_Thunk.t * FStar_Syntax_Syntax.letbinding) 
   | UnreducedLetRec of ((var * t * t) Prims.list * t *
@@ -114,8 +116,11 @@ let (__proj__Var__item___0 : atom -> var) =
 let (uu___is_Match : atom -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
 let (__proj__Match__item___0 :
-  atom -> (t * (unit -> FStar_Syntax_Syntax.branch Prims.list))) =
-  fun projectee -> match projectee with | Match _0 -> _0
+  atom ->
+    (t *
+      (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+      * (unit -> FStar_Syntax_Syntax.branch Prims.list)))
+  = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_UnreducedLet : atom -> Prims.bool) =
   fun projectee ->
     match projectee with | UnreducedLet _0 -> true | uu___ -> false
@@ -360,8 +365,14 @@ let (mkAccuVar : var -> t) =
   fun v ->
     let uu___ = FStar_Syntax_Syntax.range_of_bv v in
     mk_rt uu___ (Accu ((Var v), []))
-let (mkAccuMatch : t -> (unit -> FStar_Syntax_Syntax.branch Prims.list) -> t)
-  = fun s -> fun bs -> FStar_All.pipe_left mk_t (Accu ((Match (s, bs)), []))
+let (mkAccuMatch :
+  t ->
+    (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+      -> (unit -> FStar_Syntax_Syntax.branch Prims.list) -> t)
+  =
+  fun s ->
+    fun ret ->
+      fun bs -> FStar_All.pipe_left mk_t (Accu ((Match (s, ret, bs)), []))
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
   fun uu___ ->
     if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.Unknown
@@ -624,8 +635,8 @@ and (atom_to_string : atom -> Prims.string) =
     | Var v ->
         let uu___ = FStar_Syntax_Print.bv_to_string v in
         FStar_String.op_Hat "Var " uu___
-    | Match (t1, uu___) ->
-        let uu___1 = t_to_string t1 in FStar_String.op_Hat "Match " uu___1
+    | Match (t1, uu___, uu___1) ->
+        let uu___2 = t_to_string t1 in FStar_String.op_Hat "Match " uu___2
     | UnreducedLet (var1, typ, def, body, lb) ->
         let uu___ =
           let uu___1 = FStar_Syntax_Print.lbs_to_string [] (false, [lb]) in
