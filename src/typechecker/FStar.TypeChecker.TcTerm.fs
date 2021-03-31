@@ -1049,15 +1049,16 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         | Some (e1, c1) -> e1, c1
         | None -> e1, c1 in
 
-    let env_branches, ret_or_res_typ, g1 =  //ret_or_res_typ has type either<ascription, typ>
+    //ret_or_res_typ has type either<either<typ, comp>, typ>
+    let env_branches, ret_or_res_typ, ret_opt, g1 =
       match ret_opt with
       | None ->  //no return annotation, set an expected type either from env or a new uvar
         (match Env.expected_typ env with
-         | Some t -> env, Inr t, g1
+         | Some t -> env, Inr t, None, g1
          | None ->
            let k, _ = U.type_u() in
            let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
-           Env.set_expected_typ env res_t, Inr res_t, Env.conj_guard g1 g)
+           Env.set_expected_typ env res_t, Inr res_t, None, Env.conj_guard g1 g)
       | Some (t_or_c, None) ->
         //typecheck the return annotation and unset expected type in the env if exists
         //the branch typechecking (tc_eqn) will typecheck the branch with an ascription
@@ -1069,23 +1070,22 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
                      Inl t, g
            | Inr c -> let c, _, g = tc_comp env c in
                      Inr c, g in
-        env, Inl (t_or_c, None), Env.conj_guard g1 g
+        env, Inl t_or_c, Some (t_or_c, None), Env.conj_guard g1 g
       | _ ->
         raise_error (Errors.Fatal_UnexpectedTerm,
           "Tactic is not yet supported with match return") (Env.get_range env) in
 
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns =
-      let ret_opt = match ret_or_res_typ with
-                    | Inl ret ->
-                      (match (e1 |> U.unascribe |> SS.compress).n with
-                       | Tm_name scrutinee_bv ->
-                         //substitute scrutinee_bv with guard_x in the return annotation, if exists
-                         SS.subst_ascription [NT (scrutinee_bv, S.bv_to_name guard_x)] ret |> Some
-                       | _ ->
-                         raise_error (Errors.Fatal_UnexpectedTerm,
-                         "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos)
-                    | Inr _ -> None in
+      //substitute scrutinee_bv with guard_x in the return annotation, if exists
+      let ret_opt = BU.map_opt ret_opt (fun ret ->
+        match (e1 |> U.unascribe |> SS.compress).n with
+        | Tm_name scrutinee_bv ->          
+          SS.subst_ascription [NT (scrutinee_bv, S.bv_to_name guard_x)] ret
+        | _ ->
+          raise_error (Errors.Fatal_UnexpectedTerm,
+            "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos) in
+
       eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
 
     let c_branches, g_branches, erasable =
@@ -1103,7 +1103,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
       match ret_or_res_typ with
       | Inr res_t -> TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
-      | Inl (Inl t, _) ->  //a return annotation, with type
+      | Inl (Inl t) ->  //a return annotation, with type
         //set the type in the lcomp of the branches
         let cases = List.map
           (fun (f, eff_label, cflags, c) ->
@@ -1111,7 +1111,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         
         TcUtil.bind_cases env t cases guard_x, g, erasable
 
-      | Inl (Inr c, _) ->  //a return annotation, with computation type
+      | Inl (Inr c) ->  //a return annotation, with computation type
         let g_exhaustiveness =
           List.fold_right
             (fun (f, _, _, _) g ->  //first substitute guard_x with scrutinee bv in f
@@ -1134,19 +1134,16 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
     in
 
     let e =
-      let return_annotation = match ret_or_res_typ with
-                              | Inl asc -> Some asc
-                              | Inr _ -> None in
       let mk_match scrutinee =
         (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
         (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
-        let e = mk (Tm_match(scrutinee, return_annotation, branches)) top.pos in
+        let e = mk (Tm_match(scrutinee, ret_opt, branches)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-        //AR: TODO: revisit, for now doing only if return annotation is not provided
+        //AR: revisit, for now doing only if return annotation is not provided
         match ret_or_res_typ with
         | Inr _ -> mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
         | Inl _ -> e
@@ -1167,9 +1164,9 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
     //AR: finally, if we typechecked with the return annotation,
     //    we need to make sure that we check the expected type in the env
     let e, cres, g_expected_type =
-      match ret_or_res_typ with
-      | Inl _ -> e, cres, Env.trivial_guard
-      | Inr _ -> comp_check_expected_typ env e cres in
+      match ret_opt with
+      | None -> e, cres, Env.trivial_guard
+      | Some _ -> comp_check_expected_typ env e cres in
 
     if debug env Options.Extreme
     then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
