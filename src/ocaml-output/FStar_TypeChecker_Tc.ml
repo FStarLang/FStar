@@ -3752,49 +3752,68 @@ let (tc_decls :
                     ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___5
                     uu___6
                 else ());
-               (let uu___4 =
-                  let uu___5 =
-                    let uu___6 = FStar_Syntax_Print.sigelt_to_string_short se in
+               (let uu___5 = FStar_Options.ide_id_info_off () in
+                if uu___5
+                then FStar_TypeChecker_Env.toggle_id_info env1 false
+                else ());
+               (let uu___6 =
+                  FStar_TypeChecker_Env.debug env1
+                    (FStar_Options.Other "IdInfoOn") in
+                if uu___6
+                then FStar_TypeChecker_Env.toggle_id_info env1 true
+                else ());
+               (let uu___6 =
+                  let uu___7 =
+                    let uu___8 = FStar_Syntax_Print.sigelt_to_string_short se in
                     FStar_Util.format1
                       "While typechecking the top-level declaration `%s`"
-                      uu___6 in
-                  FStar_Errors.with_ctx uu___5
-                    (fun uu___6 -> tc_decl env1 se) in
-                match uu___4 with
+                      uu___8 in
+                  FStar_Errors.with_ctx uu___7
+                    (fun uu___8 -> tc_decl env1 se) in
+                match uu___6 with
                 | (ses', ses_elaborated, env2) ->
                     let ses'1 =
                       FStar_All.pipe_right ses'
                         (FStar_List.map
                            (fun se1 ->
-                              (let uu___6 =
+                              (let uu___8 =
                                  FStar_TypeChecker_Env.debug env2
                                    (FStar_Options.Other "UF") in
-                               if uu___6
+                               if uu___8
                                then
-                                 let uu___7 =
+                                 let uu___9 =
                                    FStar_Syntax_Print.sigelt_to_string se1 in
                                  FStar_Util.print1
-                                   "About to elim vars from %s\n" uu___7
+                                   "About to elim vars from %s\n" uu___9
                                else ());
                               FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
                     let ses_elaborated1 =
                       FStar_All.pipe_right ses_elaborated
                         (FStar_List.map
                            (fun se1 ->
-                              (let uu___6 =
+                              (let uu___8 =
                                  FStar_TypeChecker_Env.debug env2
                                    (FStar_Options.Other "UF") in
-                               if uu___6
+                               if uu___8
                                then
-                                 let uu___7 =
+                                 let uu___9 =
                                    FStar_Syntax_Print.sigelt_to_string se1 in
                                  FStar_Util.print1
                                    "About to elim vars from (elaborated) %s\n"
-                                   uu___7
+                                   uu___9
                                else ());
                               FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
                     (FStar_TypeChecker_Env.promote_id_info env2
                        (fun t ->
+                          (let uu___9 =
+                             FStar_TypeChecker_Env.debug env2
+                               (FStar_Options.Other "UF") in
+                           if uu___9
+                           then
+                             let uu___10 =
+                               FStar_Syntax_Print.term_to_string t in
+                             FStar_Util.print1 "check uvars %s\n" uu___10
+                           else ());
                           FStar_TypeChecker_Normalize.normalize
                             [FStar_TypeChecker_Env.AllowUnboundUniverses;
                             FStar_TypeChecker_Env.CheckNoUvars;
@@ -3813,23 +3832,23 @@ let (tc_decls :
                                 fun se1 -> add_sigelt_to_env env4 se1 false)
                              env2) in
                       FStar_Syntax_Unionfind.reset ();
-                      (let uu___8 =
+                      (let uu___10 =
                          (FStar_Options.log_types ()) ||
                            (FStar_All.pipe_left
                               (FStar_TypeChecker_Env.debug env3)
                               (FStar_Options.Other "LogTypes")) in
-                       if uu___8
+                       if uu___10
                        then
-                         let uu___9 =
+                         let uu___11 =
                            FStar_List.fold_left
                              (fun s ->
                                 fun se1 ->
-                                  let uu___10 =
-                                    let uu___11 =
+                                  let uu___12 =
+                                    let uu___13 =
                                       FStar_Syntax_Print.sigelt_to_string se1 in
-                                    Prims.op_Hat uu___11 "\n" in
-                                  Prims.op_Hat s uu___10) "" ses'1 in
-                         FStar_Util.print1 "Checked: %s\n" uu___9
+                                    Prims.op_Hat uu___13 "\n" in
+                                  Prims.op_Hat s uu___12) "" ses'1 in
+                         FStar_Util.print1 "Checked: %s\n" uu___11
                        else ());
                       FStar_List.iter
                         (fun se1 ->
@@ -3867,7 +3886,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___921 : unit) =
+let (uu___927 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

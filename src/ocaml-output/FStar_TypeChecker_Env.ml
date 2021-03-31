@@ -15,6 +15,7 @@ type step =
   | UnfoldOnly of FStar_Ident.lid Prims.list 
   | UnfoldFully of FStar_Ident.lid Prims.list 
   | UnfoldAttr of FStar_Ident.lid Prims.list 
+  | UnfoldQual of Prims.string Prims.list 
   | UnfoldTac 
   | PureSubtermsWithinComputations 
   | Simplify 
@@ -74,6 +75,11 @@ let (uu___is_UnfoldAttr : step -> Prims.bool) =
     match projectee with | UnfoldAttr _0 -> true | uu___ -> false
 let (__proj__UnfoldAttr__item___0 : step -> FStar_Ident.lid Prims.list) =
   fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_UnfoldQual : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldQual _0 -> true | uu___ -> false
+let (__proj__UnfoldQual__item___0 : step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldQual _0 -> _0
 let (uu___is_UnfoldTac : step -> Prims.bool) =
   fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
@@ -147,6 +153,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (UnfoldAttr lids1, UnfoldAttr lids2) ->
           ((FStar_List.length lids1) = (FStar_List.length lids2)) &&
             (FStar_List.forall2 FStar_Ident.lid_equals lids1 lids2)
+      | (UnfoldQual strs1, UnfoldQual strs2) -> strs1 = strs2
       | uu___ -> false
 type sig_binding =
   (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
@@ -4602,15 +4609,17 @@ let (update_effect_lattice :
                              | FStar_Pervasives_Native.None -> []
                              | FStar_Pervasives_Native.Some (k, e1, e2) ->
                                  let uu___1 =
-                                   (let uu___2 =
-                                      exists_polymonadic_bind env1 i j in
-                                    FStar_All.pipe_right uu___2
-                                      FStar_Util.is_some)
-                                     ||
-                                     (let uu___2 =
-                                        exists_polymonadic_bind env1 j i in
-                                      FStar_All.pipe_right uu___2
-                                        FStar_Util.is_some) in
+                                   (let uu___2 = FStar_Ident.lid_equals i j in
+                                    Prims.op_Negation uu___2) &&
+                                     ((let uu___2 =
+                                         exists_polymonadic_bind env1 i j in
+                                       FStar_All.pipe_right uu___2
+                                         FStar_Util.is_some)
+                                        ||
+                                        (let uu___2 =
+                                           exists_polymonadic_bind env1 j i in
+                                         FStar_All.pipe_right uu___2
+                                           FStar_Util.is_some)) in
                                  if uu___1
                                  then
                                    let uu___2 =

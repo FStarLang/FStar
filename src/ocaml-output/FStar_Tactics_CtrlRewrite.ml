@@ -1,4 +1,7 @@
 open Prims
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Range.range) =
+  fun g ->
+    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
@@ -166,7 +169,8 @@ let (__do_rewrite :
                  else
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let uu___4 =
-                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ in
+                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
+                        (rangeof g0) in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with

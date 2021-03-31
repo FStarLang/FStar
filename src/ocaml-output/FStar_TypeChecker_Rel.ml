@@ -5461,13 +5461,11 @@ and (solve_t_flex_rigid_eq :
                                          let uu___8 =
                                            let uu___9 =
                                              let uu___10 =
-                                               let uu___11 =
-                                                 let uu___12 =
-                                                   FStar_Syntax_Syntax.as_arg
-                                                     lhs'_last_arg in
-                                                 [uu___12] in
                                                FStar_Syntax_Syntax.mk_Tm_app
-                                                 lhs' uu___11
+                                                 lhs'
+                                                 [(lhs'_last_arg,
+                                                    (FStar_Pervasives_Native.snd
+                                                       last_arg_rhs))]
                                                  t_lhs.FStar_Syntax_Syntax.pos in
                                              FStar_Syntax_Util.abs bs_lhs
                                                uu___10

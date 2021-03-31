@@ -309,6 +309,15 @@ let (__proj__Mkid_info_table__item__id_info_buffer :
 let (id_info_table_empty : id_info_table) =
   let uu___ = FStar_Util.psmap_empty () in
   { id_info_enabled = false; id_info_db = uu___; id_info_buffer = [] }
+let (print_identifier_info : identifier_info -> Prims.string) =
+  fun info ->
+    let uu___ = FStar_Range.string_of_range info.identifier_range in
+    let uu___1 =
+      match info.identifier with
+      | FStar_Util.Inl x -> FStar_Syntax_Print.bv_to_string x
+      | FStar_Util.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
+    let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
+    FStar_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
     (Prims.int * identifier_info) Prims.list FStar_Util.pimap
@@ -324,12 +333,15 @@ let (id_info__insert :
         let use_range =
           let uu___ = FStar_Range.use_range range in
           FStar_Range.set_def_range range uu___ in
+        let id_ty =
+          match info.identifier with
+          | FStar_Util.Inr uu___ -> info.identifier_ty
+          | FStar_Util.Inl x -> ty_map info.identifier_ty in
         let info1 =
           let uu___ = info in
-          let uu___1 = ty_map info.identifier_ty in
           {
             identifier = (uu___.identifier);
-            identifier_ty = uu___1;
+            identifier_ty = id_ty;
             identifier_range = use_range
           } in
         let fn = FStar_Range.file_of_range use_range in

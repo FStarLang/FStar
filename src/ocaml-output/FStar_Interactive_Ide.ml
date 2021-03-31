@@ -1584,8 +1584,14 @@ let run_push_without_deps :
               FStar_Parser_ParseIt.frag_line = line;
               FStar_Parser_ParseIt.frag_col = column
             } in
-          (FStar_TypeChecker_Env.toggle_id_info
-             st.FStar_Interactive_JsonHelper.repl_env true;
+          ((let uu___2 = FStar_Options.ide_id_info_off () in
+            if uu___2
+            then
+              FStar_TypeChecker_Env.toggle_id_info
+                st.FStar_Interactive_JsonHelper.repl_env false
+            else
+              FStar_TypeChecker_Env.toggle_id_info
+                st.FStar_Interactive_JsonHelper.repl_env true);
            (let st1 = set_nosynth_flag st peek_only in
             let uu___2 =
               run_repl_transaction st1 push_kind peek_only
