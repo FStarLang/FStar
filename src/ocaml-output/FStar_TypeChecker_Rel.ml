@@ -5024,7 +5024,8 @@ and (solve_binders :
                               FStar_Util.print1 "rhs_prob = %s\n" uu___4
                             else ());
                            (let formula = p_guard rhs_prob in
-                            (env1, (FStar_Util.Inl ([rhs_prob], formula)),
+                            (env1,
+                              (FStar_Pervasives.Inl ([rhs_prob], formula)),
                               wl2))))
                  | (x::xs1, y::ys1) when
                      let uu___1 =
@@ -5103,7 +5104,7 @@ and (solve_binders :
                                                  (uu___5.FStar_Syntax_Syntax.binder_attrs)
                                              })]) env2 subst1 xs1 ys1 in
                                     (match uu___4 with
-                                     | (env3, FStar_Util.Inl
+                                     | (env3, FStar_Pervasives.Inl
                                         (sub_probs, phi), wl3) ->
                                          let phi1 =
                                            let uu___5 =
@@ -5140,18 +5141,19 @@ and (solve_binders :
                                                uu___7 uu___8
                                            else ());
                                           (env3,
-                                            (FStar_Util.Inl
+                                            (FStar_Pervasives.Inl
                                                ((prob :: sub_probs), phi1)),
                                             wl3))
                                      | fail -> fail))))
                  | uu___1 ->
                      (env1,
-                       (FStar_Util.Inr "arity or argument-qualifier mismatch"),
-                       wl1) in
+                       (FStar_Pervasives.Inr
+                          "arity or argument-qualifier mismatch"), wl1) in
                let uu___1 = aux wl [] env [] bs1 bs2 in
                match uu___1 with
-               | (env1, FStar_Util.Inr msg, wl1) -> giveup_lit env1 msg orig
-               | (env1, FStar_Util.Inl (sub_probs, phi), wl1) ->
+               | (env1, FStar_Pervasives.Inr msg, wl1) ->
+                   giveup_lit env1 msg orig
+               | (env1, FStar_Pervasives.Inl (sub_probs, phi), wl1) ->
                    let wl2 =
                      solve_prob orig (FStar_Pervasives_Native.Some phi) []
                        wl1 in
@@ -5244,7 +5246,7 @@ and (solve_t_flex_rigid_eq :
                   (let uu___4 = quasi_pattern env1 lhs1 in
                    match uu___4 with
                    | FStar_Pervasives_Native.None ->
-                       ((FStar_Util.Inl "Not a quasi-pattern"), wl1)
+                       ((FStar_Pervasives.Inl "Not a quasi-pattern"), wl1)
                    | FStar_Pervasives_Native.Some (bs, uu___5) ->
                        let uu___6 = lhs1 in
                        (match uu___6 with
@@ -5260,7 +5262,7 @@ and (solve_t_flex_rigid_eq :
                                        Prims.op_Hat
                                          "quasi-pattern, occurs-check failed: "
                                          uu___10 in
-                                     FStar_Util.Inl uu___9 in
+                                     FStar_Pervasives.Inl uu___9 in
                                    (uu___8, wl1)
                                  else
                                    (let fvs_lhs =
@@ -5277,14 +5279,14 @@ and (solve_t_flex_rigid_eq :
                                       Prims.op_Negation uu___10 in
                                     if uu___9
                                     then
-                                      ((FStar_Util.Inl
+                                      ((FStar_Pervasives.Inl
                                           "quasi-pattern, free names on the RHS are not included in the LHS"),
                                         wl1)
                                     else
                                       (let uu___11 =
                                          let uu___12 =
                                            mk_solution env1 lhs1 bs rhs1 in
-                                         FStar_Util.Inr uu___12 in
+                                         FStar_Pervasives.Inr uu___12 in
                                        let uu___12 =
                                          restrict_all_uvars env1 ctx_u []
                                            uvars wl1 in
@@ -5677,12 +5679,12 @@ and (solve_t_flex_rigid_eq :
                                 (let uu___7 =
                                    try_quasi_pattern orig env wl lhs rhs in
                                  match uu___7 with
-                                 | (FStar_Util.Inr sol, wl1) ->
+                                 | (FStar_Pervasives.Inr sol, wl1) ->
                                      let uu___8 =
                                        solve_prob orig
                                          FStar_Pervasives_Native.None sol wl1 in
                                      solve env uu___8
-                                 | (FStar_Util.Inl msg, uu___8) ->
+                                 | (FStar_Pervasives.Inl msg, uu___8) ->
                                      first_order orig env wl lhs rhs)))))
 and (solve_t_flex_flex :
   FStar_TypeChecker_Env.env ->
@@ -6491,7 +6493,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                       FStar_Pervasives_Native.None))))) in
            match t1t2_opt with
            | FStar_Pervasives_Native.None ->
-               FStar_Util.Inr FStar_Pervasives_Native.None
+               FStar_Pervasives.Inr FStar_Pervasives_Native.None
            | FStar_Pervasives_Native.Some (t1, t2) ->
                ((let uu___2 =
                    FStar_All.pipe_left (FStar_TypeChecker_Env.debug env1)
@@ -6533,7 +6535,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            FStar_Util.print1
                              "match head %s is not a flex term\n" uu___10
                          else ());
-                        FStar_Util.Inr FStar_Pervasives_Native.None)
+                        FStar_Pervasives.Inr FStar_Pervasives_Native.None)
                      else
                        if wl1.defer_ok
                        then
@@ -6544,7 +6546,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            if uu___10
                            then FStar_Util.print_string "Deferring ... \n"
                            else ());
-                          FStar_Util.Inl "defer")
+                          FStar_Pervasives.Inl "defer")
                        else
                          ((let uu___11 =
                              FStar_All.pipe_left
@@ -6624,8 +6626,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         | (p, uu___14, uu___15) ->
                                             try_solve_branch scrutinee p) in
                                  FStar_All.pipe_left
-                                   (fun uu___13 -> FStar_Util.Inr uu___13)
-                                   uu___12))
+                                   (fun uu___13 ->
+                                      FStar_Pervasives.Inr uu___13) uu___12))
                            | FStar_Pervasives_Native.Some b ->
                                let uu___11 = FStar_Syntax_Subst.open_branch b in
                                (match uu___11 with
@@ -6648,7 +6650,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         try_solve_branch scrutinee p in
                                       FStar_All.pipe_left
                                         (fun uu___15 ->
-                                           FStar_Util.Inr uu___15) uu___14)))))
+                                           FStar_Pervasives.Inr uu___15)
+                                        uu___14)))))
                  | ((s, t),
                     (uu___3,
                      {
@@ -6673,7 +6676,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            FStar_Util.print1
                              "match head %s is not a flex term\n" uu___10
                          else ());
-                        FStar_Util.Inr FStar_Pervasives_Native.None)
+                        FStar_Pervasives.Inr FStar_Pervasives_Native.None)
                      else
                        if wl1.defer_ok
                        then
@@ -6684,7 +6687,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            if uu___10
                            then FStar_Util.print_string "Deferring ... \n"
                            else ());
-                          FStar_Util.Inl "defer")
+                          FStar_Pervasives.Inl "defer")
                        else
                          ((let uu___11 =
                              FStar_All.pipe_left
@@ -6764,8 +6767,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         | (p, uu___14, uu___15) ->
                                             try_solve_branch scrutinee p) in
                                  FStar_All.pipe_left
-                                   (fun uu___13 -> FStar_Util.Inr uu___13)
-                                   uu___12))
+                                   (fun uu___13 ->
+                                      FStar_Pervasives.Inr uu___13) uu___12))
                            | FStar_Pervasives_Native.Some b ->
                                let uu___11 = FStar_Syntax_Subst.open_branch b in
                                (match uu___11 with
@@ -6788,7 +6791,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         try_solve_branch scrutinee p in
                                       FStar_All.pipe_left
                                         (fun uu___15 ->
-                                           FStar_Util.Inr uu___15) uu___14)))))
+                                           FStar_Pervasives.Inr uu___15)
+                                        uu___14)))))
                  | uu___3 ->
                      ((let uu___5 =
                          FStar_All.pipe_left
@@ -6802,7 +6806,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            "Heuristic not applicable: tag lhs=%s, rhs=%s\n"
                            uu___6 uu___7
                        else ());
-                      FStar_Util.Inr FStar_Pervasives_Native.None))) in
+                      FStar_Pervasives.Inr FStar_Pervasives_Native.None))) in
          let rigid_rigid_delta env1 torig wl1 head1 head2 t1 t2 =
            let orig = FStar_TypeChecker_Common.TProb torig in
            (let uu___2 =
@@ -6848,15 +6852,16 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                        | uu___6 -> false in
                      let uu___5 = try_match_heuristic env1 orig wl1 t1 t2 o in
                      (match uu___5 with
-                      | FStar_Util.Inl _defer_ok ->
+                      | FStar_Pervasives.Inl _defer_ok ->
                           let uu___6 =
                             FStar_Thunk.mkv "delaying match heuristic" in
                           giveup_or_defer1 orig
                             FStar_TypeChecker_Common.Deferred_delay_match_heuristic
                             uu___6
-                      | FStar_Util.Inr (FStar_Pervasives_Native.Some wl2) ->
-                          solve env1 wl2
-                      | FStar_Util.Inr (FStar_Pervasives_Native.None) ->
+                      | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some
+                          wl2) -> solve env1 wl2
+                      | FStar_Pervasives.Inr (FStar_Pervasives_Native.None)
+                          ->
                           let uu___6 =
                             ((may_relate head1) || (may_relate head2)) &&
                               wl1.smt_ok in
@@ -7197,13 +7202,13 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     | uu___9 -> false in
                   let maybe_eta t =
                     if is_abs t
-                    then FStar_Util.Inl t
+                    then FStar_Pervasives.Inl t
                     else
                       (let t3 =
                          FStar_TypeChecker_Normalize.eta_expand wl.tcenv t in
                        if is_abs t3
-                       then FStar_Util.Inl t3
-                       else FStar_Util.Inr t3) in
+                       then FStar_Pervasives.Inl t3
+                       else FStar_Pervasives.Inr t3) in
                   let force_eta t =
                     if is_abs t
                     then t
@@ -7354,7 +7359,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     let uu___10 = maybe_eta t1 in
                     let uu___11 = maybe_eta t2 in (uu___10, uu___11) in
                   (match uu___9 with
-                   | (FStar_Util.Inl t11, FStar_Util.Inl t21) ->
+                   | (FStar_Pervasives.Inl t11, FStar_Pervasives.Inl t21) ->
                        solve_t env
                          (let uu___10 = problem in
                           {
@@ -7377,7 +7382,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                             FStar_TypeChecker_Common.rank =
                               (uu___10.FStar_TypeChecker_Common.rank)
                           }) wl
-                   | (FStar_Util.Inl t_abs, FStar_Util.Inr not_abs) ->
+                   | (FStar_Pervasives.Inl t_abs, FStar_Pervasives.Inr
+                      not_abs) ->
                        let uu___10 =
                          (is_flex not_abs) &&
                            ((p_rel orig) = FStar_TypeChecker_Common.EQ) in
@@ -7420,7 +7426,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                FStar_Thunk.mkv
                                  "head tag mismatch: RHS is an abstraction" in
                              giveup env uu___13 orig))
-                   | (FStar_Util.Inr not_abs, FStar_Util.Inl t_abs) ->
+                   | (FStar_Pervasives.Inr not_abs, FStar_Pervasives.Inl
+                      t_abs) ->
                        let uu___10 =
                          (is_flex not_abs) &&
                            ((p_rel orig) = FStar_TypeChecker_Common.EQ) in
@@ -7473,13 +7480,13 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     | uu___9 -> false in
                   let maybe_eta t =
                     if is_abs t
-                    then FStar_Util.Inl t
+                    then FStar_Pervasives.Inl t
                     else
                       (let t3 =
                          FStar_TypeChecker_Normalize.eta_expand wl.tcenv t in
                        if is_abs t3
-                       then FStar_Util.Inl t3
-                       else FStar_Util.Inr t3) in
+                       then FStar_Pervasives.Inl t3
+                       else FStar_Pervasives.Inr t3) in
                   let force_eta t =
                     if is_abs t
                     then t
@@ -7630,7 +7637,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     let uu___10 = maybe_eta t1 in
                     let uu___11 = maybe_eta t2 in (uu___10, uu___11) in
                   (match uu___9 with
-                   | (FStar_Util.Inl t11, FStar_Util.Inl t21) ->
+                   | (FStar_Pervasives.Inl t11, FStar_Pervasives.Inl t21) ->
                        solve_t env
                          (let uu___10 = problem in
                           {
@@ -7653,7 +7660,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                             FStar_TypeChecker_Common.rank =
                               (uu___10.FStar_TypeChecker_Common.rank)
                           }) wl
-                   | (FStar_Util.Inl t_abs, FStar_Util.Inr not_abs) ->
+                   | (FStar_Pervasives.Inl t_abs, FStar_Pervasives.Inr
+                      not_abs) ->
                        let uu___10 =
                          (is_flex not_abs) &&
                            ((p_rel orig) = FStar_TypeChecker_Common.EQ) in
@@ -7696,7 +7704,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                FStar_Thunk.mkv
                                  "head tag mismatch: RHS is an abstraction" in
                              giveup env uu___13 orig))
-                   | (FStar_Util.Inr not_abs, FStar_Util.Inl t_abs) ->
+                   | (FStar_Pervasives.Inr not_abs, FStar_Pervasives.Inl
+                      t_abs) ->
                        let uu___10 =
                          (is_flex not_abs) &&
                            ((p_rel orig) = FStar_TypeChecker_Common.EQ) in

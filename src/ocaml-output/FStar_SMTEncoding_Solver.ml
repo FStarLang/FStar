@@ -1,16 +1,16 @@
 open Prims
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels)
-    FStar_Util.either
+    FStar_Pervasives.either
 let z3_result_as_replay_result :
   'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Util.either ->
-      ('uuuuu, 'uuuuu1) FStar_Util.either
+    ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Pervasives.either ->
+      ('uuuuu, 'uuuuu1) FStar_Pervasives.either
   =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl l -> FStar_Util.Inl l
-    | FStar_Util.Inr (r, uu___1) -> FStar_Util.Inr r
+    | FStar_Pervasives.Inl l -> FStar_Pervasives.Inl l
+    | FStar_Pervasives.Inr (r, uu___1) -> FStar_Pervasives.Inr r
 let (recorded_hints :
   FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None
@@ -551,7 +551,8 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                   (FStar_List.map error_to_short_string) in
               FStar_All.pipe_right uu___3 (FStar_String.concat ";\n\t") in
             FStar_All.pipe_right uu___2 format_smt_error in
-          FStar_All.pipe_right uu___1 (fun uu___2 -> FStar_Util.Inr uu___2)
+          FStar_All.pipe_right uu___1
+            (fun uu___2 -> FStar_Pervasives.Inr uu___2)
         else
           (let uu___2 =
              FStar_List.fold_left
@@ -590,7 +591,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                       "The SMT query timed out, you might want to increase the rlimit"
                   | (uu___3, uu___4, uu___5) ->
                       "Try with --query_stats to get more details")
-                 (fun uu___3 -> FStar_Util.Inl uu___3)) in
+                 (fun uu___3 -> FStar_Pervasives.Inl uu___3)) in
       let uu___ = find_localized_errors settings.query_errors in
       match uu___ with
       | FStar_Pervasives_Native.Some err ->
@@ -909,19 +910,19 @@ let (fold_queries :
       (query_settings ->
          FStar_SMTEncoding_Z3.z3result ->
            errors FStar_Pervasives_Native.option)
-        -> (errors Prims.list, query_settings) FStar_Util.either)
+        -> (errors Prims.list, query_settings) FStar_Pervasives.either)
   =
   fun qs ->
     fun ask ->
       fun f ->
         let rec aux acc qs1 =
           match qs1 with
-          | [] -> FStar_Util.Inl acc
+          | [] -> FStar_Pervasives.Inl acc
           | q::qs2 ->
               let res = ask q in
               let uu___ = f q res in
               (match uu___ with
-               | FStar_Pervasives_Native.None -> FStar_Util.Inr q
+               | FStar_Pervasives_Native.None -> FStar_Pervasives.Inr q
                | FStar_Pervasives_Native.Some errs -> aux (errs :: acc) qs2) in
         aux [] qs
 let (full_query_id : query_settings -> Prims.string) =
@@ -1242,7 +1243,7 @@ let (ask_and_report_errors :
                                    (let r = run_one (seed + n) in
                                     let uu___7 =
                                       match r with
-                                      | FStar_Util.Inr cfg ->
+                                      | FStar_Pervasives.Inr cfg ->
                                           (maybe_improve best_fuel
                                              cfg.query_fuel;
                                            maybe_improve best_ifuel
@@ -1289,8 +1290,8 @@ let (ask_and_report_errors :
                              FStar_List.concatMap
                                (fun uu___4 ->
                                   match uu___4 with
-                                  | FStar_Util.Inr uu___5 -> []
-                                  | FStar_Util.Inl es -> [es]) rs in
+                                  | FStar_Pervasives.Inr uu___5 -> []
+                                  | FStar_Pervasives.Inl es -> [es]) rs in
                            let uu___4 =
                              quaking_or_retrying &&
                                (let uu___5 = FStar_Options.query_stats () in

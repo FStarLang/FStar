@@ -1568,8 +1568,8 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
             let bs, t2 = SS.open_term [b] t2 in
@@ -1583,14 +1583,14 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
+                 | Inr _ -> ret Tv_Unknown
+                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
@@ -1651,11 +1651,11 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
 
@@ -1674,10 +1674,10 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange

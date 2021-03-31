@@ -60,7 +60,7 @@ let mk_lazy cb obj ty kind =
     }
     in
     let thunk = Thunk.mk (fun () -> translate_cb cb (U.unfold_lazy li)) in
-    mk_t (Lazy (BU.Inl li, thunk))
+    mk_t (Lazy (Inl li, thunk))
 
 let e_bv =
     let embed_bv cb (bv:bv) : t =
@@ -68,7 +68,7 @@ let e_bv =
     in
     let unembed_bv cb (t:t) : option<bv> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_bv}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
@@ -83,7 +83,7 @@ let e_binder =
     in
     let unembed_binder cb (t:t) : option<binder> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_binder}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_binder}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (t_to_string t)));
@@ -158,7 +158,7 @@ let e_fv =
     in
     let unembed_fv cb (t:t) : option<fv> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_fvar}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_fvar}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (t_to_string t)));
@@ -172,7 +172,7 @@ let e_comp =
     in
     let unembed_comp cb (t:t) : option<S.comp> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_comp}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_comp}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (t_to_string t)));
@@ -186,7 +186,7 @@ let e_env =
     in
     let unembed_env cb (t:t) : option<Env.env> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_env}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_env}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (t_to_string t)));
@@ -299,7 +299,7 @@ let e_match_returns_annotation =
 
 let unlazy_as_t k t =
     match t.nbe_t with
-    | Lazy (BU.Inl {lkind=k'; blob=v}, _)
+    | Lazy (Inl {lkind=k'; blob=v}, _)
         when U.eq_lazy_kind k k' ->
       FStar.Dyn.undyn v
     | _ ->
@@ -552,7 +552,7 @@ let e_sigelt =
     in
     let unembed_sigelt cb (t:t) : option<sigelt> =
         match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_sigelt}, _) ->
+        | Lazy (Inl {blob=b; lkind=Lazy_sigelt}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (t_to_string t)));

@@ -174,7 +174,7 @@ type cached_elt =
   (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
       FStar_Pervasives_Native.option))
-    FStar_Util.either * FStar_Range.range)
+    FStar_Pervasives.either * FStar_Range.range)
 type goal = FStar_Syntax_Syntax.term
 type must_tot = Prims.bool
 type mlift =
@@ -343,7 +343,8 @@ and tcenv_hooks =
   {
   tc_push_in_gamma_hook:
     env ->
-      (FStar_Syntax_Syntax.binding, sig_binding) FStar_Util.either -> unit
+      (FStar_Syntax_Syntax.binding, sig_binding) FStar_Pervasives.either ->
+        unit
     }
 let (__proj__Mkmlift__item__mlift_wp :
   mlift ->
@@ -1227,7 +1228,8 @@ let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   tcenv_hooks ->
     env ->
-      (FStar_Syntax_Syntax.binding, sig_binding) FStar_Util.either -> unit)
+      (FStar_Syntax_Syntax.binding, sig_binding) FStar_Pervasives.either ->
+        unit)
   =
   fun projectee ->
     match projectee with
@@ -2354,7 +2356,8 @@ type qninfo =
   (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
       FStar_Pervasives_Native.option))
-    FStar_Util.either * FStar_Range.range) FStar_Pervasives_Native.option
+    FStar_Pervasives.either * FStar_Range.range)
+    FStar_Pervasives_Native.option
 let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
   fun env1 ->
     fun lid ->
@@ -2383,7 +2386,7 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                              us_names in
                          let uu___3 =
                            let uu___4 = FStar_Ident.range_of_lid l in
-                           ((FStar_Util.Inl (us, t)), uu___4) in
+                           ((FStar_Pervasives.Inl (us, t)), uu___4) in
                          FStar_Pervasives_Native.Some uu___3
                      | uu___3 -> FStar_Pervasives_Native.None) in
               FStar_Util.catch_opt uu___1
@@ -2411,7 +2414,7 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                                  if uu___11
                                  then
                                    cache
-                                     ((FStar_Util.Inr
+                                     ((FStar_Pervasives.Inr
                                          (se, FStar_Pervasives_Native.None)),
                                        (FStar_Syntax_Util.range_of_sigelt se))
                                  else FStar_Pervasives_Native.None)
@@ -2430,7 +2433,7 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                              | FStar_Pervasives_Native.Some l ->
                                  let uu___5 =
                                    let uu___6 = FStar_Ident.range_of_lid l in
-                                   ((FStar_Util.Inr
+                                   ((FStar_Pervasives.Inr
                                        (s, FStar_Pervasives_Native.None)),
                                      uu___6) in
                                  maybe_cache uu___5)))
@@ -2443,7 +2446,7 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
          match uu___1 with
          | FStar_Pervasives_Native.Some se ->
              FStar_Pervasives_Native.Some
-               ((FStar_Util.Inr (se, FStar_Pervasives_Native.None)),
+               ((FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None)),
                  (FStar_Syntax_Util.range_of_sigelt se))
          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (lookup_sigelt :
@@ -2456,9 +2459,9 @@ let (lookup_sigelt :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (FStar_Util.Inl uu___1, rng) ->
+      | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl uu___1, rng) ->
           FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (FStar_Util.Inr (se, us), rng) ->
+      | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr (se, us), rng) ->
           FStar_Pervasives_Native.Some se
 let (lookup_attr :
   env -> Prims.string -> FStar_Syntax_Syntax.sigelt Prims.list) =
@@ -2550,8 +2553,8 @@ let (lookup_type_of_let :
             FStar_Util.find_map lbs
               (fun lb ->
                  match lb.FStar_Syntax_Syntax.lbname with
-                 | FStar_Util.Inl uu___2 -> failwith "impossible"
-                 | FStar_Util.Inr fv ->
+                 | FStar_Pervasives.Inl uu___2 -> failwith "impossible"
+                 | FStar_Pervasives.Inr fv ->
                      let uu___2 = FStar_Syntax_Syntax.fv_eq_lid fv lid in
                      if uu___2
                      then
@@ -2653,8 +2656,9 @@ let (try_lookup_lid_aux :
           match uu___ with
           | (lr, rng) ->
               (match lr with
-               | FStar_Util.Inl t -> FStar_Pervasives_Native.Some (t, rng)
-               | FStar_Util.Inr
+               | FStar_Pervasives.Inl t ->
+                   FStar_Pervasives_Native.Some (t, rng)
+               | FStar_Pervasives.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_datacon
@@ -2669,7 +2673,7 @@ let (try_lookup_lid_aux :
                    let uu___10 =
                      let uu___11 = inst_tscheme1 (uvs, t) in (uu___11, rng) in
                    FStar_Pervasives_Native.Some uu___10
-               | FStar_Util.Inr
+               | FStar_Pervasives.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_declare_typ (l, uvs, t);
@@ -2699,7 +2703,7 @@ let (try_lookup_lid_aux :
                      (let uu___7 =
                         let uu___8 = inst_tscheme1 (uvs, t) in (uu___8, rng) in
                       FStar_Pervasives_Native.Some uu___7)
-               | FStar_Util.Inr
+               | FStar_Pervasives.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
@@ -2728,7 +2732,7 @@ let (try_lookup_lid_aux :
                             inst_tscheme1 uu___11 in
                           (uu___10, rng) in
                         FStar_Pervasives_Native.Some uu___9)
-               | FStar_Util.Inr
+               | FStar_Pervasives.Inr
                    ({
                       FStar_Syntax_Syntax.sigel =
                         FStar_Syntax_Syntax.Sig_inductive_typ
@@ -2757,7 +2761,7 @@ let (try_lookup_lid_aux :
                             inst_tscheme_with uu___11 us in
                           (uu___10, rng) in
                         FStar_Pervasives_Native.Some uu___9)
-               | FStar_Util.Inr se ->
+               | FStar_Pervasives.Inr se ->
                    let uu___1 =
                      match se with
                      | ({
@@ -2905,7 +2909,7 @@ let (try_lookup_val_decl :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
                 (uu___1, uvs, t);
@@ -2936,7 +2940,7 @@ let (lookup_val_decl :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
                 (uu___1, uvs, t);
@@ -2964,7 +2968,7 @@ let (lookup_datacon :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
                 (uu___1, uvs, t, uu___2, uu___3, uu___4);
@@ -2990,7 +2994,7 @@ let (datacons_of_typ :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
@@ -3010,7 +3014,7 @@ let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
                 (uu___1, uu___2, uu___3, l, uu___4, uu___5);
@@ -3048,7 +3052,9 @@ let (lookup_definition_qninfo_aux :
                       (FStar_Util.for_some (visible_at dl)))) in
           match qninfo1 with
           | FStar_Pervasives_Native.Some
-              (FStar_Util.Inr (se, FStar_Pervasives_Native.None), uu___) ->
+              (FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None),
+               uu___)
+              ->
               (match se.FStar_Syntax_Syntax.sigel with
                | FStar_Syntax_Syntax.Sig_let ((is_rec, lbs), uu___1) when
                    (visible se.FStar_Syntax_Syntax.sigquals) &&
@@ -3118,11 +3124,12 @@ let (delta_depth_of_qninfo :
          | FStar_Pervasives_Native.None ->
              FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-         | FStar_Pervasives_Native.Some (FStar_Util.Inl uu___2, uu___3) ->
+         | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl uu___2, uu___3)
+             ->
              FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-         | FStar_Pervasives_Native.Some (FStar_Util.Inr (se, uu___2), uu___3)
-             ->
+         | FStar_Pervasives_Native.Some
+             (FStar_Pervasives.Inr (se, uu___2), uu___3) ->
              (match se.FStar_Syntax_Syntax.sigel with
               | FStar_Syntax_Syntax.Sig_inductive_typ uu___4 ->
                   FStar_Pervasives_Native.Some
@@ -3226,8 +3233,8 @@ let (quals_of_qninfo :
   =
   fun qninfo1 ->
     match qninfo1 with
-    | FStar_Pervasives_Native.Some (FStar_Util.Inr (se, uu___), uu___1) ->
-        FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigquals)
+    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr (se, uu___), uu___1)
+        -> FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigquals)
     | uu___ -> FStar_Pervasives_Native.None
 let (attrs_of_qninfo :
   qninfo ->
@@ -3235,8 +3242,8 @@ let (attrs_of_qninfo :
   =
   fun qninfo1 ->
     match qninfo1 with
-    | FStar_Pervasives_Native.Some (FStar_Util.Inr (se, uu___), uu___1) ->
-        FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigattrs)
+    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr (se, uu___), uu___1)
+        -> FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigattrs)
     | uu___ -> FStar_Pervasives_Native.None
 let (lookup_attrs_of_lid :
   env ->
@@ -3368,7 +3375,8 @@ let (try_lookup_effect_lid :
       let uu___ = lookup_qname env1 ftv in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr (se, FStar_Pervasives_Native.None), uu___1) ->
+          (FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None), uu___1)
+          ->
           let uu___2 =
             effect_signature FStar_Pervasives_Native.None se env1.range in
           (match uu___2 with
@@ -3403,7 +3411,7 @@ let (lookup_effect_abbrev :
         let uu___ = lookup_qname env1 lid0 in
         match uu___ with
         | FStar_Pervasives_Native.Some
-            (FStar_Util.Inr
+            (FStar_Pervasives.Inr
              ({
                 FStar_Syntax_Syntax.sigel =
                   FStar_Syntax_Syntax.Sig_effect_abbrev
@@ -3544,7 +3552,7 @@ let (lookup_effect_quals :
       let uu___ = lookup_qname env1 l1 in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_new_effect
                 uu___1;
@@ -3592,7 +3600,7 @@ let (is_projector : env -> FStar_Ident.lident -> Prims.bool) =
       let uu___ = lookup_qname env1 l in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
                 (uu___1, uu___2, uu___3);
@@ -3616,7 +3624,7 @@ let (is_datacon : env -> FStar_Ident.lident -> Prims.bool) =
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
                 (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6);
@@ -3635,7 +3643,7 @@ let (is_record : env -> FStar_Ident.lident -> Prims.bool) =
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
@@ -3659,7 +3667,7 @@ let (qninfo_is_action : qninfo -> Prims.bool) =
   fun qninfo1 ->
     match qninfo1 with
     | FStar_Pervasives_Native.Some
-        (FStar_Util.Inr
+        (FStar_Pervasives.Inr
          ({
             FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
               (uu___, uu___1);
@@ -3715,7 +3723,8 @@ let (is_irreducible : env -> FStar_Ident.lident -> Prims.bool) =
     fun l ->
       let uu___ = lookup_qname env1 l in
       match uu___ with
-      | FStar_Pervasives_Native.Some (FStar_Util.Inr (se, uu___1), uu___2) ->
+      | FStar_Pervasives_Native.Some
+          (FStar_Pervasives.Inr (se, uu___1), uu___2) ->
           FStar_Util.for_some
             (fun uu___3 ->
                match uu___3 with
@@ -3727,8 +3736,8 @@ let (is_type_constructor : env -> FStar_Ident.lident -> Prims.bool) =
     fun lid ->
       let mapper x =
         match FStar_Pervasives_Native.fst x with
-        | FStar_Util.Inl uu___ -> FStar_Pervasives_Native.Some false
-        | FStar_Util.Inr (se, uu___) ->
+        | FStar_Pervasives.Inl uu___ -> FStar_Pervasives_Native.Some false
+        | FStar_Pervasives.Inr (se, uu___) ->
             (match se.FStar_Syntax_Syntax.sigel with
              | FStar_Syntax_Syntax.Sig_declare_typ uu___1 ->
                  FStar_Pervasives_Native.Some
@@ -3750,7 +3759,7 @@ let (num_inductive_ty_params :
       let uu___ = lookup_qname env1 lid in
       match uu___ with
       | FStar_Pervasives_Native.Some
-          (FStar_Util.Inr
+          (FStar_Pervasives.Inr
            ({
               FStar_Syntax_Syntax.sigel =
                 FStar_Syntax_Syntax.Sig_inductive_typ
@@ -4215,7 +4224,7 @@ let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
           unif_allow_ref_guards = (uu___.unif_allow_ref_guards)
         } in
       add_sigelt env2 s;
-      (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Util.Inr sb);
+      (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
       env2
 let (push_new_effect :
   env ->
@@ -5089,7 +5098,7 @@ let (binding_of_lb :
   fun x ->
     fun t ->
       match x with
-      | FStar_Util.Inl x1 ->
+      | FStar_Pervasives.Inl x1 ->
           let x2 =
             let uu___1 = x1 in
             {
@@ -5099,7 +5108,7 @@ let (binding_of_lb :
               FStar_Syntax_Syntax.sort = (FStar_Pervasives_Native.snd t)
             } in
           FStar_Syntax_Syntax.Binding_var x2
-      | FStar_Util.Inr fv ->
+      | FStar_Pervasives.Inr fv ->
           FStar_Syntax_Syntax.Binding_lid
             (((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v), t)
 let (push_let_binding :
@@ -6157,8 +6166,8 @@ let (get_letrec_arity :
     fun lbname ->
       let compare_either f1 f2 e1 e2 =
         match (e1, e2) with
-        | (FStar_Util.Inl v1, FStar_Util.Inl v2) -> f1 v1 v2
-        | (FStar_Util.Inr v1, FStar_Util.Inr v2) -> f2 v1 v2
+        | (FStar_Pervasives.Inl v1, FStar_Pervasives.Inl v2) -> f1 v1 v2
+        | (FStar_Pervasives.Inr v1, FStar_Pervasives.Inr v2) -> f2 v1 v2
         | uu___ -> false in
       let uu___ =
         FStar_Util.find_opt

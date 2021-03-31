@@ -293,10 +293,6 @@ val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
 val split: str:string -> sep:string -> Tot<list<string>>
 
-type either<'a,'b> =
-  | Inl of 'a
-  | Inr of 'b
-
 val is_left: either<'a,'b> -> bool
 val is_right: either<'a,'b> -> bool
 val left: either<'a,'b> -> 'a

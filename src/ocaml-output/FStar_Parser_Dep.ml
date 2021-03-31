@@ -1365,8 +1365,8 @@ let (collect_one :
                  (FStar_List.iter
                     (fun uu___4 ->
                        match uu___4 with
-                       | FStar_Util.Inl b -> collect_binder b
-                       | FStar_Util.Inr t1 -> collect_term t1) binders;
+                       | FStar_Pervasives.Inl b -> collect_binder b
+                       | FStar_Pervasives.Inr t1 -> collect_term t1) binders;
                   collect_term t)
              | FStar_Parser_AST.QForall (binders, (uu___3, ts), t) ->
                  (collect_binders binders;

@@ -57,7 +57,7 @@ type term' =
   Prims.list) 
   | Project of (term * FStar_Ident.lid) 
   | Product of (binder Prims.list * term) 
-  | Sum of ((binder, term) FStar_Util.either Prims.list * term) 
+  | Sum of ((binder, term) FStar_Pervasives.either Prims.list * term) 
   | QForall of (binder Prims.list * (FStar_Ident.ident Prims.list * term
   Prims.list Prims.list) * term) 
   | QExists of (binder Prims.list * (FStar_Ident.ident Prims.list * term
@@ -233,7 +233,7 @@ let (__proj__Product__item___0 : term' -> (binder Prims.list * term)) =
 let (uu___is_Sum : term' -> Prims.bool) =
   fun projectee -> match projectee with | Sum _0 -> true | uu___ -> false
 let (__proj__Sum__item___0 :
-  term' -> ((binder, term) FStar_Util.either Prims.list * term)) =
+  term' -> ((binder, term) FStar_Pervasives.either Prims.list * term)) =
   fun projectee -> match projectee with | Sum _0 -> _0
 let (uu___is_QForall : term' -> Prims.bool) =
   fun projectee -> match projectee with | QForall _0 -> true | uu___ -> false
@@ -807,7 +807,7 @@ let (__proj__Interface__item___0 :
   modul -> (FStar_Ident.lid * decl Prims.list * Prims.bool)) =
   fun projectee -> match projectee with | Interface _0 -> _0
 type file = modul
-type inputFragment = (file, decl Prims.list) FStar_Util.either
+type inputFragment = (file, decl Prims.list) FStar_Pervasives.either
 let (decl_drange : decl -> FStar_Range.range) = fun decl1 -> decl1.drange
 let (check_id : FStar_Ident.ident -> unit) =
   fun id ->
@@ -1341,7 +1341,8 @@ let (as_frag :
                      let uu___1 = mk_decl (Pragma LightOff) light_range [] in
                      uu___1 :: ds1
                    else ds1 in
-                 let m1 = as_mlist ((m, d), []) ds2 in FStar_Util.Inl m1
+                 let m1 = as_mlist ((m, d), []) ds2 in
+                 FStar_Pervasives.Inl m1
              | uu___1 ->
                  let ds2 = d :: ds1 in
                  (FStar_List.iter
@@ -1353,7 +1354,7 @@ let (as_frag :
                              (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
                                "Unexpected module declaration") r
                        | uu___4 -> ()) ds2;
-                  FStar_Util.Inr ds2))
+                  FStar_Pervasives.Inr ds2))
 let (compile_op :
   Prims.int -> Prims.string -> FStar_Range.range -> Prims.string) =
   fun arity ->
@@ -1608,12 +1609,13 @@ let rec (term_to_string : term -> Prims.string) =
         FStar_Util.format2 "%s => %s" uu___ uu___1
     | Sum (binders, t) ->
         let uu___ =
-          FStar_All.pipe_right (FStar_List.append binders [FStar_Util.Inr t])
+          FStar_All.pipe_right
+            (FStar_List.append binders [FStar_Pervasives.Inr t])
             (FStar_List.map
                (fun uu___1 ->
                   match uu___1 with
-                  | FStar_Util.Inl b -> binder_to_string b
-                  | FStar_Util.Inr t1 -> term_to_string t1)) in
+                  | FStar_Pervasives.Inl b -> binder_to_string b
+                  | FStar_Pervasives.Inr t1 -> term_to_string t1)) in
         FStar_All.pipe_right uu___ (FStar_String.concat " & ")
     | QForall (bs, (uu___, pats), t) ->
         let uu___1 = to_string_l " " binder_to_string bs in

@@ -583,7 +583,7 @@ let (gen_wps_for_free :
                           FStar_List.map FStar_Syntax_Syntax.as_arg uu___7 in
                         FStar_Syntax_Util.mk_app c_lift21 uu___6 in
                       FStar_Syntax_Util.ascribe uu___5
-                        ((FStar_Util.Inr result_comp),
+                        ((FStar_Pervasives.Inr result_comp),
                           FStar_Pervasives_Native.None) in
                     FStar_Syntax_Util.abs uu___3 uu___4
                       (FStar_Pervasives_Native.Some
@@ -1652,20 +1652,24 @@ and (star_type' :
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_ascribed
-          (e, (FStar_Util.Inl t2, FStar_Pervasives_Native.None), something)
+          (e, (FStar_Pervasives.Inl t2, FStar_Pervasives_Native.None),
+           something)
           ->
           let uu___ =
             let uu___1 =
               let uu___2 = star_type' env1 e in
               let uu___3 =
                 let uu___4 =
-                  let uu___5 = star_type' env1 t2 in FStar_Util.Inl uu___5 in
+                  let uu___5 = star_type' env1 t2 in
+                  FStar_Pervasives.Inl uu___5 in
                 (uu___4, FStar_Pervasives_Native.None) in
               (uu___2, uu___3, something) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_ascribed
-          (e, (FStar_Util.Inr c, FStar_Pervasives_Native.None), something) ->
+          (e, (FStar_Pervasives.Inr c, FStar_Pervasives_Native.None),
+           something)
+          ->
           let uu___ =
             let uu___1 =
               let uu___2 = star_type' env1 e in
@@ -1673,7 +1677,7 @@ and (star_type' :
                 let uu___4 =
                   let uu___5 =
                     star_type' env1 (FStar_Syntax_Util.comp_result c) in
-                  FStar_Util.Inl uu___5 in
+                  FStar_Pervasives.Inl uu___5 in
                 (uu___4, FStar_Pervasives_Native.None) in
               (uu___2, uu___3, something) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
@@ -2263,7 +2267,7 @@ and (infer :
                           uu___4 uu___5 in
                       let uu___4 =
                         FStar_Syntax_Util.ascribe u_body
-                          ((FStar_Util.Inr comp1),
+                          ((FStar_Pervasives.Inr comp1),
                             FStar_Pervasives_Native.None) in
                       (uu___4,
                         (FStar_Pervasives_Native.Some
@@ -2815,7 +2819,7 @@ and (mk_match :
                             mk
                               (FStar_Syntax_Syntax.Tm_ascribed
                                  (s_e,
-                                   ((FStar_Util.Inl t1_star),
+                                   ((FStar_Pervasives.Inl t1_star),
                                      FStar_Pervasives_Native.None),
                                    FStar_Pervasives_Native.None)) in
                           let uu___5 =
@@ -2841,7 +2845,7 @@ and (mk_match :
                                         (s_e0, FStar_Pervasives_Native.None,
                                           s_branches1)) in
                                  (uu___8,
-                                   ((FStar_Util.Inl t1_star),
+                                   ((FStar_Pervasives.Inl t1_star),
                                      FStar_Pervasives_Native.None),
                                    FStar_Pervasives_Native.None) in
                                FStar_Syntax_Syntax.Tm_ascribed uu___7 in

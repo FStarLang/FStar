@@ -827,7 +827,8 @@ let rec (resugar_term' :
                            let uu___7 =
                              let uu___8 =
                                FStar_List.map
-                                 (fun uu___9 -> FStar_Util.Inl uu___9) xs3 in
+                                 (fun uu___9 -> FStar_Pervasives.Inl uu___9)
+                                 xs3 in
                              (uu___8, body3) in
                            FStar_Parser_AST.Sum uu___7 in
                          mk uu___6)
@@ -1268,12 +1269,12 @@ let rec (resugar_term' :
                            | (binders, term, is_pat_app) ->
                                let uu___5 =
                                  match bnd.FStar_Syntax_Syntax.lbname with
-                                 | FStar_Util.Inr fv ->
+                                 | FStar_Pervasives.Inr fv ->
                                      ((mk_pat
                                          (FStar_Parser_AST.PatName
                                             ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))),
                                        term)
-                                 | FStar_Util.Inl bv ->
+                                 | FStar_Pervasives.Inl bv ->
                                      let uu___6 =
                                        let uu___7 =
                                          let uu___8 =
@@ -1411,9 +1412,9 @@ let rec (resugar_term' :
 and (resugar_ascription :
   FStar_Syntax_DsEnv.env ->
     ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
-      * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-      FStar_Pervasives_Native.option) ->
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+      FStar_Pervasives.either * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
       (FStar_Parser_AST.term * FStar_Parser_AST.term
         FStar_Pervasives_Native.option))
   =
@@ -1423,8 +1424,8 @@ and (resugar_ascription :
       | (asc, tac_opt) ->
           let uu___1 =
             match asc with
-            | FStar_Util.Inl n -> resugar_term' env n
-            | FStar_Util.Inr n -> resugar_comp' env n in
+            | FStar_Pervasives.Inl n -> resugar_term' env n
+            | FStar_Pervasives.Inr n -> resugar_comp' env n in
           let uu___2 = FStar_Util.map_opt tac_opt (resugar_term' env) in
           (uu___1, uu___2)
 and (resugar_calc :

@@ -1690,7 +1690,7 @@ let (intro_rec :
                               FStar_Syntax_Util.abs [b] u
                                 FStar_Pervasives_Native.None in
                             FStar_Syntax_Util.mk_letbinding
-                              (FStar_Util.Inl bv) [] uu___8
+                              (FStar_Pervasives.Inl bv) [] uu___8
                               FStar_Parser_Const.effect_Tot_lid uu___9 []
                               FStar_Range.dummyRange in
                           let body = FStar_Syntax_Syntax.bv_to_name bv in
@@ -1962,10 +1962,11 @@ let (t_exact :
                FStar_Tactics_Monad.bind uu___2
                  (fun uu___3 ->
                     match uu___3 with
-                    | FStar_Util.Inr r -> FStar_Tactics_Monad.ret ()
-                    | FStar_Util.Inl e when Prims.op_Negation try_refine ->
+                    | FStar_Pervasives.Inr r -> FStar_Tactics_Monad.ret ()
+                    | FStar_Pervasives.Inl e when
+                        Prims.op_Negation try_refine ->
                         FStar_Tactics_Monad.traise e
-                    | FStar_Util.Inl e ->
+                    | FStar_Pervasives.Inl e ->
                         FStar_Tactics_Monad.mlog
                           (fun uu___4 ->
                              FStar_Util.print_string
@@ -1985,14 +1986,14 @@ let (t_exact :
                              FStar_Tactics_Monad.bind uu___5
                                (fun uu___6 ->
                                   match uu___6 with
-                                  | FStar_Util.Inr r ->
+                                  | FStar_Pervasives.Inr r ->
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___7 ->
                                            FStar_Util.print_string
                                              "__exact_now: failed after refining too\n")
                                         (fun uu___7 ->
                                            FStar_Tactics_Monad.ret ())
-                                  | FStar_Util.Inl uu___7 ->
+                                  | FStar_Pervasives.Inl uu___7 ->
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___8 ->
                                            FStar_Util.print_string
@@ -5191,10 +5192,10 @@ let rec (inspect :
                    FStar_Reflection_Data.Tv_Unknown
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
-                  | FStar_Util.Inr uu___3 ->
+                  | FStar_Pervasives.Inr uu___3 ->
                       FStar_All.pipe_left FStar_Tactics_Monad.ret
                         FStar_Reflection_Data.Tv_Unknown
-                  | FStar_Util.Inl bv ->
+                  | FStar_Pervasives.Inl bv ->
                       let b = FStar_Syntax_Syntax.mk_binder bv in
                       let uu___3 = FStar_Syntax_Subst.open_term [b] t21 in
                       (match uu___3 with
@@ -5217,20 +5218,20 @@ let rec (inspect :
                    FStar_Reflection_Data.Tv_Unknown
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
-                  | FStar_Util.Inr uu___3 ->
+                  | FStar_Pervasives.Inr uu___3 ->
                       FStar_All.pipe_left FStar_Tactics_Monad.ret
                         FStar_Reflection_Data.Tv_Unknown
-                  | FStar_Util.Inl bv ->
+                  | FStar_Pervasives.Inl bv ->
                       let uu___3 = FStar_Syntax_Subst.open_let_rec [lb] t21 in
                       (match uu___3 with
                        | (lbs, t22) ->
                            (match lbs with
                             | lb1::[] ->
                                 (match lb1.FStar_Syntax_Syntax.lbname with
-                                 | FStar_Util.Inr uu___4 ->
+                                 | FStar_Pervasives.Inr uu___4 ->
                                      FStar_Tactics_Monad.ret
                                        FStar_Reflection_Data.Tv_Unknown
-                                 | FStar_Util.Inl bv1 ->
+                                 | FStar_Pervasives.Inl bv1 ->
                                      FStar_All.pipe_left
                                        FStar_Tactics_Monad.ret
                                        (FStar_Reflection_Data.Tv_Let
@@ -5334,7 +5335,7 @@ let (pack :
         FStar_All.pipe_left FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Let (false, attrs, bv, t1, t2) ->
         let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl bv) []
+          FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Range.dummyRange in
         let uu___ =
@@ -5350,7 +5351,7 @@ let (pack :
         FStar_All.pipe_left FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Let (true, attrs, bv, t1, t2) ->
         let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl bv) []
+          FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Range.dummyRange in
         let uu___ = FStar_Syntax_Subst.close_let_rec [lb] t2 in
@@ -5410,14 +5411,14 @@ let (pack :
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Util.Inl t), tacopt),
+               (e, ((FStar_Pervasives.Inl t), tacopt),
                  FStar_Pervasives_Native.None)) FStar_Range.dummyRange in
         FStar_All.pipe_left FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Util.Inr c), tacopt),
+               (e, ((FStar_Pervasives.Inr c), tacopt),
                  FStar_Pervasives_Native.None)) FStar_Range.dummyRange in
         FStar_All.pipe_left FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Unknown ->

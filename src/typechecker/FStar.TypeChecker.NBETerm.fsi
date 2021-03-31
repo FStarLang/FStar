@@ -108,7 +108,7 @@ type atom
 and t'
   =
   | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
+        * either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
                                                                  //or a list of arguments, for primitive unembeddings
         * int                        // arity
   | Accu of atom * args
@@ -118,11 +118,11 @@ and t'
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
+  | Arrow of either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | Lazy of either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
   | Meta of t * Thunk.t<S.metadata>
   | TopLevelLet of
        // 1. The definition of the fv
@@ -261,7 +261,7 @@ val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
-val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
+val e_either : embedding<'a> -> embedding<'b> -> embedding<either<'a ,'b>>
 val e_string_list : embedding<list<string>>
 val e_arrow : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 

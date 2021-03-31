@@ -177,7 +177,8 @@ let (tc_tycon :
                                                    let uu___9 =
                                                      FStar_TypeChecker_Env.push_let_binding
                                                        env0
-                                                       (FStar_Util.Inr fv_tc)
+                                                       (FStar_Pervasives.Inr
+                                                          fv_tc)
                                                        (uvs2, t_tc1) in
                                                    (uu___9,
                                                      (let uu___10 = s in
@@ -2916,7 +2917,7 @@ let (mk_discriminator_and_indexed_projectors :
                                         FStar_Syntax_Syntax.lid_as_fv
                                           discriminator_name dd
                                           FStar_Pervasives_Native.None in
-                                      FStar_Util.Inr uu___4 in
+                                      FStar_Pervasives.Inr uu___4 in
                                     let uu___4 =
                                       FStar_Syntax_Subst.close_univ_vars uvs
                                         imp in
@@ -3259,7 +3260,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                       FStar_Syntax_Syntax.lid_as_fv
                                                         field_name dd
                                                         FStar_Pervasives_Native.None in
-                                                    FStar_Util.Inr uu___7 in
+                                                    FStar_Pervasives.Inr
+                                                      uu___7 in
                                                   let uu___7 =
                                                     FStar_Syntax_Subst.close_univ_vars
                                                       uvs imp in

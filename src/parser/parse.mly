@@ -6,6 +6,7 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Pervasives
 open FStar_Errors
 open FStar_List
 open FStar_Util

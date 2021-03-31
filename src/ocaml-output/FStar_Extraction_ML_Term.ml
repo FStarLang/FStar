@@ -855,7 +855,7 @@ let (bv_as_mlty :
     fun bv ->
       let uu___ = FStar_Extraction_ML_UEnv.lookup_bv g bv in
       match uu___ with
-      | FStar_Util.Inl ty_b -> ty_b.FStar_Extraction_ML_UEnv.ty_b_ty
+      | FStar_Pervasives.Inl ty_b -> ty_b.FStar_Extraction_ML_UEnv.ty_b_ty
       | uu___1 -> FStar_Extraction_ML_Syntax.MLTY_Top
 let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
   let extraction_norm_steps_core =
@@ -2594,11 +2594,11 @@ and (term_as_mlexpr' :
            else
              (let uu___4 = FStar_Extraction_ML_UEnv.lookup_term g t in
               match uu___4 with
-              | (FStar_Util.Inl uu___5, uu___6) ->
+              | (FStar_Pervasives.Inl uu___5, uu___6) ->
                   (FStar_Extraction_ML_Syntax.ml_unit,
                     FStar_Extraction_ML_Syntax.E_PURE,
                     FStar_Extraction_ML_Syntax.ml_unit_ty)
-              | (FStar_Util.Inr
+              | (FStar_Pervasives.Inr
                  { FStar_Extraction_ML_UEnv.exp_b_name = uu___5;
                    FStar_Extraction_ML_UEnv.exp_b_expr = x;
                    FStar_Extraction_ML_UEnv.exp_b_tscheme = mltys;_},
@@ -2975,7 +2975,7 @@ and (term_as_mlexpr' :
                         let uu___6 =
                           FStar_Extraction_ML_UEnv.lookup_term g head1 in
                         match uu___6 with
-                        | (FStar_Util.Inr exp_b, q) ->
+                        | (FStar_Pervasives.Inr exp_b, q) ->
                             (FStar_Extraction_ML_UEnv.debug g
                                (fun uu___8 ->
                                   let uu___9 =
@@ -3099,7 +3099,7 @@ and (term_as_mlexpr' :
                         let uu___6 =
                           FStar_Extraction_ML_UEnv.lookup_term g head1 in
                         match uu___6 with
-                        | (FStar_Util.Inr exp_b, q) ->
+                        | (FStar_Pervasives.Inr exp_b, q) ->
                             (FStar_Extraction_ML_UEnv.debug g
                                (fun uu___8 ->
                                   let uu___9 =
@@ -3249,8 +3249,8 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_ascribed (e0, (tc, uu___1), f) ->
            let t1 =
              match tc with
-             | FStar_Util.Inl t2 -> term_as_mlty g t2
-             | FStar_Util.Inr c ->
+             | FStar_Pervasives.Inl t2 -> term_as_mlty g t2
+             | FStar_Pervasives.Inr c ->
                  let uu___2 =
                    let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                    maybe_reify_comp g uu___3 c in
@@ -3367,7 +3367,8 @@ and (term_as_mlexpr' :
                       let lb1 =
                         let uu___4 = lb in
                         {
-                          FStar_Syntax_Syntax.lbname = (FStar_Util.Inl y);
+                          FStar_Syntax_Syntax.lbname =
+                            (FStar_Pervasives.Inl y);
                           FStar_Syntax_Syntax.lbunivs =
                             (uu___4.FStar_Syntax_Syntax.lbunivs);
                           FStar_Syntax_Syntax.lbtyp =
@@ -3409,7 +3410,7 @@ and (term_as_mlexpr' :
                    let lb1 =
                      let uu___5 = lb in
                      {
-                       FStar_Syntax_Syntax.lbname = (FStar_Util.Inl x);
+                       FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);
                        FStar_Syntax_Syntax.lbunivs =
                          (uu___5.FStar_Syntax_Syntax.lbunivs);
                        FStar_Syntax_Syntax.lbtyp =

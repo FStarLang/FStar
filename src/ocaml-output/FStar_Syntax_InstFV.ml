@@ -261,7 +261,7 @@ and (inst_ascription :
     FStar_Syntax_Syntax.ascription ->
       ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-        FStar_Util.either * FStar_Syntax_Syntax.term'
+        FStar_Pervasives.either * FStar_Syntax_Syntax.term'
         FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
   =
   fun s ->
@@ -271,10 +271,10 @@ and (inst_ascription :
       | (annot, topt) ->
           let annot1 =
             match annot with
-            | FStar_Util.Inl t ->
-                let uu___1 = inst s t in FStar_Util.Inl uu___1
-            | FStar_Util.Inr c ->
-                let uu___1 = inst_comp s c in FStar_Util.Inr uu___1 in
+            | FStar_Pervasives.Inl t ->
+                let uu___1 = inst s t in FStar_Pervasives.Inl uu___1
+            | FStar_Pervasives.Inr c ->
+                let uu___1 = inst_comp s c in FStar_Pervasives.Inr uu___1 in
           let topt1 = FStar_Util.map_opt topt (inst s) in (annot1, topt1)
 let (instantiate :
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =

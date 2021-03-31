@@ -444,11 +444,12 @@ let (subst_comp' :
 let (subst_ascription' :
   FStar_Syntax_Syntax.subst_ts ->
     ((FStar_Syntax_Syntax.term,
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
-      * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) ->
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+      FStar_Pervasives.either * FStar_Syntax_Syntax.term
+      FStar_Pervasives_Native.option) ->
       ((FStar_Syntax_Syntax.term,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-        FStar_Util.either * FStar_Syntax_Syntax.term
+        FStar_Pervasives.either * FStar_Syntax_Syntax.term
         FStar_Pervasives_Native.option))
   =
   fun s ->
@@ -458,10 +459,10 @@ let (subst_ascription' :
       | (annot, topt) ->
           let annot1 =
             match annot with
-            | FStar_Util.Inl t ->
-                let uu___1 = subst' s t in FStar_Util.Inl uu___1
-            | FStar_Util.Inr c ->
-                let uu___1 = subst_comp' s c in FStar_Util.Inr uu___1 in
+            | FStar_Pervasives.Inl t ->
+                let uu___1 = subst' s t in FStar_Pervasives.Inl uu___1
+            | FStar_Pervasives.Inr c ->
+                let uu___1 = subst_comp' s c in FStar_Pervasives.Inr uu___1 in
           let uu___1 = FStar_Util.map_opt topt (subst' s) in (annot1, uu___1)
 let (shift :
   Prims.int -> FStar_Syntax_Syntax.subst_elt -> FStar_Syntax_Syntax.subst_elt)
@@ -864,8 +865,8 @@ let rec (push_subst :
                       else subst' s lb.FStar_Syntax_Syntax.lbdef in
                     let lbname =
                       match lb.FStar_Syntax_Syntax.lbname with
-                      | FStar_Util.Inl x ->
-                          FStar_Util.Inl
+                      | FStar_Pervasives.Inl x ->
+                          FStar_Pervasives.Inl
                             (let uu___ = x in
                              {
                                FStar_Syntax_Syntax.ppname =
@@ -874,7 +875,7 @@ let rec (push_subst :
                                  (uu___.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = lbt
                              })
-                      | FStar_Util.Inr fv -> FStar_Util.Inr fv in
+                      | FStar_Pervasives.Inr fv -> FStar_Pervasives.Inr fv in
                     let lbattrs =
                       FStar_List.map (subst' s)
                         lb.FStar_Syntax_Syntax.lbattrs in
@@ -1390,7 +1391,8 @@ let (open_let_rec :
                      ((i + Prims.int_one),
                        ((let uu___4 = lb in
                          {
-                           FStar_Syntax_Syntax.lbname = (FStar_Util.Inl x);
+                           FStar_Syntax_Syntax.lbname =
+                             (FStar_Pervasives.Inl x);
                            FStar_Syntax_Syntax.lbunivs =
                              (uu___4.FStar_Syntax_Syntax.lbunivs);
                            FStar_Syntax_Syntax.lbtyp =
@@ -1788,9 +1790,9 @@ let rec (deep_compress :
         let elim_lb lb =
           let uu___ =
             match lb.FStar_Syntax_Syntax.lbname with
-            | FStar_Util.Inl bv ->
-                let uu___1 = elim_bv bv in FStar_Util.Inl uu___1
-            | FStar_Util.Inr fv -> FStar_Util.Inr fv in
+            | FStar_Pervasives.Inl bv ->
+                let uu___1 = elim_bv bv in FStar_Pervasives.Inl uu___1
+            | FStar_Pervasives.Inr fv -> FStar_Pervasives.Inr fv in
           let uu___1 = deep_compress lb.FStar_Syntax_Syntax.lbtyp in
           let uu___2 = deep_compress lb.FStar_Syntax_Syntax.lbdef in
           {
@@ -1830,23 +1832,24 @@ let rec (deep_compress :
         mk uu___
 and (elim_ascription :
   ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either *
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-    FStar_Pervasives_Native.option) ->
+    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+    FStar_Pervasives.either * FStar_Syntax_Syntax.term'
+    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
     ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) FStar_Util.either
-      * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-      FStar_Pervasives_Native.option))
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+      FStar_Pervasives.either * FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
   =
   fun uu___ ->
     match uu___ with
     | (tc, topt) ->
         let uu___1 =
           match tc with
-          | FStar_Util.Inl t ->
-              let uu___2 = deep_compress t in FStar_Util.Inl uu___2
-          | FStar_Util.Inr c ->
-              let uu___2 = deep_compress_comp c in FStar_Util.Inr uu___2 in
+          | FStar_Pervasives.Inl t ->
+              let uu___2 = deep_compress t in FStar_Pervasives.Inl uu___2
+          | FStar_Pervasives.Inr c ->
+              let uu___2 = deep_compress_comp c in
+              FStar_Pervasives.Inr uu___2 in
         let uu___2 = FStar_Util.map_opt topt deep_compress in
         (uu___1, uu___2)
 and (deep_compress_cflags :

@@ -110,11 +110,11 @@ let (is_quant : FStar_Syntax_Syntax.typ -> Prims.bool) =
 let (is_ite : FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun t -> is_prim_op [FStar_Parser_Const.ite_lid] t
 let is_inr :
-  'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Util.either -> Prims.bool =
+  'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Pervasives.either -> Prims.bool =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl uu___1 -> false
-    | FStar_Util.Inr uu___1 -> true
+    | FStar_Pervasives.Inl uu___1 -> false
+    | FStar_Pervasives.Inr uu___1 -> true
 let (filter_imp :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     Prims.bool)
@@ -180,8 +180,8 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
 let (lbname_to_string : FStar_Syntax_Syntax.lbname -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl l -> bv_to_string l
-    | FStar_Util.Inr l ->
+    | FStar_Pervasives.Inl l -> bv_to_string l
+    | FStar_Pervasives.Inr l ->
         lid_to_string (l.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
 let (uvar_to_string : FStar_Syntax_Syntax.uvar -> Prims.string) =
   fun u ->
@@ -595,7 +595,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt), eff_name) ->
                let annot1 =
                  match annot with
-                 | FStar_Util.Inl t ->
+                 | FStar_Pervasives.Inl t ->
                      let uu___3 =
                        let uu___4 =
                          FStar_Util.map_opt eff_name
@@ -604,7 +604,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                          (FStar_Util.dflt "default") in
                      let uu___4 = term_to_string t in
                      FStar_Util.format2 "[%s] %s" uu___3 uu___4
-                 | FStar_Util.Inr c -> comp_to_string c in
+                 | FStar_Pervasives.Inr c -> comp_to_string c in
                let topt1 =
                  match topt with
                  | FStar_Pervasives_Native.None -> ""
@@ -621,8 +621,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  | FStar_Pervasives_Native.Some (asc, tacopt) ->
                      let uu___5 =
                        match asc with
-                       | FStar_Util.Inl t -> term_to_string t
-                       | FStar_Util.Inr c -> comp_to_string c in
+                       | FStar_Pervasives.Inl t -> term_to_string t
+                       | FStar_Pervasives.Inr c -> comp_to_string c in
                      let uu___6 =
                        match tacopt with
                        | FStar_Pervasives_Native.None -> ""
