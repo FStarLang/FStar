@@ -1594,7 +1594,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, _, brs) ->  //AR: will change once we export the return annotation in the reflectin API
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -1605,7 +1605,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         in
         let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        ret <| Tv_Match (t, brs)
+        ret <| Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         ret <| Tv_Unknown
@@ -1659,7 +1659,7 @@ let pack (tv:term_view) : tac<term> =
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -1671,7 +1671,7 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, None, brs)) Range.dummyRange  //AR: will change once we export the return annotation in the reflection API
+        ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
         ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange

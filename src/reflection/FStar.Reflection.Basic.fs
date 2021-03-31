@@ -208,7 +208,7 @@ let rec inspect_ln (t:term) : term_view =
         | BU.Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
-    | Tm_match (t, _, brs) ->  //AR: TODO: expose the annotation in the reflection API
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -218,7 +218,7 @@ let rec inspect_ln (t:term) : term_view =
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        Tv_Match (t, brs)
+        Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         Tv_Unknown
@@ -350,7 +350,7 @@ let pack_ln (tv:term_view) : term =
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -361,7 +361,7 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, None, brs)) Range.dummyRange  //AR: once we have return annotation in the reflection, this should change
+        S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
         S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange

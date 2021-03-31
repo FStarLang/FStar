@@ -294,6 +294,9 @@ let e_argv   = e_tuple2 e_term    e_aqualv
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
+let e_match_returns_annotation =
+  e_option (e_tuple2 (e_either e_term e_comp) (e_option e_term))
+
 let unlazy_as_t k t =
     match t.nbe_t with
     | Lazy (BU.Inl {lkind=k'; blob=v}, _)
@@ -342,9 +345,11 @@ let e_term_view_aq aq =
                                    as_arg (embed (e_term_aq aq) cb t1);
                                    as_arg (embed (e_term_aq aq) cb t2)]
 
-        | Tv_Match (t, brs) ->
-            mkConstruct ref_Tv_Match.fv [] [as_arg (embed (e_term_aq aq) cb t);
-                                     as_arg (embed (e_list (e_branch_aq aq)) cb brs)]
+        | Tv_Match (t, ret_opt, brs) ->
+            mkConstruct ref_Tv_Match.fv [] [
+                as_arg (embed (e_term_aq aq) cb t);
+                as_arg (embed e_match_returns_annotation cb ret_opt);
+                as_arg (embed (e_list (e_branch_aq aq)) cb brs)]
 
         | Tv_AscribedT (e, t, tacopt) ->
             mkConstruct ref_Tv_AscT.fv []
@@ -416,10 +421,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_term cb t2) (fun t2 ->
             Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
-        | Construct (fv, _, [(brs, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
+        | Construct (fv, _, [(brs, _); (ret_opt, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
             BU.bind_opt (unembed (e_list e_branch) cb brs) (fun brs ->
-            Some <| Tv_Match (t, brs)))
+            BU.bind_opt (unembed e_match_returns_annotation cb ret_opt) (fun ret_opt ->
+            Some <| Tv_Match (t, ret_opt, brs))))
 
         | Construct (fv, _, [(tacopt, _); (t, _); (e, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
             BU.bind_opt (unembed e_term cb e) (fun e ->
