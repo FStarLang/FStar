@@ -9,6 +9,9 @@ irreducible let smt_fallback : unit = ()
 let return_pre (p:slprop u#1) : slprop u#1 = p
 let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 
+let admit_pre (p:slprop u#1) : slprop u#1 = p
+let admit_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
+
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
 
@@ -69,6 +72,10 @@ let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
 
 let can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) =
   forall (x:a). p x ==> t1 x `sl_implies` t2 x
+
+val destruct_can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) : Lemma
+  (requires forall x. p x == True /\ t1 x `sl_implies` t2 x)
+  (ensures can_be_split_forall_dep p t1 t2)
 
 val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
 
@@ -1397,10 +1404,9 @@ let rec solve_return_eqs (l:list goal) : Tac unit =
         solve_return_eqs tl
     | _ -> later(); solve_return_eqs tl
 
-// The term corresponds to a goal containing a return_post
-let solve_return (t:term) : Tac unit
-  = // Remove potential annotations first
-    if term_appears_in (`can_be_split) t then (
+/// Strip annotations in a goal, to get to the underlying slprop equivalence
+let goal_to_equiv (t:term) (loc:string) : Tac unit
+  = if term_appears_in (`can_be_split) t then (
       norm [delta_only [`%can_be_split]];
       apply_lemma (`equiv_sl_implies)
     ) else if term_appears_in (`can_be_split_forall) t then (
@@ -1416,12 +1422,25 @@ let solve_return (t:term) : Tac unit
       ignore (forall_intro ());
       ignore (forall_intro ())
     ) else if term_appears_in (`can_be_split_dep) t then (
-      fail "can_be_split_dep not supported in return"
+      fail ("can_be_split_dep not supported in " ^ loc)
     ) else if term_appears_in (`can_be_split_forall_dep) t then (
-      fail "can_be_split_forall_dep not supported in return"
+      apply_lemma (`destruct_can_be_split_forall_dep);
+      // Ignore the prop term that just got created
+      dismiss ();
+      ignore (forall_intro());
+      split();
+      // Now closing the prop that is unused here.
+      trefl ();
+
+      // Finally rewriting sl_implies into equiv
+      apply_lemma (`equiv_sl_implies)
     ) else
       // This should never happen
-      fail "return_post goal in unexpected position";
+      fail (loc ^ " goal in unexpected position")
+
+// The term corresponds to a goal containing a return_post
+let solve_return (t:term) : Tac unit
+  = goal_to_equiv t "return";
     match (goals ()) with
     | [] -> () // Can happen if reflexivity was sufficient here
     | _ -> norm [delta_only [
@@ -1440,7 +1459,6 @@ let rec solve_all_returns (l:list goal) : Tac unit =
   | [] -> ()
   | hd::tl ->
     let t = goal_type hd in
-    let f = term_as_formula' t in
     if term_appears_in (`return_post) t then (
       (try solve_return t with
         // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
@@ -1450,6 +1468,31 @@ let rec solve_all_returns (l:list goal) : Tac unit =
       ); later()
     ) else later();
     solve_all_returns tl
+
+let rec solve_sladmits (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let t = goal_type hd in
+    let is_preadmit = term_appears_in (`admit_pre) t in
+    let is_postadmit = term_appears_in (`admit_post) t in
+    if is_preadmit || is_postadmit then (
+      focus (fun _ ->
+        dump "entering sladmit";
+        goal_to_equiv t "sladmit";
+        norm [delta_only [`%admit_pre; `%admit_post]];
+        apply_lemma (`Steel.Memory.Tactics.equiv_refl);
+        dump "ending sladmit";
+        // If we had both a preadmit and a postadmit, we had two successive sladmits calls,
+        // and this constraint corresponds to the inner equivalence, where slprops are
+        // irrelevant. We arbitrarily set them to emp
+        match goals () with
+        | [] -> ()
+        | [hd] -> if is_preadmit && is_postadmit then exact (`emp) else fail "sladmit case not supported"
+        | _ -> fail "solving sladmit generated too many goals, should not happen"
+      )
+    ) else later ();
+    solve_sladmits tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
@@ -1575,6 +1618,10 @@ let init_resolve_tac () : Tac unit =
   // See test7 in FramingTestSuite for more explanations of what is failing
   // Once unification has been done, we can then safely normalize and remove all return_pre
   norm_return_pre (goals());
+
+  // Handle all sladmits here. They are outside the scope of our calculus since
+  // they are not once-removed unitriangular. As such, they need a special handling
+  solve_sladmits (goals());
 
   // TODO: If we had better handling of lifts from PURE, we might prove a true
   // sl_implies here, "losing" extra assertions"
