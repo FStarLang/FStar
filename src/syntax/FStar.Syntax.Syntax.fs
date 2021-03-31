@@ -115,6 +115,7 @@ type delta_depth =
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Allow_ghost           (* Escape hatch used for dot patterns *)
   | Strict                (* Everything else is strict *)
 
 type term' =

@@ -16,7 +16,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "ed08d6c9df382cf3d6a8dbd37eb89cdd"
+      "05360042f53b8da07aa3f9d04e8d29b2"
     ],
     [
       "KeyValue.encoded_entry",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "fc1d185fd7907122381ca8431979c909"
+      "67d92d35da2b1cb9e8695638b7689298"
     ],
     [
       "KeyValue.encoded_entry",
@@ -34,38 +34,11 @@
       1,
       [ "@query" ],
       0,
-      "82eaedcde272228704f7b64216abf045"
+      "c5d8b595f9a29a95b0adf5a2475756c7"
     ],
     [
       "KeyValue.encoded_entry",
       3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "77d2d8b7b8758a21c8961462536e82a4"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_FStar.UInt16.t__uu___haseq",
-        "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_FStar.UInt8.t__uu___haseq", "equation_FStar.UInt8.byte",
-        "equation_Slice.byte", "equation_Slice.bytes",
-        "function_token_typing_FStar.UInt8.t",
-        "haseqIntegerParsing_Tm_refine_67a0f7da090ddd7cabafb21bf5e2ed60",
-        "haseqIntegerParsing_Tm_refine_81c227cb3788ac9527a15eab9f2e5b39"
-      ],
-      0,
-      "d2db3c304fda7c1035f258025cb89d83"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      5,
       2,
       1,
       [
@@ -79,7 +52,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "58fc5e07cd4e032926162e0806a9bcd0"
+      "a741e95b98f2b02e3bf1c1f55412ec48"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -88,7 +61,7 @@
       1,
       [ "@query" ],
       0,
-      "43b25054cf02c9d09c9a95abf3ea302a"
+      "6002109b258ba4998e4b7bb66a4e38ae"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -100,7 +73,7 @@
         "projection_inverse_KeyValue.EncodedEntry_key_len"
       ],
       0,
-      "2da51ba0fabdbead4ffa05181f626e37"
+      "45e5378e36d5560cd8eea5a127ca0e32"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -109,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "43b604974454dba6461d9d61dbfe6f23"
+      "42d7662b64938d1dfd8620bf64ceb3c5"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -121,7 +94,7 @@
         "projection_inverse_KeyValue.EncodedEntry_val_len"
       ],
       0,
-      "97e80b4c3d7e18d1c7005ba666fc26c0"
+      "dfd9f155286553ad439a670e0fe46a69"
     ],
     [
       "KeyValue.store",
@@ -130,7 +103,7 @@
       1,
       [ "@query" ],
       0,
-      "05b49949a09e1db751e3aee042f2a398"
+      "0ba9cc0bd91a44f610b41dd45827c750"
     ],
     [
       "KeyValue.store",
@@ -139,26 +112,11 @@
       1,
       [ "@query" ],
       0,
-      "62cb90cc7d7f91b7174c93a800200378"
+      "75781be62fafe69de5e9723582166479"
     ],
     [
       "KeyValue.store",
       3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_KeyValue.encoded_entry__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "haseqKeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
-        "kinding_KeyValue.encoded_entry@tok"
-      ],
-      0,
-      "2dabceaf45d90cdde0e7cd521d917175"
-    ],
-    [
-      "KeyValue.store",
-      4,
       2,
       1,
       [
@@ -170,7 +128,7 @@
         "typing_FStar.UInt32.t"
       ],
       0,
-      "018c3b61ae685f7ef355d80694f565af"
+      "eeb6cc0d499173711edfda93ba5de329"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -179,7 +137,7 @@
       1,
       [ "@query" ],
       0,
-      "622bb3623e39293b3cc31a0e6dfe2947"
+      "190d83decd7c2f08c3aca17292ca993a"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -191,7 +149,7 @@
         "projection_inverse_KeyValue.Store_num_entries"
       ],
       0,
-      "6dfc1f35a96a20494efc88c02fa77ff7"
+      "21dde03aa273fb3893073d193aa8eee4"
     ],
     [
       "KeyValue.as_entry",
@@ -203,7 +161,7 @@
         "equation_KeyValue.entry_live", "equation_Slice.byte"
       ],
       0,
-      "82122f412d7224fada22a5cf3d67edc3"
+      "c03fa41d6c8518aa32e4705747190629"
     ]
   ]
 ]

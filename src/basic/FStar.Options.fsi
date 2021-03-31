@@ -235,7 +235,6 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)

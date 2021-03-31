@@ -642,6 +642,13 @@ let e_sigelt_view =
                             S.as_arg (embed (e_list e_ctor) rng dcs)]
                         rng
 
+        | Sg_Val (nm, univs, t) ->
+            S.mk_Tm_app ref_Sg_Val.t
+                        [S.as_arg (embed e_string_list rng nm);
+                         S.as_arg (embed e_univ_names rng univs);
+                         S.as_arg (embed e_term rng t)]
+                        rng
+
         | Unk ->
             { ref_Unk.t with pos = rng }
     in

@@ -159,6 +159,7 @@ let (__proj__Delta_abstract__item___0 : delta_depth -> delta_depth) =
 type should_check_uvar =
   | Allow_unresolved 
   | Allow_untyped 
+  | Allow_ghost 
   | Strict [@@deriving yojson,show]
 let (uu___is_Allow_unresolved : should_check_uvar -> Prims.bool) =
   fun projectee ->
@@ -166,6 +167,9 @@ let (uu___is_Allow_unresolved : should_check_uvar -> Prims.bool) =
 let (uu___is_Allow_untyped : should_check_uvar -> Prims.bool) =
   fun projectee ->
     match projectee with | Allow_untyped -> true | uu___ -> false
+let (uu___is_Allow_ghost : should_check_uvar -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Allow_ghost -> true | uu___ -> false
 let (uu___is_Strict : should_check_uvar -> Prims.bool) =
   fun projectee -> match projectee with | Strict -> true | uu___ -> false
 type term' =

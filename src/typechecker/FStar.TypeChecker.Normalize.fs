@@ -2938,10 +2938,10 @@ let eta_expand (env:Env.env) (t:term) : term =
         let formals, _tres = U.arrow_formals (SS.subst' s u.ctx_uvar_typ) in
         if List.length formals = List.length args
         then t
-        else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+        else let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in
              eta_expand_with_type env t ty
       | _ ->
-        let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+        let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in
         eta_expand_with_type env t ty
       end
 

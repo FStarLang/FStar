@@ -1,7 +1,4 @@
 open Prims
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Range.range) =
-  fun g ->
-    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
@@ -99,15 +96,14 @@ let (__do_rewrite :
                                       (uu___4.FStar_TypeChecker_Env.uvar_subtyping);
                                     FStar_TypeChecker_Env.tc_term =
                                       (uu___4.FStar_TypeChecker_Env.tc_term);
-                                    FStar_TypeChecker_Env.type_of =
-                                      (uu___4.FStar_TypeChecker_Env.type_of);
-                                    FStar_TypeChecker_Env.type_of_well_typed
+                                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term
                                       =
-                                      (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
+                                      (uu___4.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
                                     FStar_TypeChecker_Env.universe_of =
                                       (uu___4.FStar_TypeChecker_Env.universe_of);
-                                    FStar_TypeChecker_Env.check_type_of =
-                                      (uu___4.FStar_TypeChecker_Env.check_type_of);
+                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
                                     FStar_TypeChecker_Env.use_bv_sorts =
                                       (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index
@@ -170,8 +166,7 @@ let (__do_rewrite :
                  else
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let uu___4 =
-                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
-                        (rangeof g0) in
+                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with

@@ -124,7 +124,57 @@ let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee -> match projectee with | NonTrivial _0 -> _0
-type deferred = (Prims.string * prob) Prims.list
+type deferred_reason =
+  | Deferred_univ_constraint 
+  | Deferred_occur_check_failed 
+  | Deferred_first_order_heuristic_failed 
+  | Deferred_flex 
+  | Deferred_free_names_check_failed 
+  | Deferred_not_a_pattern 
+  | Deferred_flex_flex_nonpattern 
+  | Deferred_delay_match_heuristic 
+  | Deferred_to_user_tac 
+let (uu___is_Deferred_univ_constraint : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_univ_constraint -> true | uu___ -> false
+let (uu___is_Deferred_occur_check_failed : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_occur_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_first_order_heuristic_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_first_order_heuristic_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_flex : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_flex -> true | uu___ -> false
+let (uu___is_Deferred_free_names_check_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_free_names_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_not_a_pattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
+let (uu___is_Deferred_flex_flex_nonpattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_flex_flex_nonpattern -> true
+    | uu___ -> false
+let (uu___is_Deferred_delay_match_heuristic : deferred_reason -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Deferred_delay_match_heuristic -> true
+    | uu___ -> false
+let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_to_user_tac -> true | uu___ -> false
+type deferred = (deferred_reason * Prims.string * prob) Prims.list
 type univ_ineq =
   (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 let (mk_by_tactic :
@@ -259,15 +309,6 @@ let (__proj__Mkid_info_table__item__id_info_buffer :
 let (id_info_table_empty : id_info_table) =
   let uu___ = FStar_Util.psmap_empty () in
   { id_info_enabled = false; id_info_db = uu___; id_info_buffer = [] }
-let (print_identifier_info : identifier_info -> Prims.string) =
-  fun info ->
-    let uu___ = FStar_Range.string_of_range info.identifier_range in
-    let uu___1 =
-      match info.identifier with
-      | FStar_Util.Inl x -> FStar_Syntax_Print.bv_to_string x
-      | FStar_Util.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
-    let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
-    FStar_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
     (Prims.int * identifier_info) Prims.list FStar_Util.pimap
@@ -283,15 +324,12 @@ let (id_info__insert :
         let use_range =
           let uu___ = FStar_Range.use_range range in
           FStar_Range.set_def_range range uu___ in
-        let id_ty =
-          match info.identifier with
-          | FStar_Util.Inr uu___ -> info.identifier_ty
-          | FStar_Util.Inl x -> ty_map info.identifier_ty in
         let info1 =
           let uu___ = info in
+          let uu___1 = ty_map info.identifier_ty in
           {
             identifier = (uu___.identifier);
-            identifier_ty = id_ty;
+            identifier_ty = uu___1;
             identifier_range = use_range
           } in
         let fn = FStar_Range.file_of_range use_range in

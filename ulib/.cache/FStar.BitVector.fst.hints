@@ -121,56 +121,6 @@
       "5d3e9cfc20db088ccacdedf6f29d85e6"
     ],
     [
-      "FStar.BitVector.logand_vec",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_1",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_2",
-        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
-        "equation_FStar.BitVector.bv_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "a048c0c9edb41a1042f4fcbb1c945a8f"
-    ],
-    [
-      "FStar.BitVector.logand_vec",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "207459a15b53e91073a93b791b75d587"
-    ],
-    [
       "FStar.BitVector.logand_vec_definition",
       1,
       2,
@@ -186,7 +136,7 @@
         "typing_FStar.BitVector.logand_vec"
       ],
       0,
-      "1025d870c549a8f0beab3b0d548e84da"
+      "e794724906a28a8196bb02e962128bba"
     ],
     [
       "FStar.BitVector.logand_vec_definition",
@@ -240,7 +190,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "53770f332654e613260752f94cfdd153"
+      "b557cc263ef65d1e56fc88953cf2dcaf"
     ],
     [
       "FStar.BitVector.logxor_vec",
@@ -255,7 +205,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d470f80d68ce5c41b74b5d21cb84ea5a"
+      "10630fa4c6799eb3c4860c706eeafd7e"
     ],
     [
       "FStar.BitVector.logxor_vec",
@@ -289,56 +239,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "326bb9dbbbe3ba00380333fc07572f7b"
-    ],
-    [
-      "FStar.BitVector.logxor_vec",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_1",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_2",
-        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
-        "equation_FStar.BitVector.bv_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "3205df9d496862a03afe7ef4991ff634"
-    ],
-    [
-      "FStar.BitVector.logxor_vec",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "7ed6c9a09be3d01d292909e820420100"
+      "5bd82d43ea8f9c5b5de9f2285838c34c"
     ],
     [
       "FStar.BitVector.logxor_vec_definition",
@@ -356,7 +257,7 @@
         "typing_FStar.BitVector.logxor_vec"
       ],
       0,
-      "54a914642985900165d39bf934689f87"
+      "fd777df741ac140ad45852ab3e1ba757"
     ],
     [
       "FStar.BitVector.logxor_vec_definition",
@@ -410,7 +311,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0abe7153951f50bcbe68a17a00e4c291"
+      "b232105fe8efe1865690119f58b7db7c"
     ],
     [
       "FStar.BitVector.logor_vec",
@@ -425,7 +326,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "09b11eadfb29d02ca86947cfb8603c46"
+      "652c64ddbd2c1178cce99e8b4363fbc4"
     ],
     [
       "FStar.BitVector.logor_vec",
@@ -460,57 +361,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "f1a0baa6e3aa33cb073305207a32d33a"
-    ],
-    [
-      "FStar.BitVector.logor_vec",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_1",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_2",
-        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
-        "equation_FStar.BitVector.bv_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "e1b775bc37717a8e0633be7f19b0d683"
-    ],
-    [
-      "FStar.BitVector.logor_vec",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "d5c95d688b264637be3e1efbe13280fd"
+      "745f4996917f7f1b74077d535ae956f5"
     ],
     [
       "FStar.BitVector.logor_vec_definition",
@@ -528,7 +379,7 @@
         "typing_FStar.BitVector.logor_vec"
       ],
       0,
-      "e6bd33ba3acf6a21c14655a4aebad2f4"
+      "621368650edc5294922bbe6e703c7be8"
     ],
     [
       "FStar.BitVector.logor_vec_definition",
@@ -582,7 +433,7 @@
         "typing_FStar.Seq.Base.slice", "well-founded-ordering-on-nat"
       ],
       0,
-      "3ebb8743cf6a74f648ac2f1f488c03ca"
+      "14843d0eb3604d93bee2e14f8874f894"
     ],
     [
       "FStar.BitVector.lognot_vec",
@@ -591,7 +442,7 @@
       1,
       [ "@query" ],
       0,
-      "0e5fac95f372b785be68283fd8770396"
+      "fc9544f2f81d1a16b41469f62c18d81b"
     ],
     [
       "FStar.BitVector.lognot_vec",
@@ -624,49 +475,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "c5681468ccb1cdb140d33546a1620dc2"
-    ],
-    [
-      "FStar.BitVector.lognot_vec",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "binder_x_258eefc28ab673d68ad6ce5649eeb6c6_1",
-        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
-        "equation_FStar.BitVector.bv_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool", "int_inversion", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "8d5faa9e79b6593c33712d269a1283fe"
-    ],
-    [
-      "FStar.BitVector.lognot_vec",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e402a885f12e472dfe3f044a136a30a6"
+      "9a7c72870375300e78d30d74f97104a6"
     ],
     [
       "FStar.BitVector.lognot_vec_definition",
@@ -684,7 +493,7 @@
         "typing_FStar.BitVector.lognot_vec"
       ],
       0,
-      "6214ad58d96ddd8ac7da9318987806f6"
+      "d55f2f3408f129842ab14548f6a80083"
     ],
     [
       "FStar.BitVector.lognot_vec_definition",
@@ -737,7 +546,7 @@
         "typing_FStar.Seq.Base.slice", "well-founded-ordering-on-nat"
       ],
       0,
-      "2a9ed2f46d86e56b4859489e813589c1"
+      "2df08618bbd57d61ec4b4717a973da30"
     ],
     [
       "FStar.BitVector.lemma_xor_bounded",
@@ -756,7 +565,7 @@
         "typing_FStar.BitVector.logxor_vec"
       ],
       0,
-      "525d17972c414fb0dd1c4254f5f521cd"
+      "d4fa1f32094a710bb765bce6e95e118e"
     ],
     [
       "FStar.BitVector.lemma_xor_bounded",
@@ -780,7 +589,7 @@
         "typing_FStar.BitVector.logxor_vec"
       ],
       0,
-      "f653800b7fc08ea3750157709efc6eb8"
+      "6ae0c2d081ca0c9af8ae4520b1bc3399"
     ],
     [
       "FStar.BitVector.is_subset_vec",
@@ -792,7 +601,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d30583197aa9a8b3b7d44df1f726382f"
+      "64568bbbaaf8f0255dbe6cac4d180c88"
     ],
     [
       "FStar.BitVector.is_subset_vec",
@@ -804,7 +613,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "bcc709b6aabc5df3d396a3b85a9c27c4"
+      "c07077abcb69d9f7ec9f985e8ac0138f"
     ],
     [
       "FStar.BitVector.is_superset_vec",
@@ -816,7 +625,7 @@
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "131885be6fe0ea04dd0d4c0330bce276"
+      "b7bfd1428b91c42a3aaea16ad2aa68f8"
     ],
     [
       "FStar.BitVector.is_superset_vec",
@@ -828,7 +637,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "69af3037d6c6f6b280d16b66deda6fea"
+      "47672a208c987be643d111cd081d713d"
     ],
     [
       "FStar.BitVector.lemma_slice_subset_vec",
@@ -854,7 +663,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "6d45557e4dc3e3a066dc1ac8f2fa61dd"
+      "1b831f9f3d8db7dcef5b1f72da5ef0de"
     ],
     [
       "FStar.BitVector.lemma_slice_subset_vec",
@@ -885,7 +694,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "151091503a6d861d7974d36da2482066"
+      "2f823533c37e42f3ba05e10b57c3efa0"
     ],
     [
       "FStar.BitVector.lemma_slice_superset_vec",
@@ -911,7 +720,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "204a9be8ef94b6b9c1a8bb70ad2bd08e"
+      "fc3d7e9cbda116a2758b4fa1fe36037c"
     ],
     [
       "FStar.BitVector.lemma_slice_superset_vec",
@@ -942,7 +751,7 @@
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "0d5d630f028c1e0633f375e518117651"
+      "9f9218f64816e446357c985f473cf38e"
     ],
     [
       "FStar.BitVector.shift_left_vec",
@@ -951,7 +760,7 @@
       1,
       [ "@query" ],
       0,
-      "6093574377d63de979bf01cc9acb74e2"
+      "aecb3b766c7dbfadef44c3d02d293e78"
     ],
     [
       "FStar.BitVector.shift_left_vec",
@@ -982,7 +791,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "7111a5057785a466213263b45623c5aa"
+      "be9ef6bb88df775ced7ec7c7492db16f"
     ],
     [
       "FStar.BitVector.shift_left_vec_lemma_1",
@@ -997,7 +806,7 @@
         "typing_FStar.BitVector.shift_left_vec"
       ],
       0,
-      "77b251cfb58f455017c1b5b9cdb711bf"
+      "bd4ac2cb840756e4e27f8156de7ea1fe"
     ],
     [
       "FStar.BitVector.shift_left_vec_lemma_1",
@@ -1039,7 +848,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "d07159d1981adfd7389d96cc094a043e"
+      "b96dd34ca94ea4cd7b6efc13a216b60f"
     ],
     [
       "FStar.BitVector.shift_left_vec_lemma_2",
@@ -1060,7 +869,7 @@
         "typing_FStar.BitVector.shift_left_vec"
       ],
       0,
-      "ebad6cc5a8b1e5b76179ee3e2b6843e3"
+      "d9a94565db48e45c98add705a8b43c60"
     ],
     [
       "FStar.BitVector.shift_left_vec_lemma_2",
@@ -1101,7 +910,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "24e2ebeb5812b95978788e13f7ce0252"
+      "f8cd30cc81bf2650198faee19aea6e1c"
     ],
     [
       "FStar.BitVector.shift_right_vec",
@@ -1110,7 +919,7 @@
       1,
       [ "@query" ],
       0,
-      "a0f2d08b1feb3ef40d50eb82322af110"
+      "7491a1781daf0384a098303291488fd1"
     ],
     [
       "FStar.BitVector.shift_right_vec",
@@ -1142,7 +951,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "bf2783ff7c28f9753a3cf67ade1a94f4"
+      "7aa92894579c3f18a59a9623b0d7e79e"
     ],
     [
       "FStar.BitVector.shift_right_vec_lemma_1",
@@ -1157,7 +966,7 @@
         "typing_FStar.BitVector.shift_right_vec"
       ],
       0,
-      "4b431bd3d7cf91ec4e6109b3abcd54ea"
+      "5b4a0f477d3ee10d9f8d54bf243c2488"
     ],
     [
       "FStar.BitVector.shift_right_vec_lemma_1",
@@ -1196,7 +1005,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "849b9599a1eb49d67dde29428fc4bcd1"
+      "e77a97b21f28db24d3ba70dc840d9462"
     ],
     [
       "FStar.BitVector.shift_right_vec_lemma_2",
@@ -1218,7 +1027,7 @@
         "typing_FStar.BitVector.shift_right_vec"
       ],
       0,
-      "d04fe585e4be0a6a633f1e5bd1d81374"
+      "eead1b0e4718539dc045f9b8cd01111f"
     ],
     [
       "FStar.BitVector.shift_right_vec_lemma_2",
@@ -1261,7 +1070,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "4b6866dd2e43936cccaca3b4a7936387"
+      "0763845137bb5fc8163bd4b834cee899"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec",
@@ -1270,7 +1079,7 @@
       1,
       [ "@query" ],
       0,
-      "c4919b7a7b2a87ce74f291f903d8fafa"
+      "e592fc6b0f7175dcc1b66b36bcef9920"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec",
@@ -1302,7 +1111,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a93910816b570711a2100320f4ad9558"
+      "64c6b1631bd7e6b6e56096fdc234490e"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec_lemma_1",
@@ -1321,7 +1130,7 @@
         "typing_FStar.BitVector.shift_arithmetic_right_vec"
       ],
       0,
-      "b0f2bd7fc836c57b8d40ec318ae9585b"
+      "3d6b13067bb629a1edf1f7b0ebf051ec"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec_lemma_1",
@@ -1361,7 +1170,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "3df664442ad221ebd7c5a22e721bfb09"
+      "274ac4731f9087f4b776a336a1a08f80"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec_lemma_2",
@@ -1383,7 +1192,7 @@
         "typing_FStar.BitVector.shift_arithmetic_right_vec"
       ],
       0,
-      "147678381c07cb940bde45401de999e7"
+      "65eeb3e6fac723c1881de52d8a0ca191"
     ],
     [
       "FStar.BitVector.shift_arithmetic_right_vec_lemma_2",
@@ -1430,7 +1239,7 @@
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "8dfe9f534c293bac5db044a98fbd20e8"
+      "a096a9b7961cb1ec8a8a6921abddece6"
     ]
   ]
 ]

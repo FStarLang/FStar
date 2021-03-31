@@ -2573,7 +2573,7 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_constant c ->
            let uu___1 =
              let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-             FStar_TypeChecker_TcTerm.type_of_tot_term uu___2 t in
+             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term uu___2 t true in
            (match uu___1 with
             | (uu___2, ty, uu___3) ->
                 let ml_ty = term_as_mlty g ty in

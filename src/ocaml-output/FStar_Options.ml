@@ -227,7 +227,6 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("hint_file", Unset);
   ("in", (Bool false));
   ("ide", (Bool false));
-  ("ide_id_info_off", (Bool false));
   ("lsp", (Bool false));
   ("include", (List []));
   ("print", (Bool false));
@@ -307,7 +306,6 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("z3rlimit_factor", (Int Prims.int_one));
   ("z3seed", (Int Prims.int_zero));
   ("z3cliopt", (List []));
-  ("use_two_phase_tc", (Bool true));
   ("__no_positivity", (Bool false));
   ("__tactics_nbe", (Bool false));
   ("warn_error", (List []));
@@ -366,7 +364,6 @@ let (set_verification_options : optionstate -> unit) =
       "z3rlimit";
       "z3rlimit_factor";
       "z3seed";
-      "use_two_phase_tc";
       "trivial_pre_for_unannotated_effectful_fns"] in
     FStar_List.iter
       (fun k ->
@@ -439,8 +436,6 @@ let (get_hint_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "hint_file" (as_option as_string)
 let (get_in : unit -> Prims.bool) = fun uu___ -> lookup_opt "in" as_bool
 let (get_ide : unit -> Prims.bool) = fun uu___ -> lookup_opt "ide" as_bool
-let (get_ide_id_info_off : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "ide_id_info_off" as_bool
 let (get_lsp : unit -> Prims.bool) = fun uu___ -> lookup_opt "lsp" as_bool
 let (get_include : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "include" (as_list as_string)
@@ -594,8 +589,6 @@ let (get_z3rlimit_factor : unit -> Prims.int) =
   fun uu___ -> lookup_opt "z3rlimit_factor" as_int
 let (get_z3seed : unit -> Prims.int) =
   fun uu___ -> lookup_opt "z3seed" as_int
-let (get_use_two_phase_tc : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "use_two_phase_tc" as_bool
 let (get_no_positivity : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "__no_positivity" as_bool
 let (get_warn_error : unit -> Prims.string Prims.list) =
@@ -929,7 +922,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -940,11 +933,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___404 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___404 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1045,8 +1038,6 @@ let rec (specs_with_types :
       "Legacy interactive mode; reads input from stdin");
     (FStar_Getopt.noshort, "ide", (Const (Bool true)),
       "JSON-based interactive mode for IDEs");
-    (FStar_Getopt.noshort, "ide_id_info_off", (Const (Bool true)),
-      "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
     (FStar_Getopt.noshort, "lsp", (Const (Bool true)),
       "Language Server Protocol-based interactive mode for IDEs");
     (FStar_Getopt.noshort, "include", (ReverseAccumulated (PathStr "path")),
@@ -1279,8 +1270,6 @@ let rec (specs_with_types :
       "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
     (FStar_Getopt.noshort, "z3seed", (IntStr "positive_integer"),
       "Set the Z3 random seed (default 0)");
-    (FStar_Getopt.noshort, "use_two_phase_tc", BoolStr,
-      "Use the two phase typechecker (default 'true')");
     (FStar_Getopt.noshort, "__no_positivity", (Const (Bool true)),
       "Don't check positivity of inductive types");
     (FStar_Getopt.noshort, "warn_error", (Accumulated (SimpleStr "")),
@@ -1352,7 +1341,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "ifuel" -> true
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
-    | "ide_id_info_off" -> true
     | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
@@ -1402,7 +1390,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "ugly" -> true
     | "unthrottle_inductives" -> true
     | "use_eq_at_higher_order" -> true
-    | "use_two_phase_tc" -> true
     | "using_facts_from" -> true
     | "vcgen.optimize_bind_as_seq" -> true
     | "warn_error" -> true
@@ -1428,7 +1415,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___588 :
+let (uu___584 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1444,11 +1431,11 @@ let (uu___588 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___588 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___588 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1813,8 +1800,6 @@ let (hint_file_for_src : Prims.string -> Prims.string) =
           | uu___2 -> src_filename in
         FStar_Util.format1 "%s.hints" file_name
 let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
-let (ide_id_info_off : unit -> Prims.bool) =
-  fun uu___ -> get_ide_id_info_off ()
 let (print : unit -> Prims.bool) = fun uu___ -> get_print ()
 let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()
@@ -1967,10 +1952,6 @@ let (z3_rlimit : unit -> Prims.int) = fun uu___ -> get_z3rlimit ()
 let (z3_rlimit_factor : unit -> Prims.int) =
   fun uu___ -> get_z3rlimit_factor ()
 let (z3_seed : unit -> Prims.int) = fun uu___ -> get_z3seed ()
-let (use_two_phase_tc : unit -> Prims.bool) =
-  fun uu___ ->
-    (get_use_two_phase_tc ()) &&
-      (let uu___1 = lax () in Prims.op_Negation uu___1)
 let (no_positivity : unit -> Prims.bool) = fun uu___ -> get_no_positivity ()
 let (use_nbe : unit -> Prims.bool) = fun uu___ -> get_use_nbe ()
 let (use_nbe_for_extraction : unit -> Prims.bool) =
@@ -2142,9 +2123,8 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
       let uu___23 = get_z3rlimit () in
       let uu___24 = get_z3rlimit_factor () in
       let uu___25 = get_z3seed () in
-      let uu___26 = get_use_two_phase_tc () in
-      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
-      let uu___28 = get_reuse_hint_for () in
+      let uu___26 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___27 = get_reuse_hint_for () in
       {
         FStar_VConfig.initial_fuel = uu___1;
         FStar_VConfig.max_fuel = uu___2;
@@ -2171,9 +2151,8 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
         FStar_VConfig.z3rlimit = uu___23;
         FStar_VConfig.z3rlimit_factor = uu___24;
         FStar_VConfig.z3seed = uu___25;
-        FStar_VConfig.use_two_phase_tc = uu___26;
-        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
-        FStar_VConfig.reuse_hint_for = uu___28
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___26;
+        FStar_VConfig.reuse_hint_for = uu___27
       } in
     vcfg
 let (set_vconfig : FStar_VConfig.vconfig -> unit) =
@@ -2221,11 +2200,9 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
     set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
     set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
     set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
-    set_option "use_two_phase_tc"
-      (Bool (vcfg.FStar_VConfig.use_two_phase_tc));
     set_option "trivial_pre_for_unannotated_effectful_fns"
       (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
-    (let uu___28 =
-       option_as (fun uu___29 -> String uu___29)
+    (let uu___27 =
+       option_as (fun uu___28 -> String uu___28)
          vcfg.FStar_VConfig.reuse_hint_for in
-     set_option "reuse_hint_for" uu___28)
+     set_option "reuse_hint_for" uu___27)
