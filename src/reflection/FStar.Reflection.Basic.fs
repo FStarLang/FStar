@@ -2,6 +2,7 @@
 module FStar.Reflection.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax

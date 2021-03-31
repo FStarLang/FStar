@@ -3,6 +3,7 @@ module FStar.Tests.Norm
 //Normalization tests
 
 open FStar
+open FStar.Pervasives
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars
 module S = FStar.Syntax.Syntax

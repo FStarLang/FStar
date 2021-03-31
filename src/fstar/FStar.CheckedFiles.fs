@@ -17,6 +17,7 @@
 
 module FStar.CheckedFiles
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

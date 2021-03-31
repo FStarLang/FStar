@@ -17,6 +17,7 @@
 module FStar.Interactive.Lsp
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Util
 open FStar.Range

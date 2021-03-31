@@ -2,6 +2,7 @@
 module FStar.Tests.Util
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Errors
 open FStar.Util

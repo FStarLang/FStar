@@ -3,6 +3,7 @@
 // (c) Microsoft Corporation. All rights reserved
 open Prims
 open FStar
+open FStar.Pervasives
 open FStar.Errors
 open FStar.List
 open FStar.Util

@@ -17,6 +17,7 @@
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

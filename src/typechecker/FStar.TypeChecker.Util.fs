@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

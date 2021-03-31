@@ -2,6 +2,7 @@
 module FStar.Reflection.NBEEmbeddings
 
 open FStar.All
+open FStar.Pervasives
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.NBETerm

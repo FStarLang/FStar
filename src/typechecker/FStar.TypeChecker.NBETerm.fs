@@ -1,5 +1,6 @@
 #light "off"
 module FStar.TypeChecker.NBETerm
+open FStar.Pervasives
 open FStar.All
 open FStar.Exn
 open FStar

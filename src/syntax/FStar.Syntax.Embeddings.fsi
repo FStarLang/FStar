@@ -2,6 +2,7 @@
 module FStar.Syntax.Embeddings
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Char

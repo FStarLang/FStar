@@ -16,6 +16,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax

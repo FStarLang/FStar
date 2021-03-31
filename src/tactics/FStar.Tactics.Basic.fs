@@ -2,6 +2,7 @@
 module FStar.Tactics.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util

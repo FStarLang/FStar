@@ -18,6 +18,7 @@
 #light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
