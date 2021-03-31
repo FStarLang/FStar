@@ -36,7 +36,21 @@ let rec term_to_ast_string (t:term) : Tac string =
                               bv_to_string x ^ ", " ^
                               term_to_ast_string e1 ^ ", " ^
                               term_to_ast_string e2)
-  | Tv_Match e brs -> "Tv_Match " ^ paren (term_to_ast_string e ^ ", " ^ branches_to_ast_string brs)
+  | Tv_Match e ret_opt brs ->
+    let tacopt_to_string tacopt : Tac string =
+      match tacopt with
+      | None -> ""
+      | Some tac -> " by " ^ (term_to_ast_string tac) in
+    "Tv_Match " ^
+      paren (
+        term_to_ast_string e ^
+        ", " ^
+        (match ret_opt with
+         | None -> "None"
+         | Some (Inl t, tacopt) -> (term_to_ast_string t) ^ (tacopt_to_string tacopt)
+         | Some (Inr c, tacopt) -> (comp_to_ast_string c) ^ (tacopt_to_string tacopt)) ^
+        ", " ^
+        branches_to_ast_string brs)
   | Tv_AscribedT e t _ -> "Tv_AscribedT " ^ paren (term_to_ast_string e ^ ", " ^ term_to_ast_string t)
   | Tv_AscribedC e c _ -> "Tv_AscribedC " ^ paren (term_to_ast_string e ^ ", " ^ comp_to_ast_string c)
   | Tv_Unknown -> "_"
