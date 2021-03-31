@@ -15,3 +15,8 @@ let test3 (n: nat) =
   | 0 -> n + 1
   | _ -> n + 2
 
+let test4 (n: nat) =
+  match n returns (PURE int (fun p -> forall x. p x)) with
+  | 0 -> n + 1
+  | _ -> n + 2
+
