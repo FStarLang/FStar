@@ -74,7 +74,9 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. reconstructs the pattern matching, if it needs to be readback
+       // 2. reconstruct the returns annotation
+       (unit -> option<ascription>) *
+       // 3. reconstructs the pattern matching, if it needs to be readback
        (unit -> list<branch>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
@@ -214,7 +216,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> option<ascription>) -> (unit -> list<branch>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg

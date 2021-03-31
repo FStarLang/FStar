@@ -61,7 +61,9 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. reconstructs the pattern matching
+       // 2. reconstruct the returns annotation
+       (unit -> option<ascription>) *
+       // 3. reconstructs the pattern matching
        (unit -> list<branch>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
@@ -224,7 +226,8 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (bs:(unit -> list<branch>)) = mk_t <| Accu(Match (s, bs), [])
+let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>)) =
+  mk_t <| Accu(Match (s, ret, bs), [])
 
 // Term equality
 
@@ -345,7 +348,7 @@ let rec t_to_string (x:t) =
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
-  | Match (t, _) -> "Match " ^ (t_to_string t)
+  | Match (t, _, _) -> "Match " ^ (t_to_string t)
   | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
   | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
   | UVar _ -> "UVar"

@@ -500,7 +500,14 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
-    | Tm_match(scrut, _, branches) ->
+    | Tm_match(scrut, ret_opt, branches) ->
+      (* Thunked computation to reconstrct the returns annotation *)
+      let make_returns () : option<ascription> =
+        match ret_opt with
+        | None -> None
+        | Some (BU.Inl t, tacopt) -> Some (BU.Inl (readback cfg (translate cfg bs t)), tacopt)
+        | Some (BU.Inr c, tacopt) -> Some (BU.Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt) in
+
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list<branch> =
         let cfg = zeta_false cfg in
@@ -554,7 +561,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate cfg (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut make_branches
+            mkAccuMatch scrut make_returns make_branches
           end
       | Constant c ->
           debug (fun () -> BU.print1 "Match constant : %s\n" (t_to_string scrut));
@@ -565,12 +572,12 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate cfg (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut make_branches
+             mkAccuMatch scrut make_returns make_branches
            | Some (_, hd::tl) ->
              failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut make_branches
+          mkAccuMatch scrut make_returns make_branches
       end
 
     | Tm_meta (e, Meta_monadic(m, t))
@@ -1266,12 +1273,13 @@ and readback (cfg:config) (x:t) : term =
         else app
       )
 
-    | Accu (Match (scrut, make_branches), args) ->
+    | Accu (Match (scrut, make_returns, make_branches), args) ->
       let args = readback_args cfg args in
       let head =
         let scrut_new = readback cfg scrut in
+        let returns_new = make_returns () in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, None, branches_new)) scrut.nbe_r  //AR: not preserving the return annotation
+        S.mk (Tm_match (scrut_new, returns_new, branches_new)) scrut.nbe_r
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
