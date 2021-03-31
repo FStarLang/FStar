@@ -1303,7 +1303,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
        | Some ret ->
         group (surround 2 1 (str "match")
-                            ((p_noSeqTermAndComment false false e) ^/+^ (str "ret" ^/+^ p_tmIff ret))
+                            ((p_noSeqTermAndComment false false e) ^/+^ (str "returns" ^/+^ p_tmIff ret))
                             (str "with")))
         
       ^/^

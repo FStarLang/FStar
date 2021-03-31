@@ -2502,7 +2502,7 @@ and (p_noSeqTerm' :
                       let uu___4 =
                         let uu___5 = p_noSeqTermAndComment false false e1 in
                         let uu___6 =
-                          let uu___7 = str "ret" in
+                          let uu___7 = str "returns" in
                           let uu___8 = p_tmIff ret in
                           op_Hat_Slash_Plus_Hat uu___7 uu___8 in
                         op_Hat_Slash_Plus_Hat uu___5 uu___6 in
