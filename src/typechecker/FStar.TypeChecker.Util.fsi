@@ -57,6 +57,28 @@ val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+
+(*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+val get_neg_branch_conds: list<formula> -> list<formula> * formula
+
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
 val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
