@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "bbdbd3b8e71d56773eddd26148dcb394"
+      "930a6f678128d55f7ad139c3a683c700"
     ],
     [
       "GenericPartialDM4A.return",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_GenericPartialDM4A.equiv" ],
       0,
-      "4defb468f00ec921a581d207bf9c8cd5"
+      "948ec1e44f50f9ce855ce983b6904b14"
     ],
     [
       "GenericPartialDM4A.and_elim_2",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5f8fb324fc2ece13fc4629345affe4fc"
+      "e9eb977f39d1401f63d19e297ca69ee4"
     ],
     [
       "GenericPartialDM4A.iw_bind",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "91bf03ee667eae68623a0efb2cc2f0ac"
+      "ed99739c27f2440643132cb43251b31f"
     ],
     [
       "GenericPartialDM4A.bind",
@@ -78,7 +78,7 @@
         "unit_typing"
       ],
       0,
-      "27254819192362b79483922b44bf6bc5"
+      "9d4dd2a3a8db4fa4d8f434fbde79859b"
     ],
     [
       "GenericPartialDM4A.weaken",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9064114fa3c9a69645a0dad360f8c9e0"
+      "53bba416936f381e554b03500332e45f"
     ],
     [
       "GenericPartialDM4A.subcomp",
@@ -115,7 +115,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "7f255884f91e9f826402805dae65c409"
+      "df55a771f4d2e469823f31fae1e485ce"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -124,29 +124,11 @@
       1,
       [ "@query" ],
       0,
-      "1afc8fb41585c49f28515aec8c7ba0d6"
+      "2846bb667809cc455bb03277a36d9c9b"
     ],
     [
       "GenericPartialDM4A.DM4A",
       2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "144b2080e7771275279f3af99c0dc5a0"
-    ],
-    [
-      "GenericPartialDM4A.DM4A",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a5fadfe5776cc533de96057a30a9ce20"
-    ],
-    [
-      "GenericPartialDM4A.DM4A",
-      4,
       2,
       1,
       [
@@ -164,11 +146,11 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "c32c4abcf1e417cc34440370a45e4c0f"
+      "4934c28500c706df5b3cebe9f71c9d6f"
     ],
     [
       "GenericPartialDM4A.DM4A",
-      5,
+      3,
       2,
       1,
       [
@@ -188,7 +170,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "114443b333573167b2b7c68f6752a635"
+      "bd45a87711d0f5985760a647d640bff1"
     ],
     [
       "GenericPartialDM4A.lift_pure_dm4a",
@@ -212,10 +194,10 @@
         "typing_Tm_abs_dbf003a9879e111684205aae0ef8682e"
       ],
       0,
-      "dc4c2985cddccf545d69682ca5b4f0d8"
+      "9eab4a8c52ae986ec4c7679aa4b8435a"
     ],
     [
-      "GenericPartialDM4A.20930",
+      "GenericPartialDM4A.19573",
       1,
       2,
       1,
@@ -224,7 +206,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "45985f6a0c87718a0926029be725d223"
+      "a5596f0d93a1b96d5d106a57d8c350b9"
     ]
   ]
 ]

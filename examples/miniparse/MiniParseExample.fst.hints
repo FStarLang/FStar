@@ -63,37 +63,7 @@
         "typing_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc"
       ],
       0,
-      "56963d4668e237fe0295970cd1413769"
-    ],
-    [
-      "MiniParseExample.q",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Combinators.synth_inverse",
-        "equation_Prims.squash",
-        "interpretation_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "e0d08f0a27a74f17108178226b028065"
-    ],
-    [
-      "MiniParseExample.q",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Combinators.synth_inverse",
-        "equation_Prims.squash",
-        "interpretation_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "bbbb7d4af0d788b2e8080516e3890da6"
+      "cf2c5bc8a140a7e7a9c375531aa19cc6"
     ]
   ]
 ]
