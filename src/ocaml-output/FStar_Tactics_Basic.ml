@@ -5242,23 +5242,23 @@ let rec (inspect :
                             | uu___4 ->
                                 failwith
                                   "impossible: open_term returned different amount of binders")))
-           | FStar_Syntax_Syntax.Tm_match (t4, uu___2, brs) ->
+           | FStar_Syntax_Syntax.Tm_match (t4, ret_opt, brs) ->
                let rec inspect_pat p =
                  match p.FStar_Syntax_Syntax.v with
                  | FStar_Syntax_Syntax.Pat_constant c ->
-                     let uu___3 = FStar_Reflection_Basic.inspect_const c in
-                     FStar_Reflection_Data.Pat_Constant uu___3
+                     let uu___2 = FStar_Reflection_Basic.inspect_const c in
+                     FStar_Reflection_Data.Pat_Constant uu___2
                  | FStar_Syntax_Syntax.Pat_cons (fv, ps) ->
-                     let uu___3 =
-                       let uu___4 =
+                     let uu___2 =
+                       let uu___3 =
                          FStar_List.map
-                           (fun uu___5 ->
-                              match uu___5 with
+                           (fun uu___4 ->
+                              match uu___4 with
                               | (p1, b) ->
-                                  let uu___6 = inspect_pat p1 in (uu___6, b))
+                                  let uu___5 = inspect_pat p1 in (uu___5, b))
                            ps in
-                       (fv, uu___4) in
-                     FStar_Reflection_Data.Pat_Cons uu___3
+                       (fv, uu___3) in
+                     FStar_Reflection_Data.Pat_Cons uu___2
                  | FStar_Syntax_Syntax.Pat_var bv ->
                      FStar_Reflection_Data.Pat_Var bv
                  | FStar_Syntax_Syntax.Pat_wild bv ->
@@ -5268,12 +5268,12 @@ let rec (inspect :
                let brs1 = FStar_List.map FStar_Syntax_Subst.open_branch brs in
                let brs2 =
                  FStar_List.map
-                   (fun uu___3 ->
-                      match uu___3 with
-                      | (pat, uu___4, t5) ->
-                          let uu___5 = inspect_pat pat in (uu___5, t5)) brs1 in
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | (pat, uu___3, t5) ->
+                          let uu___4 = inspect_pat pat in (uu___4, t5)) brs1 in
                FStar_All.pipe_left FStar_Tactics_Monad.ret
-                 (FStar_Reflection_Data.Tv_Match (t4, brs2))
+                 (FStar_Reflection_Data.Tv_Match (t4, ret_opt, brs2))
            | FStar_Syntax_Syntax.Tm_unknown ->
                FStar_All.pipe_left FStar_Tactics_Monad.ret
                  FStar_Reflection_Data.Tv_Unknown
@@ -5361,7 +5361,7 @@ let (pack :
                  (FStar_Syntax_Syntax.Tm_let ((true, lbs), body))
                  FStar_Range.dummyRange in
              FStar_All.pipe_left FStar_Tactics_Monad.ret uu___1)
-    | FStar_Reflection_Data.Tv_Match (t, brs) ->
+    | FStar_Reflection_Data.Tv_Match (t, ret_opt, brs) ->
         let wrap v =
           {
             FStar_Syntax_Syntax.v = v;
@@ -5403,8 +5403,7 @@ let (pack :
         let brs2 = FStar_List.map FStar_Syntax_Subst.close_branch brs1 in
         let uu___ =
           FStar_Syntax_Syntax.mk
-            (FStar_Syntax_Syntax.Tm_match
-               (t, FStar_Pervasives_Native.None, brs2))
+            (FStar_Syntax_Syntax.Tm_match (t, ret_opt, brs2))
             FStar_Range.dummyRange in
         FStar_All.pipe_left FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
