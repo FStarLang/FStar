@@ -16,6 +16,7 @@
 #light "off"
 module FStar.TypeChecker.Common
 open Prims
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -456,7 +457,7 @@ let simplify (debug:bool) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, br::brs) ->
+        | Tm_match (_, _, br::brs) ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None

@@ -229,10 +229,10 @@ let (do_rewrite :
           FStar_Tactics_Monad.bind uu___
             (fun uu___1 ->
                match uu___1 with
-               | FStar_Util.Inl (FStar_Tactics_Common.TacticFailure "SKIP")
-                   -> FStar_Tactics_Monad.ret tm
-               | FStar_Util.Inl e -> FStar_Tactics_Monad.traise e
-               | FStar_Util.Inr tm' -> FStar_Tactics_Monad.ret tm')
+               | FStar_Pervasives.Inl (FStar_Tactics_Common.TacticFailure
+                   "SKIP") -> FStar_Tactics_Monad.ret tm
+               | FStar_Pervasives.Inl e -> FStar_Tactics_Monad.traise e
+               | FStar_Pervasives.Inr tm' -> FStar_Tactics_Monad.ret tm')
 type 'a ctac =
   'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 let seq_ctac : 'a . 'a ctac -> 'a ctac -> 'a ctac =
@@ -427,7 +427,7 @@ and (on_subterms :
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue)
-                | FStar_Syntax_Syntax.Tm_match (hd, brs) ->
+                | FStar_Syntax_Syntax.Tm_match (hd, asc_opt, brs) ->
                     let c_branch br =
                       let uu___1 = FStar_Syntax_Subst.open_branch br in
                       match uu___1 with
@@ -454,11 +454,11 @@ and (on_subterms :
                          match uu___2 with
                          | ((hd1, brs1), flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_match (hd1, brs1)),
-                                 flag))
+                               ((FStar_Syntax_Syntax.Tm_match
+                                   (hd1, asc_opt, brs1)), flag))
                 | FStar_Syntax_Syntax.Tm_let
                     ((false,
-                      { FStar_Syntax_Syntax.lbname = FStar_Util.Inl bv;
+                      { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl bv;
                         FStar_Syntax_Syntax.lbunivs = uu___1;
                         FStar_Syntax_Syntax.lbtyp = uu___2;
                         FStar_Syntax_Syntax.lbeff = uu___3;

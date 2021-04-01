@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -521,7 +522,7 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
@@ -567,8 +568,8 @@ let lookup_qname env (lid:lident) : qninfo =
 let lookup_sigelt (env:env) (lid:lid) : option<sigelt> =
     match lookup_qname env lid with
     | None -> None
-    | Some (BU.Inl _, rng) -> None
-    | Some (BU.Inr (se, us), rng) -> Some se
+    | Some (Inl _, rng) -> None
+    | Some (Inr (se, us), rng) -> Some se
 
 let lookup_attr (env:env) (attr:string) : list<sigelt> =
     match BU.smap_try_find (attrtab env) attr with
@@ -1994,8 +1995,8 @@ let dummy_solver = {
 let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
   let compare_either f1 f2 e1 e2 : bool =
       match e1, e2 with
-      | BU.Inl v1, BU.Inl v2 -> f1 v1 v2
-      | BU.Inr v1, BU.Inr v2 -> f2 v1 v2
+      | Inl v1, Inl v2 -> f1 v1 v2
+      | Inr v1, Inr v2 -> f2 v1 v2
       | _ -> false
   in
   match BU.find_opt (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')

@@ -171,6 +171,7 @@ let keywords =
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
+    ALWAYS, "returns"    ,RETURNS;
     ALWAYS, "module"     ,MODULE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;

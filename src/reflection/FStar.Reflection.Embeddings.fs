@@ -305,6 +305,9 @@ let e_args   = e_list e_argv
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
+let e_match_returns_annotation =
+  e_option (e_tuple2 (e_either e_term e_comp) (e_option e_term))
+
 let e_term_view_aq aq =
     let embed_term_view (rng:Range.range) (t:term_view) : term =
         match t with
@@ -358,8 +361,9 @@ let e_term_view_aq aq =
                                       S.as_arg (embed (e_term_aq aq) rng t2)]
                         rng
 
-        | Tv_Match (t, brs) ->
+        | Tv_Match (t, ret_opt, brs) ->
             S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed (e_term_aq aq) rng t);
+                                        S.as_arg (embed e_match_returns_annotation rng ret_opt);
                                         S.as_arg (embed (e_list (e_branch_aq aq)) rng brs)]
                         rng
 
@@ -436,10 +440,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed' w e_term t2) (fun t2 ->
             Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
-        | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
+        | Tm_fvar fv, [(t, _); (ret_opt, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             BU.bind_opt (unembed' w (e_list e_branch) brs) (fun brs ->
-            Some <| Tv_Match (t, brs)))
+            BU.bind_opt (unembed' w e_match_returns_annotation ret_opt) (fun ret_opt ->
+            Some <| Tv_Match (t, ret_opt, brs))))
 
         | Tm_fvar fv, [(e, _); (t, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
             BU.bind_opt (unembed' w e_term e) (fun e ->

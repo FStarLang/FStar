@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -1477,6 +1478,35 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   mk_comp md u t wp []
 
 (*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+let get_neg_branch_conds (branch_conds:list<formula>)
+  : list<formula> * formula
+  = branch_conds
+    |> List.fold_left (fun (conds, acc) g ->
+        let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
+        (conds@[cond]), cond) ([U.t_true], U.t_true)
+    |> fst
+    |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
+    |> (fun (l1, l2) -> l1, List.hd l2)
+
+(*
  * The formula in lcases is the individual branch guard, a boolean
  *)
 let bind_cases env0 (res_t:typ)
@@ -1529,15 +1559,7 @@ let bind_cases env0 (res_t:typ)
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
             let neg_branch_conds, exhaustiveness_branch_cond =
-              lcases
-              |> List.map (fun (g, _, _, _) -> g)
-              |> List.fold_left (fun (conds, acc) g ->
-                  let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
-                  (conds@[cond]), cond) ([U.t_true], U.t_true)
-              |> fst
-              |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
-              |> (fun (l1, l2) -> l1, List.hd l2) in
-
+              get_neg_branch_conds (lcases |> List.map (fun (g, _, _, _) -> g)) in
 
             let md, comp, g_comp =
               match lcases with
@@ -1741,7 +1763,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, branches), _ ->
+    | Tm_match (_, _, branches), _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe

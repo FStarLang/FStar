@@ -2,6 +2,7 @@
 module FStar.Tactics.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -1478,7 +1479,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, brs)) s_tm.pos in
+      let w = mk (Tm_match (s_tm, None, brs)) s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos)))))
@@ -1568,8 +1569,8 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
             let bs, t2 = SS.open_term [b] t2 in
@@ -1583,18 +1584,18 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
+                 | Inr _ -> ret Tv_Unknown
+                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, brs) ->
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -1605,7 +1606,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         in
         let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        ret <| Tv_Match (t, brs)
+        ret <| Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         ret <| Tv_Unknown
@@ -1651,15 +1652,15 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -1671,13 +1672,13 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, brs)) Range.dummyRange
+        ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
@@ -1705,9 +1706,9 @@ let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" 
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, brs) ->
+    | Tm_match (e, asc_opt, brs) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, brs')) l.pos in
+      let l' = mk (Tm_match (e, asc_opt, brs')) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->

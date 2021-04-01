@@ -793,8 +793,8 @@ let (load_interface_decls :
           (FStar_Parser_ParseIt.Filename interface_file_name) in
       match r with
       | FStar_Parser_ParseIt.ASTFragment
-          (FStar_Util.Inl (FStar_Parser_AST.Interface (l, decls, uu___)),
-           uu___1)
+          (FStar_Pervasives.Inl (FStar_Parser_AST.Interface
+           (l, decls, uu___)), uu___1)
           ->
           let uu___2 =
             let uu___3 =

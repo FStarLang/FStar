@@ -432,7 +432,7 @@ let compile_ifthenelse
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
-  | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
+  | T.Tv_Match cond _ [T.Pat_Constant T.C_True, tt; _, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
     let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in

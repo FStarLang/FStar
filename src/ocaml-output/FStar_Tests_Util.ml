@@ -175,8 +175,10 @@ let rec (term_eq' :
           -> args_eq [s1; s2] [t12; t22]
       | (FStar_Syntax_Syntax.Tm_app (t, args), FStar_Syntax_Syntax.Tm_app
          (s, args')) -> (term_eq' t s) && (args_eq args args')
-      | (FStar_Syntax_Syntax.Tm_match (t, pats), FStar_Syntax_Syntax.Tm_match
-         (t', pats')) ->
+      | (FStar_Syntax_Syntax.Tm_match
+         (t, FStar_Pervasives_Native.None, pats),
+         FStar_Syntax_Syntax.Tm_match
+         (t', FStar_Pervasives_Native.None, pats')) ->
           (((FStar_List.length pats) = (FStar_List.length pats')) &&
              (FStar_List.forall2
                 (fun uu___ ->
@@ -186,9 +188,9 @@ let rec (term_eq' :
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed
-         (t12, (FStar_Util.Inl t22, uu___), uu___1),
+         (t12, (FStar_Pervasives.Inl t22, uu___), uu___1),
          FStar_Syntax_Syntax.Tm_ascribed
-         (s1, (FStar_Util.Inl s2, uu___2), uu___3)) ->
+         (s1, (FStar_Pervasives.Inl s2, uu___2), uu___3)) ->
           (term_eq' t12 s1) && (term_eq' t22 s2)
       | (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), t),
          FStar_Syntax_Syntax.Tm_let ((is_rec', lbs'), s)) when

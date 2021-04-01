@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -37,7 +38,7 @@ exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
-let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
+let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -310,21 +311,21 @@ let lookup_free_var_sym env a =
     match fvb.smt_fuel_partial_app with
     | Some({tm=App(g, zf)})
         when env.use_zfuel_name ->
-      BU.Inl g, zf, fvb.smt_arity + 1
+      Inl g, zf, fvb.smt_arity + 1
     | _ ->
         begin
         match fvb.smt_token with
         | None when fvb.fvb_thunked ->
-            BU.Inr (force_thunk fvb), [], fvb.smt_arity
+            Inr (force_thunk fvb), [], fvb.smt_arity
         | None ->
-            BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
+            Inl (Var fvb.smt_id), [], fvb.smt_arity
         | Some sym ->
             begin
             match sym.tm with
             | App(g, [fuel]) ->
-                BU.Inl g, [fuel], fvb.smt_arity + 1
+                Inl g, [fuel], fvb.smt_arity + 1
             | _ ->
-                BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
+                Inl (Var fvb.smt_id), [], fvb.smt_arity
             end
         end
 

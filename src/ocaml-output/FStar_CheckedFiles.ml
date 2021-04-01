@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (33))
+let (cache_version_number : Prims.int) = (Prims.of_int (34))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -83,14 +83,14 @@ let (__proj__Valid__item___0 : tc_result_t -> Prims.string) =
   fun projectee -> match projectee with | Valid _0 -> _0
 type cache_t =
   (tc_result_t * (Prims.string, FStar_Parser_Dep.parsing_data)
-    FStar_Util.either)
+    FStar_Pervasives.either)
 let (mcache : cache_t FStar_Util.smap) =
   FStar_Util.smap_create (Prims.of_int (50))
 let (hash_dependences :
   FStar_Parser_Dep.deps ->
     Prims.string ->
       (Prims.string, (Prims.string * Prims.string) Prims.list)
-        FStar_Util.either)
+        FStar_Pervasives.either)
   =
   fun deps ->
     fun fn ->
@@ -138,7 +138,7 @@ let (hash_dependences :
       let maybe_add_iface_hash out =
         match interface_checked_file_name with
         | FStar_Pervasives_Native.None ->
-            FStar_Util.Inr (("source", source_hash) :: out)
+            FStar_Pervasives.Inr (("source", source_hash) :: out)
         | FStar_Pervasives_Native.Some iface ->
             let uu___ = FStar_Util.smap_try_find mcache iface in
             (match uu___ with
@@ -151,12 +151,12 @@ let (hash_dependences :
                      FStar_Options.debug_at_level_no_module
                        (FStar_Options.Other "CheckedFiles") in
                    if uu___2 then FStar_Util.print1 "%s\n" msg else ());
-                  FStar_Util.Inl msg)
+                  FStar_Pervasives.Inl msg)
              | FStar_Pervasives_Native.Some (Invalid msg, uu___1) ->
-                 FStar_Util.Inl msg
+                 FStar_Pervasives.Inl msg
              | FStar_Pervasives_Native.Some (Valid h, uu___1) ->
-                 FStar_Util.Inr (("source", source_hash) :: ("interface", h)
-                   :: out)
+                 FStar_Pervasives.Inr (("source", source_hash) ::
+                   ("interface", h) :: out)
              | FStar_Pervasives_Native.Some (Unknown, uu___1) ->
                  let uu___2 =
                    FStar_Util.format1
@@ -180,11 +180,11 @@ let (hash_dependences :
                       FStar_Options.debug_at_level_no_module
                         (FStar_Options.Other "CheckedFiles") in
                     if uu___3 then FStar_Util.print1 "%s\n" msg else ());
-                   FStar_Util.Inl msg)
+                   FStar_Pervasives.Inl msg)
               | FStar_Pervasives_Native.Some (Invalid msg, uu___2) ->
-                  FStar_Util.Inl msg
+                  FStar_Pervasives.Inl msg
               | FStar_Pervasives_Native.Some (Valid dig, uu___2) ->
-                  FStar_Util.Inr dig
+                  FStar_Pervasives.Inr dig
               | FStar_Pervasives_Native.Some (Unknown, uu___2) ->
                   let uu___3 =
                     FStar_Util.format2
@@ -192,8 +192,8 @@ let (hash_dependences :
                       fn2 module_name in
                   failwith uu___3 in
             (match digest with
-             | FStar_Util.Inl msg -> FStar_Util.Inl msg
-             | FStar_Util.Inr dig ->
+             | FStar_Pervasives.Inl msg -> FStar_Pervasives.Inl msg
+             | FStar_Pervasives.Inr dig ->
                  let uu___1 =
                    let uu___2 =
                      let uu___3 = FStar_Parser_Dep.lowercase_module_name fn2 in
@@ -216,21 +216,21 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
          then
            let msg =
              FStar_Util.format1 "checked file %s does not exist" checked_fn in
-           add_and_return ((Invalid msg), (FStar_Util.Inl msg))
+           add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
          else
            (let entry = FStar_Util.load_value_from_file checked_fn in
             match entry with
             | FStar_Pervasives_Native.None ->
                 let msg =
                   FStar_Util.format1 "checked file %s is corrupt" checked_fn in
-                add_and_return ((Invalid msg), (FStar_Util.Inl msg))
+                add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
             | FStar_Pervasives_Native.Some x ->
                 if x.version <> cache_version_number
                 then
                   let msg =
                     FStar_Util.format1
                       "checked file %s has incorrect version" checked_fn in
-                  add_and_return ((Invalid msg), (FStar_Util.Inl msg))
+                  add_and_return ((Invalid msg), (FStar_Pervasives.Inl msg))
                 else
                   (let current_digest = FStar_Util.digest_of_file fn in
                    if x.digest <> current_digest
@@ -248,14 +248,15 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
                          FStar_Util.format2
                            "checked file %s is stale (digest mismatch for %s)"
                            checked_fn fn in
-                       add_and_return ((Invalid msg), (FStar_Util.Inl msg))))
+                       add_and_return
+                         ((Invalid msg), (FStar_Pervasives.Inl msg))))
                    else
                      add_and_return
-                       (Unknown, (FStar_Util.Inr (x.parsing_data))))))
+                       (Unknown, (FStar_Pervasives.Inr (x.parsing_data))))))
 let (load_checked_file_with_tc_result :
   FStar_Parser_Dep.deps ->
     Prims.string ->
-      Prims.string -> (Prims.string, tc_result) FStar_Util.either)
+      Prims.string -> (Prims.string, tc_result) FStar_Pervasives.either)
   =
   fun deps ->
     fun fn ->
@@ -270,20 +271,21 @@ let (load_checked_file_with_tc_result :
                 "Impossible! if first phase of loading was unknown, it should have succeeded" in
         let elt = load_checked_file fn checked_fn in
         match elt with
-        | (Invalid msg, uu___) -> FStar_Util.Inl msg
+        | (Invalid msg, uu___) -> FStar_Pervasives.Inl msg
         | (Valid uu___, uu___1) ->
             let uu___2 =
               let uu___3 = FStar_All.pipe_right checked_fn load_tc_result in
               FStar_All.pipe_right uu___3 FStar_Pervasives_Native.snd in
-            FStar_All.pipe_right uu___2 (fun uu___3 -> FStar_Util.Inr uu___3)
+            FStar_All.pipe_right uu___2
+              (fun uu___3 -> FStar_Pervasives.Inr uu___3)
         | (Unknown, parsing_data) ->
             let uu___ = hash_dependences deps fn in
             (match uu___ with
-             | FStar_Util.Inl msg ->
+             | FStar_Pervasives.Inl msg ->
                  let elt1 = ((Invalid msg), parsing_data) in
                  (FStar_Util.smap_add mcache checked_fn elt1;
-                  FStar_Util.Inl msg)
-             | FStar_Util.Inr deps_dig' ->
+                  FStar_Pervasives.Inl msg)
+             | FStar_Pervasives.Inr deps_dig' ->
                  let uu___1 = FStar_All.pipe_right checked_fn load_tc_result in
                  (match uu___1 with
                   | (deps_dig, tc_result1) ->
@@ -329,7 +331,8 @@ let (load_checked_file_with_tc_result :
                                                  iface_checked_fn uu___6
                                            | uu___6 -> ())) ()
                                  with | uu___4 -> ()) in
-                          validate_iface_cache (); FStar_Util.Inr tc_result1))
+                          validate_iface_cache ();
+                          FStar_Pervasives.Inr tc_result1))
                       else
                         ((let uu___4 =
                             FStar_Options.debug_at_level_no_module
@@ -376,9 +379,10 @@ let (load_checked_file_with_tc_result :
                             FStar_Util.format1
                               "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
                               checked_fn in
-                          let elt1 = ((Invalid msg), (FStar_Util.Inl msg)) in
+                          let elt1 =
+                            ((Invalid msg), (FStar_Pervasives.Inl msg)) in
                           FStar_Util.smap_add mcache checked_fn elt1;
-                          FStar_Util.Inl msg))))
+                          FStar_Pervasives.Inl msg))))
 let (load_parsing_data_from_cache :
   Prims.string ->
     FStar_Parser_Dep.parsing_data FStar_Pervasives_Native.option)
@@ -401,8 +405,9 @@ let (load_parsing_data_from_cache :
          | FStar_Pervasives_Native.Some cache_file1 ->
              let uu___1 = load_checked_file file_name cache_file1 in
              (match uu___1 with
-              | (uu___2, FStar_Util.Inl msg) -> FStar_Pervasives_Native.None
-              | (uu___2, FStar_Util.Inr data) ->
+              | (uu___2, FStar_Pervasives.Inl msg) ->
+                  FStar_Pervasives_Native.None
+              | (uu___2, FStar_Pervasives.Inr data) ->
                   FStar_Pervasives_Native.Some data))
 let (load_module_from_cache :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -443,9 +448,9 @@ let (load_module_from_cache :
                  FStar_TypeChecker_Env.dep_graph uu___4 in
                load_checked_file_with_tc_result uu___3 fn1 cache_file in
              match uu___2 with
-             | FStar_Util.Inl msg ->
+             | FStar_Pervasives.Inl msg ->
                  (fail msg cache_file; FStar_Pervasives_Native.None)
-             | FStar_Util.Inr tc_result1 ->
+             | FStar_Pervasives.Inr tc_result1 ->
                  ((let uu___4 =
                      FStar_Options.debug_at_level_no_module
                        (FStar_Options.Other "CheckedFiles") in
@@ -508,7 +513,7 @@ let (store_module_to_cache :
                 FStar_TypeChecker_Env.dep_graph uu___2 in
               hash_dependences uu___1 fn in
             match digest with
-            | FStar_Util.Inr hashes ->
+            | FStar_Pervasives.Inr hashes ->
                 let tc_result2 =
                   let uu___1 = tc_result1 in
                   {
@@ -527,7 +532,7 @@ let (store_module_to_cache :
                   } in
                 let stage2 = { deps_dig = hashes; tc_res = tc_result2 } in
                 store_values_to_cache cache_file stage1 stage2
-            | FStar_Util.Inl msg ->
+            | FStar_Pervasives.Inl msg ->
                 let uu___1 =
                   let uu___2 =
                     FStar_Range.mk_pos Prims.int_zero Prims.int_zero in

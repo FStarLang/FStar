@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -74,7 +75,7 @@ type name_prefix = FStar.Ident.path
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
 type proof_namespace = list<(name_prefix * bool)>
 
-type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
 type must_tot = bool
@@ -191,7 +192,7 @@ and solver_t = {
     refresh      :unit -> unit;
 }
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -241,7 +242,7 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool

@@ -23,7 +23,7 @@ let (parse_mod :
       let uu___ =
         FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename mod_name) in
       match uu___ with
-      | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inl m, uu___1) ->
+      | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl m, uu___1) ->
           let uu___2 =
             let uu___3 = FStar_ToSyntax_ToSyntax.ast_modul_to_modul m in
             uu___3 dsenv in
@@ -37,7 +37,8 @@ let (parse_mod :
                (match uu___3 with | (env'1, uu___4) -> (env'1, m1)))
       | FStar_Parser_ParseIt.ParseError (err, msg, r) ->
           FStar_Exn.raise (FStar_Errors.Error (err, msg, r, []))
-      | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu___1, uu___2) ->
+      | FStar_Parser_ParseIt.ASTFragment
+          (FStar_Pervasives.Inr uu___1, uu___2) ->
           let msg = FStar_Util.format1 "%s: expected a module\n" mod_name in
           FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg)
             FStar_Range.dummyRange
