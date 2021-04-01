@@ -24,6 +24,13 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
+    dependent pattern matching. F* now supports `match e returns C with |...`
+    syntax for typechecking the branches with `C` appropriately substituted.
+    This changes the syntax of the `match` nodes to maintain an optional
+    annotation. The data constructor `Tv_Match` in the reflection API changes
+    accordingly.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1916,
     F* has a revised treatment for the lexicographic tuples. This is a breaking change
     and may require some additional annotations in the decreases clauses, see for example:
