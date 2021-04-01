@@ -1041,7 +1041,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
   match (SS.compress top).n with
   | Tm_match(e1, ret_opt, eqns) ->  //ret_opt is the return annotation
     let e1, c1, g1 = tc_term
-      ({(env |> Env.clear_expected_typ |> fst) with instantiate_imp = true})
+      (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
 
     let e1, c1 =
@@ -1060,7 +1060,8 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
            let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
            Env.set_expected_typ env res_t, Inr res_t, None, Env.conj_guard g1 g)
       | Some (t_or_c, None) ->
-        //typecheck the return annotation and unset expected type in the env if exists
+        //typecheck the return annotation and unset expected type in the env if exists,
+        //  (we will check the expected type at the end)
         //the branch typechecking (tc_eqn) will typecheck the branch with an ascription
         let env, _ = Env.clear_expected_typ env in
         let t_or_c, g =
