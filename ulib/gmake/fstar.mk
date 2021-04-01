@@ -11,7 +11,11 @@ ADMIT ?=
 MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 
 ifdef FSTAR_HOME
-FSTAR_EXE?=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe
+  FSTAR_HOME := $(realpath $(FSTAR_HOME))
+  ifeq ($(OS),Windows_NT)
+    FSTAR_HOME := $(shell cygpath -m $(FSTAR_HOME))
+  endif
+  FSTAR_EXE?=$(FSTAR_HOME)/bin/fstar.exe
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
 FSTAR_EXE?=fstar.exe
