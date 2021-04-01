@@ -13,4 +13,5 @@ RUN opam install --deps-only FStar/fstar.opam
 ARG opamthreads=24
 RUN opam install -j $opamthreads -v -v -v FStar/fstar.opam
 RUN eval $(opam env) && make -C $(opam config var fstar:share)/examples -j $opamthreads
+RUN eval $(opam env) && make -C $(opam config var fstar:share)/tutorial -j $opamthreads regressions
 RUN opam uninstall -v -v -v fstar
