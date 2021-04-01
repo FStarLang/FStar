@@ -12,10 +12,5 @@ RUN rm -rf FStar/.git
 RUN opam install --deps-only FStar/fstar.opam
 ARG opamthreads=24
 RUN opam install -j $opamthreads -v -v -v FStar/fstar.opam
-
-# RUN mkdir -p FStar-examples/ulib
-# RUN mv FStar/examples FStar-examples/examples
-# RUN mv FStar/ulib/gmake FStar-examples/ulib/gmake
-# RUN make -C FStar-examples/examples
-
+RUN eval $(opam env) && make -C $(opam config var fstar:share)/examples -j $opamthreads
 RUN opam uninstall -v -v -v fstar
