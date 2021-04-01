@@ -2,6 +2,7 @@
 module FStar.Tests.Pars
 //open FSharp.Compatibility.OCaml
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Range
 open FStar.Parser

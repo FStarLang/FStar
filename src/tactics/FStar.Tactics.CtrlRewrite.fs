@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Tactics.CtrlRewrite
 
+open FStar.Pervasives
 open FStar.All
 open FStar.Util
 open FStar.Syntax.Syntax

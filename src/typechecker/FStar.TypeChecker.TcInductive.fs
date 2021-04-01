@@ -17,6 +17,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcInductive
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

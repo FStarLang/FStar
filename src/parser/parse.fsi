@@ -34,6 +34,7 @@ type token =
   | SEMICOLON_SEMICOLON
   | SEMICOLON
   | RPAREN
+  | RETURNS
   | REQUIRES
   | REIFY
   | REIFIABLE
@@ -89,6 +90,7 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT_AT_AT
   | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
@@ -193,6 +195,7 @@ type tokenId =
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
     | TOKEN_RPAREN
+    | TOKEN_RETURNS
     | TOKEN_REQUIRES
     | TOKEN_REIFY
     | TOKEN_REIFIABLE
@@ -248,6 +251,7 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT_AT_AT
     | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
@@ -333,18 +337,18 @@ type nonTerminalId =
     | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
-    | NONTERM_option_binders_
     | NONTERM_option_fsTypeArgs_
+    | NONTERM_option_match_returning_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_option_term_
-    | NONTERM_option_typars_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
+    | NONTERM_list___anonymous_4_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
@@ -353,7 +357,6 @@ type nonTerminalId =
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_nonempty_list___anonymous_4_
     | NONTERM_nonempty_list_aqualifiedWithAttrs_lident__
     | NONTERM_nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
@@ -401,8 +404,7 @@ type nonTerminalId =
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqualUniverses
-    | NONTERM_newAttributes
+    | NONTERM_binderAttributes
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -412,6 +414,8 @@ type nonTerminalId =
     | NONTERM_binder
     | NONTERM_multiBinder
     | NONTERM_binders
+    | NONTERM_aqualifiedWithAttrs_lident_
+    | NONTERM_aqualifiedWithAttrs_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
     | NONTERM_path_lident_
@@ -430,6 +434,7 @@ type nonTerminalId =
     | NONTERM_ascribeKind
     | NONTERM_kind
     | NONTERM_term
+    | NONTERM_match_returning
     | NONTERM_noSeqTerm
     | NONTERM_calcRel
     | NONTERM_calcStep

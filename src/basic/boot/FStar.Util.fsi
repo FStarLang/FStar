@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 

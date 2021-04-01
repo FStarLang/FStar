@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax

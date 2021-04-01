@@ -23,6 +23,7 @@
 *)
 module FStar.Parser.Dep
 
+open FStar.Pervasives
 open FStar.ST   //for ref
 open FStar.All  //for failwith
 

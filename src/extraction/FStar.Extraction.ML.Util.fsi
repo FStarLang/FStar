@@ -17,6 +17,7 @@
 module FStar.Extraction.ML.Util
 open Prims
 open FStar
+open FStar.Pervasives
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 module S = FStar.Syntax.Syntax
