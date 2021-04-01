@@ -84,8 +84,12 @@ let return_pre (p:vprop) : vprop = p
 let return_post (#a:Type) (p:post_t a) : post_t a = p
 
 
-val can_be_split (p q:vprop) : Type0
+val can_be_split (p q:pre_t) : Type0
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
+
+let can_be_split_dep (p:prop) (t1 t2:pre_t) = p ==> can_be_split t1 t2
+let can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) =
+  forall (x:a). p x ==> can_be_split (t1 x) (t2 x)
 
 val can_be_split_trans (p q r:vprop)
 : Lemma
