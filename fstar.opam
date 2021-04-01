@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "0.9.7.0-alpha1"
+version: "0.9.8.0~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -20,31 +20,21 @@ depends: [
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
+  "z3" {= "4.8.5"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [
-  [make "PREFIX=%{prefix}%" "-C" "src/ocaml-output"]
-  [make "PREFIX=%{prefix}%" "-C" "ulib" "install-fstarlib"]
-  [make "PREFIX=%{prefix}%" "-C" "ulib" "install-fstar-tactics"]
+  [make "PREFIX=%{prefix}%" "-j" jobs]
 ]
 install: [
-  [make "PREFIX=%{prefix}%" "-C" "src/ocaml-output" "install"]
+  [make "PREFIX=%{prefix}%" "install"]
 ]
 remove: [
-  [ "rm" "-rf"
-      "%{prefix}%/lib/fstar"
-      "%{prefix}%/doc/fstar"
-      "%{prefix}%/etc/fstar"
-      "%{prefix}%/bin/fstar.exe"
-      "%{prefix}%/share/fstar" ]
-  [ "ocamlfind" "remove" "fstarlib" ]
-  [ "ocamlfind" "remove" "fstar-compiler-lib" ]
-  [ "ocamlfind" "remove" "fstar-tactics-lib" ]
+  [make "PREFIX=%{prefix}%" "uninstall"]
 ]
 dev-repo: "git://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
-flags: light-uninstall
 url {
   src: "https://github.com/FStarLang/FStar/archive/V0.9.7.0-alpha1.zip"
   checksum: "md5=78414a6a5a0ca0c7770a43a36c5f31f7"

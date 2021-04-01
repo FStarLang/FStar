@@ -1,9 +1,9 @@
-FSTAR_HOME=../..
 
 # Inspired from: ../tactics/Makefile
 
-KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
-INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
+ifdef KREMLIN_HOME
+INCLUDE_PATHS+=$(KREMLIN_HOME)/kremlib
+endif
 FSTAR_FILES=$(wildcard *.fst) $(wildcard *.fsti)
 
 all: verify-all

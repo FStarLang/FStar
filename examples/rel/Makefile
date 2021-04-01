@@ -1,6 +1,5 @@
 
 OTHERFLAGS+=$(FLAGS) $(LIB) --include ../dm4free
-FSTAR_HOME=../..
 include ../Makefile.include
 
 uall: all
