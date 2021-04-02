@@ -3,7 +3,7 @@ module Steel.Effect.Common
 open Steel.Memory
 
 irreducible let framing_implicit : unit = ()
-irreducible let __reduce__ = ()
+irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
 
 let return_pre (p:slprop u#1) : slprop u#1 = p
@@ -1231,7 +1231,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
         true
       ) else false
 
-  | _ -> false // Ill-formed can_be_split, should not happen
+  | _ -> fail "Ill-formed can_be_split_forall, should not happen"
 
 let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
   match args with
@@ -1268,7 +1268,7 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
 
       ) else false
 
-  | _ -> false // Ill-formed can_be_split, should not happen
+  | _ -> fail "Ill-formed can_be_split_forall_dep, should not happen"
 
 let solve_equiv_forall (args:list argv) : Tac bool =
   match args with
@@ -1301,7 +1301,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
         true
       ) else false
 
-  | _ -> false // Ill-formed can_be_split, should not happen
+  | _ -> fail "Ill-formed equiv_forall, should not happen"
 
 let solve_equiv (args:list argv) : Tac bool =
   match args with
@@ -1375,10 +1375,10 @@ let rec solve_indirection_eqs (l:list goal) : Tac unit =
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
-        // trefl();
         if is_return_eq l r then later() else trefl();
         solve_indirection_eqs tl
     | _ -> later(); solve_indirection_eqs tl
+
 
 let rec solve_all_eqs (l:list goal) : Tac unit =
   match l with
@@ -1454,6 +1454,7 @@ let solve_return (t:term) : Tac unit
            canon_return ();
            norm [delta_only [`%return_post]]
 
+
 let rec solve_all_returns (l:list goal) : Tac unit =
   match l with
   | [] -> ()
@@ -1465,7 +1466,7 @@ let rec solve_all_returns (l:list goal) : Tac unit =
         | AlreadyGathered -> norm [delta_only [`%return_post]]
         | TacticFailure m -> fail m
         | _ -> () // Success
-      ); later()
+      ); later ()
     ) else later();
     solve_all_returns tl
 
@@ -1478,11 +1479,9 @@ let rec solve_sladmits (l:list goal) : Tac unit =
     let is_postadmit = term_appears_in (`admit_post) t in
     if is_preadmit || is_postadmit then (
       focus (fun _ ->
-        dump "entering sladmit";
         goal_to_equiv t "sladmit";
         norm [delta_only [`%admit_pre; `%admit_post]];
         apply_lemma (`Steel.Memory.Tactics.equiv_refl);
-        dump "ending sladmit";
         // If we had both a preadmit and a postadmit, we had two successive sladmits calls,
         // and this constraint corresponds to the inner equivalence, where slprops are
         // irrelevant. We arbitrarily set them to emp
@@ -1585,6 +1584,8 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
+
+
 let rec norm_return_pre (l:list goal) : Tac unit =
   match l with
   | [] -> ()
@@ -1607,7 +1608,7 @@ let init_resolve_tac () : Tac unit =
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
-  // We now solve all frames of postconditions of pure returns to emp
+  // We now solve all postconditions of pure returns to avoid restricting the uvars
   solve_all_returns (goals ());
 
   // We can now solve the equalities for returns
