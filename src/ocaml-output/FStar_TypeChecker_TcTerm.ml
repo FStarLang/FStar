@@ -9956,22 +9956,70 @@ and (build_let_rec_env :
                   (FStar_TypeChecker_Rel.discharge_guard env01) in
               (env01, uu___2, t1) in
         let reconcile_let_rec_ascription_and_body_type univ_vars asc ty =
-          let uu___ = check_annot univ_vars ty in
+          let ty1 =
+            let uu___ = FStar_Syntax_Util.arrow_formals_comp asc in
+            match uu___ with
+            | (bs, c) ->
+                let uu___1 = FStar_Syntax_Util.arrow_formals_comp ty in
+                (match uu___1 with
+                 | (bs', c') ->
+                     let get_decreases c1 =
+                       FStar_All.pipe_right (FStar_Syntax_Util.comp_flags c1)
+                         (FStar_Util.find_opt
+                            (fun uu___2 ->
+                               match uu___2 with
+                               | FStar_Syntax_Syntax.DECREASES uu___3 -> true
+                               | uu___3 -> false)) in
+                     let uu___2 =
+                       let uu___3 = get_decreases c in
+                       let uu___4 = get_decreases c' in (uu___3, uu___4) in
+                     (match uu___2 with
+                      | (FStar_Pervasives_Native.Some uu___3,
+                         FStar_Pervasives_Native.Some uu___4) ->
+                          FStar_Errors.raise_error
+                            (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                              "Multiple decreases clauses")
+                            ty.FStar_Syntax_Syntax.pos
+                      | (FStar_Pervasives_Native.Some
+                         (FStar_Syntax_Syntax.DECREASES d),
+                         FStar_Pervasives_Native.None) ->
+                          (if
+                             (FStar_List.length bs) <>
+                               (FStar_List.length bs')
+                           then
+                             FStar_Errors.raise_error
+                               (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                                 "Arity mismatch on let rec annotation")
+                               ty.FStar_Syntax_Syntax.pos
+                           else ();
+                           (let d1 =
+                              let uu___4 =
+                                let uu___5 =
+                                  FStar_Syntax_Util.rename_binders bs bs' in
+                                FStar_Syntax_Subst.subst uu___5 in
+                              FStar_List.map uu___4 d in
+                            let c'1 =
+                              FStar_Syntax_Util.comp_set_flags c'
+                                ((FStar_Syntax_Syntax.DECREASES d1) ::
+                                (FStar_Syntax_Util.comp_flags c')) in
+                            FStar_Syntax_Util.arrow bs' c'1))
+                      | uu___3 -> ty)) in
+          let uu___ = check_annot univ_vars ty1 in
           match uu___ with
-          | (env1, g, ty1) ->
+          | (env1, g, ty2) ->
               let uu___1 =
-                FStar_TypeChecker_Rel.get_subtyping_prop env1 ty1 asc in
+                FStar_TypeChecker_Rel.get_subtyping_prop env1 ty2 asc in
               (match uu___1 with
                | FStar_Pervasives_Native.None ->
                    ((let uu___3 =
                        FStar_TypeChecker_Err.basic_type_error env1
-                         FStar_Pervasives_Native.None ty1 asc in
-                     FStar_Errors.log_issue ty1.FStar_Syntax_Syntax.pos
+                         FStar_Pervasives_Native.None ty2 asc in
+                     FStar_Errors.log_issue ty2.FStar_Syntax_Syntax.pos
                        uu___3);
-                    (g, asc, ty1))
+                    (g, asc, ty2))
                | FStar_Pervasives_Native.Some g' ->
                    let uu___2 = FStar_TypeChecker_Env.conj_guard g g' in
-                   (uu___2, asc, ty1)) in
+                   (uu___2, asc, ty2)) in
         let uu___ =
           FStar_List.fold_left
             (fun uu___1 ->

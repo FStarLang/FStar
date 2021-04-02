@@ -3462,6 +3462,23 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
        env0, g |> Rel.resolve_implicits env |> Rel.discharge_guard env0, t
    in
    let reconcile_let_rec_ascription_and_body_type univ_vars asc ty = 
+       let ty = 
+         let bs, c = U.arrow_formals_comp asc in
+         let bs', c' = U.arrow_formals_comp ty in
+         let get_decreases c =
+           U.comp_flags c |> BU.find_opt (function DECREASES _ -> true | _ -> false) 
+         in
+         match get_decreases c, get_decreases c' with
+         | Some _, Some _ -> 
+           Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Multiple decreases clauses") ty.pos
+         | Some (DECREASES d), None -> 
+           if List.length bs <> List.length bs'
+           then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation") ty.pos;
+           let d = List.map (SS.subst (U.rename_binders bs bs')) d in
+           let c' = comp_set_flags c' (DECREASES d :: comp_flags c') in
+           U.arrow bs' c'
+         | _ -> ty
+       in
        let env, g, ty = check_annot univ_vars ty in
        match Rel.get_subtyping_prop env ty asc with
        | None -> 
