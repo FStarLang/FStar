@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
