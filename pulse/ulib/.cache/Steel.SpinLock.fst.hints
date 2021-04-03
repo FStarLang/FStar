@@ -1,5 +1,5 @@
 [
-  "™µp≠4\\}ì¯∏5 \u0014Ï#1",
+  "h«>\u0011\u0005fg¥Ö\u0012ê√˜≈E\u0016",
   [
     [
       "Steel.SpinLock.lockprop_witinv",
@@ -24,7 +24,7 @@
         "typing_Steel.Memory.emp", "typing_Steel.Reference.pts_to"
       ],
       0,
-      "849c8c7aca1893dbda2a03cdb636da9d"
+      "c42a0a334a3cffc9389b9b6175954c0e"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -38,7 +38,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e5ce1bc91371589bc6059d7a609fd6f8"
+      "a3a378a619f4855d5d53b3dee22cec51"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Tm_refine_1deeb20268a5c4d4fffeebd3d94d85e9"
       ],
       0,
-      "1a979436d09d3b2b9a4e77c322aae08f"
+      "4b674acbbe3790832357062d733b146d"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -72,7 +72,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5374ecc8d1e56e71eabe25e516a47956"
+      "9ce4197912c930b185fc849591bad6e1"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -98,7 +98,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "6f1d70cbae170e3ab1d113f31dd5d3ec"
+      "73523f5b6062dca539a6e33fe77d6d7a"
     ],
     [
       "Steel.SpinLock.acquire'",
@@ -122,7 +122,16 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "098302dfc0421f1e4ceb1483d20c3a94"
+      "230795c1f4acee8f232fd0a55832c690"
+    ],
+    [
+      "Steel.SpinLock.acquire",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "6835e84662ebe5500a207067a1ab935f"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -148,7 +157,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "dfd36f958dd14019ba930bff4c3d90a6"
+      "83d0fce0e1c4bcb0a18b21501a0917f1"
     ],
     [
       "Steel.SpinLock.release",
@@ -169,7 +178,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "ec5b7300725fe1fe4f8281449610ca55"
+      "a8d76d5c8b4ac455008408e6eef920c6"
     ]
   ]
 ]
