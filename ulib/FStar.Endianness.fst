@@ -30,13 +30,13 @@ open FStar.Mul
 
 let rec le_to_n b
   : Tot nat (decreases (S.length b))
-  if S.length b = 0 then 0
-  else U8.v (S.head b) + pow2 8 * le_to_n (S.tail b)
+  = if S.length b = 0 then 0
+    else U8.v (S.head b) + pow2 8 * le_to_n (S.tail b)
 
 let rec be_to_n b
-  : Tot nat (decreases (S.length b)) =
-  if S.length b = 0 then 0
-  else U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))
+  : Tot nat (decreases (S.length b))
+  = if S.length b = 0 then 0
+    else U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))
 
 let reveal_le_to_n _ = ()
 
