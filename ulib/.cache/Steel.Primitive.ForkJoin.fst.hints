@@ -1,5 +1,5 @@
 [
-  "ßpí,à.ÿ\u0010\u0003z¦0\r:¦e",
+  "\u0002KmE\u0018–ÀÎ<hÐ IT^´",
   [
     [
       "Steel.Primitive.ForkJoin.__proj__Mkthread__item__l",
@@ -11,7 +11,21 @@
         "projection_inverse_Steel.Primitive.ForkJoin.Mkthread_r"
       ],
       0,
-      "f8c8d887970068630d6835e7917b7358"
+      "8d12a6cbb4d9fbf01f5296aa7dfde682"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.join",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "dd08d7fb24f269dda17398c19a767b6f"
     ]
   ]
 ]
