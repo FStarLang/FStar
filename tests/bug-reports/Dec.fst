@@ -34,14 +34,11 @@ let rec h (x y : nat)
     then g (x - 1) (y - 1)
     else ()
 
-
-#push-options "--debug Dec --debug_level Dec"
 val old (x:nat) (y:nat)
   : Tot unit (decreases y)
 let rec old (a b:nat)
   = if b = 0 then ()
     else old (a + 1) (b - 1)
-#pop-options
 
 val old2 (x:nat) (y:nat)
   : Tot unit (decreases y)
@@ -49,3 +46,8 @@ let rec old2 (a b:nat)
   : Tot unit
   = if b = 0 then ()
     else old2 (a + 1) (b - 1)
+
+let rec simple (x:nat) (y:nat)
+  : Tot unit (decreases y)
+  = if y = 0 then ()
+    else simple x (y - 1)

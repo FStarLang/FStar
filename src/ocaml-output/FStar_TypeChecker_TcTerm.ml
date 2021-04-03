@@ -9974,12 +9974,26 @@ and (build_let_rec_env :
                        let uu___3 = get_decreases c in
                        let uu___4 = get_decreases c' in (uu___3, uu___4) in
                      (match uu___2 with
-                      | (FStar_Pervasives_Native.Some uu___3,
-                         FStar_Pervasives_Native.Some uu___4) ->
-                          FStar_Errors.raise_error
-                            (FStar_Errors.Fatal_LetRecArgumentMismatch,
-                              "Multiple decreases clauses")
-                            ty.FStar_Syntax_Syntax.pos
+                      | (FStar_Pervasives_Native.Some
+                         (FStar_Syntax_Syntax.DECREASES d),
+                         FStar_Pervasives_Native.Some
+                         (FStar_Syntax_Syntax.DECREASES d')) ->
+                          let r =
+                            let uu___3 = FStar_List.hd d in
+                            uu___3.FStar_Syntax_Syntax.pos in
+                          let r' =
+                            let uu___3 = FStar_List.hd d' in
+                            uu___3.FStar_Syntax_Syntax.pos in
+                          ((let uu___4 =
+                              let uu___5 =
+                                let uu___6 = FStar_Range.string_of_range r in
+                                FStar_Util.format1
+                                  "Multiple decreases clauses on this definition; please remove the on on its declaration (see %s)"
+                                  uu___6 in
+                              (FStar_Errors.Warning_DeprecatedGeneric,
+                                uu___5) in
+                            FStar_Errors.log_issue r' uu___4);
+                           ty)
                       | (FStar_Pervasives_Native.Some
                          (FStar_Syntax_Syntax.DECREASES d),
                          FStar_Pervasives_Native.None) ->
@@ -10030,7 +10044,7 @@ and (build_let_rec_env :
                        FStar_TypeChecker_Util.extract_let_rec_annotation env1
                          lb in
                      (match uu___2 with
-                      | (univ_vars, asc_ty, check_t) ->
+                      | (univ_vars, asc_ty, e, check_t) ->
                           let env2 =
                             FStar_TypeChecker_Env.push_univ_vars env1
                               univ_vars in
@@ -10052,9 +10066,6 @@ and (build_let_rec_env :
                                   univ_vars asc ty in
                           (match uu___3 with
                            | (g, asc, t) ->
-                               let e =
-                                 FStar_Syntax_Util.unascribe
-                                   lb.FStar_Syntax_Syntax.lbdef in
                                let uu___4 =
                                  let uu___5 =
                                    termination_check_enabled

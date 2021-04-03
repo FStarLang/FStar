@@ -3469,8 +3469,14 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
            U.comp_flags c |> BU.find_opt (function DECREASES _ -> true | _ -> false) 
          in
          match get_decreases c, get_decreases c' with
-         | Some _, Some _ -> 
-           Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Multiple decreases clauses") ty.pos
+         | Some (DECREASES d), Some (DECREASES d') -> 
+           let r = (List.hd d).pos in
+           let r' = (List.hd d').pos in
+           Errors.log_issue r' 
+             (Warning_DeprecatedGeneric, 
+              BU.format1 "Multiple decreases clauses on this definition; please remove the on on its declaration (see %s)"
+                          (Range.string_of_range r));
+           ty
          | Some (DECREASES d), None -> 
            if List.length bs <> List.length bs'
            then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation") ty.pos;
@@ -3488,7 +3494,7 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
          Env.conj_guard g g', asc, ty
    in
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
-        let univ_vars, asc_ty, check_t = TcUtil.extract_let_rec_annotation env lb in
+        let univ_vars, asc_ty, e, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
         let g, asc, t = 
           match asc_ty with
@@ -3500,7 +3506,6 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
           | Inr (asc, ty) -> 
             reconcile_let_rec_ascription_and_body_type univ_vars asc ty
         in
-        let e = U.unascribe lb.lbdef in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)

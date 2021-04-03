@@ -98,6 +98,7 @@ let check_uvars r t =
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
    * either<typ, (typ * typ)>
+   * term
    * bool //true indicates that the type needs to be checked; false indicates that it is already checked
    =
   let rng = S.range_of_lbname lbname in
@@ -118,12 +119,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           None
      in
      let rec body_type has_ascription e
-       : option<typ> //not has_ascription ==> Some?
+       : option<(term * typ)> //not has_ascription ==> Some?
        = match (SS.compress e).n with
          | Tm_meta(e, _) ->
            body_type has_ascription e
 
-         | Tm_abs(bs, body, _) ->
+         | Tm_abs(bs, body, rcopt) ->
            let mk_comp t =
               if Options.ml_ish()
               then U.ml_comp t r
@@ -136,24 +137,26 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
            | None ->
              if has_ascription
              then None
-             else Some (mk_arrow (mk_comp S.tun))
+             else Some (e, mk_arrow (mk_comp S.tun))
 
-           | Some (_, (Inl t, _)) ->
-             Some (mk_arrow (mk_comp t))
+           | Some (body, (Inl t, _)) ->
+             let e = {e with n = Tm_abs(bs, body, rcopt)} in
+             Some (e, mk_arrow (mk_comp t))
 
-           | Some (_, (Inr c, _)) ->
-             Some (mk_arrow c)
+           | Some (body, (Inr c, _)) ->
+             let e = {e with n = Tm_abs(bs, body, rcopt)} in
+             Some (e, mk_arrow c)
 
          | _ ->
-           if has_ascription then None else Some S.tun
+           if has_ascription then None else Some (e, S.tun)
      in
-     let ty_opt =
+     let e_ty_opt =
          match ascription e with
          | None ->
            body_type has_outer_ascription e
 
          | Some (e, (Inl t, _)) ->
-           Some t
+           Some (e, t)
 
          | Some (e, (Inr c, _)) ->
            let t =
@@ -164,19 +167,23 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                                           (Print.comp_to_string c))
                                r
            in
-           Some t
+           Some (e, t)
      in
-     univ_vars, ty_opt
+     univ_vars, e_ty_opt
   in
   match t.n with
   | Tm_unknown ->
-    let univ_vars, ty_opt = extract_annot_from_body false in
-    let asc_ty =
-      match ty_opt with
-      | Some ty -> Inl ty
+    let univ_vars, e_ty_opt = extract_annot_from_body false in
+    let e, asc_ty =
+      match e_ty_opt with
+      | Some (e, ty) ->
+        if Env.debug env <| Options.Other "Dec"
+        then BU.print1 "Got body ascription %s\n"
+                            (Print.term_to_string ty);
+        e, Inl ty
       | _ -> failwith "Impossible"
     in
-    univ_vars, asc_ty, true
+    univ_vars, asc_ty, e, true
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in
@@ -187,14 +194,14 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         if Env.debug env <| Options.Other "Dec"
         then BU.print1 "Got lbtyp %s\n" (Print.term_to_string t);
         Inl t
-      | Some asc ->
+      | Some (_, asc) ->
         if Env.debug env <| Options.Other "Dec"
         then BU.print2 "Got lbtyp %s and asc %s\n"
                        (Print.term_to_string t)
                        (Print.term_to_string asc);
         Inr (t, asc)
     in
-    univ_vars, asc_ty, false
+    univ_vars, asc_ty, e, false
 
 (************************************************************************)
 (* Utilities on patterns  *)
