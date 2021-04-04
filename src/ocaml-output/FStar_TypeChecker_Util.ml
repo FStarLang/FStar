@@ -130,9 +130,8 @@ let (check_uvars : FStar_Range.range -> FStar_Syntax_Syntax.typ -> unit) =
 let (extract_let_rec_annotation :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.letbinding ->
-      (FStar_Syntax_Syntax.univ_names * (FStar_Syntax_Syntax.typ,
-        (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ))
-        FStar_Pervasives.either * FStar_Syntax_Syntax.term * Prims.bool))
+      (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.typ *
+        FStar_Syntax_Syntax.term * Prims.bool))
   =
   fun env ->
     fun uu___ ->
@@ -145,180 +144,354 @@ let (extract_let_rec_annotation :
           FStar_Syntax_Syntax.lbpos = uu___3;_} ->
           let rng = FStar_Syntax_Syntax.range_of_lbname lbname in
           let t1 = FStar_Syntax_Subst.compress t in
-          let extract_annot_from_body has_outer_ascription =
-            let uu___4 = FStar_Syntax_Subst.open_univ_vars univ_vars e in
-            match uu___4 with
-            | (univ_vars1, e1) ->
-                let env1 =
-                  FStar_TypeChecker_Env.push_univ_vars env univ_vars1 in
-                let r = FStar_TypeChecker_Env.get_range env1 in
-                let rec ascription e2 =
-                  let uu___5 =
-                    let uu___6 = FStar_Syntax_Subst.compress e2 in
-                    uu___6.FStar_Syntax_Syntax.n in
-                  match uu___5 with
-                  | FStar_Syntax_Syntax.Tm_meta (e3, uu___6) -> ascription e3
-                  | FStar_Syntax_Syntax.Tm_ascribed (e3, asc, uu___6) ->
-                      FStar_Pervasives_Native.Some (e3, asc)
-                  | uu___6 -> FStar_Pervasives_Native.None in
-                let rec body_type has_ascription e2 =
-                  let uu___5 =
-                    let uu___6 = FStar_Syntax_Subst.compress e2 in
-                    uu___6.FStar_Syntax_Syntax.n in
-                  match uu___5 with
-                  | FStar_Syntax_Syntax.Tm_meta (e3, uu___6) ->
-                      body_type has_ascription e3
-                  | FStar_Syntax_Syntax.Tm_abs (bs, body, rcopt) ->
-                      let mk_comp t2 =
-                        let uu___6 = FStar_Options.ml_ish () in
-                        if uu___6
-                        then FStar_Syntax_Util.ml_comp t2 r
-                        else FStar_Syntax_Syntax.mk_Total t2 in
-                      let mk_arrow c =
-                        FStar_Syntax_Syntax.mk
-                          (FStar_Syntax_Syntax.Tm_arrow (bs, c))
-                          c.FStar_Syntax_Syntax.pos in
-                      let uu___6 = ascription body in
-                      (match uu___6 with
-                       | FStar_Pervasives_Native.None ->
-                           if has_ascription
-                           then FStar_Pervasives_Native.None
-                           else
-                             (let uu___8 =
-                                let uu___9 =
-                                  let uu___10 =
-                                    mk_comp FStar_Syntax_Syntax.tun in
-                                  mk_arrow uu___10 in
-                                (e2, uu___9) in
-                              FStar_Pervasives_Native.Some uu___8)
-                       | FStar_Pervasives_Native.Some
-                           (body1, (FStar_Pervasives.Inl t2, uu___7)) ->
-                           let e3 =
-                             let uu___8 = e2 in
-                             {
-                               FStar_Syntax_Syntax.n =
-                                 (FStar_Syntax_Syntax.Tm_abs
-                                    (bs, body1, rcopt));
-                               FStar_Syntax_Syntax.pos =
-                                 (uu___8.FStar_Syntax_Syntax.pos);
-                               FStar_Syntax_Syntax.vars =
-                                 (uu___8.FStar_Syntax_Syntax.vars)
-                             } in
-                           let uu___8 =
-                             let uu___9 =
-                               let uu___10 = mk_comp t2 in mk_arrow uu___10 in
-                             (e3, uu___9) in
-                           FStar_Pervasives_Native.Some uu___8
-                       | FStar_Pervasives_Native.Some
-                           (body1, (FStar_Pervasives.Inr c, uu___7)) ->
-                           let e3 =
-                             let uu___8 = e2 in
-                             {
-                               FStar_Syntax_Syntax.n =
-                                 (FStar_Syntax_Syntax.Tm_abs
-                                    (bs, body1, rcopt));
-                               FStar_Syntax_Syntax.pos =
-                                 (uu___8.FStar_Syntax_Syntax.pos);
-                               FStar_Syntax_Syntax.vars =
-                                 (uu___8.FStar_Syntax_Syntax.vars)
-                             } in
-                           let uu___8 =
-                             let uu___9 = mk_arrow c in (e3, uu___9) in
-                           FStar_Pervasives_Native.Some uu___8
-                       | uu___7 ->
-                           if has_ascription
-                           then FStar_Pervasives_Native.None
-                           else
-                             FStar_Pervasives_Native.Some
-                               (e2, FStar_Syntax_Syntax.tun)) in
-                let e_ty_opt =
-                  let uu___5 = ascription e1 in
-                  match uu___5 with
-                  | FStar_Pervasives_Native.None ->
-                      body_type has_outer_ascription e1
-                  | FStar_Pervasives_Native.Some
-                      (e2, (FStar_Pervasives.Inl t2, uu___6)) ->
-                      FStar_Pervasives_Native.Some (e2, t2)
-                  | FStar_Pervasives_Native.Some
-                      (e2, (FStar_Pervasives.Inr c, uu___6)) ->
-                      let t2 =
-                        let uu___7 = FStar_Syntax_Util.is_tot_or_gtot_comp c in
-                        if uu___7
-                        then FStar_Syntax_Util.comp_result c
-                        else
-                          (let uu___9 =
-                             let uu___10 =
-                               let uu___11 =
-                                 FStar_Syntax_Print.comp_to_string c in
-                               FStar_Util.format1
-                                 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                 uu___11 in
-                             (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
-                               uu___10) in
-                           FStar_Errors.raise_error uu___9 r) in
-                      FStar_Pervasives_Native.Some (e2, t2) in
-                (univ_vars1, e_ty_opt) in
-          (match t1.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Tm_unknown ->
-               let uu___4 = extract_annot_from_body false in
-               (match uu___4 with
-                | (univ_vars1, e_ty_opt) ->
-                    let uu___5 =
-                      match e_ty_opt with
-                      | FStar_Pervasives_Native.Some (e1, ty) ->
-                          ((let uu___7 =
-                              FStar_All.pipe_left
-                                (FStar_TypeChecker_Env.debug env)
-                                (FStar_Options.Other "Dec") in
-                            if uu___7
-                            then
-                              let uu___8 =
-                                FStar_Syntax_Print.term_to_string ty in
-                              FStar_Util.print1 "Got body ascription %s\n"
-                                uu___8
-                            else ());
-                           (e1, (FStar_Pervasives.Inl ty)))
-                      | uu___6 -> failwith "Impossible" in
-                    (match uu___5 with
-                     | (e1, asc_ty) -> (univ_vars1, asc_ty, e1, true)))
-           | uu___4 ->
-               let uu___5 = FStar_Syntax_Subst.open_univ_vars univ_vars t1 in
-               (match uu___5 with
-                | (univ_vars1, t2) ->
-                    let uu___6 = extract_annot_from_body true in
+          let uu___4 = FStar_Syntax_Subst.univ_var_opening univ_vars in
+          (match uu___4 with
+           | (u_subst, univ_vars1) ->
+               let e1 = FStar_Syntax_Subst.subst u_subst e in
+               let t2 = FStar_Syntax_Subst.subst u_subst t1 in
+               let env1 = FStar_TypeChecker_Env.push_univ_vars env univ_vars1 in
+               let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt
+                 =
+                 let get_decreases c =
+                   FStar_All.pipe_right (FStar_Syntax_Util.comp_flags c)
+                     (FStar_Util.prefix_until
+                        (fun uu___5 ->
+                           match uu___5 with
+                           | FStar_Syntax_Syntax.DECREASES uu___6 -> true
+                           | uu___6 -> false)) in
+                 match lbtyp_opt with
+                 | FStar_Pervasives_Native.None ->
+                     let uu___5 = FStar_Syntax_Util.arrow_formals_comp tarr in
+                     (match uu___5 with
+                      | (bs, c) ->
+                          let uu___6 = get_decreases c in
+                          (match uu___6 with
+                           | FStar_Pervasives_Native.Some
+                               (pfx, FStar_Syntax_Syntax.DECREASES d, sfx) ->
+                               let c1 =
+                                 FStar_Syntax_Util.comp_set_flags c
+                                   (FStar_List.append pfx sfx) in
+                               let uu___7 = FStar_Syntax_Util.arrow bs c1 in
+                               (uu___7, tarr, true)
+                           | uu___7 -> (tarr, tarr, true)))
+                 | FStar_Pervasives_Native.Some annot ->
+                     let uu___5 = FStar_Syntax_Util.arrow_formals_comp tarr in
+                     (match uu___5 with
+                      | (bs, c) ->
+                          let uu___6 =
+                            FStar_Syntax_Util.arrow_formals_comp annot in
+                          (match uu___6 with
+                           | (bs', c') ->
+                               (if
+                                  (FStar_List.length bs) <>
+                                    (FStar_List.length bs')
+                                then
+                                  FStar_Errors.raise_error
+                                    (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                                      "Arity mismatch on let rec annotation")
+                                    rng
+                                else ();
+                                (let move_decreases d flags flags' =
+                                   let d' =
+                                     let s =
+                                       FStar_Syntax_Util.rename_binders bs
+                                         bs' in
+                                     FStar_List.map
+                                       (FStar_Syntax_Subst.subst s) d in
+                                   let c1 =
+                                     FStar_Syntax_Util.comp_set_flags c flags in
+                                   let tarr1 = FStar_Syntax_Util.arrow bs c1 in
+                                   let c'1 =
+                                     FStar_Syntax_Util.comp_set_flags c'
+                                       ((FStar_Syntax_Syntax.DECREASES d') ::
+                                       flags') in
+                                   let tannot =
+                                     FStar_Syntax_Util.arrow bs' c'1 in
+                                   (let uu___9 =
+                                      FStar_All.pipe_left
+                                        (FStar_TypeChecker_Env.debug env1)
+                                        (FStar_Options.Other "Dec") in
+                                    if uu___9
+                                    then
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string
+                                          tarr1 in
+                                      let uu___11 =
+                                        FStar_Syntax_Print.term_to_string
+                                          tannot in
+                                      FStar_Util.print2
+                                        "Annotated type is %s\nConstructed lbtyp is %s\n"
+                                        uu___10 uu___11
+                                    else ());
+                                   (tarr1, tannot, true) in
+                                 let uu___8 =
+                                   let uu___9 = get_decreases c in
+                                   let uu___10 = get_decreases c' in
+                                   (uu___9, uu___10) in
+                                 match uu___8 with
+                                 | (FStar_Pervasives_Native.None, uu___9) ->
+                                     (tarr, annot, false)
+                                 | (FStar_Pervasives_Native.Some
+                                    (pfx, FStar_Syntax_Syntax.DECREASES d,
+                                     sfx),
+                                    FStar_Pervasives_Native.Some
+                                    (pfx', FStar_Syntax_Syntax.DECREASES d',
+                                     sfx')) ->
+                                     ((let uu___10 =
+                                         let uu___11 =
+                                           let uu___12 =
+                                             let uu___13 =
+                                               let uu___14 = FStar_List.hd d' in
+                                               uu___14.FStar_Syntax_Syntax.pos in
+                                             FStar_Range.string_of_range
+                                               uu___13 in
+                                           FStar_Util.format1
+                                             "Multiple decreases clauses on this definition; please remove the one on its declaration (see %s)"
+                                             uu___12 in
+                                         (FStar_Errors.Warning_DeprecatedGeneric,
+                                           uu___11) in
+                                       FStar_Errors.log_issue rng uu___10);
+                                      move_decreases d
+                                        (FStar_List.append pfx sfx)
+                                        (FStar_List.append pfx' sfx'))
+                                 | (FStar_Pervasives_Native.Some
+                                    (pfx, FStar_Syntax_Syntax.DECREASES d,
+                                     sfx),
+                                    FStar_Pervasives_Native.None) ->
+                                     move_decreases d
+                                       (FStar_List.append pfx sfx)
+                                       (FStar_Syntax_Util.comp_flags c')
+                                 | uu___9 -> failwith "Impossible")))) in
+               let extract_annot_from_body lbtyp_opt =
+                 let rec aux e2 =
+                   let e3 = FStar_Syntax_Subst.compress e2 in
+                   match e3.FStar_Syntax_Syntax.n with
+                   | FStar_Syntax_Syntax.Tm_meta (e', m) ->
+                       ((let uu___6 =
+                           FStar_All.pipe_left
+                             (FStar_TypeChecker_Env.debug env1)
+                             (FStar_Options.Other "Dec") in
+                         if uu___6
+                         then FStar_Util.print_string "Body tm_meta\n"
+                         else ());
+                        (let uu___6 = aux e' in
+                         match uu___6 with
+                         | (t3, e'1, recheck) ->
+                             (t3,
+                               (let uu___7 = e3 in
+                                {
+                                  FStar_Syntax_Syntax.n =
+                                    (FStar_Syntax_Syntax.Tm_meta (e'1, m));
+                                  FStar_Syntax_Syntax.pos =
+                                    (uu___7.FStar_Syntax_Syntax.pos);
+                                  FStar_Syntax_Syntax.vars =
+                                    (uu___7.FStar_Syntax_Syntax.vars)
+                                }), recheck)))
+                   | FStar_Syntax_Syntax.Tm_ascribed
+                       (uu___5, (FStar_Pervasives.Inr c, uu___6), uu___7) ->
+                       let uu___8 =
+                         let uu___9 =
+                           let uu___10 = FStar_Syntax_Print.comp_to_string c in
+                           FStar_Util.format1
+                             "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                             uu___10 in
+                         (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                           uu___9) in
+                       FStar_Errors.raise_error uu___8 rng
+                   | FStar_Syntax_Syntax.Tm_ascribed
+                       (e', (FStar_Pervasives.Inl t3, tac_opt), lopt) ->
+                       ((let uu___6 =
+                           FStar_All.pipe_left
+                             (FStar_TypeChecker_Env.debug env1)
+                             (FStar_Options.Other "Dec") in
+                         if uu___6
+                         then FStar_Util.print_string "Body tm_ascribed\n"
+                         else ());
+                        (let uu___6 =
+                           reconcile_let_rec_ascription_and_body_type t3
+                             lbtyp_opt in
+                         match uu___6 with
+                         | (t4, lbtyp, recheck) ->
+                             let e4 =
+                               let uu___7 = e3 in
+                               {
+                                 FStar_Syntax_Syntax.n =
+                                   (FStar_Syntax_Syntax.Tm_ascribed
+                                      (e',
+                                        ((FStar_Pervasives.Inl t4), tac_opt),
+                                        lopt));
+                                 FStar_Syntax_Syntax.pos =
+                                   (uu___7.FStar_Syntax_Syntax.pos);
+                                 FStar_Syntax_Syntax.vars =
+                                   (uu___7.FStar_Syntax_Syntax.vars)
+                               } in
+                             (lbtyp, e4, recheck)))
+                   | FStar_Syntax_Syntax.Tm_abs uu___5 ->
+                       ((let uu___7 =
+                           FStar_All.pipe_left
+                             (FStar_TypeChecker_Env.debug env1)
+                             (FStar_Options.Other "Dec") in
+                         if uu___7
+                         then FStar_Util.print_string "Body tm_abs\n"
+                         else ());
+                        (let uu___7 =
+                           FStar_Syntax_Util.abs_formals_maybe_unascribe_body
+                             false e3 in
+                         match uu___7 with
+                         | (bs, body, rcopt) ->
+                             let mk_comp t3 =
+                               let uu___8 = FStar_Options.ml_ish () in
+                               if uu___8
+                               then
+                                 FStar_Syntax_Util.ml_comp t3
+                                   t3.FStar_Syntax_Syntax.pos
+                               else FStar_Syntax_Syntax.mk_Total t3 in
+                             let mk_arrow c = FStar_Syntax_Util.arrow bs c in
+                             let rec aux1 body1 =
+                               let body2 = FStar_Syntax_Subst.compress body1 in
+                               match body2.FStar_Syntax_Syntax.n with
+                               | FStar_Syntax_Syntax.Tm_meta (body3, m) ->
+                                   let uu___8 = aux1 body3 in
+                                   (match uu___8 with
+                                    | (t3, body', recheck) ->
+                                        let body4 =
+                                          let uu___9 = body3 in
+                                          {
+                                            FStar_Syntax_Syntax.n =
+                                              (FStar_Syntax_Syntax.Tm_meta
+                                                 (body', m));
+                                            FStar_Syntax_Syntax.pos =
+                                              (uu___9.FStar_Syntax_Syntax.pos);
+                                            FStar_Syntax_Syntax.vars =
+                                              (uu___9.FStar_Syntax_Syntax.vars)
+                                          } in
+                                        (t3, body4, recheck))
+                               | FStar_Syntax_Syntax.Tm_ascribed
+                                   (body', (asc, tac_opt), lopt) ->
+                                   let tarr =
+                                     match asc with
+                                     | FStar_Pervasives.Inl t3 ->
+                                         let uu___8 = mk_comp t3 in
+                                         mk_arrow uu___8
+                                     | FStar_Pervasives.Inr c -> mk_arrow c in
+                                   let uu___8 =
+                                     reconcile_let_rec_ascription_and_body_type
+                                       tarr lbtyp_opt in
+                                   (match uu___8 with
+                                    | (tarr1, lbtyp, recheck) ->
+                                        let uu___9 =
+                                          FStar_Syntax_Util.arrow_formals_comp
+                                            tarr1 in
+                                        (match uu___9 with
+                                         | (bs', c) ->
+                                             if
+                                               (FStar_List.length bs') <>
+                                                 (FStar_List.length bs)
+                                             then failwith "Impossible"
+                                             else
+                                               (let subst =
+                                                  FStar_Syntax_Util.rename_binders
+                                                    bs' bs in
+                                                let c1 =
+                                                  FStar_Syntax_Subst.subst_comp
+                                                    subst c in
+                                                (let uu___12 =
+                                                   FStar_All.pipe_left
+                                                     (FStar_TypeChecker_Env.debug
+                                                        env1)
+                                                     (FStar_Options.Other
+                                                        "Dec") in
+                                                 if uu___12
+                                                 then
+                                                   let uu___13 =
+                                                     FStar_Syntax_Print.comp_to_string
+                                                       c1 in
+                                                   FStar_Util.print1
+                                                     "Ascribing body with %s\n"
+                                                     uu___13
+                                                 else ());
+                                                (let body3 =
+                                                   let uu___12 = body2 in
+                                                   {
+                                                     FStar_Syntax_Syntax.n =
+                                                       (FStar_Syntax_Syntax.Tm_ascribed
+                                                          (body',
+                                                            ((FStar_Pervasives.Inr
+                                                                c1), tac_opt),
+                                                            lopt));
+                                                     FStar_Syntax_Syntax.pos
+                                                       =
+                                                       (uu___12.FStar_Syntax_Syntax.pos);
+                                                     FStar_Syntax_Syntax.vars
+                                                       =
+                                                       (uu___12.FStar_Syntax_Syntax.vars)
+                                                   } in
+                                                 let e4 =
+                                                   FStar_Syntax_Util.abs bs
+                                                     body3 rcopt in
+                                                 (let uu___13 =
+                                                    FStar_All.pipe_left
+                                                      (FStar_TypeChecker_Env.debug
+                                                         env1)
+                                                      (FStar_Options.Other
+                                                         "Dec") in
+                                                  if uu___13
+                                                  then
+                                                    let uu___14 =
+                                                      FStar_Syntax_Print.term_to_string
+                                                        e4 in
+                                                    FStar_Util.print1
+                                                      "Ascribed defn is %s\n"
+                                                      uu___14
+                                                  else ());
+                                                 (lbtyp, e4, recheck)))))
+                               | uu___8 ->
+                                   ((let uu___10 =
+                                       FStar_All.pipe_left
+                                         (FStar_TypeChecker_Env.debug env1)
+                                         (FStar_Options.Other "Dec") in
+                                     if uu___10
+                                     then
+                                       let uu___11 =
+                                         FStar_Syntax_Print.tag_of_term e3 in
+                                       FStar_Util.print1 "Body other %s\n"
+                                         uu___11
+                                     else ());
+                                    (match lbtyp_opt with
+                                     | FStar_Pervasives_Native.Some lbtyp ->
+                                         (lbtyp, e3, false)
+                                     | FStar_Pervasives_Native.None ->
+                                         let tarr =
+                                           let uu___10 =
+                                             mk_comp FStar_Syntax_Syntax.tun in
+                                           mk_arrow uu___10 in
+                                         (tarr, e3, true))) in
+                             aux1 body)) in
+                 aux e1 in
+               (match t2.FStar_Syntax_Syntax.n with
+                | FStar_Syntax_Syntax.Tm_unknown ->
+                    ((let uu___6 =
+                        FStar_All.pipe_left
+                          (FStar_TypeChecker_Env.debug env1)
+                          (FStar_Options.Other "Dec") in
+                      if uu___6
+                      then
+                        let uu___7 = FStar_Syntax_Print.term_to_string e1 in
+                        FStar_Util.print1
+                          "No top-level lbtyp, extracting annot from body %s\n"
+                          uu___7
+                      else ());
+                     (let uu___6 =
+                        extract_annot_from_body FStar_Pervasives_Native.None in
+                      match uu___6 with
+                      | (lbtyp, e2, uu___7) -> (univ_vars1, lbtyp, e2, true)))
+                | uu___5 ->
+                    let uu___6 =
+                      extract_annot_from_body
+                        (FStar_Pervasives_Native.Some t2) in
                     (match uu___6 with
-                     | (uu___7, ty_opt) ->
-                         let asc_ty =
-                           match ty_opt with
-                           | FStar_Pervasives_Native.None ->
-                               ((let uu___9 =
-                                   FStar_All.pipe_left
-                                     (FStar_TypeChecker_Env.debug env)
-                                     (FStar_Options.Other "Dec") in
-                                 if uu___9
-                                 then
-                                   let uu___10 =
-                                     FStar_Syntax_Print.term_to_string t2 in
-                                   FStar_Util.print1 "Got lbtyp %s\n" uu___10
-                                 else ());
-                                FStar_Pervasives.Inl t2)
-                           | FStar_Pervasives_Native.Some (uu___8, asc) ->
-                               ((let uu___10 =
-                                   FStar_All.pipe_left
-                                     (FStar_TypeChecker_Env.debug env)
-                                     (FStar_Options.Other "Dec") in
-                                 if uu___10
-                                 then
-                                   let uu___11 =
-                                     FStar_Syntax_Print.term_to_string t2 in
-                                   let uu___12 =
-                                     FStar_Syntax_Print.term_to_string asc in
-                                   FStar_Util.print2
-                                     "Got lbtyp %s and asc %s\n" uu___11
-                                     uu___12
-                                 else ());
-                                FStar_Pervasives.Inr (t2, asc)) in
-                         (univ_vars1, asc_ty, e, false))))
+                     | (lbtyp, e2, check_lbtyp) ->
+                         (univ_vars1, lbtyp, e2, true))))
 let rec (decorated_pattern_as_term :
   FStar_Syntax_Syntax.pat ->
     (FStar_Syntax_Syntax.bv Prims.list * FStar_Syntax_Syntax.term))

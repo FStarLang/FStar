@@ -97,111 +97,158 @@ let check_uvars r t =
 (************************************************************************)
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
-   * either<typ, (typ * typ)>
+   * typ
    * term
    * bool //true indicates that the type needs to be checked; false indicates that it is already checked
    =
   let rng = S.range_of_lbname lbname in
   let t = SS.compress t in
-  let extract_annot_from_body has_outer_ascription =
-     let univ_vars, e = SS.open_univ_vars univ_vars e in
-     let env = Env.push_univ_vars env univ_vars in
-     let r = Env.get_range env in
-     let rec ascription e : option<(term * S.ascription)> =
-        match (SS.compress e).n with
-        | Tm_meta(e, _) ->
-          ascription e
-
-        | Tm_ascribed(e, asc, _) ->
-          Some (e, asc)
-
-        | _ ->
-          None
-     in
-     let rec body_type has_ascription e
-       : option<(term * typ)> //not has_ascription ==> Some?
-       = match (SS.compress e).n with
-         | Tm_meta(e, _) ->
-           body_type has_ascription e
-
-         | Tm_abs(bs, body, rcopt) ->
-           let mk_comp t =
-              if Options.ml_ish()
-              then U.ml_comp t r
-              else S.mk_Total t
-           in
-           let mk_arrow c =
-               S.mk (Tm_arrow (bs, c)) c.pos
-           in
-           match ascription body with
-           | None ->
-             if has_ascription
-             then None
-             else Some (e, mk_arrow (mk_comp S.tun))
-
-           | Some (body, (Inl t, _)) ->
-             let e = {e with n = Tm_abs(bs, body, rcopt)} in
-             Some (e, mk_arrow (mk_comp t))
-
-           | Some (body, (Inr c, _)) ->
-             let e = {e with n = Tm_abs(bs, body, rcopt)} in
-             Some (e, mk_arrow c)
-
-         | _ ->
-           if has_ascription then None else Some (e, S.tun)
-     in
-     let e_ty_opt =
-         match ascription e with
-         | None ->
-           body_type has_outer_ascription e
-
-         | Some (e, (Inl t, _)) ->
-           Some (e, t)
-
-         | Some (e, (Inr c, _)) ->
-           let t =
-             if U.is_tot_or_gtot_comp c
-             then U.comp_result c
-             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
-                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                          (Print.comp_to_string c))
-                               r
-           in
-           Some (e, t)
-     in
-     univ_vars, e_ty_opt
-  in
-  match t.n with
-  | Tm_unknown ->
-    let univ_vars, e_ty_opt = extract_annot_from_body false in
-    let e, asc_ty =
-      match e_ty_opt with
-      | Some (e, ty) ->
-        if Env.debug env <| Options.Other "Dec"
-        then BU.print1 "Got body ascription %s\n"
-                            (Print.term_to_string ty);
-        e, Inl ty
-      | _ -> failwith "Impossible"
-    in
-    univ_vars, asc_ty, e, true
-
-  | _ ->
-    let univ_vars, t = open_univ_vars univ_vars t in
-    let _, ty_opt = extract_annot_from_body true  in
-    let asc_ty =
-      match ty_opt with
+  let u_subst, univ_vars = SS.univ_var_opening univ_vars in
+  let e = SS.subst u_subst e in
+  let t = SS.subst u_subst t in
+  let env = Env.push_univ_vars env univ_vars in
+  let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt =
+      let get_decreases c =
+          U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
+      in
+      match lbtyp_opt with
       | None ->
-        if Env.debug env <| Options.Other "Dec"
-        then BU.print1 "Got lbtyp %s\n" (Print.term_to_string t);
-        Inl t
-      | Some (_, asc) ->
-        if Env.debug env <| Options.Other "Dec"
-        then BU.print2 "Got lbtyp %s and asc %s\n"
-                       (Print.term_to_string t)
-                       (Print.term_to_string asc);
-        Inr (t, asc)
+        let bs, c = U.arrow_formals_comp tarr in
+        (match get_decreases c with
+         | Some (pfx, DECREASES d, sfx) ->
+           let c = U.comp_set_flags c (pfx @ sfx) in
+           U.arrow bs c, tarr, true
+         | _ -> tarr, tarr, true)
+
+      | Some annot ->
+        let bs, c = U.arrow_formals_comp tarr in
+        let bs', c' = U.arrow_formals_comp annot in
+        if List.length bs <> List.length bs'
+        then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation")
+                                rng;
+        let move_decreases d flags flags' =
+          let d' =
+            let s = U.rename_binders bs bs' in
+            List.map (SS.subst s) d
+          in
+          let c = U.comp_set_flags c flags in
+          let tarr = U.arrow bs c in
+          let c' = U.comp_set_flags c' (DECREASES d'::flags') in
+          let tannot = U.arrow bs' c' in
+          if Env.debug env <| Options.Other "Dec"
+          then BU.print2 "Annotated type is %s\n\
+                      Constructed lbtyp is %s\n"
+                     (Print.term_to_string tarr)
+                     (Print.term_to_string tannot);
+          tarr, tannot, true
+        in
+        match get_decreases c, get_decreases c' with
+        | None, _ -> tarr, annot, false
+        | Some (pfx, DECREASES d, sfx), Some (pfx', DECREASES d', sfx') ->
+          Errors.log_issue rng
+             (Warning_DeprecatedGeneric,
+              BU.format1 "Multiple decreases clauses on this definition; please remove the one on its declaration (see %s)"
+                          (Range.string_of_range (List.hd d').pos));
+          move_decreases d (pfx@sfx) (pfx'@sfx')
+        | Some (pfx, DECREASES d, sfx), None ->
+          move_decreases d (pfx@sfx) (U.comp_flags c')
+        | _ -> failwith "Impossible"
+  in
+  let extract_annot_from_body (lbtyp_opt:option<typ>)
+    : typ
+    * term
+    * bool
+    = let rec aux e
+        : typ * term * bool
+        = let e = SS.compress e in
+          match e.n with
+          | Tm_meta(e', m) ->
+            if Env.debug env <| Options.Other "Dec"
+            then BU.print_string "Body tm_meta\n";
+
+            let t, e', recheck = aux e' in
+            t, { e with n = Tm_meta(e', m) }, recheck
+
+          | Tm_ascribed(_, (Inr c, _), _) ->
+            raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                         BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                     (Print.comp_to_string c))
+                        rng
+
+          | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
+            if Env.debug env <| Options.Other "Dec"
+            then BU.print_string "Body tm_ascribed\n";
+
+            let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
+            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt), lopt) } in
+            lbtyp, e, recheck
+
+          | Tm_abs _ ->
+            if Env.debug env <| Options.Other "Dec"
+            then BU.print_string "Body tm_abs\n";
+
+            let bs, body, rcopt = U.abs_formals_maybe_unascribe_body false e in
+            let mk_comp t =
+              if Options.ml_ish()
+              then U.ml_comp t t.pos
+              else S.mk_Total t
+            in
+            let mk_arrow c = U.arrow bs c in
+            let rec aux body =
+              let body = SS.compress body in
+              match body.n with
+              | Tm_meta (body, m) ->
+                let t, body', recheck = aux body in
+                let body = { body with n = Tm_meta(body', m) } in
+                t, body, recheck
+
+              | Tm_ascribed (body', (asc, tac_opt), lopt) ->
+                let tarr =
+                  match asc with
+                  | Inl t -> mk_arrow (mk_comp t)
+                  | Inr c -> mk_arrow c
+                in
+                let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
+                let bs', c = U.arrow_formals_comp tarr in
+                if List.length bs' <> List.length bs
+                then failwith "Impossible"
+                else let subst = U.rename_binders bs' bs in
+                     let c = SS.subst_comp subst c in
+                     if Env.debug env <| Options.Other "Dec"
+                     then BU.print1 "Ascribing body with %s\n" (Print.comp_to_string c);
+                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt), lopt) } in
+                     let e = U.abs bs body rcopt in
+                     if Env.debug env <| Options.Other "Dec"
+                     then BU.print1 "Ascribed defn is %s\n" (Print.term_to_string e);
+                     lbtyp, e, recheck
+
+              | _ ->
+                if Env.debug env <| Options.Other "Dec"
+                then BU.print1 "Body other %s\n"
+                                     (Print.tag_of_term e);
+                match lbtyp_opt with
+                | Some lbtyp ->
+                  lbtyp, e, false
+
+                | None ->
+                  let tarr = mk_arrow (mk_comp S.tun) in
+                  tarr, e, true
+            in
+            aux body
+      in
+      aux e
     in
-    univ_vars, asc_ty, e, false
+    match t.n with
+    | Tm_unknown ->
+      if Env.debug env <| Options.Other "Dec"
+      then BU.print1 "No top-level lbtyp, extracting annot from body %s\n"
+                     (Print.term_to_string e);
+      let lbtyp, e, _ = extract_annot_from_body None in
+      univ_vars, lbtyp, e, true
+
+    | _ ->
+      let lbtyp, e, check_lbtyp = extract_annot_from_body (Some t) in
+      univ_vars, lbtyp, e, true
 
 (************************************************************************)
 (* Utilities on patterns  *)

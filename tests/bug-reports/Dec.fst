@@ -31,7 +31,15 @@ let rec h (x y : nat)
           (ensures (pred x y))
           (decreases y)
   = if x > 0
-    then g (x - 1) (y - 1)
+    then h (x - 1) (y - 1)
+    else ()
+
+let rec h (x y : nat)
+  : Lemma (requires x <= y)
+          (ensures (pred x y))
+          (decreases y)
+  = if x > 0
+    then h (x - 1) (y - 1)
     else ()
 
 val old (x:nat) (y:nat)

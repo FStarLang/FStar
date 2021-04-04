@@ -3310,9 +3310,9 @@ and check_top_level_let_rec env top =
             * the expected type is defined within lbs
             * *)
            let env0, topt = Env.clear_expected_typ env in
-           let lbts, rec_env, g_t = build_let_rec_env true env0 lbs in
+           let lbs, rec_env, g_t = build_let_rec_env true env0 lbs in
            (* now we type check each let rec *)
-           let lbs, g_lbs = check_let_recs rec_env lbts in
+           let lbs, g_lbs = check_let_recs rec_env lbs in
            let g_lbs = Env.conj_guard g_t g_lbs |> Rel.solve_deferred_constraints env |> Rel.resolve_implicits env in
 
            let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
@@ -3363,8 +3363,8 @@ and check_inner_let_rec env top =
 (*open*)  let lbs, e2 = SS.open_let_rec lbs e2 in
 
           let env0, topt = Env.clear_expected_typ env in
-          let lbts, rec_env, g_t = build_let_rec_env false env0 lbs in
-          let lbs, g_lbs = check_let_recs rec_env lbts |> (fun (lbs, g) -> lbs, Env.conj_guard g_t g) in
+          let lbs, rec_env, g_t = build_let_rec_env false env0 lbs in
+          let lbs, g_lbs = check_let_recs rec_env lbs |> (fun (lbs, g) -> lbs, Env.conj_guard g_t g) in
 
           let env, lbs = lbs |> BU.fold_map (fun env lb ->
             let x = {left lb.lbname with sort=lb.lbtyp} in
@@ -3410,7 +3410,7 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * guard_t =
+and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let env0 = env in
    let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
      : option<(int * term)> // when enabled returns recursion arity;
@@ -3461,69 +3461,38 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
        let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
        env0, g |> Rel.resolve_implicits env |> Rel.discharge_guard env0, t
    in
-   let reconcile_let_rec_ascription_and_body_type univ_vars asc ty = 
-       let ty = 
-         let bs, c = U.arrow_formals_comp asc in
-         let bs', c' = U.arrow_formals_comp ty in
-         let get_decreases c =
-           U.comp_flags c |> BU.find_opt (function DECREASES _ -> true | _ -> false) 
-         in
-         match get_decreases c, get_decreases c' with
-         | Some (DECREASES d), Some (DECREASES d') -> 
-           let r = (List.hd d).pos in
-           let r' = (List.hd d').pos in
-           Errors.log_issue r' 
-             (Warning_DeprecatedGeneric, 
-              BU.format1 "Multiple decreases clauses on this definition; please remove the on on its declaration (see %s)"
-                          (Range.string_of_range r));
-           ty
-         | Some (DECREASES d), None -> 
-           if List.length bs <> List.length bs'
-           then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation") ty.pos;
-           let d = List.map (SS.subst (U.rename_binders bs bs')) d in
-           let c' = comp_set_flags c' (DECREASES d :: comp_flags c') in
-           U.arrow bs' c'
-         | _ -> ty
-       in
-       let env, g, ty = check_annot univ_vars ty in
-       match Rel.get_subtyping_prop env ty asc with
-       | None -> 
-         Errors.log_issue ty.pos (Err.basic_type_error env None ty asc);
-         g, asc, ty         
-       | Some g' ->
-         Env.conj_guard g g', asc, ty
-   in
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
-        let univ_vars, asc_ty, e, check_t = TcUtil.extract_let_rec_annotation env lb in
+        let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
+        if Env.debug env <| Options.Other "Dec"
+        then BU.print2 "Got lbtyp=%s\n\
+                        and lbdef=%s\n"
+                       (Print.term_to_string lbtyp)
+                       (Print.term_to_string lbdef);
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
-        let g, asc, t = 
-          match asc_ty with
-          | Inl t -> 
+        let g, lbtyp = 
             if not check_t 
-            then g_acc, t, t
-            else let _, g, t = check_annot univ_vars t in
-                 Env.conj_guard g_acc g, t, t
-          | Inr (asc, ty) -> 
-            reconcile_let_rec_ascription_and_body_type univ_vars asc ty
+            then g_acc, lbtyp
+            else let _, g, t = check_annot univ_vars lbtyp in
+                 Env.conj_guard g_acc g, t
         in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
         // Removed that check. Rest of the code relies on env.letrecs = []
         let lb, env =
-            match termination_check_enabled lb.lbname e t with
+            match termination_check_enabled lb.lbname lbdef lbtyp with
             // AR: we need to add the binding of the let rec after adding the
             // binders of the lambda term, and so, here we just note in the env that
             // we are typechecking a let rec, the recursive binding will be added in
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
             | Some (arity, def) ->
-              let lb = {lb with lbtyp=asc; lbunivs=univ_vars; lbdef=def} in
-              let env = {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs} in
-              (lb, t), env
+              let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
+              let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
+              lb, env
             | None ->
-              let lb = {lb with lbtyp=asc; lbunivs=univ_vars; lbdef=e} in
-              (lb, t), Env.push_let_binding env lb.lbname (univ_vars, t)
+              let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
+              lb, Env.push_let_binding env lb.lbname (univ_vars, lbtyp)
         in
         lb::lbs,  env, g)
     ([], env, Env.trivial_guard)
@@ -3531,7 +3500,7 @@ and build_let_rec_env _top_level env lbs : list<(letbinding * typ)> * env_t * gu
   List.rev lbs, env, g
 
 and check_let_recs env lbts =
-    let lbs, gs = lbts |> List.map (fun (lb,lbt) ->
+    let lbs, gs = lbts |> List.map (fun lb ->
         (* here we set the expected type in the environment to the annotated expected type
          * and use it in order to type check the body of the lb
          * *)
@@ -3565,7 +3534,7 @@ and check_let_recs env lbts =
 
         let lb = { lb with lbdef = def } in
 
-        let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lbt) lb.lbdef in
+        let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (TcComm.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
         (* replace the body lb.lbdef with the type checked body e with elaboration on monadic application *)
