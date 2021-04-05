@@ -955,7 +955,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
     src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
     not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
-    
+
   if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
   else begin
     aux
@@ -1406,7 +1406,7 @@ let ufailed_simple (s:string) : univ_eq_sol =
 let ufailed_thunk (s: unit -> string) : univ_eq_sol =
   UFailed (mklstr s)
 
-  
+
 let rec really_solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
     let u2 = N.normalize_universe wl.tcenv u2 in
@@ -2281,7 +2281,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
               let t_last_arg, _ = env.typeof_well_typed_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) false in  //AR: 03/30: WARNING: dropping the guard
-              //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
@@ -2294,7 +2293,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
-        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] t_lhs.pos)
+        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [(lhs'_last_arg, snd last_arg_rhs)] t_lhs.pos)
                                             (Some (U.residual_tot t_res_lhs)))]
         in
         let sub_probs, wl =
@@ -3348,7 +3347,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
        *)
 
       if problem.relation = EQ
-      then solve_eq c1 c2 Env.trivial_guard        
+      then solve_eq c1 c2 Env.trivial_guard
       else
         let r = Env.get_range env in
 
@@ -3746,7 +3745,7 @@ let with_guard env prob dopt =
                   implicits=implicits})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
-  Profiling.profile 
+  Profiling.profile
     (fun () ->
       if debug env <| Options.Other "Rel" then
         BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
@@ -3757,7 +3756,7 @@ let try_teq smt_ok env t1 t2 : option<guard_t> =
       g)
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.try_teq"
-     
+
 
 let teq env t1 t2 : guard_t =
     match try_teq true env t1 t2 with
@@ -3924,7 +3923,7 @@ let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:gua
    let g =
      if deferred_to_tac_ok
      then DeferredImplicits.solve_deferred_to_tactic_goals env g
-     else g 
+     else g
    in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
@@ -3976,10 +3975,10 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
                   guard = %s\n"
                   (guard_to_string env g);
-  let g = 
+  let g =
     let defer_ok = false in
     let deferred_to_tac_ok = true in
-    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g 
+    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
   in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
@@ -4128,7 +4127,7 @@ let get_subtyping_prop env t1 t2 =
  *   and the set of new implicits, right now this set is same as imps,
  *   for inductives, this may later include implicits for pattern variables
  *)
- 
+
 let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.implicits * bool =
   (*
    * Get the value of the implicit imp
@@ -4139,9 +4138,9 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
   else
     let imp_value imp : option<term> =
       let ctx_u, r = imp.imp_uvar, imp.imp_range in
-  
+
      let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
-    
+
       match (SS.compress t_norm).n with
       | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
         r |> S.unit_const_with_range |> Some
@@ -4422,7 +4421,7 @@ let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
 let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t =
   if Env.debug env <| Options.Other "LayeredEffectsEqns"
   then BU.print3 "Layered Effect (%s) %s = %s\n"
-         (if reason |> is_none then "_" else reason |> must)              
+         (if reason |> is_none then "_" else reason |> must)
          (Print.term_to_string t1) (Print.term_to_string t2);
   teq env t1 t2  //AR: teq_nosmt?
 
@@ -4430,3 +4429,4 @@ let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
+
