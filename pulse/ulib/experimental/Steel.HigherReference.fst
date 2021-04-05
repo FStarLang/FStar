@@ -23,17 +23,14 @@ open FStar.Real
 open FStar.PCM
 open Steel.FractionalPermission
 module Atomic = Steel.Effect.Atomic
-//module SB = Steel.SteelT.Basics
 
 let fractional (a:Type u#1) = option (a & perm)
-#push-options "--query_stats"
 let composable #a : symrel (fractional a) =
   fun (f0 f1:fractional a) ->
     match f0, f1 with
     | None, _
     | _, None -> True
     | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. 1.0R
-#pop-options
 let compose #a (f0:fractional a) (f1:fractional a{composable f0 f1}) : fractional a =
   match f0, f1 with
   | None, f
@@ -212,7 +209,7 @@ let free (#a:Type) (#v:erased a) (r:ref a)
     drop (Mem.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
 
 (* move these to Mem *)
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 20 --retry 2"
 let mem_share_atomic_raw (#a:Type) (#uses:_) (#p:perm{perm_ok p}) (r:ref a)
                          (v0:erased a)
   : action_except unit uses (pts_to_raw r p v0)
