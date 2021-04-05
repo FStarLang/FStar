@@ -2280,12 +2280,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-<<<<<<< HEAD
-              let t_last_arg = env.type_of_well_typed ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
-=======
               let t_last_arg, _ = env.typeof_well_typed_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) false in  //AR: 03/30: WARNING: dropping the guard
-              //FIXME: this may be an implicit arg ... fix qualifier
->>>>>>> master
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
