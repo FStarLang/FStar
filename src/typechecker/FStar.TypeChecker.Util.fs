@@ -273,7 +273,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
            univ_vars, t, e, false
       else
         let lbtyp, e, check_lbtyp = extract_annot_from_body (Some t) in
-        univ_vars, lbtyp, e, true
+        univ_vars, lbtyp, e, check_lbtyp
 
 (************************************************************************)
 (* Utilities on patterns  *)

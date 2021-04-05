@@ -3474,8 +3474,9 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
         if Env.debug env <| Options.Other "Dec"
-        then BU.print2 "Got lbtyp=%s\n\
+        then BU.print3 "Got lbtyp(should_check=%s)=%s\n\
                         and lbdef=%s\n"
+                       (BU.string_of_bool check_t)
                        (Print.term_to_string lbtyp)
                        (Print.term_to_string lbdef);
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes

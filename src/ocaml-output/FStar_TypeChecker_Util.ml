@@ -554,7 +554,7 @@ let (extract_let_rec_annotation :
                                  (FStar_Pervasives_Native.Some t2) in
                              match uu___11 with
                              | (lbtyp, e2, check_lbtyp) ->
-                                 (univ_vars1, lbtyp, e2, true))))))
+                                 (univ_vars1, lbtyp, e2, check_lbtyp))))))
 let rec (decorated_pattern_as_term :
   FStar_Syntax_Syntax.pat ->
     (FStar_Syntax_Syntax.bv Prims.list * FStar_Syntax_Syntax.term))

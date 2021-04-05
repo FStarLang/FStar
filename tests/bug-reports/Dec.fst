@@ -79,3 +79,10 @@ let test_inner_let_rec (x y:nat)
           else aux (x - 1) (y - 1)
     in
     aux x y
+
+
+open FStar.Mul
+val factorial_tail (acc:nat) (n:nat) : Tot nat
+let rec factorial_tail acc n : Tot _ (decreases n) =
+  if n = 0 then acc
+  else factorial_tail (n * acc) (n - 1)

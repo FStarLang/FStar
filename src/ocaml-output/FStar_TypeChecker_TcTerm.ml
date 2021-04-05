@@ -10013,12 +10013,14 @@ and (build_let_rec_env :
                                 (FStar_Options.Other "Dec") in
                             if uu___4
                             then
-                              let uu___5 =
-                                FStar_Syntax_Print.term_to_string lbtyp in
+                              let uu___5 = FStar_Util.string_of_bool check_t in
                               let uu___6 =
+                                FStar_Syntax_Print.term_to_string lbtyp in
+                              let uu___7 =
                                 FStar_Syntax_Print.term_to_string lbdef in
-                              FStar_Util.print2
-                                "Got lbtyp=%s\nand lbdef=%s\n" uu___5 uu___6
+                              FStar_Util.print3
+                                "Got lbtyp(should_check=%s)=%s\nand lbdef=%s\n"
+                                uu___5 uu___6 uu___7
                             else ());
                            (let env2 =
                               FStar_TypeChecker_Env.push_univ_vars env1
