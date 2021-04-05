@@ -147,8 +147,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         | Some (pfx, DECREASES d, sfx), Some (pfx', DECREASES d', sfx') ->
           Errors.log_issue rng
              (Warning_DeprecatedGeneric,
-              BU.format1 "Multiple decreases clauses on this definition; please remove the one on its declaration (see %s)"
-                          (Range.string_of_range (List.hd d').pos));
+              "Multiple decreases clauses on this definition; please remove the one on its declaration");
           move_decreases d (pfx@sfx) (pfx'@sfx')
         | Some (pfx, DECREASES d, sfx), None ->
           move_decreases d (pfx@sfx) (U.comp_flags c')
@@ -169,11 +168,15 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let t, e', recheck = aux e' in
             t, { e with n = Tm_meta(e', m) }, recheck
 
-          | Tm_ascribed(_, (Inr c, _), _) ->
-            raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
-                         BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                     (Print.comp_to_string c))
-                        rng
+          | Tm_ascribed(e', (Inr c, tac_opt), lopt) ->
+            if U.is_total_comp c
+            then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
+                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt), lopt) } in
+                 lbtyp, e, recheck
+            else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                                   (Print.comp_to_string c))
+                              rng
 
           | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
             if Env.debug env <| Options.Other "Dec"
@@ -217,24 +220,22 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                      if Env.debug env <| Options.Other "Dec"
                      then BU.print1 "Ascribing body with %s\n" (Print.comp_to_string c);
                      let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt), lopt) } in
-                     let e = U.abs bs body rcopt in
-                     if Env.debug env <| Options.Other "Dec"
-                     then BU.print1 "Ascribed defn is %s\n" (Print.term_to_string e);
-                     lbtyp, e, recheck
+                     lbtyp, body, recheck
 
               | _ ->
                 if Env.debug env <| Options.Other "Dec"
                 then BU.print1 "Body other %s\n"
-                                     (Print.tag_of_term e);
+                                     (Print.tag_of_term body);
                 match lbtyp_opt with
                 | Some lbtyp ->
-                  lbtyp, e, false
+                  lbtyp, body, false
 
                 | None ->
                   let tarr = mk_arrow (mk_comp S.tun) in
-                  tarr, e, true
+                  tarr, body, true
             in
-            aux body
+            let lbtyp, body, recheck = aux body in
+            lbtyp, U.abs bs body rcopt, recheck
       in
       aux e
     in

@@ -59,3 +59,11 @@ let rec simple (x:nat) (y:nat)
   : Tot unit (decreases y)
   = if y = 0 then ()
     else simple x (y - 1)
+
+val last: l:list 'a {Cons? l} -> Tot 'a
+let rec last = function
+  | [hd] -> hd
+  | _::tl -> last tl
+
+let rec tt : int -> int = fun x -> x
+let rec tt' : int -> Dv int = fun x -> tt' x

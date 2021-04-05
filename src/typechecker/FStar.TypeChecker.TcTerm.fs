@@ -3427,20 +3427,30 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
      //lbdef is of the form (fun x -> t)
      //in which case, we need to add (#'a:Type) to the actuals
      //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
+     if Env.debug env <| Options.Other "Dec"
+     then BU.print2 "lbtyp=%s, actuals=%s\n" (Print.term_to_string lbtyp) (Print.binders_to_string ", " actuals);
      let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
      let nactuals = List.length actuals in
+     if Env.debug env <| Options.Other "Dec"
+     then BU.print1 "After add implicit binders actuals=%s\n" (Print.binders_to_string ", " actuals);
 
      (* Grab binders from the type. At most as many as we have in
       * the abstraction. *)
      let formals, c = N.get_n_binders env nactuals lbtyp in
 
+     if Env.debug env <| Options.Other "Dec"
+     then BU.print2 "After get_n_binders: %s -> %s\n" (Print.binders_to_string ", " formals) (Print.comp_to_string c);
+
      // TODO: There's a similar error in check_let_recs, would be nice
      // to remove this one.
      if List.isEmpty formals || List.isEmpty actuals then
        raise_error (Errors.Fatal_RecursiveFunctionLiteral,
-                    (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                    (BU.format5 "Only function literals with arrow types can be defined recursively; got (%s) %s : %s; actuals = %s; formals = %s"
+                               (Print.tag_of_term lbdef)
                                (Print.term_to_string lbdef)
-                               (Print.term_to_string lbtyp)))
+                               (Print.term_to_string lbtyp)
+                               (Print.binders_to_string ", " actuals)
+                               (Print.binders_to_string ", " formals)))
                    lbtyp.pos; // TODO: GM: maybe point to the one that's actually empty?
 
      let nformals = List.length formals in
@@ -3486,7 +3496,7 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             // we are typechecking a let rec, the recursive binding will be added in
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
-            | Some (arity, def) ->
+            | Some (arity, lbdef) ->
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env
@@ -3507,7 +3517,13 @@ and check_let_recs env lbts =
         let bs, t, lcomp = abs_formals lb.lbdef in
         //see issue #1017
         match bs with
-        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, 
+                            BU.format3
+                            "Only function literals may be defined recursively; %s is defined to be a %s, i.e., %s"
+                               (Print.lbname_to_string lb.lbname)
+                               (Print.tag_of_term lb.lbdef)
+                               (Print.term_to_string lb.lbdef)
+                            ) (S.range_of_lbname lb.lbname)
         | _ -> ();
 
         (* HACK ALERT: arity

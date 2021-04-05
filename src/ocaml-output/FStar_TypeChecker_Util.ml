@@ -237,20 +237,9 @@ let (extract_let_rec_annotation :
                                     FStar_Pervasives_Native.Some
                                     (pfx', FStar_Syntax_Syntax.DECREASES d',
                                      sfx')) ->
-                                     ((let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
-                                             let uu___13 =
-                                               let uu___14 = FStar_List.hd d' in
-                                               uu___14.FStar_Syntax_Syntax.pos in
-                                             FStar_Range.string_of_range
-                                               uu___13 in
-                                           FStar_Util.format1
-                                             "Multiple decreases clauses on this definition; please remove the one on its declaration (see %s)"
-                                             uu___12 in
-                                         (FStar_Errors.Warning_DeprecatedGeneric,
-                                           uu___11) in
-                                       FStar_Errors.log_issue rng uu___10);
+                                     (FStar_Errors.log_issue rng
+                                        (FStar_Errors.Warning_DeprecatedGeneric,
+                                          "Multiple decreases clauses on this definition; please remove the one on its declaration");
                                       move_decreases d
                                         (FStar_List.append pfx sfx)
                                         (FStar_List.append pfx' sfx'))
@@ -288,16 +277,46 @@ let (extract_let_rec_annotation :
                                     (uu___7.FStar_Syntax_Syntax.vars)
                                 }), recheck)))
                    | FStar_Syntax_Syntax.Tm_ascribed
-                       (uu___5, (FStar_Pervasives.Inr c, uu___6), uu___7) ->
-                       let uu___8 =
-                         let uu___9 =
-                           let uu___10 = FStar_Syntax_Print.comp_to_string c in
-                           FStar_Util.format1
-                             "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                             uu___10 in
-                         (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
-                           uu___9) in
-                       FStar_Errors.raise_error uu___8 rng
+                       (e', (FStar_Pervasives.Inr c, tac_opt), lopt) ->
+                       let uu___5 = FStar_Syntax_Util.is_total_comp c in
+                       if uu___5
+                       then
+                         let uu___6 =
+                           reconcile_let_rec_ascription_and_body_type
+                             (FStar_Syntax_Util.comp_result c) lbtyp_opt in
+                         (match uu___6 with
+                          | (t3, lbtyp, recheck) ->
+                              let e4 =
+                                let uu___7 = e3 in
+                                let uu___8 =
+                                  let uu___9 =
+                                    let uu___10 =
+                                      let uu___11 =
+                                        let uu___12 =
+                                          FStar_Syntax_Syntax.mk_Total t3 in
+                                        FStar_Pervasives.Inr uu___12 in
+                                      (uu___11, tac_opt) in
+                                    (e', uu___10, lopt) in
+                                  FStar_Syntax_Syntax.Tm_ascribed uu___9 in
+                                {
+                                  FStar_Syntax_Syntax.n = uu___8;
+                                  FStar_Syntax_Syntax.pos =
+                                    (uu___7.FStar_Syntax_Syntax.pos);
+                                  FStar_Syntax_Syntax.vars =
+                                    (uu___7.FStar_Syntax_Syntax.vars)
+                                } in
+                              (lbtyp, e4, recheck))
+                       else
+                         (let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                FStar_Syntax_Print.comp_to_string c in
+                              FStar_Util.format1
+                                "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                uu___9 in
+                            (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              uu___8) in
+                          FStar_Errors.raise_error uu___7 rng)
                    | FStar_Syntax_Syntax.Tm_ascribed
                        (e', (FStar_Pervasives.Inl t3, tac_opt), lopt) ->
                        ((let uu___6 =
@@ -426,25 +445,7 @@ let (extract_let_rec_annotation :
                                                        =
                                                        (uu___12.FStar_Syntax_Syntax.vars)
                                                    } in
-                                                 let e4 =
-                                                   FStar_Syntax_Util.abs bs
-                                                     body3 rcopt in
-                                                 (let uu___13 =
-                                                    FStar_All.pipe_left
-                                                      (FStar_TypeChecker_Env.debug
-                                                         env1)
-                                                      (FStar_Options.Other
-                                                         "Dec") in
-                                                  if uu___13
-                                                  then
-                                                    let uu___14 =
-                                                      FStar_Syntax_Print.term_to_string
-                                                        e4 in
-                                                    FStar_Util.print1
-                                                      "Ascribed defn is %s\n"
-                                                      uu___14
-                                                  else ());
-                                                 (lbtyp, e4, recheck)))))
+                                                 (lbtyp, body3, recheck)))))
                                | uu___8 ->
                                    ((let uu___10 =
                                        FStar_All.pipe_left
@@ -453,20 +454,25 @@ let (extract_let_rec_annotation :
                                      if uu___10
                                      then
                                        let uu___11 =
-                                         FStar_Syntax_Print.tag_of_term e3 in
+                                         FStar_Syntax_Print.tag_of_term body2 in
                                        FStar_Util.print1 "Body other %s\n"
                                          uu___11
                                      else ());
                                     (match lbtyp_opt with
                                      | FStar_Pervasives_Native.Some lbtyp ->
-                                         (lbtyp, e3, false)
+                                         (lbtyp, body2, false)
                                      | FStar_Pervasives_Native.None ->
                                          let tarr =
                                            let uu___10 =
                                              mk_comp FStar_Syntax_Syntax.tun in
                                            mk_arrow uu___10 in
-                                         (tarr, e3, true))) in
-                             aux1 body)) in
+                                         (tarr, body2, true))) in
+                             let uu___8 = aux1 body in
+                             (match uu___8 with
+                              | (lbtyp, body1, recheck) ->
+                                  let uu___9 =
+                                    FStar_Syntax_Util.abs bs body1 rcopt in
+                                  (lbtyp, uu___9, recheck)))) in
                  aux e1 in
                (match t2.FStar_Syntax_Syntax.n with
                 | FStar_Syntax_Syntax.Tm_unknown ->

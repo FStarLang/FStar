@@ -9794,52 +9794,94 @@ and (build_let_rec_env :
              let uu___2 = FStar_Syntax_Util.abs_formals lbdef in
              match uu___2 with
              | (actuals, body, body_lc) ->
-                 let actuals1 =
-                   let uu___3 =
-                     FStar_TypeChecker_Env.set_expected_typ env lbtyp in
-                   FStar_TypeChecker_Util.maybe_add_implicit_binders uu___3
-                     actuals in
-                 let nactuals = FStar_List.length actuals1 in
-                 let uu___3 =
-                   FStar_TypeChecker_Normalize.get_n_binders env nactuals
-                     lbtyp in
-                 (match uu___3 with
-                  | (formals, c) ->
-                      (if
-                         (FStar_List.isEmpty formals) ||
-                           (FStar_List.isEmpty actuals1)
-                       then
-                         (let uu___5 =
-                            let uu___6 =
-                              let uu___7 =
-                                FStar_Syntax_Print.term_to_string lbdef in
-                              let uu___8 =
-                                FStar_Syntax_Print.term_to_string lbtyp in
-                              FStar_Util.format2
-                                "Only function literals with arrow types can be defined recursively; got %s : %s"
-                                uu___7 uu___8 in
-                            (FStar_Errors.Fatal_RecursiveFunctionLiteral,
-                              uu___6) in
-                          FStar_Errors.raise_error uu___5
-                            lbtyp.FStar_Syntax_Syntax.pos)
-                       else ();
-                       (let nformals = FStar_List.length formals in
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_All.pipe_right
-                              (FStar_Syntax_Util.comp_effect_name c)
-                              (FStar_TypeChecker_Env.lookup_effect_quals env) in
-                          FStar_All.pipe_right uu___6
-                            (FStar_List.contains
-                               FStar_Syntax_Syntax.TotalEffect) in
-                        if uu___5
-                        then
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_Syntax_Util.abs actuals1 body body_lc in
-                            (nformals, uu___7) in
-                          FStar_Pervasives_Native.Some uu___6
-                        else FStar_Pervasives_Native.None)))) in
+                 ((let uu___4 =
+                     FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                       (FStar_Options.Other "Dec") in
+                   if uu___4
+                   then
+                     let uu___5 = FStar_Syntax_Print.term_to_string lbtyp in
+                     let uu___6 =
+                       FStar_Syntax_Print.binders_to_string ", " actuals in
+                     FStar_Util.print2 "lbtyp=%s, actuals=%s\n" uu___5 uu___6
+                   else ());
+                  (let actuals1 =
+                     let uu___4 =
+                       FStar_TypeChecker_Env.set_expected_typ env lbtyp in
+                     FStar_TypeChecker_Util.maybe_add_implicit_binders uu___4
+                       actuals in
+                   let nactuals = FStar_List.length actuals1 in
+                   (let uu___5 =
+                      FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "Dec") in
+                    if uu___5
+                    then
+                      let uu___6 =
+                        FStar_Syntax_Print.binders_to_string ", " actuals1 in
+                      FStar_Util.print1
+                        "After add implicit binders actuals=%s\n" uu___6
+                    else ());
+                   (let uu___5 =
+                      FStar_TypeChecker_Normalize.get_n_binders env nactuals
+                        lbtyp in
+                    match uu___5 with
+                    | (formals, c) ->
+                        ((let uu___7 =
+                            FStar_All.pipe_left
+                              (FStar_TypeChecker_Env.debug env)
+                              (FStar_Options.Other "Dec") in
+                          if uu___7
+                          then
+                            let uu___8 =
+                              FStar_Syntax_Print.binders_to_string ", "
+                                formals in
+                            let uu___9 = FStar_Syntax_Print.comp_to_string c in
+                            FStar_Util.print2
+                              "After get_n_binders: %s -> %s\n" uu___8 uu___9
+                          else ());
+                         if
+                           (FStar_List.isEmpty formals) ||
+                             (FStar_List.isEmpty actuals1)
+                         then
+                           (let uu___8 =
+                              let uu___9 =
+                                let uu___10 =
+                                  FStar_Syntax_Print.tag_of_term lbdef in
+                                let uu___11 =
+                                  FStar_Syntax_Print.term_to_string lbdef in
+                                let uu___12 =
+                                  FStar_Syntax_Print.term_to_string lbtyp in
+                                let uu___13 =
+                                  FStar_Syntax_Print.binders_to_string ", "
+                                    actuals1 in
+                                let uu___14 =
+                                  FStar_Syntax_Print.binders_to_string ", "
+                                    formals in
+                                FStar_Util.format5
+                                  "Only function literals with arrow types can be defined recursively; got (%s) %s : %s; actuals = %s; formals = %s"
+                                  uu___10 uu___11 uu___12 uu___13 uu___14 in
+                              (FStar_Errors.Fatal_RecursiveFunctionLiteral,
+                                uu___9) in
+                            FStar_Errors.raise_error uu___8
+                              lbtyp.FStar_Syntax_Syntax.pos)
+                         else ();
+                         (let nformals = FStar_List.length formals in
+                          let uu___8 =
+                            let uu___9 =
+                              FStar_All.pipe_right
+                                (FStar_Syntax_Util.comp_effect_name c)
+                                (FStar_TypeChecker_Env.lookup_effect_quals
+                                   env) in
+                            FStar_All.pipe_right uu___9
+                              (FStar_List.contains
+                                 FStar_Syntax_Syntax.TotalEffect) in
+                          if uu___8
+                          then
+                            let uu___9 =
+                              let uu___10 =
+                                FStar_Syntax_Util.abs actuals1 body body_lc in
+                              (nformals, uu___10) in
+                            FStar_Pervasives_Native.Some uu___9
+                          else FStar_Pervasives_Native.None)))))) in
         let check_annot univ_vars t =
           let env01 = FStar_TypeChecker_Env.push_univ_vars env0 univ_vars in
           let uu___ =
@@ -10000,8 +10042,8 @@ and (build_let_rec_env :
                                       lb.FStar_Syntax_Syntax.lbname lbdef
                                       lbtyp1 in
                                   match uu___6 with
-                                  | FStar_Pervasives_Native.Some (arity, def)
-                                      ->
+                                  | FStar_Pervasives_Native.Some
+                                      (arity, lbdef1) ->
                                       let lb1 =
                                         let uu___7 = lb in
                                         {
@@ -10012,7 +10054,7 @@ and (build_let_rec_env :
                                           FStar_Syntax_Syntax.lbtyp = lbtyp1;
                                           FStar_Syntax_Syntax.lbeff =
                                             (uu___7.FStar_Syntax_Syntax.lbeff);
-                                          FStar_Syntax_Syntax.lbdef = lbdef;
+                                          FStar_Syntax_Syntax.lbdef = lbdef1;
                                           FStar_Syntax_Syntax.lbattrs =
                                             (uu___7.FStar_Syntax_Syntax.lbattrs);
                                           FStar_Syntax_Syntax.lbpos =
@@ -10186,12 +10228,25 @@ and (check_let_recs :
                       (match bs with
                        | [] ->
                            let uu___3 =
+                             let uu___4 =
+                               let uu___5 =
+                                 FStar_Syntax_Print.lbname_to_string
+                                   lb.FStar_Syntax_Syntax.lbname in
+                               let uu___6 =
+                                 FStar_Syntax_Print.tag_of_term
+                                   lb.FStar_Syntax_Syntax.lbdef in
+                               let uu___7 =
+                                 FStar_Syntax_Print.term_to_string
+                                   lb.FStar_Syntax_Syntax.lbdef in
+                               FStar_Util.format3
+                                 "Only function literals may be defined recursively; %s is defined to be a %s, i.e., %s"
+                                 uu___5 uu___6 uu___7 in
+                             (FStar_Errors.Fatal_RecursiveFunctionLiteral,
+                               uu___4) in
+                           let uu___4 =
                              FStar_Syntax_Syntax.range_of_lbname
                                lb.FStar_Syntax_Syntax.lbname in
-                           FStar_Errors.raise_error
-                             (FStar_Errors.Fatal_RecursiveFunctionLiteral,
-                               "Only function literals may be defined recursively")
-                             uu___3
+                           FStar_Errors.raise_error uu___3 uu___4
                        | uu___3 ->
                            let arity =
                              let uu___5 =

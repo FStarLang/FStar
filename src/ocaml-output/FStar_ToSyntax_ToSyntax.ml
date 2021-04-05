@@ -3935,7 +3935,7 @@ and (desugar_ascription :
               (annot, uu___2) in
             (uu___1, aq0)
 and (desugar_args :
-  env_t ->
+  FStar_Syntax_DsEnv.env ->
     (FStar_Parser_AST.term * FStar_Parser_AST.imp) Prims.list ->
       (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
         FStar_Pervasives_Native.option) Prims.list)

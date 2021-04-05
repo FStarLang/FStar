@@ -1755,10 +1755,7 @@ let (abs_formals_maybe_unascribe_body :
         | uu___ -> l in
       let rec aux t1 abs_body_lcomp =
         let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Subst.compress t1 in
-            FStar_All.pipe_left unascribe uu___2 in
-          uu___1.FStar_Syntax_Syntax.n in
+          let uu___1 = unmeta_safe t1 in uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_abs (bs, t2, what) ->
             if maybe_unascribe
