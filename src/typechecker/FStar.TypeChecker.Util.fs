@@ -93,7 +93,87 @@ let check_uvars r t =
     Options.pop()
 
 (************************************************************************)
-(* Extracting annotations from a term *)
+(* Extracting annotations, notably the decreases clause, for a recursive definion *)
+(* We support several styles of writing decreases clauses:
+
+   1. val f (x:t) : Tot t' (decreases d)
+      let rec f x = e
+
+      and variations such as the following, where the definition is
+      partially annotated.
+
+      val f (x:t) : Tot t' (decreases d)
+      let rec f (x:t) : t' = e
+
+   2. val f (x:t) : Tot t'
+      let rec f x : Tot _ (decreases d) = e
+
+   3. let rec f (x:t) : Tot t' (decreases d) = e
+
+   4. let rec f x = e
+
+   The first style is mainly for legacy reasons. Annotating a `val`
+   with a decreases clause isn't pretty, but there is a fair bit of
+   code using it.
+
+   The second style is useful in conjunction with interfaces, where
+   the val may appear in the interface and is defined using a
+   recursive function separately. It may also be useful when the user
+   wants to check the type of f first and separately from the
+   definition, and then try to define it afterwards.
+
+   The third style is common in another scenarios.
+
+   The fourth style leaves it to type inference to figure output.
+
+   A fifth style is the following:
+
+   5. val f (x:t) : Tot t (decreases d)
+      let rec f (x:t) : Tot t' (decreases d) = e
+
+   where the decreases clause appears more than once. This style now
+   raises a warning.
+
+   In the function below,
+       extract_let_rec_annotation env lb
+
+   the general idea is to
+
+     1. prefer the decreases clause annotated on the
+        term, if any
+
+     2. Remove the decreases clause from the ascription on the body
+
+     3. construct a type with the decreases clause and use that as the
+        lbtyp, which TcTerm will use to implement the termination
+        check
+
+   returns the following:
+
+   - lb.univ_vars: The opened universe names for the letbinding
+     (incidentally, they are the same as the input univ_vars)
+
+   - lbtyp: This is the type to be used to check the recursive
+     definition.
+
+       - In case 1, it is simply the annotated type from the
+         val, i.e., lb.lbtyp
+
+       - In case 2, we lift the decreases clause from the ascription
+         and return  `x:t -> Tot t' (decreases d)`
+
+       - In case 3, it is simply the ascribed type
+
+       - In case 4, just build a type `_ -> _` and return it
+
+       - In case 5, warn and ignore the decrease clause on the val,
+         and treat it as case 2
+
+   - lbdef: lb.lbdef adapted to remove any decreases clause annotation
+
+   - check: A flag that signals when the constructed type should be
+     re-typechecked. Except in case 1, the flag is set.
+*)
 (************************************************************************)
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
@@ -112,6 +192,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                  (Print.term_to_string t);
   let env = Env.push_univ_vars env univ_vars in
   let un_arrow t =
+    //Rather than use U.abs_formals_comp, we use un_arrow here
+    //since the former collapses adjacent Tot annotations, e.g.,
+    //    x:t -> Tot (y:t -> M)
+    // is collapsed, breaking arities
       match (SS.compress t).n with
       | Tm_arrow (bs, c) ->
         Subst.open_comp bs c
@@ -147,11 +231,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           let tarr = U.arrow bs c in
           let c' = U.comp_set_flags c' (DECREASES d'::flags') in
           let tannot = U.arrow bs' c' in
-          if Env.debug env <| Options.Other "Dec"
-          then BU.print2 "Annotated type is %s\n\
-                      Constructed lbtyp is %s\n"
-                     (Print.term_to_string tarr)
-                     (Print.term_to_string tannot);
           tarr, tannot, true
         in
         match get_decreases c, get_decreases c' with
@@ -174,9 +253,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         = let e = SS.compress e in
           match e.n with
           | Tm_meta(e', m) ->
-            if Env.debug env <| Options.Other "Dec"
-            then BU.print_string "Body tm_meta\n";
-
             let t, e', recheck = aux e' in
             t, { e with n = Tm_meta(e', m) }, recheck
 
@@ -191,17 +267,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                               rng
 
           | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
-            if Env.debug env <| Options.Other "Dec"
-            then BU.print_string "Body tm_ascribed\n";
 
             let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
             let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt), lopt) } in
             lbtyp, e, recheck
 
           | Tm_abs _ ->
-            if Env.debug env <| Options.Other "Dec"
-            then BU.print_string "Body tm_abs\n";
-
             let bs, body, rcopt = U.abs_formals_maybe_unascribe_body false e in
             let mk_comp t =
               if Options.ml_ish()
@@ -236,15 +307,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
                      let c = SS.subst_comp subst c in
-                     if Env.debug env <| Options.Other "Dec"
-                     then BU.print1 "Ascribing body with %s\n" (Print.comp_to_string c);
                      let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt), lopt) } in
                      lbtyp, body, recheck
 
               | _ ->
-                if Env.debug env <| Options.Other "Dec"
-                then BU.print1 "Body other %s\n"
-                                     (Print.tag_of_term body);
                 match lbtyp_opt with
                 | Some lbtyp ->
                   lbtyp, body, false
@@ -260,9 +326,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     in
     match t.n with
     | Tm_unknown ->
-      if Env.debug env <| Options.Other "Dec"
-      then BU.print1 "No top-level lbtyp, extracting annot from body %s\n"
-                     (Print.term_to_string e);
       let lbtyp, e, _ = extract_annot_from_body None in
       univ_vars, lbtyp, e, true
 

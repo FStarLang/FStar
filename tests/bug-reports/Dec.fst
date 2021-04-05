@@ -86,3 +86,22 @@ val factorial_tail (acc:nat) (n:nat) : Tot nat
 let rec factorial_tail acc n : Tot _ (decreases n) =
   if n = 0 then acc
   else factorial_tail (n * acc) (n - 1)
+
+
+(* A test case to ensure that the types of inner recursive definitions
+   are well-formed in an environment that includes the post-conditions
+   of what precedes them *)
+assume
+val p (x:nat) : prop
+let ppp (x:nat) = p x
+assume
+val ensures_p (x:nat) : Lemma (ppp x)
+assume
+val requires_p (x:nat{ p x }) : bool
+let test_inner_let_rec_with_wf (x:nat)
+  : int
+  = let _ = ensures_p x in
+    let rec aux (y:nat { requires_p x }) : Tot unit
+      = if y = 0 then () else aux (y - 1)
+    in
+    0
