@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -74,9 +75,10 @@ type name_prefix = FStar.Ident.path
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
 type proof_namespace = list<(name_prefix * bool)>
 
-type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
+type must_tot = bool
 
 (*
  * AR: The mlift record that maintains functions to lift 'source' computation types
@@ -149,11 +151,12 @@ and env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
-  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
-  type_of_well_typed :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
-  universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_of  :bool -> env -> term -> typ -> guard_t;
+
+  tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
+  typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
+  universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
+
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -189,7 +192,7 @@ and solver_t = {
     refresh      :unit -> unit;
 }
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -201,12 +204,12 @@ val preprocess : env -> term -> term -> term
 val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
+
 val initial_env : FStar.Parser.Dep.deps ->
-                  (env -> term -> term*lcomp*guard_t) ->
-                  (env -> term -> term*typ*guard_t) ->
-                  (env -> term -> option<typ>) ->
+                  (env -> term -> term * lcomp * guard_t) ->
+                  (env -> term -> must_tot -> term * typ * guard_t) ->
+                  (env -> term -> must_tot -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (bool -> env -> term -> typ -> guard_t) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 
@@ -239,7 +242,7 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool

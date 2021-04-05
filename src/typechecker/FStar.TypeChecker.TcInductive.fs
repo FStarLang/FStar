@@ -17,6 +17,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcInductive
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -377,7 +378,7 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
      | Tm_refine (bv, _) ->
        debug_log env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
        ty_strictly_positive_in_type ty_lid bv.sort unfolded env
-     | Tm_match (_, branches) ->
+     | Tm_match (_, _, branches) ->
        debug_log env (fun () -> "Checking strict positivity in an Tm_match, recur in the branches)");
        List.for_all (fun (p, _, t) ->
          let bs = List.map mk_binder (pat_bvs p) in
@@ -1154,7 +1155,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name unrefined_arg_binder.binder_bv in
-                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) p
+                        mk (Tm_match(arg_exp, None, [U.branch pat_true ; U.branch pat_false])) p
                 in
                 let dd = Delta_equational_at_level 1 in
                 let imp = U.abs binders body None in
@@ -1248,7 +1249,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, [U.branch pat])) p in
+              let body = mk (Tm_match(arg_exp, None, [U.branch pat])) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in

@@ -77,7 +77,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
         $ fstar.exe --version
         F* 0.9.7.0-alpha1
         platform=Linux_x86_64
-        compiler=OCaml 4.09.1
+        compiler=OCaml 4.12.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -120,7 +120,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith yojson ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
+        $ opam install ocamlfind batteries stdint zarith yojson ppx_deriving ppx_deriving_yojson ppxlib=0.22.0 process
 
 5. (Optional) You can also verify all the examples, keep in mind that this will
    take a long time, use a lot of resources, and there are also some quirks
@@ -180,8 +180,7 @@ but first we explain how to get a working OCaml setup on your machine.
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.09.X should work.
-Versions outside this range are known not to work.
+The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.12.X should work.
 
 #### Instructions for Windows ####
 
@@ -192,7 +191,7 @@ Versions outside this range are known not to work.
   ```sh
   $ opam update
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.09.1+mingw64c
+  $ opam switch create ocaml-variants.4.12.0+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
@@ -244,7 +243,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process ocaml-migrate-parsetree
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
   ```
 
   **Note:** This list of opam packages is longer than the list in the

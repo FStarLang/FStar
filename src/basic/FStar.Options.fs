@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.Pervasives
 open FStar.String
 open FStar.ST
 open FStar.Exn
@@ -271,7 +272,6 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -334,7 +334,6 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
-    "use_two_phase_tc";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -451,7 +450,6 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -1292,11 +1290,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "use_two_phase_tc",
-        BoolStr,
-        "Use the two phase typechecker (default 'true')");
-
-       ( noshort,
         "__no_positivity",
         Const (Bool true),
         "Don't check positivity of inductive types");
@@ -1437,7 +1430,6 @@ let settable = function
     | "ugly"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
-    | "use_two_phase_tc"
     | "using_facts_from"
     | "vcgen.optimize_bind_as_seq"
     | "warn_error"
@@ -1797,8 +1789,6 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let use_two_phase_tc             () = get_use_two_phase_tc            ()
-                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -1934,7 +1924,6 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
-    use_two_phase_tc                          = get_use_two_phase_tc ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
@@ -1972,7 +1961,6 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
   set_option "z3seed"                                    (Int vcfg.z3seed);
-  set_option "use_two_phase_tc"                          (Bool vcfg.use_two_phase_tc);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()

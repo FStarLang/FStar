@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.EncodeTerm
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -186,13 +187,13 @@ let isTotFun_axioms pos head vars guards is_pure =
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
-let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
+let maybe_curry_app rng (head:either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
     match head with
-    | BU.Inr head -> //must curry
+    | Inr head -> //must curry
       mk_Apply_args head args
 
-    | BU.Inl head ->
+    | Inl head ->
         if n_args = arity
         then Util.mkApp'(head, args)
         else if n_args > arity
@@ -204,7 +205,7 @@ let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>)
 let maybe_curry_fvb rng fvb args =
     if fvb.fvb_thunked
     then mk_Apply_args (force_thunk fvb) args
-    else maybe_curry_app rng (BU.Inl (Var fvb.smt_id)) fvb.smt_arity args
+    else maybe_curry_app rng (Inl (Var fvb.smt_id)) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"
@@ -659,7 +660,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, (k,_), _) ->
-        if (match k with BU.Inl t -> U.is_unit t | _ -> false)
+        if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
 
@@ -1104,8 +1105,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (BU.Inl t, _), _) -> Some t
-                | Tm_ascribed(_, (BU.Inr c, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (Inl t, _), _) -> Some t
+                | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1160,13 +1161,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //          let reify_comp_and_body env body =
 //            let reified_body = TcUtil.reify_body env.tcenv body in
 //            let c = match c with
-//              | BU.Inl lc ->
+//              | Inl lc ->
 //                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
-//                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
+//                Inl (U.lcomp_of_comp (S.mk_Total typ))
 //
 //              (* In this case we don't have enough information to reconstruct the *)
 //              (* whole computation type and reify it *)
-//              | BU.Inr (eff_name, _) -> c
+//              | Inr (eff_name, _) -> c
 //            in
 //            c, reified_body
 //          in
@@ -1274,10 +1275,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
-      | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
+      | Tm_let((_, {lbname=Inr _}::_), _) ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
-      | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+      | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let((false, _::_), _) ->
@@ -1290,7 +1291,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, pats) ->
+      | Tm_match(e, _, pats) ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1298,7 +1299,7 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term (U.ascribe e1 (BU.Inl t1, None)) env in
+        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None)) env in
         let xs, e2 = SS.open_term [S.mk_binder x] e2 in
         let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in
@@ -1538,11 +1539,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, pats) ->
+        | Tm_match(e, _, pats) ->
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 
-        | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 

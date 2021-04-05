@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -312,6 +313,8 @@ let store_sigopts (se:sigelt) : sigelt =
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
   BU.mk_ref None
 
+let do_two_phases env : bool = Env.should_verify env
+
 (* The type checking rule for Sig_let (lbs, lids) *)
 let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     let env0 = env in
@@ -429,7 +432,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env' then begin
+      if do_two_phases env' then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
@@ -596,7 +599,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
     let ses =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses =
           tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
@@ -637,7 +640,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       [], ses @ effect_and_lift_ses, env0
     else       
       let ne =
-        if Options.use_two_phase_tc () && Env.should_verify env then begin
+        if do_two_phases env then begin
           let ne =
             TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
@@ -659,7 +662,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
     let lid, uvs, tps, c =
-      if Options.use_two_phase_tc () && Env.should_verify env
+      if do_two_phases env
       then
         TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
         |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
@@ -688,7 +691,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                                    (Ident.string_of_lid lid))) r;
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -706,7 +709,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -751,7 +754,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
@@ -771,7 +774,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_polymonadic_subcomp (m, n, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) })

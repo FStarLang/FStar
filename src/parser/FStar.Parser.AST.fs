@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.AST
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -59,8 +60,8 @@ type term' =
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * term * term
-  | Match     of term * list<branch>
+  | If        of term * option<term> * term * term  //option<term> here and in Match is the return annotation
+  | Match     of term * option<term> * list<branch>
   | TryWith   of term * list<branch>
   | Ascribed  of term * term * option<term>
   | Record    of option<term> * list<(lid * term)>
@@ -268,7 +269,7 @@ let un_curry_abs ps body = match body.tm with
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
   mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
@@ -400,7 +401,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                             (mk_pattern (PatWild (None, [])) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
-                        mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
+                        mk_term (Match (x_var, None, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 end
@@ -575,24 +576,17 @@ let rec term_to_string (x:term) = match x.tm with
   | Bind (id, t1, t2) ->
     Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
-  | If(t1, t2, t3) ->
-    Util.format3 "if %s then %s else %s" (t1|> term_to_string) (t2|> term_to_string) (t3|> term_to_string)
+  | If(t1, ret_opt, t2, t3) ->
+    Util.format4 "if %s %sthen %s else %s"
+      (t1|> term_to_string)
+      (match ret_opt with
+       | None -> ""
+       | Some ret -> Util.format1 "ret %s " (term_to_string ret))
+      (t2|> term_to_string)
+      (t3|> term_to_string)
 
-  | Match(t, branches)
-  | TryWith (t, branches) ->
-    let s =
-      match x.tm with
-      | Match _ -> "match"
-      | TryWith _ -> "try"
-      | _ -> failwith "impossible"
-    in
-    Util.format3 "%s %s with %s"
-      s
-      (t|> term_to_string)
-      (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
-        (p |> pat_to_string)
-        (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
-        (e |> term_to_string)) branches)
+  | Match(t, ret_opt,  branches) -> try_or_match_to_string x t branches ret_opt
+  | TryWith (t, branches) -> try_or_match_to_string x t branches None
 
   | Ascribed(t1, t2, None) ->
     Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
@@ -658,6 +652,23 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format3 "calc (%s) { %s %s }" (term_to_string rel)
                                        (term_to_string init)
                                        (String.concat " " <| List.map calc_step_to_string steps)
+
+and try_or_match_to_string (x:term) scrutinee branches ret_opt =
+  let s =
+    match x.tm with
+    | Match _ -> "match"
+    | TryWith _ -> "try"
+    | _ -> failwith "impossible" in
+  Util.format4 "%s %s %swith %s"
+    s
+    (scrutinee|> term_to_string)
+    (match ret_opt with
+     | None -> ""
+     | Some ret -> Util.format1 "ret %s " (term_to_string ret))
+    (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
+      (p |> pat_to_string)
+      (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
+      (e |> term_to_string)) branches)
 
 and calc_step_to_string (CalcStep (rel, just, next)) =
     Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)

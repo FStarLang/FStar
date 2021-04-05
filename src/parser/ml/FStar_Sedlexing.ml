@@ -1,5 +1,5 @@
 (**
-A custom version of Ulexing enhanced with
+A custom version of Sedlexing enhanced with
 lc, bol and fname position tracking and
 specialized for UTF-8 string inputs
 (the parser driver always reads whole files)
@@ -32,7 +32,7 @@ let get_start lb = lb.start
    we want to ble able to interpret a fragment as if it was part
    of a larger file and report absolute error positions *)
 let create (s:string) fn loffset coffset =
-  let a = Utf8.to_int_array s 0 (String.length s) in
+  let a = FStar_Parser_Utf8.to_int_array s 0 (String.length s) in
   let start_p = {
     L.pos_fname = fn;
     L.pos_cnum = coffset;
@@ -71,11 +71,11 @@ let backtrack b =
   b.mark_val
 
 let next b =
-  if b.cur = b.len then -1
+  if b.cur = b.len then None
   else
     let c = b.buf.(b.cur) in
     (b.cur <- b.cur + 1;
-    b.cur_p <- {b.cur_p with L.pos_cnum = b.cur_p.L.pos_cnum + 1}; c)
+    b.cur_p <- {b.cur_p with L.pos_cnum = b.cur_p.L.pos_cnum + 1}; Some (Uchar.of_int c))
 
 let new_line b =
   b.cur_p <- { b.cur_p with
@@ -88,12 +88,12 @@ let range b = (b.start_p, b.cur_p)
 let ulexeme lexbuf =
   Array.sub lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
 
-let lexeme lexbuf = 
-  Utf8.from_int_array lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
+let lexeme lexbuf =
+  FStar_Parser_Utf8.from_int_array lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
 
 let lookahead b pos =
   if b.len <= pos then ""
-  else Utf8.from_int_array b.buf pos (b.len - pos)
+  else FStar_Parser_Utf8.from_int_array b.buf pos (b.len - pos)
 
 let source_file b =
   b.cur_p.L.pos_fname

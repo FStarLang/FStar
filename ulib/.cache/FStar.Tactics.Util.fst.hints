@@ -1,5 +1,5 @@
 [
-  "%¦|)ƒkkxvxÌ­r©%o",
+  "°Q˜¤\\9—†´øÞ=¨‰~Ý",
   [
     [
       "FStar.Tactics.Util.map",
@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "84375c30986a2729192aea6ee2f56378"
+      "c901d22a2c2155db1d0828af48617b09"
     ],
     [
       "FStar.Tactics.Util.__mapi",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "afec59f11b619241b30775d788947bf6"
+      "0d54d08f3e5b74202c3e42889dd043ed"
     ],
     [
       "FStar.Tactics.Util.iter",
@@ -40,7 +40,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "da5775f79cb80f6d7c3b2a6fb76467c6"
+      "397acd8b0d08fbd862113de677a5811a"
     ],
     [
       "FStar.Tactics.Util.iteri_aux",
@@ -53,7 +53,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "dfe4e2a298eacd2437d2bd37cf218f77"
+      "83b276993a43920cf9d719405a73352d"
     ],
     [
       "FStar.Tactics.Util.fold_left",
@@ -65,7 +65,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "0e90e866f6db5896df27f7f38b809b93"
+      "7df3c177dd133991c455e42d97034d45"
     ],
     [
       "FStar.Tactics.Util.fold_right",
@@ -77,7 +77,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "08d37b9080dc39af417c62eafa2341d0"
+      "28a6539da2fe6cffc236761eb6359966"
     ],
     [
       "FStar.Tactics.Util.filter",
@@ -90,7 +90,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d5bccd66bc38ee36f37709c2a16573d3"
+      "310e1e02086fd65a4eebffca4110bc93"
     ],
     [
       "FStar.Tactics.Util.filter_map_acc",
@@ -108,7 +108,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "d8ead7590ebbee799ef33ec74a97ec2a"
+      "18f83cad3fa161023a61d6d576226fb2"
     ],
     [
       "FStar.Tactics.Util.tryPick",
@@ -125,7 +125,16 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8d1bca6451072ee8b774bc9d4f973962"
+      "6a025de6301d227eca36df23b90c1a10"
+    ],
+    [
+      "FStar.Tactics.Util.map_opt",
+      1,
+      0,
+      0,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "dba5fb10252ad3c420dce17cfadf97ee"
     ]
   ]
 ]

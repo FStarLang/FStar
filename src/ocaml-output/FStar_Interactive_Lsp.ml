@@ -231,7 +231,8 @@ let (repl_state_init :
 type optresponse =
   FStar_Interactive_JsonHelper.assoct FStar_Pervasives_Native.option
 type either_gst_exit =
-  (FStar_Interactive_JsonHelper.grepl_state, Prims.int) FStar_Util.either
+  (FStar_Interactive_JsonHelper.grepl_state, Prims.int)
+    FStar_Pervasives.either
 let (invoke_full_lax :
   FStar_Interactive_JsonHelper.grepl_state ->
     Prims.string ->
@@ -259,7 +260,7 @@ let (invoke_full_lax :
                         FStar_Interactive_JsonHelper.js_diag_clear fname in
                       FStar_Pervasives_Native.Some uu___4) in
                  (diag1,
-                   (FStar_Util.Inl
+                   (FStar_Pervasives.Inl
                       (let uu___3 = gst in
                        {
                          FStar_Interactive_JsonHelper.grepl_repls = repls;
@@ -273,7 +274,7 @@ let (invoke_full_lax :
           | FStar_Pervasives_Native.Some uu___1 ->
               if force
               then aux ()
-              else (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+              else (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
           | FStar_Pervasives_Native.None -> aux ()
 let (run_query :
   FStar_Interactive_JsonHelper.grepl_state ->
@@ -286,25 +287,31 @@ let (run_query :
           let uu___2 =
             FStar_Interactive_JsonHelper.resultResponse
               FStar_Interactive_JsonHelper.js_servcap in
-          (uu___2, (FStar_Util.Inl gst))
+          (uu___2, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Initialized ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+          (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Shutdown ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Exit ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inr Prims.int_zero))
+          (FStar_Pervasives_Native.None,
+            (FStar_Pervasives.Inr Prims.int_zero))
       | FStar_Interactive_JsonHelper.Cancel id ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+          (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.FolderChange evt ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.ChangeConfig ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.ChangeWatch ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+          (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Symbol sym ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.ExecCommand cmd ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DidOpen
           { FStar_Interactive_JsonHelper.fname = f;
             FStar_Interactive_JsonHelper.langId = uu___;
@@ -313,15 +320,16 @@ let (run_query :
           -> invoke_full_lax gst f t false
       | FStar_Interactive_JsonHelper.DidChange (txid, content) ->
           (FStar_Parser_ParseIt.add_vfs_entry txid content;
-           (FStar_Pervasives_Native.None, (FStar_Util.Inl gst)))
+           (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst)))
       | FStar_Interactive_JsonHelper.WillSave txid ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+          (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.WillSaveWait txid ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DidSave (f, t) ->
           invoke_full_lax gst f t true
       | FStar_Interactive_JsonHelper.DidClose txid ->
-          (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
+          (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Completion (txpos, ctx) ->
           let uu___ =
             FStar_Util.psmap_try_find
@@ -330,12 +338,13 @@ let (run_query :
           (match uu___ with
            | FStar_Pervasives_Native.Some st ->
                let uu___1 = FStar_Interactive_QueryHelper.complookup st txpos in
-               (uu___1, (FStar_Util.Inl gst))
+               (uu___1, (FStar_Pervasives.Inl gst))
            | FStar_Pervasives_Native.None ->
                (FStar_Interactive_JsonHelper.nullResponse,
-                 (FStar_Util.Inl gst)))
+                 (FStar_Pervasives.Inl gst)))
       | FStar_Interactive_JsonHelper.Resolve ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Hover txpos ->
           let uu___ =
             FStar_Util.psmap_try_find
@@ -346,14 +355,16 @@ let (run_query :
                let uu___1 =
                  FStar_Interactive_QueryHelper.hoverlookup
                    st.FStar_Interactive_JsonHelper.repl_env txpos in
-               (uu___1, (FStar_Util.Inl gst))
+               (uu___1, (FStar_Pervasives.Inl gst))
            | FStar_Pervasives_Native.None ->
                (FStar_Interactive_JsonHelper.nullResponse,
-                 (FStar_Util.Inl gst)))
+                 (FStar_Pervasives.Inl gst)))
       | FStar_Interactive_JsonHelper.SignatureHelp txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Declaration txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Definition txpos ->
           let uu___ =
             FStar_Util.psmap_try_find
@@ -364,53 +375,71 @@ let (run_query :
                let uu___1 =
                  FStar_Interactive_QueryHelper.deflookup
                    st.FStar_Interactive_JsonHelper.repl_env txpos in
-               (uu___1, (FStar_Util.Inl gst))
+               (uu___1, (FStar_Pervasives.Inl gst))
            | FStar_Pervasives_Native.None ->
                (FStar_Interactive_JsonHelper.nullResponse,
-                 (FStar_Util.Inl gst)))
+                 (FStar_Pervasives.Inl gst)))
       | FStar_Interactive_JsonHelper.TypeDefinition txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Implementation txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.References ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DocumentHighlight txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DocumentSymbol ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.CodeAction ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.CodeLens ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.CodeLensResolve ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DocumentLink ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DocumentLinkResolve ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.DocumentColor ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.ColorPresentation ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Formatting ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.RangeFormatting ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.TypeFormatting ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.Rename ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.PrepareRename txpos ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.FoldingRange ->
-          (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
+          (FStar_Interactive_JsonHelper.nullResponse,
+            (FStar_Pervasives.Inl gst))
       | FStar_Interactive_JsonHelper.BadProtocolMsg msg ->
           let uu___ =
             let uu___1 =
               FStar_Interactive_JsonHelper.js_resperr
                 FStar_Interactive_JsonHelper.MethodNotFound msg in
             FStar_Interactive_JsonHelper.errorResponse uu___1 in
-          (uu___, (FStar_Util.Inl gst))
+          (uu___, (FStar_Pervasives.Inl gst))
 let rec (parse_header_len :
   FStar_Util.stream_reader -> Prims.int -> Prims.int) =
   fun stream ->
@@ -474,8 +503,8 @@ let rec (go : FStar_Interactive_JsonHelper.grepl_state -> Prims.int) =
                FStar_Interactive_JsonHelper.write_jsonrpc response')
           | FStar_Pervasives_Native.None -> ());
          (match state_opt with
-          | FStar_Util.Inl gst' -> go gst'
-          | FStar_Util.Inr exitcode -> exitcode))
+          | FStar_Pervasives.Inl gst' -> go gst'
+          | FStar_Pervasives.Inr exitcode -> exitcode))
 let (start_server : unit -> unit) =
   fun uu___ ->
     let uu___1 =

@@ -20,6 +20,7 @@
 
 module FStar.Interactive.QueryHelper
 open FStar
+open FStar.Pervasives
 open FStar.Range
 open FStar.Util
 open FStar.TypeChecker.Env

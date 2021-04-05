@@ -87,6 +87,7 @@ endif
 	$(Q)echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	$(Q)echo "open Prims" >> $@
 	$(Q)echo "open FStar" >> $@
+	$(Q)echo "open FStar.Pervasives" >> $@
 	$(Q)echo "open FStar.Errors" >> $@
 	$(Q)echo "open FStar.List" >> $@
 	$(Q)echo "open FStar.Util" >> $@

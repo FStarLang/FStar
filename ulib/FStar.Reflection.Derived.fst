@@ -190,7 +190,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
         lex (compare_term t1 t2) (fun () ->
              compare_term t1' t2'))
 
-    | Tv_Match _ _, Tv_Match _ _ ->
+    | Tv_Match _ _ _, Tv_Match _ _ _ ->
         Eq // TODO
 
     | Tv_AscribedT e1 t1 tac1, Tv_AscribedT e2 t2 tac2 ->
@@ -225,7 +225,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
-    | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
+    | Tv_Match _ _ _, _  -> Lt | _, Tv_Match _ _ _  -> Gt
     | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
     | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
@@ -325,7 +325,7 @@ let mkpair (t1 t2 : term) : term =
 
 let rec head (t : term) : term =
     match inspect_ln t with
-    | Tv_Match t _
+    | Tv_Match t _ _
     | Tv_Let _ _ _ t _
     | Tv_Abs _ t
     | Tv_Refine _ t

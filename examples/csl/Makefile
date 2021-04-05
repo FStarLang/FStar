@@ -1,5 +1,3 @@
-FSTAR_HOME=../..
-# KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=../tactics
 EXCLUDED_FSTAR_FILES=
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
