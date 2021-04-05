@@ -259,8 +259,13 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
       univ_vars, lbtyp, e, true
 
     | _ ->
-      let lbtyp, e, check_lbtyp = extract_annot_from_body (Some t) in
-      univ_vars, lbtyp, e, true
+      let _, c = U.arrow_formals_comp t in
+      if not (U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect)
+      then //no termination check anyway, so don't bother rearranging decreases clauses
+           univ_vars, t, e, false
+      else
+        let lbtyp, e, check_lbtyp = extract_annot_from_body (Some t) in
+        univ_vars, lbtyp, e, true
 
 (************************************************************************)
 (* Utilities on patterns  *)

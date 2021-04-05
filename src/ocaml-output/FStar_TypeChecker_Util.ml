@@ -523,12 +523,29 @@ let (extract_let_rec_annotation :
                        match uu___7 with
                        | (lbtyp, e2, uu___8) -> (univ_vars1, lbtyp, e2, true)))
                  | uu___6 ->
-                     let uu___7 =
-                       extract_annot_from_body
-                         (FStar_Pervasives_Native.Some t2) in
+                     let uu___7 = FStar_Syntax_Util.arrow_formals_comp t2 in
                      (match uu___7 with
-                      | (lbtyp, e2, check_lbtyp) ->
-                          (univ_vars1, lbtyp, e2, true)))))
+                      | (uu___8, c) ->
+                          let uu___9 =
+                            let uu___10 =
+                              let uu___11 =
+                                FStar_All.pipe_right
+                                  (FStar_Syntax_Util.comp_effect_name c)
+                                  (FStar_TypeChecker_Env.lookup_effect_quals
+                                     env1) in
+                              FStar_All.pipe_right uu___11
+                                (FStar_List.contains
+                                   FStar_Syntax_Syntax.TotalEffect) in
+                            Prims.op_Negation uu___10 in
+                          if uu___9
+                          then (univ_vars1, t2, e1, false)
+                          else
+                            (let uu___11 =
+                               extract_annot_from_body
+                                 (FStar_Pervasives_Native.Some t2) in
+                             match uu___11 with
+                             | (lbtyp, e2, check_lbtyp) ->
+                                 (univ_vars1, lbtyp, e2, true))))))
 let rec (decorated_pattern_as_term :
   FStar_Syntax_Syntax.pat ->
     (FStar_Syntax_Syntax.bv Prims.list * FStar_Syntax_Syntax.term))
