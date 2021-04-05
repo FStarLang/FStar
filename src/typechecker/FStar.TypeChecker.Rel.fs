@@ -4157,24 +4157,6 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
 
     imps, b
 
-<<<<<<< HEAD
-let resolve_implicits' env is_tac g =
-  let must_total =
-    if is_tac then false
-    else (not env.phase1 && not env.lax) in
-
-  let rec unresolved ctx_u =
-    match (Unionfind.find ctx_u.ctx_uvar_head) with
-    | Some r ->
-        begin match ctx_u.ctx_uvar_meta with
-        | None -> false
-        (* If we have a meta annotation, we recurse to see if the uvar
-         * is actually solved, instead of being resolved to yet another uvar.
-         * In that case, while we are keeping track of that uvar, we must not
-         * forget the meta annotation in case this second uvar is not solved.
-         * See #1561. *)
-        | Some _ ->
-=======
 (*
  * Check that an implicit solution t has an expected type k
  *   we know that G |- t : (G)Tot k', for some k'
@@ -4268,7 +4250,6 @@ let rec unresolved ctx_u : bool =
              * forget the meta annotation in case this second uvar is not solved.
              * See #1561. *)
           | Some _ ->
->>>>>>> master
             begin match (SS.compress r).n with
                   | Tm_uvar (ctx_u', _) -> unresolved ctx_u'
                   | _ -> false
@@ -4448,56 +4429,4 @@ let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
-<<<<<<< HEAD
 
-///////////////////////////////////////////////////////////////////
-let check_subtyping env t1 t2 =
-  Profiling.profile (fun () ->
-    if debug env <| Options.Other "Rel"
-    then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
-    let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit env (singleton wl prob true) (fun _ -> None) in
-    if debug env <| Options.Other "Rel"
-    && BU.is_some g
-    then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env t1)
-                    (N.term_to_string env t2)
-                    (guard_to_string env (BU.must g));
-    match g with
-    | None -> None
-    | Some g -> Some (x, g)
-  )
-  (Some (Ident.string_of_lid (Env.current_module env)))
-  "FStar.TypeChecker.Rel.check_subtyping"
-
-let get_subtyping_predicate env t1 t2 =
-    match check_subtyping env t1 t2 with
-    | None -> None
-    | Some (x, g) ->
-      Some (abstract_guard (S.mk_binder x) g)
-
-let get_subtyping_prop env t1 t2 =
-    match check_subtyping env t1 t2 with
-    | None -> None
-    | Some (x, g) ->
-      Some (close_guard env [S.mk_binder x] g)
-
-let subtype_nosmt env t1 t2 =
-    if debug env <| Options.Other "Rel"
-    then BU.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
-    let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit env (singleton wl prob false) (fun _ -> None) in
-    match g with
-    | None -> None
-    | Some g ->
-      let g = close_guard env [S.mk_binder x] g in
-      discharge_guard' None env g false
-
-let subtype_nosmt_force env t1 t2 =
-    match subtype_nosmt env t1 t2 with
-    | None -> false
-    | Some g ->
-        force_trivial_guard env g;
-        true
-=======
->>>>>>> master
