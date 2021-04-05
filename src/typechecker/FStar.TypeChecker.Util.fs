@@ -106,6 +106,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   let u_subst, univ_vars = SS.univ_var_opening univ_vars in
   let e = SS.subst u_subst e in
   let t = SS.subst u_subst t in
+  if Env.debug env <| Options.Other "Dec"
+  then BU.print2 "extract_let_rec_annotation lbdef=%s; lbtyp=%s\n"
+                 (Print.term_to_string e)
+                 (Print.term_to_string t);
   let env = Env.push_univ_vars env univ_vars in
   let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt =
       let get_decreases c =
@@ -205,12 +209,19 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 let body = { body with n = Tm_meta(body', m) } in
                 t, body, recheck
 
-              | Tm_ascribed (body', (asc, tac_opt), lopt) ->
-                let tarr =
-                  match asc with
-                  | Inl t -> mk_arrow (mk_comp t)
-                  | Inr c -> mk_arrow c
-                in
+              | Tm_ascribed (_, (Inl t, _), _) -> //no decreases clause here
+                begin
+                match lbtyp_opt with
+                | Some lbtyp ->
+                  lbtyp, body, false
+
+                | None ->
+                  let t = mk_arrow (mk_comp t) in
+                  t, body, true
+                end
+
+              | Tm_ascribed (body', (Inr c, tac_opt), lopt) ->
+                let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
                 let bs', c = U.arrow_formals_comp tarr in
                 if List.length bs' <> List.length bs
