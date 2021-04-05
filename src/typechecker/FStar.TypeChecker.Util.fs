@@ -111,13 +111,21 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                  (Print.term_to_string e)
                  (Print.term_to_string t);
   let env = Env.push_univ_vars env univ_vars in
+  let un_arrow t =
+      match (SS.compress t).n with
+      | Tm_arrow (bs, c) ->
+        Subst.open_comp bs c
+      | _ ->
+        Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Recursive functions must be introduced at arrow types")
+                           rng
+  in
   let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt =
       let get_decreases c =
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
       match lbtyp_opt with
       | None ->
-        let bs, c = U.arrow_formals_comp tarr in
+        let bs, c = un_arrow tarr in
         (match get_decreases c with
          | Some (pfx, DECREASES d, sfx) ->
            let c = U.comp_set_flags c (pfx @ sfx) in
@@ -125,8 +133,8 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
          | _ -> tarr, tarr, true)
 
       | Some annot ->
-        let bs, c = U.arrow_formals_comp tarr in
-        let bs', c' = U.arrow_formals_comp annot in
+        let bs, c = un_arrow tarr in
+        let bs', c' = un_arrow annot in
         if List.length bs <> List.length bs'
         then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation")
                                 rng;
@@ -223,7 +231,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
               | Tm_ascribed (body', (Inr c, tac_opt), lopt) ->
                 let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
-                let bs', c = U.arrow_formals_comp tarr in
+                let bs', c = un_arrow tarr in
                 if List.length bs' <> List.length bs
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in

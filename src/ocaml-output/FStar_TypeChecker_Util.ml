@@ -162,6 +162,18 @@ let (extract_let_rec_annotation :
                  else ());
                 (let env1 =
                    FStar_TypeChecker_Env.push_univ_vars env univ_vars1 in
+                 let un_arrow t3 =
+                   let uu___6 =
+                     let uu___7 = FStar_Syntax_Subst.compress t3 in
+                     uu___7.FStar_Syntax_Syntax.n in
+                   match uu___6 with
+                   | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+                       FStar_Syntax_Subst.open_comp bs c
+                   | uu___7 ->
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_LetRecArgumentMismatch,
+                           "Recursive functions must be introduced at arrow types")
+                         rng in
                  let reconcile_let_rec_ascription_and_body_type tarr
                    lbtyp_opt =
                    let get_decreases c =
@@ -173,7 +185,7 @@ let (extract_let_rec_annotation :
                              | uu___7 -> false)) in
                    match lbtyp_opt with
                    | FStar_Pervasives_Native.None ->
-                       let uu___6 = FStar_Syntax_Util.arrow_formals_comp tarr in
+                       let uu___6 = un_arrow tarr in
                        (match uu___6 with
                         | (bs, c) ->
                             let uu___7 = get_decreases c in
@@ -188,11 +200,10 @@ let (extract_let_rec_annotation :
                                  (uu___8, tarr, true)
                              | uu___8 -> (tarr, tarr, true)))
                    | FStar_Pervasives_Native.Some annot ->
-                       let uu___6 = FStar_Syntax_Util.arrow_formals_comp tarr in
+                       let uu___6 = un_arrow tarr in
                        (match uu___6 with
                         | (bs, c) ->
-                            let uu___7 =
-                              FStar_Syntax_Util.arrow_formals_comp annot in
+                            let uu___7 = un_arrow annot in
                             (match uu___7 with
                              | (bs', c') ->
                                  (if
@@ -425,9 +436,7 @@ let (extract_let_rec_annotation :
                                          tarr lbtyp_opt in
                                      (match uu___9 with
                                       | (tarr1, lbtyp, recheck) ->
-                                          let uu___10 =
-                                            FStar_Syntax_Util.arrow_formals_comp
-                                              tarr1 in
+                                          let uu___10 = un_arrow tarr1 in
                                           (match uu___10 with
                                            | (bs', c1) ->
                                                if

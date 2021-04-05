@@ -67,3 +67,15 @@ let rec last = function
 
 let rec tt : int -> int = fun x -> x
 let rec tt' : int -> Dv int = fun x -> tt' x
+
+let test_inner_let_rec (x y:nat)
+  : Lemma (requires x <= y)
+          (ensures pred x y)
+  = let rec aux (x:nat) (y:nat)
+        : Lemma (requires (x <= y))
+                (ensures (pred x y))
+                (decreases y)
+        = if x = 0 then ()
+          else aux (x - 1) (y - 1)
+    in
+    aux x y
