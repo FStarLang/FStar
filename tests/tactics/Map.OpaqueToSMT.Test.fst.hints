@@ -1,0 +1,41 @@
+[
+  "K>o|ó\r¥Îlhë¶Ý²0â",
+  [
+    [
+      "Map.OpaqueToSMT.Test.test1",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "941a1d92d516a05a96c8899fe1079e68"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test2",
+      1,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f060eeee32f76e3bb40a0273b73b3425"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test1",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "728fa4b1f45b42a9ff133d8ef083abed"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test2",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "33b108515fac7b849f1111beedbeb625"
+    ]
+  ]
+]

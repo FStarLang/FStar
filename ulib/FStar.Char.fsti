@@ -13,42 +13,62 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module FStar.Char
 
-module U32 = FStar.UInt32
-new val char : eqtype
+/// This module provides the [char] type, an abstract type
+/// representing UTF-8 characters.
+///
+/// UTF-8 characters are representing in a variable-length encoding of
+/// between 1 and 4 bytes, with a maximum of 21 bits used to represent
+/// a code.
+///
+/// See https://en.wikipedia.org/wiki/UTF-8 and
+/// https://erratique.ch/software/uucp/doc/unicode.html
 
+module U32 = FStar.UInt32
+
+(** [char] is a new primitive type with decidable equality *)
+new
+val char:eqtype
+
+(** A [char_code] is the representation of a UTF-8 char code in
+    an unsigned 32-bit integer whose value is at most 2^21 *)
+type char_code = n: U32.t{U32.v n < pow2 21}
+
+(** A primitive to extract the [char_code] of a [char] *)
+val u32_of_char: char -> Tot char_code
+
+(** A primitive to promote a [char_code] to a [char] *)
+val char_of_u32: char_code -> Tot char
+
+(** Encoding and decoding from [char] to [char_code] is the identity *)
+val char_of_u32_of_char (c: char)
+    : Lemma (ensures (char_of_u32 (u32_of_char c) == c)) [SMTPat (u32_of_char c)]
+
+(** Encoding and decoding from [char] to [char_code] is the identity *)
+val u32_of_char_of_u32 (c: char_code)
+    : Lemma (ensures (u32_of_char (char_of_u32 c) == c)) [SMTPat (char_of_u32 c)]
+
+(** A couple of utilities to use mathematical integers rather than [U32.t]
+    to represent a [char_code] *)
+let int_of_char (c: char) : nat = U32.v (u32_of_char c)
+let char_of_int (i: nat{i < pow2 21}) : char = char_of_u32 (U32.uint_to_t i)
+
+(** Case conversion *)
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
 
-type char_code = n:U32.t{U32.v n < pow2 21}
-val u32_of_char: char -> Tot char_code
-val char_of_u32: char_code -> Tot char
-val char_of_u32_of_char:
-    c:char
-  -> Lemma
-    (ensures (char_of_u32 (u32_of_char c) == c))
-    [SMTPat (u32_of_char c)]
-
-val u32_of_char_of_u32:
-    c:char_code
-  -> Lemma
-    (ensures (u32_of_char (char_of_u32 c) == c))
-    [SMTPat (char_of_u32 c)]
-
-let int_of_char (c:char) : nat = U32.v (u32_of_char c)
-let char_of_int (i:nat{i < pow2 21}) : char = char_of_u32 (U32.uint_to_t i)
-
 #set-options "--lax"
-//This private primitive is used internally by the
-//compiler to translate character literals
-//with a desugaring-time check of the size of the number,
-//rather than an expensive verifiation check.
-//Since it is marked private, client programs cannot call it directly
-//Since it is marked unfold, it eagerly reduces,
-//eliminating the verification overhead of the wrapper
-private
-unfold
-let __char_of_int (x:int) : char
-    = char_of_int x
+
+(** This private primitive is used internally by the compiler to
+    translate character literals with a desugaring-time check of the
+    size of the number, rather than an expensive verifiation check.
+    Since it is marked private, client programs cannot call it
+    directly Since it is marked unfold, it eagerly reduces,
+    eliminating the verification overhead of the wrapper *)
+
+private unfold
+let __char_of_int (x: int) : char = char_of_int x
 #reset-options
+

@@ -566,6 +566,7 @@ let rec mem_memP
   (x: a)
   (l: list a)
 : Lemma (ensures (mem x l <==> memP x l))
+        [SMTPat (mem x l); SMTPat (memP x l)]
 = match l with
   | [] -> ()
   | a :: q -> mem_memP x q
@@ -1000,14 +1001,14 @@ let rec precedes_append_cons_r
 
 let precedes_append_cons_prod_r
   (#a #b: Type)
-  (l l1: list (a * b))
+  (l1: list (a * b))
   (x: a)
   (y: b)
   (l2: list (a * b))
 : Lemma
-  (requires (l == append l1 ((x, y) :: l2)))
-  (ensures (x << l /\ y << l))
-  [SMTPatOr [ [ SMTPat (x << l); SMTPat (l == append l1 ((x, y) :: l2))] ; [SMTPat (y << l); SMTPat (l == append l1 ((x, y) :: l2))] ] ]
+  (ensures
+    x << (append l1 ((x, y) :: l2)) /\
+    y << (append l1 ((x, y) :: l2)))
 = precedes_append_cons_r l1 (x, y) l2
 
 let rec memP_precedes

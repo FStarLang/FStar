@@ -29,8 +29,6 @@ let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let cur_sigint_handler : Sys.signal_behavior ref =
   ref Sys.Signal_default
@@ -77,7 +75,8 @@ type proc =
      outc : out_channel;
      mutable killed : bool;
      stop_marker: (string -> bool) option;
-     id : string}
+     id : string;
+     start_time : time}
 
 let all_procs : (proc list) ref = ref []
 
@@ -109,6 +108,8 @@ let with_monitor _ f x = atomically (fun () ->
 let spawn f =
   let _ = Thread.create f () in ()
 
+let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
+
 (* On the OCaml side it would make more sense to take stop_marker in
    ask_process, but the F# side isn't built that way *)
 let start_process'
@@ -125,7 +126,9 @@ let start_process'
                inc = Unix.in_channel_of_descr stdout_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
-               killed = false } in
+               killed = false;
+               start_time = now()} in
+  (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc
 
@@ -154,6 +157,7 @@ let kill_process (p: proc) =
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
+      (* print_string ("Killed process " ^ p.id ^ "\n" ^ (stack_dump()));       *)
       p.killed <- true
     end
 
@@ -300,7 +304,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
-let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
@@ -582,24 +585,21 @@ let stdout = stdout
 
 let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 
-type ('a,'b) either =
-  | Inl of 'a
-  | Inr of 'b
 [@@deriving yojson,show]
 
 let is_left = function
-  | Inl _ -> true
+  | FStar_Pervasives.Inl _ -> true
   | _ -> false
 
 let is_right = function
-  | Inr _ -> true
+  | FStar_Pervasives.Inr _ -> true
   | _ -> false
 
 let left = function
-  | Inl x -> x
+  | FStar_Pervasives.Inl x -> x
   | _ -> failwith "Not in left"
 let right = function
-  | Inr x -> x
+  | FStar_Pervasives.Inr x -> x
   | _ -> failwith "Not in right"
 
 let (-<-) f g x = f (g x)
@@ -988,13 +988,17 @@ let load_value_from_file (fname:string) =
   with | _ -> None
 
 let save_2values_to_file (fname:string) value1 value2 =
-  let channel = open_out_bin fname in
-  BatPervasives.finally
-    (fun () -> close_out channel)
-    (fun channel ->
-      output_value channel value1;
-      output_value channel value2)
-    channel
+  try
+    let channel = open_out_bin fname in
+    BatPervasives.finally
+      (fun () -> close_out channel)
+      (fun channel ->
+        output_value channel value1;
+        output_value channel value2)
+      channel
+  with
+  | e -> delete_file fname;
+         raise e
 
 let load_2values_from_file (fname:string) =
   try
@@ -1023,6 +1027,11 @@ let digest_of_file =
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
+
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  (* Sets access and modification times to current time *)
+  Unix.utimes fname 0.0 0.0
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
@@ -1056,6 +1065,11 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 let write_hints (filename: string) (hints: hints_db): unit =
   let json = `List [
     `String hints.module_digest;
@@ -1082,7 +1096,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
     (fun channel -> Yojson.Safe.pretty_to_channel channel json)
     channel
 
-let read_hints (filename: string) (warn: bool) : hints_db option =
+let read_hints (filename: string) : hints_read_result =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
       hint_name = nm;
       hint_index = Z.of_int ix;
@@ -1108,7 +1122,7 @@ let read_hints (filename: string) (warn: bool) : hints_db option =
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (
+    HintsOK (
         match json with
         | `List [
             `String module_digest;
@@ -1145,11 +1159,9 @@ let read_hints (filename: string) (warn: bool) : hints_db option =
     )
   with
    | Exit ->
-      if warn then print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
-      None
+      MalformedJson
    | Sys_error _ ->
-      if warn then print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
-      None
+      UnableToOpen
 
 (** Interactive protocol **)
 

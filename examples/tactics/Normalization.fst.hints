@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "d4bc7f25dc0576720d1cb5c20fdfa3ef"
+      "54f9931f8a2f3e13ce53f3ec65671c72"
     ],
     [
       "Normalization.uu___29",
@@ -25,7 +25,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "2e539e74c8d01f8cf786e9bd333c2e04"
+      "79f1a943a76bdcfe3aa04556210bb0a3"
     ],
     [
       "Normalization.uu___35",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "518e41045a0051a4b443c0d44036c9bf"
+      "f532450400d36d44e22473796479bdd8"
     ],
     [
       "Normalization.uu___35",
@@ -51,7 +51,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "5b2a997408cf4aaa494f9934abede9f5"
+      "073c50fd5770002bbbf9d29177c4873b"
     ],
     [
       "Normalization.uu___41",
@@ -64,7 +64,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "4daf91b202cadaaffcae89552c2a4e6f"
+      "31c18e3ac01afa68d5e264a4823d934e"
     ],
     [
       "Normalization.uu___41",
@@ -77,7 +77,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "6fc8f239825d8c5e5d86d18fbd1c790f"
+      "75f10028a2512bfe686e0f8b7def17e5"
     ],
     [
       "Normalization.uu___49",
@@ -89,7 +89,7 @@
         "equation_Normalization.four__"
       ],
       0,
-      "783e889bffc3b5072459dbef7dda49a5"
+      "710c5a2ae89c4664b24b79b83ff910d4"
     ],
     [
       "Normalization.uu___50",
@@ -102,7 +102,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "acd807b978764056e6a33882a8d2f0d5"
+      "32aeae7b0ebe159409fd937021904ac8"
     ],
     [
       "Normalization.uu___50",
@@ -115,123 +115,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "563dc0584d6a79c21bda5321465abd43"
-    ],
-    [
-      "Normalization.uu___29",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "47f5177f6f5f7f4b842e09c5c056d503"
-    ],
-    [
-      "Normalization.uu___29",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
-      ],
-      0,
-      "cfb89e4e3a214cd9ddef146ddde75778"
-    ],
-    [
-      "Normalization.uu___35",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "d865cde13bdaf415c516b47b1dc4063a"
-    ],
-    [
-      "Normalization.uu___35",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
-      ],
-      0,
-      "82ab7b450dafff2f5ccb909848751e94"
-    ],
-    [
-      "Normalization.uu___41",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "c5aebfda8a45ef75776a3cad29ff0541"
-    ],
-    [
-      "Normalization.uu___41",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
-      ],
-      0,
-      "71ff6b9b62a89c51687f1e15176f76d6"
-    ],
-    [
-      "Normalization.uu___49",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Normalization.does_not_normalize",
-        "equation_Normalization.four__"
-      ],
-      0,
-      "993d5f51c8b1baca871f77dbcc436135"
-    ],
-    [
-      "Normalization.uu___50",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "0362ba504f279dcc062cee43c2168d64"
-    ],
-    [
-      "Normalization.uu___50",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Order.order__uu___haseq",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
-      ],
-      0,
-      "e71f05e5b54a2c83d08cc0ef922e3b67"
+      "b836967430505ece9a7607b3e68774b3"
     ]
   ]
 ]

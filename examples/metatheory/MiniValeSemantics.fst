@@ -71,19 +71,19 @@ type fuel = nat
 /// Evaluating an operand:
 ///   -- marked for reduction
 ///   -- Registers evaluated by state lookup
-[@qattr]
+[@@qattr]
 let eval_operand (o:operand) (s:state) : nat64 =
   match o with
   | OReg r -> s r
   | OConst n -> n
 
 /// updating a register state `s` at `r` with `v`
-[@qattr]
+[@@qattr]
 let update_reg (s:state) (r:reg) (v:nat64) : state =
   fun r' -> if r = r' then v else s r'
 
 /// updating a register state `s` at `r` with `s' r`
-[@qattr]
+[@@qattr]
 let update_state (r:reg) (s' s:state) : state =
   update_reg s r (s' r)
 
@@ -209,10 +209,10 @@ let lemma_merge (c:code) (cs:list code) (s0:state) (f0:fuel) (sM:state) (fM:fuel
 //      represented as the raw code packaged with their typeclass
 //      instances for computing their WPs
 /////////////////////////////////////////////////////////////////
-[@qattr]
+[@@qattr]
 let t_post = state -> Type0
 
-[@qattr]
+[@@qattr]
 let t_pre = state -> Type0
 
 /// t_wp: The type of weakest preconditions
@@ -234,7 +234,7 @@ let t_lemma (pre:Type0) (post:Type0) =
 
 
 /// `with_wp` : A typeclass for code packaged with its wp
-[@qattr]
+[@@qattr]
 noeq
 type with_wp : code -> Type =
 | QProc: c:code -> wp:t_wp -> hasWp:has_wp c wp -> with_wp c
@@ -260,7 +260,7 @@ type with_wps : list code -> Type =
    with_wps cs ->
    with_wps cs
 
-[@qattr]
+[@@qattr]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
   : Tot (state -> Tot Type0 (decreases qcs))
   =
@@ -321,7 +321,7 @@ let lemma_Move (s0:state) (dst:operand) (src:operand)
   let Some sM = eval_code (Ins (Mov64 dst src)) 0 s0 in
   (sM, 0)
 
-[@qattr]
+[@@qattr]
 let wp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
   OReg? dst /\
   (forall (x:nat64).
@@ -335,7 +335,7 @@ let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost
   =
   lemma_Move s0 dst src
 
-[@qattr]
+[@@qattr]
 let inst_Move (dst:operand) (src:operand) : with_wp (Ins (Mov64 dst src)) =
   QProc (Ins (Mov64 dst src)) (wp_Move dst src) (hasWp_Move dst src)
 
@@ -353,7 +353,7 @@ let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state * fuel)
   let Some sM = eval_code (Ins (Add64 dst src)) 0 s0 in
   (sM, 0)
 
-[@qattr]
+[@@qattr]
 let wp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
   OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64 /\
   (forall (x:nat64).
@@ -367,7 +367,7 @@ let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost 
   =
   lemma_Add s0 dst src
 
-[@qattr]
+[@@qattr]
 let inst_Add (dst:operand) (src:operand) : with_wp (Ins (Add64 dst src)) =
   QProc (Ins (Add64 dst src)) (wp_Add dst src) (hasWp_Add dst src)
 
@@ -402,7 +402,7 @@ let vc_sound_norm
 // Verifying a simple program
 ////////////////////////////////////////////////////////////////////////////////
 
-[@qattr]
+[@@qattr]
 let codes_Triple : list code =
   [Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
    Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
@@ -671,7 +671,7 @@ Ins (Mov64 (OReg Rbx) (OReg Rax));   //mov rbx rax;
    Ins (Add64 (OReg Rax) (OReg Rbx));   //add rax rbx;
    Ins (Add64 (OReg Rbx) (OReg Rax))]   //add rbx rax
 
-[@qattr]
+[@@qattr]
 let inst_Triple : with_wps codes_Triple = //A typeclass instance for our program
   QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
   QSeq (inst_Move (OReg Rbx) (OReg Rax)) (
@@ -958,7 +958,7 @@ procedure Triple()
 }
 *)
 
-[@qattr]
+[@@qattr]
 let state_eq (s0 s1:state) : Ghost Type0
   (requires True)
   (ensures fun b -> b ==> s0 `feq` s1)

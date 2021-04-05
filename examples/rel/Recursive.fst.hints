@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "44565a9fd57c9d4424bfc31384f6236a"
+      "1508fe1e0684a51fe68b41b7d7ae4950"
     ],
     [
       "Recursive.fac_mon",
@@ -45,7 +45,7 @@
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "37dd0cf48dce1d143f7afc3782e3ed5e"
+      "b12cb09cfdb872ac43333b3b4ba27224"
     ],
     [
       "Recursive.fac_sum",
@@ -61,7 +61,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "d3bd87279fd520721ee4bc059c8bda44"
+      "bf2065828ec99242a004b79e823b92ee"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -74,40 +74,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4f1adea05abbaae21fc65a7aff5331dc"
-    ],
-    [
-      "Recursive.fac",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "7be9cc267d4e3500739e210c8ac15547"
-    ],
-    [
-      "Recursive.fac_sum",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
-        "equation_Prims.nat", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_Recursive.fac"
-      ],
-      0,
-      "ffcb6a0ee35587e57b5a6a07ea4f007d"
+      "663436a3c430697658cd1d82d1001282"
     ]
   ]
 ]

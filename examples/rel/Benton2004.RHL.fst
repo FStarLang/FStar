@@ -14,42 +14,8 @@
    limitations under the License.
 *)
 module Benton2004.RHL
-include Benton2004
 
 (* Relational Hoare Logic (Section 4) *)
-
-type gexp (t: Type0) = heap -> heap -> GTot t
-
-let gconst (#t: Type0) (n: t) : gexp t =
-  let g _ _ : GTot t = n in
-  g
-
-type pos =
-  | Left
-  | Right
-
-let gvar (x: var) (side: pos) : GTot (gexp int) =
-  let g s1 s2 : GTot int = sel (match side with Left -> s1 | Right -> s2) x in
-  g
-
-let gop (#from #to: Type0) (op: (from -> from -> GTot to)) (e1 e2: gexp from) : GTot (gexp to) =
-  let g s1 s2 : GTot to = op (e1 s1 s2) (e2 s1 s2) in
-  g
-
-let gnot (e: gexp bool) : GTot (gexp bool) =
-  let g s1 s2 = not (e s1 s2) in
-  g
-
-(* Substitution: Lemma 3 al. 1, 2 *)
-
-let gsubst (#t: Type0) (ge: gexp t) (x: var) (side: pos) (ge': gexp int) : gexp t =
-  let g s1 s2 : GTot t =
-    let v' = ge' s1 s2 in
-    match side with
-    | Left -> ge (upd s1 x v') s2
-    | Right -> ge s1 (upd s2 x v')
-  in
-  g
 
 let gsubst_gconst (#t: Type0) (n: t) (x: var) (side: pos) (ge' : gexp int): Lemma
   (forall h1 h2. (gsubst (gconst n) x side ge') h1 h2 == (gconst n) h1 h2)
@@ -73,12 +39,6 @@ let gsubst_gop (#from #to: Type0) (op: (from -> from -> GTot to)) (ge1 ge2: gexp
   [SMTPat (gsubst (gop op ge1 ge2) x side ge')]
 = ()
 
-(* 4.1.3 Inference rules *)
-
-let interp (ge: gexp bool) : GTot sttype =
-  let g s1 s2 : GTot Type0 = ge s1 s2 == true in
-  g
-
 let holds_interp
   (ge: gexp bool)
   (s1 s2: heap)
@@ -87,7 +47,6 @@ let holds_interp
   [SMTPat (holds (interp ge) s1 s2)]
 = holds_equiv (interp ge) s1 s2
 
-abstract
 let exec_equiv
   (p p' : gexp bool)
   (f f' : computation)
@@ -108,16 +67,6 @@ let r_skip
   (exec_equiv p p skip skip)
   [SMTPat (exec_equiv p p skip skip)]
 = d_skip (interp p)
-
-let exp_to_gexp
-  (#t: Type0)
-  (e: exp t)
-  (side: pos)
-: GTot (gexp t)
-= let g s1 s2 : GTot t =
-    fst (reify_exp e (match side with | Left -> s1 | Right -> s2))
-  in
-  g
 
 let exp_to_gexp_const
   (#t: Type0)
@@ -148,9 +97,6 @@ let exp_to_gexp_eop
 
 #set-options "--z3rlimit 2048 --max_fuel 8 --max_ifuel 8"
 
-let gand (b1 b2 : gexp bool) : GTot (gexp bool) =
-  gop op_AmpAmp b1 b2
-
 let holds_gand (b1 b2 : gexp bool) : Lemma
   (forall s1 s2 . holds (interp (gand b1 b2)) s1 s2 <==> holds (interp b1) s1 s2 /\ holds (interp b2) s1 s2)
   [SMTPat (holds (interp (gand b1 b2)))]
@@ -160,9 +106,6 @@ let gsubst_gand (b1 b2: gexp bool) x side e : Lemma
   (forall h1 h2. (gsubst (gand b1 b2) x side e) h1 h2 == (gand (gsubst b1 x side e) (gsubst b2 x side e)) h1 h2)
   [SMTPat (gsubst (gand b1 b2) x side e)]
 = ()
-
-let gor (b1 b2 : gexp bool) : GTot (gexp bool) =
-  gop op_BarBar b1 b2
 
 let holds_gor (b1 b2 : gexp bool) : Lemma
   (forall s1 s2 . holds (interp (gor b1 b2)) s1 s2 <==> holds (interp b1) s1 s2 \/ holds (interp b2) s1 s2)
@@ -178,12 +121,6 @@ let holds_gnot (b: gexp bool) : Lemma
   (forall s1 s2 . holds (interp (gnot b)) s1 s2 <==> ~ (holds (interp b) s1 s2))
   [SMTPat (holds (interp (gnot b)))]
 = ()
-
-let geq
-  (#t: eqtype)
-  (e1 e2 : gexp t)
-: GTot (gexp bool)
-= gop op_Equality e1 e2
 
 let holds_geq (#t: eqtype) (e1 e2 : gexp t) : Lemma
   (forall s1 s2 . holds (interp (geq e1 e2)) s1 s2 <==> e1 s1 s2 == e2 s1 s2)
@@ -209,13 +146,6 @@ let holds_exp_to_gexp_right
   [SMTPat (holds (interp (exp_to_gexp e Right)))]
 = ()
 
-let r_if_precond_true
-  (b b': exp bool)
-  (c c' d d' : computation)
-  (p p' : gexp bool)
-: GTot (gexp bool)
-= gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))
-
 let holds_r_if_precond_true
   (b b': exp bool)
   (c c' d d' : computation)
@@ -229,13 +159,6 @@ let holds_r_if_precond_true
   ))
 = ()
 
-let r_if_precond_false
-  (b b': exp bool)
-  (c c' d d' : computation)
-  (p p' : gexp bool)
-: GTot (gexp bool)
-= gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right)))
-
 let holds_r_if_precond_false
   (b b': exp bool)
   (c c' d d' : computation)
@@ -247,13 +170,6 @@ let holds_r_if_precond_false
     ( ~ (fst (reify_exp b s1) == true \/ fst (reify_exp b' s2) == true))   
   ))
 = ()  
-
-let r_if_precond
-  (b b': exp bool)
-  (c c' d d' : computation)
-  (p p' : gexp bool)
-: GTot (gexp bool)
-= gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))
 
 let holds_r_if_precond
   (b b': exp bool)
@@ -325,9 +241,6 @@ let r_ass
     (assign y e')
   )
 = ()
-
-let included (p1 p2: gexp bool) : GTot Type0 =
-  Benton2004.included (interp p1) (interp p2)
 
 let included_alt (p1 p2 : gexp bool) : Lemma
   (included p1 p2 <==> (forall s1 s2 . p1 s1 s2 == true ==> p2 s1 s2 == true))
@@ -401,10 +314,6 @@ let rec r_while_terminates'
     in
     Classical.forall_intro (Classical.move_requires g)
   end else ()
-
-let flip (phi: gexp bool) : Tot (gexp bool) =
-  let g s1 s2 = phi s2 s1 in
-  g
 
 let holds_interp_flip (phi: gexp bool) : Lemma
   (forall s1 s2 . holds (interp (flip phi)) s1 s2 <==> holds (Benton2004.flip (interp phi)) s1 s2)
@@ -498,8 +407,6 @@ let rec r_while
   Classical.forall_intro_2 g;
   Classical.forall_intro_3 h
 
-let is_per (p: gexp bool) = Benton2004.is_per (interp p)
-
 (* Aparte: 4.4 How to prove is_per *)
 
 let is_per_geq_exp_to_gexp
@@ -539,8 +446,6 @@ let r_sym
   (ensures (exec_equiv p p' f f' <==> exec_equiv p p' f' f))
   [SMTPat (exec_equiv p p' f f'); SMTPat (is_per p); SMTPat (is_per p')]
 = exec_equiv_sym (interp p) (interp p') f f'
-
-let interpolable (p: gexp bool) = Benton2004.interpolable (interp p)
 
 (* Aparte: 4.4 How to prove interpolable *)
 

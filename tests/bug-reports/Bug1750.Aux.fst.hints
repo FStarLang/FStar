@@ -1,0 +1,33 @@
+[
+  "‹œ6n≤;‘’Â∆≈¸?T\u0000∫",
+  [
+    [
+      "Bug1750.Aux.test",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Monotonic.DependentMap_interpretation_Tm_arrow_e0342d9558b243b3e59b56f030223dea",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "equation_FStar.Monotonic.DependentMap.opt",
+        "equation_FStar.Monotonic.DependentMap.partial_dependent_map",
+        "fuel_guarded_inversion_Bug1750.Aux.ilog_entry",
+        "function_token_typing_FStar.Monotonic.DependentMap.opt",
+        "kinding_Bug1750.Aux.ilog_entry@tok",
+        "lemma_FStar.DependentMap.sel_upd_same",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Bug1750.Aux.ilog_entry@tok",
+        "token_correspondence_FStar.Monotonic.DependentMap.opt",
+        "typing_Bug1750.Aux.pre_dhi",
+        "typing_FStar.Monotonic.DependentMap.repr"
+      ],
+      0,
+      "0ee951697e8da3c08dd861bea5187e75"
+    ]
+  ]
+]

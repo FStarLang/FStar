@@ -1,6 +1,10 @@
 exception EOF
 type fd_read = in_channel
 type fd_write = out_channel
+let stdin = stdin
+let stdout = stdout
+let stderr = stderr
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf

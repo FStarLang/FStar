@@ -173,7 +173,7 @@ val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key v
                       Lemma (ensures (equal m1 m2 <==> m1 == m2))
                             [SMTPat (equal m1 m2)]
 
-[@(deprecated "use lemma_equal_elim")]
+[@@(deprecated "use lemma_equal_elim")]
 val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
                       Lemma  (requires (m1 == m2))
                              (ensures  (equal m1 m2))

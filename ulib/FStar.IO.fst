@@ -21,6 +21,10 @@ exception EOF
 assume new type fd_read : Type0
 assume new type fd_write : Type0
 
+assume val stdin : fd_read
+assume val stdout : fd_write
+assume val stderr : fd_write
+
 assume val print_newline : unit -> ML unit
 assume val print_string : string -> ML unit
 

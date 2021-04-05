@@ -13,11 +13,42 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Typeclass argument syntax
+
+  * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
+    instead of `[| ... |]`. They are also better supported, and be used in
+    `val` declarations and arrows which was not previously the case.
+
 ## Module system
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
+    dependent pattern matching. F* now supports `match e returns C with |...`
+    syntax for typechecking the branches with `C` appropriately substituted.
+    This changes the syntax of the `match` nodes to maintain an optional
+    annotation. The data constructor `Tv_Match` in the reflection API changes
+    accordingly.
+
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1916,
+    F* has a revised treatment for the lexicographic tuples. This is a breaking change
+    and may require some additional annotations in the decreases clauses, see for example:
+    https://github.com/FStarLang/FStar/pull/2218/commits/0baf2277cd1e2c83ba71c4bc9659f1a84837a33a.
+    F* tries to give a warning for such cases that the proof may require type annotations on
+    these decreases clause elements.
+
+  * The expected type of the `if_then_else` combinator for layered effects is now
+    `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
+    Previously, the `p` parameter used to have type `Type0`. It only needs
+    change in the definition of the combinator, no changes are required in
+    the client code using the effect. For example, see:
+    https://github.com/FStarLang/FStar/commit/731b353aa3bb6c32f4da97170284a1f301b242e1
+
+    The types of the combinators are also subject to stricter typing (no smt and no subtyping).
+    See this commit: https://github.com/FStarLang/FStar/commit/a5b2d8818e386b2be1058061a913ffcef4bfb8ea
+    for the kind of fixes this change required.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
     F* now enforces that unannotated, effectful functions have a
     trivial precondition (this is already the case for pure functions).
@@ -60,6 +91,21 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
+     specialization axiom1) is unsound when instantiated across
+     different universe levels. The issue and fix is discussed in
+     detail here: https://github.com/FStarLang/FStar/issues/2069
+
+     In summary, `FStar.WellFounded.axiom1_dep`,
+     `FStar.WellFounded.axiom1`, and `FStar.WellFounded.apply` have
+     all been removed. The user-facing universe polymorphic axiom is
+     no longer needed---you should just be able to remove calls to it
+     in your programs. Instead, we have enhanced F*'s SMT encoding of
+     inductive types to include additional, more targeted
+     well-foundedness axioms.
+     tests/micro-benchmarks/TestWellFoundedRecursion.fst provides
+     several small representative examples.
+
    * Two core axioms were discovered by Aseem Rastogi to be formulated
      in an unsound manner.
 
@@ -88,6 +134,13 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * Support for binder attributes in the reflection APIs `pack_binder`
+     and `inspect_binder`. This is a breaking change, see
+     https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
+     commit for how to fix the breaking code.
+
+   * `abstract` qualifier and the related option `--use_extracted_interfaces`
+     are no longer supported. Use interfaces instead.
 
    * We now overload `&` to construct both dependent and non-dependent
      tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
@@ -96,6 +149,15 @@ Guidelines for the changelog:
      proposition here is that in contrast to `*`, which clashes with
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
+
+   * Attributes are now specified using the notation `[@@ a1; ... ; an]` i.e.,
+     a semicolon separated list of terms. The old syntax will soon
+     be deprecated.
+
+   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e., 
+     @@@ instead of @@. This is a breaking change that enables 
+     using attributes on explicit binders, record fields and more. See 
+     https://github.com/FStarLang/FStar/pull/2192 for more details. 
 
 ## Extraction
 
@@ -247,6 +309,8 @@ Guidelines for the changelog:
 # Version 0.9.6.0
 
 ## Command line options
+
+   `--use_two_phase_tc` is no longer a command line option.
 
    F* reads .checked files by default unless the `--cache_off` option is provided.
    To write .checked files, provide `--cache_checked_modules`

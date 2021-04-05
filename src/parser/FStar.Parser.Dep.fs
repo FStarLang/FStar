@@ -23,6 +23,7 @@
 *)
 module FStar.Parser.Dep
 
+open FStar.Pervasives
 open FStar.ST   //for ref
 open FStar.All  //for failwith
 
@@ -102,9 +103,9 @@ let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
 let namespace_of_module f =
     let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
-    match lid.ns with
+    match ns_of_lid lid with
     | [] -> None
-    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
+    | ns -> Some (FStar.Ident.lid_of_ids ns)
 
 type file_name = string
 type module_name = string
@@ -155,12 +156,12 @@ let str_of_parsing_data_elt elt =
     | Open_namespace -> "P_open_namespace"
   in
   match elt with
-  | P_begin_module lid -> "P_begin_module (" ^ (text_of_lid lid) ^ ")"
-  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_dep (b, lid) -> "P_dep (" ^ (text_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
-  | P_alias (id, lid) -> "P_alias (" ^ (text_of_id id) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_lid lid -> "P_lid (" ^ (text_of_lid lid) ^ ")"
+  | P_begin_module lid -> "P_begin_module (" ^ (string_of_lid lid) ^ ")"
+  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
+  | P_alias (id, lid) -> "P_alias (" ^ (string_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
   | P_inline_for_extraction -> "P_inline_for_extraction"
 
 let str_of_parsing_data = function
@@ -173,7 +174,7 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   | P_open (b1, l1), P_open (b2, l2) -> b1 = b2 && lid_equals l1 l2
   | P_open_module_or_namespace (k1, l1), P_open_module_or_namespace (k2, l2) -> k1 = k2 && lid_equals l1 l2
   | P_dep (b1, l1), P_dep (b2, l2) -> b1 = b2 && lid_equals l1 l2
-  | P_alias (i1, l1), P_alias (i2, l2) -> text_of_id i1 = text_of_id i2 && lid_equals l1 l2
+  | P_alias (i1, l1), P_alias (i2, l2) -> string_of_id i1 = string_of_id i2 && lid_equals l1 l2
   | P_lid l1, P_lid l2 -> lid_equals l1 l2
   | P_inline_for_extraction, P_inline_for_extraction -> true
   | _, _ -> false
@@ -263,13 +264,21 @@ let cache_file_name =
             FStar.Errors.log_issue
                 Range.dummyRange
                 (FStar.Errors.Warning_UnexpectedCheckedFile,
-                    BU.format3 "Did not expected %s to be already checked, \
+                    BU.format3 "Did not expect %s to be already checked, \
                                 but found it in an unexpected location %s \
                                 instead of %s"
                                 mname
                                 path
                                 (Options.prepend_cache_dir cache_fn));
-        path
+
+        (* This expression morally just returns [path], but prefers
+         * the path in [expected_cache_file] is possible to give
+         * preference to relative filenames. This is mostly since
+         * GNU make doesn't resolve paths in targets, so we try
+         * to keep target paths relative. See issue #1978. *)
+        if BU.file_exists expected_cache_file && BU.paths_to_same_file path expected_cache_file
+        then expected_cache_file
+        else path
       | None ->
           if mname |> Options.should_be_already_cached
           then
@@ -452,8 +461,8 @@ let enter_namespace (original_map: files_for_module_name) (working_map: files_fo
 
 
 let string_of_lid (l: lident) (last: bool) =
-  let suffix = if last then [ l.ident.idText ] else [ ] in
-  let names = List.map (fun x -> x.idText) l.ns @ suffix in
+  let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
+  let names = List.map (fun x -> (string_of_id x)) (ns_of_lid l) @ suffix in
   String.concat "." names
 
 (** All the components of a [lident] joined by "." (the last component of the
@@ -462,7 +471,7 @@ let lowercase_join_longident (l: lident) (last: bool) =
   String.lowercase (string_of_lid l last)
 
 let namespace_of_lid l =
-  String.concat "_" (List.map text_of_id l.ns)
+  String.concat "_" (List.map string_of_id (ns_of_lid l))
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
@@ -475,15 +484,18 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 exception Exit
 
 (* In public interface *)
+
+let core_modules =
+  [Options.prims_basename () ;
+   Options.pervasives_basename () ;
+   Options.pervasives_native_basename ()]
+  |> List.map module_name_of_file
+
 let hard_coded_dependencies full_filename =
   let filename : string = basename full_filename in
-  let corelibs =
-    [Options.prims_basename () ;
-     Options.pervasives_basename () ;
-     Options.pervasives_native_basename ()]
-  in
+
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem filename corelibs then []
+  if List.mem (module_name_of_file filename) core_modules then []
   else let implicit_deps =
            [ (Const.fstar_ns_lid, Open_namespace);
              (Const.prims_lid, Open_module);
@@ -614,7 +626,7 @@ let collect_one
        in
 
        let record_module_alias ident lid =
-         let key = String.lowercase (text_of_id ident) in
+         let key = String.lowercase (string_of_id ident) in
          let alias = lowercase_join_longident lid true in
          // Only fully qualified module aliases are allowed.
          match smap_try_find original_map alias with
@@ -631,7 +643,7 @@ let collect_one
        let add_dep_on_module (module_name : lid) (is_friend : bool) =
          if add_dependence_edge working_map module_name is_friend
          then ()
-         else if Options.debug_any () then
+         else if Options.debug_at_level_no_module (Options.Other "Dep") then
            FStar.Errors.log_issue (range_of_lid module_name)
              (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
               (Ident.string_of_lid module_name)))
@@ -641,15 +653,15 @@ let collect_one
          (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
             module name itself, so only its namespace part is to be
             recorded as a module dependency.  *)
-         match lid.ns with
+         match ns_of_lid lid with
          | [] -> ()
-         | _ ->
-           let module_name = Ident.lid_of_ids lid.ns in
+         | ns ->
+           let module_name = Ident.lid_of_ids ns in
            add_dep_on_module module_name false
        in
       
        let begin_module lid =
-         if List.length lid.ns > 0 then
+         if List.length (ns_of_lid lid) > 0 then
          ignore (enter_namespace original_map working_map (namespace_of_lid lid))
        in
 
@@ -680,7 +692,7 @@ let collect_one
   let data_from_cache = filename |> get_parsing_data_from_cache in
 
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
-    if Options.debug_any () then
+    if Options.debug_at_level_no_module (Options.Other "Dep") then
       BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     data_from_cache |> must,
@@ -723,7 +735,6 @@ let collect_one
             add_to_parsing_data (P_alias (ident, lid))
         | TopLevelLet (_, patterms) ->
             List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-        | Main t
         | Splice (_, t)
         | Assume (_, t)
         | SubEffect { lift_op = NonReifiableLift t }
@@ -744,7 +755,10 @@ let collect_one
         | NewEffect ed
         | LayeredEffect ed ->
              collect_effect_decl ed
-        | Polymonadic_bind (_, _, _, bind) -> collect_term bind  //collect deps from the effect lids?
+
+        | Polymonadic_bind (_, _, _, t)
+        | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
+
         | Pragma _ ->
             ()
         | TopLevelModule lid ->
@@ -763,7 +777,10 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t) -> collect_term t) identterms
+            List.iter (fun (_, aq, attrs, t) -> 
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
@@ -783,6 +800,7 @@ let collect_one
 
       and collect_binder b =
         collect_aqual b.aqual;
+        b.battributes |> List.iter collect_term;
         match b with
         | { b = Annotated (_, t) }
         | { b = TAnnotated (_, t) }
@@ -814,7 +832,7 @@ let collect_one
         | Const c ->
             collect_constant c
         | Op (s, ts) ->
-            if Ident.text_of_id s = "@" then
+            if Ident.string_of_id s = "@" then
               (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
               collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
             List.iter collect_term ts
@@ -849,11 +867,15 @@ let collect_one
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, t2, t3) ->
+        | If (t1, ret_opt, t2, t3) ->
             collect_term t1;
+            iter_opt ret_opt collect_term;
             collect_term t2;
             collect_term t3
-        | Match (t, bs)
+        | Match (t, ret_opt, bs) ->
+            collect_term t;
+            iter_opt ret_opt collect_term;
+            collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;
             collect_branches bs
@@ -894,6 +916,8 @@ let collect_one
         | Ensures (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->
@@ -918,10 +942,11 @@ let collect_one
         collect_pattern' p.pat
 
       and collect_pattern' = function
-        | PatVar (_, aqual)
-        | PatTvar (_, aqual)
-        | PatWild aqual ->
-            collect_aqual aqual
+        | PatVar (_, aqual, attrs)
+        | PatTvar (_, aqual, attrs)
+        | PatWild (aqual, attrs) ->
+            collect_aqual aqual;
+            attrs |> List.iter collect_term
 
         | PatOp _
         | PatConst _ ->
@@ -1024,7 +1049,7 @@ let topological_dependences_of'
             * dependencies. Otherwise, the map only contains its direct dependencies. *)
         all_friends, all_files
     | White ->
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print2 "Visiting %s: direct deps are %s\n"
                 filename
                 (String.concat ", " (List.map dep_to_string dep_node.edges));
@@ -1040,7 +1065,7 @@ let topological_dependences_of'
         in
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename ({dep_node with color=Black});
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
@@ -1122,7 +1147,7 @@ let topological_dependences_of'
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print3 "Phase1 complete:\n\t\
                        all_files = %s\n\t\
                        all_friends=%s\n\t\
@@ -1134,11 +1159,11 @@ let topological_dependences_of'
         widen_deps friends dep_graph file_system_map widened
     in
     let _, all_files =
-        if Options.debug_any()
+        if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print_string "==============Phase2==================\n";
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     widened
@@ -1149,7 +1174,7 @@ let phase1
         interfaces_needing_inlining
         for_extraction
 =
-    if Options.debug_any()
+    if Options.debug_at_level_no_module (Options.Other "Dep")
     then BU.print_string "==============Phase1==================\n";
     let widened = false in
     if Options.cmi()
@@ -1281,7 +1306,7 @@ let collect (all_cmd_line_files: list<file_name>)
             match deps_try_find dep_graph filename with
             | Some node -> node
             | None ->
-              failwith (BU.format1 "Failed to find dependences of %s" filename)
+              failwith (BU.format1 "Impossible: Failed to find dependencies of %s" filename)
         in
         let direct_deps = node.edges |> List.collect (fun x ->
             match x with
@@ -1354,7 +1379,7 @@ let collect (all_cmd_line_files: list<file_name>)
            (Options.codegen()<>None))
       "FStar.Parser.Dep.topological_dependences_of"
   in
-  if Options.debug_any()
+  if Options.debug_at_level_no_module (Options.Other "Dep")
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
@@ -1470,7 +1495,7 @@ let print_full (deps:deps) : unit =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
-    let norm_path s = replace_chars s '\\' "/" in
+    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
@@ -1482,13 +1507,14 @@ let print_full (deps:deps) : unit =
         (fun all_checked_files file_name ->
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
-            let iface_deps =
+            let iface_fn, iface_deps =
                 if is_interface file_name
-                then None
+                then None, None
                 else match interface_of deps (lowercase_module_name file_name) with
                      | None ->
-                       None
+                       None, None
                      | Some iface ->
+                       Some iface,
                        Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
             in
             let iface_deps =
@@ -1512,8 +1538,19 @@ let print_full (deps:deps) : unit =
                   in
                   BU.remove_dups (fun x y -> x = y) (files @ iface_files)
             in
+
+            (*
+             * AR: depend on A.fsti.checked, rather than A.fsti
+             *     see #1919
+             *)
+            let files =
+              if iface_fn |> is_some then
+                let iface_fn = iface_fn |> must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (cache_file_name iface_fn)::files)
+              else files in
+
             let files = List.map norm_path files in
-            let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
@@ -1659,6 +1696,20 @@ let print_full (deps:deps) : unit =
         List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
         pr "\n"
     in
+    all_fsti_files
+    |> List.iter
+      (fun fsti ->
+          let mn = lowercase_module_name fsti in
+         let range_of_file fsti =
+           let r = Range.set_file_of_range Range.dummyRange fsti in
+           Range.set_use_range r (Range.def_range r)
+         in
+         if not (has_implementation deps.file_system_map mn)
+         then (FStar.Errors.log_issue
+                    (range_of_file fsti)
+                    (Warning_WarnOnUse,
+                     BU.format1 "Interface %s is admitted without an implementation"
+                       (module_name_of_file fsti))));
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;

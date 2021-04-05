@@ -506,12 +506,15 @@ and translate_let env flavor lb: option<decl> =
 
 
 and translate_type_decl env ty: option<decl> =
-  let _, _, _, _, flags, _ = ty in
-  if List.mem Syntax.NoExtract flags then
+  if List.mem Syntax.NoExtract ty.tydecl_meta then
     None
   else
     match ty with
-    | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
+    | {tydecl_assumed=assumed;
+       tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_meta=flags;
+       tydecl_defn= Some (MLTD_Abbrev t)} ->
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
         if assumed && List.mem Syntax.CAbstract flags then
@@ -524,13 +527,19 @@ and translate_type_decl env ty: option<decl> =
         else
           Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
 
-    | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_meta=flags;
+       tydecl_defn=Some (MLTD_Record fields)} ->
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
           f, (translate_type env t, false)) fields))
 
-    | (_, name, _mangled_name, args, flags, Some (MLTD_DType branches)) ->
+    | {tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_meta=flags;
+       tydecl_defn=Some (MLTD_DType branches)} ->
         let name = env.module_name, name in
         let flags = translate_flags flags in
         let env = List.fold_left extend_t env args in
@@ -539,8 +548,7 @@ and translate_type_decl env ty: option<decl> =
             name, (translate_type env t, false)
           ) ts
         ) branches))
-
-    | (_, name, _mangled_name, _, _, _) ->
+    | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
         Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KreMLin\n" name));
         None
@@ -702,7 +710,8 @@ and translate_expr env e: expr =
       (match arg with
        | {expr=MLE_Const (MLC_String msg)} -> EAbortS msg
        | _ ->
-         let print = with_ty MLTY_Top (MLE_Name (mlpath_of_lident (Ident.lid_of_str "FStar.HyperStack.IO.print_string"))) in
+         let print_nm = ["FStar"; "HyperStack"; "IO"], "print_string" in
+         let print = with_ty MLTY_Top (MLE_Name print_nm) in
          let print = with_ty MLTY_Top (MLE_App (print, [arg])) in
          let t = translate_expr env print in
          ESequence [t; EAbort])

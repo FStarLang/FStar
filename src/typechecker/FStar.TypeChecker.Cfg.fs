@@ -26,6 +26,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;
@@ -63,6 +64,7 @@ let steps_to_string f =
     beta = %s;\n\
     iota = %s;\n\
     zeta = %s;\n\
+    zeta_full = %s;\n\
     weak = %s;\n\
     hnf  = %s;\n\
     primops = %s;\n\
@@ -84,10 +86,12 @@ let steps_to_string f =
     unascribe = %s;\n\
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
+    for_extraction = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
     f.zeta |> b;
+    f.zeta_full |> b;
     f.weak |> b;
     f.hnf  |> b;
     f.primops |> b;
@@ -108,12 +112,15 @@ let steps_to_string f =
     f.unmeta |> b;
     f.unascribe |> b;
     f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b]
+    f.weakly_reduce_scrutinee |> b;
+    f.for_extraction |> b;
+   ]
 
 let default_steps : fsteps = {
     beta = true;
     iota = true;
     zeta = true;
+    zeta_full = false;
     weak = false;
     hnf  = false;
     primops = false;
@@ -144,6 +151,7 @@ let fstep_add_one s fs =
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
+    | ZetaFull -> { fs with zeta_full = true }
     | Exclude Beta -> { fs with beta = false }
     | Exclude Iota -> { fs with iota = false }
     | Exclude Zeta -> { fs with zeta = false }
@@ -228,7 +236,7 @@ let empty_prim_steps () : prim_step_set =
     BU.psmap_empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.text_of_lid s.name) s
+    BU.psmap_add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
     BU.psmap_merge s1 s2
@@ -261,10 +269,10 @@ let cfg_to_string cfg =
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
+    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -292,7 +300,6 @@ let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
     EMB.unembed emb x false EMB.id_norm_cb
-let mk t r = mk t None r
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -300,11 +307,11 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
     let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
     let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
-        let hd, args = U.head_and_args' a in
+        let hd, args = U.head_and_args_full a in
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
-            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+            when BU.ends_with (Ident.string_of_lid fv1.fv_name.v) "int_to_t" ->
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
@@ -532,10 +539,60 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+    (* and_op and or_op are special cased because they are short-circuting,
+     * can run without unembedding its second argument. *)
+    let and_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some false ->
+              Some (embed_simple EMB.e_bool psc.psc_range false)
+            | Some true ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+    let or_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some true ->
+              Some (embed_simple EMB.e_bool psc.psc_range true)
+            | Some false ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+
+    (* division is special cased since we must avoid zero denominators *)
+    let division_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_int a1,
+                        try_unembed_simple EMB.e_int a2 with
+            | Some m, Some n ->
+              if Z.to_int_fs n <> 0
+              then Some (embed_simple EMB.e_int psc.psc_range (Z.div_big_int m n))
+              else None
+
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let bogus_cbs = {
         NBE.iapp = (fun h _args -> h);
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
     }
+    in
+    let int_as_bounded r int_to_t n =
+      let c = embed_simple EMB.e_int r n in
+      let int_to_t = S.fv_to_tm int_to_t in
+      S.mk_Tm_app int_to_t [S.as_arg c] r
     in
     let basic_ops
       //this type annotation has to be on a single line for it to parse
@@ -570,8 +627,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Division,
              2,
              0,
-             binary_int_op (fun x y -> Z.div_big_int x y),
-             NBETerm.binary_int_op (fun x y -> Z.div_big_int x y));
+             division_op,
+             NBETerm.division_op);
          (PC.op_LT,
              2,
              0,
@@ -605,13 +662,26 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_And,
              2,
              0,
-             binary_bool_op (fun x y -> x && y),
-             NBETerm.binary_bool_op (fun x y -> x && y));
+             and_op,
+             NBETerm.and_op);
          (PC.op_Or,
              2,
              0,
-             binary_bool_op (fun x y -> x || y),
-             NBETerm.binary_bool_op (fun x y -> x || y));
+             or_op,
+             NBETerm.or_op);
+         (let u32_int_to_t =
+            ["FStar"; "UInt32"; "uint_to_t"]
+            |> PC.p2l
+            |> (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 0) None) in
+          PC.char_u32_of_char,
+             1,
+             0,
+             unary_op
+               arg_as_char
+               (fun r c -> int_as_bounded r u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)),
+             NBETerm.unary_op
+               NBETerm.arg_as_char
+               (fun c -> NBETerm.int_as_bounded u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)));
          (PC.string_of_int_lid,
              1,
              0,
@@ -728,11 +798,6 @@ let built_in_primitive_steps : prim_step_set =
         in
         let bounded_unsigned_int_types =
            [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
-        in
-        let int_as_bounded r int_to_t n =
-            let c = embed_simple EMB.e_int r n in
-            let int_to_t = S.fv_to_tm int_to_t in
-            S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)

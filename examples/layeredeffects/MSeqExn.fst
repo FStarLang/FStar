@@ -101,7 +101,7 @@ let subcomp (a:Type)
 let if_then_else (a:Type)
   (wp_then:wp_t a) (wp_else:wp_t a)
   (f:repr a wp_then) (g:repr a wp_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post s0 ->
@@ -123,7 +123,7 @@ assume PURE_wp_monotonic:
   forall (a:Type) (wp:pure_wp a).
     (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
-let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
 = fun s0 -> Success (f ()), s0
 
@@ -187,19 +187,21 @@ let witnessed_exists (#t:Type) (p:(t -> s_pred))
 
 /// Some actions
 
-let get ()
-: MSeqExn state
-  (fun _ -> True)
+(*
+ * Written using val specifically to make sure that it works even then
+ *)
+val get: unit -> MSeqExn state
+  (fun _ -> True) 
   (fun s0 r s1 -> r == Success s0 /\ s0 == s1)
-= MSeqEXN?.reflect (fun s0 -> Success s0, s0)
+let get () = MSeqEXN?.reflect (fun s0 -> Success s0, s0)
 
-let put (s:state)
+val put (s:state)
 : MSeqExn unit
   (fun s0 -> grows s0 s)
   (fun _ r s1 ->
     r == Success () /\
     s1 == s)
-= MSeqEXN?.reflect (fun _ -> Success (), s)
+let put s = MSeqEXN?.reflect (fun _ -> Success (), s)
 
 let raise (#a:Type) (e:string)
 : MSeqExn a

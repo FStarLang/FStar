@@ -26,12 +26,6 @@ open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
-type closure =
-  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
-  | Univ of universe                                //universe terms do not have free variables
-  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
-and env = list<(option<binder> * closure)>
-
 type should_unfold_res =
     | Should_unfold_no
     | Should_unfold_yes
@@ -45,7 +39,6 @@ val should_unfold : cfg
                  -> should_unfold_res
 
 
-val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term
@@ -56,6 +49,7 @@ val whnf_steps: list<step>
 val unfold_whnf':         steps -> Env.env -> term -> term
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
+val non_info_norm: Env.env -> term -> bool
 val ghost_to_pure:        Env.env -> comp -> comp
 val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val normalize_with_primitive_steps : list<primitive_step> -> steps -> Env.env -> term -> term
@@ -69,3 +63,10 @@ val remove_uvar_solutions: Env.env -> term -> term
 
 val unfold_head_once: Env.env -> term -> option<term>
 val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.embedding<binder>>>
+
+val reflection_env_hook : ref<option<Env.env>>
+
+(* Destructs the term as an arrow type and returns its binders and
+computation type. Only grabs up to [n] binders, and normalizes only as
+needed to discover the shape of the arrow. The binders are opened. *)
+val get_n_binders : Env.env -> int -> term -> list<binder> * comp

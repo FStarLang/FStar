@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6199d0a143f026fd3ac9890fc85d383c"
+      "0d3dbf4e43401365f80bf99b285096ae"
     ],
     [
       "EtM.MAC.tag",
@@ -24,7 +24,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0085e560fbfcc7ced9216bf3bc05c9ba"
+      "7d60daf9d58ab2ab896f521583675fbc"
     ],
     [
       "EtM.MAC.sha1",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "580cfe3bcd120aab3b2696a7dde8902e"
+      "87439925e5384f8e3202d3366e5839c9"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -45,7 +45,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "34f71932a9184cc4f48c11630f2536eb"
+      "6582106798bb4dacaad63983b8e4c8e6"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -57,7 +57,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "a6180bc0f088bddc824997bb529d8847"
+      "557b319b63375a89610a84c95b82565a"
     ],
     [
       "EtM.MAC.keygen",
@@ -145,7 +145,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "26ca5717941aaf2a8c348f17dfd26370"
+      "b6c5f82aa7620cb601411b880678f9dd"
     ],
     [
       "EtM.MAC.mac",
@@ -175,12 +175,13 @@
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
         "typing_EtM.MAC.__proj__Key__item__log",
+        "typing_EtM.MAC.__proj__Key__item__raw", "typing_EtM.MAC.hmac_sha1",
         "typing_FStar.Monotonic.HyperStack.sel",
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "d010088297f5b7385f30fc9fc04bf9d9"
+      "9cf35b536387d8f9d851e1bccd5f1ebe"
     ],
     [
       "EtM.MAC.verify",
@@ -199,7 +200,7 @@
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "568469935e4852241f0fd4d3f77f0eb5"
+      "a0fdce6ad1b92131857ca61621eaa388"
     ],
     [
       "EtM.MAC.verify",
@@ -263,84 +264,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "18cec6313671af3a28dcf3d6684f07bb"
-    ],
-    [
-      "EtM.MAC.sha1_key",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_EtM.MAC.keysize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "bae7f047475b8c15a7b895f230519deb"
-    ],
-    [
-      "EtM.MAC.tag",
-      2,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_CoreCrypto.SHA1",
-        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize",
-        "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "20b91ddacf35ec06d6a917b4aa26971c"
-    ],
-    [
-      "EtM.MAC.sha1",
-      2,
-      2,
-      1,
-      [ "@query", "equation_EtM.MAC.macsize" ],
-      0,
-      "7e7a040c215e15c907d2dba479691f9e"
-    ],
-    [
-      "EtM.MAC.hmac_sha1",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_EtM.MAC.blocksize", "equation_EtM.MAC.keysize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "3911b0d00b2eb764b55424e49df3b2ee"
-    ],
-    [
-      "EtM.MAC.__proj__Key__item__log",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.MAC.Key_region",
-        "projection_inverse_EtM.MAC.Key_region"
-      ],
-      0,
-      "291788fc772efe0c2da7d42453a9aabf"
-    ],
-    [
-      "EtM.MAC.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
-        "equation_EtM.MAC.log_entry", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.lbytes",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8",
-        "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
-      ],
-      0,
-      "558286eb6ed42fd8ee0481b50c966a05"
+      "c0031d23884dd8565e0cbd172467658a"
     ]
   ]
 ]

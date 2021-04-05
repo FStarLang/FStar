@@ -1,0 +1,4 @@
+inplace/
+printed/
+.*.test.print
+.*.test.inplace

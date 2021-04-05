@@ -31,7 +31,7 @@ open FStar.Integers
 /// signedness/width `s`.
 let secret_int (#sl:sl)
                (l:lattice_element sl)
-               (s:sw) =
+               (s:sw) : Type0 =
     protected l (int_t s)
 
 /// A `secret_int l s` can be seen as an int in spec
@@ -61,6 +61,8 @@ let promote #sl #l0 #s x l1 =
 /// Note, with our choice of representation, it is impossible to
 /// implement functions that break basic IFC guarantees, e.g., we
 /// cannot implement a boolean comparison function on secret_ints
+noextract
+inline_for_extraction
 let addition #sl (#l:lattice_element sl) #s
              (x : secret_int l s)
              (y : secret_int l s {ok ( + ) (m x) (m y)})
@@ -69,6 +71,8 @@ let addition #sl (#l:lattice_element sl) #s
       b <-- y ;
       return l (a + b)
 
+noextract
+inline_for_extraction
 let addition_mod (#sl:sl)
                  (#l:lattice_element sl)
                  (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})

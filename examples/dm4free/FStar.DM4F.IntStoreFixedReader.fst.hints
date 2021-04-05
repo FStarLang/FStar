@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "be958797508bd3ff7d49b73e5a6b9479"
+      "6eff9d268e3b4de04ed39d7edfb30230"
     ],
     [
       "FStar.DM4F.IntStoreFixedReader.INT_STORE_READER",
@@ -17,43 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "df4abf6e848762e3acd1d840ff1869a5"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixedReader.read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7389f1f3bbb48e85541bca3a77bb826f"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixedReader._dm4f_INT_STORE_READER___proj__INT_STORE_READER__item__get_elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c64b487b27144c9c34d2c8299f20331c"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixedReader.INT_STORE_READER",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bbf868349a76b5f7b2480154d0efda13"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixedReader.read",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "86f193abc5f21a6dc93a24d1ad99c2bc"
+      "a7dbba05e054bf4a08d8247848b587ce"
     ]
   ]
 ]

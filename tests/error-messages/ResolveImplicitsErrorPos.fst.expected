@@ -1,0 +1,10 @@
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: ResolveImplicitsErrorPos.fst(15,2-16,7)
+Goal 1/1 (Instantiation of meta argument):
+(_: Prims.unit) |- _ : Prims.int
+
+>> Got issues: [
+ResolveImplicitsErrorPos.fst(15,10-15,11): (Error 228) user tactic failed: `oops`
+>>]
+Verified module: ResolveImplicitsErrorPos
+All verification conditions discharged successfully

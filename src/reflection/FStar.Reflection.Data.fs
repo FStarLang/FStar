@@ -1,11 +1,20 @@
 #light "off"
 module FStar.Reflection.Data
 
+open FStar.Pervasives
+
+(* NOTE: This file is exactly the same as its .fs variant. It is only
+here so the equally-named interface file in ulib/ is not taken by the
+dependency analysis to be the interface of the .fs. We also cannot ditch
+the .fs, since out bootstrapping process does not extract any .ml file
+from an interface. Hence we keep both, exactly equal to each other. *)
+
 open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 module Z     = FStar.BigInt
 open FStar.Ident
+module PC = FStar.Parser.Const
 
 type name = list<string>
 type typ  = term
@@ -38,18 +47,18 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of bv
-    | Tv_BVar   of bv
-    | Tv_FVar   of fv
-    | Tv_App    of term * argv
-    | Tv_Abs    of binder * term
-    | Tv_Arrow  of binder * comp
-    | Tv_Type   of unit
-    | Tv_Refine of bv * term
-    | Tv_Const  of vconst
-    | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * list<term> * bv * term * term
-    | Tv_Match  of term * list<branch>
+    | Tv_Var       of bv
+    | Tv_BVar      of bv
+    | Tv_FVar      of fv
+    | Tv_App       of term * argv
+    | Tv_Abs       of binder * term
+    | Tv_Arrow     of binder * comp
+    | Tv_Type      of unit
+    | Tv_Refine    of bv * term
+    | Tv_Const     of vconst
+    | Tv_Uvar      of Z.t * ctx_uvar_and_subst
+    | Tv_Let       of bool * list<term> * bv * term * term
+    | Tv_Match     of term * option<(either<term, comp> * option<term>)> * list<branch>
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
@@ -62,7 +71,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen
   | Visible_default
   | Irreducible
-  | Abstract
   | Inline_for_extraction
   | NoExtract
   | Noeq
@@ -87,18 +95,19 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * aqualv
+type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
-    | C_Total of typ * option<term>  //optional decreases clause
-    | C_GTotal of typ * option<term> //idem
+    | C_Total of typ * list<term>  //decreases clause
+    | C_GTotal of typ * list<term> //idem
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
+type ctor = name * typ
 type sigelt_view =
     | Sg_Let of bool * fv * list<univ_name> * typ * term
-    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<name> // name, params, type, constructors
-    | Sg_Constructor of name * typ
+    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
+    | Sg_Val of name * list<univ_name> * typ
     | Unk
 
 type var = Z.t
@@ -120,10 +129,10 @@ let refl_constant_lid rc = rc.lid
 let refl_constant_term rc = rc.t
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
-let fstar_refl_basic_lid  s = fstar_refl_lid ["Basic";  s]
-let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
-let fstar_refl_types_lid  s = fstar_refl_lid ["Types";  s]
-let fstar_refl_data_lid   s = fstar_refl_lid ["Data";   s]
+let fstar_refl_builtins_lid  s = fstar_refl_lid ["Builtins";  s]
+let fstar_refl_syntax_lid    s = fstar_refl_lid ["Syntax";    s]
+let fstar_refl_types_lid     s = fstar_refl_lid ["Types";     s]
+let fstar_refl_data_lid      s = fstar_refl_lid ["Data";      s]
 
 let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
@@ -140,8 +149,8 @@ let mk_refl_data_lid_as_term   (s:string) = tconst  (fstar_refl_data_lid s)
 let mk_refl_data_lid_as_fv     (s:string) = fvconst (fstar_refl_data_lid s)
 
 let mk_inspect_pack_pair s =
-    let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
-    let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
+    let inspect_lid = fstar_refl_builtins_lid ("inspect" ^ s) in
+    let pack_lid    = fstar_refl_builtins_lid ("pack" ^ s) in
     let inspect_fv  = lid_as_fv inspect_lid (Delta_constant_at_level 1) None in
     let pack_fv     = lid_as_fv pack_lid    (Delta_constant_at_level 1) None in
     let inspect     = { lid = inspect_lid ; fv = inspect_fv ; t = fv_to_tm inspect_fv } in
@@ -199,6 +208,8 @@ let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
 let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
 
+let fstar_refl_vconfig = tconst (PC.psconst "vconfig")
+
 (* bv_view, this is a record constructor *)
 
 let ref_Mk_bv =
@@ -213,10 +224,20 @@ let ref_Mk_bv =
     ; t   = fv_to_tm fv
     }
 
+let ref_Mkvconfig =
+    let lid = PC.psconst "Mkvconfig" in
+    let attr = Record_ctor (PC.psconst "vconfig", []) in
+    let fv = lid_as_fv lid delta_constant (Some attr) in
+    { lid = lid
+    ; fv  = fv
+    ; t   = fv_to_tm fv
+    }
+
 (* quals *)
-let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
-let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
-let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
+let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
+let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
+let ref_Q_Meta_attr = fstar_refl_data_const "Q_Meta_attr"
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"
@@ -261,7 +282,7 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
-let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
+let ref_Sg_Val         = fstar_refl_data_const "Sg_Val"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)
@@ -271,7 +292,6 @@ let ref_qual_Private                          = fstar_refl_data_const "Private"
 let ref_qual_Unfold_for_unification_and_vcgen = fstar_refl_data_const "Unfold_for_unification_and_vcgen"
 let ref_qual_Visible_default                  = fstar_refl_data_const "Visible_default"
 let ref_qual_Irreducible                      = fstar_refl_data_const "Irreducible"
-let ref_qual_Abstract                         = fstar_refl_data_const "Abstract"
 let ref_qual_Inline_for_extraction            = fstar_refl_data_const "Inline_for_extraction"
 let ref_qual_NoExtract                        = fstar_refl_data_const "NoExtract"
 let ref_qual_Noeq                             = fstar_refl_data_const "Noeq"

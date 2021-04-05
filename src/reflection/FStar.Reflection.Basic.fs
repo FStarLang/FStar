@@ -2,6 +2,7 @@
 module FStar.Reflection.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
@@ -10,22 +11,24 @@ open FStar.Errors
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
-module C = FStar.Const
-module PC = FStar.Parser.Const
-module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module C     = FStar.Const
+module PC    = FStar.Parser.Const
+module SS    = FStar.Syntax.Subst
+module BU    = FStar.Util
 module Range = FStar.Range
-module U = FStar.Syntax.Util
-module UF = FStar.Syntax.Unionfind
+module U     = FStar.Syntax.Util
+module UF    = FStar.Syntax.Unionfind
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
-module Env = FStar.TypeChecker.Env
-module Err = FStar.Errors
-module Z = FStar.BigInt
+module Env   = FStar.TypeChecker.Env
+module Err   = FStar.Errors
+module Z     = FStar.BigInt
 module DsEnv = FStar.Syntax.DsEnv
-module O = FStar.Options
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
+module O     = FStar.Options
+module RD    = FStar.Reflection.Data
+module EMB   = FStar.Syntax.Embeddings
+module N     = FStar.TypeChecker.Normalize
+open FStar.VConfig
 
 open FStar.Dyn
 
@@ -42,7 +45,24 @@ open FStar.Dyn
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
-let env_hook = BU.mk_ref None
+
+(* This is a hack, but it allows to lookup the constructor sigelts when
+inspecting a Sig_inductive_typ.
+
+We need to be careful though. If we use this for, say, `lookup_attr` and
+remove its `env` argument, then the normalizer can reduce it eagerly.
+Trying to do this right now means calls to `lookup_attr` are evaluated
+at extraction time, and will not behave as expected. The root cause is
+that all of the reflection operators are taken to be pure and that't not
+the case if we remove the `env` in some, like `lookup_attr`.
+
+In the case of `inspect_sigelt`, however, I think it won't be
+noticeable since one obtain a concrete sigelt without running an impure
+metaprogram. *)
+let get_env () : Env.env =
+  match !N.reflection_env_hook with
+  | None -> failwith "impossible: env_hook unset in reflection"
+  | Some e -> e
 
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
@@ -66,6 +86,7 @@ let pack_fv (ns:list<string>) : fv =
     let lid = PC.p2l ns in
     let fallback () =
         let quals =
+            (* This an awful hack *)
             if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
             if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
             if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
@@ -75,12 +96,12 @@ let pack_fv (ns:list<string>) : fv =
         // FIXME: Get a proper delta depth
         lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
     in
-    match !env_hook with
+    match !N.reflection_env_hook with
     | None -> fallback ()
     | Some env ->
      let qninfo = Env.lookup_qname env lid in
      match qninfo with
-     | Some (BU.Inr (se, _us), _rng) ->
+     | Some (Inr (se, _us), _rng) ->
          let quals = DsEnv.fv_qual_of_se se in
          // FIXME: Get a proper delta depth
          lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
@@ -137,7 +158,7 @@ let rec inspect_ln (t:term) : term_view =
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
+        Tv_App (U.mk_app hd (init args), (a, q'))
 
     | Tm_abs ([], _, _) ->
         failwith "inspect_ln: empty arguments on Tm_abs"
@@ -146,7 +167,7 @@ let rec inspect_ln (t:term) : term_view =
         let body =
             match bs with
             | [] -> t
-            | bs -> S.mk (Tm_abs (bs, t, k)) None t.pos
+            | bs -> S.mk (Tm_abs (bs, t, k)) t.pos
         in
         Tv_Abs (b, body)
 
@@ -175,8 +196,8 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> Tv_Unknown // no top level lets
+        | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             Tv_Let (false, lb.lbattrs, bv, lb.lbdef, t2)
         end
@@ -184,11 +205,11 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _  -> Tv_Unknown // no top level lets
-        | BU.Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
+        | Inr _  -> Tv_Unknown // no top level lets
+        | Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
-    | Tm_match (t, brs) ->
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -198,7 +219,7 @@ let rec inspect_ln (t:term) : term_view =
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        Tv_Match (t, brs)
+        Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         Tv_Unknown
@@ -208,15 +229,15 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list<cflag>) : option<term> =
+    let get_dec (flags : list<cflag>) : list<term> =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
-        | None -> None
-        | Some (DECREASES t) -> Some t
+        | None -> []
+        | Some (DECREASES ts) -> ts
         | _ -> failwith "impossible"
     in
     match c.n with
-    | Total (t, _) -> C_Total (t, None)
-    | GTotal (t, _) -> C_GTotal (t, None)
+    | Total (t, _) -> C_Total (t, [])
+    | GTotal (t, _) -> C_GTotal (t, [])
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -240,23 +261,23 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, None) -> mk_Total t
-    | C_Total (t, Some d) ->
+    | C_Total (t, []) -> mk_Total t
+    | C_Total (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, None) -> mk_GTotal t
-    | C_GTotal (t, Some d) ->
+    | C_GTotal (t, []) -> mk_GTotal t
+    | C_GTotal (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
@@ -305,32 +326,32 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        U.abs [b] t None // TODO: effect?
+        mk (Tm_abs ([b], t, None)) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        U.arrow [b] c
+        mk (Tm_arrow ([b], c)) c.pos
 
     | Tv_Type () ->
         U.ktype
 
     | Tv_Refine (bv, t) ->
-        U.refine bv t
+        mk (Tm_refine (bv, t)) t.pos
 
     | Tv_Const c ->
-        S.mk (Tm_constant (pack_const c)) None Range.dummyRange
+        S.mk (Tm_constant (pack_const c)) Range.dummyRange
 
     | Tv_Uvar (u, ctx_u_s) ->
-      S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
+      S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), t2)) None Range.dummyRange
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((true, [lb]), t2)) None Range.dummyRange
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -341,16 +362,16 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, brs)) None Range.dummyRange
+        S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
-        S.mk Tm_unknown None Range.dummyRange
+        S.mk Tm_unknown Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =
     let n = S.order_bv x y in
@@ -361,10 +382,18 @@ let compare_bv (x:bv) (y:bv) : order =
 let is_free (x:bv) (t:term) : bool =
     U.is_free_in x t
 
+let free_bvs (t:term) : list<bv> =
+  Syntax.Free.names t |> BU.set_elements
+
+let free_uvars (t:term) : list<Z.t> =
+  Syntax.Free.uvars_uncached t
+    |> BU.set_elements
+    |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
+
 let lookup_attr (attr:term) (env:Env.env) : list<fv> =
     match (SS.compress attr).n with
     | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
                                   // FIXME: Get a proper delta depth
@@ -378,7 +407,7 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
-                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_ident in
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_id in
                 if ns = modul
                 then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
                 else [])
@@ -402,7 +431,6 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Unfold_for_unification_and_vcgen -> Unfold_for_unification_and_vcgen
   | RD.Visible_default -> Visible_default
   | RD.Irreducible -> Irreducible
-  | RD.Abstract -> Abstract
   | RD.Inline_for_extraction -> Inline_for_extraction
   | RD.NoExtract -> NoExtract
   | RD.Noeq -> Noeq
@@ -428,7 +456,6 @@ let syntax_to_rd_qual = function
   | Unfold_for_unification_and_vcgen -> RD.Unfold_for_unification_and_vcgen
   | Visible_default -> RD.Visible_default
   | Irreducible -> RD.Irreducible
-  | Abstract -> RD.Abstract
   | Inline_for_extraction -> RD.Inline_for_extraction
   | NoExtract -> RD.NoExtract
   | Noeq -> RD.Noeq
@@ -454,38 +481,65 @@ let sigelt_quals (se : sigelt) : list<RD.qualifier> =
 let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
-let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+let sigelt_opts (se : sigelt) : option<vconfig> = se.sigopts
 
-let sigelt_opts (se : sigelt) : option<term> =
-    match se.sigopts with
-    | None -> None
-    | Some o -> Some (EMB.embed (!e_optionstate_hook |> BU.must) o
-                        Range.dummyRange None EMB.id_norm_cb)
+let embed_vconfig (vcfg : vconfig) : term =
+  EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, [lb]), _) ->
         let fv = match lb.lbname with
-                 | BU.Inr fv -> fv
-                 | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
+                 | Inr fv -> fv
+                 | Inl _  -> failwith "impossible: global Sig_let has bv"
         in
         let s, us = SS.univ_var_opening lb.lbunivs in
         let typ = SS.subst s lb.lbtyp in
         let def = SS.subst s lb.lbdef in
-        Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
+        Sg_Let (r, fv, us, typ, def)
 
-    | Sig_inductive_typ (lid, us, bs, ty, _, c_lids) ->
+    | Sig_inductive_typ (lid, us, param_bs, ty, _mutual, c_lids) ->
         let nm = Ident.path_of_lid lid in
         let s, us = SS.univ_var_opening us in
-        let bs = SS.subst_binders s bs in
+        let param_bs = SS.subst_binders s param_bs in
         let ty = SS.subst s ty in
-        Sg_Inductive (nm, us, bs, ty, List.map Ident.path_of_lid c_lids)
 
-    | Sig_datacon (lid, us, ty, _, n, _) ->
-        let s, us = SS.univ_var_opening us in
-        let ty = SS.subst s ty in
-        (* TODO: return universes *)
-        Sg_Constructor (Ident.path_of_lid lid, ty)
+        let param_bs, ty = SS.open_term param_bs ty in
+
+        let inspect_ctor (c_lid:Ident.lid) : ctor =
+          match Env.lookup_sigelt (get_env ()) c_lid with
+          | Some ({sigel = Sig_datacon (lid, us, cty, _ty_lid_, nparam, _mutual)}) ->
+            let cty = SS.subst s cty in // open universes from above
+
+            let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
+
+            if List.length param_ctor_bs <> nparam then
+              failwith "impossible: inspect_sigelt: could not obtain sufficient ctor param binders";
+
+            if not (U.is_total_comp c) then
+              failwith "impossible: inspect_sigelt: removed parameters and got an effectful comp";
+            let cty = U.comp_result c in
+
+            (* Substitute the parameters of the constructor to match
+             * those of the inductive opened above, and return the type
+             * of the constructor already instantiated. *)
+            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
+                               param_ctor_bs param_bs
+            in
+            let cty = SS.subst s' cty in
+
+            let cty = U.remove_inacc cty in
+            (Ident.path_of_lid lid, cty)
+
+          | _ ->
+            failwith "impossible: inspect_sigelt: did not find ctor"
+        in
+        Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
+
+    | Sig_declare_typ (lid, us, ty) ->
+        let nm = Ident.path_of_lid lid in
+        let us, ty = SS.open_univ_vars us ty in
+        Sg_Val (nm, us, ty)
 
     | _ ->
         Unk
@@ -496,21 +550,49 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let s = SS.univ_var_closing univs in
         let typ = SS.subst s typ in
         let def = SS.subst s def in
-        let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
+        let lb = U.mk_letbinding (Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
-    | Sg_Constructor _ ->
-        failwith "packing Sg_Constructor, sorry"
+    | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
+      let ind_lid = Ident.lid_of_path nm Range.dummyRange in
+      let s = SS.univ_var_closing us_names in
+      let nparam = List.length param_bs in
 
-    | Sg_Inductive _ ->
-        failwith "packing Sg_Inductive, sorry"
+      let pack_ctor (c:ctor) : sigelt =
+        let (nm, ty) = c in
+        let lid = Ident.lid_of_path nm Range.dummyRange in
+        let ty = U.arrow param_bs (S.mk_Total ty) in
+        let ty = SS.subst s ty in (* close univs *)
+        mk_sigelt <| Sig_datacon (lid, us_names, ty, ind_lid, nparam, [])
+      in
+
+      let ctor_ses : list<sigelt> = List.map pack_ctor ctors in
+      let c_lids : list<Ident.lid> = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
+
+      let ind_se : sigelt =
+        let param_bs = SS.close_binders param_bs in
+        let ty = SS.close param_bs ty in
+
+        (* close univs *)
+        let param_bs = SS.subst_binders s param_bs in
+        let ty = SS.subst s ty in
+
+        mk_sigelt <| Sig_inductive_typ (ind_lid, us_names, param_bs, ty, [], c_lids)
+      in
+      let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
+      { se with sigquals = Noeq::se.sigquals }
+
+    | Sg_Val (nm, us_names, ty) ->
+        let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        let typ = SS.close_univ_vars us_names ty in
+        mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
     | Unk ->
         failwith "packing Unk, sorry"
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.string_of_ident bv.ppname;
+      bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
@@ -522,22 +604,30 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * aqualv =
-    let bv, aq = b in
-    bv, inspect_aqual aq
+let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    bv, pack_aqual aqv
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
 let env_open_modules (e : Env.env) : list<name> =
-    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+    List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
 let comp_to_string c = Print.comp_to_string c
+
+let implode_qn ns = String.concat "." ns
+let explode_qn s = String.split ['.'] s
+let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
+
+let push_binder e b = Env.push_binders e [b]
+
+let subst (x:bv) (n:term) (m:term) : term =
+  SS.subst [NT(x,n)] m

@@ -2,9 +2,11 @@
 module FStar.Syntax.Embeddings
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Char
+open FStar.VConfig
 
 module Range = FStar.Range
 module Z = FStar.BigInt
@@ -18,6 +20,7 @@ type norm_step =
     | Primops
     | Delta
     | Zeta
+    | ZetaFull
     | Iota
     | Reify
     | UnfoldOnly  of list<string>
@@ -31,6 +34,7 @@ val steps_HNF           : term
 val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
+val steps_ZetaFull      : term
 val steps_Iota          : term
 val steps_Reify         : term
 val steps_UnfoldOnly    : term
@@ -46,7 +50,7 @@ val steps_NBE           : term
  * able to unembed.
  *)
 
-type norm_cb = FStar.Util.either<Ident.lident, term> -> term // a callback to the normalizer
+type norm_cb = either<Ident.lident, term> -> term // a callback to the normalizer
 val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
@@ -79,6 +83,11 @@ val try_unembed  : embedding<'a> -> term -> norm_cb -> option<'a>
 val type_of      : embedding<'a> -> typ
 val set_type     : typ -> embedding<'a> -> embedding<'a>
 
+val embed_as     : embedding<'a> ->
+                   ('a -> 'b) ->
+                   ('b -> 'a) ->
+                   option<typ> -> (* optionally change the type *)
+                   embedding<'b>
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity
@@ -86,14 +95,16 @@ val e_unit        : embedding<unit>
 val e_bool        : embedding<bool>
 val e_char        : embedding<char>
 val e_int         : embedding<Z.t>
+val e_fsint       : embedding<int>
 val e_string      : embedding<string>
 val e_norm_step   : embedding<norm_step>
 val e_range       : embedding<Range.range>
+val e_vconfig     : embedding<vconfig>
 
 val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
-val e_either      : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a, 'b>>
+val e_either      : embedding<'a> -> embedding<'b> -> embedding<either<'a, 'b>>
 val e_string_list : embedding<list<string>>
 val e_arrow       : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 

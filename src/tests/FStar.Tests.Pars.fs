@@ -2,6 +2,7 @@
 module FStar.Tests.Pars
 //open FSharp.Compatibility.OCaml
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Range
 open FStar.Parser
@@ -26,7 +27,6 @@ let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<TcEnv.env>> = mk_ref None
 let test_mod_ref = mk_ref (Some ({name=test_lid;
                                   declarations=[];
-                                  exports=[];
                                   is_interface=false}))
 
 let parse_mod mod_name dsenv =
@@ -36,7 +36,7 @@ let parse_mod mod_name dsenv =
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
-        raise (Error(err, msg, r))
+        raise (Error(err, msg, r, []))
     | ASTFragment (Inr _, _) ->
         let msg = BU.format1 "%s: expected a module\n" mod_name in
         raise_error (Errors.Fatal_ModuleExpected, msg) dummyRange
@@ -55,9 +55,9 @@ let init_once () : unit =
   let env = TcEnv.initial_env
                 FStar.Parser.Dep.empty_deps
                 TcTerm.tc_term
-                TcTerm.type_of_tot_term
+                TcTerm.typeof_tot_or_gtot_term
+                TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
-                TcTerm.check_type_of_well_typed_term
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in

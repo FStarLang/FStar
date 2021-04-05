@@ -136,19 +136,19 @@ let bind_sz
   (y_sz: (r: t1) -> Tot (m_sz (y r)))
 : Tot (m_sz (bind x y))
 = (fun t' g g' ->
-   [@inline_let]
+   [@@inline_let]
    let gx (rx: t1) (sx: U32.t) (u: unit { m_sz_res_pred x rx sx } ) : Tot (res: t' { m_sz_correct (bind x y) t' g g' res } ) =
-     [@inline_let]
+     [@@inline_let]
      let gy (ry: t2) (sy: U32.t) (u: unit { m_sz_res_pred (y rx) ry sy } ) : Tot (res: t' { m_sz_correct (bind x y) t' g g' res } ) =
-       [@inline_let]
+       [@@inline_let]
        let su = U32.sub 4294967295ul sy in
-       [@inline_let]
+       [@@inline_let]
        let c = U32.lt su sx in
-       [@inline_let]
+       [@@inline_let]
        let res =
          if c
          then
-           [@inline_let]
+           [@@inline_let]
            let _ = assert (
              let (rx', logx) = x () in
              let (ry', logy) = y rx () in
@@ -157,19 +157,19 @@ let bind_sz
            in
            g' ()
          else
-           [@inline_let]
+           [@@inline_let]
            let r = U32.add sx sy in
-           [@inline_let]
+           [@@inline_let]
            let _ = m_sz_res_pred_bind x rx sx y ry sy in
            g ry r ()
        in
-       [@inline_let]
+       [@@inline_let]
        let _ = assert (m_sz_correct (bind x y) t' g g' res) in
        res
      in
-     [@inline_let]
+     [@@inline_let]
      let res = y_sz rx t' gy g' in
-     [@inline_let]
+     [@@inline_let]
      let _ = assert (
        let (_, _) = x () in
        let (_, _) = y rx () in
@@ -177,9 +177,9 @@ let bind_sz
      ) in
      res
    in
-   [@inline_let]
+   [@@inline_let]
    let res : t' = x_sz t' gx g' in
-   [@inline_let]
+   [@@inline_let]
    let _ = assert (
      let (rx, _) = x () in
      let (_, _) = y rx () in
@@ -432,7 +432,7 @@ let compile_ifthenelse
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
-  | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
+  | T.Tv_Match cond _ [T.Pat_Constant T.C_True, tt; _, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
     let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
@@ -596,7 +596,7 @@ let seq_st
 inline_for_extraction
 let print_char_st (c: U8.t) : Tot (m_st (print_char c)) =
   fun b ->
-  [@inline_let]
+  [@@inline_let]
   let b0 = B.sub b 0ul 1ul in
   B.upd b0 0ul c ;
   let b' = B.offset b 1ul in

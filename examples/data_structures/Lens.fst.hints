@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cbf4f9bac67b156fa18e3e35de219682"
+      "49e9c105602563aabec7f59cd2e1937a"
     ],
     [
       "Lens.rgb",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b25956a3ee04408956f619341a9b1635"
+      "cd9dd68bf215a799cadec7dc98f4c1bd"
     ],
     [
       "Lens.colored",
@@ -37,7 +37,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "67a34d8dc30461c838299cb424dfd2da"
+      "30d63b14fe99cc9766773a119b44b87e"
     ],
     [
       "Lens.stlens",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "469db8afde2f1ee9a17212bcde50068a"
+      "319e598eb2e9e7b2ca0adf88e25568b0"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fb9e545bd0ae03b45ffb8e65acd5b86e"
+      "a3fbf26bbea7de93329f576e1159849a"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -79,7 +79,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f31a751d58011c2de37cc3bc06c08d89"
+      "c5bf469f21096e7486ebf4282baf5568"
     ],
     [
       "Lens.st",
@@ -88,11 +88,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.Heap.only",
-        "equation_Lens.op_String_Access", "fuel_guarded_inversion_Lens.lens"
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.only", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Lens.op_String_Access",
+        "fuel_guarded_inversion_Lens.lens",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel", "typing_Lens.op_String_Access"
       ],
       0,
-      "b5e3309f8b6e0584bc500987995d2016"
+      "9c34cc5b746fa02da17c2d2445e0a178"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -114,10 +119,11 @@
         "projection_inverse_Lens.Mklens_put",
         "token_correspondence_Lens.__proj__Mklens__item__get",
         "token_correspondence_Lens.__proj__Mklens__item__put",
-        "token_correspondence_Lens.op_Bar_Colon_Equals"
+        "token_correspondence_Lens.op_Bar_Colon_Equals",
+        "typing_Lens.op_String_Access"
       ],
       0,
-      "e0511773aad3c94fb29389e3a8af683e"
+      "69d9d667701d375c6f175df08ae2fa40"
     ]
   ]
 ]

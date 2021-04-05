@@ -2,15 +2,6 @@
   "—++\u0016\"˛ÜÃd∆ﬁ®$ê\r€",
   [
     [
-      "IfcExampleReify3.is_x",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "cfc2b8dbec07891418036fd1327daf33"
-    ],
-    [
       "IfcExampleReify3.p1_x",
       1,
       2,
@@ -48,7 +39,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "ceac51041eda2d9b9d67b9b11bed9696"
+      "cf4845eb0df42aa6dd57430f45a6aaac"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -90,16 +81,7 @@
         "unit_typing"
       ],
       0,
-      "33597ad3123239b1f9c4563ef80b0b8c"
-    ],
-    [
-      "IfcExampleReify3.is_x",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "596e6d258de47dff45c49a9acc2a212a"
+      "86ca50cd1c70ffb24cb5077291e1a3df"
     ]
   ]
 ]

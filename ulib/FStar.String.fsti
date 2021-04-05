@@ -95,11 +95,11 @@ val index_of: string -> char -> Tot int
 /// `sub s i len`
 ///     Second argument is a length, not an index.
 ///     Returns a substring of length `len` beginning at `i`
-val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot string
+val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot (r: string {length r = l})
 
 /// `collect f s`: maps `f` over each character of `s`
 ///  from left to right, appending and flattening the result
-[@(deprecated "FStar.String.collect can be defined using list_of_string and List.collect")]
+[@@(deprecated "FStar.String.collect can be defined using list_of_string and List.collect")]
 val collect: (char -> FStar.All.ML string) -> string -> FStar.All.ML string
 
 /// `substring s i len`
@@ -110,3 +110,11 @@ val substring: string -> int -> int -> Ex string
 /// `get s i`: Similar to `index` except it may fail
 ///  if `i` is out of bounds
 val get: string -> int -> Ex char
+
+
+/// Some lemmas (admitted for now as we don't have a model)
+val concat_length (s1 s2: string): Lemma
+  (ensures length (s1 ^ s2) = length s1 + length s2)
+
+val list_of_concat (s1 s2: string): Lemma
+  (ensures list_of_string (s1 ^ s2) == list_of_string s1 @ list_of_string s2)

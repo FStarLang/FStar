@@ -43,3 +43,9 @@ val raise_val_downgrade_val
 : Lemma
   (raise_val (downgrade_val x) == x)
   [SMTPat (raise_val u#a u#b (downgrade_val x))]
+
+let lift_dom #a #b (q:a -> b) : raise_t a -> b =
+  fun v -> q (downgrade_val v)
+
+let lift_codom #a #b (q:a -> b) : a -> raise_t b =
+  fun v -> raise_val (q v)

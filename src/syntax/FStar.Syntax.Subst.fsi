@@ -29,6 +29,7 @@ val subst:              list<subst_elt> -> term -> term
 val subst':           subst_ts -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
 val subst_imp:          list<subst_elt> -> aqual -> aqual
+val subst_ascription:   list<subst_elt> -> ascription -> ascription
 val subst_binders:      list<subst_elt> -> binders -> binders
 val compress:           term -> term
 val compress_univ:      universe -> universe
@@ -67,3 +68,7 @@ val set_use_range: Range.range -> term -> term
 val open_term_1   : binder   -> term -> binder * term
 val open_term_bvs : list<bv> -> term -> list<bv> * term
 val open_term_bv  : bv       -> term -> bv * term
+
+(* Removes all delayed substitutions and resolved uvar nodes in a term.
+Raises a hard error if an *unresolved* uvar (term or universe) remains. *)
+val deep_compress : term -> term

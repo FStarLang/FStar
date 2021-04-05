@@ -1,0 +1,27 @@
+[
+  "È¡\u0007ùÖ@'Ö\u007fzÌ£P´\u0000€",
+  [
+    [
+      "Bug022.exp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8b294c5222d19f2e5e343cf455371060"
+    ],
+    [
+      "Bug022.__proj__EAbs__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug022.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
+      ],
+      0,
+      "65fac83802bb0eadd6ff5e9e63db5050"
+    ]
+  ]
+]

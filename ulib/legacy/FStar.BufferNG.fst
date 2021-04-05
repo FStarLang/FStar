@@ -385,7 +385,6 @@ let lemma_offset_spec
   ))
 = ()
 
-abstract
 val eqb: #a:typ -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t
   -> HST.ST bool
@@ -443,7 +442,6 @@ let live_slice_middle #t b i len h =
   P.buffer_readable_gsub_merge b i len h
 
 (** Corresponds to memcpy *)
-abstract
 val blit: #t:typ
   -> a:buffer t
   -> idx_a:UInt32.t
@@ -474,7 +472,6 @@ let blit #t a idx_a b idx_b len =
   end
 
 (** Corresponds to memset *)
-abstract
 val fill: #t:typ
   -> b:buffer t
   -> z: P.type_of_typ t

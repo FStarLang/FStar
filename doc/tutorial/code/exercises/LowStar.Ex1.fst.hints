@@ -14,7 +14,7 @@
         "projection_inverse_FStar.Integers.Signed__0"
       ],
       0,
-      "a105c59f49ff488fe7e6a20afaaa3d9b"
+      "70b1a3d4caef291c4f0bdb9c082de057"
     ],
     [
       "LowStar.Ex1.min_int32",
@@ -38,7 +38,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "247b24886cec7bbda07e0eaba3acbd32"
+      "d9c4f9c32c466d2d0e4d539f1e3552ff"
     ],
     [
       "LowStar.Ex1.sum3",
@@ -50,70 +50,7 @@
         "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "d14763d5b7529b615993724f935a1cb2"
-    ],
-    [
-      "LowStar.Ex1.abs",
-      2,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_FStar.Integers.Signed",
-        "disc_equation_FStar.Integers.Signed",
-        "equality_tok_FStar.Integers.Winfinite@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Integers.Signed__0"
-      ],
-      0,
-      "ac04437491cce22de8e9e921bf379433"
-    ],
-    [
-      "LowStar.Ex1.min_int32",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
-        "b2t_def", "equation_FStar.Int.fits", "equation_FStar.Int.max_int",
-        "equation_FStar.Int.min_int", "equation_FStar.Int.size",
-        "equation_Prims.nat", "equation_Prims.pos", "int_typing",
-        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Minus",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "typing_Prims.pow2"
-      ],
-      0,
-      "2ee0e2150c19d053af8e4a281dbb1c1e"
-    ],
-    [
-      "LowStar.Ex1.sum3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
-      ],
-      0,
-      "4f89ea5dce6460f5b212a05617a426c2"
-    ],
-    [
-      "LowStar.Ex1.sum3",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
-      ],
-      0,
-      "ac9a9943288504293dd7520ae4d18427"
+      "52416279edaa2689a3b0b3b96952bfd7"
     ]
   ]
 ]

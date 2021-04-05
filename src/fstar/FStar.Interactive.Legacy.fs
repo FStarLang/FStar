@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.Interactive.Legacy
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -74,12 +75,12 @@ let check_frag (env:TcEnv.env) curmod frag =
         let m, env = tc_one_fragment curmod env frag in
         Some (m, env, FStar.Errors.get_err_count())
     with
-        | FStar.Errors.Error(e, msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, r)];
+        | FStar.Errors.Error(e, msg, r, ctx) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, r, ctx)];
           None
 
-        | FStar.Errors.Err (e, msg) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env)];
+        | FStar.Errors.Err (e, msg, ctx) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env, ctx)];
           None
 
 let report_fail () =
@@ -413,7 +414,7 @@ let rec go (line_col:(int*int))
           | [], _ -> Some ([], 0)
           | _, [] -> None
           | hs :: ts, hc :: tc ->
-            let hc_text = FStar.Ident.text_of_id hc in
+            let hc_text = FStar.Ident.string_of_id hc in
             if Util.starts_with hc_text hs then
                match ts with
                | [] -> Some (candidate, String.length hs)
@@ -431,9 +432,9 @@ let rec go (line_col:(int*int))
         | hc :: tc ->
           locate_match needle tc |>
             Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
-    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
+    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.string_of_id ids) in
     let match_lident_against needle lident =
-        locate_match needle (lident.ns @ [lident.ident])
+        locate_match needle (ns_of_lid lident @ [ident_of_lid lident])
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
@@ -469,7 +470,7 @@ let rec go (line_col:(int*int))
             List.filter_map (fun n ->
             if Util.starts_with n id
             then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-                 Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
+                 Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[ident_of_lid fqn], matched_length)
                             (DsEnv.resolve_to_fully_qualified_name env.dsenv lid)
             else None)
         in

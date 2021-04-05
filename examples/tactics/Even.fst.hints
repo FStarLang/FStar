@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "bb07bab99a6db630385d4cd563f50476"
+      "98a0ca80bddb06b30e86b5a333902ad7"
     ],
     [
       "Even.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_bb628da1f7d40b6a048cba9503380f5d"
       ],
       0,
-      "3b0bb6cc57d3dc138eabbe4eb97646ae"
+      "d439f3f9310410a20ccff2d51d6bb705"
     ],
     [
       "Even.nat2unary",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9b5d6d0ec0fb281f2955f3fb6eb26d76"
+      "571f0b2548be9a2bb44b2763924bf237"
     ],
     [
       "Even.even",
@@ -48,7 +48,7 @@
       1,
       [ "@query", "assumption_Even.unat__uu___haseq" ],
       0,
-      "40c22eac23f140755ad4e96772ccef2d"
+      "2eb901cc82d75d8280f2a27f3aedece7"
     ],
     [
       "Even.__proj__Even_SS__item__n",
@@ -61,7 +61,7 @@
         "refinement_interpretation_Tm_refine_54b3fdb8b64a7b5a7f1535a28234d0d5"
       ],
       0,
-      "44671ada21cbcb68a7df7eb5b422790c"
+      "1053c03fa9ea88cbf5e43eb32f3bc12c"
     ],
     [
       "Even.__proj__Even_SS__item___1",
@@ -75,103 +75,7 @@
         "refinement_interpretation_Tm_refine_54b3fdb8b64a7b5a7f1535a28234d0d5"
       ],
       0,
-      "94706a586a146f618d323bfb7342d973"
-    ],
-    [
-      "Even.unat",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "13891aa19f270bbf52e3813f1604e617"
-    ],
-    [
-      "Even.__proj__S__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Even.S",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_bb628da1f7d40b6a048cba9503380f5d"
-      ],
-      0,
-      "6b87ab632f3c8847a5339b5f75a3940c"
-    ],
-    [
-      "Even.nat2unary",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "1884e0bd653d5367bbc5ca228eae5377"
-    ],
-    [
-      "Even.even",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Even.unat__uu___haseq" ],
-      0,
-      "f2ce9bd270ea0d9552b35ea16ad5d254"
-    ],
-    [
-      "Even.__proj__Even_SS__item__n",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Even.Even_SS",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_54b3fdb8b64a7b5a7f1535a28234d0d5"
-      ],
-      0,
-      "adbaba56a5d66bc54879a3b49bea7406"
-    ],
-    [
-      "Even.__proj__Even_SS__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Even.Even_SS",
-        "proj_equation_Even.Even_SS_n", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Even.Even_SS_n",
-        "refinement_interpretation_Tm_refine_54b3fdb8b64a7b5a7f1535a28234d0d5"
-      ],
-      0,
-      "4793c9eb8961a9a767e7800223ffe7e4"
-    ],
-    [
-      "Even.prove_even",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "disc_equation_FStar.Tactics.Result.Failed",
-        "disc_equation_FStar.Tactics.Result.Success",
-        "equation_Prims.eqtype", "function_token_typing_Prims.unit",
-        "kinding_Prims.list@tok", "lemma_FStar.Tactics.Result.result_split",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
-      ],
-      0,
-      "0a22d35a8b4b9574f835c4197b22b2a1"
+      "6f848e739cf020393c814c9b4221327c"
     ]
   ]
 ]

@@ -11,7 +11,6 @@ open FStar.Ref
 
 let init_print = print_string "\ninitializing...\n\n"
 
-open FStar.Seq
 open Platform.Bytes
 open SHA1
 open CntFormat

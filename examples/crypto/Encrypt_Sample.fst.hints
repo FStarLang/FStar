@@ -1,18 +1,1 @@
-[
-  "…â.R…ù©¨\u0016\u0004'[†IØž",
-  [
-    [
-      "Encrypt_Sample.test",
-      1,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_FStar.Pervasives.V",
-        "disc_equation_FStar.Pervasives.Err", "equation_AES.plain",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "712099cfff915b14881d11ee92e0464e"
-    ]
-  ]
-]
+[ "…â.R…ù©¨\u0016\u0004'[†IØž", [] ]

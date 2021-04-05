@@ -17,6 +17,7 @@
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -59,16 +60,16 @@ let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env
     a, ({tcenv with dsenv = dsenv})
 
 let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
-     let a, t' = f e.env_tcenv in
-     a, ({e with env_tcenv=t'})
+     let a, t' = f (tcenv_of_uenv e) in
+     a, (set_tcenv e t')
 
 let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv<'a>) : 'a * uenv =
-     let a, tcenv = with_dsenv_of_tcenv e.env_tcenv f in
-     a, ({e with env_tcenv=tcenv})
+     let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
+     a, (set_tcenv e tcenv)
 
 let push_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
-            (), FStar.TypeChecker.Env.push env.env_tcenv "top-level: push_env"))
+            (), FStar.TypeChecker.Env.push (tcenv_of_uenv env) "top-level: push_env"))
 
 let pop_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
@@ -81,7 +82,7 @@ let with_env env (f:uenv -> 'a) : 'a =
     res
 
 let env_of_tcenv (env:TcEnv.env) =
-    FStar.Extraction.ML.UEnv.mkContext env
+    FStar.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
@@ -114,26 +115,25 @@ let init_env deps : TcEnv.env =
   let solver =
     if Options.lax()
     then SMT.dummy
-    else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
+    else {SMT.solver with preprocess=FStar.Tactics.Hooks.preprocess} in
   let env =
       TcEnv.initial_env
         deps
         TcTerm.tc_term
-        TcTerm.type_of_tot_term
+        TcTerm.typeof_tot_or_gtot_term
+        TcTerm.typeof_tot_or_gtot_term_fastpath
         TcTerm.universe_of
-        TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
         (NBE.normalize
           (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)
-  let env = { env with synth_hook       = FStar.Tactics.Interpreter.synthesize } in
-  let env = { env with try_solve_implicits_hook = FStar.Tactics.Interpreter.solve_implicits } in
-  let env = { env with splice           = FStar.Tactics.Interpreter.splice} in
-  let env = { env with mpreprocess      = FStar.Tactics.Interpreter.mpreprocess} in
-  let env = { env with postprocess      = FStar.Tactics.Interpreter.postprocess} in
-  let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
+  let env = { env with synth_hook       = FStar.Tactics.Hooks.synthesize } in
+  let env = { env with try_solve_implicits_hook = FStar.Tactics.Hooks.solve_implicits } in
+  let env = { env with splice           = FStar.Tactics.Hooks.splice} in
+  let env = { env with mpreprocess      = FStar.Tactics.Hooks.mpreprocess} in
+  let env = { env with postprocess      = FStar.Tactics.Hooks.postprocess} in
   env.solver.init env;
   env
 
@@ -179,10 +179,9 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
-    let (modul, _), env =
-        if DsEnv.syntax_only env.dsenv then (modul, []), env
-        else let m, i, e = Tc.tc_partial_modul env modul in
-                (m, i), e
+    let modul, env =
+        if DsEnv.syntax_only env.dsenv then modul, env
+        else Tc.tc_partial_modul env modul
     in
     (Some modul, env)
   | Parser.Driver.Decls ast_decls ->
@@ -196,7 +195,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
             (fun env a_decl ->
                 let decls, env =
                     with_dsenv_of_tcenv env <|
-                    FStar.ToSyntax.Interleave.prefix_with_interface_decls a_decl
+                    FStar.ToSyntax.Interleave.prefix_with_interface_decls modul.name a_decl
                 in
                 env, decls)
             env
@@ -215,7 +214,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
     Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
   | Pars.ParseError (err, msg, rng) ->
-    raise (FStar.Errors.Error(err, msg, rng))
+    raise (FStar.Errors.Error(err, msg, rng, []))
   | Pars.Term _ ->
      failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
@@ -272,12 +271,9 @@ let tc_one_file
     if not (Options.interactive ()) then
       Options.restore_cmd_line_options true |> ignore
   in
-  let post_smt_encoding (_:unit) :unit =
-    FStar.SMTEncoding.Z3.refresh ()
-  in
   let maybe_extract_mldefs tcmod env =
       if Options.codegen() = None
-      || not (Options.should_extract tcmod.name.str)
+      || not (Options.should_extract (string_of_lid tcmod.name))
       then None, 0
       else
         FStar.Util.record_time (fun () ->
@@ -298,9 +294,10 @@ let tc_one_file
   in
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
-      let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
+      let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
+              if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
               with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
@@ -310,10 +307,8 @@ let tc_one_file
                  //AR: encode the module to to smt
                  maybe_restore_opts ();
                  let smt_decls =
-                   if (not (Options.lax()))
-                   then let smt_decls = FStar.SMTEncoding.Encode.encode_modul env modul in
-                        post_smt_encoding ();
-                        smt_decls
+                   if not (Options.lax())
+                   then FStar.SMTEncoding.Encode.encode_modul env modul
                    else [], []
                  in
                  ((modul, smt_decls), env))
@@ -321,7 +316,7 @@ let tc_one_file
 
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
-                              (Some fmod.name.str)
+                              (Some (string_of_lid fmod.name))
                               "FStar.Universal.tc_source_file"
           in
 
@@ -339,14 +334,24 @@ let tc_one_file
           extracted_defs,
           env
       in
-      if (Options.should_verify fmod.name.str //if we're verifying this module
+      if (Options.should_verify (string_of_lid fmod.name) //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
       then SMT.with_hints_db (Pars.find_file fn) check_mod
       else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
-      match Ch.load_module_from_cache env fn with
+      let r = Ch.load_module_from_cache env fn in
+      let r =
+        (* If --force and this file was given in the command line,
+         * forget about the cache we just loaded and recheck the file.
+         * Note: we do the call above anyway since load_module_from_cache
+         * sets some internal state about dependencies. *)
+        if Options.force () && Options.should_check_file fn
+        then None
+        else r
+      in
+      match r with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
         then FStar.Errors.raise_err
@@ -360,23 +365,25 @@ let tc_one_file
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
 
-
         let tc_result, mllib, env = tc_source_file () in
+
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
-            || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
+            || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
+        //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
         then Ch.store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env
 
       | Some tc_result ->
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
-        if Options.dump_module tcmod.name.str
+        if Options.dump_module (string_of_lid tcmod.name)
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
         let extend_tcenv tcmod tcenv =
+            if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStar.ToSyntax.ToSyntax.add_modul_to_env
@@ -388,8 +395,7 @@ let tc_one_file
             maybe_restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
-              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
-              post_smt_encoding ()
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
             end;
             (), env
         in
@@ -405,7 +411,7 @@ let tc_one_file
         (* If we have to extract this module, then do it first *)
         let mllib =
             if Options.codegen()<>None
-            && Options.should_extract tcmod.name.str
+            && Options.should_extract (string_of_lid tcmod.name)
             && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
             then
                  let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
@@ -432,7 +438,7 @@ let tc_one_file_for_ide
     =
     let env = env_of_tcenv env in
     let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in
-    tc_result, env.env_tcenv
+    tc_result, (tcenv_of_uenv env)
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -478,16 +484,17 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
 let batch_mode_tc filenames dep_graph =
-  if Options.debug_any () then begin
+  if Options.debug_at_level_no_module (Options.Other "Dep") then begin
     FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
     FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
-  let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
+  let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
-  emit mllibs;
+  if FStar.Errors.get_err_count() = 0 then
+    emit mllibs;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->

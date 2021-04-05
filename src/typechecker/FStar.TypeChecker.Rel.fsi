@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -45,7 +46,7 @@ val flex_prob_closing         : env -> binders -> prob -> bool
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
-val solve_some_deferred_constraints: env -> guard_t -> guard_t
+val solve_non_tactic_deferred_constraints: env -> guard_t -> guard_t
 val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
@@ -61,6 +62,7 @@ val get_teq_predicate : env -> typ -> typ -> option<guard_t>
 val teq_force  : env -> typ -> typ -> unit
 val teq_nosmt        : env -> typ -> typ -> option<guard_t>
 val teq_nosmt_force  : env -> typ -> typ -> bool
+val layered_effect_teq : env -> typ -> typ -> reason:option<string> -> guard_t
 val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
 val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
 val subtype_nosmt       : env -> typ -> typ -> option<guard_t>

@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 include ../Makefile.include
 
 OTHERFLAGS+=--include ../tactics
@@ -12,7 +11,7 @@ SL.ExamplesAuto.custom: OTHERFLAGS+=--cache_off
 
 #Excludes extracted interfaces for these examples
 %.custom: %.fst
-	$(FSTAR) --use_extracted_interfaces true $^
+	$(FSTAR) $^
 
 %.fst-in:
 	@echo $(OTHERFLAGS)

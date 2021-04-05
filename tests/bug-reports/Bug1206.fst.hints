@@ -1,0 +1,34 @@
+[
+  "¤#úÒU‡j‡¬Wb$\u000e>\u0015³",
+  [
+    [
+      "Bug1206.bslice",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "24f17276b77b5c17c6a337d57bc501fe"
+    ],
+    [
+      "Bug1206.ser_id",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option"
+      ],
+      0,
+      "8448e5c2ee7bd64acfe3b3a00be14824"
+    ]
+  ]
+]

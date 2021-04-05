@@ -29,7 +29,7 @@
         "typing_FStar.DM4F.Heap.Random.upd"
       ],
       0,
-      "ecec1809ea3bbddff5f013f7b8c4d060"
+      "e10de1c98e97cbea2e743f7ab4f511aa"
     ],
     [
       "ElGamal.elgamal_prop",
@@ -47,7 +47,7 @@
         "typing_FStar.DM4F.Heap.Random.q"
       ],
       0,
-      "2090dcd2e6c06a90941f7db6800e4a1c"
+      "0b41b13e3982fb9c516ccbd313ed45de"
     ],
     [
       "ElGamal.elgamal_equiv",
@@ -106,52 +106,7 @@
         "typing_Tm_abs_4ce18f071b8caf7306002bfd3e2115b2", "unit_typing"
       ],
       0,
-      "8d24fff7b49d50cfad342d70ba3f8c77"
-    ],
-    [
-      "ElGamal.bij'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_ElGamal.Group.group",
-        "equation_FStar.DM4F.Heap.Random.elem",
-        "equation_FStar.DM4F.Heap.Random.sel",
-        "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "int_typing",
-        "lemma_ElGamal.Group.mod_minus_plus",
-        "lemma_ElGamal.Group.mod_plus_minus",
-        "lemma_FStar.DM4F.Heap.Random.lemma_eq_intro",
-        "lemma_FStar.DM4F.Heap.Random.lemma_index_upd1",
-        "lemma_FStar.DM4F.Heap.Random.lemma_index_upd2",
-        "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_c214c9b992936e25888fdce6a55eb676",
-        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178",
-        "typing_ElGamal.Group.log", "typing_FStar.DM4F.Heap.Random.q",
-        "typing_FStar.DM4F.Heap.Random.sel",
-        "typing_FStar.DM4F.Heap.Random.to_id",
-        "typing_FStar.DM4F.Heap.Random.upd"
-      ],
-      0,
-      "ac9a8a52762f1a8d501a38c9edec6e0a"
-    ],
-    [
-      "ElGamal.elgamal_prop",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "int_inversion", "primitive_Prims.op_Modulus",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "typing_FStar.DM4F.Heap.Random.q"
-      ],
-      0,
-      "85b844da046ff015c24267f213d6025b"
+      "605f1120cb95d9148a6c3cdf0ad9e665"
     ]
   ]
 ]

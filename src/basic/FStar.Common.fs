@@ -90,3 +90,33 @@ let tabulate (n:int) (f : int -> 'a) : list<'a> =
     then f i :: aux (i + 1)
     else []
   in aux 0
+
+(** max_prefix f xs returns (l, r) such that
+  * every x in l satisfies f
+  * l@r == xs
+  * and l is the largest list satisfying that
+  *)
+let rec max_prefix (f : 'a -> bool) (xs : list<'a>) : list<'a> * list<'a> =
+  match xs with
+  | [] -> [], []
+  | x::xs when f x ->
+    let l, r = max_prefix f xs in
+    (x::l, r)
+  | x::xs ->
+    ([], x::xs)
+
+(** max_suffix f xs returns (l, r) such that
+  * every x in r satisfies f
+  * l@r == xs
+  * and r is the largest list satisfying that
+  *)
+let max_suffix (f : 'a -> bool) (xs : list<'a>) : list<'a> * list<'a> =
+  let rec aux acc xs =
+    match xs with
+    | [] -> acc, []
+    | x::xs when f x ->
+      aux (x::acc) xs
+    | x::xs ->
+      (acc, x::xs)
+  in
+  xs |> List.rev |> aux [] |> (fun (xs, ys) -> List.rev ys, xs)

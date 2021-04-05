@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Err
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -89,11 +90,13 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         [pi; pu; pea; pf]
     in
     let set (l : list<bool>) : unit =
-        let [pi; pu; pea; pf] = l in
-        set_bool_option "print_implicits"   pi;
-        set_bool_option "print_universes"   pu;
-        set_bool_option "print_effect_args" pea;
-        set_bool_option "print_full_names " pf
+        match l with
+        | [pi; pu; pea; pf] ->
+          set_bool_option "print_implicits"   pi;
+          set_bool_option "print_universes"   pu;
+          set_bool_option "print_effect_args" pea;
+          set_bool_option "print_full_names " pf
+        | _ -> failwith "impossible: print_discrepancy"
     in
     let bas = get () in
     let rec go (cur : list<bool>) =
@@ -126,7 +129,11 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
  *     in the first case, we print it starting from a newline,
  *       while in the latter, it is printed on the same line
  *)
-let errors_smt_detail env errs smt_detail =
+let errors_smt_detail env
+        (errs : list<Errors.error>)
+        (smt_detail : either<string,string>)
+: list<Errors.error>
+=
     let maybe_add_smt_detail msg =
       match smt_detail with
       | Inr d -> msg ^ "\n\t" ^ d
@@ -136,10 +143,10 @@ let errors_smt_detail env errs smt_detail =
     let errs =
         errs
         |> List.map
-          (fun (e, msg, r) ->
-            let e, msg, r =
+          (fun (e, msg, r, ctx) ->
+            let e, msg, r, ctx =
                 if r = dummyRange
-                then e, msg, Env.get_range env
+                then e, msg, Env.get_range env, ctx
                 else let r' = Range.set_def_range r (Range.use_range r) in
                      if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
                      then e,
@@ -148,17 +155,21 @@ let errors_smt_detail env errs smt_detail =
                                 ^ (if Range.use_range r <> Range.def_range r
                                    then "(Other related locations: " ^ Range.string_of_def_range r ^")"
                                    else "")),
-                          Env.get_range env
-                     else e, msg, r
+                          Env.get_range env,
+                          ctx
+                     else e, msg, r, ctx
             in
-            e, maybe_add_smt_detail msg, r)
+            e, maybe_add_smt_detail msg, r, ctx)
     in
     errs
 
-let add_errors_smt_detail env errs smt_detail =
+let add_errors_smt_detail env (errs:list<Errors.error>) smt_detail : unit =
     FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
 
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")
+
+let log_issue env r (e, m) : unit =
+ add_errors env [e, m, r, Errors.get_ctx ()]
 
 let err_msg_type_strings env t1 t2 :(string * string) =
   print_discrepancy (N.term_to_string env) t1 t2
@@ -176,8 +187,8 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let unexpected_signature_for_monad env m k =
-  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
-    m.str (N.term_to_string env k)))
+  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
+    (string_of_lid m) (N.term_to_string env k)))
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
   (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
@@ -255,11 +266,25 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c =
-  (Errors.Fatal_ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_pure_expression e c reason =
+  let msg = "Expected a pure expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedPureExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
-let expected_ghost_expression e c =
-  (Errors.Fatal_ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_ghost_expression e c reason =
+  let msg = "Expected a ghost expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedGhostExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))

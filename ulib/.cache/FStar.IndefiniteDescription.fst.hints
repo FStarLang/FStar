@@ -1,18 +1,37 @@
 [
-  "*Éun§'tÙñ\u0019çÃên˝c",
+  "øßœèº\u0012\u001dGuV®„}6ø\u0002",
   [
     [
-      "FStar.IndefiniteDescription.aux",
+      "FStar.IndefiniteDescription.indefinite_description_ghost",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8",
+        "typing_FStar.IndefiniteDescription.indefinite_description_tot"
       ],
       0,
-      "b44acf624a796a3499c7602d54358bec"
+      "1d50277b1c0df3a113ee947cf3395146"
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.Left", "disc_equation_Prims.Right",
+        "equation_Prims.l_and", "equation_Prims.l_iff",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_Prims.c_or",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "45b2d09830bdc3d8d9e93d39dc2d0721"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -20,25 +39,32 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "FStar.IndefiniteDescription_interpretation_Tm_ghost_arrow_eaf0e881316979a10a835f9aef894ea3",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "equation_Prims.eq2", "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "int_inversion",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_f3db4b290bcde56fe0046b79b9c3a13f"
       ],
       0,
-      "49120338e9bf533dc7924c0056d59f15"
+      "1dde92c733afa793aa40f1a1895a3667"
     ],
     [
-      "FStar.IndefiniteDescription.stronger_markovs_principle",
-      2,
+      "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_e76bd1e3fcd1369d7232ec3854a8c984"
       ],
       0,
-      "efe2884da6dfc67f140e502ce776e292"
+      "96e1e043d8615338982930fbef0a209d"
     ]
   ]
 ]

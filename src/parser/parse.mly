@@ -6,6 +6,7 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Pervasives
 open FStar_Errors
 open FStar_List
 open FStar_Util
@@ -23,6 +24,17 @@ open FStar_String
 
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
+let mk_meta_tac m = Meta m
+
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
+let none_to_empty_list x = 
+  match x with
+  | None -> []
+  | Some l -> l
 
 %}
 
@@ -51,7 +63,7 @@ let logic_qualifier_deprecation_warning =
 %token <bool> LET
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
-%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
@@ -60,17 +72,18 @@ let logic_qualifier_deprecation_warning =
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
-%token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
+%token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND SPLICE SQUIGGLY_RARROW TOTAL
-%token REQUIRES ENSURES
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
+%token REQUIRES ENSURES DECREASES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
@@ -136,7 +149,18 @@ pragma:
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
+      {
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      }
+  | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
+
 
 decoration:
   | x=attribute
@@ -221,7 +245,7 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
-  | SPLICE LBRACK ids=separated_list(SEMICOLON, lidentOrOperator) RBRACK t=thunk(atomicTerm)
+  | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
       { Splice (ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
@@ -229,10 +253,14 @@ rawDecl:
       { NewEffect ne }
   | LAYERED_EFFECT ne=effectDefinition
       { LayeredEffect ne }
+  | EFFECT ne=layeredEffectDefinition
+      { LayeredEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
       { Polymonadic_bind b }
+  | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
+      { Polymonadic_subcomp c }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -245,7 +273,7 @@ typars:
 
 tvarinsts:
   | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs }
+      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
 
 typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
@@ -261,8 +289,11 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  lid=lident COLON t=typ
-      { (lid, t) }
+  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
+      { 
+        let (qual, attrs), lid = qualified_lid in
+        (lid, qual, attrs, t) 
+      }
 
 constructorDecl:
   | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
@@ -275,7 +306,7 @@ attr_letbinding:
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 2) in
+        let pat = mk_pattern (PatVar(lid, None, [])) (rhs parseState 2) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
         let pos = rhs2 parseState 1 6 in
         match ascr_opt with
@@ -305,6 +336,34 @@ effectDefinition:
            WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
     RBRACE
     { DefineEffect(lid, bs, typ, eds) }
+
+layeredEffectDefinition:
+  | LBRACE lid=uident bs=binders WITH r=tmNoEq RBRACE
+    {
+      let typ =  (* bs -> Effect *)
+        let first_b, last_b =
+          match bs with
+          | [] ->
+             raise_error (Fatal_SyntaxError,
+                          "Syntax error: unexpected empty binders list in the layered effect definition")
+                         (range_of_id lid)
+          | _ -> hd bs, last bs |> must in
+        let r = union_ranges first_b.brange last_b.brange in
+        mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
+      let rec decls (r:term) =
+        match r.tm with
+        | Paren r -> decls r
+        | Record (None, flds) ->
+           flds |> List.map (fun (lid, t) ->
+                              mk_decl (Tycon (false,
+                                              false,
+                                              [TyconAbbrev (ident_of_lid lid, [], None, t)]))
+                                      t.range [])
+        | _ ->
+           raise_error (Fatal_SyntaxError,
+                        "Syntax error: layered effect combinators should be declared as a record")
+                       r.range in
+      DefineEffect (lid, [], typ, decls r) }
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
@@ -344,6 +403,10 @@ polymonadic_bind:
   | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
       { (m_eff, n_eff, p_eff, bind) }
 
+polymonadic_subcomp:
+  | m_eff=quident SUBTYPE n_eff=quident EQUALS subcomp=simpleTerm
+    { (m_eff, n_eff, subcomp) }
+
 
 /******************************************************************************/
 /*                        Qualifiers, tags, ...                               */
@@ -368,7 +431,7 @@ qualifier:
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
-  | ABSTRACT      { Abstract }
+  
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
@@ -386,16 +449,18 @@ letqualifier:
   | REC         { Rec }
   |             { NoLetQualifier }
 
- (* Remove with stratify *)
-aqual:
-  | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality }
-  | q=aqualUniverses { q }
-
-aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta t }
+(*
+ * AR: this should be generalized to:
+ *     (a) allow attributes on non-implicit binders
+ *     note that in the [@@ case, we choose the Implicit aqual
+ *)
+aqual: 
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
+
+binderAttributes:
+  | LBRACK_AT_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -434,17 +499,19 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
+  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern (PatWild None) (rhs parseState 1) }
+      { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
-  | qual_id=aqualified(lident)
-      { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
+  | qual_id=aqualifiedWithAttrs(lident)
+    {
+      let (aqual, attrs), lid = qual_id in
+      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -452,63 +519,85 @@ fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (Meta mt)))
+        let w = mk_pattern (PatWild (Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
+  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
+   * but I need to produce a PatWild above, and a PatVar here. However
+   * why does PatWild even exist..? *)
+  | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
       }
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
+        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       }
 
 binder:
-  | aqualified_lid=aqualified(lidentOrUnderscore)
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
      {
-       let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type_level q
+       let (q, attrs), lid = aqualifiedWithAttrs_lid in
+       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
      }
+
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let r = rhs2 parseState 1 5 in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let r = rhs2 parseState 1 3 in
+        let id = gen r in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
+  | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
+       List.map (fun ((q, attrs), x) ->
+         mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-aqualified(X): x=pair(ioption(aqualUniverses), X) { x }
+aqualifiedWithAttrs(X):
+  | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
+  | aq=aqual x=X { (Some aq, []), x }
+  | attrs=binderAttributes x=X { (None, attrs), x }
+  | x=X { (None, []), x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -532,7 +621,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { {id with idText = compile_op' id.idText id.idRange} }
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -552,13 +641,13 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 thunk2(X):
   | t=X
      { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
        let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
-       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
@@ -570,10 +659,6 @@ ascribeKind:
 (* Remove for stratify *)
 kind:
   | t=tmArrow(tmNoEq) { {t with level=Kind} }
-
-
-
-
 
 
 term:
@@ -590,6 +675,9 @@ term:
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
+match_returning:
+  | RETURNS t=tmIff {t}
+
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
@@ -597,30 +685,33 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
+  | DECREASES t=typ
+      { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
+      { mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
+        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | MATCH e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
-        let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+        let branches = focusBranches pbs (rhs2 parseState 1 5) in
+        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
   | LET OPEN uid=quident IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
@@ -664,9 +755,9 @@ noSeqTerm:
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      }
 
-   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
+   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
      {
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      }
 
 calcRel:
@@ -753,10 +844,10 @@ tmImplies:
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
@@ -765,22 +856,30 @@ tmArrow(Tm):
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
   | e=tmEqNoRefinement { e }
 
 simpleArrowDomain:
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+  | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        ((Some (mk_meta_tac mt), []), t)
+      }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
-  | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
-  | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
+  | LBRACE_BAR t=Tm BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        ((Some (mk_meta_tac mt), []), t)
+      }
+  | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
@@ -836,7 +935,7 @@ tmNoEqWith(X):
             let dom =
                match extract_named_refinement e1 with
                | Some (x, t, f) ->
-                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
                  Inl dom
                | _ ->
                  Inr e1
@@ -915,7 +1014,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
-  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
+  | lid=qlident { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
@@ -1008,7 +1107,7 @@ projectionLHS:
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mkLexList (rhs2 parseState 1 3) es }
+      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident
@@ -1103,8 +1202,8 @@ universeFrom:
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
-        if text_of_id max <> text_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        if string_of_id max <> string_of_lid max_lid
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
@@ -1120,7 +1219,7 @@ atomicUniverse:
           log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
-  | u=lident { mk_term (Uvar u) u.idRange Expr }
+  | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
 
@@ -1152,7 +1251,7 @@ range:
 /*                       Miscellanous, tools                                   */
 /******************************************************************************/
 
-%inline string:
+string:
   | s=STRING { s }
 
 %inline operator:

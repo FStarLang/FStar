@@ -132,7 +132,6 @@ let is_gcd_plus a b q d =
 val is_gcd_for_euclid (a b q d:int) : Lemma
   (requires is_gcd b (a - q * b) d)
   (ensures  is_gcd a b d)
-  [SMTPat (is_gcd b (a - q * b) d)]
 let is_gcd_for_euclid a b q d =
   add_sub_l a (q * b);
   is_gcd_plus b (a - q * b) q d
@@ -144,7 +143,16 @@ val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
             (forall d. is_gcd u3 v3 d ==> is_gcd a b d))
   (ensures (fun (u, v, d) -> u * a + v * b = d /\ is_gcd a b d))
   (decreases v3)
+
+#push-options "--warn_error -271"
 let rec egcd a b u1 u2 u3 v1 v2 v3 =
+
+  let aux (a b q d : int) : Lemma
+    (requires is_gcd b (a - q * b) d)
+    (ensures is_gcd a b d)
+    [SMTPat ()]
+    = is_gcd_for_euclid a b q d in
+    
   if v3 = 0 then
     begin
     divides_0 u3;
@@ -173,6 +181,13 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
     end
 
 let euclid_gcd a b =
+
+  let aux (a b q d : int) : Lemma
+    (requires is_gcd b (a - q * b) d)
+    (ensures is_gcd a b d)
+    [SMTPat ()]
+    = is_gcd_for_euclid a b q d in
+
   if b >= 0 then
     egcd a b 1 0 a 0 1 b
   else
@@ -181,6 +196,7 @@ let euclid_gcd a b =
     Classical.forall_intro (Classical.move_requires (is_gcd_minus a b));
     egcd a b 1 0 a 0 (-1) (-b)
     end
+#pop-options
 
 val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma
   (requires is_prime p /\ d `divides` p /\ d `divides` a)

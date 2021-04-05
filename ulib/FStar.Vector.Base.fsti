@@ -274,7 +274,7 @@ val len:
   -> len_t
 
 /// A convenience to access the length of a t-vector as a nat
-[@"deprecated: this will be moved to the ghost effect"]
+[@@"deprecated: this will be moved to the ghost effect"]
 let length (#a:Type) (x:t a) : nat = U32.v (len x)
 
 /// Access the underlying raw vector

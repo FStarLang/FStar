@@ -84,7 +84,7 @@ let if_then_else
       (ens_else:M.post_t state a)
       (f:repr a state rel req_then ens_then)
       (g:repr a state rel req_else ens_else)
-      (p:Type0)
+      (p:bool)
     : Type
     =
   repr a state rel
@@ -92,19 +92,9 @@ let if_then_else
     (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
 reifiable reflectable
-layered_effect {
-  NMSTATE :
-    a:Type ->
-    state:Type u#2 ->
-    rel:P.preorder state ->
-    req:M.pre_t state ->
-    ens:M.post_t state a -> Effect
-  with
-    repr = repr;
-    return = return;
-    bind = bind;
-    subcomp = subcomp;
-    if_then_else = if_then_else
+effect {
+  NMSTATE (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 let get (#state:Type u#2) (#rel:P.preorder state) ()
@@ -156,7 +146,7 @@ let lift_pure_nmst
       (state:Type u#2)
       (rel:P.preorder state)
       (wp:pure_wp a)
-      (f:unit -> PURE a wp)
+      (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
@@ -167,6 +157,38 @@ let lift_pure_nmst
     x, n
 
 sub_effect PURE ~> NMSTATE = lift_pure_nmst
+
+
+(*
+ * A polymonadic bind between DIV and NMSTATE
+ *
+ * This is ultimately used when defining par and frame in Steel.Effect.fst
+ * par and frame try to compose reified Steel with Steel, since Steel is non total, its reification
+ *   incurs a Div effect, and so, we need a way to compose Div and Steel
+ *
+ * To do so, we have to go all the way down and have a story for MST and NMST too
+ *
+ * This polymonadic bind gives us bare minimum to realize that
+ * It is quite imprecise, in that it doesn't say anything about the post of the Div computation
+ * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
+ *   the way it is done for PURE and GHOST
+ *
+ * However, since the reification usecase gives us Dv anyway, this is fine for now
+ *)
+let bind_div_nmst (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (state:Type u#2) (rel:P.preorder state) (req:a -> M.pre_t state) (ens:a -> M.post_t state b)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b state rel (req x) (ens x)))
+: repr b state rel
+    (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
+    (fun s0 y s1 -> exists x. (ens x) s0 y s1)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun s0 ->
+  let x = f () in
+  (g x) s0
+
+polymonadic_bind (DIV, NMSTATE) |> NMSTATE = bind_div_nmst
+
 
 let nmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
@@ -182,3 +204,11 @@ let nmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
+
+let lift_nmst_total_nmst (a:Type) (state:Type u#2) (rel:P.preorder state)
+  (req:M.pre_t state) (ens:M.post_t state a)
+  (f:NMSTTotal.repr a state rel req ens)
+: repr a state rel req ens
+= fun (t, n) -> f (t, n)
+
+sub_effect NMSTTotal.NMSTATETOT ~> NMSTATE = lift_nmst_total_nmst

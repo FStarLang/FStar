@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.EncodeTerm
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -42,6 +43,7 @@ module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 module Env = FStar.TypeChecker.Env
+module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
 (*---------------------------------------------------------------------------------*)
@@ -98,13 +100,13 @@ let norm_with_steps steps env t =
   Profiling.profile
     (fun () -> N.normalize steps env t)
     (Some (Ident.string_of_lid (Env.current_module env)))
-    "FStar.TypeChecker.SMTEncoding.EncodeTerm.norm_with_steps"
+    "FStar.SMTEncoding.EncodeTerm.norm_with_steps"
 
 let normalize_refinement steps env t =
   Profiling.profile
     (fun () -> N.normalize_refinement steps env t)
     (Some (Ident.string_of_lid (Env.current_module env)))
-    "FStar.TypeChecker.SMTEncoding.EncodeTerm.normalize_refinement"
+    "FStar.SMTEncoding.EncodeTerm.normalize_refinement"
 
 let whnf env t =
     if head_normal env t then t
@@ -150,7 +152,7 @@ let raise_arity_mismatch head arity n_args rng =
                                         (BU.string_of_int n_args))
                                 rng
 
-//See issue #1750 and examples/bug-reports/Bug1750.fst
+//See issue #1750 and tests/bug-reports/Bug1750.fst
 let isTotFun_axioms pos head vars guards is_pure =
     let maybe_mkForall pat vars body =
         match vars with
@@ -185,13 +187,13 @@ let isTotFun_axioms pos head vars guards is_pure =
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
-let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
+let maybe_curry_app rng (head:either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
     match head with
-    | BU.Inr head -> //must curry
+    | Inr head -> //must curry
       mk_Apply_args head args
 
-    | BU.Inl head ->
+    | Inl head ->
         if n_args = arity
         then Util.mkApp'(head, args)
         else if n_args > arity
@@ -203,7 +205,7 @@ let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>)
 let maybe_curry_fvb rng fvb args =
     if fvb.fvb_thunked
     then mk_Apply_args (force_thunk fvb) args
-    else maybe_curry_app rng (BU.Inl (Var fvb.smt_id)) fvb.smt_arity args
+    else maybe_curry_app rng (Inl (Var fvb.smt_id)) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"
@@ -271,9 +273,9 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> BU.set_union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
+        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
         | None -> ()
-        | Some (x,_) ->
+        | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
         Errors.log_issue pos (Errors.Warning_SMTPatternIllFormed,
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
@@ -402,7 +404,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> varops.string_const s, []
+    | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
@@ -421,7 +423,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
       bs |> List.fold_left
       (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
-            let x = fst b in
+            let x = b.binder_bv in
             let xxsym, xx, env' = gen_term_var env x in
             let guard_x_t, decls' =
               encode_term_pred fuel_opt (norm env x.sort) env xx
@@ -658,7 +660,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, (k,_), _) ->
-        if (match k with BU.Inl t -> U.is_unit t | _ -> false)
+        if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
 
@@ -825,7 +827,28 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh module_name "Non_total_Tm_arrow" in
+        else 
+             (*
+              * AR: compute a hash for the Non total arrow,
+              *       that we will use in the name of the arrow
+              *       so that we can get some hashconsing
+              *)
+             let tkey_hash =
+               (*
+                * AR: any decls computed here are ignored
+                *     we encode terms in this let-scope just to compute a hash
+                *)
+               let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
+               let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
+               let ct, _ = encode_term (c |> U.comp_result) env_bs in
+               let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
+               let tkey = mkForall t.pos
+                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+               let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
+                 (c |> U.comp_effect_name |> string_of_lid) in
+               BU.digest_of_string tkey_hash in                 
+        
+             let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
@@ -845,7 +868,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               Some a_name,
                               a_name) in
 
-             t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
         let x, f =
@@ -856,8 +879,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           ] in
           match normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine(x, f)} ->
-            let b, f = SS.open_term [x, None] f in
-            fst (List.hd b), f
+            let b, f = SS.open_term [S.mk_binder x] f in
+            (List.hd b).binder_bv, f
           | _ -> failwith "impossible"
         in
 
@@ -971,15 +994,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               ||  S.fv_eq_lid fv Const.exists_lid) ->
           encode_deeply_embedded_quantifier t0 env
 
-        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _) ; (v1, _); (v2, _)]
-        | Tm_fvar fv,  [(v0, _); (v1, _); (v2, _)]
-            when S.fv_eq_lid fv Const.lexcons_lid ->
-            //lex tuples are primitive
-            let v0, decls0 = encode_term v0 env in
-            let v1, decls1 = encode_term v1 env in
-            let v2, decls2 = encode_term v2 env in
-            mk_LexCons v0 v1 v2, decls0@decls1@decls2
-
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
@@ -990,7 +1004,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
-            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
+            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
             encode_term e env
 
         | Tm_constant (Const_reflect _), [(arg, _)] ->
@@ -999,7 +1013,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | _ ->
             let args, decls = encode_args args_e env in
 
-            let encode_partial_app ht_opt =
+            let encode_partial_app (ht_opt:option<(S.typ * S.binders * S.comp)>) =
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
@@ -1013,14 +1027,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              (Print.comp_to_string c)
                              (Print.args_to_string args_e);
                     let formals, rest = BU.first_N (List.length args_e) formals in
-                    let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
+                    let subst = List.map2 (fun ({binder_bv=bv}) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
                             (Print.term_to_string ty);
                     let vars, pattern, has_type, decls'' =
                       let t_hyps, decls =
-                        List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
+                        List.fold_left2 (fun (t_hyps, decls) ({binder_bv=bv}) e ->
                           let t = SS.subst subst bv.sort in
                           let t_hyp, decls' = encode_term_pred None t env e in
                           if Env.debug env.tcenv (Options.Other "PartialApp")
@@ -1091,8 +1105,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (BU.Inl t, _), _) -> Some t
-                | Tm_ascribed(_, (BU.Inr c, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (Inl t, _), _) -> Some t
+                | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1147,13 +1161,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //          let reify_comp_and_body env body =
 //            let reified_body = TcUtil.reify_body env.tcenv body in
 //            let c = match c with
-//              | BU.Inl lc ->
+//              | Inl lc ->
 //                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
-//                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
+//                Inl (U.lcomp_of_comp (S.mk_Total typ))
 //
 //              (* In this case we don't have enough information to reconstruct the *)
 //              (* whole computation type and reify it *)
-//              | BU.Inr (eff_name, _) -> c
+//              | Inr (eff_name, _) -> c
 //            in
 //            c, reified_body
 //          in
@@ -1261,10 +1275,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
-      | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
+      | Tm_let((_, {lbname=Inr _}::_), _) ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
-      | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+      | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let((false, _::_), _) ->
@@ -1274,10 +1288,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
                                         let x = BU.left lbname in (* has to be Inl *)
-                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+                                        (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, pats) ->
+      | Tm_match(e, _, pats) ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1285,16 +1299,16 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term (U.ascribe e1 (BU.Inl t1, None)) env in
-        let xs, e2 = SS.open_term [(x, None)] e2 in
-        let x, _ = List.hd xs in
+        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None)) env in
+        let xs, e2 = SS.open_term [S.mk_binder x] e2 in
+        let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in
         let ee2, decls2 = encode_body e2 env' in
         ee2, decls1@decls2
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
-    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
+    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
@@ -1525,11 +1539,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, pats) ->
+        | Tm_match(e, _, pats) ->
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 
-        | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 
@@ -1542,12 +1556,19 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               mk_HasType x t, decls@decls'
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match (SS.compress r).n, (SS.compress msg).n with
-                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
-                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
-                  fallback phi
-                | _ ->
-                  fallback phi
+              begin match SE.unembed SE.e_range r false SE.id_norm_cb,
+                          SE.unembed SE.e_string msg false SE.id_norm_cb with
+              | Some r, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) r in
+                fallback phi
+
+              (* If we could not unembed the position, still use the string *)
+              | None, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, phi.pos, false))) phi.pos in
+                fallback phi
+
+              | _ ->
+                fallback phi
               end
 
             | Tm_fvar fv, [(t, _)]
@@ -1584,7 +1605,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in
         let guards = match pats with
-          | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
+          | [[{tm=App(Var gf, [p])}]] when Ident.string_of_lid Const.guard_free = gf -> []
           | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@decls'@decls'' in
 

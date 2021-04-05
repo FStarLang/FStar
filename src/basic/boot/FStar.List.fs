@@ -130,6 +130,10 @@ let fold_right f x a = List.fold_right f x a
 let fold_right2 f x y a = List.fold_right2 f x y a
 
 let rev_map_onto f l acc = fold_left (fun acc x -> f x :: acc) acc l
+let rec init = function
+  | [] -> failwith "init: empty list"
+  | [h] -> []
+  | h::t -> h::(init t)
 let last l = fold_left (fun _ x -> Some x) None l
 
 let mem x l = List.mem x l

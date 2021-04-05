@@ -1,5 +1,5 @@
 [
-  "?\u0006b,ΙUF\u0014“\u001eόζE=j",
+  "cθαρφZ›Ή<χΫ&ΊNZΠ",
   [
     [
       "MST.return",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "612f4a134d45d40e123a5ea40f36107a"
+      "1d8cd5379faee42819f8a8852fffa036"
     ],
     [
       "MST.bind",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "a0fc36216d52e1ee74a2cfe5b3a139de"
+      "40029d083a92bf80798853a63bf70bdd"
     ],
     [
       "MST.subcomp",
@@ -38,25 +38,31 @@
       1,
       [ "@query", "equation_MST.repr" ],
       0,
-      "3037df2ce1a7c327e02ed82c1d063032"
+      "9cd63289b329a16c3a4e325fc566fab2"
     ],
     [
       "MST.MSTATE",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "1c7e799e194a7d90aac922f62d12a561"
+      "736c3aef840c2b75682182b7968f1ffd"
     ],
     [
       "MST.MSTATE",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "df51cfd7063541fde88ce1a19a31820a"
+      "994394724e6b0f4fc3e98ffe38243f5c"
     ],
     [
       "MST.get",
@@ -70,7 +76,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "57ae72b6afe7b49a1dee51c04fca5892"
+      "318e1662ed3c60cf5df1ea17a0dee41c"
     ],
     [
       "MST.put",
@@ -79,7 +85,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "f9cb245a6c84950bddb418a595942b54"
+      "1366bd5ee3a2ebb3a73bd7429091f80c"
     ],
     [
       "MST.lift_pure_mst",
@@ -108,152 +114,56 @@
         "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
       ],
       0,
-      "56214eb578555068425b23c6ee6d5405"
+      "2da28f6aca5141663b2948fe364d0371"
     ],
     [
-      "MST.mst_assume",
+      "MST.bind_div_mst",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "91dd88bae2b046f680cd1e885cc29d13"
-    ],
-    [
-      "MST.mst_assert",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8979db96547a56560099dac482216067"
-    ],
-    [
-      "MST.return",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
-      0,
-      "2f027833b18118c8a9d486a3e9102a86"
-    ],
-    [
-      "MST.bind",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.transitive",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
-      0,
-      "243260b00effba4cb0e0c22f8bbf9971"
-    ],
-    [
-      "MST.subcomp",
-      2,
-      2,
-      1,
-      [ "@query", "equation_MST.repr" ],
-      0,
-      "9481b7f0d2635d6323ac7e9cf9870da9"
-    ],
-    [
-      "MST.MSTATE",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "33dc61156d79bc0628e6ae69a7799895"
-    ],
-    [
-      "MST.MSTATE",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8ded2a55c8a8c5f4dc62b21d9ac374b3"
-    ],
-    [
-      "MST.get",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
-      0,
-      "9566a0eedd97049b4c998efde8e6ecac"
-    ],
-    [
-      "MST.put",
-      2,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "e57672249648c6637b08908dae4b74a8"
-    ],
-    [
-      "MST.lift_pure_mst",
-      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "eq2-interp", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive", "equation_Prims.l_Forall",
         "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "function_token_typing_Prims.l_True",
-        "interpretation_Tm_abs_3308759af9fac4679594edec00089023",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "interpretation_Tm_abs_da437716eb372fac740da22fdb123c4f",
-        "l_imp-interp", "l_not-interp", "l_or-interp",
-        "l_quant_interp_88c8a67952914b773cd43f0fb2208112",
+        "interpretation_Tm_abs_660b749c51db3dcdfc0b740d078dacf4",
+        "l_and-interp", "l_quant_interp_fb0e58df28294033edc13d22038ea9c0",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
-        "typing_Tm_abs_3308759af9fac4679594edec00089023",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
+        "typing_Tm_abs_660b749c51db3dcdfc0b740d078dacf4"
       ],
       0,
-      "275b20def0c2d7662ce2baf0a1a0c867"
+      "8998a1db24e69a7ef8104f6db04d7554"
     ],
     [
       "MST.mst_assume",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
       0,
-      "f071f637ece1a3a65866adacd408f19e"
+      "bd5aa46af1614d63a7be2cf18de77472"
     ],
     [
       "MST.mst_assert",
-      2,
+      1,
       2,
       1,
       [ "@query" ],
       0,
-      "8d40faed78e6e19b5f356ecc5a7632c3"
+      "3d0f79cb7d0df42fd61ea4bb5a3385b1"
+    ],
+    [
+      "MST.lift_mst_total_mst",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4f0d54215029f1562acc46245fb7362c"
     ]
   ]
 ]

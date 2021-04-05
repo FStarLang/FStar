@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e162dab6e32d9a3af729d066001e0526"
+      "71f83505810f7d9b4fabe59311b5c70c"
     ],
     [
       "IST.f",
@@ -17,7 +17,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "1efe17a764618649d981ae14a7bebbd7"
+      "1e97542b1e90e1b285c9adf2f67be1c4"
     ],
     [
       "IST.g",
@@ -30,16 +30,7 @@
         "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
       ],
       0,
-      "b0cb42142d6a2d04d156f2d50f5179e9"
-    ],
-    [
-      "IST.op_Greater_Less",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4537ddc66384995d2e5e621dbcbd259d"
+      "24448d0d56bbf0521b8b03e441458aca"
     ]
   ]
 ]

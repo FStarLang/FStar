@@ -17,7 +17,7 @@ module Bane
 open FStar.Tactics
 (* To understand the naming convention on this file, please refer to
  * https://www.youtube.com/watch?v=w9wi0cPrU4U *)
-[@plugin]
+[@@plugin]
 val big_phi : int -> Tac unit
 let rec big_phi (n : int) =
     if n = 0
@@ -35,7 +35,7 @@ let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
      | None -> fail "Cannot apply t any more"
      | Some x -> repeat_or_fail t
 
-[@plugin]
+[@@plugin]
 let mytac () =
     norm [delta_only ["Bane.for_you12"]];
     seq (fun () -> repeatseq split)

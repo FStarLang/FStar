@@ -48,6 +48,16 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
         Some (embed er (Cfg.psc_range psc) (f a b) n)))
     | _ -> None
 
+let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (er:embedding<'r>)
+                 (psc:Cfg.psc) n (args : args) : option<term> =
+    match args with
+    | [(a, _); (b, _); (c, _)] ->
+        BU.bind_opt (try_unembed ea a n) (fun a ->
+        BU.bind_opt (try_unembed eb b n) (fun b ->
+        BU.bind_opt (try_unembed ec c n) (fun c ->
+        Some (embed er (Cfg.psc_range psc) (f a b c) n))))
+    | _ -> None
+
 let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
                      (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
     match args with
@@ -65,7 +75,17 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
         Some (NBET.embed er cb (f a b))))
     | _ -> None
 
-let mklid (nm : string) : lid = fstar_refl_basic_lid nm
+let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (er:NBET.embedding<'r>)
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
+    match args with
+    | [(a, _); (b, _); (c, _)] ->
+        BU.bind_opt (NBET.unembed ea cb a) (fun a ->
+        BU.bind_opt (NBET.unembed eb cb b) (fun b ->
+        BU.bind_opt (NBET.unembed ec cb c) (fun c ->
+        Some (NBET.embed er cb (f a b c)))))
+    | _ -> None
+
+let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
 let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<term>)
                                (nbe_fn : NBET.nbe_cbs -> NBET.args -> option<NBET.t>) : Cfg.primitive_step
@@ -91,6 +111,12 @@ let mk2 nm (f  : 'a  -> 'b  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding
     let l = mklid nm in
     mk l 2 (int2     l  f  ea  eb  er)
            (nbe_int2 l nf ena enb enr)
+
+let mk3 nm (f  : 'a  -> 'b  -> 'c  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding<'b>)       (ec  : embedding<'c>)       (er  : embedding<'r>)
+           (nf : 'na -> 'nb -> 'nc -> 'nr) (ena : NBET.embedding<'na>) (enb : NBET.embedding<'nb>) (enc : NBET.embedding<'nc>) (enr : NBET.embedding<'nr>) : Cfg.primitive_step =
+    let l = mklid nm in
+    mk l 3 (int3     l  f  ea  eb  ec  er)
+           (nbe_int3 l nf ena enb enc enr)
 
 let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_ln"            inspect_ln            E.e_term            E.e_term_view
@@ -123,8 +149,11 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_bv"               pack_bv               E.e_bv_view         E.e_bv
                                 pack_bv               NRE.e_bv_view       NRE.e_bv;
 
-    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option E.e_term)
-                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NRE.e_term);
+    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option e_vconfig)
+                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NBET.e_vconfig);
+
+    mk1 "embed_vconfig"         embed_vconfig         e_vconfig           E.e_term
+                                embed_vconfig         NBET.e_vconfig      NRE.e_term;
 
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
@@ -141,14 +170,23 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;
 
-    mk2 "pack_binder"           pack_binder           E.e_bv              E.e_aqualv         E.e_binder
-                                pack_binder           NRE.e_bv            NRE.e_aqualv       NRE.e_binder;
+    mk3 "pack_binder"           RB.pack_binder        E.e_bv              E.e_aqualv         (e_list E.e_term)          E.e_binder
+                                RB.pack_binder        NRE.e_bv            NRE.e_aqualv       (NBET.e_list NRE.e_term)   NRE.e_binder;
+
+    mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
+                                subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;
 
     mk2 "compare_bv"            compare_bv            E.e_bv              E.e_bv             E.e_order
                                 compare_bv            NRE.e_bv            NRE.e_bv           NRE.e_order;
 
     mk2 "is_free"               is_free               E.e_bv              E.e_term           e_bool
                                 is_free               NRE.e_bv            NRE.e_term         NBET.e_bool;
+
+    mk1 "free_bvs"              free_bvs              E.e_term            (e_list E.e_bv)
+                                free_bvs              NRE.e_term          (NBET.e_list NRE.e_bv);
+
+    mk1 "free_uvars"            free_uvars            E.e_term            (e_list e_int)
+                                free_uvars            NRE.e_term          (NBET.e_list NBET.e_int);
 
     mk2 "lookup_attr"           RB.lookup_attr        E.e_term            E.e_env            (e_list E.e_fv)
                                 RB.lookup_attr        NRE.e_term          NRE.e_env          (NBET.e_list NRE.e_fv);
@@ -179,6 +217,18 @@ let reflection_primops : list<Cfg.primitive_step> = [
 
     mk1 "env_open_modules"      env_open_modules      E.e_env             (e_list e_string_list)
                                 env_open_modules      NRE.e_env           (NBET.e_list NBET.e_string_list);
+
+    mk1 "implode_qn"            implode_qn            e_string_list       e_string
+                                implode_qn            NBET.e_string_list  NBET.e_string;
+
+    mk1 "explode_qn"            explode_qn            e_string            e_string_list
+                                explode_qn            NBET.e_string       NBET.e_string_list;
+
+    mk2 "compare_string"        compare_string        e_string            e_string          e_int
+                                compare_string        NBET.e_string       NBET.e_string     NBET.e_int;
+
+    mk2 "push_binder"           push_binder           E.e_env             E.e_binder        E.e_env
+                                push_binder           NRE.e_env           NRE.e_binder      NRE.e_env;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

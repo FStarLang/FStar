@@ -1,5 +1,5 @@
 [
-  "(§\u0014ø‘yÍ©ù$%JÕã¸e",
+  "ñ\u0013\u001d>¯‰$=åjÐO\n\";",
   [
     [
       "HoareDiv.bind",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "cfea4f0c29a6b522a3b919855ae53c8c"
+      "d495767494053d81870e1f13a54a15a6"
     ],
     [
       "HoareDiv.subcomp",
@@ -17,25 +17,31 @@
       1,
       [ "@query", "equation_HoareDiv.repr" ],
       0,
-      "e686c707763896f72700a7fb1f94e0df"
+      "09fa280d8cfc0489a73aca3b85691d2a"
     ],
     [
       "HoareDiv.HoareDiv",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "d60c7483ed8d7cfd7009d331be4af75e"
+      "503dd9860ac81fd56c7061c2fccceba8"
     ],
     [
       "HoareDiv.HoareDiv",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "186b1d98c59fbe6722e2cc4aa9ce7825"
+      "5057d0a32420c3b534a662a1f86ddfcf"
     ],
     [
       "HoareDiv.lift_pure_meff",
@@ -61,7 +67,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "4b24566b0abd3acec1501df0d5f95044"
+      "24971e981eabb6e00e22a6b1ceb5310d"
     ]
   ]
 ]

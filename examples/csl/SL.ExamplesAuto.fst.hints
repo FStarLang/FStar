@@ -20,7 +20,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "f2d32b5387026af6adad1897b827f865"
+      "5166ba7a90f3dae52403e694dc1b2c2d"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -41,7 +41,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "69004e5c0b497163ae9e078975f90c2d"
+      "746a274fbd22f45e61079fc1b241cad9"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -70,7 +70,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "eb157ede0d60dcb81f2d559e48ccbd5c"
+      "784c23ae1c5a3e49556de5d0786be10f"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -90,7 +90,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "0ad4d4d3a3cd67725d46501f94d685eb"
+      "0cdfc697e0b4e792d65cf09bedb2a5af"
     ],
     [
       "SL.ExamplesAuto.swap",
@@ -110,7 +110,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "2ebd5b6308b089367bcbe0c92dab75d8"
+      "a87c8286c3be531044ee36277681c240"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -132,7 +132,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "def701d8fbac773015dd13d895cf17c4"
+      "8526b5bcb5cfaec2816d740436bc03d9"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -153,7 +153,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "e7ee73ca7fcf3e005a7c86463fb147d8"
+      "36ffe8de6d8b0d2fc407f421e1d12679"
     ],
     [
       "SL.ExamplesAuto.rotate",
@@ -174,7 +174,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "3a54a9e1d18d49930f5daa53c1c00846"
+      "8f240744bb9ad5630f575538ccf7c6bf"
     ],
     [
       "SL.ExamplesAuto.test",
@@ -188,7 +188,7 @@
         "refinement_interpretation_Tm_refine_ea2a99e14d834976cda595df67a5314a"
       ],
       0,
-      "f9170b1904c90bbb93d69080196b2592"
+      "8337129b0a4f9a4c35cac99b494a90b6"
     ],
     [
       "SL.ExamplesAuto.test",
@@ -208,7 +208,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "a3f360bf7c16828da9e66ca3e8bbd341"
+      "81fa76f4a1c9869b9794df996e682524"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -230,7 +230,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "ad24c3d0943dd19be699056fe8746fd2"
+      "2df0c2dbc9d6f2ad82c7b7088ee97ce0"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -250,7 +250,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "90549cb37f89db8c1e5cbe2a4567535a"
+      "836005988bea7b96badd35fcf3c30d0d"
     ],
     [
       "SL.ExamplesAuto.write_read",
@@ -270,7 +270,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "4cbea83fe42273254c59ca2151adcef5"
+      "bce9a962a6fcbd4250317b8104484f96"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -291,7 +291,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "d7afc9d48aec6fe1ccd3e536d95ee00f"
+      "d910992aa18e73af050b050a17140c6e"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -312,7 +312,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "4dfeab9caf584c7c46c379a5c8c70bd0"
+      "1ae8e06f1886283b319bae9fc7d598e4"
     ],
     [
       "SL.ExamplesAuto.read_write",
@@ -332,7 +332,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "6fc8bdc9087735c0e5c0378e93c3ab66"
+      "8333628ce3d30282fe6744fc1064d69b"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -345,7 +345,7 @@
         "refinement_interpretation_Tm_refine_b44f0473d9ca4b4c16a5222f08655ced"
       ],
       0,
-      "6ad95b06b41520ec9fd0d6a7a111cdce"
+      "0728e99a6312c6cb875810680592e32a"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -357,7 +357,7 @@
         "refinement_interpretation_Tm_refine_0116e0bc649f2a43ee4109ea44fe62df"
       ],
       0,
-      "143d965dc6d09666e5ac88b37656d0b1"
+      "f6dbd9c90be2a0a3e4347c0e971ec593"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -370,7 +370,7 @@
         "refinement_interpretation_Tm_refine_b44f0473d9ca4b4c16a5222f08655ced"
       ],
       0,
-      "ac4f71c12cf197bf83eb683927eac9ff"
+      "af8baef48cf1dcc9584785260d438c6e"
     ],
     [
       "SL.ExamplesAuto.cond_test",
@@ -382,19 +382,7 @@
         "refinement_interpretation_Tm_refine_0116e0bc649f2a43ee4109ea44fe62df"
       ],
       0,
-      "b66f13f40e2351e59c21e21784cd0778"
-    ],
-    [
-      "SL.ExamplesAuto.cond_test",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
-      ],
-      0,
-      "b9694f55e2140a0741bd387b2ca8f2c0"
+      "5ddc7504b4dae5c6229dad70112d662c"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -406,7 +394,7 @@
         "refinement_interpretation_Tm_refine_682d04f8a4d51a15f646bfd4961ef01a"
       ],
       0,
-      "558c3278a110ba25df1de9852ddb5bae"
+      "ad681b80513feef4ada993fd2e06fc23"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -419,7 +407,7 @@
         "refinement_interpretation_Tm_refine_80a47aecdbb3cb2ff3966bdb3c7dec5d"
       ],
       0,
-      "060812960b069b86707844ba1187327c"
+      "737b090477b742dd6c852dfa9421a50c"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -436,7 +424,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "52649f193fd87c163167386352161ac0"
+      "19f12b00fe55cdb8723fadcf1f4b4e02"
     ],
     [
       "SL.ExamplesAuto.rotate_left_or_right",
@@ -454,19 +442,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "0da3b8ec1cc729e4893343ada7629c86"
-    ],
-    [
-      "SL.ExamplesAuto.rotate_left_or_right",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
-      ],
-      0,
-      "b8f426343717819968570b340e681fac"
+      "289fffce64dca1175b7dbc2f750cf31a"
     ]
   ]
 ]

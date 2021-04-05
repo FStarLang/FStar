@@ -1,5 +1,5 @@
 [
-  "„dÏuNnÉ\u001bî„ÅY\u001fû.g",
+  "c^é_ÆÖÅ³¸d—’-é<",
   [
     [
       "Monad.__proj__Mkmonad__item__laws",
@@ -13,7 +13,7 @@
         "projection_inverse_Monad.Mkmonad_return"
       ],
       0,
-      "6678902a313ea68a521bbcb71f7a9dc1"
+      "0f2164c8893a3e740a2f6e37694f97c1"
     ],
     [
       "Monad.g",
@@ -21,12 +21,17 @@
       2,
       1,
       [
-        "@query", "equation_Monad.bind", "equation_Monad.return",
+        "@MaxIFuel_assumption", "@query", "equation_Monad.bind",
+        "equation_Monad.return", "fuel_guarded_inversion_Monad.monad",
+        "interpretation_Tm_abs_7e0972babf629178f399d8ce42293ce3",
+        "interpretation_Tm_abs_a0faf8ac82f106d2f81e4f58d8caae04",
+        "token_correspondence_Monad.__proj__Mkmonad__item__bind",
+        "token_correspondence_Monad.__proj__Mkmonad__item__return",
         "token_correspondence_Monad.bind",
         "token_correspondence_Monad.return"
       ],
       0,
-      "27c0cf7dbf8f8245a2fc6b97c44cb928"
+      "b73f77e0058bffe737347d57c26cb5a3"
     ],
     [
       "Monad.g'",
@@ -34,52 +39,17 @@
       2,
       1,
       [
-        "@query", "equation_Monad.bind", "equation_Monad.return",
+        "@MaxIFuel_assumption", "@query", "equation_Monad.bind",
+        "equation_Monad.return", "fuel_guarded_inversion_Monad.monad",
+        "interpretation_Tm_abs_7e0972babf629178f399d8ce42293ce3",
+        "interpretation_Tm_abs_a0faf8ac82f106d2f81e4f58d8caae04",
+        "token_correspondence_Monad.__proj__Mkmonad__item__bind",
+        "token_correspondence_Monad.__proj__Mkmonad__item__return",
         "token_correspondence_Monad.bind",
         "token_correspondence_Monad.return"
       ],
       0,
-      "ecf5943515e0be6ea139fd0d197f4a29"
-    ],
-    [
-      "Monad.__proj__Mkmonad__item__laws",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Monad.Mkmonad_bind",
-        "proj_equation_Monad.Mkmonad_return",
-        "projection_inverse_Monad.Mkmonad_bind",
-        "projection_inverse_Monad.Mkmonad_return"
-      ],
-      0,
-      "582d810748fe121f7acdb826e8b411d0"
-    ],
-    [
-      "Monad.g",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Monad.bind", "equation_Monad.return",
-        "token_correspondence_Monad.bind",
-        "token_correspondence_Monad.return"
-      ],
-      0,
-      "6d0572012d4946596c7ccb917e6a6924"
-    ],
-    [
-      "Monad.g'",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Monad.bind", "equation_Monad.return",
-        "token_correspondence_Monad.bind",
-        "token_correspondence_Monad.return"
-      ],
-      0,
-      "7ddacd06c89e05f683544083b02f0f4d"
+      "fca1f660504b3b404a7f2a9dd8acc1bd"
     ]
   ]
 ]

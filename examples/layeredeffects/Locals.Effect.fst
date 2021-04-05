@@ -71,7 +71,7 @@ let subcomp (a:Type)
 let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a (fun post m -> (p ==> wp_f post m) /\ ((~ p) ==> wp_g post m))
 
@@ -92,7 +92,7 @@ assume Pure_wp_monotonicity:
        (wp p ==> wp q))
 
 let lift_pure_lvars (a:Type)
-  (wp:pure_wp a) (f:unit -> PURE a wp)
+  (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a (fun p m -> wp (fun x -> p x m))
 = fun m -> f (), m
 
@@ -183,6 +183,6 @@ let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length 
 
 /// Termination check failure
 
-[@expect_failure]
+[@@expect_failure]
 let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
 = test2 l
