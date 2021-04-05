@@ -91,6 +91,9 @@ let admit_pre (p:pre_t) : pre_t = p
 let admit_post (#a:Type) (p:post_t a) : post_t a = p
 
 val can_be_split (p q:pre_t) : Type0
+val reveal_can_be_split (_:unit) : Lemma
+  (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
+
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
 
 let can_be_split_dep (p:prop) (t1 t2:pre_t) = p ==> can_be_split t1 t2
@@ -162,6 +165,8 @@ val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
 val vemp' :vprop'
 [@__reduce__]
 unfold let vemp = VUnit vemp'
+
+val reveal_vemp (_:unit) : Lemma (hp_of vemp == emp /\ t_of vemp == unit)
 
 open FStar.Tactics
 

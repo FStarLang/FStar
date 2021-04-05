@@ -10,6 +10,8 @@ module Eff = Steel.Effect
 
 let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 
+let reveal_can_be_split () = ()
+
 let can_be_split_trans p q r = ()
 let can_be_split_star_l p q = ()
 let can_be_split_star_r p q = ()
@@ -22,11 +24,12 @@ let intro_can_be_split_frame p q frame = ()
 let can_be_split_post_elim t1 t2 = ()
 let equiv_forall_elim t1 t2 = ()
 
-
 let vemp':vprop' =
   { hp = emp;
     t = unit;
     sel = fun _ -> ()}
+
+let reveal_vemp () = ()
 
 let equiv_refl x = ()
 let equiv_sym x y = ()

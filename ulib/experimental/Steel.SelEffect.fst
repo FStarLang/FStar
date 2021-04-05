@@ -7,7 +7,7 @@ open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
 module Eff = Steel.Effect
 
-friend Steel.SelEffect.Common
+let _:squash (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q)) = reveal_can_be_split ()
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
@@ -928,6 +928,8 @@ let as_steelsel (#a:Type)
   ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = as_steelsel1 (reify (f ()))
+
+let _:squash (hp_of vemp == emp /\ t_of vemp == unit) = reveal_vemp ()
 
 unfold
 let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
