@@ -1206,7 +1206,7 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
   | Tv_Uvar _ _ -> 1
   | Tv_App _ _ ->
     let hd, args = collect_app t in
-    if term_eq hd (`star) then
+    if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
 
       // Only count the number of unresolved slprops, not program implicits
       fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
