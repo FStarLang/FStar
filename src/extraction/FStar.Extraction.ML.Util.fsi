@@ -17,6 +17,7 @@
 module FStar.Extraction.ML.Util
 open Prims
 open FStar
+open FStar.Pervasives
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 module S = FStar.Syntax.Syntax
@@ -39,7 +40,7 @@ type unfold_t = mlty -> option<mlty>
 val type_leq_c : unfold_ty:unfold_t -> e:option<mlexpr> -> t:mlty -> t':mlty -> bool * option<mlexpr>
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
 val erase_effect_annotations: mlty -> mlty
-val is_type_abstraction : list<(BU.either<'a,'b> * 'c)> -> bool
+val is_type_abstraction : list<(either<'a,'b> * 'c)> -> bool
 val is_xtuple : list<string> * string -> option<int>
 val is_xtuple_ty : list<string> * string -> option<int>
 val resugar_exp : e:mlexpr -> mlexpr

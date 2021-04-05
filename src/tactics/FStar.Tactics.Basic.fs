@@ -2,6 +2,7 @@
 module FStar.Tactics.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -147,8 +148,7 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
     try
         let res =
           if allow_guards
-          then let env = { env with unif_allow_ref_guards = allow_guards } in
-               Rel.try_teq false env t1 t2
+          then Rel.try_teq true env t1 t2
           else Rel.teq_nosmt env t1 t2
         in
         if dbg then
@@ -160,7 +160,7 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
         match res with
         | None ->
           ret None
-        | Some g -> 
+        | Some g ->
           bind (add_implicits g.implicits) (fun () ->
           ret (Some g))
 
@@ -340,7 +340,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (TcTerm.type_of_tot_term e t)
+    try ret (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -609,7 +609,7 @@ let refine_intro () : tac<unit> = wrap_err "refine_intro" <|
     | t, Some (bv, phi) ->
         let g1 = goal_with_type g t in
         let bv, phi = match SS.open_term [S.mk_binder bv] phi with
-                      | bvs, phi -> fst (List.hd bvs), phi
+                      | bvs, phi -> (List.hd bvs).binder_bv, phi
         in
         bind (mk_irrelevant_goal "refine_intro refinement" (goal_env g)
                     (SS.subst [S.NT (bv, (goal_witness g))] phi) g.opts g.label) (fun g2 ->
@@ -676,11 +676,11 @@ let rec  __try_unify_by_application
             fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
-            bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
+            bind (new_uvar "apply arg" e b.binder_bv.sort) (fun (uvt, uv) ->
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
-            let typ' = SS.subst [S.NT (fst b, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, snd b, uv)::acc) e typ' ty2))
+            let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
+            __try_unify_by_application only_match ((uvt, b.binder_qual, uv)::acc) e typ' ty2))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
@@ -768,6 +768,22 @@ let rec fold_left (f : ('a -> 'b -> tac<'b>)) (e : 'b) (xs : list<'a>) : tac<'b>
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
 
+let check_lemma_implicits_solution env (t:term) (k:typ) : guard_t =
+  let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+
+  let slow_path () =
+    let must_tot = false in  //since we are typechecking lemma implicits
+    //expected type is already set in the env
+    let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
+    g in
+
+  match TcTerm.typeof_tot_or_gtot_term_fastpath env t false with
+  | None -> slow_path ()
+  | Some k' ->
+    match Rel.subtype_nosmt env k' k with
+    | None -> slow_path ()
+    | Some g -> g
+
 let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
@@ -784,7 +800,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     | None -> fail "not a lemma or squashed function"
     | Some (pre, post) ->
     bind (
-       fold_left (fun (b, aq) (uvs, imps, subst) ->
+       fold_left (fun ({binder_bv=b;binder_qual=aq}) (uvs, imps, subst) ->
                let b_t = SS.subst subst b.sort in
                if is_unit_t b_t
                then
@@ -846,8 +862,8 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
-                            true env term ctx_uvar.ctx_uvar_typ
+                  // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
+                  check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
@@ -905,16 +921,16 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac<option<(bv * goal)>> =
         let bs'', t'' = SS.open_term bs' t' in
 
         (* b2 has been freshened *)
-        let b2 = fst (List.hd bs'') in
+        let b2 = (List.hd bs'').binder_bv in
 
         (* Make a new goal in the new env (with new binders) *)
-        let new_env = push_bvs e0 (List.map fst bs'') in
+        let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
         bind (new_uvar "subst_goal" new_env t'') (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
         (* Solve the old goal with an application of the new witness *)
         let sol = U.mk_app (U.abs bs'' uvt None)
-                            (List.map (fun (bv, q) -> S.as_arg (S.bv_to_name bv)) bs) in
+                            (List.map (fun ({binder_bv=bv;binder_qual=q}) -> S.as_arg (S.bv_to_name bv)) bs) in
         bind (set_solution g sol) (fun () ->
 
         ret (Some (b2, goal'))))
@@ -924,7 +940,7 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac<option<(bv * goal)>> =
 
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind cur_goal (fun goal ->
-    let bv, _ = h in
+    let bv = h.binder_bv in
     mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
@@ -946,12 +962,12 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs'', t'' = SS.open_term bs' t' in
 
-             let new_env = push_bvs e0 (bv::(List.map fst bs'')) in
+             let new_env = push_bvs e0 (bv::(List.map (fun b -> b.binder_bv) bs'')) in
 
              bind (new_uvar "rewrite" new_env t'') (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs bs'' uvt None)
-                                 (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) in
+                                 (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
 
              (* See comment in subst_goal *)
              bind (set_solution goal sol) (fun () ->
@@ -964,17 +980,17 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
 let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind cur_goal (fun goal ->
-    let bv, q = b in
+    let bv = b.binder_bv in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     bind (subst_goal bv bv' goal) (function
     | None -> fail "binder not found in environment"
     | Some (bv',  goal) ->
         bind (replace_cur goal) (fun () ->
-        ret (bv', q))))
+        ret ({b with binder_bv=bv'}))))
 
 let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     bind cur_goal (fun goal ->
-    let bv, _ = b in
+    let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
@@ -1001,7 +1017,7 @@ let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
 (* TODO: move to bv *)
 let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_err "norm_binder_type" <|
     bind cur_goal (fun goal ->
-    let bv, _ = b in
+    let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) -> begin
@@ -1018,7 +1034,7 @@ let revert () : tac<unit> =
     match Env.pop_bv (goal_env goal) with
     | None -> fail "Cannot revert; empty context"
     | Some (x, env') ->
-        let typ' = U.arrow [(x, None)] (mk_Total (goal_type goal)) in
+        let typ' = U.arrow [S.mk_binder x] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ') (fun (r, u_r) ->
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
@@ -1028,7 +1044,7 @@ let free_in bv t =
     Util.set_mem bv (SF.names t)
 
 let clear (b : binder) : tac<unit> =
-    let bv = fst b in
+    let bv = b.binder_bv in
     bind cur_goal (fun goal ->
     mlog (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
                         (Print.binder_to_string b)
@@ -1147,7 +1163,7 @@ let longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list
 let join_goals g1 g2 : tac<goal> =
     (* The one in Syntax.Util ignores null_binders, why? *)
     let close_forall_no_univs bs f =
-        List.fold_right (fun b f -> U.mk_forall_no_univ (fst b) f) bs f
+        List.fold_right (fun b f -> U.mk_forall_no_univ b.binder_bv f) bs f
     in
     match get_phi g1 with
     | None -> fail "goal 1 is not irrelevant"
@@ -1415,8 +1431,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in
-                          let bs' = List.map (fun (bv, aq) -> (rename_bv bv, aq)) bs in
-                          let subst = List.map2 (fun (bv, _) (bv', _) -> NT (bv, bv_to_name bv')) bs bs' in
+                          let bs' = List.map (fun b -> {b with binder_bv=rename_bv b.binder_bv}) bs in
+                          let subst = List.map2 (fun ({binder_bv=bv}) ({binder_bv=bv'}) -> NT (bv, bv_to_name bv')) bs bs' in
                           SS.subst_binders subst bs', SS.subst_comp subst comp
                         in
 
@@ -1431,11 +1447,11 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let a_ps, a_is = List.splitAt nparam args in
                         failwhen (List.length a_ps <> List.length d_ps) "params not match?" (fun () ->
                         let d_ps_a_ps = List.zip d_ps a_ps in
-                        let subst = List.map (fun ((bv, _), (t, _)) -> NT (bv, t)) d_ps_a_ps in
+                        let subst = List.map (fun (({binder_bv=bv}), (t, _)) -> NT (bv, t)) d_ps_a_ps in
                         let bs = SS.subst_binders subst bs in
-                        let subpats_1 = List.map (fun ((bv, _), (t, _)) ->
+                        let subpats_1 = List.map (fun (({binder_bv=bv}), (t, _)) ->
                                                  (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
-                        let subpats_2 = List.map (fun (bv, aq) ->
+                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=aq}) ->
                                                  (mk_pat (Pat_var bv), is_imp aq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
@@ -1463,7 +1479,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, brs)) s_tm.pos in
+      let w = mk (Tm_match (s_tm, None, brs)) s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos)))))
@@ -1542,7 +1558,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         let b = (match b' with
         | [b'] -> b'
         | _ -> failwith "impossible") in
-        ret <| Tv_Refine (fst b, t)
+        ret <| Tv_Refine (b.binder_bv, t)
 
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
@@ -1553,8 +1569,8 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             let b = S.mk_binder bv in
             let bs, t2 = SS.open_term [b] t2 in
@@ -1562,24 +1578,24 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, lb.lbattrs, fst b, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> ret <| Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> ret <| Tv_Unknown // no top level lets
+        | Inl bv ->
             let lbs, t2 = SS.open_let_rec [lb] t2 in
             match lbs with
             | [lb] ->
                 (match lb.lbname with
-                 | BU.Inr _ -> ret Tv_Unknown
-                 | BU.Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
+                 | Inr _ -> ret Tv_Unknown
+                 | Inl bv -> ret <| Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2))
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, brs) ->
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -1590,7 +1606,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         in
         let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        ret <| Tv_Match (t, brs)
+        ret <| Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         ret <| Tv_Unknown
@@ -1636,15 +1652,15 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
         ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -1656,13 +1672,13 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, brs)) Range.dummyRange
+        ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
@@ -1690,9 +1706,9 @@ let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" 
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, brs) ->
+    | Tm_match (e, asc_opt, brs) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, brs')) l.pos in
+      let l' = mk (Tm_match (e, asc_opt, brs')) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->

@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -62,14 +63,14 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
   || solve_deferred
   then
     let solve_now, defer =
-      g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
+      g.deferred |> List.partition (fun (_, _, p) -> Rel.flex_prob_closing env xs p)
     in
     if Env.debug env <| Options.Other "Rel"
     then begin
       BU.print_string "SOLVE BEFORE CLOSING:\n";
-      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
+      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
       BU.print_string " ...DEFERRED THE REST:\n";
-      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
+      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
     let g = Rel.solve_non_tactic_deferred_constraints env ({g with deferred=solve_now}) in
@@ -302,10 +303,10 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
            && Options.ml_ish() //NS: Disabling this optimization temporarily
            then S.tun
            else let ret_wp = ed |> U.get_return_vc_combinator in
-                N.normalize [Env.Beta; Env.NoFullNorm] env
-                            (mk_Tm_app (inst_effect_fun_with [u_a] env ed ret_wp)
-                                       [S.as_arg a; S.as_arg e]
-                                       e.pos) in
+                mk_Tm_app
+                  (inst_effect_fun_with [u_a] env ed ret_wp)
+                  [S.as_arg a; S.as_arg e]
+                  e.pos in
          mk_comp ed u_a a wp [RETURN]
   in
   if debug env <| Options.Other "Return"
@@ -344,14 +345,14 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, a); NT (x_b |> fst, e)]
+    env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
     (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
              (Print.binder_to_string b)
              (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
              (Range.string_of_range r)) r in
 
   let subst = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
 
   let is =
@@ -634,7 +635,7 @@ let mk_indexed_bind env
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
+    env rest_bs [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s at %s"
       (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
@@ -648,15 +649,16 @@ let mk_indexed_bind env
              (Print.term_to_string t)
              (match u.ctx_uvar_meta with
               | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
-              | _ -> "<no attr>"));
+              | _ -> "<no attr>")
+         | _ -> failwith ("Impossible, expected a uvar, got : " ^ Print.term_to_string t));
 
   let subst = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
 
   let f_guard =  //unify c1's indices with f's indices in the bind_wp
     let f_sort_is = effect_args_from_repr
-      (SS.compress (f_b |> fst).sort)
+      (SS.compress f_b.binder_bv.sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
       (fun g i1 f_i1 -> 
@@ -675,10 +677,10 @@ let mk_indexed_bind env
       | Some x -> S.mk_binder x in
 
     let g_sort_is : list<term> =
-      match (SS.compress (g_b |> fst).sort).n with
+      match (SS.compress g_b.binder_bv.sort).n with
       | Tm_arrow (bs, c) ->
         let bs, c = SS.open_comp bs c in
-        let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
+        let bs_subst = NT ((List.hd bs).binder_bv, x_a.binder_bv |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
         |> List.map (SS.subst subst)
@@ -1400,19 +1402,19 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, a)]
+    env rest_bs [NT (a_b.binder_bv, a)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s:conjunction at %s"
       (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
       (r |> Range.string_of_range)) r in
 
   let substs = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::(rest_bs@[p_b])) (a::(rest_bs_uvars@[p])) in
 
   let f_guard =
     let f_sort_is =
-      match (SS.compress (f_b |> fst).sort).n with
+      match (SS.compress f_b.binder_bv.sort).n with
       | Tm_app (_, _::is) ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
@@ -1422,7 +1424,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 
   let g_guard =
     let g_sort_is =
-      match (SS.compress (g_b |> fst).sort).n with
+      match (SS.compress g_b.binder_bv.sort).n with
       | Tm_app (_, _::is) ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
@@ -1474,6 +1476,35 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
                (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
   let md     = Env.get_effect_decl env C.effect_PURE_lid in
   mk_comp md u t wp []
+
+(*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+let get_neg_branch_conds (branch_conds:list<formula>)
+  : list<formula> * formula
+  = branch_conds
+    |> List.fold_left (fun (conds, acc) g ->
+        let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
+        (conds@[cond]), cond) ([U.t_true], U.t_true)
+    |> fst
+    |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
+    |> (fun (l1, l2) -> l1, List.hd l2)
 
 (*
  * The formula in lcases is the individual branch guard, a boolean
@@ -1528,15 +1559,7 @@ let bind_cases env0 (res_t:typ)
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
             let neg_branch_conds, exhaustiveness_branch_cond =
-              lcases
-              |> List.map (fun (g, _, _, _) -> g)
-              |> List.fold_left (fun (conds, acc) g ->
-                  let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
-                  (conds@[cond]), cond) ([U.t_true], U.t_true)
-              |> fst
-              |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
-              |> (fun (l1, l2) -> l1, List.hd l2) in
-
+              get_neg_branch_conds (lcases |> List.map (fun (g, _, _, _) -> g)) in
 
             let md, comp, g_comp =
               match lcases with
@@ -1740,7 +1763,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, branches), _ ->
+    | Tm_match (_, _, branches), _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe
@@ -1772,8 +1795,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
     let should_coerce =
-         not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
-      || env.phase1 // otherwise only on phase1
+        env.phase1
       || env.lax
       || Options.lax ()
     in
@@ -2080,6 +2102,12 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
+let maybe_implicit_with_meta_or_attr aq (attrs:list<attribute>) =
+  match aq, attrs with
+  | Some (Meta _), _
+  | Some (Implicit _), _::_ -> true
+  | _ -> false
+
 let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
   if not env.instantiate_imp
@@ -2105,7 +2133,7 @@ let maybe_instantiate (env:Env.env) e t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -2137,7 +2165,7 @@ let maybe_instantiate (env:Env.env) e t =
               let rec aux subst inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, (x, Some (Implicit _))::rest ->
+                  | _, ({binder_bv=x; binder_qual=Some (Implicit _);binder_attrs=[]})::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
@@ -2147,14 +2175,16 @@ let maybe_instantiate (env:Env.env) e t =
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
-                  | _, (x, Some (Meta tac_or_attr))::rest ->
+                  | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
+                    when maybe_implicit_with_meta_or_attr qual attrs ->
                       let t = SS.subst subst x.sort in
                       let meta_t = 
-                        match tac_or_attr with
-                        | Arg_qualifier_meta_tac tau ->
+                        match qual, attrs with
+                        | Some (Meta tau), _ ->
                           Ctx_uvar_meta_tac (mkdyn env, tau)
-                        | Arg_qualifier_meta_attr attr ->
+                        | _, attr::_ ->
                           Ctx_uvar_meta_attr attr
+                        | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
                       let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
                                                          e.pos env t Strict
@@ -2196,27 +2226,32 @@ let maybe_instantiate (env:Env.env) e t =
 (************************************************************************)
 //check_has_type env e t1 t2
 //checks is e:t1 has type t2, subject to some guard.
-let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+
+let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
   let env = Env.set_range env e.pos in
-  let check env t1 t2 =
+
+  let g_opt =
     if env.use_eq_strict
     then match Rel.teq_nosmt_force env t1 t2 with
-         | false -> None
-         | true -> Env.trivial_guard |> Some
+       | false -> None
+       | true -> Env.trivial_guard |> Some
     else if env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
-            | None -> None
-            | Some f -> Some <| apply_guard f e
-  in
+             | None -> None
+             | Some f -> apply_guard f e |> Some in
+
+  match g_opt with
+  | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
+  | Some g -> g
+  
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+  let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
-  match check env lc.res_typ t2 with
-  | None ->
-    raise_error (Err.expected_expression_of_type env t2 e lc.res_typ) (Env.get_range env)
-  | Some g ->
-    if debug env <| Options.Other "Rel" then
-      BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    e, lc, (Env.conj_guard g g_c)
+  let g = check_has_type env e lc.res_typ t2 in
+  if debug env <| Options.Other "Rel" then
+    BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
+  e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
@@ -2298,23 +2333,23 @@ let short_circuit_head l =
 (************************************************************************)
 let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
     let pos bs = match bs with
-        | (hd, _)::_ -> S.range_of_bv hd
+        | ({binder_bv=hd})::_ -> S.range_of_bv hd
         | _ -> Env.get_range env in
     match bs with
-        | (_, Some (Implicit _))::_ -> bs //bs begins with an implicit binder; don't add any
+        | ({binder_qual=Some (Implicit _)})::_ -> bs //bs begins with an implicit binder; don't add any
         | _ ->
           match Env.expected_typ env with
             | None -> bs
             | Some t ->
                 match (SS.compress t).n with
                     | Tm_arrow(bs', _) ->
-                      begin match BU.prefix_until (function (_, Some (Implicit _)) -> false | _ -> true) bs' with
+                      begin match BU.prefix_until (function ({binder_qual=Some (Implicit _)}) -> false | _ -> true) bs' with
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (string_of_id x.ppname) "'")
+                          if imps |> BU.for_all (fun ({binder_bv=x}) -> BU.starts_with (string_of_id x.ppname) "'")
                           then let r = pos bs in
-                               let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
+                               let imps = imps |> List.map (fun b -> { b with binder_bv = (S.set_range_of_bv b.binder_bv r) }) in
                                imps@bs //we have a prefix of ticked variables
                           else bs
                       end
@@ -2361,7 +2396,6 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) Range.dummyRange
-
 
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it
@@ -2597,7 +2631,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
     (match bs with
      | a::bs ->
        //is is all the uvars, and g is their collective guard
-       let is, g = Env.uvars_for_binders env bs [NT (fst a, a_tm)]
+       let is, g = Env.uvars_for_binders env bs [NT (a.binder_bv, a_tm)]
          (fun b -> BU.format3
            "uvar for binder %s when creating a fresh repr for %s at %s"
            (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
@@ -2612,7 +2646,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
-          let is_args = List.map2 (fun i (_, aqual) -> (i, aqual)) is bs in
+          let is_args = List.map2 (fun i ({binder_qual=aqual}) -> (i, aqual)) is bs in
           S.mk_Tm_app
             repr
             (S.as_arg a_tm::is_args)
@@ -2634,7 +2668,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   | Tm_arrow (bs, _) ->
     let bs = SS.open_binders bs in
     (match bs with
-     | (a', _)::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
+     | ({binder_bv=a'})::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
 
@@ -2688,7 +2722,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
         "either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, g = Env.uvars_for_binders env rest_bs
-    [NT (a_b |> fst, a)]
+    [NT (a_b.binder_bv, a)]
     (fun b -> BU.format4
       "implicit var for binder %s of %s~>%s at %s"
       (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
@@ -2699,11 +2733,11 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
 
   let substs = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::rest_bs) (a::rest_bs_uvars) in
 
   let guard_f =
-    let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
+    let f_sort = f_b.binder_bv.sort |> SS.subst substs |> SS.compress in
     let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
     List.fold_left2
       (fun g i1 i2 -> Env.conj_guard g (Rel.layered_effect_teq env i1 i2 (Some lift_name)))
@@ -2766,11 +2800,11 @@ let get_field_projector_name env datacon index =
         (Ident.string_of_lid datacon) (string_of_int n) (string_of_int index)) (Env.get_range env) in
   match (SS.compress t).n with
   | Tm_arrow (bs, _) ->
-    let bs = bs |> List.filter (fun (_, q) -> match q with | Some (Implicit true) -> false | _ -> true) in
+    let bs = bs |> List.filter (fun ({binder_qual=q}) -> match q with | Some (Implicit true) -> false | _ -> true) in
     if List.length bs <= index then err (List.length bs)
     else
       let b = List.nth bs index in
-      U.mk_field_projector_name datacon (fst b) index
+      U.mk_field_projector_name datacon b.binder_bv index
   | _ -> err 0
 
 

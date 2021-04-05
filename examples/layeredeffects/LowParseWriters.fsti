@@ -1216,7 +1216,7 @@ let destr_repr_impl
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-  (f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
+  ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
 : Tot (repr_impl a r_in r_out pre post post_err l (destr_repr_spec a r_in r_out pre post post_err l f_destr_spec))
 = Repr?.impl (reify (f_destr_spec ()))
 

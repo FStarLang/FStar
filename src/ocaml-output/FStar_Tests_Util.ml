@@ -54,12 +54,12 @@ let rec (term_eq' :
       let binders_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
-             (fun uu___ ->
-                fun uu___1 ->
-                  match (uu___, uu___1) with
-                  | ((x1, uu___2), (y1, uu___3)) ->
-                      term_eq' x1.FStar_Syntax_Syntax.sort
-                        y1.FStar_Syntax_Syntax.sort) xs ys) in
+             (fun x1 ->
+                fun y1 ->
+                  term_eq'
+                    (x1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                    (y1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
+             xs ys) in
       let args_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
@@ -175,8 +175,10 @@ let rec (term_eq' :
           -> args_eq [s1; s2] [t12; t22]
       | (FStar_Syntax_Syntax.Tm_app (t, args), FStar_Syntax_Syntax.Tm_app
          (s, args')) -> (term_eq' t s) && (args_eq args args')
-      | (FStar_Syntax_Syntax.Tm_match (t, pats), FStar_Syntax_Syntax.Tm_match
-         (t', pats')) ->
+      | (FStar_Syntax_Syntax.Tm_match
+         (t, FStar_Pervasives_Native.None, pats),
+         FStar_Syntax_Syntax.Tm_match
+         (t', FStar_Pervasives_Native.None, pats')) ->
           (((FStar_List.length pats) = (FStar_List.length pats')) &&
              (FStar_List.forall2
                 (fun uu___ ->
@@ -186,9 +188,9 @@ let rec (term_eq' :
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed
-         (t12, (FStar_Util.Inl t22, uu___), uu___1),
+         (t12, (FStar_Pervasives.Inl t22, uu___), uu___1),
          FStar_Syntax_Syntax.Tm_ascribed
-         (s1, (FStar_Util.Inl s2, uu___2), uu___3)) ->
+         (s1, (FStar_Pervasives.Inl s2, uu___2), uu___3)) ->
           (term_eq' t12 s1) && (term_eq' t22 s2)
       | (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), t),
          FStar_Syntax_Syntax.Tm_let ((is_rec', lbs'), s)) when

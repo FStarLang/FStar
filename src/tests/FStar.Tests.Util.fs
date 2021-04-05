@@ -2,6 +2,7 @@
 module FStar.Tests.Util
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Errors
 open FStar.Util
@@ -37,7 +38,7 @@ let rec term_eq' t1 t2 =
     let t2 = SS.compress t2 in
     let binders_eq xs ys =
         List.length xs = List.length ys
-        && List.forall2 (fun ((x, _):binder) ((y, _):binder) -> term_eq' x.sort y.sort) xs ys in
+        && List.forall2 (fun (x:binder) (y:binder) -> term_eq' x.binder_bv.sort y.binder_bv.sort) xs ys in
     let args_eq xs ys =
          List.length xs = List.length ys
          && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp'=U.Equal) xs ys in
@@ -75,7 +76,7 @@ let rec term_eq' t1 t2 =
               && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
       | Tm_app(t, args), Tm_app(s, args') -> term_eq' t s && args_eq args args'
-      | Tm_match(t, pats), Tm_match(t', pats') ->
+      | Tm_match(t, None, pats), Tm_match(t', None, pats') ->
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq' e e') pats pats'
         && term_eq' t t'

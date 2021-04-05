@@ -207,9 +207,9 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
-                let r0 = List.map (fun (bv, aq) ->
-                                     let r = traverse f (flip pol) e bv.sort in
-                                     comb1 (fun s' -> ({ bv with sort = s' }, aq)) r
+                let r0 = List.map (fun b ->
+                                     let r = traverse f (flip pol) e b.binder_bv.sort in
+                                     comb1 (fun s' -> ({b with binder_bv={ b.binder_bv with sort = s' }})) r
                                   ) bs
                 in
                 let rbs = comb_list r0 in
@@ -220,8 +220,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-        | Tm_match (sc, brs) ->
-            comb2 (fun sc brs -> Tm_match (sc, brs))
+        | Tm_match (sc, asc_opt, brs) ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in

@@ -23,7 +23,7 @@ module U64 = FStar.UInt64
 /// These examples only rely on facts about bounded ints, U64, and Prims
 /// In particular, pruning away sequences, reflection, tactics etc.
 /// from the SMT solver makes a big difference
-#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims' --__temp_fast_implicits --use_two_phase_tc false"
+#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims' --__temp_fast_implicits"
 
 ////////////////////////////////////////////////////////////////////////////////
 //Some examples working on FStar.UInt.uint_t, i.e., bounded natural numbers

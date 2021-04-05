@@ -45,6 +45,7 @@ val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation of implicits
+val maybe_implicit_with_meta_or_attr: aqual -> list<attribute> -> bool
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 
 //operations on computation types
@@ -56,6 +57,28 @@ val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+
+(*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+val get_neg_branch_conds: list<formula> -> list<formula> * formula
+
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
 val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
@@ -74,7 +97,8 @@ val universe_of_comp: env -> universe -> comp -> universe
 val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
-val check_has_type : env -> term -> lcomp -> typ -> term * lcomp * guard_t
+val check_has_type : env -> term -> t:typ -> t':typ -> guard_t
+val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t

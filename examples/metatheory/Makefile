@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 FSTAR_FILES = ParSubst.fst StlcCbvDbPntSubstNoLists.fst		\
 	      StlcStrongDbParSubst.fst StlcCbvDbParSubst.fst	\
 	      LambdaOmega.fst StackMachine.fst indind.fst

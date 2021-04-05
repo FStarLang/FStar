@@ -2,6 +2,7 @@
 module FStar.Reflection.Basic
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
@@ -67,8 +68,7 @@ let get_env () : Env.env =
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta (Arg_qualifier_meta_tac t)) -> Data.Q_Meta t
-    | Some (Meta (Arg_qualifier_meta_attr t)) -> Data.Q_Meta_attr t
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -77,8 +77,7 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
-    | Data.Q_Meta t   -> Some (Meta (Arg_qualifier_meta_tac t))
-    | Data.Q_Meta_attr t   -> Some (Meta (Arg_qualifier_meta_attr t))
+    | Data.Q_Meta t   -> Some (Meta t)
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
@@ -102,7 +101,7 @@ let pack_fv (ns:list<string>) : fv =
     | Some env ->
      let qninfo = Env.lookup_qname env lid in
      match qninfo with
-     | Some (BU.Inr (se, _us), _rng) ->
+     | Some (Inr (se, _us), _rng) ->
          let quals = DsEnv.fv_qual_of_se se in
          // FIXME: Get a proper delta depth
          lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
@@ -197,8 +196,8 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _ -> Tv_Unknown // no top level lets
-        | BU.Inl bv ->
+        | Inr _ -> Tv_Unknown // no top level lets
+        | Inl bv ->
             // The type of `bv` should match `lb.lbtyp`
             Tv_Let (false, lb.lbattrs, bv, lb.lbdef, t2)
         end
@@ -206,11 +205,11 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_let ((true, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
         begin match lb.lbname with
-        | BU.Inr _  -> Tv_Unknown // no top level lets
-        | BU.Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
+        | Inr _  -> Tv_Unknown // no top level lets
+        | Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
-    | Tm_match (t, brs) ->
+    | Tm_match (t, ret_opt, brs) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -220,7 +219,7 @@ let rec inspect_ln (t:term) : term_view =
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
-        Tv_Match (t, brs)
+        Tv_Match (t, ret_opt, brs)
 
     | Tm_unknown ->
         Tv_Unknown
@@ -230,15 +229,15 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list<cflag>) : option<term> =
+    let get_dec (flags : list<cflag>) : list<term> =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
-        | None -> None
-        | Some (DECREASES t) -> Some t
+        | None -> []
+        | Some (DECREASES ts) -> ts
         | _ -> failwith "impossible"
     in
     match c.n with
-    | Total (t, _) -> C_Total (t, None)
-    | GTotal (t, _) -> C_GTotal (t, None)
+    | Total (t, _) -> C_Total (t, [])
+    | GTotal (t, _) -> C_GTotal (t, [])
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -262,23 +261,23 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, None) -> mk_Total t
-    | C_Total (t, Some d) ->
+    | C_Total (t, []) -> mk_Total t
+    | C_Total (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, None) -> mk_GTotal t
-    | C_GTotal (t, Some d) ->
+    | C_GTotal (t, []) -> mk_GTotal t
+    | C_GTotal (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
@@ -345,14 +344,14 @@ let pack_ln (tv:term_view) : term =
       S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
-        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
+        let lb = U.mk_letbinding (Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
-    | Tv_Match (t, brs) ->
+    | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
         let rec pack_pat p : S.pat =
             match p with
@@ -363,13 +362,13 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, brs)) Range.dummyRange
+        S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
+        S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
+        S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
         S.mk Tm_unknown Range.dummyRange
@@ -491,8 +490,8 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, [lb]), _) ->
         let fv = match lb.lbname with
-                 | BU.Inr fv -> fv
-                 | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
+                 | Inr fv -> fv
+                 | Inl _  -> failwith "impossible: global Sig_let has bv"
         in
         let s, us = SS.univ_var_opening lb.lbunivs in
         let typ = SS.subst s lb.lbtyp in
@@ -524,7 +523,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
             (* Substitute the parameters of the constructor to match
              * those of the inductive opened above, and return the type
              * of the constructor already instantiated. *)
-            let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
+            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
                                param_ctor_bs param_bs
             in
             let cty = SS.subst s' cty in
@@ -537,6 +536,11 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         in
         Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
+    | Sig_declare_typ (lid, us, ty) ->
+        let nm = Ident.path_of_lid lid in
+        let us, ty = SS.open_univ_vars us ty in
+        Sg_Val (nm, us, ty)
+
     | _ ->
         Unk
 
@@ -546,7 +550,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let s = SS.univ_var_closing univs in
         let typ = SS.subst s typ in
         let def = SS.subst s def in
-        let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
+        let lb = U.mk_letbinding (Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
@@ -578,6 +582,11 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
       { se with sigquals = Noeq::se.sigquals }
 
+    | Sg_Val (nm, us_names, ty) ->
+        let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        let typ = SS.close_univ_vars us_names ty in
+        mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
+
     | Unk ->
         failwith "packing Unk, sorry"
 
@@ -595,12 +604,11 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * aqualv =
-    let bv, aq = b in
-    bv, inspect_aqual aq
+let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    bv, pack_aqual aqv
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =

@@ -106,7 +106,7 @@ let repr a pre post req ens =
     (req_to_act_req req)
     (ens_to_act_ens ens)
 
-let returnc (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
+let return (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
 
 let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
   = fun frame ->
@@ -222,47 +222,13 @@ let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.emp
 let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
-let cond_aux (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-             (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
-             (else_:unit -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
-  : SteelT a (p b) (q b)
-  = if b then then_ () else else_ ()
-
-let aux1 (#a:Type) (b:bool{b == true}) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-  : unit -> SteelT a (p b) (q b)
-  = fun _ -> then_ ()
-
-let aux2 (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-  : unit -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
-  = fun _ -> (aux1 b p q then_) ()
-
-let aux3 (#a:Type) (b:bool{b == false}) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : unit -> SteelT a (p b) (q b)
-  = fun _ -> else_ ()
-
-let aux4 (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : unit -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
-  = fun _ -> (aux3 b p q else_) ()
-
-let cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-  = let a1 = aux2 b p q then_ in
-    let a2 = aux4 b p q else_ in
-    cond_aux b p q a1 a2
-
 let add_action f = Steel?.reflect (action_as_repr f)
 
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
 friend Steel.Effect.Atomic
-open Steel.Effect.Atomic
+//open Steel.Effect.Atomic
 
 #push-options "--z3rlimit 40"
 let bind_atomic_steel _ _ _ _ _ _ _ _ f g

@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "0de65186b6d4a217ce0bfbaf24c4567b"
+      "ef5302a014152193cfa7e6dbf096e96d"
     ],
     [
       "Ex06e.mem",
@@ -38,7 +38,7 @@
         "int_inversion", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "69f472dc4d23291eab76e3ab6e3886c7"
+      "db796740c2ba7a73b9099ed3ad0187b9"
     ]
   ]
 ]
