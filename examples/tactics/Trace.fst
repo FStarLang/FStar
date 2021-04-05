@@ -81,9 +81,9 @@ type ins_info = {
 let rec instrument_body (ii : ins_info) (t : term) : Tac term =
   match inspect t with
   // descend into matches
-  | Tv_Match t brs -> begin
+  | Tv_Match t ret_opt brs -> begin
     let brs' = map (ins_br ii) brs in
-    pack (Tv_Match t brs')
+    pack (Tv_Match t ret_opt brs')
     end
   // descend into lets
   | Tv_Let r attrs b t1 t2 -> begin

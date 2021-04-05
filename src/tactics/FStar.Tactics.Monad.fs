@@ -2,6 +2,7 @@
 module FStar.Tactics.Monad
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
@@ -77,31 +78,31 @@ let fail (msg:string) =
         Failed (TacticFailure msg, ps)
     )
 
-let catch (t : tac<'a>) : tac<BU.either<exn,'a>> =
+let catch (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
                 UF.commit tx;
-                Success (BU.Inr a, q)
+                Success (Inr a, q)
             | Failed (m, q) ->
                 UF.rollback tx;
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
-                Success (BU.Inl m, ps)
+                Success (Inl m, ps)
            )
 
-let recover (t : tac<'a>) : tac<BU.either<exn,'a>> =
+let recover (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             match run t ps with
-            | Success (a, q) -> Success (BU.Inr a, q)
-            | Failed (m, q)  -> Success (BU.Inl m, q)
+            | Success (a, q) -> Success (Inr a, q)
+            | Failed (m, q)  -> Success (Inl m, q)
            )
 
 let trytac (t : tac<'a>) : tac<option<'a>> =
     bind (catch t) (fun r ->
     match r with
-    | BU.Inr v -> ret (Some v)
-    | BU.Inl _ -> ret None)
+    | Inr v -> ret (Some v)
+    | Inl _ -> ret None)
 
 let trytac_exn (t : tac<'a>) : tac<option<'a>> =
     mk_tac (fun ps ->

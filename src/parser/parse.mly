@@ -6,6 +6,7 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Pervasives
 open FStar_Errors
 open FStar_List
 open FStar_Util
@@ -71,7 +72,7 @@ let none_to_empty_list x =
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -660,10 +661,6 @@ kind:
   | t=tmArrow(tmNoEq) { {t with level=Kind} }
 
 
-
-
-
-
 term:
   | e=noSeqTerm
       { e }
@@ -677,6 +674,9 @@ term:
       { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+
+match_returning:
+  | RETURNS t=tmIff {t}
 
 noSeqTerm:
   | t=typ  { t }
@@ -696,22 +696,22 @@ noSeqTerm:
       { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
+      { mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
+        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | MATCH e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
-        let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+        let branches = focusBranches pbs (rhs2 parseState 1 5) in
+        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
   | LET OPEN uid=quident IN e=term
       { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }

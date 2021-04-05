@@ -198,30 +198,6 @@
       "5b6ba6f6e919f7f8c61f00a3b1f581b5"
     ],
     [
-      "Problem01.test_prefix_exists_to_b",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "628626ad78f5273f6aae70af01a0b173"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "a836ba75d95184de2c39cb09d339f102"
-    ],
-    [
       "Problem01.test_prefix_iff",
       1,
       2,
@@ -241,7 +217,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "8840a5c74f3127835790b250f8b54a01"
+      "96361d224c7d4da2b99d212d15ebfff8"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -277,7 +253,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "a77af0f2f8048c528d5113cd3b18cd87"
+      "bc64cbb3c0f9b1980d0b9ce6a9537d77"
     ]
   ]
 ]

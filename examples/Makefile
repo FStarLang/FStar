@@ -1,4 +1,3 @@
-FSTAR_HOME=..
 include Makefile.include
 
 # Note: native_tactics is not included in the list below, it is called
@@ -6,7 +5,7 @@ include Makefile.include
 # These examples are excluded since the binary package can't verify
 # them.
 
-ALL_EXAMPLE_DIRS=\
+ALL_EXAMPLE_DIRS_NO_KREMLIN=\
 data_structures \
 algorithms \
 crypto \
@@ -23,8 +22,6 @@ dm4free \
 tactics \
 param \
 typeclasses \
-miniparse \
-kv_parsing \
 low-mitls-experiments \
 seplogic \
 csl \
@@ -39,6 +36,15 @@ calc \
 steel \
 layeredeffects \
 misc
+
+ifdef KREMLIN_HOME
+ALL_EXAMPLE_DIRS=\
+  kv_parsing \
+  miniparse \
+  $(ALL_EXAMPLE_DIRS_NO_KREMLIN)
+else
+ALL_EXAMPLE_DIRS=$(ALL_EXAMPLE_DIRS_NO_KREMLIN)
+endif
 
 # low-level \  ... NS: removing from CI for this branch
 

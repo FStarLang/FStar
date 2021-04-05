@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -62,14 +63,14 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
   || solve_deferred
   then
     let solve_now, defer =
-      g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
+      g.deferred |> List.partition (fun (_, _, p) -> Rel.flex_prob_closing env xs p)
     in
     if Env.debug env <| Options.Other "Rel"
     then begin
       BU.print_string "SOLVE BEFORE CLOSING:\n";
-      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
+      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
       BU.print_string " ...DEFERRED THE REST:\n";
-      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
+      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
     let g = Rel.solve_non_tactic_deferred_constraints env ({g with deferred=solve_now}) in
@@ -1477,6 +1478,35 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   mk_comp md u t wp []
 
 (*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+let get_neg_branch_conds (branch_conds:list<formula>)
+  : list<formula> * formula
+  = branch_conds
+    |> List.fold_left (fun (conds, acc) g ->
+        let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
+        (conds@[cond]), cond) ([U.t_true], U.t_true)
+    |> fst
+    |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
+    |> (fun (l1, l2) -> l1, List.hd l2)
+
+(*
  * The formula in lcases is the individual branch guard, a boolean
  *)
 let bind_cases env0 (res_t:typ)
@@ -1529,15 +1559,7 @@ let bind_cases env0 (res_t:typ)
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
             let neg_branch_conds, exhaustiveness_branch_cond =
-              lcases
-              |> List.map (fun (g, _, _, _) -> g)
-              |> List.fold_left (fun (conds, acc) g ->
-                  let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
-                  (conds@[cond]), cond) ([U.t_true], U.t_true)
-              |> fst
-              |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
-              |> (fun (l1, l2) -> l1, List.hd l2) in
-
+              get_neg_branch_conds (lcases |> List.map (fun (g, _, _, _) -> g)) in
 
             let md, comp, g_comp =
               match lcases with
@@ -1741,7 +1763,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, branches), _ ->
+    | Tm_match (_, _, branches), _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe
@@ -2204,27 +2226,32 @@ let maybe_instantiate (env:Env.env) e t =
 (************************************************************************)
 //check_has_type env e t1 t2
 //checks is e:t1 has type t2, subject to some guard.
-let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+
+let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
   let env = Env.set_range env e.pos in
-  let check env t1 t2 =
+
+  let g_opt =
     if env.use_eq_strict
     then match Rel.teq_nosmt_force env t1 t2 with
-         | false -> None
-         | true -> Env.trivial_guard |> Some
+       | false -> None
+       | true -> Env.trivial_guard |> Some
     else if env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
-            | None -> None
-            | Some f -> Some <| apply_guard f e
-  in
+             | None -> None
+             | Some f -> apply_guard f e |> Some in
+
+  match g_opt with
+  | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
+  | Some g -> g
+  
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+  let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
-  match check env lc.res_typ t2 with
-  | None ->
-    raise_error (Err.expected_expression_of_type env t2 e lc.res_typ) (Env.get_range env)
-  | Some g ->
-    if debug env <| Options.Other "Rel" then
-      BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
-    e, lc, (Env.conj_guard g g_c)
+  let g = check_has_type env e lc.res_typ t2 in
+  if debug env <| Options.Other "Rel" then
+    BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
+  e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =

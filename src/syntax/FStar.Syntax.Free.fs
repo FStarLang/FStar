@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -117,7 +118,7 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_app(t, args) ->
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
-      | Tm_match(t, pats) ->
+      | Tm_match(t, asc_opt, pats) ->
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
@@ -127,17 +128,15 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
             let n =
               pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort use_cache)) n
             in
-            union n (union n1 n2) )
-            (free_names_and_uvars t use_cache)
+            union n (union n1 n2))
+            (union (free_names_and_uvars t use_cache)
+                   (match asc_opt with
+                    | None -> no_free_vars
+                    | Some asc -> free_names_and_uvars_ascription asc use_cache))
 
       | Tm_ascribed(t1, asc, _) ->
-        let u1 = free_names_and_uvars t1 use_cache in
-        let u2 = match fst asc with
-         | Inl t2 -> free_names_and_uvars t2 use_cache
-         | Inr c2 -> free_names_and_uvars_comp c2 use_cache in
-        (match snd asc with
-         | None -> union u1 u2
-         | Some tac -> union (union u1 u2) (free_names_and_uvars tac use_cache))
+        union (free_names_and_uvars t1 use_cache)
+              (free_names_and_uvars_ascription asc use_cache)
 
       | Tm_let(lbs, t) ->
         snd lbs |> List.fold_left (fun n lb ->
@@ -166,6 +165,15 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
         | Meta_desugared _
         | Meta_named _ -> u1
         end
+
+
+and free_names_and_uvars_ascription asc use_cache =
+  union (match fst asc with
+         | Inl t -> free_names_and_uvars t use_cache
+         | Inr c -> free_names_and_uvars_comp c use_cache)
+        (match snd asc with
+         | None -> no_free_vars
+         | Some tac -> free_names_and_uvars tac use_cache)
 
 
 and free_names_and_uvars t use_cache =

@@ -1571,7 +1571,7 @@ let (try_lookup_definition :
             FStar_Util.find_map (FStar_Pervasives_Native.snd lbs)
               (fun lb ->
                  match lb.FStar_Syntax_Syntax.lbname with
-                 | FStar_Util.Inr fv when
+                 | FStar_Pervasives.Inr fv when
                      FStar_Syntax_Syntax.fv_eq_lid fv lid1 ->
                      FStar_Pervasives_Native.Some
                        (lb.FStar_Syntax_Syntax.lbdef)

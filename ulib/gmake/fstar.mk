@@ -11,12 +11,16 @@ ADMIT ?=
 MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 
 ifdef FSTAR_HOME
-FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED) $(CACHE_DIR)
-FSTAR=$(FSTAR_ALWAYS)
+  FSTAR_HOME := $(realpath $(FSTAR_HOME))
+  ifeq ($(OS),Windows_NT)
+    FSTAR_HOME := $(shell cygpath -m $(FSTAR_HOME))
+  endif
+  FSTAR_EXE?=$(FSTAR_HOME)/bin/fstar.exe
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
-FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED) $(CACHE_DIR)
+FSTAR_EXE?=fstar.exe
 endif
+FSTAR=$(FSTAR_EXE) $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED) $(WITH_CACHE_DIR)
 
 # Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
 #  make -C tests/micro-benchmarks BENCHMARK_CMD=time

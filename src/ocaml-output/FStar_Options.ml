@@ -1968,12 +1968,12 @@ let with_saved_options : 'a . (unit -> 'a) -> 'a =
           try
             (fun uu___2 ->
                match () with
-               | () -> let uu___3 = f () in FStar_Util.Inr uu___3) ()
-          with | uu___2 -> FStar_Util.Inl uu___2 in
+               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
+          with | uu___2 -> FStar_Pervasives.Inl uu___2 in
         pop ();
         (match r with
-         | FStar_Util.Inr v -> v
-         | FStar_Util.Inl ex -> FStar_Exn.raise ex)))
+         | FStar_Pervasives.Inr v -> v
+         | FStar_Pervasives.Inl ex -> FStar_Exn.raise ex)))
     else (push (); (let retv = f () in pop (); retv))
 let (module_matches_namespace_filter :
   Prims.string -> Prims.string Prims.list -> Prims.bool) =

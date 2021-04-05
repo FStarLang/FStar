@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -488,7 +489,7 @@ let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
       else let bs, _ = U.arrow_formals t in
            let fv = S.lid_as_fv lid delta_constant None in
            let lb = {
-               lbname = BU.Inr fv;
+               lbname = Inr fv;
                lbunivs = univs;
                lbtyp = t;
                lbeff = PC.effect_Tot_lid;

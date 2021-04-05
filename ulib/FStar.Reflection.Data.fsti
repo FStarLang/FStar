@@ -71,7 +71,7 @@ type term_view =
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
-  | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
+  | Tv_Match  : scrutinee:term -> ret:option (either term comp & option term) -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
@@ -182,8 +182,8 @@ let smaller (tv:term_view) (t:term) : Type0 =
     | Tv_Let r attrs bv t1 t2 ->
         (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
 
-    | Tv_Match t1 brs ->
-        t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
+    | Tv_Match t1 ret_opt brs ->
+        t1 << t /\ ret_opt << t /\ (forall_list (fun (b, t') -> t' << t) brs)
 
     | Tv_AscribedT e ty tac ->
       e << t /\ ty << t /\ tac << t

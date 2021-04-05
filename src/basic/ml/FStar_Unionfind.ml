@@ -71,7 +71,7 @@ let pa_new t x l empty =
 type 'a puf = {
   (* array of parents of each node
       contains either path or root element *)
-  mutable parent: (int, 'a) either pa_t; (* mutable to allow path compression *)
+  mutable parent: (int, 'a) FStar_Pervasives.either pa_t; (* mutable to allow path compression *)
   ranks: int pa_t;
   (* keep track of how many elements are allocated in the array *)
   count: int ref
@@ -82,13 +82,13 @@ type 'a p_uvar = P of int
   (* failwith "cannot pretty-print a unification variable" *)
 
 let puf_empty () =
-    { parent = pa_create 2 (Inl (-1)) ;
+    { parent = pa_create 2 (FStar_Pervasives.Inl (-1)) ;
       ranks = pa_create 2 0;
       count = mk_ref 0 }
 
 let puf_fresh (h: 'a puf) (x: 'a): 'a p_uvar =
     let count = !(h.count) in
-    pa_new h.parent (Inr x) count (Inl (-1));
+    pa_new h.parent (FStar_Pervasives.Inr x) count (FStar_Pervasives.Inl (-1));
     pa_new h.ranks 0 count 0;
     h.count := count + 1;
     P count
@@ -96,11 +96,11 @@ let puf_fresh (h: 'a puf) (x: 'a): 'a p_uvar =
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
     match (pa_get f i) with
-        | Inl fi ->
+        | FStar_Pervasives.Inl fi ->
             let f, r, id = puf_find_aux f fi in
-            let f = pa_set f i (Inl id) in
+            let f = pa_set f i (FStar_Pervasives.Inl id) in
             f, r, id
-        | Inr x -> f, Inr x, i
+        | FStar_Pervasives.Inr x -> f, FStar_Pervasives.Inr x, i
 
 (* return both rep and previous version of parent array *)
 let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
@@ -108,8 +108,8 @@ let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
     let f, rx, i = puf_find_aux h.parent x in
         h.parent <- f;
         match rx with
-            | Inr r -> r, i
-            | Inl _ -> failwith "Impossible"
+            | FStar_Pervasives.Inr r -> r, i
+            | FStar_Pervasives.Inl _ -> failwith "Impossible"
 
 (* only return the equivalence class *)
 let puf_id' (h:'a puf) (x:'a p_uvar) : int =
@@ -132,7 +132,7 @@ let puf_equivalent (h:'a puf) (x:'a p_uvar) (y:'a p_uvar) =
 
 let puf_change (h:'a puf) (x:'a p_uvar) (v:'a) : 'a puf =
     let i = puf_id' h x in
-    let hp = pa_set h.parent i (Inr v) in
+    let hp = pa_set h.parent i (FStar_Pervasives.Inr v) in
     { h with parent = hp}
 
 let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
@@ -142,15 +142,15 @@ let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then
-            { parent = pa_set h.parent iy (Inl ix);
+            { parent = pa_set h.parent iy (FStar_Pervasives.Inl ix);
               ranks = h.ranks;
               count = h.count}
         else if rxc < ryc then
-            { parent = pa_set h.parent ix (Inl iy);
+            { parent = pa_set h.parent ix (FStar_Pervasives.Inl iy);
               ranks = h.ranks;
               count = h.count}
         else
-            { parent = pa_set h.parent iy (Inl ix);
+            { parent = pa_set h.parent iy (FStar_Pervasives.Inl ix);
               ranks = pa_set h.ranks ix (rxc+1);
               count = h.count }
         end else

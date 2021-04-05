@@ -515,7 +515,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       (* Perform the exploration in the proper order *)
       let expl1, expl2 = if dfs then explore_next, explore_def else explore_def, explore_next in
       bind_expl x0 expl1 expl2
-    | Tv_Match scrutinee branches ->
+    | Tv_Match scrutinee _ret_opt branches ->  //AR: TODO: need to account for returns annotation here
       (* Auxiliary function to explore the branches *)
       let explore_branch (x_flag : a & ctrl_flag) (br : branch) : Tac (a & ctrl_flag)=
         let x0, flag = x_flag in

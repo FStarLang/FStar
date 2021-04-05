@@ -103,14 +103,12 @@ let (push_with_kind :
                 (uu___.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.tc_term =
                 (uu___.FStar_TypeChecker_Env.tc_term);
-              FStar_TypeChecker_Env.type_of =
-                (uu___.FStar_TypeChecker_Env.type_of);
-              FStar_TypeChecker_Env.type_of_well_typed =
-                (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
+                (uu___.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
               FStar_TypeChecker_Env.universe_of =
                 (uu___.FStar_TypeChecker_Env.universe_of);
-              FStar_TypeChecker_Env.check_type_of =
-                (uu___.FStar_TypeChecker_Env.check_type_of);
+              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
+                (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -643,16 +641,16 @@ let rec (go :
                                 (fun uu___3 ->
                                    match uu___3 with
                                    | ((uu___4, typ), r) ->
-                                       ((FStar_Util.Inr lid1), typ, r)))) in
+                                       ((FStar_Pervasives.Inr lid1), typ, r)))) in
                   ((match info_opt with
                     | FStar_Pervasives_Native.None ->
                         FStar_Util.print_string "\n#done-nok\n"
                     | FStar_Pervasives_Native.Some (name_or_lid, typ, rng) ->
                         let uu___2 =
                           match name_or_lid with
-                          | FStar_Util.Inl name ->
+                          | FStar_Pervasives.Inl name ->
                               (name, FStar_Pervasives_Native.None)
-                          | FStar_Util.Inr lid ->
+                          | FStar_Pervasives.Inr lid ->
                               let uu___3 = FStar_Ident.string_of_lid lid in
                               (uu___3, FStar_Pervasives_Native.None) in
                         (match uu___2 with

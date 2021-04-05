@@ -20,11 +20,12 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
     let uu___ =
       FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Toplevel frag) in
     match uu___ with
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inl modul, uu___1) ->
-        Modul modul
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr [], uu___1) -> Empty
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr decls, uu___1) ->
-        Decls decls
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl modul, uu___1)
+        -> Modul modul
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr [], uu___1) ->
+        Empty
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr decls, uu___1)
+        -> Decls decls
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->
@@ -37,9 +38,10 @@ let (parse_file :
   fun fn ->
     let uu___ = FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename fn) in
     match uu___ with
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inl ast, comments) ->
-        (ast, comments)
-    | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu___1, uu___2) ->
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl ast, comments)
+        -> (ast, comments)
+    | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
+        ->
         let msg = FStar_Util.format1 "%s: expected a module\n" fn in
         let r = FStar_Range.dummyRange in
         FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg) r
