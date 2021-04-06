@@ -3438,7 +3438,8 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
      // to remove this one.
      if List.isEmpty formals || List.isEmpty actuals then
        raise_error (Errors.Fatal_RecursiveFunctionLiteral,
-                    (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                    (BU.format3 "Only function literals with arrow types can be defined recursively; got (%s) %s : %s"
+                               (Print.tag_of_term lbdef)
                                (Print.term_to_string lbdef)
                                (Print.term_to_string lbtyp)))
                    lbtyp.pos; // TODO: GM: maybe point to the one that's actually empty?
@@ -3456,49 +3457,58 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
      else
        None
    in
+   let check_annot univ_vars t =
+       let env0 = Env.push_univ_vars env0 univ_vars in
+       let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
+       env0, g |> Rel.resolve_implicits env |> Rel.discharge_guard env0, t
+   in
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
-        let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
+        let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
-        let e = U.unascribe lb.lbdef in
-        let g, t =
-            if not check_t
-            then g_acc, t
-            else (let env0 = Env.push_univ_vars env0 univ_vars in
-                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
-                  Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), t) in
+        let g, lbtyp = 
+            if not check_t 
+            then g_acc, lbtyp
+            else let _, g, t = check_annot univ_vars lbtyp in
+                 Env.conj_guard g_acc g, t
+        in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
         // Removed that check. Rest of the code relies on env.letrecs = []
         let lb, env =
-            match termination_check_enabled lb.lbname e t with
+            match termination_check_enabled lb.lbname lbdef lbtyp with
             // AR: we need to add the binding of the let rec after adding the
             // binders of the lambda term, and so, here we just note in the env that
             // we are typechecking a let rec, the recursive binding will be added in
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
-            | Some (arity, def) ->
-              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=def} in
-              let env = {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs} in
+            | Some (arity, lbdef) ->
+              let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
+              let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env
             | None ->
-              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
-              lb, Env.push_let_binding env lb.lbname (univ_vars, t)
+              let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
+              lb, Env.push_let_binding env lb.lbname (univ_vars, lbtyp)
         in
         lb::lbs,  env, g)
     ([], env, Env.trivial_guard)
     lbs  in
   List.rev lbs, env, g
 
-and check_let_recs env lbs =
-    let lbs, gs = lbs |> List.map (fun lb ->
+and check_let_recs env lbts =
+    let lbs, gs = lbts |> List.map (fun lb ->
         (* here we set the expected type in the environment to the annotated expected type
          * and use it in order to type check the body of the lb
          * *)
         let bs, t, lcomp = abs_formals lb.lbdef in
         //see issue #1017
         match bs with
-        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, 
+                            BU.format2
+                            "Only function literals may be defined recursively; %s is defined to be %s"
+                               (Print.lbname_to_string lb.lbname)
+                               (Print.term_to_string lb.lbdef)
+                            ) (S.range_of_lbname lb.lbname)
         | _ -> ();
 
         (* HACK ALERT: arity

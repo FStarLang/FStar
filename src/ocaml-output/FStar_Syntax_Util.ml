@@ -1728,49 +1728,56 @@ let (let_rec_arity :
                            d_bvs)) in
                FStar_List.append uu___2 uu___3) in
         ((n_univs + (FStar_List.length bs)), uu___1)
+let (abs_formals_maybe_unascribe_body :
+  Prims.bool ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.term *
+        FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
+  =
+  fun maybe_unascribe ->
+    fun t ->
+      let subst_lcomp_opt s l =
+        match l with
+        | FStar_Pervasives_Native.Some rc ->
+            let uu___ =
+              let uu___1 = rc in
+              let uu___2 =
+                FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
+                  (FStar_Syntax_Subst.subst s) in
+              {
+                FStar_Syntax_Syntax.residual_effect =
+                  (uu___1.FStar_Syntax_Syntax.residual_effect);
+                FStar_Syntax_Syntax.residual_typ = uu___2;
+                FStar_Syntax_Syntax.residual_flags =
+                  (uu___1.FStar_Syntax_Syntax.residual_flags)
+              } in
+            FStar_Pervasives_Native.Some uu___
+        | uu___ -> l in
+      let rec aux t1 abs_body_lcomp =
+        let uu___ =
+          let uu___1 = unmeta_safe t1 in uu___1.FStar_Syntax_Syntax.n in
+        match uu___ with
+        | FStar_Syntax_Syntax.Tm_abs (bs, t2, what) ->
+            if maybe_unascribe
+            then
+              let uu___1 = aux t2 what in
+              (match uu___1 with
+               | (bs', t3, what1) -> ((FStar_List.append bs bs'), t3, what1))
+            else (bs, t2, what)
+        | uu___1 -> ([], t1, abs_body_lcomp) in
+      let uu___ = aux t FStar_Pervasives_Native.None in
+      match uu___ with
+      | (bs, t1, abs_body_lcomp) ->
+          let uu___1 = FStar_Syntax_Subst.open_term' bs t1 in
+          (match uu___1 with
+           | (bs1, t2, opening) ->
+               let abs_body_lcomp1 = subst_lcomp_opt opening abs_body_lcomp in
+               (bs1, t2, abs_body_lcomp1))
 let (abs_formals :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.term *
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
-  =
-  fun t ->
-    let subst_lcomp_opt s l =
-      match l with
-      | FStar_Pervasives_Native.Some rc ->
-          let uu___ =
-            let uu___1 = rc in
-            let uu___2 =
-              FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
-                (FStar_Syntax_Subst.subst s) in
-            {
-              FStar_Syntax_Syntax.residual_effect =
-                (uu___1.FStar_Syntax_Syntax.residual_effect);
-              FStar_Syntax_Syntax.residual_typ = uu___2;
-              FStar_Syntax_Syntax.residual_flags =
-                (uu___1.FStar_Syntax_Syntax.residual_flags)
-            } in
-          FStar_Pervasives_Native.Some uu___
-      | uu___ -> l in
-    let rec aux t1 abs_body_lcomp =
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Subst.compress t1 in
-          FStar_All.pipe_left unascribe uu___2 in
-        uu___1.FStar_Syntax_Syntax.n in
-      match uu___ with
-      | FStar_Syntax_Syntax.Tm_abs (bs, t2, what) ->
-          let uu___1 = aux t2 what in
-          (match uu___1 with
-           | (bs', t3, what1) -> ((FStar_List.append bs bs'), t3, what1))
-      | uu___1 -> ([], t1, abs_body_lcomp) in
-    let uu___ = aux t FStar_Pervasives_Native.None in
-    match uu___ with
-    | (bs, t1, abs_body_lcomp) ->
-        let uu___1 = FStar_Syntax_Subst.open_term' bs t1 in
-        (match uu___1 with
-         | (bs1, t2, opening) ->
-             let abs_body_lcomp1 = subst_lcomp_opt opening abs_body_lcomp in
-             (bs1, t2, abs_body_lcomp1))
+  = fun t -> abs_formals_maybe_unascribe_body true t
 let (remove_inacc : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let no_acc b =

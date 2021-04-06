@@ -105,22 +105,22 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e, _)
-        | Tm_ascribed(e, _, _) -> unmeta e
-        | _ -> e
+    | Tm_meta(e, _)
+    | Tm_ascribed(e, _, _) -> unmeta e
+    | _ -> e
 
 let rec unmeta_safe e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e', m) ->
-            begin match m with
+    | Tm_meta(e', m) ->
+      begin match m with
             | Meta_monadic _
             | Meta_monadic_lift _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
-            end
-        | Tm_ascribed(e, _, _) -> unmeta_safe e
-        | _ -> e
+      end
+    | Tm_ascribed(e, _, _) -> unmeta_safe e
+    | _ -> e
 
 let unmeta_lift (t:term) : term =
   match (compress t).n with
@@ -997,23 +997,27 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
 
-let abs_formals t =
+let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
           Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
-        match (unascribe <| Subst.compress t).n with
+        match (unmeta_safe t).n with
         | Tm_abs(bs, t, what) ->
-            let bs',t, what = aux t what in
-            bs@bs', t, what
+          if maybe_unascribe
+          then let bs',t, what = aux t what in
+               bs@bs', t, what
+          else bs, t, what
         | _ -> [], t, abs_body_lcomp
     in
     let bs, t, abs_body_lcomp = aux t None in
     let bs, t, opening = Subst.open_term' bs t in
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
+
+let abs_formals t = abs_formals_maybe_unascribe_body true t
 
 let remove_inacc (t:term) : term =
     let no_acc (b : binder) : binder =
