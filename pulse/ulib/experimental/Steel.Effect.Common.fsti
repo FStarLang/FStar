@@ -15,6 +15,10 @@ let admit_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
 
+let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
+let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
+  if framed then (forall x. frame x == emp) else True
+
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 let true_p : prop = True
 
