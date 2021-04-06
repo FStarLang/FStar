@@ -75,7 +75,8 @@ let bind_ens (#a:Type) (#b:Type)
 
 
 val bind (a:Type) (b:Type)
-  (#framed_f:eqtype_as_type bool) (#framed_g:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed_f:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
   (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
@@ -117,15 +118,16 @@ let subcomp_pre (#a:Type)
   (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
 
 val subcomp (a:Type)
-  (#framed:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed_f:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
   (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
   (#[@@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
-  (f:repr a framed pre_f post_f req_f ens_f)
-: Pure (repr a false pre_g post_g req_g ens_g)
+  (f:repr a framed_f pre_f post_f req_f ens_f)
+: Pure (repr a framed_g pre_g post_g req_g ens_g)
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
 
@@ -147,18 +149,18 @@ let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) 
 = fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
 let if_then_else (a:Type)
-  (#framed_f:eqtype_as_type bool) (#framed_g:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed:eqtype_as_type bool)// (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
   (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
-  (f:repr a framed_f pre_f post_f req_then ens_then)
-  (g:repr a framed_g pre_g post_g req_else ens_else)
+  (f:repr a framed pre_f post_f req_then ens_then)
+  (g:repr a framed pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a false pre_f post_f
+= repr a framed pre_f post_f
     (if_then_else_req s_pre req_then req_else p)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
@@ -379,7 +381,7 @@ assume WP_monotonic :
  * Since before bind is called, the typechecker has already substituted them
  * with the pure f computation
  *)
-
+(*
 unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
@@ -393,9 +395,11 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 : ens_t pre b post
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
+
+
 val bind_pure_steel_ (a:Type) (b:Type)
   (#[@@@ framing_implicit] wp:pure_wp a)
-  (#framed:eqtype_as_type bool)
+  (#[@@@ framing_implicit] framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
   (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b framed pre post (req x) (ens x)))
@@ -407,6 +411,25 @@ val bind_pure_steel_ (a:Type) (b:Type)
     (bind_pure_steel__ens wp ens)
 
 polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
+*)
+
+unfold
+let lift_pure_steel__req (#a:Type) (wp:pure_wp a)
+: req_t emp
+= fun m -> as_requires wp /\ True
+
+unfold
+let lift_pure_steel__ens (#a:Type) (wp:pure_wp a)
+: ens_t emp a (fun _ -> emp)
+= fun m0 r m1 -> as_requires wp /\ as_ensures wp r
+
+val lift_pure_steel
+  (a:Type)
+  (#[@@@ framing_implicit] wp:pure_wp a)
+  (f:eqtype_as_type unit -> PURE a wp)
+  : repr a false emp (fun _ -> emp) (lift_pure_steel__req wp) (lift_pure_steel__ens wp)
+
+sub_effect PURE ~> SteelBase = lift_pure_steel
 
 // polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
 
@@ -423,7 +446,7 @@ polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 //  *)
 
 effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
-  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+  SteelBase a false pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (* Exposing actions as Steel functions *)
 
