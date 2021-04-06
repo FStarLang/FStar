@@ -249,7 +249,7 @@ let (extract_let_rec_annotation :
                                        d', sfx')) ->
                                        (FStar_Errors.log_issue rng
                                           (FStar_Errors.Warning_DeprecatedGeneric,
-                                            "Multiple decreases clauses on this definition; please remove the one on its declaration");
+                                            "Multiple decreases clauses on this definition; the decreases clause on the declaration is ignored, please remove it");
                                         move_decreases d
                                           (FStar_List.append pfx sfx)
                                           (FStar_List.append pfx' sfx'))
@@ -262,11 +262,11 @@ let (extract_let_rec_annotation :
                                          (FStar_Syntax_Util.comp_flags c')
                                    | uu___10 -> failwith "Impossible")))) in
                  let extract_annot_from_body lbtyp_opt =
-                   let rec aux e2 =
+                   let rec aux_lbdef e2 =
                      let e3 = FStar_Syntax_Subst.compress e2 in
                      match e3.FStar_Syntax_Syntax.n with
                      | FStar_Syntax_Syntax.Tm_meta (e', m) ->
-                         let uu___6 = aux e' in
+                         let uu___6 = aux_lbdef e' in
                          (match uu___6 with
                           | (t3, e'1, recheck) ->
                               (t3,
@@ -355,11 +355,11 @@ let (extract_let_rec_annotation :
                                     t3.FStar_Syntax_Syntax.pos
                                 else FStar_Syntax_Syntax.mk_Total t3 in
                               let mk_arrow c = FStar_Syntax_Util.arrow bs c in
-                              let rec aux1 body1 =
+                              let rec aux_abs_body body1 =
                                 let body2 = FStar_Syntax_Subst.compress body1 in
                                 match body2.FStar_Syntax_Syntax.n with
                                 | FStar_Syntax_Syntax.Tm_meta (body3, m) ->
-                                    let uu___8 = aux1 body3 in
+                                    let uu___8 = aux_abs_body body3 in
                                     (match uu___8 with
                                      | (t3, body', recheck) ->
                                          let body4 =
@@ -438,13 +438,13 @@ let (extract_let_rec_annotation :
                                              mk_comp FStar_Syntax_Syntax.tun in
                                            mk_arrow uu___9 in
                                          (tarr, body2, true)) in
-                              let uu___8 = aux1 body in
+                              let uu___8 = aux_abs_body body in
                               (match uu___8 with
                                | (lbtyp, body1, recheck) ->
                                    let uu___9 =
                                      FStar_Syntax_Util.abs bs body1 rcopt in
                                    (lbtyp, uu___9, recheck))) in
-                   aux e1 in
+                   aux_lbdef e1 in
                  match t2.FStar_Syntax_Syntax.n with
                  | FStar_Syntax_Syntax.Tm_unknown ->
                      let uu___6 =

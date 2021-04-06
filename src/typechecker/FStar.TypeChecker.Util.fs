@@ -192,7 +192,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                  (Print.term_to_string t);
   let env = Env.push_univ_vars env univ_vars in
   let un_arrow t =
-    //Rather than use U.abs_formals_comp, we use un_arrow here
+    //Rather than use U.arrow_formals_comp, we use un_arrow here
     //since the former collapses adjacent Tot annotations, e.g.,
     //    x:t -> Tot (y:t -> M)
     // is collapsed, breaking arities
@@ -238,7 +238,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         | Some (pfx, DECREASES d, sfx), Some (pfx', DECREASES d', sfx') ->
           Errors.log_issue rng
              (Warning_DeprecatedGeneric,
-              "Multiple decreases clauses on this definition; please remove the one on its declaration");
+              "Multiple decreases clauses on this definition; the decreases clause on the declaration is ignored, please remove it");
           move_decreases d (pfx@sfx) (pfx'@sfx')
         | Some (pfx, DECREASES d, sfx), None ->
           move_decreases d (pfx@sfx) (U.comp_flags c')
@@ -248,12 +248,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     : typ
     * term
     * bool
-    = let rec aux e
+    = let rec aux_lbdef e
         : typ * term * bool
         = let e = SS.compress e in
           match e.n with
           | Tm_meta(e', m) ->
-            let t, e', recheck = aux e' in
+            let t, e', recheck = aux_lbdef e' in
             t, { e with n = Tm_meta(e', m) }, recheck
 
           | Tm_ascribed(e', (Inr c, tac_opt), lopt) ->
@@ -267,7 +267,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                               rng
 
           | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
-
             let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
             let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt), lopt) } in
             lbtyp, e, recheck
@@ -280,11 +279,11 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
               else S.mk_Total t
             in
             let mk_arrow c = U.arrow bs c in
-            let rec aux body =
+            let rec aux_abs_body body =
               let body = SS.compress body in
               match body.n with
               | Tm_meta (body, m) ->
-                let t, body', recheck = aux body in
+                let t, body', recheck = aux_abs_body body in
                 let body = { body with n = Tm_meta(body', m) } in
                 t, body, recheck
 
@@ -319,10 +318,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                   let tarr = mk_arrow (mk_comp S.tun) in
                   tarr, body, true
             in
-            let lbtyp, body, recheck = aux body in
+            let lbtyp, body, recheck = aux_abs_body body in
             lbtyp, U.abs bs body rcopt, recheck
       in
-      aux e
+      aux_lbdef e
     in
     match t.n with
     | Tm_unknown ->
