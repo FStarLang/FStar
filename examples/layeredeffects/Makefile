@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing
 include ../Makefile.include
 

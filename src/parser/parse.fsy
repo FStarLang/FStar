@@ -3,6 +3,7 @@
 // (c) Microsoft Corporation. All rights reserved
 open Prims
 open FStar
+open FStar.Pervasives
 open FStar.Errors
 open FStar.List
 open FStar.Util
@@ -167,6 +168,7 @@ let none_to_empty_list x =
 %token REIFIABLE
 %token REIFY
 %token REQUIRES
+%token RETURNS
 %token RPAREN
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
@@ -290,6 +292,13 @@ option_fsTypeArgs_:
   
     {    ( None )}
 | fsTypeArgs
+    {let x = $1 in
+    ( Some x )}
+
+option_match_returning_:
+  
+    {    ( None )}
+| match_returning
     {let x = $1 in
     ( Some x )}
 
@@ -1384,6 +1393,11 @@ term:
     {let (x, _2, e1, _4, e2) = ($1, (), $3, (), $5) in
       ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}
 
+match_returning:
+  RETURNS tmIff
+    {let (_1, t) = ((), $2) in
+                    (t)}
+
 noSeqTerm:
   typ
     {let t = $1 in
@@ -1435,14 +1449,14 @@ let op_expr =                                                 ( mk_ident (".(||)
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
-| IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
-    {let (_1, e1, _3, e2, _5, e3) = ((), $2, (), $4, (), $6) in
-      ( mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr )}
-| IF noSeqTerm THEN noSeqTerm
-    {let (_1, e1, _3, e2) = ((), $2, (), $4) in
+| IF noSeqTerm option_match_returning_ THEN noSeqTerm ELSE noSeqTerm
+    {let (_1, e1, ret_opt, _4, e2, _6, e3) = ((), $2, $3, (), $5, (), $7) in
+      ( mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr )}
+| IF noSeqTerm option_match_returning_ THEN noSeqTerm
+    {let (_1, e1, ret_opt, _4, e2) = ((), $2, $3, (), $5) in
       (
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
+        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       )}
 | TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
     {let (_1, e1, _3, xs) = ((), $2, (), $4) in
@@ -1451,12 +1465,12 @@ let pbs =    ( List.rev xs ) in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_7_
-    {let (_1, e, _3, xs) = ((), $2, (), $4) in
+| MATCH term option_match_returning_ WITH reverse_left_flexible_list_BAR___anonymous_7_
+    {let (_1, e, ret_opt, _4, xs) = ((), $2, $3, (), $5) in
 let pbs =    ( List.rev xs ) in
       (
-        let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+        let branches = focusBranches pbs (rhs2 parseState 1 5) in
+        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       )}
 | LET OPEN quident IN term
     {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
@@ -2666,11 +2680,11 @@ reverse_left_flexible_list_BAR___anonymous_7_:
     {   ( [] )}
 | patternBranch
     {let pb = $1 in
-let x =                                                                    (pb) in
+let x =                                                                                                    (pb) in
    ( [x] )}
 | reverse_left_flexible_list_BAR___anonymous_7_ BAR patternBranch
     {let (xs, _2, pb) = ($1, (), $3) in
-let x =                                                                    (pb) in
+let x =                                                                                                    (pb) in
    ( x :: xs )}
 
 reverse_left_flexible_nonempty_list_BAR_patternBranch_:

@@ -2113,7 +2113,7 @@ let (tc_layered_eff_decl :
                                                          let uu___21 =
                                                            FStar_Syntax_Syntax.mk_Total
                                                              ite_t_applied in
-                                                         FStar_Util.Inr
+                                                         FStar_Pervasives.Inr
                                                            uu___21 in
                                                        (uu___20,
                                                          FStar_Pervasives_Native.None) in

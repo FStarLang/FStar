@@ -119,11 +119,11 @@ let rec mk_do_while_body
         tout, T.Q_Explicit;
         t, T.Q_Explicit
       ]
-  | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; pat, tf] ->
+  | T.Tv_Match cond ret_opt [T.Pat_Constant T.C_True, tt; pat, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
     let tt' = mk_do_while_body tin tout tt f in
     let tf' = mk_do_while_body tin tout tf f in
-    T.pack (T.Tv_Match cond [T.Pat_Constant T.C_True, tt'; pat, tf'])
+    T.pack (T.Tv_Match cond ret_opt [T.Pat_Constant T.C_True, tt'; pat, tf'])
   | _ -> T.fail "mk_do_while_body: unsupported"
 
 let do_while_body_res_intro

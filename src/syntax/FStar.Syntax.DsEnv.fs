@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Syntax.DsEnv
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

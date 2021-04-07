@@ -39,10 +39,10 @@ open FStar.Mul
 /// This is our spec, to be audited. From bytes to nat.
 
 /// lt_to_n interprets a byte sequence as a little-endian natural number
-val le_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val le_to_n : b:bytes -> Tot nat
 
 /// be_to_n interprets a byte sequence as a big-endian natural number
-val be_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val be_to_n : b:bytes -> Tot nat
 
 /// Induction for le_to_n and be_to_n
 

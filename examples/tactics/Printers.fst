@@ -90,7 +90,7 @@ let mk_printer_fun (dom : term) : Tac term =
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument
-        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) None branches) in
         (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function

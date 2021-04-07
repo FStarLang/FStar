@@ -858,10 +858,14 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         let def = visit_tm ff def in
         let t = visit_tm ff t in
         Tv_Let r attrs b def t
-    | Tv_Match sc brs ->
+    | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
+        let ret_opt = map_opt (fun ret ->
+          match ret with
+          | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
+          | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt) ret_opt in
         let brs = map (visit_br ff) brs in
-        Tv_Match sc brs
+        Tv_Match sc ret_opt brs
     | Tv_AscribedT e t topt ->
         let e = visit_tm ff e in
         let t = visit_tm ff t in
@@ -920,7 +924,7 @@ private let get_match_body () : Tac term =
   match FStar.Reflection.Formula.unsquash (cur_goal ()) with
   | None -> fail ""
   | Some t -> match inspect t with
-             | Tv_Match sc _ -> sc
+             | Tv_Match sc _ _ -> sc
              | _ -> fail "Goal is not a match"
 
 private let rec last (x : list 'a) : Tac 'a =

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -1207,7 +1208,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let body = match sc_pat_opt with
             | Some (sc, pat) ->
                 let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
-                S.mk (Tm_match(sc, [(pat, None, body)])) body.pos
+                S.mk (Tm_match(sc, None, [(pat, None, body)])) body.pos
             | None -> body in
             setpos (no_annot_abs (List.rev bs) body), aq
 
@@ -1431,7 +1432,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
              | []
              | [{v=Pat_wild _}, _] -> body
              | _ ->
-               S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) top.range
+               S.mk (Tm_match(S.bv_to_name x, None, desugar_disjunctive_pattern pat None body)) top.range
            in
            mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
         in
@@ -1444,16 +1445,20 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       then ds_let_rec_or_app()
       else ds_non_rec attrs head_pat defn body
 
-    | If(t1, t2, t3) ->
+    | If(t1, asc_opt, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
       let t1' = U.ascribe t1' (Inl t_bool, None) in
+      let asc_opt, aq0 =
+        match asc_opt with
+        | None -> None, []
+        | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
-      mk (Tm_match(t1',
+      mk (Tm_match(t1', asc_opt,
                     [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
-                     (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq2;aq3]
+                     (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq0;aq2;aq3]
 
     | TryWith(e, branches) ->
       let r = top.range in
@@ -1465,7 +1470,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let a2 = mk_term (App(a1, handler, Nothing)) r top.level in
       desugar_term_aq env a2
 
-    | Match(e, branches) ->
+    | Match(e, topt, branches) ->
       let desugar_branch (pat, wopt, b) =
         let env, pat = desugar_match_pat env pat in
         let wopt = match wopt with
@@ -1475,20 +1480,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         desugar_disjunctive_pattern pat wopt b, aq
       in
       let e, aq = desugar_term_aq env e in
+      let asc_opt, aq0 =
+        match topt with
+        | None -> None, []
+        | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
       let brs, aqs = List.map desugar_branch branches |> List.unzip |> (fun (x, y) -> (List.flatten x, y)) in
-      mk <| Tm_match(e, brs), join_aqs (aq::aqs)
+      mk <| Tm_match(e, asc_opt, brs), join_aqs (aq::aq0::aqs)
 
     | Ascribed(e, t, tac_opt) ->
-      let annot, aq0 =
-        if is_comp_type env t
-        then let comp = desugar_comp t.range true env t in
-             (Inr comp, [])
-        else let tm, aq = desugar_term_aq env t in
-             (Inl tm, aq)
-      in
-      let tac_opt = BU.map_opt tac_opt (desugar_term env) in
+      let asc, aq0 = desugar_ascription env t tac_opt in
       let e, aq = desugar_term_aq env e in
-      mk <| Tm_ascribed(e, (annot, tac_opt), None), aq0@aq
+      mk <| Tm_ascribed(e, asc, None), aq0@aq
 
     | Record(_, []) ->
       raise_error (Errors.Fatal_UnexpectedEmptyRecord, "Unexpected empty record") top.range
@@ -1664,6 +1666,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | _ ->
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term: " ^ term_to_string top)) top.range
   end
+
+and desugar_ascription env t tac_opt =
+  let annot, aq0 =
+    if is_comp_type env t
+    then let comp = desugar_comp t.range true env t in
+         (Inr comp, [])
+    else let tm, aq = desugar_term_aq env t in
+         (Inl tm, aq) in
+  (annot, BU.map_opt tac_opt (desugar_term env)), aq0
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
@@ -3051,7 +3062,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                                     (range_of_id id) in
             bv_pat, branch
         in
-        let body = mk_term (Match (main, [pat, None, branch])) main.range Expr in
+        let body = mk_term (Match (main, None, [pat, None, branch])) main.range Expr in
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
         let id_decl = { id_decl with quals = d.quals } in
         let env, ses' = desugar_decl env id_decl in

@@ -16,7 +16,7 @@ FSTAR_FILES := $(filter-out $(FLAKY), \
 	$(wildcard experimental/*fst experimental/*fsti))
 
 
-CACHE_DIR=--cache_dir .cache --hint_dir .cache
+WITH_CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 #271 -> pattern uses theory symbols
 OTHERFLAGS+=--warn_error @271

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 (* Type definitions for the core AST *)
@@ -112,7 +113,7 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
+  | Tm_match      of term * option<ascription> * list<branch>    (* match e (ret asc?) with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)

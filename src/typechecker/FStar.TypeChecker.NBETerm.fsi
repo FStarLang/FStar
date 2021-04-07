@@ -17,6 +17,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.NBETerm
+open FStar.Pervasives
 open FStar.All
 open FStar.Exn
 open FStar
@@ -74,7 +75,9 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. reconstructs the pattern matching, if it needs to be readback
+       // 2. reconstruct the returns annotation
+       (unit -> option<ascription>) *
+       // 3. reconstructs the pattern matching, if it needs to be readback
        (unit -> list<branch>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
@@ -106,7 +109,7 @@ type atom
 and t'
   =
   | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
+        * either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
                                                                  //or a list of arguments, for primitive unembeddings
         * int                        // arity
   | Accu of atom * args
@@ -116,11 +119,11 @@ and t'
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
+  | Arrow of either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | Lazy of either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
   | Meta of t * Thunk.t<S.metadata>
   | TopLevelLet of
        // 1. The definition of the fv
@@ -214,7 +217,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> option<ascription>) -> (unit -> list<branch>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -259,7 +262,7 @@ val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
-val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
+val e_either : embedding<'a> -> embedding<'b> -> embedding<either<'a ,'b>>
 val e_string_list : embedding<list<string>>
 val e_arrow : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 

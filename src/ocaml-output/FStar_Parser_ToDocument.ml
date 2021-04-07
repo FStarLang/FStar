@@ -499,29 +499,32 @@ let (uu___is_Right : associativity -> Prims.bool) =
   fun projectee -> match projectee with | Right -> true | uu___ -> false
 let (uu___is_NonAssoc : associativity -> Prims.bool) =
   fun projectee -> match projectee with | NonAssoc -> true | uu___ -> false
-type token = (FStar_Char.char, Prims.string) FStar_Util.either
+type token = (FStar_Char.char, Prims.string) FStar_Pervasives.either
 type associativity_level = (associativity * token Prims.list)
 let (token_to_string :
-  (FStar_BaseTypes.char, Prims.string) FStar_Util.either -> Prims.string) =
+  (FStar_BaseTypes.char, Prims.string) FStar_Pervasives.either ->
+    Prims.string)
+  =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl c -> Prims.op_Hat (FStar_Util.string_of_char c) ".*"
-    | FStar_Util.Inr s -> s
+    | FStar_Pervasives.Inl c ->
+        Prims.op_Hat (FStar_Util.string_of_char c) ".*"
+    | FStar_Pervasives.Inr s -> s
 let (matches_token :
   Prims.string ->
-    (FStar_Char.char, Prims.string) FStar_Util.either -> Prims.bool)
+    (FStar_Char.char, Prims.string) FStar_Pervasives.either -> Prims.bool)
   =
   fun s ->
     fun uu___ ->
       match uu___ with
-      | FStar_Util.Inl c ->
+      | FStar_Pervasives.Inl c ->
           let uu___1 = FStar_String.get s Prims.int_zero in uu___1 = c
-      | FStar_Util.Inr s' -> s = s'
+      | FStar_Pervasives.Inr s' -> s = s'
 let matches_level :
   'uuuuu .
     Prims.string ->
-      ('uuuuu * (FStar_Char.char, Prims.string) FStar_Util.either Prims.list)
-        -> Prims.bool
+      ('uuuuu * (FStar_Char.char, Prims.string) FStar_Pervasives.either
+        Prims.list) -> Prims.bool
   =
   fun s ->
     fun uu___ ->
@@ -529,24 +532,32 @@ let matches_level :
       | (assoc_levels, tokens) ->
           let uu___1 = FStar_List.tryFind (matches_token s) tokens in
           uu___1 <> FStar_Pervasives_Native.None
-let (opinfix4 : associativity_level) = (Right, [FStar_Util.Inr "**"])
+let (opinfix4 : associativity_level) = (Right, [FStar_Pervasives.Inr "**"])
 let (opinfix3 : associativity_level) =
-  (Left, [FStar_Util.Inl 42; FStar_Util.Inl 47; FStar_Util.Inl 37])
+  (Left,
+    [FStar_Pervasives.Inl 42;
+    FStar_Pervasives.Inl 47;
+    FStar_Pervasives.Inl 37])
 let (opinfix2 : associativity_level) =
-  (Left, [FStar_Util.Inl 43; FStar_Util.Inl 45])
-let (minus_lvl : associativity_level) = (Left, [FStar_Util.Inr "-"])
+  (Left, [FStar_Pervasives.Inl 43; FStar_Pervasives.Inl 45])
+let (minus_lvl : associativity_level) = (Left, [FStar_Pervasives.Inr "-"])
 let (opinfix1 : associativity_level) =
-  (Right, [FStar_Util.Inl 64; FStar_Util.Inl 94])
-let (pipe_right : associativity_level) = (Left, [FStar_Util.Inr "|>"])
-let (opinfix0d : associativity_level) = (Left, [FStar_Util.Inl 36])
+  (Right, [FStar_Pervasives.Inl 64; FStar_Pervasives.Inl 94])
+let (pipe_right : associativity_level) = (Left, [FStar_Pervasives.Inr "|>"])
+let (opinfix0d : associativity_level) = (Left, [FStar_Pervasives.Inl 36])
 let (opinfix0c : associativity_level) =
-  (Left, [FStar_Util.Inl 61; FStar_Util.Inl 60; FStar_Util.Inl 62])
-let (equal : associativity_level) = (Left, [FStar_Util.Inr "="])
-let (opinfix0b : associativity_level) = (Left, [FStar_Util.Inl 38])
-let (opinfix0a : associativity_level) = (Left, [FStar_Util.Inl 124])
-let (colon_equals : associativity_level) = (NonAssoc, [FStar_Util.Inr ":="])
-let (amp : associativity_level) = (Right, [FStar_Util.Inr "&"])
-let (colon_colon : associativity_level) = (Right, [FStar_Util.Inr "::"])
+  (Left,
+    [FStar_Pervasives.Inl 61;
+    FStar_Pervasives.Inl 60;
+    FStar_Pervasives.Inl 62])
+let (equal : associativity_level) = (Left, [FStar_Pervasives.Inr "="])
+let (opinfix0b : associativity_level) = (Left, [FStar_Pervasives.Inl 38])
+let (opinfix0a : associativity_level) = (Left, [FStar_Pervasives.Inl 124])
+let (colon_equals : associativity_level) =
+  (NonAssoc, [FStar_Pervasives.Inr ":="])
+let (amp : associativity_level) = (Right, [FStar_Pervasives.Inr "&"])
+let (colon_colon : associativity_level) =
+  (Right, [FStar_Pervasives.Inr "::"])
 let (level_associativity_spec : associativity_level Prims.list) =
   [opinfix4;
   opinfix3;
@@ -2405,7 +2416,7 @@ and (p_noSeqTerm' :
               let uu___2 = FStar_Pprint.separate_map break1 p_atomicTerm es in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
-        | FStar_Parser_AST.If (e1, e2, e3) ->
+        | FStar_Parser_AST.If (e1, ret_opt, e2, e3) ->
             if is_unit e3
             then
               let uu___ =
@@ -2422,27 +2433,52 @@ and (p_noSeqTerm' :
             else
               (let e2_doc =
                  match e2.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.If (uu___1, uu___2, e31) when is_unit e31
-                     ->
-                     let uu___3 = p_noSeqTermAndComment false false e2 in
-                     soft_parens_with_nesting uu___3
+                 | FStar_Parser_AST.If (uu___1, uu___2, uu___3, e31) when
+                     is_unit e31 ->
+                     let uu___4 = p_noSeqTermAndComment false false e2 in
+                     soft_parens_with_nesting uu___4
                  | uu___1 -> p_noSeqTermAndComment false false e2 in
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = str "if" in
-                   let uu___4 = p_noSeqTermAndComment false false e1 in
-                   op_Hat_Slash_Plus_Hat uu___3 uu___4 in
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = str "then" in
-                     op_Hat_Slash_Plus_Hat uu___5 e2_doc in
-                   let uu___5 =
-                     let uu___6 = str "else" in
-                     let uu___7 = p_noSeqTermAndComment ps pb e3 in
-                     op_Hat_Slash_Plus_Hat uu___6 uu___7 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-               FStar_Pprint.group uu___1)
+               match ret_opt with
+               | FStar_Pervasives_Native.None ->
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 = str "if" in
+                       let uu___4 = p_noSeqTermAndComment false false e1 in
+                       op_Hat_Slash_Plus_Hat uu___3 uu___4 in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = str "then" in
+                         op_Hat_Slash_Plus_Hat uu___5 e2_doc in
+                       let uu___5 =
+                         let uu___6 = str "else" in
+                         let uu___7 = p_noSeqTermAndComment ps pb e3 in
+                         op_Hat_Slash_Plus_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                   FStar_Pprint.group uu___1
+               | FStar_Pervasives_Native.Some ret ->
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 = str "if" in
+                       let uu___4 = p_noSeqTermAndComment false false e1 in
+                       op_Hat_Slash_Plus_Hat uu___3 uu___4 in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = str "ret" in
+                         let uu___6 = p_tmIff ret in
+                         op_Hat_Slash_Plus_Hat uu___5 uu___6 in
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = str "then" in
+                           op_Hat_Slash_Plus_Hat uu___7 e2_doc in
+                         let uu___7 =
+                           let uu___8 = str "else" in
+                           let uu___9 = p_noSeqTermAndComment ps pb e3 in
+                           op_Hat_Slash_Plus_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                   FStar_Pprint.group uu___1)
         | FStar_Parser_AST.TryWith (e1, branches) ->
             let uu___ =
               let uu___1 =
@@ -2459,20 +2495,36 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if (ps || pb) in uu___1 uu___
-        | FStar_Parser_AST.Match (e1, branches) ->
+        | FStar_Parser_AST.Match (e1, ret_opt, branches) ->
             let uu___ =
               let uu___1 =
-                let uu___2 =
-                  let uu___3 = str "match" in
-                  let uu___4 = p_noSeqTermAndComment false false e1 in
-                  let uu___5 = str "with" in
-                  FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
-                    uu___3 uu___4 uu___5 in
-                let uu___3 =
-                  separate_map_last FStar_Pprint.hardline p_patternBranch
-                    branches in
-                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-              FStar_Pprint.group uu___1 in
+                match ret_opt with
+                | FStar_Pervasives_Native.None ->
+                    let uu___2 =
+                      let uu___3 = str "match" in
+                      let uu___4 = p_noSeqTermAndComment false false e1 in
+                      let uu___5 = str "with" in
+                      FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
+                        uu___3 uu___4 uu___5 in
+                    FStar_Pprint.group uu___2
+                | FStar_Pervasives_Native.Some ret ->
+                    let uu___2 =
+                      let uu___3 = str "match" in
+                      let uu___4 =
+                        let uu___5 = p_noSeqTermAndComment false false e1 in
+                        let uu___6 =
+                          let uu___7 = str "returns" in
+                          let uu___8 = p_tmIff ret in
+                          op_Hat_Slash_Plus_Hat uu___7 uu___8 in
+                        op_Hat_Slash_Plus_Hat uu___5 uu___6 in
+                      let uu___5 = str "with" in
+                      FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
+                        uu___3 uu___4 uu___5 in
+                    FStar_Pprint.group uu___2 in
+              let uu___2 =
+                separate_map_last FStar_Pprint.hardline p_patternBranch
+                  branches in
+              FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             let uu___1 = paren_if (ps || pb) in uu___1 uu___
         | FStar_Parser_AST.LetOpen (uid, e1) ->
             let uu___ =
@@ -2559,7 +2611,7 @@ and (p_noSeqTerm' :
                FStar_Parser_AST.prange = uu___1;_}::[],
              {
                FStar_Parser_AST.tm = FStar_Parser_AST.Match
-                 (maybe_x, branches);
+                 (maybe_x, FStar_Pervasives_Native.None, branches);
                FStar_Parser_AST.range = uu___2;
                FStar_Parser_AST.level = uu___3;_})
             when matches_var maybe_x x ->
@@ -3431,7 +3483,7 @@ and (p_tmNoEqWith' :
                | (left, mine, right) ->
                    let p_dsumfst bt =
                      match bt with
-                     | FStar_Util.Inl b ->
+                     | FStar_Pervasives.Inl b ->
                          let uu___1 = p_binder false b in
                          let uu___2 =
                            let uu___3 =
@@ -3439,7 +3491,7 @@ and (p_tmNoEqWith' :
                              FStar_Pprint.op_Hat_Hat uu___4 break1 in
                            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
                          FStar_Pprint.op_Hat_Hat uu___1 uu___2
-                     | FStar_Util.Inr t ->
+                     | FStar_Pervasives.Inr t ->
                          let uu___1 = p_tmNoEqWith' false p_X left t in
                          let uu___2 =
                            let uu___3 =
