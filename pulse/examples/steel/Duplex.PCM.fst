@@ -496,7 +496,7 @@ let lemma_same_length_ahead_implies_eq (#p:dprot) (tr tr':partial_trace_of p)
           | Message _ _ _ tail -> aux tail (Message?._3 tr2)
     in aux tr.tr tr'.tr
 
-#push-options "--z3rlimit_factor 4 --query_stats --max_ifuel 1 --max_fuel 1"
+#push-options "--z3rlimit_factor 4 --max_ifuel 1 --max_fuel 1"
 let frame_compatible_a_extend (#p:dprot)
   (q:dprot{is_recv q /\ more q}) (tr:trace p q)
   (tr':partial_trace_of p)
