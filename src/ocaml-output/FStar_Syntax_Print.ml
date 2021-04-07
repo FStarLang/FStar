@@ -280,7 +280,7 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
     | FStar_Syntax_Syntax.New -> "new"
     | FStar_Syntax_Syntax.Private -> "private"
     | FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen -> "unfold"
-    | FStar_Syntax_Syntax.Inline_for_extraction -> "inline"
+    | FStar_Syntax_Syntax.Inline_for_extraction -> "inline_for_extraction"
     | FStar_Syntax_Syntax.NoExtract -> "noextract"
     | FStar_Syntax_Syntax.Visible_default -> "visible"
     | FStar_Syntax_Syntax.Irreducible -> "irreducible"
