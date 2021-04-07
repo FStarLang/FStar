@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -78,83 +79,6 @@ let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current
 
 
 (*****************Type-checking the signature of a module*****************************)
-
-let tc_lex_t env ses quals lids =
-    (* We specifically type lex_t as:
-
-          type lex_t<u> : Type(u) =
-          datacon LexTop<utop>  : lex_t<utop>
-          datacon LexCons<ucons1, ucons2> : #a:Type(ucons1) -> hd:a -> tl:lex_t<ucons2> -> lex_t<max ucons1 ucons2>
-    *)
-    assert (quals = []);
-    let err_range = (List.hd ses).sigrng in
-    begin match lids with
-        | [lex_t; lex_top; lex_cons] when
-            (lid_equals lex_t PC.lex_t_lid
-             && lid_equals lex_top PC.lextop_lid
-             && lid_equals lex_cons PC.lexcons_lid) -> ()
-        | _ -> Errors.raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, ("Invalid (partial) redefinition of lex_t")) err_range
-    end;
-    begin match ses with
-      //AR: we were enforcing the univs to be [], which breaks down when we have two phases
-      //    the typechecking of lex_t is anyway hardcoded, so it should be fine to ignore that restriction
-      | [{ sigel = Sig_inductive_typ(lex_t, _, [], t, _, _);  sigquals = []; sigrng = r };
-         { sigel = Sig_datacon(lex_top, _, _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
-         { sigel = Sig_datacon(lex_cons, _, _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
-         when (lid_equals lex_t PC.lex_t_lid
-            && lid_equals lex_top PC.lextop_lid
-            && lid_equals lex_cons PC.lexcons_lid) ->
-
-        let u = S.new_univ_name (Some r) in
-        let t = mk (Tm_type(U_name u)) r in
-        let t = Subst.close_univ_vars [u] t in
-        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [PC.lextop_lid; PC.lexcons_lid]);
-                   sigquals = [];
-                   sigrng = r;
-                   sigmeta = default_sigmeta;
-                   sigattrs = [];
-                   sigopts = None; } in
-
-        let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) r1 in
-        let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
-                          sigquals = [];
-                          sigrng = r1;
-                          sigmeta = default_sigmeta;
-                          sigattrs = [];
-                          sigopts = None; } in
-
-        let ucons1 = S.new_univ_name (Some r2) in
-        let ucons2 = S.new_univ_name (Some r2) in
-        let lex_cons_t =
-            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) r2) in
-            let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
-            U.arrow [(S.mk_binder_with_attrs a (Some S.imp_tag) []);
-                     (S.mk_binder_with_attrs hd None []); 
-                     (S.mk_binder_with_attrs tl None [])] (S.mk_Total res) in
-        let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
-                           sigquals = [];
-                           sigrng = r2;
-                           sigmeta = default_sigmeta;
-                           sigattrs = [];
-                           sigopts = None; } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
-          sigquals = [];
-          sigrng = Env.get_range env;
-          sigmeta = default_sigmeta;
-          sigattrs = [];
-          sigopts = None; }
-      | _ ->
-        let err_msg =
-          BU.format1 "Invalid (re)definition of lex_t: %s\n"
-            (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids))))
-        in
-        raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
-    end
 
 let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
   let uvs, t = SS.open_univ_vars uvs t in
@@ -389,6 +313,8 @@ let store_sigopts (se:sigelt) : sigelt =
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
   BU.mk_ref None
 
+let do_two_phases env : bool = Env.should_verify env
+
 (* The type checking rule for Sig_let (lbs, lids) *)
 let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     let env0 = env in
@@ -506,7 +432,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env' then begin
+      if do_two_phases env' then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
@@ -520,7 +446,11 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | _ -> e_lax  //leave recursive lets as is
+          | _ -> 
+            //leave recursive lets as is; since the decreases clause from the ascription (if any)
+            //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
+            //if we drop the lbtyp here, we'll lose the decreases clause
+            e_lax
         in
         let e =
           Profiling.profile (fun () ->
@@ -670,22 +600,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     end;
     [], [], env
 
-  | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
-    //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
-    //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
-    (*
-        type lex_t<u> =
-          | LexTop<u>  : lex_t<u>
-          | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
-    *)
-    let env = Env.set_range env r in
-    let se = tc_lex_t env ses se.sigquals lids  in
-    [se], [], env0
-
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
     let ses =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses =
           tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
@@ -726,7 +644,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       [], ses @ effect_and_lift_ses, env0
     else       
       let ne =
-        if Options.use_two_phase_tc () && Env.should_verify env then begin
+        if do_two_phases env then begin
           let ne =
             TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
@@ -748,7 +666,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
     let lid, uvs, tps, c =
-      if Options.use_two_phase_tc () && Env.should_verify env
+      if do_two_phases env
       then
         TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
         |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
@@ -777,7 +695,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                                    (Ident.string_of_lid lid))) r;
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -795,7 +713,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -840,7 +758,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
@@ -860,7 +778,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_polymonadic_subcomp (m, n, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) })

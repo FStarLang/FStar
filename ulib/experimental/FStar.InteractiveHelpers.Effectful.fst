@@ -580,7 +580,7 @@ let related_term_is_effectul dbg ge tv : Tac bool =
   | Tv_Const _ -> false
   | Tv_Uvar _ _ -> false
   | Tv_Let recf attrs bv def body -> is_effectful def
-  | Tv_Match scrutinee branches ->
+  | Tv_Match scrutinee _ret_opt branches ->
     (* TODO: we need to keep track of the relation between parents and children *)
     (* We assume the term under focus is in one the branches of the match - this
      * assumption is safe: in the worst case, we won't be able to find a mem to use.

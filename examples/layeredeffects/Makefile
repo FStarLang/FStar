@@ -1,5 +1,4 @@
-FSTAR_HOME=../..
-OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --record_hints
+OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing
 include ../Makefile.include
 
 NO_VERIFY=Buffers.fst

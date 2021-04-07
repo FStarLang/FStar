@@ -1,10 +1,11 @@
-FSTAR_HOME=../..
-KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
-INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
 # Poly files are here for benchmarking, and expected to fail without tactics
 EXCLUDED_FSTAR_FILES=Launch.fst CanonDeep.fst Poly1.fst Poly2.fst \
 		     StringPrinterTest.fst StringPrinterTest.Aux.fst NArrows.fst
 		     # ^ these last 3 should be fixed and restored
+
+ifndef KREMLIN_HOME
+  EXCLUDED_FSTAR_FILES += $(wildcard StringPrinter*)
+endif
 
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
@@ -12,6 +13,10 @@ all: verify-all #stringprintertest
 
 $(CACHE_DIR):
 	mkdir -p $@
+
+ifdef KREMLIN_HOME
+INCLUDE_PATHS+=$(KREMLIN_HOME)/kremlib
+endif
 
 include ../Makefile.common
 

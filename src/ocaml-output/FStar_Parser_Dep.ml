@@ -1182,8 +1182,12 @@ let (collect_one :
                   FStar_Util.iter_opt k collect_term;
                   FStar_List.iter
                     (fun uu___6 ->
-                       match uu___6 with | (uu___7, t) -> collect_term t)
-                    identterms)
+                       match uu___6 with
+                       | (uu___7, aq, attrs, t) ->
+                           (collect_aqual aq;
+                            FStar_All.pipe_right attrs
+                              (FStar_List.iter collect_term);
+                            collect_term t)) identterms)
              | FStar_Parser_AST.TyconVariant (uu___3, binders, k, identterms)
                  ->
                  (collect_binders binders;
@@ -1331,10 +1335,15 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Seq (t1, t2) ->
                  (collect_term t1; collect_term t2)
-             | FStar_Parser_AST.If (t1, t2, t3) ->
-                 (collect_term t1; collect_term t2; collect_term t3)
-             | FStar_Parser_AST.Match (t, bs) ->
-                 (collect_term t; collect_branches bs)
+             | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
+                 (collect_term t1;
+                  FStar_Util.iter_opt ret_opt collect_term;
+                  collect_term t2;
+                  collect_term t3)
+             | FStar_Parser_AST.Match (t, ret_opt, bs) ->
+                 (collect_term t;
+                  FStar_Util.iter_opt ret_opt collect_term;
+                  collect_branches bs)
              | FStar_Parser_AST.TryWith (t, bs) ->
                  (collect_term t; collect_branches bs)
              | FStar_Parser_AST.Ascribed
@@ -1356,8 +1365,8 @@ let (collect_one :
                  (FStar_List.iter
                     (fun uu___4 ->
                        match uu___4 with
-                       | FStar_Util.Inl b -> collect_binder b
-                       | FStar_Util.Inr t1 -> collect_term t1) binders;
+                       | FStar_Pervasives.Inl b -> collect_binder b
+                       | FStar_Pervasives.Inr t1 -> collect_term t1) binders;
                   collect_term t)
              | FStar_Parser_AST.QForall (binders, (uu___3, ts), t) ->
                  (collect_binders binders;
@@ -1373,8 +1382,9 @@ let (collect_one :
              | FStar_Parser_AST.Paren t -> collect_term t
              | FStar_Parser_AST.Requires (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Ensures (t, uu___3) -> collect_term t
-             | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Labeled (t, uu___3, uu___4) -> collect_term t
+             | FStar_Parser_AST.LexList l -> FStar_List.iter collect_term l
+             | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Quote (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Antiquote t -> collect_term t
              | FStar_Parser_AST.VQuote t -> collect_term t

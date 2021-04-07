@@ -356,7 +356,6 @@ let rec complete_memo_rec (f: (x:dom -> Tot (partial_result x))) (x:dom) (px:par
       | None ->
         let px' = f x' in
         fpartial_result_lemma f x' px' Now ;
-        assert ( %[x' ; px'] << %[x ; px]) ;
         let y = complete_memo_rec f x' (f x') in
         assert (y == fixp f x') ;
         MEMO?.put x' y ;
@@ -393,7 +392,7 @@ let memo_rec (f: (x:dom -> Tot (partial_result x))) (x0:dom)
 (* ****************************************************************************)
 
 
-let p (x:dom) (px:partial_result x) (x':dom) = %[ %[x'; 2 ; ()] ] << %[ %[x; 0 ; px] ]
+let p (x:dom) (px:partial_result x) (x':dom) = x' << x
 
 (*  *)
 let rec complete_memo_rec_extr
@@ -431,7 +430,8 @@ let rec complete_memo_rec_extr_computes :
     let compute_lemma0 (h0:heap) (vm:squash(valid_memo h0 (fixp f))) (x':dom) (px':squash (p x px x'))
         : Lemma (p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in
                                y == fixp f x' /\ valid_memo h1 (fixp f)))
-    = give_proof vm ; give_proof px' ; assert (%[ %[x; 0 ; px] ] << %[ %[x; 1 ; px] ]); memo_rec_extr_computes f x' h0
+    = give_proof vm ; give_proof px' ;
+      memo_rec_extr_computes f x' h0
     in
     let compute_lemma1 (h0:heap) (vm:squash(valid_memo h0 (fixp f)))
       : Lemma (forall x'. p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in y == fixp f x' /\ valid_memo h1 (fixp f)))

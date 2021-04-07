@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.Interactive.Legacy
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar

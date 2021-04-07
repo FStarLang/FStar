@@ -26,7 +26,6 @@ type vconfig =
   z3rlimit: Prims.int ;
   z3rlimit_factor: Prims.int ;
   z3seed: Prims.int ;
-  use_two_phase_tc: Prims.bool ;
   trivial_pre_for_unannotated_effectful_fns: Prims.bool ;
   reuse_hint_for: Prims.string FStar_Pervasives_Native.option }
 let (__proj__Mkvconfig__item__initial_fuel : vconfig -> Prims.int) =
@@ -38,9 +37,8 @@ let (__proj__Mkvconfig__item__initial_fuel : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        initial_fuel
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> initial_fuel
 let (__proj__Mkvconfig__item__max_fuel : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -50,9 +48,8 @@ let (__proj__Mkvconfig__item__max_fuel : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        max_fuel
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> max_fuel
 let (__proj__Mkvconfig__item__initial_ifuel : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -62,9 +59,8 @@ let (__proj__Mkvconfig__item__initial_ifuel : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        initial_ifuel
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> initial_ifuel
 let (__proj__Mkvconfig__item__max_ifuel : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -74,9 +70,8 @@ let (__proj__Mkvconfig__item__max_ifuel : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        max_ifuel
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> max_ifuel
 let (__proj__Mkvconfig__item__detail_errors : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -86,9 +81,8 @@ let (__proj__Mkvconfig__item__detail_errors : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        detail_errors
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> detail_errors
 let (__proj__Mkvconfig__item__detail_hint_replay : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -98,9 +92,8 @@ let (__proj__Mkvconfig__item__detail_hint_replay : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        detail_hint_replay
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> detail_hint_replay
 let (__proj__Mkvconfig__item__no_smt : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -110,9 +103,8 @@ let (__proj__Mkvconfig__item__no_smt : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        no_smt
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> no_smt
 let (__proj__Mkvconfig__item__quake_lo : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -122,9 +114,8 @@ let (__proj__Mkvconfig__item__quake_lo : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        quake_lo
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> quake_lo
 let (__proj__Mkvconfig__item__quake_hi : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -134,9 +125,8 @@ let (__proj__Mkvconfig__item__quake_hi : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        quake_hi
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> quake_hi
 let (__proj__Mkvconfig__item__quake_keep : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -146,9 +136,8 @@ let (__proj__Mkvconfig__item__quake_keep : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        quake_keep
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> quake_keep
 let (__proj__Mkvconfig__item__retry : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -158,8 +147,8 @@ let (__proj__Mkvconfig__item__retry : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} -> retry
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> retry
 let (__proj__Mkvconfig__item__smtencoding_elim_box : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -169,9 +158,8 @@ let (__proj__Mkvconfig__item__smtencoding_elim_box : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        smtencoding_elim_box
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> smtencoding_elim_box
 let (__proj__Mkvconfig__item__smtencoding_nl_arith_repr :
   vconfig -> Prims.string) =
   fun projectee ->
@@ -182,9 +170,8 @@ let (__proj__Mkvconfig__item__smtencoding_nl_arith_repr :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        smtencoding_nl_arith_repr
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> smtencoding_nl_arith_repr
 let (__proj__Mkvconfig__item__smtencoding_l_arith_repr :
   vconfig -> Prims.string) =
   fun projectee ->
@@ -195,9 +182,8 @@ let (__proj__Mkvconfig__item__smtencoding_l_arith_repr :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        smtencoding_l_arith_repr
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> smtencoding_l_arith_repr
 let (__proj__Mkvconfig__item__smtencoding_valid_intro :
   vconfig -> Prims.bool) =
   fun projectee ->
@@ -208,9 +194,8 @@ let (__proj__Mkvconfig__item__smtencoding_valid_intro :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        smtencoding_valid_intro
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> smtencoding_valid_intro
 let (__proj__Mkvconfig__item__smtencoding_valid_elim : vconfig -> Prims.bool)
   =
   fun projectee ->
@@ -221,9 +206,8 @@ let (__proj__Mkvconfig__item__smtencoding_valid_elim : vconfig -> Prims.bool)
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        smtencoding_valid_elim
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> smtencoding_valid_elim
 let (__proj__Mkvconfig__item__tcnorm : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -233,9 +217,8 @@ let (__proj__Mkvconfig__item__tcnorm : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        tcnorm
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> tcnorm
 let (__proj__Mkvconfig__item__no_plugins : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -245,9 +228,8 @@ let (__proj__Mkvconfig__item__no_plugins : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        no_plugins
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> no_plugins
 let (__proj__Mkvconfig__item__no_tactics : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -257,9 +239,8 @@ let (__proj__Mkvconfig__item__no_tactics : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        no_tactics
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> no_tactics
 let (__proj__Mkvconfig__item__vcgen_optimize_bind_as_seq :
   vconfig -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -270,9 +251,8 @@ let (__proj__Mkvconfig__item__vcgen_optimize_bind_as_seq :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        vcgen_optimize_bind_as_seq
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> vcgen_optimize_bind_as_seq
 let (__proj__Mkvconfig__item__z3cliopt : vconfig -> Prims.string Prims.list)
   =
   fun projectee ->
@@ -283,9 +263,8 @@ let (__proj__Mkvconfig__item__z3cliopt : vconfig -> Prims.string Prims.list)
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        z3cliopt
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> z3cliopt
 let (__proj__Mkvconfig__item__z3refresh : vconfig -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -295,9 +274,8 @@ let (__proj__Mkvconfig__item__z3refresh : vconfig -> Prims.bool) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        z3refresh
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> z3refresh
 let (__proj__Mkvconfig__item__z3rlimit : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -307,9 +285,8 @@ let (__proj__Mkvconfig__item__z3rlimit : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        z3rlimit
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> z3rlimit
 let (__proj__Mkvconfig__item__z3rlimit_factor : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -319,9 +296,8 @@ let (__proj__Mkvconfig__item__z3rlimit_factor : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        z3rlimit_factor
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> z3rlimit_factor
 let (__proj__Mkvconfig__item__z3seed : vconfig -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -331,21 +307,8 @@ let (__proj__Mkvconfig__item__z3seed : vconfig -> Prims.int) =
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        z3seed
-let (__proj__Mkvconfig__item__use_two_phase_tc : vconfig -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { initial_fuel; max_fuel; initial_ifuel; max_ifuel; detail_errors;
-        detail_hint_replay; no_smt; quake_lo; quake_hi; quake_keep; retry;
-        smtencoding_elim_box; smtencoding_nl_arith_repr;
-        smtencoding_l_arith_repr; smtencoding_valid_intro;
-        smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
-        vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        use_two_phase_tc
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> z3seed
 let (__proj__Mkvconfig__item__trivial_pre_for_unannotated_effectful_fns :
   vconfig -> Prims.bool) =
   fun projectee ->
@@ -356,9 +319,8 @@ let (__proj__Mkvconfig__item__trivial_pre_for_unannotated_effectful_fns :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        trivial_pre_for_unannotated_effectful_fns
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> trivial_pre_for_unannotated_effectful_fns
 let (__proj__Mkvconfig__item__reuse_hint_for :
   vconfig -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -369,6 +331,5 @@ let (__proj__Mkvconfig__item__reuse_hint_for :
         smtencoding_l_arith_repr; smtencoding_valid_intro;
         smtencoding_valid_elim; tcnorm; no_plugins; no_tactics;
         vcgen_optimize_bind_as_seq; z3cliopt; z3refresh; z3rlimit;
-        z3rlimit_factor; z3seed; use_two_phase_tc;
-        trivial_pre_for_unannotated_effectful_fns; reuse_hint_for;_} ->
-        reuse_hint_for
+        z3rlimit_factor; z3seed; trivial_pre_for_unannotated_effectful_fns;
+        reuse_hint_for;_} -> reuse_hint_for

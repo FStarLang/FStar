@@ -210,11 +210,6 @@ let (mk_Precedes :
       FStar_SMTEncoding_Term.term ->
         FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng4 FStar_SMTEncoding_Term.mk_Precedes
-let (mk_LexCons :
-  FStar_SMTEncoding_Term.term ->
-    FStar_SMTEncoding_Term.term ->
-      FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
-  = norng3 FStar_SMTEncoding_Term.mk_LexCons
 let (is_smt_reifiable_effect :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun en ->

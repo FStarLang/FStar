@@ -220,8 +220,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-        | Tm_match (sc, brs) ->
-            comb2 (fun sc brs -> Tm_match (sc, brs))
+        | Tm_match (sc, asc_opt, brs) ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in

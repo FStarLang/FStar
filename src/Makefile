@@ -1,5 +1,6 @@
 # -*- Makefile -*-
 include Makefile.config
+export FSTAR_HOME # because of the recursive calls to `make`
 
 FSLYDIR := VS/packages/FsLexYacc.6.1.0
 FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe

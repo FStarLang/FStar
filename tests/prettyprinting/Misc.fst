@@ -416,6 +416,8 @@ let f (#a #b c d: t) : Tot nat (decreases (length s)) = ()
 
 let f (a b: t) (c: r) (d: t) : Tot nat (decreases (length s)) = ()
 
+let f (a:t) (b:t) : Tot nat (decreases %[length s]) = ()
+
 let min x y = if x <= y then x else y
 
 let return_squash (#a: Type) x = ()

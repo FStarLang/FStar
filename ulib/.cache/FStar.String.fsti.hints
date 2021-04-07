@@ -1,5 +1,5 @@
 [
-  "√uÙ∏Z\u0000µRt1Eï®¿\u0019¬",
+  "+R>!l∫©≤¡¢:ø\u0001oxé",
   [
     [
       "FStar.String.make",
@@ -13,7 +13,21 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e43881492f13704090843cf94f9c7c47"
+      "0dd32b667172183bd93ebc0441e5b529"
+    ],
+    [
+      "FStar.String.sub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ffbfc54aa6e9838afbbc899b29d3c8ad"
     ]
   ]
 ]

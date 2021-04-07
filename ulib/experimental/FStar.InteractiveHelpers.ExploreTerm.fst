@@ -371,7 +371,7 @@ let flush_typ_or_comp dbg e tyc =
   in
   try begin match tyc with
   | TC_Typ ty pl n ->
-    let c = pack_comp (C_Total ty None) in
+    let c = pack_comp (C_Total ty []) in
     flush_comp pl n c
   | TC_Comp c pl n -> flush_comp pl n c
   end
@@ -515,7 +515,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       (* Perform the exploration in the proper order *)
       let expl1, expl2 = if dfs then explore_next, explore_def else explore_def, explore_next in
       bind_expl x0 expl1 expl2
-    | Tv_Match scrutinee branches ->
+    | Tv_Match scrutinee _ret_opt branches ->  //AR: TODO: need to account for returns annotation here
       (* Auxiliary function to explore the branches *)
       let explore_branch (x_flag : a & ctrl_flag) (br : branch) : Tac (a & ctrl_flag)=
         let x0, flag = x_flag in

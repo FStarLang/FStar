@@ -34,6 +34,7 @@ type token =
   | SEMICOLON_SEMICOLON
   | SEMICOLON
   | RPAREN
+  | RETURNS
   | REQUIRES
   | REIFY
   | REIFIABLE
@@ -89,6 +90,7 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT_AT_AT
   | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
@@ -193,6 +195,7 @@ type tokenId =
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
     | TOKEN_RPAREN
+    | TOKEN_RETURNS
     | TOKEN_REQUIRES
     | TOKEN_REIFY
     | TOKEN_REIFIABLE
@@ -248,6 +251,7 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT_AT_AT
     | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
@@ -334,6 +338,7 @@ type nonTerminalId =
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
+    | NONTERM_option_match_returning_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_option_term_
@@ -390,6 +395,7 @@ type nonTerminalId =
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
     | NONTERM_effectDefinition
+    | NONTERM_layeredEffectDefinition
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_polymonadic_bind
@@ -398,7 +404,7 @@ type nonTerminalId =
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqualAndAttrsUniverses
+    | NONTERM_binderAttributes
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -428,6 +434,7 @@ type nonTerminalId =
     | NONTERM_ascribeKind
     | NONTERM_kind
     | NONTERM_term
+    | NONTERM_match_returning
     | NONTERM_noSeqTerm
     | NONTERM_calcRel
     | NONTERM_calcStep

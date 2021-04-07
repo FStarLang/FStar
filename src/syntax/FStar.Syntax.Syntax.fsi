@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 (* Type definitions for the core AST *)
@@ -98,6 +99,7 @@ type delta_depth =
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Allow_ghost           (* Escape hatch used for dot patterns *)
   | Strict                (* Everything else is strict *)
 
 type term' =
@@ -111,7 +113,7 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
+  | Tm_match      of term * option<ascription> * list<branch>    (* match e (ret asc?) with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -192,7 +194,7 @@ and cflag =                                                      (* flags applic
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
-  | DECREASES of term
+  | DECREASES of list<term>
 and metadata =
   | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
