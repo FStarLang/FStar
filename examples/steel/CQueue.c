@@ -1,7 +1,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-/* instantiate with int */
+/* This file implements a queue using a singly linked list with a
+   pointer to the tail end of the list, not to the actual last
+   element, but to the *pointer* to the last element.
+
+   We model this file in Steel using CQueue.*.fst*, where we
+   instantiate the type of elements with int. */
+
+/* A list cell (Steel model in CQueue.CCell.*) */
 
 struct ccell_lvalue;
 
@@ -17,6 +24,8 @@ ccell_ptrvalue alloc_cell (int const data, ccell_ptrvalue const next) {
   return res;
 }
 
+/* A singly linked list (Steel model in CQueue.LList.*) */
+
 struct cllist_lvalue;
 
 typedef struct cllist_lvalue {
@@ -30,6 +39,8 @@ cllist_ptrvalue alloc_llist () {
   res->cllist_tail = &(res->cllist_head);
   return res;
 }
+
+/* Queue operations (Steel model in CQueue.fst*) */
 
 bool is_empty(cllist_ptrvalue l) {
   return l->cllist_head == NULL;

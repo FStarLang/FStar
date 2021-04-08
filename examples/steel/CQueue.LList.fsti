@@ -6,7 +6,10 @@ open Steel.Effect.Atomic
 open Steel.FractionalPermission
 open Steel.Reference
 
-(* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content) *)
+(* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content)
+
+   See CQueue.c: cllist_* 
+*)
 
 val cllist_ptrvalue (a: Type0) : Tot Type0 (* "cllist *" seen as a rvalue *)
 
