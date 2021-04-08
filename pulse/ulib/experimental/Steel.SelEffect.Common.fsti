@@ -256,7 +256,7 @@ let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
       visit_tm ff def;
       visit_tm ff t
 
-  | Tv_Match sc brs ->
+  | Tv_Match sc _ brs ->
       visit_tm ff sc;
       iter (visit_br ff) brs
 
