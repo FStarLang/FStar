@@ -537,63 +537,69 @@ let (new_uvar :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
+        FStar_Range.range ->
+          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
   =
   fun reason ->
     fun env ->
       fun typ ->
-        let uu___ =
-          FStar_TypeChecker_Env.new_implicit_var_aux reason
-            typ.FStar_Syntax_Syntax.pos env typ
-            FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
-        match uu___ with
-        | (u, ctx_uvar, g_u) ->
-            let uu___1 = add_implicits g_u.FStar_TypeChecker_Common.implicits in
-            bind uu___1
-              (fun uu___2 ->
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = FStar_List.hd ctx_uvar in
-                     FStar_Pervasives_Native.fst uu___5 in
-                   (u, uu___4) in
-                 ret uu___3)
+        fun rng ->
+          let uu___ =
+            FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
+              FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
+          match uu___ with
+          | (u, ctx_uvar, g_u) ->
+              let uu___1 =
+                add_implicits g_u.FStar_TypeChecker_Common.implicits in
+              bind uu___1
+                (fun uu___2 ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_List.hd ctx_uvar in
+                       FStar_Pervasives_Native.fst uu___5 in
+                     (u, uu___4) in
+                   ret uu___3)
 let (mk_irrelevant_goal :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Options.optionstate ->
-          Prims.string -> FStar_Tactics_Types.goal tac)
+        FStar_Range.range ->
+          FStar_Options.optionstate ->
+            Prims.string -> FStar_Tactics_Types.goal tac)
   =
   fun reason ->
     fun env ->
       fun phi ->
-        fun opts ->
-          fun label ->
-            let typ =
-              let uu___ = env.FStar_TypeChecker_Env.universe_of env phi in
-              FStar_Syntax_Util.mk_squash uu___ phi in
-            let uu___ = new_uvar reason env typ in
-            bind uu___
-              (fun uu___1 ->
-                 match uu___1 with
-                 | (uu___2, ctx_uvar) ->
-                     let goal =
-                       FStar_Tactics_Types.mk_goal env ctx_uvar opts false
-                         label in
-                     ret goal)
+        fun rng ->
+          fun opts ->
+            fun label ->
+              let typ =
+                let uu___ = env.FStar_TypeChecker_Env.universe_of env phi in
+                FStar_Syntax_Util.mk_squash uu___ phi in
+              let uu___ = new_uvar reason env typ rng in
+              bind uu___
+                (fun uu___1 ->
+                   match uu___1 with
+                   | (uu___2, ctx_uvar) ->
+                       let goal =
+                         FStar_Tactics_Types.mk_goal env ctx_uvar opts false
+                           label in
+                       ret goal)
 let (add_irrelevant_goal' :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Options.optionstate -> Prims.string -> unit tac)
+        FStar_Range.range ->
+          FStar_Options.optionstate -> Prims.string -> unit tac)
   =
   fun reason ->
     fun env ->
       fun phi ->
-        fun opts ->
-          fun label ->
-            let uu___ = mk_irrelevant_goal reason env phi opts label in
-            bind uu___ (fun goal -> add_goals [goal])
+        fun rng ->
+          fun opts ->
+            fun label ->
+              let uu___ = mk_irrelevant_goal reason env phi rng opts label in
+              bind uu___ (fun goal -> add_goals [goal])
 let (add_irrelevant_goal :
   FStar_Tactics_Types.goal ->
     Prims.string ->
@@ -604,35 +610,38 @@ let (add_irrelevant_goal :
       fun env ->
         fun phi ->
           add_irrelevant_goal' reason env phi
+            (base_goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
             base_goal.FStar_Tactics_Types.opts
             base_goal.FStar_Tactics_Types.label
 let (goal_of_guard :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term -> FStar_Tactics_Types.goal tac)
+      FStar_Syntax_Syntax.term ->
+        FStar_Range.range -> FStar_Tactics_Types.goal tac)
   =
   fun reason ->
     fun e ->
       fun f ->
-        bind getopts
-          (fun opts ->
-             let uu___ = mk_irrelevant_goal reason e f opts "" in
-             bind uu___
-               (fun goal ->
-                  let goal1 =
-                    let uu___1 = goal in
-                    {
-                      FStar_Tactics_Types.goal_main_env =
-                        (uu___1.FStar_Tactics_Types.goal_main_env);
-                      FStar_Tactics_Types.goal_ctx_uvar =
-                        (uu___1.FStar_Tactics_Types.goal_ctx_uvar);
-                      FStar_Tactics_Types.opts =
-                        (uu___1.FStar_Tactics_Types.opts);
-                      FStar_Tactics_Types.is_guard = true;
-                      FStar_Tactics_Types.label =
-                        (uu___1.FStar_Tactics_Types.label)
-                    } in
-                  ret goal1))
+        fun rng ->
+          bind getopts
+            (fun opts ->
+               let uu___ = mk_irrelevant_goal reason e f rng opts "" in
+               bind uu___
+                 (fun goal ->
+                    let goal1 =
+                      let uu___1 = goal in
+                      {
+                        FStar_Tactics_Types.goal_main_env =
+                          (uu___1.FStar_Tactics_Types.goal_main_env);
+                        FStar_Tactics_Types.goal_ctx_uvar =
+                          (uu___1.FStar_Tactics_Types.goal_ctx_uvar);
+                        FStar_Tactics_Types.opts =
+                          (uu___1.FStar_Tactics_Types.opts);
+                        FStar_Tactics_Types.is_guard = true;
+                        FStar_Tactics_Types.label =
+                          (uu___1.FStar_Tactics_Types.label)
+                      } in
+                    ret goal1))
 let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
   fun pref ->
     fun t ->
