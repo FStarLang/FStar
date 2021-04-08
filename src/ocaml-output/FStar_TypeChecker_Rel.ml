@@ -9826,7 +9826,11 @@ and (solve_c :
                              let uu___7 = FStar_Syntax_Subst.compress t in
                              uu___7.FStar_Syntax_Syntax.n in
                            match uu___6 with
-                           | FStar_Syntax_Syntax.Tm_uvar uu___7 -> true
+                           | FStar_Syntax_Syntax.Tm_uvar (uv, uu___7) ->
+                               let uu___8 =
+                                 FStar_TypeChecker_DeferredImplicits.should_defer_uvar_to_user_tac
+                                   env uv in
+                               Prims.op_Negation uu___8
                            | FStar_Syntax_Syntax.Tm_uinst (t1, uu___7) ->
                                is_uvar t1
                            | FStar_Syntax_Syntax.Tm_app (t1, uu___7) ->

@@ -3385,13 +3385,32 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           let stronger_t = stronger_t_opt |> must in
           let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
 
+          (*
+           * AR: 04/08: Suppose we have a subcomp problem of the form:
+           *            M a ?u <: M a wp or M a wp <: M a ?u
+           *
+           *            If we simply applied the stronger (subcomp) combinator,
+           *              there is a chance that the uvar would escape into the
+           *              refinements/wp and remain unresolved
+           *
+           *            So, if this is the case (i.e. an effect index on one side is a uvar)
+           *              we solve this particular index with equality ?u = wp
+           *
+           *            There are two exceptions:
+           *              If it is a polymonadic subcomp (the indices may not be symmetric)
+           *              If uvar is to be solved using a user-defined tactic
+           *
+           * TODO: apply this equality heuristic to non-layered effects also
+           *)
+
           //sub problems for uvar indices in c1
           let is_sub_probs, wl =
             if is_polymonadic then [], wl
             else
-              let rec is_uvar t =
+              let rec is_uvar t =  //t is a uvar that is not to be solved by a user tactic
                 match (SS.compress t).n with
-                | Tm_uvar _ -> true
+                | Tm_uvar (uv, _) ->
+                  not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
                 | Tm_uinst (t, _) -> is_uvar t
                 | Tm_app (t, _) -> is_uvar t
                 | _ -> false in

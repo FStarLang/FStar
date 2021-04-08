@@ -91,7 +91,7 @@ let load_native_tactics () =
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     if Options.debug_any () then
       Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
-    if not (Options.no_load_fstartaclib ()) then //&& not (FStar.Platform.system = FStar.Platform.Windows) then
+    if not (Options.no_load_fstartaclib ()) then
         Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
