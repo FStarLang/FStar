@@ -737,6 +737,8 @@ let tr_norm_step = function
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | EMB.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
+    | EMB.UnfoldQual names ->
+        [UnfoldUntil delta_constant; UnfoldQual names]
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
@@ -868,9 +870,15 @@ Initialized below in normalize *)
 let plugin_unfold_warn_ctr : ref<int> = BU.mk_ref 0
 
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
-    let attrs = match Env.attrs_of_qninfo qninfo with
-            | None -> []
-            | Some ats -> ats
+    let attrs =
+      match Env.attrs_of_qninfo qninfo with
+      | None -> []
+      | Some ats -> ats
+    in
+    let quals =
+      match Env.quals_of_qninfo qninfo with
+      | None -> []
+      | Some quals -> quals
     in
     (* unfold or not, fully or not, reified or not *)
     let yes   = true  , false , false in
@@ -883,7 +891,13 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let comb_or l = List.fold_right (fun (a,b,c) (x,y,z) -> (a||x, b||y, c||z)) l (false, false, false) in
     let string_of_res (x,y,z) = BU.format3 "(%s,%s,%s)" (string_of_bool x) (string_of_bool y) (string_of_bool z) in
 
-    let res = match qninfo, cfg.steps.unfold_only, cfg.steps.unfold_fully, cfg.steps.unfold_attr with
+    let res =
+    match qninfo,
+          cfg.steps.unfold_only,
+          cfg.steps.unfold_fully,
+          cfg.steps.unfold_attr,
+          cfg.steps.unfold_qual
+    with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg in
@@ -898,26 +912,27 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+    | _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
         log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
-    | _, Some _, _, _
-    | _, _, Some _, _
-    | _, _, _, Some _ ->
+    | _, Some _, _, _, _
+    | _, _, Some _, _, _
+    | _, _, _, Some _, _
+    | _, _, _, _, Some _ ->
         log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
@@ -937,6 +952,16 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         ;(match cfg.steps.unfold_fully with
           | None -> no
           | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
+        ;(match cfg.steps.unfold_qual with
+          | None -> no
+          | Some qs ->
+            yesno <|
+            BU.for_some
+              (fun q ->
+                BU.for_some 
+                  (fun qual -> Print.qual_to_string qual = q)
+                  quals)
+              qs)
         ]
 
     // Nothing special, just check the depth
@@ -996,6 +1021,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                        unfold_only  = None
                      ; unfold_fully = None
                      ; unfold_attr  = None
+                     ; unfold_qual  = None
                      ; unfold_until = Some delta_constant } } in
 
         (* Take care to not change the stack's head if there's a universe
@@ -2565,6 +2591,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_until = None;
                     unfold_only = None;
                     unfold_attr = None;
+                    unfold_qual = None;
                     unfold_tac = false
              }
              in

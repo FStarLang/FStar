@@ -35,6 +35,7 @@ type fsteps = {
      unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
      unfold_attr  : option<list<I.lid>>;
+     unfold_qual  : option<list<string>>;
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -73,6 +74,7 @@ let steps_to_string f =
     unfold_only = %s;\n\
     unfold_fully = %s;\n\
     unfold_attr = %s;\n\
+    unfold_qual = %s;\n\
     unfold_tac = %s;\n\
     pure_subterms_within_computations = %s;\n\
     simplify = %s;\n\
@@ -100,6 +102,7 @@ let steps_to_string f =
     f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
+    f.unfold_qual |> format_opt (String.concat ", ");
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -129,6 +132,7 @@ let default_steps : fsteps = {
     unfold_only = None;
     unfold_fully = None;
     unfold_attr = None;
+    unfold_qual = None;
     unfold_tac = false;
     pure_subterms_within_computations = false;
     simplify = false;
@@ -166,6 +170,7 @@ let fstep_add_one s fs =
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
+    | UnfoldQual  strs -> { fs with unfold_qual  = Some strs }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }

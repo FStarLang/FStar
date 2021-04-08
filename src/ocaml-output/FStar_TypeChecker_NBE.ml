@@ -178,6 +178,8 @@ let (zeta_false : config -> config) =
                  (uu___1.FStar_TypeChecker_Cfg.unfold_fully);
                FStar_TypeChecker_Cfg.unfold_attr =
                  (uu___1.FStar_TypeChecker_Cfg.unfold_attr);
+               FStar_TypeChecker_Cfg.unfold_qual =
+                 (uu___1.FStar_TypeChecker_Cfg.unfold_qual);
                FStar_TypeChecker_Cfg.unfold_tac =
                  (uu___1.FStar_TypeChecker_Cfg.unfold_tac);
                FStar_TypeChecker_Cfg.pure_subterms_within_computations =
@@ -2965,6 +2967,8 @@ let (normalize :
                      (uu___1.FStar_TypeChecker_Cfg.unfold_fully);
                    FStar_TypeChecker_Cfg.unfold_attr =
                      (uu___1.FStar_TypeChecker_Cfg.unfold_attr);
+                   FStar_TypeChecker_Cfg.unfold_qual =
+                     (uu___1.FStar_TypeChecker_Cfg.unfold_qual);
                    FStar_TypeChecker_Cfg.unfold_tac =
                      (uu___1.FStar_TypeChecker_Cfg.unfold_tac);
                    FStar_TypeChecker_Cfg.pure_subterms_within_computations =
@@ -3072,6 +3076,8 @@ let (normalize_for_unit_test :
                    (uu___1.FStar_TypeChecker_Cfg.unfold_fully);
                  FStar_TypeChecker_Cfg.unfold_attr =
                    (uu___1.FStar_TypeChecker_Cfg.unfold_attr);
+                 FStar_TypeChecker_Cfg.unfold_qual =
+                   (uu___1.FStar_TypeChecker_Cfg.unfold_qual);
                  FStar_TypeChecker_Cfg.unfold_tac =
                    (uu___1.FStar_TypeChecker_Cfg.unfold_tac);
                  FStar_TypeChecker_Cfg.pure_subterms_within_computations =
