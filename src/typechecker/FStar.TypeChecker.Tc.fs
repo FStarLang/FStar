@@ -900,6 +900,8 @@ let tc_decls env ses =
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "check uvars %s\n" (Print.term_to_string t);
         N.normalize
                [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 Env.CheckNoUvars;
