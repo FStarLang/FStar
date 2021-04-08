@@ -696,7 +696,11 @@ let run_push_without_deps st query =
 
   let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
-  TcEnv.toggle_id_info st.repl_env true;
+  let _ =
+    if FStar.Options.ide_id_info_off()
+    then TcEnv.toggle_id_info st.repl_env false
+    else TcEnv.toggle_id_info st.repl_env true
+  in
   let st = set_nosynth_flag st peek_only in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
   let st = set_nosynth_flag st false in
