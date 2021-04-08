@@ -169,11 +169,27 @@ let id_info_table_empty =
 
 open FStar.Range
 
+let print_identifier_info info =
+  BU.format3 "id info { %s, %s : %s}"
+    (Range.string_of_range info.identifier_range)
+    (match info.identifier with
+     | Inl x -> Print.bv_to_string x
+     | Inr fv -> Print.fv_to_string fv)
+    (Print.term_to_string info.identifier_ty)
+
 let id_info__insert ty_map db info =
     let range = info.identifier_range in
     let use_range = Range.set_def_range range (Range.use_range range) in
+    let id_ty =
+      match info.identifier with
+      | Inr _ -> info.identifier_ty
+      | Inl x ->
+        // BU.print1 "id_info__insert: %s\n"
+        //           (print_identifier_info info);
+        ty_map info.identifier_ty
+    in
     let info = { info with identifier_range = use_range;
-                           identifier_ty = ty_map info.identifier_ty } in
+                           identifier_ty = id_ty } in
 
     let fn = file_of_range use_range in
     let start = start_of_range use_range in

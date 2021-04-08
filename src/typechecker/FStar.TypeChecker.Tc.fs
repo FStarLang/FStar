@@ -882,6 +882,9 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
+    if Options.ide_id_info_off() then Env.toggle_id_info env false;
+    if Env.debug env (Options.Other "IdInfoOn") then Env.toggle_id_info env true;
+
     let ses', ses_elaborated, env =
             Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
