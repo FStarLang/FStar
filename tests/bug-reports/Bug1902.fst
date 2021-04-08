@@ -63,7 +63,7 @@ let craft_f' use_f_type: Tac decls =
   let se = Sg_Let true name [] typ (
     mk_abs [m;n] (
       pack (
-        Tv_Match n'
+        Tv_Match n' None
         [ (Pat_Constant   (C_Int 0), (`(*`*)0))
         ; (Pat_Wild (fresh_bv (`(*`*)int)),
                     call2 (pack (Tv_FVar name))

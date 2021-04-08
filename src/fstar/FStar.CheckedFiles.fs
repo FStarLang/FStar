@@ -17,6 +17,7 @@
 
 module FStar.CheckedFiles
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -42,7 +43,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 33
+let cache_version_number = 34
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted

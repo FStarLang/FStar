@@ -73,7 +73,7 @@ let fail : 'a . Prims.string -> 'a tac =
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Common.TacticFailure msg), ps))
-let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Util.either tac =
+let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
   fun t ->
     mk_tac
       (fun ps ->
@@ -82,7 +82,7 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Util.either tac =
          match uu___ with
          | FStar_Tactics_Result.Success (a1, q) ->
              (FStar_Syntax_Unionfind.commit tx;
-              FStar_Tactics_Result.Success ((FStar_Util.Inr a1), q))
+              FStar_Tactics_Result.Success ((FStar_Pervasives.Inr a1), q))
          | FStar_Tactics_Result.Failed (m, q) ->
              (FStar_Syntax_Unionfind.rollback tx;
               (let ps1 =
@@ -114,25 +114,25 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Util.either tac =
                    FStar_Tactics_Types.urgency =
                      (uu___2.FStar_Tactics_Types.urgency)
                  } in
-               FStar_Tactics_Result.Success ((FStar_Util.Inl m), ps1))))
-let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Util.either tac =
+               FStar_Tactics_Result.Success ((FStar_Pervasives.Inl m), ps1))))
+let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
   fun t ->
     mk_tac
       (fun ps ->
          let uu___ = run t ps in
          match uu___ with
          | FStar_Tactics_Result.Success (a1, q) ->
-             FStar_Tactics_Result.Success ((FStar_Util.Inr a1), q)
+             FStar_Tactics_Result.Success ((FStar_Pervasives.Inr a1), q)
          | FStar_Tactics_Result.Failed (m, q) ->
-             FStar_Tactics_Result.Success ((FStar_Util.Inl m), q))
+             FStar_Tactics_Result.Success ((FStar_Pervasives.Inl m), q))
 let trytac : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
   fun t ->
     let uu___ = catch t in
     bind uu___
       (fun r ->
          match r with
-         | FStar_Util.Inr v -> ret (FStar_Pervasives_Native.Some v)
-         | FStar_Util.Inl uu___1 -> ret FStar_Pervasives_Native.None)
+         | FStar_Pervasives.Inr v -> ret (FStar_Pervasives_Native.Some v)
+         | FStar_Pervasives.Inl uu___1 -> ret FStar_Pervasives_Native.None)
 let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
   fun t ->
     mk_tac

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Term
+open FStar.Pervasives
 open FStar.Extraction.ML.UEnv
 open FStar.Ident
 open FStar.Syntax.Syntax

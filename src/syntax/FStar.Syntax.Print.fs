@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -339,9 +340,19 @@ and term_to_string x =
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
         U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
-      | Tm_match(head, branches) ->
-        U.format2 "(match %s with\n\t| %s)"
+      | Tm_match(head, asc_opt, branches) ->
+        U.format3 "(match %s %swith\n\t| %s)"
           (term_to_string head)
+          (match asc_opt with
+           | None -> ""
+           | Some (asc, tacopt) ->
+             U.format2 "returns %s%s "
+               (match asc with
+                | Inl t -> term_to_string t
+                | Inr c -> comp_to_string c)
+               (match tacopt with
+                | None -> ""
+                | Some tac -> U.format1 " by %s" (term_to_string tac)))
           (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
       | Tm_uinst(t, us) ->
         if (Options.print_universes())

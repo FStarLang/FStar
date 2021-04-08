@@ -20,6 +20,7 @@
 
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -2698,8 +2699,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
             match (s1, U.unmeta t1), (s2, U.unmeta t2) with
-            | (_, {n=Tm_match (scrutinee, branches)}), (s, t)
-            | (s, t), (_, {n=Tm_match(scrutinee, branches)}) ->
+            | (_, {n=Tm_match (scrutinee, _, branches)}), (s, t)
+            | (s, t), (_, {n=Tm_match(scrutinee, _, branches)}) ->
               if not (is_flex scrutinee)
               then begin
                 if Env.debug env <| Options.Other "Rel"
@@ -3128,7 +3129,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, brs1), Tm_match (s2, brs2) ->
+      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in
@@ -3384,13 +3385,32 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           let stronger_t = stronger_t_opt |> must in
           let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
 
+          (*
+           * AR: 04/08: Suppose we have a subcomp problem of the form:
+           *            M a ?u <: M a wp or M a wp <: M a ?u
+           *
+           *            If we simply applied the stronger (subcomp) combinator,
+           *              there is a chance that the uvar would escape into the
+           *              refinements/wp and remain unresolved
+           *
+           *            So, if this is the case (i.e. an effect index on one side is a uvar)
+           *              we solve this particular index with equality ?u = wp
+           *
+           *            There are two exceptions:
+           *              If it is a polymonadic subcomp (the indices may not be symmetric)
+           *              If uvar is to be solved using a user-defined tactic
+           *
+           * TODO: apply this equality heuristic to non-layered effects also
+           *)
+
           //sub problems for uvar indices in c1
           let is_sub_probs, wl =
             if is_polymonadic then [], wl
             else
-              let rec is_uvar t =
+              let rec is_uvar t =  //t is a uvar that is not to be solved by a user tactic
                 match (SS.compress t).n with
-                | Tm_uvar _ -> true
+                | Tm_uvar (uv, _) ->
+                  not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
                 | Tm_uinst (t, _) -> is_uvar t
                 | Tm_app (t, _) -> is_uvar t
                 | _ -> false in
@@ -4428,3 +4448,4 @@ let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
+

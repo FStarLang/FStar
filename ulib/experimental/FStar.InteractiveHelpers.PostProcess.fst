@@ -329,9 +329,9 @@ let split_conjunctions_under_match dbg t =
   let t1 = remove_b2t t in
   print_dbg dbg ("[> split_conjunctions_under_match: " ^ term_construct t1);
   match inspect t1 with
-  | Tv_Match scrut [(pat, br)] ->
+  | Tv_Match scrut ret_opt [(pat, br)] ->
     let tl = split_conjunctions br in
-    map (fun x -> pack (Tv_Match scrut [(pat, x)])) tl
+    map (fun x -> pack (Tv_Match scrut ret_opt [(pat, x)])) tl
   | _ ->
     (* Not of the proper shape: return the original term *)
     [t]
@@ -581,7 +581,7 @@ let rec replace_term_in dbg from_term to_term tm =
     let def' = replace_term_in dbg from_term to_term def in
     let body' = replace_term_in dbg from_term to_term body in
     pack (Tv_Let recf attrs bv def' body')
-  | Tv_Match scrutinee branches ->
+  | Tv_Match scrutinee ret_opt branches ->  //AR: TODO: account for the returns annotation
     (* Auxiliary function to explore the branches *)
     let explore_branch (br : branch) : Tac branch =
       (* Only explore the branch body *)
@@ -591,7 +591,7 @@ let rec replace_term_in dbg from_term to_term tm =
     in
     let scrutinee' = replace_term_in dbg from_term to_term scrutinee in
     let branches' = map explore_branch branches in
-    pack (Tv_Match scrutinee' branches')
+    pack (Tv_Match scrutinee' ret_opt branches')
   | Tv_AscribedT e ty tac ->
     let e' = replace_term_in dbg from_term to_term e in
     let ty' = replace_term_in dbg from_term to_term ty in

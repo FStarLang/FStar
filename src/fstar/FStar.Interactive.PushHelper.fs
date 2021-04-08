@@ -20,6 +20,7 @@
 
 module FStar.Interactive.PushHelper
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar.Util

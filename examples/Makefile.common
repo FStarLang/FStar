@@ -1,8 +1,18 @@
-FSTAR_HOME?=..
-include $(FSTAR_HOME)/ulib/gmake/z3.mk
-include $(FSTAR_HOME)/ulib/gmake/fstar.mk
-include $(FSTAR_HOME)/.common.mk
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+ifdef FSTAR_HOME
+  FSTAR_ULIB=$(FSTAR_HOME)/ulib
+else
+  # FSTAR_HOME not defined, assume fstar.exe installed through opam
+  # or binary package, and reachable from PATH
+  FSTAR_ULIB=$(dir $(shell which fstar.exe))/../lib/fstar
+endif
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk
+ifdef FSTAR_HOME
+  include $(FSTAR_HOME)/.common.mk
+  FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+else
+  FSTAR=fstar.exe
+endif
 
 #################################################################################
 # Customize these variables for your project

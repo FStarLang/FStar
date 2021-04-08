@@ -1,5 +1,5 @@
 [
-  "%¦|)ƒkkxvxÌ­r©%o",
+  "°Q˜¤\\9—†´øÞ=¨‰~Ý",
   [
     [
       "FStar.Tactics.Util.map",
@@ -126,6 +126,15 @@
       ],
       0,
       "6a025de6301d227eca36df23b90c1a10"
+    ],
+    [
+      "FStar.Tactics.Util.map_opt",
+      1,
+      0,
+      0,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "dba5fb10252ad3c420dce17cfadf97ee"
     ]
   ]
 ]

@@ -110,11 +110,11 @@ let (is_quant : FStar_Syntax_Syntax.typ -> Prims.bool) =
 let (is_ite : FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun t -> is_prim_op [FStar_Parser_Const.ite_lid] t
 let is_inr :
-  'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Util.either -> Prims.bool =
+  'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Pervasives.either -> Prims.bool =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl uu___1 -> false
-    | FStar_Util.Inr uu___1 -> true
+    | FStar_Pervasives.Inl uu___1 -> false
+    | FStar_Pervasives.Inr uu___1 -> true
 let (filter_imp :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     Prims.bool)
@@ -180,8 +180,8 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
 let (lbname_to_string : FStar_Syntax_Syntax.lbname -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inl l -> bv_to_string l
-    | FStar_Util.Inr l ->
+    | FStar_Pervasives.Inl l -> bv_to_string l
+    | FStar_Pervasives.Inr l ->
         lid_to_string (l.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
 let (uvar_to_string : FStar_Syntax_Syntax.uvar -> Prims.string) =
   fun u ->
@@ -595,7 +595,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt), eff_name) ->
                let annot1 =
                  match annot with
-                 | FStar_Util.Inl t ->
+                 | FStar_Pervasives.Inl t ->
                      let uu___3 =
                        let uu___4 =
                          FStar_Util.map_opt eff_name
@@ -604,7 +604,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                          (FStar_Util.dflt "default") in
                      let uu___4 = term_to_string t in
                      FStar_Util.format2 "[%s] %s" uu___3 uu___4
-                 | FStar_Util.Inr c -> comp_to_string c in
+                 | FStar_Pervasives.Inr c -> comp_to_string c in
                let topt1 =
                  match topt with
                  | FStar_Pervasives_Native.None -> ""
@@ -613,14 +613,30 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                      FStar_Util.format1 "by %s" uu___3 in
                let uu___3 = term_to_string e in
                FStar_Util.format3 "(%s <ascribed: %s %s)" uu___3 annot1 topt1
-           | FStar_Syntax_Syntax.Tm_match (head, branches) ->
+           | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches) ->
                let uu___3 = term_to_string head in
                let uu___4 =
-                 let uu___5 =
+                 match asc_opt with
+                 | FStar_Pervasives_Native.None -> ""
+                 | FStar_Pervasives_Native.Some (asc, tacopt) ->
+                     let uu___5 =
+                       match asc with
+                       | FStar_Pervasives.Inl t -> term_to_string t
+                       | FStar_Pervasives.Inr c -> comp_to_string c in
+                     let uu___6 =
+                       match tacopt with
+                       | FStar_Pervasives_Native.None -> ""
+                       | FStar_Pervasives_Native.Some tac ->
+                           let uu___7 = term_to_string tac in
+                           FStar_Util.format1 " by %s" uu___7 in
+                     FStar_Util.format2 "returns %s%s " uu___5 uu___6 in
+               let uu___5 =
+                 let uu___6 =
                    FStar_All.pipe_right branches
                      (FStar_List.map branch_to_string) in
-                 FStar_Util.concat_l "\n\t|" uu___5 in
-               FStar_Util.format2 "(match %s with\n\t| %s)" uu___3 uu___4
+                 FStar_Util.concat_l "\n\t|" uu___6 in
+               FStar_Util.format3 "(match %s %swith\n\t| %s)" uu___3 uu___4
+                 uu___5
            | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
                let uu___3 = FStar_Options.print_universes () in
                if uu___3

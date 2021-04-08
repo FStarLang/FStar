@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -445,7 +446,11 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | _ -> e_lax  //leave recursive lets as is
+          | _ -> 
+            //leave recursive lets as is; since the decreases clause from the ascription (if any)
+            //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
+            //if we drop the lbtyp here, we'll lose the decreases clause
+            e_lax
         in
         let e =
           Profiling.profile (fun () ->
