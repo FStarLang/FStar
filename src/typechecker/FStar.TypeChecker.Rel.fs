@@ -2265,8 +2265,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
-        //if Env.debug env <| Options.Other "Rel"
-        //then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
         //    (flex_t_to_string lhs)
         //    (Print.binders_to_string ", " bs_lhs)
         //    (Print.term_to_string t_res_lhs)
@@ -2274,8 +2274,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
-        //if Env.debug env <| Options.Other "Rel"
-        //then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
@@ -2289,8 +2289,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
-        //if Env.debug env <| Options.Other "Rel"
-        //then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [(lhs'_last_arg, snd last_arg_rhs)] t_lhs.pos)
@@ -4095,7 +4095,7 @@ let check_subtyping env t1 t2 =
   )
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStar.TypeChecker.Rel.check_subtyping"
-  
+
 let get_subtyping_predicate env t1 t2 =
     match check_subtyping env t1 t2 with
     | None -> None
@@ -4212,7 +4212,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
     let must_tot = not (env.phase1 ||
                         env.lax    ||
                         ctx_u.ctx_uvar_should_check = Allow_ghost) in
-    
+
     Errors.with_ctx
       (BU.format3 "While checking implicit %s set to %s of expected type %s"
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
@@ -4325,7 +4325,7 @@ let resolve_implicits' env is_tac g =
                match teq_nosmt env t tm with
                | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
                | Some g -> g.implicits in
-             
+
              let ctx_u = { ctx_u with ctx_uvar_meta = None } in
              until_fixpoint (out, true) (extra @ tl)
            | _ ->
