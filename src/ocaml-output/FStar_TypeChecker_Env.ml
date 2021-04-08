@@ -4618,15 +4618,17 @@ let (update_effect_lattice :
                              | FStar_Pervasives_Native.None -> []
                              | FStar_Pervasives_Native.Some (k, e1, e2) ->
                                  let uu___1 =
-                                   (let uu___2 =
-                                      exists_polymonadic_bind env1 i j in
-                                    FStar_All.pipe_right uu___2
-                                      FStar_Util.is_some)
-                                     ||
-                                     (let uu___2 =
-                                        exists_polymonadic_bind env1 j i in
-                                      FStar_All.pipe_right uu___2
-                                        FStar_Util.is_some) in
+                                   (let uu___2 = FStar_Ident.lid_equals i j in
+                                    Prims.op_Negation uu___2) &&
+                                     ((let uu___2 =
+                                         exists_polymonadic_bind env1 i j in
+                                       FStar_All.pipe_right uu___2
+                                         FStar_Util.is_some)
+                                        ||
+                                        (let uu___2 =
+                                           exists_polymonadic_bind env1 j i in
+                                         FStar_All.pipe_right uu___2
+                                           FStar_Util.is_some)) in
                                  if uu___1
                                  then
                                    let uu___2 =
