@@ -37,6 +37,7 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   refine = (fun x -> Both? x \/ Neither? x)
 })
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
@@ -53,7 +54,9 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
           | First _ -> First y
           | Both _ z -> Both y z
     in
-    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f)
+    change_slprop (pts_to r (First (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (First (Ghost.reveal x))))) (fun _ -> ());
+    upd_gen r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f;
+    change_slprop (pts_to r (Ghost.reveal (Ghost.hide (First y)))) (pts_to r (First y)) (fun _ -> ())
 
 let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
   : SteelT unit
@@ -69,4 +72,6 @@ let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
           | Second _ -> Second y
           | Both z _ -> Both z y
     in
-    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f)
+    change_slprop (pts_to r (Second (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (Second (Ghost.reveal x))))) (fun _ -> ());
+    upd_gen r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f;
+    change_slprop (pts_to r (Ghost.reveal (Ghost.hide (Second y)))) (pts_to r (Second y)) (fun _ -> ())
