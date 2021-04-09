@@ -4,8 +4,8 @@ include .common.mk
 
 all:
 	$(Q)+$(MAKE) -C src/ocaml-output
-	$(Q)+$(MAKE) -C ulib
 	$(Q)+$(MAKE) -C ulib/ml
+	$(Q)+$(MAKE) -C ulib
 
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install

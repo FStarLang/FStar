@@ -1,14 +1,14 @@
 module Steel.MonotonicHigherReference
 open FStar.PCM
-open Steel.Effect
-open Steel.Effect.Atomic
 open Steel.Memory
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
 open FStar.Ghost
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
 module M = Steel.Memory
-module SB = Steel.SteelT.Basics
+//module SB = Steel.SteelT.Basics
 module Atomic = Steel.Effect.Atomic
 open FStar.Real
 
@@ -210,6 +210,7 @@ let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
   : prop
   = Current? h /\ hval h == v /\ hperm h == f
 
+[@@__reduce__]
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
       M.pts_to r h `star`
       pure (history_val h v f)
@@ -239,19 +240,6 @@ let pts_to_body_witness_invariant #a #p (r:ref a p) (f:perm) (v:Ghost.erased a)
 let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a) =
     h_exists (pts_to_body r f v)
 
-let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
-  = let h = Current [v] full_perm in
-    assert (compatible pcm_history h h);
-    let x : ref a p = Steel.Effect.alloc h in
-    SB.h_assert (M.pts_to x h);
-    SB.intro_pure (Current? h /\
-                   hval h == Ghost.hide v /\
-                   hperm h == full_perm);
-    SB.h_assert (M.pts_to x h `star`  pure (Current? h /\ hval h == Ghost.hide v /\ hperm h == full_perm));
-    SB.intro_h_exists h (pts_to_body x full_perm (Ghost.hide v));
-    SB.h_assert (pts_to x full_perm v);
-    SB.return x
-
 let intro_pure #a #p #f
                  (r:ref a p)
                  (v:a)
@@ -259,58 +247,66 @@ let intro_pure #a #p #f
   : SteelT unit
            (M.pts_to r h)
            (fun _ -> pts_to_body r f v h)
-  = Atomic.change_slprop _ _ (fun m ->
+  = change_slprop _ _ (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m)
 
-let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
-          ($f:unit -> SteelT a pre post)
-          (frame:slprop)
-  : SteelT a
-    (frame `star` pre)
-    (fun x -> frame `star` post x)
-  = SB.h_commute _ _;
-    let x = SB.frame f _ in
-    SB.h_commute _ _;
-    SB.return x
+let intro_pure_full #a #p #f
+                 (r:ref a p)
+                 (v:a)
+                 (h:history a p { history_val h v f })
+  : SteelT unit
+           (M.pts_to r h)
+           (fun _ -> pts_to r f v)
+  = intro_pure #a #p #f r v h;
+    intro_exists h (pts_to_body r f v)
 
-let rearrange_pqr_prq (p q r:slprop)
-  : SteelT unit ((p `star` q) `star` r)
-                (fun _ -> (p `star` r) `star` q)
-  = SB.h_assoc_r ();
-    frame_l (fun _ -> SB.h_commute _ _) _;
-    SB.h_assoc_l ()
 
-let extract_pure #a #p #f
+let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
+  = let h = Current [v] full_perm in
+    assert (compatible pcm_history h h);
+    let x : ref a p = Steel.Effect.alloc h in
+    intro_pure_full x v h;
+    x
+
+let extract_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelT (_:unit{history_val h v f})
+  : SteelAtomicT (_:unit{history_val h v f})
+           uses
+           unobservable
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
-  = let x = frame_l (fun _ -> SB.extract_pure _) _ in
-    SB.return x
+  = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
+    let (u:unit{history_val h v f}) = elim_pure (history_val h v f) in
+    change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (history_val h v f) m
+    );
+    u
 
-let elim_pure #a #p #f
+let elim_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelT (_:unit{history_val h v f})
+  : SteelAtomicT (_:unit{history_val h v f})
+           uses
+           unobservable
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
-  = extract_pure r v h;
-    SB.drop_r _ _
-
+  = let _ = extract_pure r v h in
+    drop (pure (history_val h v f))
 
 module ST = Steel.Memory.Tactics
 
 let rewrite_erased #a (p:erased a -> slprop) (x:erased a) (y:a { Ghost.reveal x == y})
   : SteelT unit (p x) (fun _ -> p (Ghost.hide y))
-  = SB.return ()
+  = change_slprop (p x) (p (Ghost.hide y)) (fun _ -> ())
 
 let rewrite_reveal_hide #a (x:a) (p:a -> slprop) ()
   : SteelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
-  = SB.return ()
+  = change_slprop (p (Ghost.reveal (Ghost.hide x))) (p x) (fun _ -> ())
 
 let pts_to_is_witness_invariant (#a:Type) (#p:Preorder.preorder a)
     (r:ref a p) (q:perm)
@@ -341,57 +337,45 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
   : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
              (fun v -> pts_to r q v `star` f v)
+  = let v = witness_h_exists #_ #_ #(fun (v:a) -> pts_to r q v `star` f v) (
+        pts_to_is_witness_invariant r q;
+        star_is_witinv_left (fun (v:a) -> pts_to r q v) f
+    ) in
+    change_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
 
-  = pts_to_is_witness_invariant r q;
-    star_is_witinv_left (fun (v:a) -> pts_to r q v) f;
-    let v = SB.witness_h_exists () in
-    SB.h_assert (pts_to r q v `star` f (Ghost.reveal v));
-    let h : Ghost.erased (history a p) =
-     let sub () : SteelT (Ghost.erased (history a p))
-                         (h_exists (pts_to_body r q v))
-                         (fun h -> pts_to_body r q v h) =
-       SB.witness_h_exists #_ #(pts_to_body r q v) ()
-     in
-     SB.frame sub _
-    in
-    SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
-    SB.h_assoc_r ();
-    let hv = SB.frame (fun _ -> read r h) _ in
-    SB.h_assoc_l ();
-    assert (compatible pcm_history h hv);
-    SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
-    SB.frame (fun _ -> extract_pure r v h) _;
-    assert (Current? h);
-    assert (hval h == hval hv);
-    assert (hval h == v);
-    assert (v == Ghost.hide (hval_tot hv));
-    assert (Ghost.reveal v == hval_tot hv);
-    SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
-    SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _;
-    SB.h_assert (pts_to r q v `star` f (Ghost.reveal v));
-    rewrite_erased (fun v -> (pts_to r q v `star` f (Ghost.reveal v))) v (hval_tot hv);
-    SB.h_assert (pts_to r q (Ghost.hide (hval_tot hv)) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))));
-    assert (Ghost.reveal (Ghost.hide (hval_tot hv)) == hval_tot hv);
-    frame_l (rewrite_reveal_hide (hval_tot hv) f) _;
-    SB.h_assert (pts_to r q (Ghost.hide (hval_tot hv)) `star` f (hval_tot hv));
-    SB.return (hval_tot hv)
+    let h = witness_h_exists #_ #_ #(pts_to_body r q v) () in
+
+    let _ = elim_pure #_ #_ #_ #q r v h in
+
+    let hv = read #_ #_ r h in
+
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (history_val h v q) m);
+
+    intro_exists_erased h (pts_to_body r q v);
+    rewrite_erased (fun v -> (pts_to r q v `star` f v)) v (hval_tot hv);
+    let v = hval_tot hv in
+
+    change_slprop
+      (pts_to r q (hval_tot hv) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))))
+      (pts_to r q v `star` f v)
+      (fun _ -> ());
+    v
+
 
 let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a{p v x})
   : SteelT unit (pts_to r full_perm v)
-                (fun v -> pts_to r full_perm x)
-  = let h_old_e = SB.witness_h_exists #_ #(pts_to_body r full_perm v) () in
-    SB.h_assert (pts_to_body r full_perm v (Ghost.reveal h_old_e));
-    let h_old = SB.frame (fun _ -> read r h_old_e) _ in
-    elim_pure r v h_old_e;
-    assert (compatible pcm_history h_old_e h_old);
-    assert (h_old_e == Ghost.hide h_old);
-    assert (Current? h_old /\ hval h_old == v);
-    let h : history a p = extend_history h_old x in
+              (fun v -> pts_to r full_perm x)
+  = let h_old_e = witness_h_exists #_ #_ #(pts_to_body r full_perm v) () in
+    let _ = elim_pure #_ #_ #_ #full_perm r v h_old_e in
+
+    let h_old = read r h_old_e in
+    let h: history a p = extend_history h_old x in
     write r h_old_e h;
-    SB.h_assert (M.pts_to r h);
-    intro_pure #a #p #full_perm r x h;
-    SB.intro_h_exists h _
+
+    intro_pure_full #_ #_ #full_perm r x h
 
 let lift_fact #a #p (f:property a)
   : property (history a p)
@@ -424,52 +408,42 @@ let witness_thunk (#a:Type) (#pcm:FStar.PCM.pcm a)
   = Steel.Effect.witness r fact v ()
 
 
-let frame_witness (#a:Type) (#pcm:FStar.PCM.pcm a)
-                  (r:M.ref a pcm)
-                  (fact:M.stable_property pcm)
-                  (v:Ghost.erased a)
-                  (s:fact_valid_compat fact v)
-                  (p:slprop)
-  : SteelT unit (M.pts_to r v `star` p)
-                (fun _ -> (M.pts_to r v `star` p) `star` pure (M.witnessed r fact))
-  = SB.frame (witness_thunk r fact v s) _;
-    rearrange_pqr_prq _ _ _
-
-
 let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
             (v:Ghost.erased a)
             (_:squash (fact v))
   : SteelT unit (pts_to r q v)
                 (fun _ -> pts_to r q v `star` pure (witnessed r fact))
-  = let h = SB.witness_h_exists #_ #(pts_to_body r q v) () in
-    extract_pure r v h;
+  = let h = witness_h_exists #_ #_ #(pts_to_body r q v) () in
+    let _ = elim_pure #_ #_ #_ #q r v h in
+
     assert (forall h'. compatible pcm_history h h' ==> lift_fact fact h');
     lift_fact_is_stable #a #p fact;
-    SB.h_assert (M.pts_to r h `star` pure (Current? h /\
-                                           hval h == v /\
-                                           hperm h == q));
 
-    frame_witness r (lift_fact fact) h () _;
-    SB.h_assert (pts_to_body r q v h `star` pure (witnessed r fact));
-    SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _
+    witness_thunk r (lift_fact fact) h () _;
+
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (history_val h v q) m);
+
+    intro_exists_erased h (pts_to_body r q v);
+    change_slprop (pts_to r q v) (pts_to r q v) (fun _ -> ())
 
 
 let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
            (r:ref a p) (v:(Ghost.erased a))
   : SteelT unit (pts_to r q v `star` pure (witnessed r fact))
                 (fun _ -> pts_to r q v `star` pure (fact v))
-  = let h = SB.frame (SB.witness_h_exists #_ #(pts_to_body r q v)) (pure (witnessed r fact)) in
-    SB.frame (fun _ -> extract_pure r v h) _;
-    assert ((Current?h /\ hval h == v /\ hperm h == q));
-    rearrange_pqr_prq _ _ _;
-    let h1 = SB.frame (fun _ -> Steel.Effect.recall r h) _ in
-    assert (compatible pcm_history h h1);
-    assert (hval h == hval h1);
-    assert (hval h == v);
-    rearrange_pqr_prq _ _ _;
-    SB.h_assert (pts_to_body r q v h `star` pure (lift_fact fact h1));
-    SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _;
-    SB.h_assert (pts_to r q v `star` pure (lift_fact fact h1));
-    assert (lift_fact fact h1 ==> fact v);
-    SB.weaken_pure _ _ _
+  = let h = witness_h_exists #_ #_ #(pts_to_body r q v) () in
+    let _ = elim_pure #_ #_ #_ #q r v h in
+
+    let h1 = Steel.Effect.recall r h in
+
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (history_val h v q) m);
+
+    intro_exists_erased h (pts_to_body r q v);
+
+    change_slprop (pts_to r q v `star` pure (lift_fact fact h1))
+      (pts_to r q v `star` pure (fact v)) (fun _ -> ())

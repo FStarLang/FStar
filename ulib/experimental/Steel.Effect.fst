@@ -16,69 +16,15 @@
 
 module Steel.Effect
 
-module Sem = Steel.Semantics.Hoare.MST
-module Mem = Steel.Memory
+#set-options "--warn_error -330"  //turn off the experimental feature warning
 
-open Steel.Semantics.Instantiate
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 20"
+
+module Sem = Steel.Semantics.Hoare.MST
 module Ins = Steel.Semantics.Instantiate
 
-open Steel.Memory
+open Steel.Semantics.Instantiate
 
-let join_preserves_interp hp m0 m1
-  = intro_emp m1;
-    intro_star hp emp m0 m1;
-    affine_star hp emp (join m0 m1)
-
-#push-options "--query_stats"
-let _test (pre:slprop) (h_pre:hmem pre) (h:mem{disjoint h_pre h}) =
-  assert (interp pre (join h_pre h))
-#pop-options
-
-let respects_fp #fp p = 
-  forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
-let reveal_respects_fp p = ()
-
-let respects_binary_fp #a #pre #post q
-  = (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
-      q h_pre x h_post <==> q (join h_pre h) x h_post) /\
-    (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
-      q h_pre x h_post <==> q h_pre x (join h_post h))
-let reveal_respects_binary_fp q = ()
-
-
-#push-options "--warn_error -271"
-let ens_depends_only_on (#a:Type) (pre:Mem.slprop) (post:a -> Mem.slprop)
-  (q:(hmem pre -> x:a -> hmem (post x) -> prop))
-
-= let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
-    : Lemma (interp hp (join m0 m1))
-      [SMTPat ()] = join_preserves_interp hp m0 m1 in
-  (
-  //can join any disjoint heap to the pre-heap and q is still valid
-  (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
-     q h_pre x h_post <==> q (join h_pre h) x h_post) /\  //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
-
-  //can join any disjoint heap to the post-heap and q is still valid
-  (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
-     q h_pre x h_post <==> q h_pre x (join h_post h))
-
-  )
-#pop-options
-
-type pre_t = slprop u#1
-type post_t (a:Type) = a -> slprop u#1
-type req_t (pre:pre_t) = q:(hmem pre -> prop){
-  forall (m0:hmem pre) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
-}
-
-type ens_t (pre:pre_t) (a:Type u#a) (post:post_t u#a a) : Type u#(max 2 a) =
-  q:(hmem pre -> x:a -> hmem (post x) -> prop){
-    ens_depends_only_on pre post q
-  }
-
-
-
-#push-options "--warn_error -271"
 let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 : Lemma
   (forall (x:a).
@@ -86,59 +32,125 @@ let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 = let aux (x:a)
     : Lemma
       (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
-      [SMTPat ()]
     = interp_depends_only_on (hp x) in
-  ()
-#pop-options
+  Classical.forall_intro aux
 
-let req_to_act_req (#pre:slprop) (req:fp_mprop pre) : Sem.l_pre #state pre =
+let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
   interp_depends_only_on pre;
   fun m -> interp pre m /\ req m
 
-let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mprop pre post)
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
 : Sem.l_post #state #a pre post
 = interp_depends_only_on pre;
   interp_depends_only_on_post post;
   fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-let repr a pre post req ens =
-  Sem.action_t #state #a pre post
-    (req_to_act_req req)
-    (ens_to_act_ens ens)
+let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+  Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
-let return (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
+let return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
+: repr a (p x) p (return_req (p x)) (return_ens a x p)
+  = fun _ -> x
 
-let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
-  = fun frame ->
-      let x = f frame in
-      g x frame
+let bind a b f g = fun frame ->
+  let x = f frame in
+  (g x) frame
 
-let subcomp a pre post req_f ens_f req_g ens_g f = f
+let subcomp a f = f
 
-#push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
-let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
-    fun frame ->
-      let x = f () in
-      g x frame
+(*
+ * Keeping f_frame aside for now
+ *)
+let frame_aux (#a:Type)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:repr a pre post req ens) (frame:slprop)
+: repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
+= fun frame' ->
+  Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
+
+let nmst_get (#st:Sem.st) ()
+  : Sem.Mst (Sem.full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = NMST.get ()
+
+let rewrite_l_3 (p1 p2 q r:slprop) : Lemma
+    (requires p1 `equiv` p2)
+    (ensures (p1 `star` q `star` r) `equiv` (p2 `star` q `star` r))
+    = calc (equiv) {
+        p1 `star` q `star` r;
+        (equiv) { star_associative p1 q r }
+        p1 `star` (q `star` r);
+        (equiv) { equiv_extensional_on_star p1 p2 (q `star` r) }
+        p2 `star` (q `star` r);
+        (equiv) { star_associative p2 q r }
+        p2 `star` q `star` r;
+      }
+
+#push-options "--z3rlimit_factor 2"
+let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post f g =
+  fun frame' ->
+  let x = frame_aux f frame_f frame' in
+  let y = frame_aux (g x) (frame_g x) frame' in
+
+  let m1 = nmst_get() in
+
+  // We have the following
+  // assert (interp
+  //   ((post_g x y `star` frame_g x) `star` frame' `star` locks_invariant Set.empty m1)
+  //     m1);
+
+  // We need to prove
+  // assert ((post y `star` frame' `star` locks_invariant Set.empty m1) `equiv`
+  //   ((post_g x y `star` frame_g x) `star` frame' `star` locks_invariant Set.empty m1));
+
+  // We do this by calling the following lemma
+  rewrite_l_3 (post y) (post_g x y `star` frame_g x) frame' (locks_invariant Set.empty m1);
+
+  // To get
+  // assert (interp (post y `star` frame' `star` locks_invariant Set.empty m1) m1);
+
+  y
+
+let bind_steel_steelf (a:Type) (b:Type)
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post
+  f g =
+  fun frame' ->
+  let x = frame_aux f frame_f frame' in
+  let y = (g x) frame' in
+
+  let m1 = nmst_get () in
+  rewrite_l_3 (post y) (post_g x y) frame' (locks_invariant Set.empty m1);
+
+  y
 #pop-options
 
-let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
-  = 
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
-    fun frame ->
-    let x = f frame in
-    g x ()
+let bind_steelf_steel (a:Type) (b:Type)
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post
+  f g =
+  fun frame' ->
+  let x = f frame' in
+  let y = frame_aux (g x) (frame_g x) frame' in
+
+  let m1 = nmst_get () in
+  rewrite_l_3 (post y) (post_g x y `star` frame_g x) frame' (locks_invariant Set.empty m1);
+
+  y
+
+let bind_pure_steel_ a b f g = fun frame ->
+  let x = f () in
+  (g x) frame
 
 
-unfold
+
+// unfold
 let bind_div_steel_req (#a:Type) (wp:pure_wp a)
   (#pre_g:pre_t) (req_g:a -> req_t pre_g)
 : req_t pre_g
 = FStar.Monotonic.Pure.wp_monotonic_pure ();
   fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
 
-unfold
+// unfold
 let bind_div_steel_ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
@@ -162,81 +174,97 @@ let bind_div_steel_ens (#a:Type) (#b:Type)
 #push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
 let bind_div_steel (a:Type) (b:Type)
   (wp:pure_wp a)
-  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t b)
+  (#[@@@ framing_implicit] req_g:a -> req_t pre_g)
+  (#[@@@ framing_implicit] ens_g:a -> ens_t pre_g b post_g)
   (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
 : repr b pre_g post_g
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
 = FStar.Monotonic.Pure.wp_monotonic_pure ();
-  fun frame ->
+  fun m0 ->
   let x = f () in
-  g x frame
+  g x m0
 #pop-options
 
 polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
 
-
-(*
- * This proof relies on core_mem_interp lemma from Steel.Memory
- *)
-let par0 (#aL:Type u#a) (#preL:slprop) (#postL:aL -> slprop) 
-         (#lpreL:fp_mprop preL) (#lpostL:fp_binary_mprop preL postL)
+let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
+         (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
          (f:repr aL preL postL lpreL lpostL)
-         (#aR:Type u#a) (#preR:slprop) (#postR:aR -> slprop)
-         (#lpreR:fp_mprop preR) (#lpostR:fp_binary_mprop preR postR)
+         (#aR:Type u#a) (#preR:slprop u#1) (#postR:aR -> slprop u#1)
+         (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
          (g:repr aR preR postR lpreR lpostR)
   : Steel (aL & aR)
-          (preL `Mem.star` preR)
-          (fun (xL, xR) -> postL xL `Mem.star` postR xR)
-          (fun h -> lpreL h /\ lpreR h)
-          (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
+    (preL `Mem.star` preR)
+    (fun y -> postL (fst y) `Mem.star` postR (snd y))
+    (fun h -> lpreL h /\ lpreR h)
+    (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
   = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
 
-let par f g = par0 (reify (f ())) (reify (g ()))
+let par (#aL:Type u#a)
+        (#preL:slprop u#1)
+        (#postL:aL -> slprop u#1)
+        (#lpreL:req_t preL)
+        (#lpostL:ens_t preL aL postL)
+        ($f:unit -> Steel aL preL postL lpreL lpostL)
+        (#aR:Type u#a)
+        (#preR:slprop u#1)
+        (#postR:aR -> slprop u#1)
+        (#lpreR:req_t preR)
+        (#lpostR:ens_t preR aR postR)
+        ($g:unit -> Steel aR preR postR lpreR lpostR)
+  : Steel (aL & aR)
+    (preL `Mem.star` preR)
+    (fun y -> postL (fst y) `Mem.star` postR (snd y))
+    (fun h -> lpreL h /\ lpreR h)
+    (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
+  = par0 (reify (f ())) (reify (g()))
 
-let ( || ) f g = par f g
-
-let frame0 (#a:Type) (#pre:slprop) (#post:a -> slprop) (#req:fp_mprop pre) (#ens:fp_binary_mprop pre post)
-           (f:repr a pre post req ens)
-           (frame:Mem.slprop)
-           (f_frame:mprop frame)
-    : Steel a
-      (pre `Mem.star` frame)
-      (fun x -> post x `Mem.star` frame)
-      (fun h -> req h /\ f_frame h)
-      (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-    = Steel?.reflect (fun frame' -> Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame f_frame))
-
-let frame f frame f_frame = frame0 (reify (f ())) frame f_frame
-
-(** Reflecting actions in to the Steel effect ***)
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
   : repr a p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
+
+val add_action (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelT a p q
+
+let add_action f = Steel?.reflect (action_as_repr f)
+
+val change_slprop (p q:slprop)
+                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
+
+let change_slprop p q proof =
+  Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
+
 let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
 let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
 let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
 let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
-let split r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
+
+val split' (#a:Type)
+          (#p:FStar.PCM.pcm a)
+          (r:ref a p)
+          (v0:Ghost.erased a)
+          (v1:Ghost.erased a{FStar.PCM.composable p v0 v1})
+  : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
+                (fun _ -> pts_to r v0 `star` pts_to r v1)
+
+let split' #a #p r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
+
+let split #a #p r v v0 v1 =
+  change_slprop (pts_to r v) (pts_to r (FStar.PCM.op p v0 v1)) (fun _ -> ());
+  split' r v0 v1
+
 let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
 let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
-let add_action f = Steel?.reflect (action_as_repr f)
+let noop () = change_slprop emp emp (fun _ -> ())
 
+let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
 
-(***** Bind and Subcomp relation with Steel.Atomic *****)
-
-friend Steel.Effect.Atomic
-//open Steel.Effect.Atomic
-
-#push-options "--z3rlimit 40"
-let bind_atomic_steel _ _ _ _ _ _ _ _ f g
-= fun frame ->
-  let x = f frame in
-  g x frame
-#pop-options
-
-#push-options "--z3rlimit 40"
-let subcomp_atomic_steel _ _ _ _ f = fun m0 -> f m0
-#pop-options
+let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)
