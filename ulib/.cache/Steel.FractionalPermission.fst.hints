@@ -1,5 +1,5 @@
 [
-  "]õCÊˆå\u001aŸ\u0006Vw\n.Å\u001eb",
+  "d\u007f16c\u0006k\u0003å%Cı\u001b;:Ç",
   [
     [
       "Steel.FractionalPermission.half_perm",
@@ -8,16 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
-        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
+        "equation_FStar.Real.zero", "primitive_FStar.Real.of_int",
+        "primitive_FStar.Real.op_Greater_Dot",
         "primitive_FStar.Real.op_Slash_Dot",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0", "real_inversion",
-        "refinement_interpretation_Tm_refine_809987c72e0fbe7303bb954613d8d745",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "d8246958afbef2da6c83159cb3d42e2f"
+      "52a0145e0500501a4f5603f264ee1c66"
     ],
     [
       "Steel.FractionalPermission.sum_perm",
@@ -25,17 +26,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "primitive_FStar.Real.op_Greater_Dot",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.zero",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
         "primitive_FStar.Real.op_Plus_Dot",
         "proj_equation_Steel.FractionalPermission.MkPerm_v",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0",
-        "refinement_interpretation_Tm_refine_809987c72e0fbe7303bb954613d8d745",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "b9bcab64fcc38e5991804bb0f17f8ce2"
+      "9b23634be6fcce80cd6f101c46cd0110"
     ],
     [
       "Steel.FractionalPermission.full_perm",
@@ -43,12 +45,14 @@
       2,
       1,
       [
-        "@query", "primitive_FStar.Real.op_Greater_Dot",
+        "@query", "equation_FStar.Real.one", "equation_FStar.Real.zero",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "e73f57a0a27317b6388dfe5fe6fe1a0e"
+      "d650bae2d330dd1d5063a6ae7a65d509"
     ]
   ]
 ]

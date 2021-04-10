@@ -1,5 +1,5 @@
 [
-  "ê\f¬GÇ_2vêì‚Ë´˜ú§",
+  "\u0013ƒKƒ|\b‡‚ê\u000f\u0017\u0014leâØ",
   [
     [
       "FStar.Pervasives.Lemma",
@@ -346,7 +346,7 @@
         "refinement_interpretation_Tm_refine_13de8e33f187202d2c4a5d80966ea035"
       ],
       0,
-      "05cd5693e3cfdbb561b5b28e6ef8137b"
+      "4e853bff80c2337745d3a93303c5fc14"
     ],
     [
       "FStar.Pervasives.__proj__UnfoldFully__item___0",
@@ -360,7 +360,7 @@
         "refinement_interpretation_Tm_refine_e6c43ff652fa6b792396796b43993774"
       ],
       0,
-      "3de26a4bf8436454a5ccc4d486bfc2d7"
+      "cb77cc71f817b748ffd76f06b4babe79"
     ],
     [
       "FStar.Pervasives.__proj__UnfoldAttr__item___0",
@@ -374,7 +374,19 @@
         "refinement_interpretation_Tm_refine_f14ca5ebef9af83c4cf22600f4f19756"
       ],
       0,
-      "edb832dfd515e534f24339e07d4f79b6"
+      "220c6ec7d29a98f39f2ccd1a19b48901"
+    ],
+    [
+      "FStar.Pervasives.__proj__UnfoldQual__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c8415b91f8065f6f9613629ea06e01c"
+      ],
+      0,
+      "b527cb5effd969e709d32443973aaf81"
     ],
     [
       "FStar.Pervasives.assert_norm",
@@ -383,7 +395,7 @@
       1,
       [ "@query" ],
       0,
-      "62a8567fad13af79f3b2f701fd7fda4a"
+      "23a0794444f3ae498fdf062c4d4e22cc"
     ],
     [
       "FStar.Pervasives.norm_spec",
@@ -392,7 +404,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.norm" ],
       0,
-      "61e47ec3da9191ad9883ade558398c70"
+      "398ad88c60a58c9e585da70cbe0ee532"
     ]
   ]
 ]
