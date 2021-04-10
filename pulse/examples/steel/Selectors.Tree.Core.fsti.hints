@@ -1,0 +1,22 @@
+[
+  "µ∑x\u0000ΩªßÇ÷◊\u0019Nç/¥*",
+  [
+    [
+      "Selectors.Tree.Core.v_linked_tree",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_66beea1170e20ee7aaef804b64d25aa0",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "074364406b061294f3a5af0e1fbd5b9b"
+    ]
+  ]
+]

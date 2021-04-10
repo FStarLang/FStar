@@ -1,5 +1,5 @@
 [
-  "\u000f›æπ°Ôcul—O\u0012áU\u001bﬂ",
+  "ƒ]A«Å\nı\u0012\b`\u0000\u000eö´°\f",
   [
     [
       "Steel.Memory.join_commutative",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7f7aa7cb1d9cf37ba2583558b46a66d1"
+      "551e81786fb043b34c42dd19d6cd4b97"
     ],
     [
       "Steel.Memory.disjoint_join",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "8dddecadb230f4d356163b085f35e895"
+      "6fd3779db9f9e41b24842701fddaa4dd"
     ],
     [
       "Steel.Memory.join_associative",
@@ -33,21 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "84252e0e8d63d9788ba3f2ed449f224d"
-    ],
-    [
-      "Steel.Memory.equiv",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "371036abcbbfd7560b31dcb5f60971ab"
+      "ea93f5df9a04dee979a144397368d571"
     ],
     [
       "Steel.Memory.slimp",
@@ -61,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a9761fefe8b526c965e743f8868b5901"
+      "2c213e2b693c2b9610f01f1bb744200b"
     ],
     [
       "Steel.Memory.pts_to_compatible",
@@ -70,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "e04d364944b2e633d6bf14284e0467b7"
+      "12d46fce05907ee39a279e95e6e1762f"
     ],
     [
       "Steel.Memory.intro_star",
@@ -82,7 +68,24 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "878c46a2e87ff135a1098abce6061b57"
+      "9cb7194b108820c8ba727a30213554af"
+    ],
+    [
+      "Steel.Memory.action_except",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "a5007a07f8a0194309a361d49006bc18"
     ],
     [
       "Steel.Memory.split_action",
@@ -94,7 +97,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "c19661c2a828cfd3fe19885c8c9bf99c"
+      "4e365105b7049eb21fd29858fb89ae35"
     ],
     [
       "Steel.Memory.gather_action",
@@ -106,7 +109,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "d9164a21820689060b89dda98885e69c"
+      "e24ba9a9aaff23ebca84ad9122251281"
     ],
     [
       "Steel.Memory.select_refine",
@@ -115,7 +118,27 @@
       1,
       [ "@query" ],
       0,
-      "36b0acf1686c4b50f4db4133bb4ce63b"
+      "8a48a3d47dd9abdaba31dec39f4341e5"
+    ],
+    [
+      "Steel.Memory.frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
+        "equation_Steel.Memory.mprop", "equation_Steel.Memory.mprop2",
+        "lemma_Steel.Memory.affine_star_smt",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_8f596b7f5a63f31b45e01cd0d14d3d54",
+        "refinement_interpretation_Tm_refine_9bfbdd2d6f076a7569bbeba989c22fb8",
+        "refinement_interpretation_Tm_refine_9e882fee84b0164e274effaf8057c0b1",
+        "refinement_interpretation_Tm_refine_c68ca5e5f7afafc462129b6c70fdacac",
+        "refinement_interpretation_Tm_refine_d13ff5e7a2dcec6ca4a9195f0dca7981"
+      ],
+      0,
+      "1d6b923840618cd8898cec49fdf00b13"
     ],
     [
       "Steel.Memory.is_frame_monotonic",
@@ -129,7 +152,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3cd9ba07c3bda2ae8ba0d3ced4d06fd5"
+      "33c59f915b3450b33ced9fe5fecabeeb"
     ],
     [
       "Steel.Memory.id_elim_star",
@@ -138,7 +161,7 @@
       1,
       [ "@query" ],
       0,
-      "09129144f7f8bf3ac0d7a88d6e53f2f0"
+      "ef273b5d2bc4b92b26c11a48449710f4"
     ]
   ]
 ]
