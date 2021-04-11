@@ -208,7 +208,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "bd8df0c6e875398dc40f166a8326f2d7"
+      "315dc7117a06cf65743d774d10e565aa"
     ],
     [
       "Steel.Memory.reveal_equiv",
@@ -220,7 +220,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "958019b24779a2cce8955b2d202ace34"
+      "26b9554eda135e88d0eb946fc0ad227e"
     ],
     [
       "Steel.Memory.slimp",
@@ -243,7 +243,7 @@
       1,
       [ "@query", "equation_Steel.Memory.null" ],
       0,
-      "2a98ab54d27d89de48cb2aa9f959a913"
+      "490682b1392aaad07df0fe2ea3aa67c8"
     ],
     [
       "Steel.Memory.equiv_symmetric",
@@ -408,7 +408,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "b0113883e6a61aca8be00b47cc513c26"
+      "4c921f526fdd4a83665e2dac3fc495b0"
     ],
     [
       "Steel.Memory.intro_star",
@@ -888,7 +888,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "bdeaf68931063d78f13ba6c8b372d0f9"
+      "59a08f8795166f5bb8235c2faeffaae0"
     ],
     [
       "Steel.Memory.ac_reasoning_for_m_frame_preserving",
@@ -1162,7 +1162,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "d31de5a7ad0947ebf15279e0f13d7967"
+      "64870551544d55dca86dcc9935880cd7"
     ],
     [
       "Steel.Memory.lift_heap_action_with_frame",
@@ -1242,7 +1242,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "07bb91ff7d488c95d3e007beaa3758f1"
+      "90a4070b8ee175ae3c1bdee169e9a1e8"
     ],
     [
       "Steel.Memory.sel_action",
@@ -1877,7 +1877,7 @@
         "typing_Steel.Memory.hmem_with_inv_except", "typing_tok_Prims.T@tok"
       ],
       0,
-      "a379315e1cef7f7f58db964873da1107"
+      "9a8442dfdafdf1895e394ec496caa94f"
     ],
     [
       "Steel.Memory.rearrange_invariant",
@@ -1983,7 +1983,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "14de663b369c524efcb2c67fa3af062e"
+      "442b1ab31e22936d651a92d5e2f35b1e"
     ],
     [
       "Steel.Memory.equiv_pqrs_p_qr_s",
@@ -2018,7 +2018,7 @@
         "refinement_interpretation_Tm_refine_d13ff5e7a2dcec6ca4a9195f0dca7981"
       ],
       0,
-      "5a3ff41bb3562457659cdeedd947dee5"
+      "adae6ea4c43a049fa5bb46dcf840b945"
     ],
     [
       "Steel.Memory.frame",
@@ -2042,7 +2042,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "87027911240eff10265b73248d5f44d1"
+      "121aa60010a28d73b616129cecf63394"
     ],
     [
       "Steel.Memory.change_slprop",
