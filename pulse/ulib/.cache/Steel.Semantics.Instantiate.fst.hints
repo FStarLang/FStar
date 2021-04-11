@@ -14,7 +14,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "06151827cc15427ca9d48b2c7703d635"
+      "fe64f9fc7f3ac70aa9b594ca63935810"
     ],
     [
       "Steel.Semantics.Instantiate.state_obeys_st_laws",
@@ -71,7 +71,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join"
       ],
       0,
-      "57fd1581171ba69460b2acc90955f3b3"
+      "d02d3b39b43e9b5f68871f1c2c31e266"
     ],
     [
       "Steel.Semantics.Instantiate.state_uses",
