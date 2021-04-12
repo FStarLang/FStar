@@ -168,6 +168,10 @@ unfold let vemp = VUnit vemp'
 
 val reveal_vemp (_:unit) : Lemma (hp_of vemp == emp /\ t_of vemp == unit)
 
+let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == vemp else True
+let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
+  if framed then (forall x. frame x == vemp) else True
+
 open FStar.Tactics
 
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
@@ -1753,7 +1757,27 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
-
+// Solve the maybe_emp goals:
+// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
+// solve the goal (either an equality through trefl, or True through trivial)
+let rec solve_maybe_emps (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (cur_goal ()) in (
+    match f with
+    | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (`maybe_emp) then
+        (norm [delta; iota; zeta; primops; simplify];
+         or_else trivial trefl)
+      else if term_eq hd (`maybe_emp_dep) then
+        (norm [delta; iota; zeta; primops; simplify];
+         or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
+      else later()
+    | _ -> later()
+    );
+    solve_maybe_emps tl
 
 let rec norm_return_pre (l:list goal) : Tac unit =
   match l with
@@ -1773,6 +1797,9 @@ let init_sel_resolve_tac () : Tac unit =
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
   solve_indirection_eqs (goals());
+
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
