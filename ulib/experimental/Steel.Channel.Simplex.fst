@@ -161,7 +161,7 @@ let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
   = intro_pure (in_state_prop p v);
     intro_exists v (fun (v:chan_val) -> pts_to r half v `star` in_state_slprop p v)
 
-#push-options "--print_universes"
+//#push-options "--print_universes"
 let msg t p = Msg Send unit (fun _ -> p)
 let init_chan_val (p:prot) = v:chan_val {v.chan_prot == msg unit p}
 
@@ -273,8 +273,9 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = let v' = witness_h_exists () in
     Steel.Utils.higher_ref_pts_to_injective_eq r v _;
-    H.gather r;
-    rewrite_context()
+    H.gather #_ #half #half #v #v r;
+    change_slprop (pts_to r (sum_perm half half) v) (pts_to r full_perm v) (fun _ -> ());
+    change_slprop (in_state_slprop p v') (in_state_slprop p v) (fun _ -> ())
 
 let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit)
   : SteelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
@@ -368,7 +369,9 @@ let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
   = let v = send_receive_prelude c in //matching v as vs,vr fails
     if (fst v).chan_ctr = (snd v).chan_ctr
     then (
-      rewrite_context();
+      change_slprop (chan_inv_cond (fst v) (snd v))
+                    (pure (fst v == snd v))
+                    (fun _ -> ());
       send_available c x (fst v) (snd v) () //TODO: inlining send_availableT here fails
     )
     else (
