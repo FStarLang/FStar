@@ -1127,7 +1127,7 @@
         "typing_Steel.Semantics.Instantiate.state", "unit_typing"
       ],
       0,
-      "dbf433baa7e546474868c1e0e99fb0d9"
+      "55e287ab101097264aecf6ec4fd5a088"
     ],
     [
       "Steel.SelEffect.bind_steel_steel_req_unnormal",
@@ -1269,7 +1269,7 @@
         "typing_Tm_abs_a1aa9aae5992ea02ac882d78862b7b1f"
       ],
       0,
-      "d88a350594d4c939206c5bd529533663"
+      "84d7d72edf79b4734d7621aee5e2e09f"
     ],
     [
       "Steel.SelEffect.bind_steel_steel",
@@ -1623,7 +1623,7 @@
         "token_correspondence_Steel.SelEffect.req_to_act_req",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
-        "typing_Steel.SelEffect.Common.star",
+        "typing_Steel.Memory.core_mem", "typing_Steel.SelEffect.Common.star",
         "typing_Tm_abs_a0c600a32309982ee3e181c7b189ac12",
         "typing_Tm_abs_a1aa9aae5992ea02ac882d78862b7b1f"
       ],
@@ -2461,10 +2461,10 @@
         "@fuel_irrelevance_Steel.SelEffect.Common.sel_of.fuel_instrumented",
         "@fuel_irrelevance_Steel.SelEffect.Common.t_of.fuel_instrumented",
         "@query",
-        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
+        "Steel.Memory_interpretation_Tm_arrow_f9780de8b5428905f0418761a5d7d407",
         "Steel.SelEffect.Common_interpretation_Tm_arrow_537e315c2442af1cb31ef4ba55ab9294",
         "Steel.SelEffect.Common_interpretation_Tm_ghost_arrow_284989ce0cfc1e71b34bdc8ab5cd30a5",
         "Steel.SelEffect_interpretation_Tm_ghost_arrow_06bda854a90e021298c393ae0547b713",
@@ -2476,7 +2476,8 @@
         "disc_equation_Steel.SelEffect.Common.VUnit", "eq2-interp",
         "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.FunctionalExtensionality.restricted_g_t",
-        "equation_Steel.Memory.hmem", "equation_Steel.SelEffect.Common.rmem",
+        "equation_Steel.Memory.hmem", "equation_Steel.Memory.inames",
+        "equation_Steel.SelEffect.Common.rmem",
         "equation_Steel.SelEffect.Common.sel_depends_only_on_core",
         "equation_Steel.SelEffect.Common.selector",
         "equation_Steel.SelEffect.Common.star",
@@ -2495,6 +2496,7 @@
         "fuel_guarded_inversion_Steel.SelEffect.Common.vprop",
         "fuel_token_correspondence_Steel.SelEffect.Common.sel_of.fuel_instrumented_token",
         "function_token_typing_Steel.Memory.core_mem",
+        "function_token_typing_Steel.Memory.locks_invariant",
         "function_token_typing_Steel.SelEffect.Common.sel_of",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
@@ -2544,6 +2546,7 @@
         "token_correspondence_Steel.SelEffect.req_to_act_req",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
+        "typing_FStar.Set.empty", "typing_Steel.Memory.iname",
         "typing_Steel.SelEffect.Common.hp_of",
         "typing_Steel.SelEffect.Common.star",
         "typing_Steel.Semantics.Instantiate.state",
