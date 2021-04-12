@@ -10178,9 +10178,13 @@ and (solve_c :
                                                             uu___12) uu___11 in
                                                    solve_prob orig uu___10 []
                                                      wl6 in
-                                                 let uu___10 =
+                                                 let wl8 =
                                                    attempt sub_probs wl7 in
-                                                 solve env uu___10))))))) in
+                                                 let wl9 =
+                                                   extend_wl wl8
+                                                     g_lift.FStar_TypeChecker_Common.deferred_to_tac
+                                                     [] in
+                                                 solve env wl9))))))) in
         let solve_sub c11 edge c21 =
           if
             problem.FStar_TypeChecker_Common.relation <>
