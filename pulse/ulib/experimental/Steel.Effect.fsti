@@ -176,194 +176,6 @@ effect Steel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre
 effect SteelF (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   SteelBase a true pre post req ens
 
-// [@@allow_informative_binders]
-// reifiable reflectable
-// new_effect Steel = SteelF
-
-
-(*
-
-(*
- * Onto polymonadic binds
- *)
-
-(*
- * First the bind between two unframed computations
- *
- * Add a frame to each
- *)
-
-unfold
-let bind_steel_steel_req (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t)
-  (#pr:a -> prop)
-  (req_g:(x:a -> req_t (pre_g x)))
-  (frame_f:slprop) (frame_g:a -> slprop)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-: req_t (pre_f `star` frame_f)
-= fun m0 ->
-  req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
-
-unfold
-let bind_steel_steel_ens (#a:Type) (#b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
-  (#pr:a -> prop)
-  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (frame_f:slprop) (frame_g:a -> slprop)
-  (post:post_t b)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-: ens_t (pre_f `star` frame_f) b post
-= fun m0 y m2 ->
-  req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
-
-val bind_steel_steel (a:Type) (b:Type)
-  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@@ framing_implicit] frame_f:slprop) (#[@@@ framing_implicit] frame_g:a -> slprop)
-  (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] pr:a -> prop)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr
-    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:repr a pre_f post_f req_f ens_f)
-  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: repr b
-    (pre_f `star` frame_f)
-    post
-    (bind_steel_steel_req req_f ens_f req_g frame_f frame_g p)
-    (bind_steel_steel_ens req_f ens_f ens_g frame_f frame_g post p p2)
-
-(*
- * Note that the output is a framed computation, hence SteelF
- *)
-
-polymonadic_bind (Steel, Steel) |> SteelF = bind_steel_steel
-
-
-(*
- * Steel, SteelF: frame the first computation
- *)
-
-unfold
-let bind_steel_steelf_req (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t)
-  (#pr:a -> prop)
-  (req_g:(x:a -> req_t (pre_g x)))
-  (frame_f:slprop)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
-: req_t (pre_f `star` frame_f)
-= fun m0 ->
-  req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
-
-unfold
-let bind_steel_steelf_ens (#a:Type) (#b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
-  (#pr:a -> prop)
-  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (frame_f:slprop)
-  (post:post_t b)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
-  (_: squash (can_be_split_post post_g post))
-: ens_t (pre_f `star` frame_f) b post
-= fun m0 y m2 ->
-  req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
-
-val bind_steel_steelf (a:Type) (b:Type)
-  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@@ framing_implicit] frame_f:slprop)
-  (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] pr:a -> prop)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
-  (#[@@@ framing_implicit] p2: squash (can_be_split_post post_g post))
-  (f:repr a pre_f post_f req_f ens_f)
-  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: repr b
-    (pre_f `star` frame_f)
-    post
-    (bind_steel_steelf_req req_f ens_f req_g frame_f p)
-    (bind_steel_steelf_ens req_f ens_f ens_g frame_f post p p2)
-
-polymonadic_bind (Steel, SteelF) |> SteelF = bind_steel_steelf
-
-
-(*
- * SteelF, Steel: frame the second computation
- *)
-
-unfold
-let bind_steelf_steel_req (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t)
-  (#pr:a -> prop)
-  (req_g:(x:a -> req_t (pre_g x)))
-  (frame_g:a -> slprop)
-  (_:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
-: req_t pre_f
-= fun m0 ->
-  req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
-
-unfold
-let bind_steelf_steel_ens (#a:Type) (#b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
-  (#pr:a -> prop)
-  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (frame_g:a -> slprop)
-  (post:post_t b)
-  (_:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
-  (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-: ens_t pre_f b post
-= fun m0 y m2 ->
-  req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
-
-val bind_steelf_steel (a:Type) (b:Type)
-  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@@ framing_implicit] frame_g:a -> slprop)
-  (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] pr:a -> prop)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
-  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:repr a pre_f post_f req_f ens_f)
-  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: repr b
-    pre_f
-    post
-    (bind_steelf_steel_req req_f ens_f req_g frame_g p)
-    (bind_steelf_steel_ens req_f ens_f ens_g frame_g post p p2)
-
-
-polymonadic_bind (SteelF, Steel) |> SteelF = bind_steelf_steel
-
-*)
-
-(*
-//  * SteelF, SteelF: no framing, use the effect bind
-//  *)
 
 (*
 //  * PURE, Steel(F) bind
@@ -395,8 +207,6 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 : ens_t pre b post
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
-
-
 val bind_pure_steel_ (a:Type) (b:Type)
   (#[@@@ framing_implicit] wp:pure_wp a)
   (#framed:eqtype_as_type bool)
@@ -412,6 +222,10 @@ val bind_pure_steel_ (a:Type) (b:Type)
 
 polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 
+// AF: The lift below works, but the framing tactic currently requires annotations
+// when scope restriction occurs (i.e. during returns). See for instance the comment
+// on test7 in Steel.FramingTestSuite. When a lift is available, returns are not inserted,
+// which leads to errors
 
 // unfold
 // let lift_pure_steel__req (#a:Type) (wp:pure_wp a)
@@ -430,16 +244,6 @@ polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 //   : repr a false emp (fun _ -> emp) (lift_pure_steel__req wp) (lift_pure_steel__ens wp)
 
 // sub_effect PURE ~> SteelBase = lift_pure_steel
-
-// polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
-
-
-(*
-//  * subcomp relation from SteelF to Steel
-//  *)
-
-// polymonadic_subcomp SteelF <: Steel = subcomp
-
 
 (*
 //  * Annotations without the req and ens
