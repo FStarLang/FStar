@@ -1342,20 +1342,15 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
         focus (fun _ -> norm[];
                       let g = _cur_goal () in
                       norm [delta_only [`%can_be_split_post]];
-                      dump "enter can_be_split post";
                       ignore (forall_intro());
-                      dump "post intro";
               or_else (fun _ -> apply_lemma (`equiv_forall_refl))
                       (fun _ ->
                       norm [delta_only [`%equiv_forall]];
-//                      apply_lemma (`equiv_forall_elim);
                       match goals () with
                       | [] -> ()
                       | _ ->
                         dismiss_slprops ();
-                        dump "pre_elim";
                         ignore (forall_intro());
-                        dump "post elim";
                         // TODO: Do this count in a better way
                         if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
                         or_else (fun _ ->  flip()) (fun _ -> ());
@@ -1612,7 +1607,6 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
       else if term_eq hd (`maybe_emp_dep) then
         (norm [delta; iota; zeta; primops; simplify];
          or_else trivial trefl)
-         //(fun _ -> dump "pre forall"; ignore (forall_intro ()); dump "post forall"; trefl (); dump "post trefl"))
       else later()
     | _ -> later()
     );
@@ -1631,8 +1625,6 @@ let init_resolve_tac () : Tac unit =
 
   // We first solve the slprops
   set_goals slgs;
-
-  dump "initial";
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
