@@ -17,7 +17,7 @@ type post_t (a:Type) = a -> slprop u#1
 
 let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
 let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
-  if framed then (forall x. frame x == emp) else True
+  if framed then frame == (fun _ -> emp) else True
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 let true_p : prop = True
@@ -81,7 +81,7 @@ val destruct_can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) : 
   (requires forall x. p x == True /\ t1 x `sl_implies` t2 x)
   (ensures can_be_split_forall_dep p t1 t2)
 
-val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
+let equiv_forall (#a:Type) (t1 t2:post_t a) = forall x. t1 x `equiv` t2 x
 
 val equiv_forall_refl (#a:Type) (t:post_t a)
   : Lemma (t `equiv_forall` t)
@@ -95,7 +95,7 @@ val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
   : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
           (ensures t1 `equiv_forall` t2)
 
-let can_be_split_post (#a #b:Type) (t1:a -> post_t b) (t2:post_t b) =
+let can_be_split_post (#a:Type u#a) (#b:Type u#b) (t1:a -> post_t b) (t2:post_t b) =
   forall (x:a). equiv_forall (t1 x) t2
 
 val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
@@ -1341,15 +1341,21 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm[];
                       let g = _cur_goal () in
+                      norm [delta_only [`%can_be_split_post]];
+                      dump "enter can_be_split post";
                       ignore (forall_intro());
+                      dump "post intro";
               or_else (fun _ -> apply_lemma (`equiv_forall_refl))
                       (fun _ ->
-                      apply_lemma (`equiv_forall_elim);
+                      norm [delta_only [`%equiv_forall]];
+//                      apply_lemma (`equiv_forall_elim);
                       match goals () with
                       | [] -> ()
                       | _ ->
                         dismiss_slprops ();
+                        dump "pre_elim";
                         ignore (forall_intro());
+                        dump "post elim";
                         // TODO: Do this count in a better way
                         if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
                         or_else (fun _ ->  flip()) (fun _ -> ());
@@ -1605,7 +1611,8 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
          or_else trivial trefl)
       else if term_eq hd (`maybe_emp_dep) then
         (norm [delta; iota; zeta; primops; simplify];
-         or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
+         or_else trivial trefl)
+         //(fun _ -> dump "pre forall"; ignore (forall_intro ()); dump "post forall"; trefl (); dump "post trefl"))
       else later()
     | _ -> later()
     );
@@ -1624,6 +1631,8 @@ let init_resolve_tac () : Tac unit =
 
   // We first solve the slprops
   set_goals slgs;
+
+  dump "initial";
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding

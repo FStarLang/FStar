@@ -74,7 +74,7 @@ let bind_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:hmem (post_f x `star` frame_f)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 
-val bind (a:Type) (b:Type)
+val bind (a:Type u#a) (b:Type u#b)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -88,7 +88,7 @@ val bind (a:Type) (b:Type)
   (#[@@@ framing_implicit] pr:a -> prop)
   (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post u#a u#b (fun x y -> post_g x y `star` frame_g x) post))
   (f:repr a framed_f pre_f post_f req_f ens_f)
   (g:(x:a -> repr b framed_g (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
@@ -382,6 +382,7 @@ assume WP_monotonic :
  * with the pure f computation
  *)
 
+(*
 unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
@@ -411,25 +412,25 @@ val bind_pure_steel_ (a:Type) (b:Type)
     (bind_pure_steel__ens wp ens)
 
 polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
+*)
 
+unfold
+let lift_pure_steel__req (#a:Type) (wp:pure_wp a)
+: req_t emp
+= fun m -> as_requires wp /\ True
 
-// unfold
-// let lift_pure_steel__req (#a:Type) (wp:pure_wp a)
-// : req_t emp
-// = fun m -> as_requires wp /\ True
+unfold
+let lift_pure_steel__ens (#a:Type) (wp:pure_wp a)
+: ens_t emp a (fun _ -> emp)
+= fun m0 r m1 -> as_requires wp /\ as_ensures wp r
 
-// unfold
-// let lift_pure_steel__ens (#a:Type) (wp:pure_wp a)
-// : ens_t emp a (fun _ -> emp)
-// = fun m0 r m1 -> as_requires wp /\ as_ensures wp r
+val lift_pure_steel
+  (a:Type u#a)
+  (#[@@@ framing_implicit] wp:pure_wp a)
+  (f:eqtype_as_type unit -> PURE a wp)
+  : repr a false emp (fun _ -> emp) (lift_pure_steel__req wp) (lift_pure_steel__ens wp)
 
-// val lift_pure_steel
-//   (a:Type)
-//   (#[@@@ framing_implicit] wp:pure_wp a)
-//   (f:eqtype_as_type unit -> PURE a wp)
-//   : repr a false emp (fun _ -> emp) (lift_pure_steel__req wp) (lift_pure_steel__ens wp)
-
-// sub_effect PURE ~> SteelBase = lift_pure_steel
+sub_effect PURE ~> SteelBase = lift_pure_steel
 
 // polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
 

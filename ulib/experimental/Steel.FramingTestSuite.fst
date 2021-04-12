@@ -11,12 +11,21 @@ assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 assume val write (r:ref) (v: int) : SteelT unit (ptr r) (fun _ -> ptr r)
 
+#set-options "--debug Steel.FramingTestSuite --debug_level GenUniverses --debug_level Rel --debug_level LayeredEffects --debug_level ResolveImplicitsHook --debug_level Tac --debug_level RelBench --debug_level LayeredEffectsEqns"
+
+#set-options "--print_implicits --print_universes --print_bound_var_types --print_effect_args"
+//#set-options "--print_effect_args"
+
+//#set-options "--tactic_trace_d 3"
+
 let test0 (b1 b2 b3: ref) : SteelT int
   (ptr b1 `star` ptr b2 `star` ptr b3)
   (fun _ -> ptr b1 `star` ptr b2 `star` ptr b3)
   =
   let x = read b1 in
   x
+
+(*
 
 let test1 (b1 b2 b3: ref) : SteelT int
   (ptr b1 `star` ptr b2 `star` ptr b3)
@@ -149,3 +158,4 @@ let g (p:prop)
     = f p
   in
   let x = f2 p in x
+*)

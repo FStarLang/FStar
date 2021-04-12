@@ -29,7 +29,7 @@ let sl_implies_interp_emp p q = ()
 
 let destruct_can_be_split_forall_dep p t1 t2 = ()
 
-let equiv_forall #a p q = forall x. p x `equiv` q x
+//let equiv_forall #a p q = forall x. p x `equiv` q x
 let equiv_forall_refl (#a:Type) (t:post_t a)
   : Lemma (t `equiv_forall` t)
   = ()
