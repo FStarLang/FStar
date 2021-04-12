@@ -348,27 +348,32 @@ let (__proj__Failed__item___0 :
 let (extend_wl :
   worklist ->
     FStar_TypeChecker_Common.deferred ->
-      FStar_TypeChecker_Common.implicits -> worklist)
+      FStar_TypeChecker_Common.deferred ->
+        FStar_TypeChecker_Common.implicits -> worklist)
   =
   fun wl ->
-    fun defer_to_tac ->
-      fun imps ->
-        let uu___ = wl in
-        let uu___1 =
-          let uu___2 = as_wl_deferred wl defer_to_tac in
-          FStar_List.append wl.wl_deferred_to_tac uu___2 in
-        {
-          attempting = (uu___.attempting);
-          wl_deferred = (uu___.wl_deferred);
-          wl_deferred_to_tac = uu___1;
-          ctr = (uu___.ctr);
-          defer_ok = (uu___.defer_ok);
-          smt_ok = (uu___.smt_ok);
-          umax_heuristic_ok = (uu___.umax_heuristic_ok);
-          tcenv = (uu___.tcenv);
-          wl_implicits = (FStar_List.append wl.wl_implicits imps);
-          repr_subcomp_allowed = (uu___.repr_subcomp_allowed)
-        }
+    fun defers ->
+      fun defer_to_tac ->
+        fun imps ->
+          let uu___ = wl in
+          let uu___1 =
+            let uu___2 = as_wl_deferred wl defers in
+            FStar_List.append wl.wl_deferred uu___2 in
+          let uu___2 =
+            let uu___3 = as_wl_deferred wl defer_to_tac in
+            FStar_List.append wl.wl_deferred_to_tac uu___3 in
+          {
+            attempting = (uu___.attempting);
+            wl_deferred = uu___1;
+            wl_deferred_to_tac = uu___2;
+            ctr = (uu___.ctr);
+            defer_ok = (uu___.defer_ok);
+            smt_ok = (uu___.smt_ok);
+            umax_heuristic_ok = (uu___.umax_heuristic_ok);
+            tcenv = (uu___.tcenv);
+            wl_implicits = (FStar_List.append wl.wl_implicits imps);
+            repr_subcomp_allowed = (uu___.repr_subcomp_allowed)
+          }
 type variance =
   | COVARIANT 
   | CONTRAVARIANT 
@@ -4133,7 +4138,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                      (FStar_Syntax_Unionfind.commit
                                                         tx;
                                                       (let uu___11 =
-                                                         extend_wl wl4
+                                                         extend_wl wl4 []
                                                            defer_to_tac imps in
                                                        FStar_Pervasives_Native.Some
                                                          uu___11))
@@ -4586,7 +4591,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                           (uu___14.repr_subcomp_allowed)
                                                       } in
                                                     let wl3 =
-                                                      extend_wl wl2
+                                                      extend_wl wl2 []
                                                         defer_to_tac imps in
                                                     let g =
                                                       FStar_List.fold_left
@@ -5189,7 +5194,7 @@ and (try_solve_without_smt_or_else :
           match uu___ with
           | Success (uu___1, defer_to_tac, imps) ->
               (FStar_Syntax_Unionfind.commit tx;
-               (let wl1 = extend_wl wl defer_to_tac imps in solve env wl1))
+               (let wl1 = extend_wl wl [] defer_to_tac imps in solve env wl1))
           | Failed (p, s) ->
               (FStar_Syntax_Unionfind.rollback tx; else_solve env wl (p, s))
 and (solve_t : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
@@ -6477,7 +6482,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                           (uu___10, defer_to_tac', imps') ->
                                           (FStar_Syntax_Unionfind.commit tx;
                                            (let uu___12 =
-                                              extend_wl wl4
+                                              extend_wl wl4 []
                                                 (FStar_List.append
                                                    defer_to_tac defer_to_tac')
                                                 (FStar_List.append imps imps') in
@@ -8010,7 +8015,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                            (uu___16.repr_subcomp_allowed)
                                                        } in
                                                      let wl5 =
-                                                       extend_wl wl4
+                                                       extend_wl wl4 []
                                                          defer_to_tac imps in
                                                      let uu___16 =
                                                        attempt [base_prob]
@@ -9801,22 +9806,9 @@ and (solve_c :
                    (let stronger_t =
                       FStar_All.pipe_right stronger_t_opt FStar_Util.must in
                     let wl1 =
-                      let uu___4 = wl in
-                      {
-                        attempting = (uu___4.attempting);
-                        wl_deferred = (uu___4.wl_deferred);
-                        wl_deferred_to_tac = (uu___4.wl_deferred_to_tac);
-                        ctr = (uu___4.ctr);
-                        defer_ok = (uu___4.defer_ok);
-                        smt_ok = (uu___4.smt_ok);
-                        umax_heuristic_ok = (uu___4.umax_heuristic_ok);
-                        tcenv = (uu___4.tcenv);
-                        wl_implicits =
-                          (FStar_List.append
-                             g_lift.FStar_TypeChecker_Common.implicits
-                             wl.wl_implicits);
-                        repr_subcomp_allowed = (uu___4.repr_subcomp_allowed)
-                      } in
+                      extend_wl wl g_lift.FStar_TypeChecker_Common.deferred
+                        g_lift.FStar_TypeChecker_Common.deferred_to_tac
+                        g_lift.FStar_TypeChecker_Common.implicits in
                     let uu___4 =
                       if is_polymonadic
                       then ([], wl1)
@@ -10128,30 +10120,13 @@ and (solve_c :
                                                          stronger_ct.FStar_Syntax_Syntax.result_typ
                                                          wp
                                                          FStar_Range.dummyRange in
-                                                 let sub_probs =
-                                                   let uu___10 =
-                                                     let uu___11 =
-                                                       let uu___12 =
-                                                         let uu___13 =
-                                                           FStar_All.pipe_right
-                                                             g_lift.FStar_TypeChecker_Common.deferred
-                                                             (FStar_List.map
-                                                                (fun uu___14
-                                                                   ->
-                                                                   match uu___14
-                                                                   with
-                                                                   | 
-                                                                   (uu___15,
-                                                                    uu___16,
-                                                                    p) -> p)) in
-                                                         FStar_List.append
-                                                           g_sub_probs
-                                                           uu___13 in
-                                                       FStar_List.append
-                                                         f_sub_probs uu___12 in
-                                                     FStar_List.append
-                                                       is_sub_probs uu___11 in
-                                                   ret_sub_prob :: uu___10 in
+                                                 let sub_probs = ret_sub_prob
+                                                   ::
+                                                   (FStar_List.append
+                                                      is_sub_probs
+                                                      (FStar_List.append
+                                                         f_sub_probs
+                                                         g_sub_probs)) in
                                                  let guard =
                                                    let guard1 =
                                                      let uu___10 =
