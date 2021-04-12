@@ -216,8 +216,7 @@ let test_lift #p #q (f : unit -> SteelK unit p (fun _ -> q)) : SteelK unit p (fu
 (* Identity cont with frame, to eliminate a SteelK *)
 
 let idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
-  = (SteelF?.reflect (Steel.Effect.return a x)) <:
-    SteelF a frame (fun _ -> frame) (return_req frame) (return_ens a x (fun _ -> frame))
+  = noop(); x
 
 let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
 : SteelK (thread q) p (fun _ -> emp)
@@ -228,7 +227,7 @@ let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
       noop ();
       let t1 () : SteelT unit (emp `star` p) (fun _ -> q) =
         let r : steelK unit p (fun _ -> q) = reify (f ()) in
-        r #emp #q (fun () -> idk ())
+        r #emp #q (fun _ -> idk())
       in
       let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
       let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
@@ -264,9 +263,9 @@ let triv_pre (req:slprop) : req_t req = fun _ -> True
 let triv_post (#a:Type) (req:slprop) (ens:post_t a) : ens_t req a ens = fun _ _ _ -> True
 
 let as_steelk_repr (a:Type) (pre:slprop) (post:post_t a)
-  (f:repr a pre post (triv_pre pre) (triv_post pre post))// unit -> SteelT a pre post)
+  (f:repr a false pre post (triv_pre pre) (triv_post pre post))// unit -> SteelT a pre post)
   : steelK a pre post
-  = as_steelk_repr' a pre post (fun _ -> Steel?.reflect f)
+  = as_steelk_repr' a pre post (fun _ -> SteelBase?.reflect f)
 
 // let as_steelk_repr' (a:Type) (pre:slprop) (post:post_t a) (f:unit -> SteelT a pre post)
 //   : steelK a pre post
@@ -280,7 +279,7 @@ let as_steelk_repr (a:Type) (pre:slprop) (post:post_t a)
 
 open Steel.FractionalPermission
 
-polymonadic_subcomp Steel <: SteelK = as_steelk_repr
+polymonadic_subcomp SteelBase <: SteelK = as_steelk_repr
 
 let bind_steel_steelk (a:Type) (b:Type)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -288,14 +287,14 @@ let bind_steel_steelk (a:Type) (b:Type)
   (#[@@@ framing_implicit] frame_f:slprop) (#[@@@ framing_implicit] frame_g:slprop)
   (#[@@@ framing_implicit] p:squash (can_be_split_forall
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
-  (f:repr a pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
+  (f:repr a false pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
   (g:(x:a -> steelK b (pre_g x) post_g))
 : steelK b
     (pre_f `star` frame_f)
     (fun y -> post_g y `star` frame_g)
 = bind_steelk_steelk a b #pre_f #post_f #pre_g #post_g #frame_f #frame_g #p (as_steelk_repr a pre_f post_f f) g
 
-polymonadic_bind (Steel, SteelK) |> SteelKF = bind_steel_steelk
+polymonadic_bind (SteelBase, SteelK) |> SteelKF = bind_steel_steelk
 
 
 let bind_steel_steelkf (a:Type) (b:Type)
@@ -303,14 +302,14 @@ let bind_steel_steelkf (a:Type) (b:Type)
   (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:post_t b)
   (#[@@@ framing_implicit] frame_f:slprop)
   (#[@@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
-  (f:repr a pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
+  (f:repr a false pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
   (g:(x:a -> steelK b (pre_g x) post_g))
 : steelK b
     (pre_f `star` frame_f)
     post_g
   = bind_steelk_steelkf a b #pre_f #post_f #pre_g #post_g #frame_f #p (as_steelk_repr a pre_f post_f f) g
 
-polymonadic_bind (Steel, SteelKF) |> SteelKF = bind_steel_steelkf
+polymonadic_bind (SteelBase, SteelKF) |> SteelKF = bind_steel_steelkf
 
 let example2 (r:ref int) : SteelK (thread (pts_to r full_perm 1)) (pts_to r full_perm 0) (fun _ -> emp) =
   let p1 = kfork (fun _ -> write #_ #0 r 1) in

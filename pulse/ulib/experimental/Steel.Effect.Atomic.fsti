@@ -277,14 +277,12 @@ effect SteelAtomicT (a:Type) (opened:inames) (o:observability) (pre:pre_t) (post
 
 (***** Lift relation with Steel *****)
 
-/// There is no scope restriction or tricky unification pattern here,
-/// the indices can be solved directly by the unifier, without relying on the tactic
 val lift_atomic_steel
   (a:Type)
   (o:observability)
   (#framed:eqtype_as_type bool)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
+  (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t a)
+  (#[@@@ framing_implicit] req:req_t pre) (#[@@@ framing_implicit] ens:ens_t pre a post)
   (f:repr a framed Set.empty o pre post req ens)
   : Steel.Effect.repr a framed pre post req ens
 
