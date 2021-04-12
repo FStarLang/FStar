@@ -137,8 +137,9 @@ type solution =
   | Success of deferred * deferred * implicits
   | Failed  of prob * lstring
 
-let extend_wl (wl:worklist) (defer_to_tac:deferred) (imps:implicits) =
-  {wl with wl_deferred_to_tac=wl.wl_deferred_to_tac@(as_wl_deferred wl defer_to_tac);
+let extend_wl (wl:worklist) (defers:deferred) (defer_to_tac:deferred) (imps:implicits) =
+  {wl with wl_deferred=wl.wl_deferred@(as_wl_deferred wl defers);
+           wl_deferred_to_tac=wl.wl_deferred_to_tac@(as_wl_deferred wl defer_to_tac);
            wl_implicits=wl.wl_implicits@imps}
 
 type variance =
@@ -1834,7 +1835,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   match solve env wl' with
                   | Success (_, defer_to_tac, imps) ->
                     UF.commit tx;
-                    Some (extend_wl wl defer_to_tac imps)
+                    Some (extend_wl wl [] defer_to_tac imps)
 
                   | Failed _ ->
                     UF.rollback tx;
@@ -2006,7 +2007,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                                            attempting=sub_probs}) with
       | Success (_, defer_to_tac, imps) ->
          let wl = {wl' with attempting=rest} in
-         let wl = extend_wl wl defer_to_tac imps in
+         let wl = extend_wl wl [] defer_to_tac imps in
          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
                                  eq_prob.logical_guard
                                  sub_probs in
@@ -2203,7 +2204,7 @@ and try_solve_without_smt_or_else
     match try_solve env wl' with
     | Success (_, defer_to_tac, imps) ->
       UF.commit tx;
-      let wl = extend_wl wl defer_to_tac imps in
+      let wl = extend_wl wl [] defer_to_tac imps in
       solve env wl
     | Failed (p, s) ->
       UF.rollback tx;
@@ -2682,7 +2683,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 (match solve env wl' with
                 | Success (_, defer_to_tac', imps') ->
                   UF.commit tx;
-                  Some (extend_wl wl (defer_to_tac@defer_to_tac') (imps@imps'))
+                  Some (extend_wl wl [] (defer_to_tac@defer_to_tac') (imps@imps'))
 
                 | Failed _ ->
                   UF.rollback tx;
@@ -3062,7 +3063,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
                let wl = solve_prob orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
-               let wl = extend_wl wl defer_to_tac imps in
+               let wl = extend_wl wl [] defer_to_tac imps in
                solve env (attempt [base_prob] wl)
         else fallback()
 
@@ -3383,7 +3384,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                         (Print.lid_to_string c2.effect_name))) orig
         else
           let stronger_t = stronger_t_opt |> must in
-          let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
+          let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
           (*
            * AR: 04/08: Suppose we have a subcomp problem of the form:
@@ -3495,18 +3496,14 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           let sub_probs =
             ret_sub_prob::(is_sub_probs@
                           f_sub_probs@
-                          g_sub_probs@
-                          (g_lift.deferred |> List.map (fun (_, _, p) -> p))) in
+                          g_sub_probs) in
           let guard =
             let guard = U.mk_conj_l (List.map p_guard sub_probs) in
             match g_lift.guard_f with
             | Trivial -> guard
             | NonTrivial f -> U.mk_conj guard f in
           let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
-
-          let wl = attempt sub_probs wl in
-          let wl = extend_wl wl g_lift.deferred_to_tac [] in
-          solve env wl in
+          solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
         if problem.relation <> SUB then
