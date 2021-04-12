@@ -393,43 +393,57 @@ val bind_steelaf_steela (a:Type) (b:Type)
 polymonadic_bind (SteelAtomicF, SteelAtomic) |> SteelAtomicF = bind_steelaf_steela
 *)
 
-unfold
-let lift_pure_steela__req (#a:Type) (wp:pure_wp a)
-: req_t emp
-= fun m -> as_requires wp /\ True
 
-unfold
-let lift_pure_steela__ens (#a:Type) (wp:pure_wp a)
-: ens_t emp a (fun _ -> emp)
-= fun m0 r m1 -> as_requires wp /\ as_ensures wp r
+// unfold
+// let lift_pure_steela__req (#a:Type) (wp:pure_wp a)
+// : req_t emp
+// = fun m -> as_requires wp /\ True
 
-val lift_pure_steela
-  (a:Type)
-  (opened:inames)
-  (#[@@@ framing_implicit] wp:pure_wp a)
-  (f:eqtype_as_type unit -> PURE a wp)
-  : repr a false opened unobservable
-         emp (fun _ -> emp)
-         (lift_pure_steela__req wp) (lift_pure_steela__ens wp)
+// unfold
+// let lift_pure_steela__ens (#a:Type) (wp:pure_wp a)
+// : ens_t emp a (fun _ -> emp)
+// = fun m0 r m1 -> as_requires wp /\ as_ensures wp r
 
-sub_effect PURE ~> SteelAtomicBase = lift_pure_steela
-
-// val bind_pure_steela_ (a:Type) (b:Type)
-//   (opened_invariants:inames)
-//   (o:observability)
+// val lift_pure_steela
+//   (a:Type)
+//   (opened:inames)
 //   (#[@@@ framing_implicit] wp:pure_wp a)
-//   (#framed: eqtype_as_type bool)
-//   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
-//   (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
 //   (f:eqtype_as_type unit -> PURE a wp)
-//   (g:(x:a -> repr b framed opened_invariants o pre post (req x) (ens x)))
-// : repr b framed opened_invariants o
-//     pre
-//     post
-//     (bind_pure_steela__req wp req)
-//     (bind_pure_steela__ens wp ens)
+//   : repr a false opened unobservable
+//          emp (fun _ -> emp)
+//          (lift_pure_steela__req wp) (lift_pure_steela__ens wp)
 
-// polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
+// sub_effect PURE ~> SteelAtomicBase = lift_pure_steela
+
+unfold
+let bind_pure_steela__req (#a:Type) (wp:pure_wp a)
+  (#pre:pre_t) (req:a -> req_t pre)
+: req_t pre
+= fun m -> wp (fun x -> (req x) m) /\ as_requires wp
+
+unfold
+let bind_pure_steela__ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
+: ens_t pre b post
+= fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
+
+val bind_pure_steela_ (a:Type) (b:Type)
+  (opened_invariants:inames)
+  (o:observability)
+  (#[@@@ framing_implicit] wp:pure_wp a)
+  (#framed: eqtype_as_type bool)
+  (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
+  (f:eqtype_as_type unit -> PURE a wp)
+  (g:(x:a -> repr b framed opened_invariants o pre post (req x) (ens x)))
+: repr b framed opened_invariants o
+    pre
+    post
+    (bind_pure_steela__req wp req)
+    (bind_pure_steela__ens wp ens)
+
+polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
 
 // polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steela_
 
