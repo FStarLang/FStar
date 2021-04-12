@@ -3503,7 +3503,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             | Trivial -> guard
             | NonTrivial f -> U.mk_conj guard f in
           let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
-          solve env (attempt sub_probs wl) in
+
+          let wl = attempt sub_probs wl in
+          let wl = extend_wl wl g_lift.deferred_to_tac [] in
+          solve env wl in
 
     let solve_sub c1 edge c2 =
         if problem.relation <> SUB then
@@ -4448,4 +4451,3 @@ let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
-
