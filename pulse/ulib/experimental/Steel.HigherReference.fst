@@ -30,7 +30,7 @@ let composable #a : symrel (fractional a) =
     match f0, f1 with
     | None, _
     | _, None -> True
-    | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. 1.0R
+    | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. one
 let compose #a (f0:fractional a) (f1:fractional a{composable f0 f1}) : fractional a =
   match f0, f1 with
   | None, f
@@ -55,7 +55,7 @@ module Mem = Steel.Memory
 let ref a = Mem.ref (fractional a) pcm_frac
 let null #a = Mem.null #(fractional a) #pcm_frac
 let is_null #a r = Mem.is_null #(fractional a) #pcm_frac r
-let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
+let perm_ok p : prop = (p.v <=. one == true) /\ True
 let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
 let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
 
