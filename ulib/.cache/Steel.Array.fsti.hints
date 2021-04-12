@@ -1,0 +1,115 @@
+[
+  "„ì\u001cy©W¦—´ZDBe:Šp",
+  [
+    [
+      "Steel.Array.alloc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_Prims.nat",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "a294690aee45a6b2c17f9c00b0a589a4"
+    ],
+    [
+      "Steel.Array.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67", "b2t_def",
+        "equality_tok_Prims.T@tok", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Steel.Array.length",
+        "equation_Steel.Array.perm",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "int_inversion",
+        "interpretation_Tm_abs_4aeafcc481e7f50ac99cd712d6625a3f",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_e2895b721cd433373d5e555ce0d07940",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "3447b1e4a144a4ecb6a68f404d321180"
+    ],
+    [
+      "Steel.Array.write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_Steel.Array.length",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e2895b721cd433373d5e555ce0d07940"
+      ],
+      0,
+      "7439eea2c97854b92b573873ea8d7acd"
+    ],
+    [
+      "Steel.Array.split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67", "b2t_def",
+        "equality_tok_Prims.T@tok", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Array.length", "equation_Steel.Array.perm",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "int_inversion",
+        "interpretation_Tm_abs_c48b1875260a0e1f2712fc562d0a6d5c",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_e2895b721cd433373d5e555ce0d07940",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "dafc1da8474f15355de583066c4eddf1"
+    ],
+    [
+      "Steel.Array.join",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Array.perm",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_Tm_abs_7c04de8cea0b5e9bda63f07c7086ef3c",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "0806a864600d5caa7ed03b4fda1577f9"
+    ]
+  ]
+]

@@ -4,20 +4,17 @@
     [
       "Steel.Semantics.Instantiate.is_unit",
       1,
-      1,
+      2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Steel.Memory_pretyping_6e4f1c1fff1850c70365f645385a066f",
-        "equality_tok_Steel.Memory.Emp@tok", "equation_Steel.Memory.emp",
-        "equation_Steel.Memory.equiv",
-        "equation_Steel.Semantics.Hoare.MST.is_unit",
+        "@query", "equation_Steel.Semantics.Hoare.MST.is_unit",
         "function_token_typing_Steel.Memory.equiv",
         "function_token_typing_Steel.Memory.star",
-        "typing_tok_Steel.Memory.Emp@tok"
+        "lemma_Steel.Memory.reveal_equiv", "typing_Steel.Memory.emp",
+        "typing_Steel.Memory.star"
       ],
       0,
-      "61c41d16eb36b2c4857e91e319aca5ea"
+      "fe64f9fc7f3ac70aa9b594ca63935810"
     ],
     [
       "Steel.Semantics.Instantiate.state_obeys_st_laws",
@@ -26,8 +23,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "equation_Steel.Memory.equiv",
-        "equation_Steel.Semantics.Hoare.MST.affine",
+        "equation_Prims.squash", "equation_Steel.Semantics.Hoare.MST.affine",
         "equation_Steel.Semantics.Hoare.MST.associative",
         "equation_Steel.Semantics.Hoare.MST.commutative",
         "equation_Steel.Semantics.Hoare.MST.disjoint_join",
@@ -45,7 +41,7 @@
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
         "l_and-interp", "l_imp-interp", "lemma_Steel.Memory.affine_star_smt",
-        "lemma_Steel.Memory.disjoint_sym",
+        "lemma_Steel.Memory.disjoint_sym", "lemma_Steel.Memory.reveal_equiv",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_emp",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_equals",
@@ -75,7 +71,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join"
       ],
       0,
-      "0e40e1ae9f0143ba53a154dd0d7aa44b"
+      "d02d3b39b43e9b5f68871f1c2c31e266"
     ],
     [
       "Steel.Semantics.Instantiate.state_uses",
@@ -84,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "7ef8ad457879a70620f72dbb1118496d"
+      "dc452c287bffe1ad0014c0f0f55ac950"
     ],
     [
       "Steel.Semantics.Instantiate.state_correspondence",
@@ -96,7 +92,7 @@
         "refinement_interpretation_Tm_refine_83b7f74668e2de4073384eaaf24260ac"
       ],
       0,
-      "f0057e5f03938d3978f8a534055d3c9b"
+      "2e71901ce5ab5afd070ad21990b491ae"
     ],
     [
       "Steel.Semantics.Instantiate.state_correspondence",
@@ -145,7 +141,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core"
       ],
       0,
-      "74a82d9635613f585bf74cb25fe1edf3"
+      "6988be94a67525f0c558a0e32e7d6582"
     ]
   ]
 ]

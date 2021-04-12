@@ -6,6 +6,11 @@ open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
 
+(* This file is a Steel model for queues implemented using singly
+   linked lists, with a pointer to the tail end of the list, not to
+   the actual last element, but to the *pointer* to the last
+   element. It models the C implementation in CQueue.c. *)
+
 (* The lvalue type (or type for non-null pointers) for queues. *)
 
 val t (a: Type0) : Tot Type0

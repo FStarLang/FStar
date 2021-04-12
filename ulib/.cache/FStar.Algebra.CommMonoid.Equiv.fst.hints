@@ -12,7 +12,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "88539dfbc6d9f0b9f2a03a37b0567f12"
+      "0513890b8a3761238fb109c827f2c400"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__symmetry",
@@ -25,7 +25,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "9fd7c66aeb13b0f06ff3a03d5ea0a835"
+      "78843c4cdd8a3cf4d6729224b5c1e19f"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__transitivity",
@@ -38,7 +38,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "f4c7ebfea658b0bf2aba4cc2d7336a61"
+      "71f55351d0622b8fee5075ef31dd9319"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.equality_equiv",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "c7154e7fa77bfe8485c0018dbd0bea1e"
+      "61f508a15c2b92ba76cea20f6ef9d122"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__identity",
@@ -62,7 +62,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult"
       ],
       0,
-      "4011b2398f0f7ffc7d2fbe9372f10e72"
+      "19ea4674cd1e16be2e7c1d36d341a4ae"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__associativity",
@@ -75,7 +75,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult"
       ],
       0,
-      "15720bea03bc214ce3385884923a4f7f"
+      "6be9162452da405b6bc9b9aaaa9d816c"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__commutativity",
@@ -88,7 +88,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult"
       ],
       0,
-      "36eea91fd7faae6aa6ef4b71c7193ce8"
+      "902d289dedbdfe52e0eb9604250c1924"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__congruence",
@@ -101,7 +101,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult"
       ],
       0,
-      "e140f27f364a18ee39c15e0eb2b18c3d"
+      "b91b20fb56f93b0763ad8db1aef4f2ff"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.right_identity",
@@ -110,7 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "addd8d30580490c0157ec1bbecb0528d"
+      "bd7f4c123305e4fdb55eaa046259f49a"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_plus_cm",
@@ -131,7 +131,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "add6b02e7615d890843191cd5e9d3ed9"
+      "1b63ccd8fc9e8ec989045d9ed89aee7a"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_multiply_cm",
@@ -152,7 +152,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "6698dd50e86d3e9fe06fa85b7f0ddf67"
+      "1be60954c8e5b2f1e655a13e53d1fc6b"
     ]
   ]
 ]

@@ -1,0 +1,127 @@
+[
+  "½εά¨Ω|³ή\u007f=,όχ\u001fΖ",
+  [
+    [
+      "Steel.SelArray.asel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_07039acee423863802d9ed936edf60e4",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "59dec77ff2eb09503991cd52dc3fcb0a"
+    ],
+    [
+      "Steel.SelArray.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "a67fb475665a805320d0eb20c09afd25"
+    ],
+    [
+      "Steel.SelArray.alloc",
+      2,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Steel.SelArray.array_sel", "equation_Steel.SelArray.asel",
+        "equation_Steel.SelArray.is_array",
+        "equation_Steel.SelArray.varray_", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "be752a15d5baf848a8f1e26d8e7a6d53"
+    ],
+    [
+      "Steel.SelArray.index",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Steel.SelArray.length", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "0e1fece4384fe23f6952598e78b424ad"
+    ],
+    [
+      "Steel.SelArray.index",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Steel.SelArray.array_sel", "equation_Steel.SelArray.asel",
+        "equation_Steel.SelArray.is_array", "equation_Steel.SelArray.length",
+        "equation_Steel.SelArray.varray_",
+        "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.vptr_", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "true_interp", "typing_FStar.UInt32.v"
+      ],
+      0,
+      "9c75488f5b0034639519cd17453c783c"
+    ],
+    [
+      "Steel.SelArray.upd",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Steel.SelArray.length", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b676ee7d78fea3c61e2760c21addcf71"
+    ],
+    [
+      "Steel.SelArray.upd",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Steel.SelArray.array_sel", "equation_Steel.SelArray.asel",
+        "equation_Steel.SelArray.is_array", "equation_Steel.SelArray.length",
+        "equation_Steel.SelArray.varray_",
+        "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.vptr_", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "true_interp", "typing_FStar.UInt32.v"
+      ],
+      0,
+      "e1547ebb0807136c6527613a53e2633d"
+    ]
+  ]
+]
