@@ -911,14 +911,14 @@ friend Steel.Effect
 let as_steelsel0 (#a:Type)
   (#pre:pre_t) (#post:post_t a)
   (#req:prop) (#ens:a -> prop)
-  ($f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+  ($f:Eff.repr a false (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : repr a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = fun frame -> f frame
 
 let as_steelsel1 (#a:Type)
   (#pre:vprop) (#post:a -> vprop)
   (#req:prop) (#ens:a -> prop)
-  ($f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+  ($f:Eff.repr a false (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = SteelSel?.reflect (as_steelsel0 f)
 
