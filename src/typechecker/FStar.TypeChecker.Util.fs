@@ -2945,7 +2945,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
   then BU.print1 "Guard for lift is: %s" (Print.term_to_string fml);
 
   let c = mk_Comp ({
-    comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
+    comp_univs = [u];
     effect_name = tgt;
     result_typ = a;
     effect_args = is |> List.map S.as_arg;

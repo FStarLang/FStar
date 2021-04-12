@@ -6298,8 +6298,7 @@ let (lift_tf_layered_effect :
                                          (FStar_List.map
                                             FStar_Syntax_Syntax.as_arg) in
                                      {
-                                       FStar_Syntax_Syntax.comp_univs =
-                                         (lift_ct.FStar_Syntax_Syntax.comp_univs);
+                                       FStar_Syntax_Syntax.comp_univs = [u];
                                        FStar_Syntax_Syntax.effect_name = tgt;
                                        FStar_Syntax_Syntax.result_typ = a;
                                        FStar_Syntax_Syntax.effect_args =
