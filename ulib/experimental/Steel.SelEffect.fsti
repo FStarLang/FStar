@@ -548,3 +548,9 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
 let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
+
+val intro_vrefine
+  (v: vprop) (p: (t_of v -> Tot prop))
+: SteelSel unit v (fun _ -> vrefine v p)
+  (requires (fun h -> p (h v)))
+  (ensures (fun _ _ _ -> True))
