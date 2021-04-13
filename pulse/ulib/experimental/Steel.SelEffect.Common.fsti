@@ -309,11 +309,8 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
   | Appears -> true
   | e -> raise e
 
-
 let term_appears_in (t:term) (i:term) : Tac bool =
   name_appears_in (explode_qn (term_to_string t)) i
-
-
 
 let atom : eqtype = int
 
@@ -1591,42 +1588,48 @@ let rec solve_return_eqs (l:list goal) : Tac unit =
 
 /// Strip annotations in a goal, to get to the underlying slprop equivalence
 let goal_to_equiv (t:term) (loc:string) : Tac unit
-  = if term_appears_in (`can_be_split) t then (
-      apply_lemma (`equiv_can_be_split)
-    ) else if term_appears_in (`can_be_split_forall) t then (
-      ignore (forall_intro ());
-      apply_lemma (`equiv_can_be_split)
-    ) else if term_appears_in (`equiv_forall) t then (
-      fail "equiv_forall"
-    ) else if term_appears_in (`can_be_split_post) t then (
-      apply_lemma (`can_be_split_post_elim);
-      dismiss_slprops();
-      ignore (forall_intro ());
-      ignore (forall_intro ())
-    ) else if term_appears_in (`can_be_split_dep) t then (
-      fail ("can_be_split_dep not supported in " ^ loc)
-    ) else if term_appears_in (`can_be_split_forall_dep) t then (
-      fail ("can_be_split_forall_dep not supported in " ^ loc)
-    ) else
-      // This should never happen
-      fail (loc ^ " goal in unexpected position")
+  = let f = term_as_formula' t in
+    match f with
+    | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (`can_be_split) then (
+        apply_lemma (`equiv_can_be_split)
+      ) else if term_eq hd (`can_be_split_forall) then (
+        ignore (forall_intro ());
+        apply_lemma (`equiv_can_be_split)
+      ) else if term_eq hd (`equiv_forall) then (
+        fail "equiv_forall"
+      ) else if term_eq hd (`can_be_split_post) then (
+        apply_lemma (`can_be_split_post_elim);
+        dismiss_slprops();
+        ignore (forall_intro ());
+        ignore (forall_intro ())
+      ) else if term_eq hd (`can_be_split_dep) then (
+        fail ("can_be_split_dep not supported in " ^ loc)
+      ) else if term_eq hd (`can_be_split_forall_dep) then (
+        fail ("can_be_split_forall_dep not supported in " ^ loc)
+      ) else
+        // This should never happen
+        fail (loc ^ " goal in unexpected position")
+    | _ -> fail (loc ^ " unexpected goal")
 
 // The term corresponds to a goal containing a return_post
 let solve_return (t:term) : Tac unit
-  = goal_to_equiv t "return";
-    match (goals ()) with
-    | [] -> () // Can happen if reflexivity was sufficient here
-    | _ -> norm [delta_only [
-                     `%CE.__proj__CM__item__unit;
-                     `%CE.__proj__CM__item__mult;
-                     `%rm;
-                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                     `%fst; `%snd];
-               delta_attr [`%__reduce__];
-               primops; iota; zeta];
-           canon_return ();
-           norm [delta_only [`%return_post]]
-
+  = focus (fun _ ->
+      goal_to_equiv t "return";
+      match (goals ()) with
+      | [] -> () // Can happen if reflexivity was sufficient here
+      | _ -> norm [delta_only [
+                       `%CE.__proj__CM__item__unit;
+                       `%CE.__proj__CM__item__mult;
+                       `%rm;
+                       `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                       `%fst; `%snd];
+                 delta_attr [`%__reduce__];
+                 primops; iota; zeta];
+             canon_return ();
+             norm [delta_only [`%return_post]]
+    )
 
 let rec solve_all_returns (l:list goal) : Tac unit =
   match l with
@@ -1769,10 +1772,10 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
     | App _ t ->
       let hd, args = collect_app t in
       if term_eq hd (`maybe_emp) then
-        (norm [delta; iota; zeta; primops; simplify];
+        (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
          or_else trivial trefl)
       else if term_eq hd (`maybe_emp_dep) then
-        (norm [delta; iota; zeta; primops; simplify];
+        (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
          or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
       else later()
     | _ -> later()
@@ -1793,13 +1796,13 @@ let init_sel_resolve_tac () : Tac unit =
   // We first solve the slprops
   set_goals slgs;
 
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
+
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
   solve_indirection_eqs (goals());
-
-  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
