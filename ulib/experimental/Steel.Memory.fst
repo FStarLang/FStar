@@ -49,6 +49,8 @@ let mem_set_heap (m:mem) (h:H.heap) : mem = {
 
 let core_mem (m:mem) : mem = mem_of_heap (heap_of_mem m)
 
+let core_mem_invol m = ()
+
 let disjoint (m0 m1:mem u#h)
   : prop
   = m0.ctr == m1.ctr /\
@@ -320,6 +322,31 @@ let full_mem_pred (m:mem) = H.full_heap_pred (heap_of_mem m)
 let core_mem_interp (hp:slprop u#a) (m:mem u#a) = ()
 
 let interp_depends_only_on (hp:slprop u#a) = H.interp_depends_only_on hp
+
+let a_mem_prop_as_a_heap_prop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+: Tot (H.a_heap_prop u#a)
+=
+  let g (h: H.heap u#a) : Tot prop = interp sl (mem_of_heap h) /\ f (mem_of_heap h) in
+  let phi0 (h0 h1: H.heap u#a) : Lemma
+    (requires (g h0 /\ H.disjoint h0 h1))
+    (ensures (g h0 /\ H.disjoint h0 h1 /\ g (H.join h0 h1)))
+  = assert (mem_of_heap (H.join h0 h1) == mem_of_heap h0 `join` mem_of_heap h1);
+    interp_depends_only_on sl
+  in
+  let phi1 (h0 h1: H.heap u#a) : Lemma
+    (ensures ((g h0 /\ H.disjoint h0 h1) ==> g (H.join h0 h1)))
+  =
+    Classical.move_requires (phi0 h0) h1
+  in
+  Classical.forall_intro_2 phi1;
+  g
+
+let refine_slprop sl f = H.as_slprop (a_mem_prop_as_a_heap_prop sl f)
+
+let interp_refine_slprop sl f m =
+  assert ((interp sl m /\ f m) <==> interp sl (core_mem m) /\ f (core_mem m))
 
 let h_exists_cong (#a:Type) (p q : a -> slprop)
     : Lemma
