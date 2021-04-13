@@ -36,7 +36,7 @@ let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ 
  * The return is already framed (the post captures the full context)
  *)
 val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
-: repr a true (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
+: repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
 
 (*
  * We allow weakening of post resource of f to pre resource of g

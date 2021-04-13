@@ -58,7 +58,7 @@ val return (a:Type u#a)
    (opened_invariants:inames)
    (#[@@@ framing_implicit] p:a -> slprop u#1)
   : repr a true opened_invariants unobservable
-                (return_pre (p x)) (return_post p)
+                (return_pre (p x)) p
                 (return_req (p x)) (return_ens a x p)
 
 unfold

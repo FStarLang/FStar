@@ -1639,8 +1639,8 @@ let init_resolve_tac () : Tac unit =
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
-  // We now solve all postconditions of pure returns to avoid restricting the uvars
-  solve_all_returns (goals ());
+  // // We now solve all postconditions of pure returns to avoid restricting the uvars
+  // solve_all_returns (goals ());
 
   // We can now solve the equalities for returns
   solve_return_eqs (goals());
