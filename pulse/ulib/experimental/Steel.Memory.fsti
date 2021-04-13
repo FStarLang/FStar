@@ -284,7 +284,7 @@ let mem_prop_is_affine
   (f: (hmem sl -> Tot prop))
 : Tot prop
 = (forall m . f m <==> f (core_mem m)) /\
-  (forall (m0: hmem sl) m1 . (f m0 /\ disjoint m0 m1 /\ interp sl (join m0 m1)) ==> f (join m0 m1))
+  (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
 
 let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
 
