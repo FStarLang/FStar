@@ -17,7 +17,7 @@ type post_t (a:Type) = a -> slprop u#1
 
 let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
 let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
-  if framed then (forall x. frame x == emp) else True
+  if framed then frame == (fun _ -> emp) else True
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 let true_p : prop = True
@@ -1605,7 +1605,7 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
          or_else trivial trefl)
       else if term_eq hd (`maybe_emp_dep) then
         (norm [delta; iota; zeta; primops; simplify];
-         or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
+         or_else trivial trefl) // (fun _ -> ignore (forall_intro ()); trefl ()))
       else later()
     | _ -> later()
     );
@@ -1625,13 +1625,13 @@ let init_resolve_tac () : Tac unit =
   // We first solve the slprops
   set_goals slgs;
 
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
+
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
   solve_indirection_eqs (goals());
-
-  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
