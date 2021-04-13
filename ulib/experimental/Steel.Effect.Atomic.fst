@@ -430,3 +430,4 @@ let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m ->
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)
 
 let intro_refine_slprop #uses sl f = sladmit ()
+let elim_refine_slprop #uses sl f = sladmit ()

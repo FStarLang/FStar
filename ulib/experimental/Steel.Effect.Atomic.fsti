@@ -703,3 +703,15 @@ val intro_refine_slprop
     (fun _ -> refine_slprop sl f)
     (fun h -> f h)
     (fun _ _ _ -> True)
+
+val elim_refine_slprop
+  (#uses: inames)
+  (sl: slprop)
+  (f: a_mem_prop sl)
+: SteelAtomic unit
+    uses
+    unobservable
+    (refine_slprop sl f)
+    (fun _ -> sl)
+    (fun _ -> True)
+    (fun _ _ h -> f h)

@@ -554,3 +554,9 @@ val intro_vrefine
 : SteelSel unit v (fun _ -> vrefine v p)
   (requires (fun h -> p (h v)))
   (ensures (fun _ _ _ -> True))
+
+val elim_vrefine
+  (v: vprop) (p: (t_of v -> Tot prop))
+: SteelSel unit (vrefine v p) (fun _ -> v)
+  (requires (fun _ -> True))
+  (ensures (fun _ _ h -> p (h v)))
