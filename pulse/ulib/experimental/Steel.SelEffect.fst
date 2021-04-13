@@ -1003,3 +1003,4 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
 
 let intro_vrefine v p = sladmit ()
+let elim_vrefine v p = sladmit ()
