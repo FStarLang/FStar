@@ -1601,11 +1601,14 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
     | App _ t ->
       let hd, args = collect_app t in
       if term_eq hd (`maybe_emp) then
-        (norm [delta; iota; zeta; primops; simplify];
-         or_else trivial trefl)
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
+          or_else trivial trefl))
       else if term_eq hd (`maybe_emp_dep) then
-        (norm [delta; iota; zeta; primops; simplify];
-         or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
+          or_else trivial (fun _ -> ignore (forall_intro ()); trefl()) )
+        )
       else later()
     | _ -> later()
     );
@@ -1625,13 +1628,13 @@ let init_resolve_tac () : Tac unit =
   // We first solve the slprops
   set_goals slgs;
 
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
+
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
   solve_indirection_eqs (goals());
-
-  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
