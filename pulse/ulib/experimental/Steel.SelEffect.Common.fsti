@@ -213,6 +213,42 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_commutative
      star_congruence
 
+[@__steel_reduce__]
+let vrefine_am (v: vprop) (p: (t_of v -> Tot prop)) : Tot (a_mem_prop (hp_of v)) =
+  fun h -> p (sel_of v h)
+
+[@__steel_reduce__]
+let vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) : Tot slprop
+= refine_slprop (hp_of v) (vrefine_am v p)
+
+[@__steel_reduce__]
+let vrefine_t (v: vprop) (p: (t_of v -> Tot prop)) : Tot Type
+= (x: t_of v {p x})
+
+[@__steel_reduce__]
+let vrefine_sel' (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
+=
+  fun (h: hmem (vrefine_hp v p)) ->
+    interp_refine_slprop (hp_of v) (vrefine_am v p) h;
+    sel_of v h
+
+[@__steel_reduce__]
+let vrefine_sel (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
+= assert (sel_depends_only_on (vrefine_sel' v p));
+  assert (sel_depends_only_on_core (vrefine_sel' v p));
+  vrefine_sel' v p
+
+[@__steel_reduce__]
+let vrefine' (v: vprop) (p: (t_of v -> Tot prop)) : Tot vprop' = {
+  hp = vrefine_hp v p;
+  t = vrefine_t v p;
+  sel = vrefine_sel v p;
+}
+
+[@__steel_reduce__]
+let vrefine (v: vprop) (p: (t_of v -> Tot prop)) = VUnit (vrefine' v p)
+
+
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
 
