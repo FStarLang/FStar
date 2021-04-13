@@ -23,6 +23,7 @@ module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
 //open Steel.SteelT.Basics
 
+
 (** Specification and implementation of a pingpong protocol *)
 
 /// Specification of a pingpong protocol.
@@ -48,7 +49,7 @@ let client (c:Duplex.chan pingpong)
            (fun _ -> Duplex.endpoint c Protocol.done)
   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17
     Duplex.send c 17;
-    let y = Duplex.recv #_ #(step pingpong 17) c in
+    let y = Duplex.recv c in
     // The protocol specifies that the integer received is greater than the one sent.
     // This fact is available in the context and can be asserted.
     assert (y > 17);
@@ -65,7 +66,7 @@ let server (c:Duplex.chan pingpong)
   : SteelT unit
            (Duplex.endpoint c (Protocol.dual pingpong))
            (fun _ -> Duplex.endpoint c Protocol.done)
-  = let y = Duplex.recv #_ #(Protocol.dual pingpong) c in
+  = let y = Duplex.recv c in
     // The dual protocol specifies that an integer is received, and that a greater integer
     // must be sent. We arbitrarily choose y + 42
     Duplex.send c (y + 42);

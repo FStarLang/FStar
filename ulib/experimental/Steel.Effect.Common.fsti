@@ -1602,11 +1602,11 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
       let hd, args = collect_app t in
       if term_eq hd (`maybe_emp) then
         focus (fun _ ->
-          (norm [delta; iota; zeta; primops; simplify];
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
           or_else trivial trefl))
       else if term_eq hd (`maybe_emp_dep) then
         focus (fun _ ->
-          (norm [delta; iota; zeta; primops; simplify];
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
           or_else trivial (fun _ -> ignore (forall_intro ()); trefl()) )
         )
       else later()
