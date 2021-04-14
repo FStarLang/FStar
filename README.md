@@ -55,10 +55,17 @@ by the [KreMLin tool](https://github.com/FStarLang/kremlin),
 and code written in an ASM-like deeply embedded DSL can be extracted
 to ASM by the [Vale tool](https://github.com/project-everest/vale).
 
-### Chatting about F* on Zulip
+### Chatting about F* on Slack and Zulip
 
-Users can chat about F* or ask questions at https://fstar.zulipchat.com
-([Zulip](https://zulipchat.com) is a good open source alternative to Slack)
+The F* developers and many users interact on this [Slack
+forum](https://everestexpedition.slack.com)---you should be able to
+join automatically by [clicking
+here](https://join.slack.com/t/everestexpedition/shared_invite/zt-p11i1g2t-LQ7b2XqPzTcF2uoOf_nesA),
+but if that doesn't work, please contact the mailing list mentioned
+below.
+
+Users can also chat about F* or ask questions at this [Zulip
+forum](https://fstar.zulipchat.com).
 
 ### Community mailing list
 
