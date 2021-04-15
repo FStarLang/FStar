@@ -42,4 +42,32 @@ let star_commutative p1 p2 = Mem.star_commutative (hp_of p1) (hp_of p2)
 let star_associative p1 p2 p3 = Mem.star_associative (hp_of p1) (hp_of p2) (hp_of p3)
 let star_congruence p1 p2 p3 p4 = Mem.star_congruence (hp_of p1) (hp_of p2) (hp_of p3) (hp_of p4)
 
+let vrefine_am (v: vprop) (p: (t_of v -> Tot prop)) : Tot (a_mem_prop (hp_of v)) =
+  fun h -> p (sel_of v h)
+
+let vrefine_hp
+  v p
+= refine_slprop (hp_of v) (vrefine_am v p)
+
+let interp_vrefine_hp
+  v p m
+= ()
+
+let vrefine_sel' (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
+=
+  fun (h: hmem (vrefine_hp v p)) ->
+    interp_refine_slprop (hp_of v) (vrefine_am v p) h;
+    sel_of v h
+
+let vrefine_sel
+  v p
+= assert (sel_depends_only_on (vrefine_sel' v p));
+  assert (sel_depends_only_on_core (vrefine_sel' v p));
+  vrefine_sel' v p
+
+let vrefine_sel_eq
+  v p m
+= ()
+
+
 let emp_unit_variant p = Mem.emp_unit (hp_of p)

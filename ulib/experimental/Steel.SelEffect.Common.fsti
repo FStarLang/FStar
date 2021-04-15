@@ -217,30 +217,24 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_commutative
      star_congruence
 
-[@__steel_reduce__]
-let vrefine_am (v: vprop) (p: (t_of v -> Tot prop)) : Tot (a_mem_prop (hp_of v)) =
-  fun h -> p (sel_of v h)
+val vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) : Tot (slprop u#1)
 
-[@__steel_reduce__]
-let vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) : Tot slprop
-= refine_slprop (hp_of v) (vrefine_am v p)
+val interp_vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) (m: mem) : Lemma
+  (interp (vrefine_hp v p) m <==> (interp (hp_of v) m /\ p (sel_of v m)))
+//  [SMTPat (interp (vrefine_hp v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
 
 [@__steel_reduce__]
 let vrefine_t (v: vprop) (p: (t_of v -> Tot prop)) : Tot Type
 = (x: t_of v {p x})
 
-[@__steel_reduce__]
-let vrefine_sel' (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
-=
-  fun (h: hmem (vrefine_hp v p)) ->
-    interp_refine_slprop (hp_of v) (vrefine_am v p) h;
-    sel_of v h
+val vrefine_sel (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
 
-[@__steel_reduce__]
-let vrefine_sel (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
-= assert (sel_depends_only_on (vrefine_sel' v p));
-  assert (sel_depends_only_on_core (vrefine_sel' v p));
-  vrefine_sel' v p
+val vrefine_sel_eq (v: vprop) (p: (t_of v -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    vrefine_sel v p m == sel_of v m
+  )
+//  [SMTPat ((vrefine_sel v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
 
 [@__steel_reduce__]
 let vrefine' (v: vprop) (p: (t_of v -> Tot prop)) : Tot vprop' = {
@@ -251,7 +245,6 @@ let vrefine' (v: vprop) (p: (t_of v -> Tot prop)) : Tot vprop' = {
 
 [@__steel_reduce__]
 let vrefine (v: vprop) (p: (t_of v -> Tot prop)) = VUnit (vrefine' v p)
-
 
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
