@@ -26,13 +26,11 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
 (* State that all "atomic" subresources have the same selectors on both views *)
 
 [@@ __steel_reduce__]
-let rec frame_equalities
+let rec frame_equalities'
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
-  =
-    h0 frame == h1 frame /\
-    begin match frame with
-    | VUnit p -> True
+  = begin match frame with
+    | VUnit p -> h0 frame == h1 frame
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -44,9 +42,16 @@ let rec frame_equalities
         let h12 = focus_rmem h1 p2 in
 
 
-        frame_equalities p1 h01 h11 /\
-        frame_equalities p2 h02 h12
+        frame_equalities' p1 h01 h11 /\
+        frame_equalities' p2 h02 h12
     end
+
+(* In addition to equalities on atomic subresources, we need an equality at the toplevel,
+   in case we are handling an abstract vprop where reduction through frame_equalities'
+   would be stuck *)
+[@@ __steel_reduce__]
+let frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) : prop =
+  h0 frame == h1 frame /\ frame_equalities' frame h0 h1
 
 (* Defining the Steel effect with selectors *)
 
