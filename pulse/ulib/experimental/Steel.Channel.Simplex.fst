@@ -161,7 +161,6 @@ let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
   = intro_pure (in_state_prop p v);
     intro_exists v (fun (v:chan_val) -> pts_to r half v `star` in_state_slprop p v)
 
-//#push-options "--print_universes"
 let msg t p = Msg Send unit (fun _ -> p)
 let init_chan_val (p:prot) = v:chan_val {v.chan_prot == msg unit p}
 

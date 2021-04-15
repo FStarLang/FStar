@@ -215,29 +215,6 @@ effect SteelAtomicF (a:Type)
   (ens:ens_t pre a post)
   = SteelAtomicBase a true opened o pre post req ens
 
-// AF: Same issue as in Steel.Effect
-
-// unfold
-// let lift_pure_steela__req (#a:Type) (wp:pure_wp a)
-// : req_t emp
-// = fun m -> as_requires wp /\ True
-
-// unfold
-// let lift_pure_steela__ens (#a:Type) (wp:pure_wp a)
-// : ens_t emp a (fun _ -> emp)
-// = fun m0 r m1 -> as_requires wp /\ as_ensures wp r
-
-// val lift_pure_steela
-//   (a:Type)
-//   (opened:inames)
-//   (#[@@@ framing_implicit] wp:pure_wp a)
-//   (f:eqtype_as_type unit -> PURE a wp)
-//   : repr a false opened unobservable
-//          emp (fun _ -> emp)
-//          (lift_pure_steela__req wp) (lift_pure_steela__ens wp)
-
-// sub_effect PURE ~> SteelAtomicBase = lift_pure_steela
-
 unfold
 let bind_pure_steela__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
@@ -267,10 +244,6 @@ val bind_pure_steela_ (a:Type) (b:Type)
     (bind_pure_steela__ens wp ens)
 
 polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
-
-// polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steela_
-
-// polymonadic_subcomp SteelAtomicF <: SteelAtomic = subcomp
 
 effect SteelAtomicT (a:Type) (opened:inames) (o:observability) (pre:pre_t) (post:post_t a) =
   SteelAtomic a opened o pre post (fun _ -> True) (fun _ _ _ -> True)
