@@ -60,7 +60,7 @@ to ASM by the [Vale tool](https://github.com/project-everest/vale).
 The F* developers and many users interact on this [Slack
 forum](https://everestexpedition.slack.com)---you should be able to
 join automatically by [clicking
-here](https://join.slack.com/t/everestexpedition/shared_invite/zt-p11i1g2t-LQ7b2XqPzTcF2uoOf_nesA),
+here](https://aka.ms/JoinEverestSlack),
 but if that doesn't work, please contact the mailing list mentioned
 below.
 
