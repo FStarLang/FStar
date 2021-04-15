@@ -45,7 +45,7 @@ module A = Steel.Effect.Atomic
 
 #set-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0"
 
-let half_perm = half_perm (MkPerm 1.0R)
+let half_perm = half_perm full_perm
 
 let fst = fst
 let snd = snd
@@ -55,7 +55,7 @@ let lock_inv_slprop (r:ref int) (r1 r2:ghost_ref int) (w:G.erased int & G.erased
   ghost_pts_to r1 half_perm (fst w) `star`
   ghost_pts_to r2 half_perm (snd w) `star`
   pts_to r  full_perm (G.hide (fst w + snd w))
-  
+
 [@@ __reduce__]
 let lock_inv_pred (r:ref int) (r1 r2:ghost_ref int) =
   fun (x:G.erased int & G.erased int) -> lock_inv_slprop r r1 r2 x
@@ -187,8 +187,8 @@ let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
     incr_ghost_contrib #n_ghost #(fst w) r_mine;
     change_slprop (pts_to r full_perm (g_incr (G.hide (fst w + snd w))))
                   (pts_to r full_perm (G.hide (g_incr (fst w) + snd w)))
-                  (fun _ -> ()); 
-    intro_exists (g_incr (fst w), snd w) (lock_inv_pred r r_mine r_other); 
+                  (fun _ -> ());
+    intro_exists (g_incr (fst w), snd w) (lock_inv_pred r r_mine r_other);
     og_release r r_mine r_other b l
 
 let incr_main (#v:G.erased int) (r:ref int)
@@ -219,7 +219,7 @@ let incr_main (#v:G.erased int) (r:ref int)
     change_slprop (pts_to r full_perm v)
                   (pts_to r full_perm (G.hide (G.reveal (fst (G.hide 0, v)) + G.reveal (snd (G.hide 0, v)))))
                   (fun _ -> ());
- 
+
     //create the lock
     intro_exists (G.hide 0, v) (lock_inv_pred r r1 r2);
 

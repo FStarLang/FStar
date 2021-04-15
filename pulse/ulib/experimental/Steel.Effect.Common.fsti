@@ -15,6 +15,10 @@ let admit_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
 
+let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
+let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
+  if framed then (forall x. frame x == emp) else True
+
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 let true_p : prop = True
 
@@ -1585,6 +1589,30 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | _ -> slgoals, loggoals
 
 
+// Solve the maybe_emp goals:
+// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
+// solve the goal (either an equality through trefl, or True through trivial)
+let rec solve_maybe_emps (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (cur_goal ()) in (
+    match f with
+    | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (`maybe_emp) then
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
+          or_else trivial trefl))
+      else if term_eq hd (`maybe_emp_dep) then
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
+          or_else trivial (fun _ -> ignore (forall_intro ()); trefl()) )
+        )
+      else later()
+    | _ -> later()
+    );
+    solve_maybe_emps tl
 
 let rec norm_return_pre (l:list goal) : Tac unit =
   match l with
@@ -1600,6 +1628,9 @@ let init_resolve_tac () : Tac unit =
   // We first solve the slprops
   set_goals slgs;
 
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
+
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
@@ -1608,8 +1639,8 @@ let init_resolve_tac () : Tac unit =
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
-  // We now solve all postconditions of pure returns to avoid restricting the uvars
-  solve_all_returns (goals ());
+  // // We now solve all postconditions of pure returns to avoid restricting the uvars
+  // solve_all_returns (goals ());
 
   // We can now solve the equalities for returns
   solve_return_eqs (goals());
