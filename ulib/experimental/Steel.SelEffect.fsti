@@ -143,8 +143,12 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= normal ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
+= (forall (m0:rmem pre_g). normal (req_g m0 ==> req_f (focus_rmem m0 pre_f))) /\
+  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). normal (
+      ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1
+    )
+  )
+
 
 val subcomp (a:Type)
   (#framed_f:eqtype_as_type bool)
@@ -167,7 +171,10 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> normal ((p ==> req_then h) /\ ((~ p) ==> req_else (focus_rmem h pre_g)))
+= fun h -> normal (
+    (p ==> req_then h) /\
+    ((~ p) ==> req_else (focus_rmem h pre_g))
+  )
 
 unfold
 let if_then_else_ens (#a:Type)
@@ -177,8 +184,10 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> normal ((p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
-  ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
+= fun h0 x h1 -> normal (
+    (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
+    ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
+  )
 
 let if_then_else (a:Type)
   (#framed:eqtype_as_type bool)
@@ -364,13 +373,13 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   = h (vptr r)
 
 val intro_vrefine
-  (v: vprop) (p: (t_of v -> Tot prop))
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelSel unit v (fun _ -> vrefine v p)
   (requires (fun h -> p (h v)))
-  (ensures (fun h _ h' -> (h' (vrefine v p) <: t_of v) == h v))
+  (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
 
 val elim_vrefine
-  (v: vprop) (p: (t_of v -> Tot prop))
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelSel unit (vrefine v p) (fun _ -> v)
   (requires (fun _ -> True))
-  (ensures (fun h _ h' -> h' v == (h (vrefine v p) <: t_of v)))
+  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p))))

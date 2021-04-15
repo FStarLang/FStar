@@ -730,14 +730,8 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     write0 v r x;
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
 
-let sladmit0
-            (#p:pre_t)
-            (_:unit)
-  : SteelSelF unit p (fun _ -> p) (requires fun _ -> True) (ensures fun _ _ _ -> False)
-= sladmit ()
-
 let intro_vrefine v p =
-  let m = get #v () in
+  let m = get () in
   let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
   let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
   change_slprop
@@ -748,13 +742,10 @@ let intro_vrefine v p =
     (fun m ->
       interp_vrefine_hp v p m;
       vrefine_sel_eq v p m
-    );
-  let m' = get #(vrefine v p) () in
-  assert (m' (vrefine v p) == m v);
-  sladmit0 () // FIXME: WHY WHY WHY can't I prove the postcondition?
+    )
 
 let elim_vrefine v p =
-  let m = get #(vrefine v p) () in
+  let m = get () in
   let x : Ghost.erased (vrefine_t v p) = Ghost.hide (m (vrefine v p)) in
   let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
   change_slprop
@@ -765,7 +756,4 @@ let elim_vrefine v p =
     (fun m ->
       interp_vrefine_hp v p m;
       vrefine_sel_eq v p m
-    );
-  let m' = get #v () in
-  assert (m' v == m (vrefine v p));
-  sladmit0 () // FIXME: WHY WHY WHY can't I prove the postcondition?
+    )

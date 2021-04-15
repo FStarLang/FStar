@@ -217,19 +217,19 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_commutative
      star_congruence
 
-val vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) : Tot (slprop u#1)
+val vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (slprop u#1)
 
-val interp_vrefine_hp (v: vprop) (p: (t_of v -> Tot prop)) (m: mem) : Lemma
+val interp_vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: mem) : Lemma
   (interp (vrefine_hp v p) m <==> (interp (hp_of v) m /\ p (sel_of v m)))
 //  [SMTPat (interp (vrefine_hp v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
 
 [@__steel_reduce__]
-let vrefine_t (v: vprop) (p: (t_of v -> Tot prop)) : Tot Type
+let vrefine_t (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot Type
 = (x: t_of v {p x})
 
-val vrefine_sel (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
+val vrefine_sel (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
 
-val vrefine_sel_eq (v: vprop) (p: (t_of v -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
+val vrefine_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
   (
     interp (hp_of v) m /\
     vrefine_sel v p m == sel_of v m
@@ -237,14 +237,14 @@ val vrefine_sel_eq (v: vprop) (p: (t_of v -> Tot prop)) (m: hmem (vrefine_hp v p
 //  [SMTPat ((vrefine_sel v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
 
 [@__steel_reduce__]
-let vrefine' (v: vprop) (p: (t_of v -> Tot prop)) : Tot vprop' = {
+let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
   hp = vrefine_hp v p;
   t = vrefine_t v p;
   sel = vrefine_sel v p;
 }
 
 [@__steel_reduce__]
-let vrefine (v: vprop) (p: (t_of v -> Tot prop)) = VUnit (vrefine' v p)
+let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
 
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
