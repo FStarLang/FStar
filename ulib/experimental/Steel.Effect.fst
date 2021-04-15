@@ -49,7 +49,7 @@ let repr (a:Type) (frame:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
-: repr a true (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
+: repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
   = fun _ -> x
 
 (*
