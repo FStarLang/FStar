@@ -45,26 +45,20 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
   interp_depends_only_on_post post;
   fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+let repr (a:Type) (frame:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
-: repr a (p x) p (return_req (p x)) (return_ens a x p)
+: repr a true (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
   = fun _ -> x
-
-let bind a b f g = fun frame ->
-  let x = f frame in
-  (g x) frame
-
-let subcomp a f = f
 
 (*
  * Keeping f_frame aside for now
  *)
-let frame_aux (#a:Type)
+let frame_aux (#a:Type) (#framed:bool)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:repr a pre post req ens) (frame:slprop)
-: repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
+  ($f:repr a framed pre post req ens) (frame:slprop)
+: repr a true (pre `star` frame) (fun x -> post x `star` frame) req ens
 = fun frame' ->
   Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
@@ -88,7 +82,7 @@ let rewrite_l_3 (p1 p2 q r:slprop) : Lemma
       }
 
 #push-options "--z3rlimit_factor 2"
-let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post f g =
+let bind a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post f g =
   fun frame' ->
   let x = frame_aux f frame_f frame' in
   let y = frame_aux (g x) (frame_g x) frame' in
@@ -112,36 +106,11 @@ let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens
 
   y
 
-let bind_steel_steelf (a:Type) (b:Type)
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post
-  f g =
-  fun frame' ->
-  let x = frame_aux f frame_f frame' in
-  let y = (g x) frame' in
-
-  let m1 = nmst_get () in
-  rewrite_l_3 (post y) (post_g x y) frame' (locks_invariant Set.empty m1);
-
-  y
-#pop-options
-
-let bind_steelf_steel (a:Type) (b:Type)
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post
-  f g =
-  fun frame' ->
-  let x = f frame' in
-  let y = frame_aux (g x) (frame_g x) frame' in
-
-  let m1 = nmst_get () in
-  rewrite_l_3 (post y) (post_g x y `star` frame_g x) frame' (locks_invariant Set.empty m1);
-
-  y
+let subcomp a f = f
 
 let bind_pure_steel_ a b f g = fun frame ->
   let x = f () in
   (g x) frame
-
-
 
 // unfold
 let bind_div_steel_req (#a:Type) (wp:pure_wp a)
@@ -174,11 +143,12 @@ let bind_div_steel_ens (#a:Type) (#b:Type)
 #push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
 let bind_div_steel (a:Type) (b:Type)
   (wp:pure_wp a)
+  (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t b)
   (#[@@@ framing_implicit] req_g:a -> req_t pre_g)
   (#[@@@ framing_implicit] ens_g:a -> ens_t pre_g b post_g)
-  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
-: repr b pre_g post_g
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b framed pre_g post_g (req_g x) (ens_g x)))
+: repr b framed pre_g post_g
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
 = FStar.Monotonic.Pure.wp_monotonic_pure ();
@@ -187,14 +157,14 @@ let bind_div_steel (a:Type) (b:Type)
   g x m0
 #pop-options
 
-polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
+polymonadic_bind (DIV, SteelBase) |> SteelBase = bind_div_steel
 
 let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
          (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
-         (f:repr aL preL postL lpreL lpostL)
+         (f:repr aL false preL postL lpreL lpostL)
          (#aR:Type u#a) (#preR:slprop u#1) (#postR:aR -> slprop u#1)
          (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
-         (g:repr aR preR postR lpreR lpostR)
+         (g:repr aR false preR postR lpreR lpostR)
   : Steel (aL & aR)
     (preL `Mem.star` preR)
     (fun y -> postL (fst y) `Mem.star` postR (snd y))
@@ -222,7 +192,7 @@ let par (#aL:Type u#a)
   = par0 (reify (f ())) (reify (g()))
 
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
-  : repr a p q (fun _ -> True) (fun _ _ _ -> True)
+  : repr a false p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
 
 val add_action (#a:Type)

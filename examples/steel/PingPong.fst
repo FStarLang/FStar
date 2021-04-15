@@ -23,6 +23,7 @@ module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
 //open Steel.SteelT.Basics
 
+
 (** Specification and implementation of a pingpong protocol *)
 
 /// Specification of a pingpong protocol.
@@ -54,7 +55,6 @@ let client (c:Duplex.chan pingpong)
     assert (y > 17);
     // To end the protocol, we return unit
     ()
-
 
 /// An implementation of the server side of the protocol.
 /// Similarly to the client side, it takes as argument a channel that corresponds to the pingpong protocol.
