@@ -48,7 +48,7 @@ open Steel.DisposableInvariant
 (**** A few wrappers over library functions ****)
 
 let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelAtomic unit uses unobservable
+  : SteelGhost unit uses
       (ghost_pts_to r (P.half_perm full_perm) v1 `star`
        ghost_pts_to r (P.half_perm full_perm) v2)
       (fun _ -> ghost_pts_to r full_perm v1)
@@ -58,7 +58,7 @@ let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
     ()
 
 let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelAtomic unit uses unobservable
+  : SteelGhost unit uses
       (ghost_pts_to r full_perm v1)
       (fun _ -> ghost_pts_to r (P.half_perm full_perm) v1 `star`
              ghost_pts_to r (P.half_perm full_perm) v2)
@@ -67,7 +67,7 @@ let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
   = ghost_share #_ #_ #_ #v1 r; ()
 
 let gather_invariant (#p:slprop) (#uses:inames) (i:inv p)
-  : SteelAtomicT unit uses unobservable
+  : SteelGhostT unit uses
       (active (P.half_perm full_perm) i `star` active (P.half_perm full_perm) i)
       (fun _ -> active full_perm i)
   = gather #_ #(P.half_perm full_perm) #(P.half_perm full_perm) #_ i; ()
@@ -81,11 +81,10 @@ let gather_invariant (#p:slprop) (#uses:inames) (i:inv p)
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
-                   (#o:observability)
                    (#p:slprop)
                    (#perm:_)
                    (i:inv p)
-                   ($f:unit -> SteelAtomicT a (Set.singleton (name i)) o
+                   ($f:unit -> SteelAtomicT a (Set.singleton (name i))
                                              (p `star` fp)
                                              (fun x -> p `star` fp' x))
   : SteelT a (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
@@ -145,7 +144,7 @@ let incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
  * We assume an atomic increment operation for int refs
  *)
 assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
-  : SteelAtomicT unit uses observable
+  : SteelAtomicT unit uses
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (incr v))
 
@@ -156,7 +155,7 @@ assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
  *   and we return the same permissions with the incremented contents
  *)
 let incr_ghost_contrib (#uses:inames) (#v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelAtomic unit uses unobservable
+  : SteelGhost unit uses
       (ghost_pts_to r (P.half_perm full_perm) v1 `star`
        ghost_pts_to r (P.half_perm full_perm) v2)
       (fun _ -> ghost_pts_to r (P.half_perm full_perm) (incr v1) `star`
@@ -185,7 +184,7 @@ let inv_slprop_conditional (r:ref int) (r_mine r_other:ghost_ref int) (b:bool) =
 let incr_with_inv_slprop
   (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:_)
   ()
-  : SteelAtomicT unit (Set.singleton name) observable
+  : SteelAtomicT unit (Set.singleton name)
       (inv_slprop_conditional r r_mine r_other b
        `star`
        ghost_pts_to r_mine (P.half_perm full_perm) n_ghost)

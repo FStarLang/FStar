@@ -160,7 +160,7 @@ let dlist_cons_snoc_nil #a (left front back right: t a)
     }
 
 let elim_pure (#p:prop) #u ()
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
@@ -506,7 +506,6 @@ let rec dlist_cons_concat #a (left head1 tail1 mid:t a) (xs1:_)
          dlist_cons left head1 tail2 right (xs1 @ xs2);
       }
 
-#push-options "--query_stats"
 assume
 val equiv_pure_emp (_:unit) : Lemma (equiv (pure True) emp)
 let dlist_cons_nil (#a:_) (left right:t a)
@@ -524,7 +523,7 @@ let dlist_cons_nil (#a:_) (left right:t a)
     }
 
 let intro_dlist_nil' (#a:Type) #u (left right:t a)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
       emp
       (fun _ -> dlist_cons left right left right [])
   = change_slprop _ _ (fun _ -> dlist_cons_nil left right)
@@ -551,7 +550,7 @@ let dlist_cons_cons (#a:_) (head tail right:t a) (hd: cell a) (xs:_)
 
 
 let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: cell a) (xs:_)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_cons head (next hd) tail right xs)
        (fun _ ->
@@ -559,7 +558,7 @@ let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: cell a) (xs:_)
   = change_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
 
 let intro_dlist_snoc_cons #a #u (left tail head:t a) (hd: cell a) (xs:_)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_snoc left tail (prev hd) head xs)
        (fun _ ->
@@ -582,7 +581,7 @@ let new_dlist' (#a:Type) (init:a)
 
 assume
 val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelAtomic (cell a & list _) u unobservable
+    : SteelGhost (cell a & list _) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to tail (fst x) `star`
@@ -592,7 +591,7 @@ val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
 
 assume
 val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelAtomic (cell a & list _) u unobservable
+    : SteelGhost (cell a & list _) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to head (fst x) `star`
