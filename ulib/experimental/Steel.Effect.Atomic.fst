@@ -207,6 +207,3 @@ let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_e
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)
-
-let intro_refine_slprop #uses sl f = sladmit ()
-let elim_refine_slprop #uses sl f = sladmit ()
