@@ -29,9 +29,10 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
 let rec frame_equalities
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
-  = match frame with
-    | VUnit p ->
-        h0 frame == h1 frame
+  =
+    h0 frame == h1 frame /\
+    begin match frame with
+    | VUnit p -> True
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -45,7 +46,7 @@ let rec frame_equalities
 
         frame_equalities p1 h01 h11 /\
         frame_equalities p2 h02 h12
-
+    end
 
 (* Defining the Steel effect with selectors *)
 
