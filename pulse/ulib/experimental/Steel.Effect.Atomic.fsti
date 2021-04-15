@@ -385,27 +385,3 @@ let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
 let drop_f (#opened:inames) (#p #f:slprop) ()
   : SteelAtomicF unit opened unobservable (p `star` f) (fun _ -> p) (fun _ -> True) (fun _ _ _ -> True)
   = change_slprop (p `star` f) p (fun _ -> ()); ()
-
-val intro_refine_slprop
-  (#uses: inames)
-  (sl: slprop)
-  (f: a_mem_prop sl)
-: SteelAtomic unit
-    uses
-    unobservable
-    sl
-    (fun _ -> refine_slprop sl f)
-    (fun h -> f h)
-    (fun _ _ _ -> True)
-
-val elim_refine_slprop
-  (#uses: inames)
-  (sl: slprop)
-  (f: a_mem_prop sl)
-: SteelAtomic unit
-    uses
-    unobservable
-    (refine_slprop sl f)
-    (fun _ -> sl)
-    (fun _ -> True)
-    (fun _ _ h -> f h)

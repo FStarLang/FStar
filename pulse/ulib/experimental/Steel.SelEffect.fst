@@ -730,5 +730,30 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     write0 v r x;
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
 
-let intro_vrefine v p = sladmit ()
-let elim_vrefine v p = sladmit ()
+let intro_vrefine v p =
+  let m = get () in
+  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+  let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    v
+    (vrefine v p)
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
+
+let elim_vrefine v p =
+  let m = get () in
+  let x : Ghost.erased (vrefine_t v p) = Ghost.hide (m (vrefine v p)) in
+  let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    (vrefine v p)
+    v
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
