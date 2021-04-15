@@ -79,7 +79,7 @@ let intro_pure_l (p:prop) (q:slprop)
   = admit()
 
 let elim_pure (#p:prop) #u ()
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
@@ -508,9 +508,9 @@ let rec dlist_cons_concat #a (left head1 tail1 mid:t a) (xs1:_)
          dlist_cons left head1 tail2 right (xs1 @ xs2);
       }
 
-#push-options "--query_stats"
 assume
 val equiv_pure_emp (_:unit) : Lemma (equiv (pure True) emp)
+
 let dlist_cons_nil (#a:_) (left right:t a)
   : Lemma (equiv emp (dlist_cons left right left right []))
   = calc
@@ -526,7 +526,7 @@ let dlist_cons_nil (#a:_) (left right:t a)
     }
 
 let intro_dlist_nil' (#a:Type) #u (left right:t a)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
       emp
       (fun _ -> dlist_cons left right left right [])
   = change_slprop _ _ (fun _ -> dlist_cons_nil left right)
@@ -575,7 +575,7 @@ let dlist_snoc_cons (#a:_) (left tail head:t a) (hd: cell a) (xs:_)
 let econs #a (x:erased a) (xs:erased (list a)) = hide (reveal x :: reveal xs)
 
 let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: erased (cell a)) (xs:erased (list (cell a)))
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_cons head (next hd) tail right xs)
        (fun _ ->
@@ -583,7 +583,7 @@ let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: erased (cell a)) (xs:
   = change_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
 
 let intro_dlist_snoc_cons #a #u (left tail head:t a) (hd: erased (cell a)) (xs:erased (list (cell a)))
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_snoc left tail (prev hd) head xs)
        (fun _ ->
@@ -613,7 +613,7 @@ let esnoc #a (xs:erased (list a)) (x:erased a) = hide (List.snoc (reveal xs, rev
 
 assume
 val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelAtomic (ecell a & elist (cell a)) u unobservable
+    : SteelGhost (ecell a & elist (cell a)) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to tail (fst x) `star`
@@ -623,7 +623,7 @@ val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
 
 assume
 val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelAtomic (ecell a & elist (cell a)) u unobservable
+    : SteelGhost (ecell a & elist (cell a)) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to head (fst x) `star`
@@ -658,14 +658,14 @@ let concat (#a:_) (left head tail right: t a)
     let c = { old with next = head' } in
     assert (erev xs == econs old (snd r));
     rev_involutive xs;
-    assert (xs == erev (econs old (snd r)));    
+    assert (xs == erev (econs old (snd r)));
     rev_cons old (snd r);
     assert (xs == esnoc (erev (snd r)) old);
     write tail c;
     change_slprop
       (dlist_snoc left head (prev (fst r)) tail (snd r))
       (dlist_snoc left head (prev (Ghost.reveal (Ghost.hide c))) tail (snd r))
-      (fun _ -> ()); 
+      (fun _ -> ());
     intro_dlist_snoc_cons left head tail (Ghost.hide c) (snd r);
     change_slprop (dlist_snoc left head tail (next (Ghost.reveal (Ghost.hide c))) (econs c (snd r)))
                   (dlist_cons left head tail head' (erev (econs c (snd r))))
@@ -676,7 +676,7 @@ let concat (#a:_) (left head tail right: t a)
     let old' = read head' in
     let c' = { old' with prev = tail } in
     assert (xs' == econs old' (snd r'));
-    
+
     write head' c';
     slassert (pts_to head' c' `star`
               dlist_cons head' (next (fst r')) tail' right' (snd r'));
@@ -691,13 +691,13 @@ let concat (#a:_) (left head tail right: t a)
     change_slprop (dlist_cons (prev (reveal (hide c'))) head' tail' right' (econs (hide c') (snd r')))
                   (dlist_cons tail head' tail' right' (econs (hide c') (snd r')))
                   (fun _ -> ());
-    
-    rev_cons c (snd r); 
+
+    rev_cons c (snd r);
     assert (erev (econs c (snd r)) == esnoc (erev (snd r)) c);
     let res : elist (cell a) = esnoc (erev (snd r)) c `eappend` (econs c' (snd r')) in
     datas_rev_snoc_cons (erev (snd r)) (snd r') old old' c c';
     assert (datas res == datas (xs `eappend` xs'));
-    
+
     change_slprop (dlist_cons left head tail head' (erev (econs c (snd r))) `star`
                    dlist_cons tail head' tail' right' (econs c' (snd r')))
                   (dlist_cons left head tail' right' res)
@@ -710,30 +710,30 @@ let concat (#a:_) (left head tail right: t a)
 
 [@@__reduce__]
 let dl (#a:_) (left head tail right: t a) (x:elist a) =
-  h_exists (fun (xs:elist (cell a)) -> 
+  h_exists (fun (xs:elist (cell a)) ->
     pure (datas xs == x) `star`
     dlist_cons left head tail right xs)
 
 let witness_dl #u (#a:_) (left head tail right:t a) (x:elist a)
-  : SteelAtomicT (elist (cell a)) u unobservable
+  : SteelGhostT (elist (cell a)) u
     (dl left head tail right x)
-    (fun (xs:elist (cell a)) -> 
+    (fun (xs:elist (cell a)) ->
       pure (datas xs == x) `star`
       dlist_cons left head tail right xs)
-  = let x : erased (elist _) = witness_h_exists () in 
+  = let x : erased (elist _) = witness_h_exists () in
     reveal x
 
 let intro_dl #u (#a:_) (left head tail right:t a) (x:elist a) (xs:elist (cell a))
-  : SteelAtomic unit u unobservable
-                (dlist_cons left head tail right xs)
-                (fun _ -> dl left head tail right x)
-                (requires fun _ -> datas xs == x)
-                (ensures fun _ _ _ -> True)
+  : SteelGhost unit u
+               (dlist_cons left head tail right xs)
+               (fun _ -> dl left head tail right x)
+               (requires fun _ -> datas xs == x)
+               (ensures fun _ _ _ -> True)
   = intro_pure (datas xs == x);
     intro_exists xs (fun (xs:elist (cell a)) ->       pure (datas xs == x) `star`
       dlist_cons left head tail right xs)
 
-           
+
 let append (#a:_) (left head tail right: t a)
                   (left' head' tail' right': t a)
                   (xs xs':elist a)
@@ -744,12 +744,11 @@ let append (#a:_) (left head tail right: t a)
           (ensures fun _ _ _ -> True)
   = let cs = witness_dl left head tail right xs in
     elim_pure();
-    let cs' = witness_dl left' head' tail' right' xs' in  
-    elim_pure();    
+    let cs' = witness_dl left' head' tail' right' xs' in
+    elim_pure();
     assume (Cons? cs /\ Cons? cs');
     let res = concat left head tail right left' head' tail' right' cs cs' in
     assert (datas cs == xs);
-    assert (datas cs' == xs');    
+    assert (datas cs' == xs');
     assume (datas res == eappend xs xs');
     intro_dl left head tail' right' (eappend xs xs') res
-    
