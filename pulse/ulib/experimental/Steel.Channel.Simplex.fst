@@ -272,7 +272,7 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = let v' = witness_h_exists () in
     Steel.Utils.higher_ref_pts_to_injective_eq r v _;
-    H.gather #_ #half #half #v #v r;
+    H.gather #_ #_ #half #half #v #v r;
     change_slprop (pts_to r (sum_perm half half) v) (pts_to r full_perm v) (fun _ -> ());
     change_slprop (in_state_slprop p v') (in_state_slprop p v) (fun _ -> ())
 
