@@ -62,7 +62,7 @@ let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
  * Return is parametric in post (cf. return-scoping.txt)
  *)
 val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
-: repr a true (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
+: repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
 
 unfold
 let bind_req (#a:Type)
