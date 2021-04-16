@@ -186,7 +186,7 @@ let if_then_else (a:Type)
 
 [@@allow_informative_binders]
 total
-reifiable reflectable
+reflectable
 effect {
   SteelAtomicBase (a:Type)
                (framed:bool)
@@ -325,7 +325,7 @@ let gif_then_else (a:Type)
 
 [@@allow_informative_binders]
 total
-reifiable reflectable
+reflectable
 effect {
   SteelGhostBase (a:Type)
                (framed:bool)
