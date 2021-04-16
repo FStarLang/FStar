@@ -13,7 +13,7 @@ let elim_pure (p:prop)
   : Steel unit (pure p) (fun _ -> emp)
    (requires fun _ -> True)
    (ensures fun _ _ _ -> p)
-  = let x = elim_pure_alt p in
+  = let x = Steel.Effect.Atomic.elim_pure p in
     ()
 
 let lift_lemma_alt (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
@@ -29,7 +29,7 @@ let pts_to_not_null (#a:Type)
                     (#p:perm)
                     (#v:FStar.Ghost.erased a)
                     (r:ref a)
-  : SteelAtomic unit opened unobservable
+  : SteelGhost unit opened
     (pts_to r p v)
     (fun _ -> pts_to r p v)
     (fun _ -> True)

@@ -23,7 +23,7 @@ let ghost_gather (#a:Type) (#u:_)
                  (#p0 #p1:perm) (#p:perm{p == sum_perm p0 p1})
                  (x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r p x0)
@@ -32,20 +32,20 @@ let ghost_gather (#a:Type) (#u:_)
   = let _ = ghost_gather #a #u #p0 #p1 r in ()
 
 let rewrite #u (p q:slprop)
-  : SteelAtomic unit u unobservable p (fun _ -> q)
+  : SteelGhost unit u p (fun _ -> q)
     (requires fun _ -> p `equiv` q)
     (ensures fun _ _ _ -> True)
   = change_slprop p q (fun _ -> ())
 
 let elim_pure (#p:prop) #u ()
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
   = let _ = Steel.Effect.Atomic.elim_pure p in ()
 
 let open_exists (#a:Type) (#opened_invariants:_) (#p:Ghost.erased a -> slprop) (_:unit)
-  : SteelAtomicT (Ghost.erased a) opened_invariants unobservable
+  : SteelGhostT (Ghost.erased a) opened_invariants
                  (h_exists p) p
   = let v : erased (erased a)  = witness_h_exists () in
     reveal v
@@ -58,7 +58,7 @@ let lock_inv #a (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a)) =
 
 let intro_lock_inv #a #u (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t
 a))
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
     (h_exists (fun v ->
       pts_to ptr full v `star`
       ghost_pts_to ghost half v))
@@ -80,7 +80,7 @@ let queue_invariant (#a:_) ([@@@smt_fallback]head:q_ptr a) ([@@@smt_fallback] ta
     Q.queue h t))
 
 let pack_queue_invariant (#a:_) (#u:_) (x:erased (Q.t a)) (y:erased (Q.t a)) (head tail:q_ptr a)
- : SteelAtomicT unit u unobservable
+ : SteelGhostT unit u
    (ghost_pts_to head.ghost half x `star`
     ghost_pts_to tail.ghost half y `star`
     Q.queue x y)
@@ -131,7 +131,7 @@ let enqueue (#a:_) (hdl:t a) (x:a)
     let tl = read hdl.tail.ptr in
     let node = alloc cell in
     let enqueue_core #u ()
-      : SteelAtomicT unit u observable
+      : SteelAtomicT unit u
         (queue_invariant hdl.head hdl.tail `star`
           (ghost_pts_to hdl.tail.ghost half tl `star` pts_to node full cell))
         (fun _ -> queue_invariant hdl.head hdl.tail `star`
@@ -161,7 +161,7 @@ let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) ([@@@ smt_fallback] hd:Q.t a) (o
   | Some next -> ghost_pts_to x half next `star` (h_exists (pts_to hd full_perm))
 
 let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
-  : SteelAtomicT (option (Q.t a)) u observable
+  : SteelAtomicT (option (Q.t a)) u
     (queue_invariant hdl.head hdl.tail `star`
      ghost_pts_to hdl.head.ghost half hd)
     (fun o ->

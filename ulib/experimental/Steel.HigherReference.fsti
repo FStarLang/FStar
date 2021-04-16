@@ -55,7 +55,7 @@ val higher_ref_pts_to_injective_eq
       (#p0 #p1:perm)
       (#v0 #v1: erased a)
       (r: ref a)
-  : SteelAtomic unit opened unobservable
+  : SteelGhost unit opened
           (pts_to r p0 v0 `star` pts_to r p1 v1)
           (fun _ -> pts_to r p0 v0 `star` pts_to r p1 v0)
           (requires fun _ -> True)
@@ -79,25 +79,17 @@ val write (#a:Type) (#v:erased a) (r:ref a) (x:a)
 val free (#a:Type) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
 
-val share_atomic (#a:Type) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelAtomicT unit uses unobservable
+val share (#a:Type) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
+  : SteelGhostT unit uses
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
-val share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT unit
-    (pts_to r p v)
-    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-
-val gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelAtomicT (_:unit{v0==v1}) uses unobservable
+val gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+  : SteelGhost unit uses
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
-
-val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelT (_:unit{v0==v1})
-    (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_perm p0 p1) v0)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> v0 == v1)
 
 val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                (#uses:inames)
@@ -117,7 +109,7 @@ val ghost_ref (a:Type u#1) : Type u#0
 val ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:erased a) : slprop u#1
 
 val ghost_alloc (#a:Type) (#u:_) (x:erased a)
-  : SteelAtomicT (ghost_ref a) u unobservable
+  : SteelGhostT (ghost_ref a) u
                  emp
                  (fun r -> ghost_pts_to r full_perm x)
 
@@ -125,7 +117,7 @@ val ghost_share (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)
                 (r:ghost_ref a)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
     (ghost_pts_to r p x)
     (fun _ -> ghost_pts_to r (half_perm p) x `star`
            ghost_pts_to r (half_perm p) x)
@@ -134,7 +126,7 @@ val ghost_gather (#a:Type) (#u:_)
                  (#p0 #p1:perm)
                  (#x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
@@ -142,13 +134,13 @@ val ghost_gather (#a:Type) (#u:_)
     (ensures fun _ _ _ -> x0 == x1)
 
 val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
     (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
 
 val ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
     (ghost_pts_to r full_perm v)
     (fun _ -> ghost_pts_to r full_perm x)
