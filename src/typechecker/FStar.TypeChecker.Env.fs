@@ -915,7 +915,7 @@ let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
   | Some r ->
     r
 
-let type_is_erasable env fv =
+let fv_has_erasable_attr env fv =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
      ex,erasable
@@ -935,7 +935,7 @@ let rec non_informative env t =
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
-      || type_is_erasable env fv
+      || fv_has_erasable_attr env fv
     | Tm_app(head, _) -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow(_, c) ->
