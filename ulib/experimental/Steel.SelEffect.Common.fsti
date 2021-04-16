@@ -246,6 +246,22 @@ let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
 [@__steel_reduce__]
 let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
 
+val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
+
+val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: hmem (normal (hp_of v))) : Lemma
+  ((vrewrite_sel v f <: selector' _ _) h == f ((normal (sel_of v) <: selector' _ _) h))
+//  [SMTPat (vrewrite_sel v f h)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrewrite' (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop' = {
+  hp = normal (hp_of v);
+  t = t;
+  sel = vrewrite_sel v f;
+}
+
+[@__steel_reduce__]
+let vrewrite (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop = VUnit (vrewrite' v f)
+
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
 

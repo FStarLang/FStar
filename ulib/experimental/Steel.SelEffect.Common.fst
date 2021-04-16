@@ -69,5 +69,13 @@ let vrefine_sel_eq
   v p m
 = ()
 
+let vrewrite_sel
+  v #t f
+=
+  (fun (h: hmem (normal (hp_of v))) -> f ((normal (sel_of v) <: selector' _ _) h))
+
+let vrewrite_sel_eq
+  v #t f h
+= ()
 
 let emp_unit_variant p = Mem.emp_unit (hp_of p)

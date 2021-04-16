@@ -757,3 +757,34 @@ let elim_vrefine v p =
       interp_vrefine_hp v p m;
       vrefine_sel_eq v p m
     )
+
+let intro_vrewrite
+  v #t f
+=
+  let m = get () in
+  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+  let x' : Ghost.erased t = Ghost.hide (f (Ghost.reveal x)) in
+  change_slprop
+    v
+    (vrewrite v f)
+    x
+    x'
+    (fun m ->
+      vrewrite_sel_eq v f m
+    )
+
+let elim_vrewrite
+  v #t f g
+=
+  let m = get () in
+  let x : Ghost.erased t = Ghost.hide (m (vrewrite v f)) in
+  let x' : Ghost.erased (t_of v) = Ghost.hide (g (Ghost.reveal x)) in
+  assert (f (Ghost.reveal x') == Ghost.reveal x);
+  change_slprop
+    (vrewrite v f)
+    v
+    x
+    x'
+    (fun m ->
+      vrewrite_sel_eq v f m
+    )
