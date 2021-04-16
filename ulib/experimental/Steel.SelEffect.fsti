@@ -272,6 +272,9 @@ val change_slprop (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
 
+val change_equal_slprop (p q: vprop)
+  : SteelSel unit p (fun _ -> q) (fun _ -> p == q) (fun h0 _ h1 -> p == q /\ h1 q == h0 p)
+
 val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
