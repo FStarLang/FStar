@@ -7,13 +7,16 @@ irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
 
 let return_pre (p:slprop u#1) : slprop u#1 = p
-let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 
 let admit_pre (p:slprop u#1) : slprop u#1 = p
 let admit_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
+
+let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
+let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
+  if framed then (forall x. frame x == emp) else True
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 let true_p : prop = True
@@ -1015,9 +1018,6 @@ let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
 let canon' (pr:term) (pr_bind:term) : Tac unit =
   canon_monoid (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm) pr pr_bind
 
-(* A Variant of canon to collect all slprops in the context into the return_post term,
-   and set all extra uvars to emp *)
-
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
   | Tv_Uvar _ _ -> 1
@@ -1031,108 +1031,6 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t
   | _ -> 0
-
-
-/// Puts the term containing return_post at the top.
-/// Returns the atom corresponding to return_post, and the list with the atom removed
-let rec return_at_top' (l:list atom) (am:amap term) : Tac (atom * list atom) =
-  match l with
-  | [] -> fail "Couldn't find return_post term"
-  | hd::tl ->
-      if term_appears_in (`return_post) (select hd am) then hd, tl else
-      let ret, rest = return_at_top' tl am in
-      ret, hd::rest
-
-/// Checks whether the return slprop is fully resolved
-let return_resolved (l:list atom) (am:amap term) : Tac bool =
-  let ret, _ = return_at_top' l am in
-  let t = norm_term [delta_only [`%return_post]] (select ret am) in
-  slterm_nbr_uvars t = 0
-
-let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
-  let ret, tl = return_at_top' l am in
-  List.Tot.Base.length tl, ret :: tl
-
-exception AlreadyGathered
-
-let rec exact_emps' (l:list atom) (am:amap term) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let t = select hd am in
-    let b = unify t (`emp) in
-    if not b then fail "could not unify with emp";
-    exact_emps' tl am
-
-// The first term will always be the return_post since we called return_at_top previously.
-// We ignore it, and unify the rest with emp
-let exact_emps (l:list atom) (am:amap term) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl -> exact_emps' tl am
-
-// Solve all frames with a return_post to emp
-let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
-  let return_lhs = term_appears_in (`return_post) lhs in
-  let return_rhs = term_appears_in (`return_post) rhs in
-  let two_returns = return_lhs && return_rhs in
-
-  let lhs, rhs =
-    // Ensure that the return_post is on the left
-    if return_rhs && not (return_lhs) then
-      (apply_lemma (`Steel.Memory.Tactics.equiv_sym); rhs, lhs) else lhs, rhs
-  in
-
-
-  let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
-  let am = const m_unit in (* empty map *)
-  let (r1_raw, ts, am) = reification eq m [] am lhs in
-  let (r2_raw,  _, am) = reification eq m ts am rhs in
-
-  let l1_raw = flatten r1_raw in
-  let l2_raw = flatten r2_raw in
-
-  let resolved1 = return_resolved l1_raw am in
-  let resolved2 = if two_returns then return_resolved l2_raw am else true in
-
-  if resolved1 && resolved2 then (
-    // The return_post have already been gathered, we will fall back on the normal canon
-    raise AlreadyGathered
-  ) else (
-
-    let n_l1, l1_raw = return_at_top l1_raw am in
-
-    let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
-
-    exact_emps l1_raw am;
-    if two_returns then exact_emps l2_raw am
-  )
-
-let canon_return' (eq:term) (m:term) : Tac unit =
-  norm [iota; zeta];
-  let t = cur_goal () in
-  // removing top-level squash application
-  let sq, rel_xy = collect_app_ref t in
-  // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
-  (match rel_xy with
-   | [(rel_xy,_)] -> (
-       let open FStar.List.Tot.Base in
-       let rel, xy = collect_app_ref rel_xy in
-       if (length xy >= 2)
-       then (
-         match index xy (length xy - 2) , index xy (length xy - 1) with
-         | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           gather_return eq m lhs rhs
-         | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
-       )
-       else (
-         fail "Goal should have been an application of a binary relation to n implicit and 2 explicit arguments"
-       )
-     )
-   | _ -> fail "Goal should be squash applied to a binary relation")
-
-let canon_return () : Tac unit =
-  canon_return' (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
 
 let solve_can_be_split (args:list argv) : Tac bool =
   match args with
@@ -1438,38 +1336,6 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
       // This should never happen
       fail (loc ^ " goal in unexpected position")
 
-// The term corresponds to a goal containing a return_post
-let solve_return (t:term) : Tac unit
-  = goal_to_equiv t "return";
-    match (goals ()) with
-    | [] -> () // Can happen if reflexivity was sufficient here
-    | _ -> norm [delta_only [
-                     `%__proj__CM__item__unit;
-                     `%__proj__CM__item__mult;
-                     `%Steel.Memory.Tactics.rm;
-                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                     `%fst; `%snd];
-               delta_attr [`%__reduce__];
-               primops; iota; zeta];
-           canon_return ();
-           norm [delta_only [`%return_post]]
-
-
-let rec solve_all_returns (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let t = goal_type hd in
-    if term_appears_in (`return_post) t then (
-      (try solve_return t with
-        // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
-        | AlreadyGathered -> norm [delta_only [`%return_post]]
-        | TacticFailure m -> fail m
-        | _ -> () // Success
-      ); later ()
-    ) else later();
-    solve_all_returns tl
-
 let rec solve_sladmits (l:list goal) : Tac unit =
   match l with
   | [] -> ()
@@ -1585,6 +1451,30 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | _ -> slgoals, loggoals
 
 
+// Solve the maybe_emp goals:
+// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
+// solve the goal (either an equality through trefl, or True through trivial)
+let rec solve_maybe_emps (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (cur_goal ()) in (
+    match f with
+    | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (`maybe_emp) then
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
+          or_else trivial trefl))
+      else if term_eq hd (`maybe_emp_dep) then
+        focus (fun _ ->
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
+          or_else trivial (fun _ -> ignore (forall_intro ()); trefl()) )
+        )
+      else later()
+    | _ -> later()
+    );
+    solve_maybe_emps tl
 
 let rec norm_return_pre (l:list goal) : Tac unit =
   match l with
@@ -1600,6 +1490,9 @@ let init_resolve_tac () : Tac unit =
   // We first solve the slprops
   set_goals slgs;
 
+  // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
+  solve_maybe_emps (goals ());
+
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
@@ -1607,9 +1500,6 @@ let init_resolve_tac () : Tac unit =
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
-
-  // We now solve all postconditions of pure returns to avoid restricting the uvars
-  solve_all_returns (goals ());
 
   // We can now solve the equalities for returns
   solve_return_eqs (goals());

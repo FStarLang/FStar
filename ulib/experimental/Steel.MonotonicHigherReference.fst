@@ -39,7 +39,7 @@ let history_composable #a #p
       Q.extends #a #p h1 h0
     | Current h0 f0, Current h1 f1 ->
       h0 == h1 /\
-      (sum_perm f0 f1).v <=. 1.0R
+      (sum_perm f0 f1).v <=. one
 
 let history_compose #a #p (h0:history a p) (h1:history a p{history_composable h0 h1})
   : history a p
