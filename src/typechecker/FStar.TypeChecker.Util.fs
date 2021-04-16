@@ -80,7 +80,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (BU.set_empty uvs)
+  if not (BU.set_is_empty uvs)
   then
     let us = List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) (BU.set_elements uvs) |> String.concat ", " in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)

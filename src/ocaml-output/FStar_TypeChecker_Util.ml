@@ -5946,11 +5946,11 @@ let (must_erase_for_extraction :
                  ((FStar_Syntax_Util.is_ghost_effect
                      (FStar_Syntax_Util.comp_effect_name c))
                     ||
-                    ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-                       (aux env1 (FStar_Syntax_Util.comp_result c))))
+                    (is_erasable_effect env1
+                       (FStar_Syntax_Util.comp_effect_name c)))
                    ||
-                   (is_erasable_effect env1
-                      (FStar_Syntax_Util.comp_effect_name c)))
+                   ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                      (aux env1 (FStar_Syntax_Util.comp_result c))))
         | FStar_Syntax_Syntax.Tm_refine
             ({ FStar_Syntax_Syntax.ppname = uu___1;
                FStar_Syntax_Syntax.index = uu___2;
