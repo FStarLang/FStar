@@ -655,7 +655,7 @@ let as_steelsel (#a:Type)
   (#req:prop) (#ens:a -> prop)
   ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
-  = as_steelsel1 (reify (f ()))
+  = as_steelsel1 (Steel.Effect.reify_steel_comp f)
 
 let _:squash (hp_of vemp == emp /\ t_of vemp == unit) = reveal_vemp ()
 

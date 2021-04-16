@@ -192,11 +192,29 @@ let as_atomic_action f = SteelGhost?.reflect f
 
 let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
 
+(*
+ * AR: SteelAtomic ang SteelGhost are not marked reifiable since we intend to run Steel programs natively
+ *     However to implement the with_inv combinators we need to reify their thunks to reprs
+ *     We could implement it better by having support for reification only in the .fst file
+ *     But for now assuming a function
+ *)
+assume val reify_steel_atomic_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames) (#g:observability)
+  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelAtomicBase a already_framed opened_invariants g pre post req ens)
+  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
+
 let with_invariant #a #fp #fp' #opened i f =
-  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
+  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_atomic_comp f))
+
+assume val reify_steel_ghost_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
+  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelGhostBase a already_framed opened_invariants pre post req ens)
+  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let with_invariant_g #a #fp #fp' #opened i f =
-  SteelGhost?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
+  SteelGhost?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_ghost_comp f))
 
 let change_slprop #opened p q proof =
   SteelGhost?.reflect (Steel.Memory.change_slprop #opened p q proof)
