@@ -172,6 +172,17 @@ let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
   = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
 
+(*
+ * AR: Steel is not marked reifiable since we intend to run Steel programs natively
+ *     However to implement the par combinator we need to reify a Steel thunk to its repr
+ *     We could implement it better by having support for reification only in the .fst file
+ *     But for now assuming a (Dv) function
+ *)
+assume val reify_steel_comp
+  (#a:Type) (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+  : Dv (Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens))
+
 let par (#aL:Type u#a)
         (#preL:slprop u#1)
         (#postL:aL -> slprop u#1)
@@ -189,7 +200,7 @@ let par (#aL:Type u#a)
     (fun y -> postL (fst y) `Mem.star` postR (snd y))
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
-  = par0 (reify (f ())) (reify (g()))
+  = par0 (reify_steel_comp f) (reify_steel_comp g)
 
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
   : repr a false p q (fun _ -> True) (fun _ _ _ -> True)
