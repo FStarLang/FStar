@@ -55,6 +55,7 @@ type lcomp_with_binder = option<bv> * lcomp
 val lcomp_univ_opt: lcomp -> (option<universe> * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
+val is_erasable_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp

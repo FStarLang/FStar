@@ -80,7 +80,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (BU.set_is_empty uvs)
+  if not (BU.set_empty uvs)
   then
     let us = List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) (BU.set_elements uvs) |> String.concat ", " in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
@@ -639,6 +639,13 @@ let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
   || lid_equals l C.effect_GHOST_lid
+
+let is_erasable_effect env l =
+  l
+  |> Env.norm_eff_name env
+  |> (fun l -> lid_equals l C.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> Env.fv_has_erasable_attr env)
 
 let lax_mk_tot_or_comp_l mname u_result result flags =
     if Ident.lid_equals mname C.effect_Tot_lid
@@ -2553,7 +2560,21 @@ let maybe_lift env e c1 c2 t =
     || (U.is_pure_effect c1 && U.is_ghost_effect c2)
     || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
-    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
+    else begin
+      //raise an error if c1 is erasable, c2 is not erasable, and t is informative
+      if is_erasable_effect env m1       &&
+         not (is_erasable_effect env m2) &&
+         not (N.non_info_norm env t)
+      then Errors.raise_error
+             (Errors.Error_TypeError,
+              BU.format4 "Cannot lift erasable expression %s from %s ~> %s since its type %s is informative"
+                (Print.term_to_string e)
+                (string_of_lid m1)
+                (string_of_lid m2)
+                (Print.term_to_string t))
+             e.pos;
+      mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
+    end
 
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
@@ -2707,6 +2728,14 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                      (Print.term_to_string body))
                     body.pos
 
+          | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
+            if not (List.contains TotalEffect quals)
+            then raise_error
+                   (Errors.Fatal_QulifierListNotPermitted,
+                    BU.format1
+                      "Effect %s is marked erasable but only total effects are allowed to be erasable"
+                      (string_of_lid eff_name)) r
+
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,
@@ -2774,6 +2803,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
            let bs, c = U.arrow_formals_comp t in
            let env = FStar.TypeChecker.Env.push_binders env bs in
            (U.is_ghost_effect (U.comp_effect_name c))
+           || (is_erasable_effect env (U.comp_effect_name c))
            || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
       | Tm_refine({sort=t}, _) ->
            aux env t
@@ -2900,7 +2930,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
       s (Print.term_to_string lift_t) in
 
-  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE a wp)
+  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE/GHOST a wp)
     match (SS.compress lift_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 2 ->
       let ((a_b::bs), c) = SS.open_comp bs c in
