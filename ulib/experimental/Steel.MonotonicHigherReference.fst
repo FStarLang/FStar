@@ -39,7 +39,7 @@ let history_composable #a #p
       Q.extends #a #p h1 h0
     | Current h0 f0, Current h1 f1 ->
       h0 == h1 /\
-      (sum_perm f0 f1).v <=. 1.0R
+      (sum_perm f0 f1).v <=. one
 
 let history_compose #a #p (h0:history a p) (h1:history a p{history_composable h0 h1})
   : history a p
@@ -273,9 +273,8 @@ let extract_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomicT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
-           unobservable
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
@@ -290,9 +289,8 @@ let elim_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomicT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
-           unobservable
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
   = let _ = extract_pure r v h in
