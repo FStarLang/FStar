@@ -503,6 +503,18 @@ let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
 
 let change_slprop p q vp vq l  = SteelSel?.reflect (change_slprop0 p q vp vq l)
 
+let change_equal_slprop
+  p q
+= let m = get #p () in
+  let x : Ghost.erased (t_of p) = m p in
+  let y : Ghost.erased (t_of q) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    p
+    q
+    x
+    y
+    (fun _ -> ())
+
 #push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
 let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
   (proof:(m:mem) -> Lemma
