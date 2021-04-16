@@ -1400,15 +1400,22 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     //a:Type u
 
     //other binders
-    let rest_bs =
+    let rest_bs, lift_eff =
       match (SS.compress lift_ty).n with
-      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      | Tm_arrow (bs, c) when List.length bs >= 2 ->
         let (({binder_bv=a'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
+           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)],
+        U.comp_effect_name c |> Env.norm_eff_name env
       | _ ->
         raise_error (Errors.Fatal_UnexpectedExpressionType,
           lift_t_shape_error "either not an arrow, or not enough binders") r in
+
+    if (not ((lid_equals lift_eff PC.effect_PURE_lid) ||
+             (lid_equals lift_eff PC.effect_GHOST_lid && TcUtil.is_erasable_effect env sub.source)))
+    then raise_error (Errors.Fatal_UnexpectedExpressionType,
+                      lift_t_shape_error "the lift combinator has an unexpected effect: \
+                        it must either be PURE or if the source effect is erasable then may be GHOST") r;
 
     let f_b, g_f_b =
       let f_sort, g = TcUtil.fresh_effect_repr_en
@@ -1428,15 +1435,15 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
-      effect_name = PC.effect_PURE_lid;
+      effect_name = lift_eff;
       result_typ = repr;
       effect_args = [ pure_wp_uvar |> S.as_arg ];
       flags = [] }) in
 
     U.arrow (bs@[f_b]) c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
+  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  then BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
 
   let g = Rel.teq env lift_ty k in
   Rel.force_trivial_guard env g_k; Rel.force_trivial_guard env g;
