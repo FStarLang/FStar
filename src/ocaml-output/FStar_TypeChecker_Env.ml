@@ -3317,7 +3317,7 @@ let cache_in_fv_tab :
                  (if should_cache then FStar_Util.smap_add tab s res else ();
                   res))
         | FStar_Pervasives_Native.Some r -> r
-let (type_is_erasable : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
+let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun env1 ->
     fun fv ->
       let f uu___ =
@@ -3340,7 +3340,7 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
               (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
              ||
              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
-            || (type_is_erasable env1 fv)
+            || (fv_has_erasable_attr env1 fv)
       | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
           non_informative env1 head
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1

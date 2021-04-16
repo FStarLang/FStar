@@ -996,6 +996,21 @@ let (is_pure_or_ghost_effect :
       let l1 = FStar_TypeChecker_Env.norm_eff_name env l in
       (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_PURE_lid) ||
         (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid)
+let (is_erasable_effect :
+  FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
+  fun env ->
+    fun l ->
+      let uu___ =
+        FStar_All.pipe_right l (FStar_TypeChecker_Env.norm_eff_name env) in
+      FStar_All.pipe_right uu___
+        (fun l1 ->
+           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
+             (let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv l1
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                  FStar_Pervasives_Native.None in
+              FStar_All.pipe_right uu___1
+                (FStar_TypeChecker_Env.fv_has_erasable_attr env)))
 let (lax_mk_tot_or_comp_l :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.universe ->
@@ -5422,10 +5437,32 @@ let (maybe_lift :
             if uu___
             then e
             else
-              FStar_Syntax_Syntax.mk
-                (FStar_Syntax_Syntax.Tm_meta
-                   (e, (FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t))))
-                e.FStar_Syntax_Syntax.pos
+              ((let uu___3 =
+                  ((is_erasable_effect env m1) &&
+                     (let uu___4 = is_erasable_effect env m2 in
+                      Prims.op_Negation uu___4))
+                    &&
+                    (let uu___4 =
+                       FStar_TypeChecker_Normalize.non_info_norm env t in
+                     Prims.op_Negation uu___4) in
+                if uu___3
+                then
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Print.term_to_string e in
+                      let uu___7 = FStar_Ident.string_of_lid m1 in
+                      let uu___8 = FStar_Ident.string_of_lid m2 in
+                      let uu___9 = FStar_Syntax_Print.term_to_string t in
+                      FStar_Util.format4
+                        "Cannot lift erasable expression %s from %s ~> %s since its type %s is informative"
+                        uu___6 uu___7 uu___8 uu___9 in
+                    (FStar_Errors.Error_TypeError, uu___5) in
+                  FStar_Errors.raise_error uu___4 e.FStar_Syntax_Syntax.pos
+                else ());
+               FStar_Syntax_Syntax.mk
+                 (FStar_Syntax_Syntax.Tm_meta
+                    (e, (FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t))))
+                 e.FStar_Syntax_Syntax.pos)
 let (maybe_monadic :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -5740,6 +5777,29 @@ let (check_sigelt_quals :
                       FStar_Errors.raise_error uu___7
                         body.FStar_Syntax_Syntax.pos
                     else ())
+           | FStar_Syntax_Syntax.Sig_new_effect
+               { FStar_Syntax_Syntax.mname = eff_name;
+                 FStar_Syntax_Syntax.cattributes = uu___2;
+                 FStar_Syntax_Syntax.univs = uu___3;
+                 FStar_Syntax_Syntax.binders = uu___4;
+                 FStar_Syntax_Syntax.signature = uu___5;
+                 FStar_Syntax_Syntax.combinators = uu___6;
+                 FStar_Syntax_Syntax.actions = uu___7;
+                 FStar_Syntax_Syntax.eff_attrs = uu___8;_}
+               ->
+               if
+                 Prims.op_Negation
+                   (FStar_List.contains FStar_Syntax_Syntax.TotalEffect quals)
+               then
+                 let uu___9 =
+                   let uu___10 =
+                     let uu___11 = FStar_Ident.string_of_lid eff_name in
+                     FStar_Util.format1
+                       "Effect %s is marked erasable but only total effects are allowed to be erasable"
+                       uu___11 in
+                   (FStar_Errors.Fatal_QulifierListNotPermitted, uu___10) in
+                 FStar_Errors.raise_error uu___9 r
+               else ()
            | uu___2 ->
                FStar_Errors.raise_error
                  (FStar_Errors.Fatal_QulifierListNotPermitted,
@@ -5883,11 +5943,14 @@ let (must_erase_for_extraction :
             (match uu___2 with
              | (bs, c) ->
                  let env1 = FStar_TypeChecker_Env.push_binders env bs in
-                 (FStar_Syntax_Util.is_ghost_effect
-                    (FStar_Syntax_Util.comp_effect_name c))
+                 ((FStar_Syntax_Util.is_ghost_effect
+                     (FStar_Syntax_Util.comp_effect_name c))
+                    ||
+                    ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+                       (aux env1 (FStar_Syntax_Util.comp_result c))))
                    ||
-                   ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-                      (aux env1 (FStar_Syntax_Util.comp_result c))))
+                   (is_erasable_effect env1
+                      (FStar_Syntax_Util.comp_effect_name c)))
         | FStar_Syntax_Syntax.Tm_refine
             ({ FStar_Syntax_Syntax.ppname = uu___1;
                FStar_Syntax_Syntax.index = uu___2;
