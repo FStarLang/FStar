@@ -119,22 +119,22 @@ let effect_as_etag =
                 BU.smap_add cache (string_of_lid l) res;
                 res in
     fun g l ->
-        let l = delta_norm_eff g l in
-        if lid_equals l PC.effect_PURE_lid
-        then E_PURE
-        else if lid_equals l PC.effect_GHOST_lid
-        then E_GHOST
-        else
-            // Reifiable effects should be pure. Added guard because some effect declarations
-            // don't seem to be in the environment at this point, in particular FStar.All.ML
-            // (maybe because it's primitive?)
-            let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
-            match ed_opt with
-            | Some (ed, qualifiers) ->
-                if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
-                then E_PURE
-                else E_IMPURE
-            | None -> E_IMPURE
+    let l = delta_norm_eff g l in
+    if lid_equals l PC.effect_PURE_lid
+    then E_PURE
+    else if TcUtil.is_erasable_effect (tcenv_of_uenv g) l
+    then E_GHOST
+    else
+         // Reifiable effects should be pure. Added guard because some effect declarations
+         // don't seem to be in the environment at this point, in particular FStar.All.ML
+         // (maybe because it's primitive?)
+         let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
+         match ed_opt with
+         | Some (ed, qualifiers) ->
+           if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
+           then E_PURE
+           else E_IMPURE
+         | None -> E_IMPURE
 
 (********************************************************************************************)
 (* Basic syntactic operations on a term                                                     *)
@@ -1262,6 +1262,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 failwith "This should not happen (should have been handled at Tm_abs level)"
             | _ -> term_as_mlexpr g t
          end
+
+        | Tm_meta (t, Meta_monadic_lift (m1, _m2, _ty))
+          when effect_as_etag g m1 = E_GHOST ->
+          ml_unit, E_GHOST, MLTY_Erased
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
