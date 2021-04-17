@@ -1,0 +1,70 @@
+[
+  "\u0004IØêí+ÃÔÖˇ9¡\u000bNfF",
+  [
+    [
+      "Selectors.Examples.test0",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
+        "true_interp"
+      ],
+      0,
+      "1bcc8acd51d52c143481f91065a09d83"
+    ],
+    [
+      "Selectors.Examples.test1",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
+        "true_interp"
+      ],
+      0,
+      "5d2cfc374cccb136aba2b0c1ba9acc48"
+    ],
+    [
+      "Selectors.Examples.test2",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
+        "true_interp"
+      ],
+      0,
+      "4971c93bb2acd0b389438d83da3f8be1"
+    ],
+    [
+      "Selectors.Examples.test3",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
+        "true_interp"
+      ],
+      0,
+      "51de459f09d9c82b001eb06cd040d9c6"
+    ],
+    [
+      "Selectors.Examples.swap",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.SelEffect.Common.true_p",
+        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
+        "true_interp"
+      ],
+      0,
+      "d73992cee1e3cf4751140c4c523183d3"
+    ]
+  ]
+]
