@@ -140,7 +140,7 @@
         "token_correspondence_Steel.Effect.req_to_act_req"
       ],
       0,
-      "396ff8d685b11bb123fa75e5c851e827"
+      "511a088ad7ef5f07d7aacb653bef97b0"
     ],
     [
       "Steel.Effect.bind_req",
@@ -172,7 +172,7 @@
         "typing_Tm_abs_3a519a3a103f31814e569474c048d10b"
       ],
       0,
-      "ae14a6440d3033cd0a6ec719a509e7cd"
+      "c3f57dd8d7e81e988bc2ed2a848ac990"
     ],
     [
       "Steel.Effect.bind_ens",
@@ -214,7 +214,7 @@
         "typing_Tm_abs_3a519a3a103f31814e569474c048d10b"
       ],
       0,
-      "8b9415af230b0660b9f927bf0eff6f6d"
+      "ae46df7299dc33f66b4cb85dc2ad8496"
     ],
     [
       "Steel.Effect.frame_aux",
@@ -226,7 +226,6 @@
         "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Prims_pretyping_0da546199211a769a972571cdb3aec67",
         "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
-        "Steel.Memory_interpretation_Tm_arrow_6fb185710dd18900a6b7a54f61cc5f76",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_fcd589b21e6efcf1e5d17b07c282a015",
         "data_elim_Steel.Semantics.Hoare.MST.Mkst0",
@@ -248,7 +247,6 @@
         "equation_Steel.Semantics.Instantiate.state",
         "equation_Steel.Semantics.Instantiate.state0",
         "equation_Steel.Semantics.Instantiate.state_uses",
-        "function_token_typing_Steel.Memory.star",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
         "function_token_typing_Steel.Semantics.Hoare.MST.frame_lpre",
@@ -292,7 +290,7 @@
         "typing_Steel.Semantics.Instantiate.state", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1fe8090bb51b9f42ebac7dbf849ce393"
+      "cce46c7aa26fbaa1ac98baf6fb04dccf"
     ],
     [
       "Steel.Effect.nmst_get",
@@ -399,7 +397,7 @@
         "typing_Tm_abs_3c88e75a6873775efc88675bc3ea9f51"
       ],
       0,
-      "f7444f513eac6e22a3fdfbd023710982"
+      "6c41d52d4651c64463dda9fc8c15ee8b"
     ],
     [
       "Steel.Effect.subcomp_pre",
@@ -562,7 +560,7 @@
         "lemma_Steel.Effect.Common.sl_implies_reflexive"
       ],
       0,
-      "41a8e4fc8da23add89879e3d3f02434f"
+      "ed7fa0e88bc97cde23a0cbdc2c2e0ffe"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -575,7 +573,7 @@
         "lemma_Steel.Effect.Common.sl_implies_reflexive"
       ],
       0,
-      "584f9e7156b2bad41f8d0a5f492721e9"
+      "69f6303c113e76f560838db1f8f0ded4"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -587,7 +585,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3685d96fef91011e888c0656a4b4bf2b"
+      "719a424eae3b9a8b4ed519a302dbaa95"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -600,7 +598,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "27f3c66c6e1c9204a00e3a8aa4f62501"
+      "fb983945a0afb299c539b037350c4705"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -613,7 +611,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "01b25025dd93729d79a12b438a940a70"
+      "a26022f440bdcbc2b4f956213cc246ff"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -625,7 +623,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "3d0c1d01ac65b8a26cf450d8e86baa85"
+      "1a83237a0c79fe18d7dd5c2bc9ac1c64"
     ],
     [
       "Steel.Effect.bind_pure_steel__req",
@@ -812,6 +810,8 @@
         "Steel.Effect_interpretation_Tm_arrow_1d41b48d5da62dd86c1d6998aa626a77",
         "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
         "Steel.Memory_interpretation_Tm_arrow_6fb185710dd18900a6b7a54f61cc5f76",
+        "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
+        "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_e3f0f2f3e6826ee53d482ce15053386d",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_and",
         "equation_Prims.squash", "equation_Prims.subtype_of",
@@ -825,6 +825,7 @@
         "equation_Steel.Semantics.Hoare.MST.par_lpost",
         "equation_Steel.Semantics.Hoare.MST.par_lpre",
         "equation_Steel.Semantics.Hoare.MST.post_preserves_frame",
+        "equation_Steel.Semantics.Hoare.MST.st",
         "equation_Steel.Semantics.Instantiate.state",
         "equation_Steel.Semantics.Instantiate.state0",
         "equation_Steel.Semantics.Instantiate.state_uses",
@@ -861,6 +862,7 @@
         "refinement_interpretation_Tm_refine_7dd9e823cc87974f223bfb9f22291ffb",
         "refinement_interpretation_Tm_refine_9da842b52348507f9659e44efba6d0b7",
         "refinement_interpretation_Tm_refine_ce57d6c199223d5bd959763b5c562577",
+        "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d",
         "token_correspondence_Steel.Effect.ens_to_act_ens",
         "token_correspondence_Steel.Effect.req_to_act_req",
         "token_correspondence_Steel.Memory.core_mem",
@@ -874,11 +876,13 @@
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "typing_FStar.Set.empty",
         "typing_Steel.Memory.core_mem", "typing_Steel.Memory.iname",
-        "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star",
+        "typing_Steel.Memory.locks_invariant",
+        "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
+        "typing_Steel.Semantics.Instantiate.state",
         "typing_Tm_abs_1166dacd9556837635fdfceb12ee2d14"
       ],
       0,
-      "926db6a4b4159d4854c7d64928126bea"
+      "387dd4c474c247b67119d8c4e54bacc6"
     ],
     [
       "Steel.Effect.par",
@@ -952,7 +956,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "e02aa88929fe3299dbab37b80aa7ce3f"
+      "7801ea9142afb58d14b8aa7205d3aea1"
     ],
     [
       "Steel.Effect.action_as_repr",
