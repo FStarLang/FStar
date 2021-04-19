@@ -861,6 +861,25 @@ val delta_fully (s: list string) : Tot norm_step
   *)
 val delta_attr (s: list string) : Tot norm_step
 
+(**
+    For example, given:
+
+      {[
+        unfold
+        let f0 = 0
+
+        inline_for_extraction
+        let f1 = f0 + 1
+
+      ]}
+
+   {[norm [delta_qualifier ["unfold"; "inline_for_extraction"]] f1]}
+
+   will reduce to [0 + 1].
+
+  *)
+val delta_qualifier (s: list string) : Tot norm_step
+
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
 val norm (s: list norm_step) (#a: Type) (x: a) : Tot a

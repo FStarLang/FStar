@@ -632,6 +632,17 @@ let (e_argv_aq :
   fun aq ->
     let uu___ = e_term_aq aq in
     FStar_Syntax_Embeddings.e_tuple2 uu___ e_aqualv
+let (e_match_returns_annotation :
+  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp)
+    FStar_Pervasives.either * FStar_Syntax_Syntax.term
+    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option
+    FStar_Syntax_Embeddings.embedding)
+  =
+  let uu___ =
+    let uu___1 = FStar_Syntax_Embeddings.e_either e_term e_comp in
+    let uu___2 = FStar_Syntax_Embeddings.e_option e_term in
+    FStar_Syntax_Embeddings.e_tuple2 uu___1 uu___2 in
+  FStar_Syntax_Embeddings.e_option uu___
 let (e_term_view_aq :
   FStar_Syntax_Syntax.antiquotations ->
     FStar_Reflection_Data.term_view FStar_Syntax_Embeddings.embedding)
@@ -791,20 +802,25 @@ let (e_term_view_aq :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_Tv_Let.FStar_Reflection_Data.t uu___
             rng
-      | FStar_Reflection_Data.Tv_Match (t1, brs) ->
+      | FStar_Reflection_Data.Tv_Match (t1, ret_opt, brs) ->
           let uu___ =
             let uu___1 =
               let uu___2 = let uu___3 = e_term_aq aq in embed uu___3 rng t1 in
               FStar_Syntax_Syntax.as_arg uu___2 in
             let uu___2 =
               let uu___3 =
-                let uu___4 =
-                  let uu___5 =
-                    let uu___6 = e_branch_aq aq in
-                    FStar_Syntax_Embeddings.e_list uu___6 in
-                  embed uu___5 rng brs in
+                let uu___4 = embed e_match_returns_annotation rng ret_opt in
                 FStar_Syntax_Syntax.as_arg uu___4 in
-              [uu___3] in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = e_branch_aq aq in
+                      FStar_Syntax_Embeddings.e_list uu___8 in
+                    embed uu___7 rng brs in
+                  FStar_Syntax_Syntax.as_arg uu___6 in
+                [uu___5] in
+              uu___3 :: uu___4 in
             uu___1 :: uu___2 in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.t uu___
@@ -1023,21 +1039,27 @@ let (e_term_view_aq :
                                           (FStar_Reflection_Data.Tv_Let
                                              (r1, attrs1, b1, t11, t21)))))))
            | (FStar_Syntax_Syntax.Tm_fvar fv,
-              (t1, uu___2)::(brs, uu___3)::[]) when
+              (t1, uu___2)::(ret_opt, uu___3)::(brs, uu___4)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.lid
                ->
-               let uu___4 = unembed' w e_term t1 in
-               FStar_Util.bind_opt uu___4
+               let uu___5 = unembed' w e_term t1 in
+               FStar_Util.bind_opt uu___5
                  (fun t2 ->
-                    let uu___5 =
-                      let uu___6 = FStar_Syntax_Embeddings.e_list e_branch in
-                      unembed' w uu___6 brs in
-                    FStar_Util.bind_opt uu___5
+                    let uu___6 =
+                      let uu___7 = FStar_Syntax_Embeddings.e_list e_branch in
+                      unembed' w uu___7 brs in
+                    FStar_Util.bind_opt uu___6
                       (fun brs1 ->
-                         FStar_All.pipe_left
-                           (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
-                           (FStar_Reflection_Data.Tv_Match (t2, brs1))))
+                         let uu___7 =
+                           unembed' w e_match_returns_annotation ret_opt in
+                         FStar_Util.bind_opt uu___7
+                           (fun ret_opt1 ->
+                              FStar_All.pipe_left
+                                (fun uu___8 ->
+                                   FStar_Pervasives_Native.Some uu___8)
+                                (FStar_Reflection_Data.Tv_Match
+                                   (t2, ret_opt1, brs1)))))
            | (FStar_Syntax_Syntax.Tm_fvar fv,
               (e, uu___2)::(t1, uu___3)::(tacopt, uu___4)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv

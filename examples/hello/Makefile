@@ -1,8 +1,6 @@
-FSTAR_HOME=../..
-
 include ../Makefile.include
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 all: hello testseq
 

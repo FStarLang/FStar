@@ -45,18 +45,18 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of bv
-    | Tv_BVar   of bv
-    | Tv_FVar   of fv
-    | Tv_App    of term * argv
-    | Tv_Abs    of binder * term
-    | Tv_Arrow  of binder * comp
-    | Tv_Type   of unit
-    | Tv_Refine of bv * term
-    | Tv_Const  of vconst
-    | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * list<term> * bv * term * term
-    | Tv_Match  of term * list<branch>
+    | Tv_Var       of bv
+    | Tv_BVar      of bv
+    | Tv_FVar      of fv
+    | Tv_App       of term * argv
+    | Tv_Abs       of binder * term
+    | Tv_Arrow     of binder * comp
+    | Tv_Type      of unit
+    | Tv_Refine    of bv * term
+    | Tv_Const     of vconst
+    | Tv_Uvar      of Z.t * ctx_uvar_and_subst
+    | Tv_Let       of bool * list<term> * bv * term * term
+    | Tv_Match     of term * option<(either<term, comp> * option<term>)> * list<branch>
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown

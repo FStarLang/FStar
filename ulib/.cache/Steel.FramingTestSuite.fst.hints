@@ -1,0 +1,169 @@
+[
+  "U;#é¢¤%\u0012€~Ø}\"\tHâ",
+  [
+    [
+      "Steel.FramingTestSuite.test0",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "cb99882fbbc685900cdeb3c187b7abc7"
+    ],
+    [
+      "Steel.FramingTestSuite.test1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "b0892bcc13020a22402e197afbbda5a1"
+    ],
+    [
+      "Steel.FramingTestSuite.test2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "87f325b07a19a89e66b038c135977038"
+    ],
+    [
+      "Steel.FramingTestSuite.test3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "328694d737cd37539eca394f1e7e1522"
+    ],
+    [
+      "Steel.FramingTestSuite.test4",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "6689e6fe38018687a86f03d651dc7160"
+    ],
+    [
+      "Steel.FramingTestSuite.test5",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "572c8977a615f60a9423895b43d99f0a"
+    ],
+    [
+      "Steel.FramingTestSuite.test6",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "4c9aa3620e4b4354e518fb9444620907"
+    ],
+    [
+      "Steel.FramingTestSuite.test7",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "42ed8a6d6009983d9391bb67e18338db"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "0b688157ed2f096d8c53c2a9f3198edc"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if4",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "3c00de6887a46d7e56663a48f29ea284"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if6",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "55062ead01254646d9b323f017e05d91"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if7",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "b837c8fc14bfe564b16ca9f7658c7a19"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if8",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "85a9d2c6f4ba36d9eda080685be4e5ba"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if9",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "84eb6bf251b04e911d5cffc86dfc7e82"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if10",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "3958b6925b72d4b9e973295543321be2"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if11",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "1d393c9ca4da076b9bbed433c40dc89f"
+    ],
+    [
+      "Steel.FramingTestSuite.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "equation_Steel.Effect.Common.true_p",
+        "interpretation_Tm_abs_3e87dc6a76ef4522274f5781dbdb7606",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "1dda235d9635c7e36440928e25d75730"
+    ]
+  ]
+]

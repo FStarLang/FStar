@@ -17,6 +17,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.NBE
+open FStar.Pervasives
 open FStar.All
 open FStar.Exn
 open FStar
@@ -201,7 +202,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
   let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
-        : BU.either<list<t>, bool> =
+        : either<list<t>, bool> =
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
@@ -212,10 +213,10 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
         | Pat_wild bv ->
             // important to use the non-unfolded variant, some embeddings
             // have no decent unfolding (i.e. they cheat)
-            BU.Inl [scrutinee0]
+            Inl [scrutinee0]
 
         | Pat_dot_term _ ->
-            BU.Inl []
+            Inl []
 
         | Pat_constant s ->
             let matches_const (c: t) (s: S.sconst) =
@@ -229,32 +230,32 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
                 | Constant (Char c) -> (match s with | C.Const_char p -> c = p | _ -> false)
                 | _ -> false
             in
-            if matches_const scrutinee s then BU.Inl [] else BU.Inr false
+            if matches_const scrutinee s then Inl [] else Inr false
 
         | Pat_cons(fv, arg_pats) ->
             let rec matches_args out (a:list<(t * aqual)>) (p:list<(pat * bool)>)
-                : BU.either<list<t>, bool> =
+                : either<list<t>, bool> =
                 match a, p with
-                | [], [] -> BU.Inl out
+                | [], [] -> Inl out
                 | (t, _)::rest_a, (p, _)::rest_p ->
                   (match matches_pat t p with
-                   | BU.Inl s -> matches_args (out@s) rest_a rest_p
+                   | Inl s -> matches_args (out@s) rest_a rest_p
                    | m -> m)
                 | _ ->
-                BU.Inr false
+                Inr false
             in
             match scrutinee.nbe_t with
             | Construct(fv', _us, args_rev) ->
                 if fv_eq fv fv'
                 then matches_args [] (List.rev args_rev) arg_pats
-                else BU.Inr false
+                else Inr false
 
             | _ -> //must be a variable
-              BU.Inr true
+              Inr true
         in
         let res_to_string = function
-        | BU.Inr b -> "Inr " ^ BU.string_of_bool b
-        | BU.Inl bs -> "Inl " ^ BU.string_of_int (List.length bs)
+        | Inr b -> "Inr " ^ BU.string_of_bool b
+        | Inl bs -> "Inl " ^ BU.string_of_int (List.length bs)
         in
         debug cfg (fun () -> BU.print3 "matches_pat (%s, %s) = %s\n" (t_to_string scrutinee) (P.pat_to_string p) (res_to_string r));
         r
@@ -266,12 +267,12 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
     // TODO: Consider the when clause!
     | (p, _wopt, e)::branches ->
       match matches_pat scrut p with
-      | BU.Inl matches ->
+      | Inl matches ->
         debug cfg (fun () -> BU.print1 "Pattern %s matches\n" (P.pat_to_string p));
         Some (e, matches)
-      | BU.Inr false -> //definitely did not match
+      | Inr false -> //definitely did not match
         pickBranch_aux scrut branches branches0
-      | BU.Inr true -> //maybe matches; stop
+      | Inr true -> //maybe matches; stop
         None
   in pickBranch_aux scrut branches branches
 
@@ -304,8 +305,8 @@ let should_reduce_recursive_definition
 let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
     match lr with
-    | BU.Inr (elt, None) -> Some elt
-    | BU.Inr (elt, Some us) ->
+    | Inr (elt, None) -> Some elt
+    | Inr (elt, Some us) ->
         debug cfg (fun () -> BU.print1 "Universes in local declaration: %s\n" (P.univs_to_string us));
         Some elt
     | _ -> None in
@@ -326,7 +327,7 @@ let is_constr_fv (fvar : fv) : bool =
 
 let is_constr (q : qninfo) : bool =
   match q with
-  | Some (BU.Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
+  | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
   | _ -> false
 
 let translate_univ (cfg:config) (bs:list<t>) (u:universe) : universe =
@@ -352,8 +353,8 @@ let translate_univ (cfg:config) (bs:list<t>) (u:universe) : universe =
 
 let find_let (lbs : list<letbinding>) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
-                   | BU.Inl _ -> failwith "find_let : impossible"
-                   | BU.Inr name ->
+                   | Inl _ -> failwith "find_let : impossible"
+                   | Inr name ->
                      if fv_eq name fvar
                      then Some lb
                      else None)
@@ -431,7 +432,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
         let c = readback_comp cfg (translate_comp cfg ctx c) in
         U.arrow (List.rev binders_rev) c
       in
-      mk_t <| Arrow (BU.Inl (Thunk.mk norm))
+      mk_t <| Arrow (Inl (Thunk.mk norm))
 
     | Tm_refine (bv, tm) ->
       if cfg.core_cfg.steps.for_extraction
@@ -467,7 +468,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_abs (xs, body, resc) ->
       mk_t <| Lam ((fun ys -> translate cfg (List.append ys bs) body),
-                  BU.Inl (bs, xs, resc),
+                  Inl (bs, xs, resc),
                   List.length xs)
 
     | Tm_fvar fvar ->
@@ -500,7 +501,14 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
-    | Tm_match(scrut, branches) ->
+    | Tm_match(scrut, ret_opt, branches) ->
+      (* Thunked computation to reconstrct the returns annotation *)
+      let make_returns () : option<ascription> =
+        match ret_opt with
+        | None -> None
+        | Some (Inl t, tacopt) -> Some (Inl (readback cfg (translate cfg bs t)), tacopt)
+        | Some (Inr c, tacopt) -> Some (Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt) in
+
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list<branch> =
         let cfg = zeta_false cfg in
@@ -554,7 +562,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate cfg (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut make_branches
+            mkAccuMatch scrut make_returns make_branches
           end
       | Constant c ->
           debug (fun () -> BU.print1 "Match constant : %s\n" (t_to_string scrut));
@@ -565,12 +573,12 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate cfg (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut make_branches
+             mkAccuMatch scrut make_returns make_branches
            | Some (_, hd::tl) ->
              failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut make_branches
+          mkAccuMatch scrut make_returns make_branches
       end
 
     | Tm_meta (e, Meta_monadic(m, t))
@@ -654,7 +662,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           debug (fun () -> BU.print1 ">> Unfolding Tm_lazy to %s\n" (P.term_to_string t));
           translate cfg bs t
       in
-      mk_t <| Lazy (BU.Inl li, Thunk.mk f)
+      mk_t <| Lazy (Inl li, Thunk.mk f)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -674,14 +682,14 @@ and iapp (cfg : config) (f:t) (args:args) : t =
       let arg_values_rev = map_rev fst args in
       let binders =
         match binders with
-        | BU.Inr raw_args ->
+        | Inr raw_args ->
           let _, raw_args = List.splitAt m raw_args in
-          BU.Inr raw_args
+          Inr raw_args
 
-        | BU.Inl (ctx, xs, rc) ->
+        | Inl (ctx, xs, rc) ->
           let _, xs = List.splitAt m xs in
           let ctx = List.append arg_values_rev ctx in
-          BU.Inl (ctx, xs, rc)
+          Inl (ctx, xs, rc)
       in
       mk <|
       Lam((fun l -> f (List.append l arg_values_rev)),
@@ -837,7 +845,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
                    debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
                    iapp cfg (mkFV fvar [] []) args'),
               (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
-               BU.Inl ([], FStar.Common.tabulate arity f, None)),
+               Inl ([], FStar.Common.tabulate arity f, None)),
               arity)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -854,7 +862,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
          if is_qninfo_visible
          then begin
            match qninfo with
-           | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
+           | Some (Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
              debug (fun () -> BU.print1 "(1) Decided to unfold %s\n" (P.fv_to_string fvar));
              let lbm = find_let lbs fvar in
              begin match lbm with
@@ -1066,10 +1074,10 @@ and translate_monadic (m, ty) cfg bs e : t =
         fallback1 ()
      end
 
-   | Tm_match (sc, branches) ->
+   | Tm_match (sc, asc_opt, branches) ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-     let tm = S.mk (Tm_match(sc, branches)) e.pos in
+     let tm = S.mk (Tm_match(sc, asc_opt, branches)) e.pos in
      translate (reifying_false cfg) bs tm
 
    | Tm_meta (t, Meta_monadic _) ->
@@ -1170,7 +1178,7 @@ and readback (cfg:config) (x:t) : term =
     | Lam (f, binders, arity) ->
       let binders, accus_rev, rc =
         match binders with
-        | BU.Inl (ctx, binders, rc) ->
+        | Inl (ctx, binders, rc) ->
           let ctx, binders_rev, accus_rev =
             List.fold_left
               (fun (ctx, binders_rev, accus_rev) b ->
@@ -1192,7 +1200,7 @@ and readback (cfg:config) (x:t) : term =
           List.rev binders_rev,
           accus_rev,
           rc
-        | BU.Inr args ->
+        | Inr args ->
           let binders, accus =
             List.fold_right
               (fun (t, _) (binders, accus) ->
@@ -1223,10 +1231,10 @@ and readback (cfg:config) (x:t) : term =
       let tm = readback cfg t in
       with_range (U.mk_reflect tm)
 
-    | Arrow (BU.Inl f) ->
+    | Arrow (Inl f) ->
       with_range (Thunk.force f)
 
-    | Arrow (BU.Inr (args, c)) ->
+    | Arrow (Inr (args, c)) ->
       let binders =
         List.map
           (fun (t, q) ->
@@ -1266,12 +1274,13 @@ and readback (cfg:config) (x:t) : term =
         else app
       )
 
-    | Accu (Match (scrut, make_branches), args) ->
+    | Accu (Match (scrut, make_returns, make_branches), args) ->
       let args = readback_args cfg args in
       let head =
         let scrut_new = readback cfg scrut in
+        let returns_new = make_returns () in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, branches_new)) scrut.nbe_r
+        S.mk (Tm_match (scrut_new, returns_new, branches_new)) scrut.nbe_r
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
@@ -1307,7 +1316,7 @@ and readback (cfg:config) (x:t) : term =
       let typ = readback cfg (Thunk.force typ) in
       let defn = readback cfg (Thunk.force defn) in
       let body = SS.close [S.mk_binder var] (readback cfg (Thunk.force body)) in
-      let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
+      let lbname = Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
       let hd = S.mk (Tm_let((false, [lb]), body)) Range.dummyRange in
       let args = readback_args cfg args in
@@ -1320,7 +1329,7 @@ and readback (cfg:config) (x:t) : term =
           let t = readback cfg t in
           let def = readback cfg d in
           let v = {v with sort = t} in
-          {lb with lbname = BU.Inl v;
+          {lb with lbname = Inl v;
                    lbtyp = t;
                    lbdef = def})
         vars_typs_defns
@@ -1384,7 +1393,7 @@ and readback (cfg:config) (x:t) : term =
               let lbdef = readback cfg (translate cfg let_rec_env lb.lbdef) in
               let lbtyp = readback cfg (translate cfg bs lb.lbtyp) in
               {lb with
-                lbname = BU.Inl lbname;
+                lbname = Inl lbname;
                 lbdef  = lbdef;
                 lbtyp  = lbtyp})
             lbs
@@ -1406,7 +1415,7 @@ and readback (cfg:config) (x:t) : term =
       mk (Tm_quoted (qt, qi))
 
     // Need this case for "cheat" embeddings
-    | Lazy (BU.Inl li, _) ->
+    | Lazy (Inl li, _) ->
       mk (Tm_lazy li)
 
     | Lazy (_, thunk) ->

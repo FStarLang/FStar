@@ -227,6 +227,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("hint_file", Unset);
   ("in", (Bool false));
   ("ide", (Bool false));
+  ("ide_id_info_off", (Bool false));
   ("lsp", (Bool false));
   ("include", (List []));
   ("print", (Bool false));
@@ -436,6 +437,8 @@ let (get_hint_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "hint_file" (as_option as_string)
 let (get_in : unit -> Prims.bool) = fun uu___ -> lookup_opt "in" as_bool
 let (get_ide : unit -> Prims.bool) = fun uu___ -> lookup_opt "ide" as_bool
+let (get_ide_id_info_off : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "ide_id_info_off" as_bool
 let (get_lsp : unit -> Prims.bool) = fun uu___ -> lookup_opt "lsp" as_bool
 let (get_include : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "include" (as_list as_string)
@@ -922,7 +925,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -933,11 +936,11 @@ let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1038,6 +1041,8 @@ let rec (specs_with_types :
       "Legacy interactive mode; reads input from stdin");
     (FStar_Getopt.noshort, "ide", (Const (Bool true)),
       "JSON-based interactive mode for IDEs");
+    (FStar_Getopt.noshort, "ide_id_info_off", (Const (Bool true)),
+      "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
     (FStar_Getopt.noshort, "lsp", (Const (Bool true)),
       "Language Server Protocol-based interactive mode for IDEs");
     (FStar_Getopt.noshort, "include", (ReverseAccumulated (PathStr "path")),
@@ -1341,6 +1346,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "ifuel" -> true
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
+    | "ide_id_info_off" -> true
     | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
@@ -1415,7 +1421,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___584 :
+let (uu___586 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1431,11 +1437,11 @@ let (uu___584 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___584 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___584 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1800,6 +1806,8 @@ let (hint_file_for_src : Prims.string -> Prims.string) =
           | uu___2 -> src_filename in
         FStar_Util.format1 "%s.hints" file_name
 let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
+let (ide_id_info_off : unit -> Prims.bool) =
+  fun uu___ -> get_ide_id_info_off ()
 let (print : unit -> Prims.bool) = fun uu___ -> get_print ()
 let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()
@@ -1968,12 +1976,12 @@ let with_saved_options : 'a . (unit -> 'a) -> 'a =
           try
             (fun uu___2 ->
                match () with
-               | () -> let uu___3 = f () in FStar_Util.Inr uu___3) ()
-          with | uu___2 -> FStar_Util.Inl uu___2 in
+               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
+          with | uu___2 -> FStar_Pervasives.Inl uu___2 in
         pop ();
         (match r with
-         | FStar_Util.Inr v -> v
-         | FStar_Util.Inl ex -> FStar_Exn.raise ex)))
+         | FStar_Pervasives.Inr v -> v
+         | FStar_Pervasives.Inl ex -> FStar_Exn.raise ex)))
     else (push (); (let retv = f () in pop (); retv))
 let (module_matches_namespace_filter :
   Prims.string -> Prims.string Prims.list -> Prims.bool) =

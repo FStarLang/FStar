@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -445,7 +446,11 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | _ -> e_lax  //leave recursive lets as is
+          | _ -> 
+            //leave recursive lets as is; since the decreases clause from the ascription (if any)
+            //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
+            //if we drop the lbtyp here, we'll lose the decreases clause
+            e_lax
         in
         let e =
           Profiling.profile (fun () ->
@@ -877,6 +882,9 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
+    if Options.ide_id_info_off() then Env.toggle_id_info env false;
+    if Env.debug env (Options.Other "IdInfoOn") then Env.toggle_id_info env true;
+
     let ses', ses_elaborated, env =
             Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
@@ -892,6 +900,8 @@ let tc_decls env ses =
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "check uvars %s\n" (Print.term_to_string t);
         N.normalize
                [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 Env.CheckNoUvars;

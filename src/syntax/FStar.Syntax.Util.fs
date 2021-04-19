@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -104,22 +105,22 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e, _)
-        | Tm_ascribed(e, _, _) -> unmeta e
-        | _ -> e
+    | Tm_meta(e, _)
+    | Tm_ascribed(e, _, _) -> unmeta e
+    | _ -> e
 
 let rec unmeta_safe e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e', m) ->
-            begin match m with
+    | Tm_meta(e', m) ->
+      begin match m with
             | Meta_monadic _
             | Meta_monadic_lift _ ->
               e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
-            end
-        | Tm_ascribed(e, _, _) -> unmeta_safe e
-        | _ -> e
+      end
+    | Tm_ascribed(e, _, _) -> unmeta_safe e
+    | _ -> e
 
 let unmeta_lift (t:term) : term =
   match (compress t).n with
@@ -341,7 +342,7 @@ let is_lemma t =
 let rec head_of (t : term) : term =
     match (compress t).n with
     | Tm_app (t, _)
-    | Tm_match (t, _)
+    | Tm_match (t, _, _)
     | Tm_abs (_, t, _)
     | Tm_ascribed (t, _, _)
     | Tm_meta (t, _) -> head_of t
@@ -607,7 +608,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
-    | Tm_match (t1, bs1), Tm_match (t2, bs2) ->
+    | Tm_match (t1, None, bs1), Tm_match (t2, None, bs2) ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
                              (List.zip bs1 bs2)
@@ -996,23 +997,27 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
 
-let abs_formals t =
+let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
           Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
-        match (unascribe <| Subst.compress t).n with
+        match (unmeta_safe t).n with
         | Tm_abs(bs, t, what) ->
-            let bs',t, what = aux t what in
-            bs@bs', t, what
+          if maybe_unascribe
+          then let bs',t, what = aux t what in
+               bs@bs', t, what
+          else bs, t, what
         | _ -> [], t, abs_body_lcomp
     in
     let bs, t, abs_body_lcomp = aux t None in
     let bs, t, opening = Subst.open_term' bs t in
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
+
+let abs_formals t = abs_formals_maybe_unascribe_body true t
 
 let remove_inacc (t:term) : term =
     let no_acc (b : binder) : binder =
@@ -1282,7 +1287,7 @@ let is_wild_pat p =
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
-    mk (Tm_match(b, [then_branch; else_branch])) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
+    mk (Tm_match(b, None, [then_branch; else_branch])) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
@@ -1708,7 +1713,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
 
-  | Tm_match (t1,bs1), Tm_match (t2,bs2) ->
+  | Tm_match (t1,None,bs1), Tm_match (t2,None,bs2) ->  //AR: note: no return annotations
     (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
 
@@ -1939,21 +1944,18 @@ let rec unbound_variables tm :  list<bv> =
         List.collect (fun (x, _) -> unbound_variables x) args
         @ unbound_variables t
 
-      | Tm_match(t, pats) ->
+      | Tm_match(t, asc_opt, pats) ->
         unbound_variables t
+        @ (match asc_opt with
+           | None -> []
+           | Some asc -> unbound_variables_ascription asc)
         @ (pats |> List.collect (fun br ->
                  let p, wopt, t = Subst.open_branch br in
                  unbound_variables t
                  @ (match wopt with None -> [] | Some t -> unbound_variables t)))
 
       | Tm_ascribed(t1, asc, _) ->
-        unbound_variables t1
-        @ (match fst asc with
-           | Inl t2 -> unbound_variables t2
-           | Inr c2 -> unbound_variables_comp c2)
-        @ (match snd asc with
-           | None -> []
-           | Some tac -> unbound_variables tac)
+        unbound_variables t1 @ (unbound_variables_ascription asc)
 
       | Tm_let ((false, [lb]), t) ->
         unbound_variables lb.lbtyp
@@ -1988,6 +1990,13 @@ let rec unbound_variables tm :  list<bv> =
            | Meta_desugared _
            | Meta_named _ -> [])
 
+and unbound_variables_ascription asc =
+  (match fst asc with
+   | Inl t2 -> unbound_variables t2
+   | Inr c2 -> unbound_variables_comp c2) @
+  (match snd asc with
+   | None -> []
+   | Some tac -> unbound_variables tac)
 
 and unbound_variables_comp c =
     match c.n with

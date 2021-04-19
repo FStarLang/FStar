@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Encode
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -726,7 +727,7 @@ let encode_top_level_let :
                binders@more_binders, body, comp
           else binders, body, comp
       in
-      binders, U.ascribe body (BU.Inl (U.comp_result comp), None), comp
+      binders, U.ascribe body (Inl (U.comp_result comp), None), comp
     in
 
 
@@ -894,7 +895,7 @@ let encode_top_level_let :
             let vars_tm = List.map mkFreeV vars in
             let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
-            let mk_g_app args = maybe_curry_app rng (BU.Inl (Var g)) (fvb.smt_arity + 1) args in
+            let mk_g_app args = maybe_curry_app rng (Inl (Var g)) (fvb.smt_arity + 1) args in
             let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::vars_tm) in
             let gmax = mk_g_app (mkApp("MaxFuel", [])::vars_tm) in
             let body_tm, decls2 = encode_term body env' in
@@ -1157,7 +1158,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=BU.Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
        let xx = mk_fv ("x", Term_sort) in
        let x = mkFreeV xx in

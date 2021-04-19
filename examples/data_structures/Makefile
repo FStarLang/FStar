@@ -1,11 +1,14 @@
-FSTAR_HOME = ../..
-
 OUT_DIR = .output
 CACHE_DIR = .cache
 
 FSTAR_FILES = $(wildcard *.fst)
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+ifdef FSTAR_HOME
+  FSTAR_ULIB=$(FSTAR_HOME)/ulib
+else
+  FSTAR_ULIB=$(dir $(shell which fstar.exe))/../lib/fstar
+endif
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 FSTAR_INCLUDES = $(addprefix --include ,$(INCLUDES))
 
@@ -17,8 +20,7 @@ FSTAR_FLAGS = \
   --cache_dir $(CACHE_DIR) \
   $(FSTAR_INCLUDES) 
 
-#TODO: use Makefile.include or Makefile.tmpl
-FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS)
+include ../Makefile.common
 
 all: verify-all
 

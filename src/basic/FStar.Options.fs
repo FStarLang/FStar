@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.Pervasives
 open FStar.String
 open FStar.ST
 open FStar.Exn
@@ -190,6 +191,7 @@ let defaults =
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("ide_id_info_off"              , Bool false);
       ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
@@ -372,6 +374,7 @@ let get_hint_dir                ()      = lookup_opt "hint_dir"                 
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
@@ -829,6 +832,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "ide",
         Const (Bool true),
         "JSON-based interactive mode for IDEs");
+
+       ( noshort,
+        "ide_id_info_off",
+        Const (Bool true),
+        "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
 
        ( noshort,
         "lsp",
@@ -1380,6 +1388,7 @@ let settable = function
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
+    | "ide_id_info_off"
     | "lax"
     | "load"
     | "load_cmxs"
@@ -1701,6 +1710,7 @@ let hint_file_for_src src_filename =
         in
         Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
+let ide_id_info_off              () = get_ide_id_info_off             ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())

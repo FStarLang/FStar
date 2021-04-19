@@ -1,12 +1,12 @@
 open Prims
 type norm_cb =
-  (FStar_Ident.lid, FStar_Syntax_Syntax.term) FStar_Util.either ->
+  (FStar_Ident.lid, FStar_Syntax_Syntax.term) FStar_Pervasives.either ->
     FStar_Syntax_Syntax.term
 let (id_norm_cb : norm_cb) =
   fun uu___ ->
     match uu___ with
-    | FStar_Util.Inr x -> x
-    | FStar_Util.Inl l ->
+    | FStar_Pervasives.Inr x -> x
+    | FStar_Pervasives.Inl l ->
         let uu___1 =
           FStar_Syntax_Syntax.lid_as_fv l
             FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None in
@@ -733,7 +733,8 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
       mk_emb_full em un uu___ printer1 emb_t_pair_a_b
 let e_either :
   'a 'b .
-    'a embedding -> 'b embedding -> ('a, 'b) FStar_Util.either embedding
+    'a embedding ->
+      'b embedding -> ('a, 'b) FStar_Pervasives.either embedding
   =
   fun ea ->
     fun eb ->
@@ -755,14 +756,14 @@ let e_either :
         FStar_Syntax_Syntax.ET_app uu___ in
       let printer1 s =
         match s with
-        | FStar_Util.Inl a1 ->
+        | FStar_Pervasives.Inl a1 ->
             let uu___ = ea.print a1 in FStar_Util.format1 "Inl %s" uu___
-        | FStar_Util.Inr b1 ->
+        | FStar_Pervasives.Inr b1 ->
             let uu___ = eb.print b1 in FStar_Util.format1 "Inr %s" uu___ in
       let em s rng topt norm =
         lazy_embed printer1 emb_t_sum_a_b rng t_sum_a_b s
           (match s with
-           | FStar_Util.Inl a1 ->
+           | FStar_Pervasives.Inl a1 ->
                (fun uu___ ->
                   let shadow_a =
                     map_shadow topt
@@ -819,7 +820,7 @@ let e_either :
                       uu___5 :: uu___6 in
                     uu___3 :: uu___4 in
                   FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng)
-           | FStar_Util.Inr b1 ->
+           | FStar_Pervasives.Inr b1 ->
                (fun uu___ ->
                   let shadow_b =
                     map_shadow topt
@@ -898,7 +899,8 @@ let e_either :
                         let uu___6 = unembed ea a1 in uu___6 w norm in
                       FStar_Util.bind_opt uu___5
                         (fun a2 ->
-                           FStar_Pervasives_Native.Some (FStar_Util.Inl a2))
+                           FStar_Pervasives_Native.Some
+                             (FStar_Pervasives.Inl a2))
                   | (FStar_Syntax_Syntax.Tm_fvar fv,
                      uu___2::uu___3::(b1, uu___4)::[]) when
                       FStar_Syntax_Syntax.fv_eq_lid fv
@@ -908,7 +910,8 @@ let e_either :
                         let uu___6 = unembed eb b1 in uu___6 w norm in
                       FStar_Util.bind_opt uu___5
                         (fun b2 ->
-                           FStar_Pervasives_Native.Some (FStar_Util.Inr b2))
+                           FStar_Pervasives_Native.Some
+                             (FStar_Pervasives.Inr b2))
                   | uu___2 ->
                       (if w
                        then
@@ -1082,6 +1085,7 @@ type norm_step =
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
+  | UnfoldQual of Prims.string Prims.list 
   | NBE 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
@@ -1116,6 +1120,11 @@ let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
     match projectee with | UnfoldAttr _0 -> true | uu___ -> false
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldQual _0 -> true | uu___ -> false
+let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldQual _0 -> _0
 let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
@@ -1142,6 +1151,8 @@ let (steps_UnfoldFully : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldonly
 let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldattr
+let (steps_UnfoldQual : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldqual
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
 let (e_norm_step : norm_step embedding) =
@@ -1199,7 +1210,17 @@ let (e_norm_step : norm_step embedding) =
                    uu___4 rng FStar_Pervasives_Native.None norm in
                  FStar_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
-             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu___1 rng) in
+             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu___1 rng
+         | UnfoldQual l ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = e_list e_string in embed uu___5 l in
+                   uu___4 rng FStar_Pervasives_Native.None norm in
+                 FStar_Syntax_Syntax.as_arg uu___3 in
+               [uu___2] in
+             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldQual uu___1 rng) in
   let un t0 w norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in
     lazy_unembed printer1 emb_t_norm_step t t_norm_step
@@ -1292,6 +1313,19 @@ let (e_norm_step : norm_step embedding) =
                        FStar_All.pipe_left
                          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                          (UnfoldAttr ss))
+              | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_unfoldqual
+                  ->
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = e_list e_string in unembed uu___5 l in
+                    uu___4 w norm in
+                  FStar_Util.bind_opt uu___3
+                    (fun ss ->
+                       FStar_All.pipe_left
+                         (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
+                         (UnfoldQual ss))
               | uu___2 ->
                   (if w
                    then
@@ -2083,7 +2117,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                        "e_arrow forced back to term using shadow %s; repr=%s\n"
                        uu___4 uu___5
                    else ());
-                  (let res = norm (FStar_Util.Inr repr_f) in
+                  (let res = norm (FStar_Pervasives.Inr repr_f) in
                    (let uu___4 =
                       FStar_ST.op_Bang FStar_Options.debug_embedding in
                     if uu___4
@@ -2120,7 +2154,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                         [uu___4] in
                       FStar_Syntax_Syntax.mk_Tm_app f1 uu___3
                         f1.FStar_Syntax_Syntax.pos in
-                    FStar_Util.Inr uu___2 in
+                    FStar_Pervasives.Inr uu___2 in
                   norm uu___1 in
                 let uu___1 = let uu___2 = unembed eb b_tm in uu___2 w norm in
                 match uu___1 with
@@ -2158,7 +2192,8 @@ let arrow_as_prim_step_1 :
                            let uu___3 =
                              FStar_Thunk.mk
                                (fun uu___4 ->
-                                  let uu___5 = norm (FStar_Util.Inl fv_lid) in
+                                  let uu___5 =
+                                    norm (FStar_Pervasives.Inl fv_lid) in
                                   FStar_Syntax_Syntax.mk_Tm_app uu___5 args
                                     rng) in
                            FStar_Pervasives_Native.Some uu___3 in
@@ -2213,7 +2248,7 @@ let arrow_as_prim_step_2 :
                                     FStar_Thunk.mk
                                       (fun uu___6 ->
                                          let uu___7 =
-                                           norm (FStar_Util.Inl fv_lid) in
+                                           norm (FStar_Pervasives.Inl fv_lid) in
                                          FStar_Syntax_Syntax.mk_Tm_app uu___7
                                            args rng) in
                                   FStar_Pervasives_Native.Some uu___5 in
@@ -2288,7 +2323,8 @@ let arrow_as_prim_step_3 :
                                              (fun uu___8 ->
                                                 let uu___9 =
                                                   norm
-                                                    (FStar_Util.Inl fv_lid) in
+                                                    (FStar_Pervasives.Inl
+                                                       fv_lid) in
                                                 FStar_Syntax_Syntax.mk_Tm_app
                                                   uu___9 args rng) in
                                          FStar_Pervasives_Native.Some uu___7 in

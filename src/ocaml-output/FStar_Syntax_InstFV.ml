@@ -56,7 +56,7 @@ let rec (inst :
               let uu___3 = inst_args s args in (uu___2, uu___3) in
             FStar_Syntax_Syntax.Tm_app uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_match (t2, pats) ->
+      | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, pats) ->
           let pats1 =
             FStar_All.pipe_right pats
               (FStar_List.map
@@ -71,26 +71,16 @@ let rec (inst :
                               let uu___1 = inst s w in
                               FStar_Pervasives_Native.Some uu___1 in
                         let t4 = inst s t3 in (p, wopt1, t4))) in
+          let asc_opt1 = FStar_Util.map_opt asc_opt (inst_ascription s) in
           let uu___ =
-            let uu___1 = let uu___2 = inst s t2 in (uu___2, pats1) in
+            let uu___1 = let uu___2 = inst s t2 in (uu___2, asc_opt1, pats1) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_ascribed (t11, asc, f) ->
-          let inst_asc uu___ =
-            match uu___ with
-            | (annot, topt) ->
-                let topt1 = FStar_Util.map_opt topt (inst s) in
-                let annot1 =
-                  match annot with
-                  | FStar_Util.Inl t2 ->
-                      let uu___1 = inst s t2 in FStar_Util.Inl uu___1
-                  | FStar_Util.Inr c ->
-                      let uu___1 = inst_comp s c in FStar_Util.Inr uu___1 in
-                (annot1, topt1) in
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t11 in
-              let uu___3 = inst_asc asc in (uu___2, uu___3, f) in
+              let uu___3 = inst_ascription s asc in (uu___2, uu___3, f) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_let (lbs, t2) ->
@@ -264,6 +254,28 @@ and (inst_lcomp_opt :
                 (uu___1.FStar_Syntax_Syntax.residual_flags)
             } in
           FStar_Pervasives_Native.Some uu___
+and (inst_ascription :
+  (FStar_Syntax_Syntax.term ->
+     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+    ->
+    FStar_Syntax_Syntax.ascription ->
+      ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
+        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+        FStar_Pervasives.either * FStar_Syntax_Syntax.term'
+        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
+  =
+  fun s ->
+    fun asc ->
+      let uu___ = asc in
+      match uu___ with
+      | (annot, topt) ->
+          let annot1 =
+            match annot with
+            | FStar_Pervasives.Inl t ->
+                let uu___1 = inst s t in FStar_Pervasives.Inl uu___1
+            | FStar_Pervasives.Inr c ->
+                let uu___1 = inst_comp s c in FStar_Pervasives.Inr uu___1 in
+          let topt1 = FStar_Util.map_opt topt (inst s) in (annot1, topt1)
 let (instantiate :
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun i ->

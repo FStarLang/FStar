@@ -151,7 +151,7 @@ let term_view_construct (t : term_view) : Tac string =
   | Tv_Const _ -> "Tv_Const"
   | Tv_Uvar _ _ -> "Tv_Uvar"
   | Tv_Let _ _ _ _ _ -> "Tv_Let"
-  | Tv_Match _ _ -> "Tv_Match"
+  | Tv_Match _ _ _ -> "Tv_Match"
   | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ -> "Tv_AScribedC"
   | _ -> "Tv_Unknown"
@@ -470,8 +470,16 @@ let rec deep_apply_subst e t subst =
     let def = deep_apply_subst e def subst in
     let body = deep_apply_subst e body subst in
     pack (Tv_Let recf [] bv def body)
-  | Tv_Match scrutinee branches -> (* TODO: type of pattern variables *)
+  | Tv_Match scrutinee ret_opt branches -> (* TODO: type of pattern variables *)
     let scrutinee = deep_apply_subst e scrutinee subst in
+    let ret_opt = map_opt (fun ret ->
+      match ret with
+      | Inl t, tacopt ->
+        Inl (deep_apply_subst e t subst),
+        map_opt (fun tac -> deep_apply_subst e tac subst) tacopt
+      | Inr c, tacopt ->
+        Inr (deep_apply_subst_in_comp e c subst),
+        map_opt (fun tac -> deep_apply_subst e tac subst) tacopt) ret_opt in
     (* For the branches: we don't need to explore the patterns *)
     let deep_apply_subst_in_branch branch =
       let pat, tm = branch in
@@ -480,7 +488,7 @@ let rec deep_apply_subst e t subst =
       pat, tm
     in
     let branches = map deep_apply_subst_in_branch branches in
-    pack (Tv_Match scrutinee branches)
+    pack (Tv_Match scrutinee ret_opt branches)
   | Tv_AscribedT exp ty tac ->
     let exp = deep_apply_subst e exp subst in
     let ty = deep_apply_subst e ty subst in
