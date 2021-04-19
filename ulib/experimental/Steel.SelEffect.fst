@@ -786,17 +786,10 @@ let intro_vrewrite
     )
 
 let elim_vrewrite
-  v #t f g
+  v #t f
 =
-  let m = get () in
-  let x : Ghost.erased t = Ghost.hide (m (vrewrite v f)) in
-  let x' : Ghost.erased (t_of v) = Ghost.hide (g (Ghost.reveal x)) in
-  assert (f (Ghost.reveal x') == Ghost.reveal x);
-  change_slprop
+  change_slprop_rel
     (vrewrite v f)
     v
-    x
-    x'
-    (fun m ->
-      vrewrite_sel_eq v f m
-    )
+    (fun y x -> y == f x)
+    (fun m -> vrewrite_sel_eq v f m)
