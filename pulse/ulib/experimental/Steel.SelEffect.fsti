@@ -396,21 +396,10 @@ val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
 : SteelSel unit v (fun _ -> vrewrite v f) (fun _ -> True) (fun h _ h' -> h' (vrewrite v f) == f (h v))
 
-let elim_vrewrite_precond
-  (v: vprop)
-  (#t: Type)
-  (f: (normal (t_of v) -> GTot t))
-  (g: (t -> GTot (normal (t_of v))))
-: Tot prop
-=
-  (forall x . f (g x) == x) /\
-  (forall (x: t_of v) . g (f x) == x)
-
 val elim_vrewrite
   (v: vprop)
   (#t: Type)
   (f: (normal (t_of v) -> GTot t))
-  (g: (t -> GTot (normal (t_of v))))
 : SteelSel unit (vrewrite v f) (fun _ -> v)
-    (fun _ -> elim_vrewrite_precond v f g)
+    (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
