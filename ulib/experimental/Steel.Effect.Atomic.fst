@@ -80,15 +80,10 @@ let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mp
 : mprop2 pre post
 = fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-let atomic_repr a framed opened_invariants f pre post req ens =
+let repr a framed opened_invariants f pre post req ens =
     action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
-let return (a:Type u#a)
-   (x:a)
-   (opened_invariants:inames)
-   (#[@@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a true opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
-  = fun _ -> x
+let return a x opened_invariants #p = fun _ -> x
 
 #push-options "--fuel 0 --ifuel 0"
 
@@ -173,17 +168,6 @@ let bind_pure_steela_ (a:Type) (b:Type) opened o #wp #pre #post #req #ens f g
     let x = f () in
     g x frame
 
-let ghost_repr a already_framed opened pre post req ens =
-    action_except_full a opened pre post (req_to_act_req req) (ens_to_act_ens ens)
-
-let greturn = return
-
-let gbind a b opened = bind a b opened unobservable unobservable
-
-let gsubcomp a opened = subcomp a opened unobservable unobservable
-
-let bind_pure_steelg_ a b opened = bind_pure_steela_ a b opened unobservable
-
 let lift_ghost_atomic a o f = f
 
 let lift_atomic_steel a o #framed #pre #post #req #ens f = f
@@ -210,7 +194,7 @@ let with_invariant #a #fp #fp' #opened i f =
 assume val reify_steel_ghost_comp
   (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
   (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelGhostBase a already_framed opened_invariants pre post req ens)
+  ($f:unit -> SteelGhostBase a already_framed opened_invariants unobservable pre post req ens)
   : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let with_invariant_g #a #fp #fp' #opened i f =
@@ -223,7 +207,7 @@ let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
 
 let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
   (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : ghost_repr unit false opened p (fun _ -> p)
+  : repr unit false opened unobservable p (fun _ -> p)
       (fun _ -> True)
       (fun _ _ _ -> fact)
   = fun frame ->
