@@ -1521,35 +1521,58 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
-                        let binder_t = norm_with_steps [Env.AllowUnboundUniverses;
-                                                        Env.Beta;
-                                                       (* we don't know if this will terminate; so don't do recursive steps *)
-                                                        Env.Exclude Env.Zeta;
-                                                        Env.UnfoldUntil delta_constant;
-                                                        Env.EraseUniverses;
-                                                        Env.Unascribe]
-                                                        env''.tcenv
-                                                        formal.binder_bv.sort
+                        let rec binder_and_codomain_type t =
+                            let t = U.unrefine t in
+                            match (SS.compress t).n with
+                            | Tm_arrow _ ->
+                              let bs, c = U.arrow_formals_comp (U.unrefine t) in
+                              begin
+                              match bs with
+                              | [] -> None
+                              | _ when not (U.is_tot_or_gtot_comp c) -> None
+                              | _ -> Some (bs, c)
+                              end
+                            | _ ->
+                              let head, _ = U.head_and_args t in
+                              let t' = N.unfold_whnf' [Env.AllowUnboundUniverses;
+                                                       Env.EraseUniverses;
+                                                       Env.Unascribe;
+                                                       //we don't know if this will terminate; so don't do recursive steps
+                                                       Env.Exclude Env.Zeta]
+                                                       env''.tcenv
+                                                       t
+                              in
+                              let head', _ = U.head_and_args t' in
+                              match U.eq_tm head head' with
+                              | U.Equal -> None //no progress after whnf
+                              | U.NotEqual -> binder_and_codomain_type t'
+                              | _ ->
+                                //Did we actually make progress? Be conservative to avoid an infinite loop
+                                match (SS.compress head).n with
+                                | Tm_fvar _
+                                | Tm_name _
+                                | Tm_uinst _ ->
+                                  //The underlying name must have changed, otherwise we would have got Equal
+                                  //so, we made some progress
+                                  binder_and_codomain_type t'
+                                | _ ->
+                                  //unclear if we made progress or not
+                                  None
+
                         in
-                        if Env.debug env''.tcenv <| Options.Other "WFF"
-                        then BU.print2 "Normalized %s to %s\n"
-                               (Print.term_to_string                                                         formal.binder_bv.sort)
-                               (Print.term_to_string (U.unrefine binder_t));
-                        let bs, c = U.arrow_formals_comp (U.unrefine binder_t) in
-                        match bs with
-                        | [] -> codomain_prec_l, cod_decls
-                        | _ when not (U.is_tot_or_gtot_comp c) -> codomain_prec_l, cod_decls
-                        | _ ->
-                         //var bs << D ... var ...
-                         let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
-                         let fun_app = mk_Apply (mkFreeV var) bs' in
-                         mkForall (Ident.range_of_lid d)
-                                  ([[mk_Precedes lex_t lex_t fun_app dapp]],
-                                   bs',
-                                   mkImp (mk_and_l guards',
-                                          mk_Precedes lex_t lex_t fun_app dapp))
-                         :: codomain_prec_l,
-                         bs_decls @ cod_decls)
+                        match binder_and_codomain_type formal.binder_bv.sort with
+                        | None -> codomain_prec_l, cod_decls
+                        | Some (bs, c) ->
+                          //var bs << D ... var ...
+                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                          let fun_app = mk_Apply (mkFreeV var) bs' in
+                          mkForall (Ident.range_of_lid d)
+                                   ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                     bs',
+                                     mkImp (mk_and_l guards',
+                                           mk_Precedes lex_t lex_t fun_app dapp))
+                          :: codomain_prec_l,
+                          bs_decls @ cod_decls)
                     ([],[])
                     formals'
                     vars'
