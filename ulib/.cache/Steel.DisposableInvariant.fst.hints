@@ -1,5 +1,5 @@
 [
-  "˚ÑL\u000boÔﬂíx«}û?Ë¬ÿ",
+  "m∏ª:m^\u0018ÅŒπóû\"èiT",
   [
     [
       "Steel.DisposableInvariant.new_inv",
@@ -19,7 +19,7 @@
         "true_interp"
       ],
       0,
-      "0286b947e1867d59ecd7f1c245916648"
+      "d1a1328b0d193e61157b2dacb04e6800"
     ],
     [
       "Steel.DisposableInvariant.gather",
@@ -53,7 +53,7 @@
         "true_interp"
       ],
       0,
-      "4b9e3fd030efb0b1b953cdc2bffcce21"
+      "eb07c40be304001f50e45fdb2cece5d8"
     ],
     [
       "Steel.DisposableInvariant.dispose",
@@ -100,7 +100,7 @@
         "typing_Steel.DisposableInvariant.name", "typing_Steel.Memory.iname"
       ],
       0,
-      "217895ea019fc98b3cf277e03cbd179d"
+      "d9d86ddaae0a9c7a1a494782d577b7e7"
     ],
     [
       "Steel.DisposableInvariant.with_invariant",
@@ -137,7 +137,34 @@
         "typing_Steel.DisposableInvariant.name", "typing_Steel.Memory.iname"
       ],
       0,
-      "b53123140ff5629c004a1191e921d0e1"
+      "a9f605ea6341d6d076a7ac9066b322a6"
+    ],
+    [
+      "Steel.DisposableInvariant.with_invariant_g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "data_elim_Prims.Mkdtuple2", "equation_FStar.Pervasives.dfst",
+        "equation_FStar.Pervasives.dsnd", "equation_Prims.eqtype",
+        "equation_Steel.DisposableInvariant.gref",
+        "equation_Steel.DisposableInvariant.inv",
+        "equation_Steel.DisposableInvariant.name",
+        "equation_Steel.Effect.Common.true_p", "equation_Steel.Memory.inv",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.bool",
+        "interpretation_Tm_abs_7bd8f29e9dae21ddf96beb98232df77b",
+        "lemma_FStar.Ghost.reveal_hide", "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_1deeb20268a5c4d4fffeebd3d94d85e9",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_497be458ca2364b467343c465c6948ca",
+        "true_interp"
+      ],
+      0,
+      "8f904e856c5464c6dcc05902af56db14"
     ]
   ]
 ]
