@@ -1,0 +1,196 @@
+[
+  "¢ÍBW∫Nù‹Wtπr—}⁄\"",
+  [
+    [
+      "LList.Invariant.mk_cell",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_LList.Invariant.data",
+        "equation_LList.Invariant.next",
+        "proj_equation_LList.Invariant.Mkcell_data",
+        "proj_equation_LList.Invariant.Mkcell_next",
+        "projection_inverse_LList.Invariant.Mkcell_data",
+        "projection_inverse_LList.Invariant.Mkcell_next"
+      ],
+      0,
+      "d89864623b0a709c3633853cc574b3b6"
+    ],
+    [
+      "LList.Invariant.llist'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1086dd6f10123e0e90960d84dd8cb06b_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_LList.Invariant.null_llist", "equation_LList.Invariant.t",
+        "equation_Prims.eq2", "equation_Prims.l_False",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_Prims.list",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "7cde01bfba7bb0b4689449aad2f7d2ed"
+    ],
+    [
+      "LList.Invariant.intro_llist_nil",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "7285e906eb4c0517c365a6c90e54c4b6"
+    ],
+    [
+      "LList.Invariant.intro_llist_cons",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_False",
+        "equation_Prims.l_True", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_LList.Invariant.cell",
+        "fuel_guarded_inversion_Prims.list",
+        "interpretation_Tm_abs_aed53fcaf0bf10e19fdebfdf2549a18a",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "8139de3e74cf6741b58e94d20aeec421"
+    ],
+    [
+      "LList.Invariant.intro_llist_cons",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.l_False", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "1cdb6ad9c3599a691553db430cc38e72"
+    ],
+    [
+      "LList.Invariant.intro_llist_cons",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LList.Invariant.t",
+        "equation_Prims.eq2", "equation_Prims.l_False",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0998a3d71dbfee93f68c42ca5340f045"
+    ],
+    [
+      "LList.Invariant.intro_llist_cons",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_LList.Invariant.null_llist", "equation_LList.Invariant.t",
+        "equation_Prims.eq2", "equation_Prims.l_False",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.true_p",
+        "fuel_guarded_inversion_LList.Invariant.cell",
+        "kinding_LList.Invariant.cell@tok",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_7c3576760aabe55bd452e0ed74e31d09",
+        "true_interp", "typing_Steel.Reference.is_null"
+      ],
+      0,
+      "c8a7b273a89ced9997ebe201a98e53c3"
+    ],
+    [
+      "LList.Invariant.elim_llist_cons",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.l_False", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d9fdffa0d3c9288cc27a6310ca9c85bc"
+    ],
+    [
+      "LList.Invariant.elim_llist_cons",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LList.Invariant.t",
+        "equation_Prims.eq2", "equation_Prims.l_False",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "32f05b1b3691164976a04a885a3798be"
+    ],
+    [
+      "LList.Invariant.elim_llist_cons",
+      3,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_LList.Invariant.llist_.fuel_instrumented",
+        "@fuel_irrelevance_LList.Invariant.llist_.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok", "equation_LList.Invariant.llist",
+        "equation_Prims.l_False", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Steel.Effect.Common.true_p",
+        "equation_with_fuel_LList.Invariant.llist_.fuel_instrumented",
+        "fuel_guarded_inversion_LList.Invariant.cell",
+        "kinding_LList.Invariant.cell@tok",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp"
+      ],
+      0,
+      "943d8ceeb2c872a05b0bf8692db5e267"
+    ]
+  ]
+]
