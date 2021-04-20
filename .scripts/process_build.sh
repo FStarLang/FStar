@@ -13,6 +13,8 @@ fi
 set -e
 set -o pipefail
 
+set -x
+
 # Make sure we are starting in the right place (F* repository)
 if ! [[ -d ulib ]]; then
   echo "This script is intended to be run from the root of the F* repository"
