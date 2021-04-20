@@ -638,15 +638,15 @@ To call `id`, one can apply and check its type as shown::
      let compose : a:Type -> b:Type -> c:Type -> (b -> c) -> (a -> b) -> a -> c = <fill me in>
      let twice : <fill me in> = fun a f x -> compose a a a f f x
 
-It's a bit tedious to have to explicitly provide that first type
-argument to `id`. Next, we'll see how to use implicits in F* and
-instruct F* to automatically infer their instantiations.
-
+It's quite tedious to have to explicitly provide that first type
+argument to `id`. Implicit arguments and type inference will help, as
+we'll see next.
 
 Implicit arguments
 ..................
 
 .. _implicits:
+
 
 
 Syntax of binders
