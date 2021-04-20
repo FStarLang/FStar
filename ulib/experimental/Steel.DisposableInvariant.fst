@@ -91,7 +91,7 @@ let with_invariant #a #fp #fp' #u #p #perm i f
       A.change_slprop (if b then p else emp) p (fun _ -> ());
       let x = f() in
       A.intro_exists true (conditional_inv r p);
-      x
+      steela_return x
     in
     A.with_invariant (name i)
                      (with_invariant_aux (gref i))

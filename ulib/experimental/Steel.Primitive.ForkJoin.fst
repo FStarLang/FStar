@@ -71,7 +71,7 @@ let acquire (#p:slprop) (t:thread p)
   = L.acquire t.l;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
-    b
+    steela_return b
 
 let spawn (#p #q:slprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))

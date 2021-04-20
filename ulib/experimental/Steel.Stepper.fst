@@ -110,7 +110,7 @@ let select_refine (r:ref stepper p)
              (fun v -> pts_to r (f v))
    = let v = select_refine' r x f in
      change_slprop (Memory.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
-     v
+     steela_return v
 
 
 (** Updating a ref cell for a user-defined PCM *)
@@ -149,7 +149,7 @@ let get_even (r:ref stepper p) (n0:even)
   = let v = select_refine r (Even n0) (f_even n0) in
     let n:nat = V?.n v in
     change_slprop (pts_to r (f_even n0 v)) (pts_to r (if n = n0 then Even n0 else EvenWriteable n0)) (fun _ -> ());
-    n
+    steela_return n
 
 let get_odd (r:ref stepper p) (n0:odd)
   : Steel nat
@@ -160,7 +160,7 @@ let get_odd (r:ref stepper p) (n0:odd)
   = let v = select_refine r (Odd n0) (f_odd n0) in
     let n:nat = V?.n v in
     change_slprop (pts_to r (f_odd n0 v)) (pts_to r (if n = n0 then Odd n0 else OddWriteable n0)) (fun _ -> ());
-    n
+    steela_return n
 
 let upd_even_f (n:even) : FStar.PCM.frame_preserving_upd p
                             (EvenWriteable n)
@@ -200,7 +200,7 @@ val alloc (x:stepper{compatible p x x /\ refine x})
 let alloc x =
   let r = alloc x in
   change_slprop (Memory.pts_to r x) (pts_to r x) (fun _ -> ());
-  r
+  steela_return r
 
 val split (r:ref stepper p) (v_full v0 v1:stepper)
   : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
