@@ -5712,8 +5712,32 @@ and (encode_sigelt' :
                                                                     | 
                                                                     uu___31
                                                                     ->
+                                                                    let uu___32
+                                                                    =
+                                                                    FStar_Syntax_Util.is_lemma_comp
+                                                                    c in
+                                                                    if
+                                                                    uu___32
+                                                                    then
+                                                                    FStar_Pervasives_Native.None
+                                                                    else
+                                                                    (let t4 =
+                                                                    FStar_Syntax_Util.unrefine
+                                                                    (FStar_Syntax_Util.comp_result
+                                                                    c) in
+                                                                    let uu___34
+                                                                    =
+                                                                    (FStar_Syntax_Syntax.is_type
+                                                                    t4) ||
+                                                                    (FStar_Syntax_Util.is_sub_singleton
+                                                                    t4) in
+                                                                    if
+                                                                    uu___34
+                                                                    then
+                                                                    FStar_Pervasives_Native.None
+                                                                    else
                                                                     FStar_Pervasives_Native.Some
-                                                                    (bs, c)))
+                                                                    (bs, c))))
                                                                     | 
                                                                     uu___29
                                                                     ->
@@ -6389,8 +6413,32 @@ and (encode_sigelt' :
                                                                     | 
                                                                     uu___28
                                                                     ->
+                                                                    let uu___29
+                                                                    =
+                                                                    FStar_Syntax_Util.is_lemma_comp
+                                                                    c in
+                                                                    if
+                                                                    uu___29
+                                                                    then
+                                                                    FStar_Pervasives_Native.None
+                                                                    else
+                                                                    (let t4 =
+                                                                    FStar_Syntax_Util.unrefine
+                                                                    (FStar_Syntax_Util.comp_result
+                                                                    c) in
+                                                                    let uu___31
+                                                                    =
+                                                                    (FStar_Syntax_Syntax.is_type
+                                                                    t4) ||
+                                                                    (FStar_Syntax_Util.is_sub_singleton
+                                                                    t4) in
+                                                                    if
+                                                                    uu___31
+                                                                    then
+                                                                    FStar_Pervasives_Native.None
+                                                                    else
                                                                     FStar_Pervasives_Native.Some
-                                                                    (bs, c)))
+                                                                    (bs, c))))
                                                                     | 
                                                                     uu___26
                                                                     ->

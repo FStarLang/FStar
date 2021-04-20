@@ -1530,7 +1530,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                               match bs with
                               | [] -> None
                               | _ when not (U.is_tot_or_gtot_comp c) -> None
-                              | _ -> Some (bs, c)
+                              | _ ->
+                                if U.is_lemma_comp c
+                                then None //not useful for lemmas
+                                else
+                                  let t = U.unrefine (U.comp_result c) in
+                                  if is_type t || U.is_sub_singleton t
+                                  then None //ordering on Type and squashed values is not useful
+                                  else Some (bs, c)
                               end
                             | _ ->
                               let head, _ = U.head_and_args t in
