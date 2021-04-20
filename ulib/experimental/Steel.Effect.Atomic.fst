@@ -172,7 +172,8 @@ let lift_ghost_atomic a o f = f
 
 let lift_atomic_steel a o #framed #pre #post #req #ens f = f
 
-let as_atomic_action f = SteelGhost?.reflect f
+let as_atomic_action f = SteelAtomic?.reflect f
+let as_atomic_action_ghost f = SteelGhost?.reflect f
 
 let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
 
@@ -228,3 +229,8 @@ let witness_h_exists #a #u #p s = SteelGhost?.reflect (Steel.Memory.witness_h_ex
 let lift_h_exists_atomic #a #u p = SteelGhost?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
 let elim_pure #uses p = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+
+let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)  
+
+let steela_return #a #opened_invariants #p x =
+  SteelAtomicBase?.reflect (fun _ -> x)

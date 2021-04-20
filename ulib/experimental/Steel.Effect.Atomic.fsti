@@ -309,6 +309,14 @@ val as_atomic_action (#a:Type u#a)
                      (#fp:slprop)
                      (#fp': a -> slprop)
                      (f:action_except a opened_invariants fp fp')
+  : SteelAtomicT a opened_invariants fp fp'
+
+[@@warn_on_use "as_atomic_action is a trusted primitive"]
+val as_atomic_action_ghost (#a:Type u#a)
+                           (#opened_invariants:inames)
+                           (#fp:slprop)
+                           (#fp': a -> slprop)
+                           (f:action_except a opened_invariants fp fp')
   : SteelGhostT a opened_invariants fp fp'
 
 val new_invariant (opened_invariants:inames) (p:slprop)
@@ -408,3 +416,12 @@ let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
 let drop_f (#opened:inames) (#p #f:slprop) ()
   : SteelGhostF unit opened (p `star` f) (fun _ -> p) (fun _ -> True) (fun _ _ _ -> True)
   = change_slprop (p `star` f) p (fun _ -> ()); ()
+
+val sghost (#a:Type) (#opened_invariants:inames)
+  (#pre:slprop u#1) (#post:a -> slprop u#1)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelGhostBase a false opened_invariants unobservable pre post req ens)
+  : SteelAtomicBase a false opened_invariants unobservable pre post req ens
+
+val steela_return (#a:Type) (#opened_invariants:inames) (#p:a -> slprop) (x:a)
+  : SteelAtomicBase a true opened_invariants unobservable (return_pre (p x)) p (fun _ -> True) (fun _ r _ -> r == x)
