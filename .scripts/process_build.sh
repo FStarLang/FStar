@@ -138,14 +138,14 @@ else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
 fi
 
-# diag "-- Verify ulib --"
-# make -j6 -C ulib
-# if [ $? -ne 0 ]; then
-#   echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
-#   exit 1
-# else
-#   echo -e "* ${GREEN}PASSED!${NC} for ulib"
-# fi
+diag "-- Verify ulib --"
+make -j6 -C ulib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for ulib"
+fi
 
 diag "-- Verify all examples --"
 make -j6 -C examples
