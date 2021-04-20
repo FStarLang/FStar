@@ -34,6 +34,6 @@ ENV PATH="${FSTAR_HOME}/bin:${PATH}"
 RUN eval $(opam env) && make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/ulib/ml clean && make -C $FSTAR_HOME/ulib install-fstarlib -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/examples/hello -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
+# RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
