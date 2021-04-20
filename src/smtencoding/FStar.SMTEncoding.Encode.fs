@@ -1516,6 +1516,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 ("subterm_ordering_"^ddconstrsym))
               in
               let codomain_ordering, codomain_decls =
+                let _, formals = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
+                let _, vars = BU.first_N n_tps vars in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
@@ -1561,7 +1563,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
                                           mkImp(ty_pred, mk_and_l codomain_prec_l)),
                                  Some "well-founded ordering on codomain",
-                                 ("well_founded_ordering_on_comdain_"^ddconstrsym))],
+                                 ("well_founded_ordering_on_codomain_"^ddconstrsym))],
                   cod_decls
               in
               arg_decls @ codomain_decls,
