@@ -359,7 +359,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
       (pts_to r q (hval_tot hv) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))))
       (pts_to r q v `star` f v)
       (fun _ -> ());
-    v
+    steela_return v
 
 
 let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
