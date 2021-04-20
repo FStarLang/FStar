@@ -5633,7 +5633,7 @@ and (encode_sigelt' :
                                                                     with
                                                                     | 
                                                                     (uu___23,
-                                                                    formals1)
+                                                                    formals')
                                                                     ->
                                                                     let uu___24
                                                                     =
@@ -5644,7 +5644,8 @@ and (encode_sigelt' :
                                                                     with
                                                                     | 
                                                                     (uu___25,
-                                                                    vars1) ->
+                                                                    vars'1)
+                                                                    ->
                                                                     let uu___26
                                                                     =
                                                                     FStar_List.fold_left2
@@ -5815,8 +5816,8 @@ and (encode_sigelt' :
                                                                     bs_decls
                                                                     cod_decls)))))))
                                                                     ([], [])
-                                                                    formals1
-                                                                    vars1 in
+                                                                    formals'
+                                                                    vars'1 in
                                                                     (match uu___26
                                                                     with
                                                                     | 
@@ -5856,7 +5857,7 @@ and (encode_sigelt' :
                                                                     FStar_SMTEncoding_Env.add_fuel
                                                                     uu___35
                                                                     (FStar_List.append
-                                                                    vars1
+                                                                    vars
                                                                     arg_binders) in
                                                                     let uu___35
                                                                     =
@@ -6235,7 +6236,7 @@ and (encode_sigelt' :
                                                                     with
                                                                     | 
                                                                     (uu___20,
-                                                                    formals1)
+                                                                    formals')
                                                                     ->
                                                                     let uu___21
                                                                     =
@@ -6246,7 +6247,8 @@ and (encode_sigelt' :
                                                                     with
                                                                     | 
                                                                     (uu___22,
-                                                                    vars1) ->
+                                                                    vars'1)
+                                                                    ->
                                                                     let uu___23
                                                                     =
                                                                     FStar_List.fold_left2
@@ -6417,8 +6419,8 @@ and (encode_sigelt' :
                                                                     bs_decls
                                                                     cod_decls)))))))
                                                                     ([], [])
-                                                                    formals1
-                                                                    vars1 in
+                                                                    formals'
+                                                                    vars'1 in
                                                                     (match uu___23
                                                                     with
                                                                     | 
@@ -6458,7 +6460,7 @@ and (encode_sigelt' :
                                                                     FStar_SMTEncoding_Env.add_fuel
                                                                     uu___32
                                                                     (FStar_List.append
-                                                                    vars1
+                                                                    vars
                                                                     arg_binders) in
                                                                     let uu___32
                                                                     =

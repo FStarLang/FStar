@@ -1516,8 +1516,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 ("subterm_ordering_"^ddconstrsym))
               in
               let codomain_ordering, codomain_decls =
-                let _, formals = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
-                let _, vars = BU.first_N n_tps vars in
+                let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
+                let _, vars' = BU.first_N n_tps vars in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
@@ -1551,8 +1551,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          :: codomain_prec_l,
                          bs_decls @ cod_decls)
                     ([],[])
-                    formals
-                    vars
+                    formals'
+                    vars'
                 in
                 match codomain_prec_l with
                 | [] ->
