@@ -264,6 +264,8 @@ package:
 	@# Install the F* binary
 	$(call fexport-all,bin)
 	@# Then the standard library.
+	mkdir -p $(PREFIX)/src/ocaml-output/
+	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	@# Here we export everything, including the .cmi and .checked files
 	$(call fexport-all,ulib)
 	cp ../../version.txt $(PREFIX)/
