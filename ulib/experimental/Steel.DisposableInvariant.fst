@@ -50,12 +50,12 @@ let gather (#p:slprop) (#f0 #f1:perm) (#u:_) (i:inv p)
       (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
       (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
 
-let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
+let dispose #p #u i
   : SteelGhostT unit u
     (active full_perm i)
     (fun _ -> p)
   = let dispose_aux (r:ghost_ref bool) (_:unit)
-    : SteelGhostT unit (set_add (name i) u)
+    : SteelGhostT unit (add_inv u i)
        (ex_conditional_inv r p `star`
         ghost_pts_to r (half_perm full_perm) true)
        (fun _ ->
@@ -75,20 +75,10 @@ let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
     A.with_invariant_g (name i)
                        (dispose_aux (gref i))
 
-let with_invariant (#a:Type)
-                   (#fp:slprop)
-                   (#fp':a -> slprop)
-                   (#u:inames)
-                   (#p:slprop)
-                   (#perm:_)
-                   (i:inv p{not (name i `Set.mem` u)})
-                   ($f:unit -> SteelAtomicT a (set_add (name i) u)
-                                             (p `star` fp)
-                                             (fun x -> p `star` fp' x))
-  : SteelAtomicT a u (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+let with_invariant #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelAtomicT a (set_add (name i) u)
+      : SteelAtomicT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))
@@ -106,20 +96,10 @@ let with_invariant (#a:Type)
     A.with_invariant (name i)
                      (with_invariant_aux (gref i))
 
-let with_invariant_g (#a:Type)
-                   (#fp:slprop)
-                   (#fp':a -> slprop)
-                   (#u:inames)
-                   (#p:slprop)
-                   (#perm:_)
-                   (i:inv p{not (name i `Set.mem` u)})
-                   ($f:unit -> SteelGhostT a (set_add (name i) u)
-                                             (p `star` fp)
-                                             (fun x -> p `star` fp' x))
-  : SteelGhostT a u (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+let with_invariant_g #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelGhostT a (set_add (name i) u)
+      : SteelGhostT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))

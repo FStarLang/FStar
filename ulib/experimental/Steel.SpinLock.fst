@@ -21,13 +21,15 @@ open Steel.Reference
 open Steel.FractionalPermission
 module Atomic = Steel.Effect.Atomic
 
+open FStar.Ghost
+
 let available = false
 let locked = true
 
 let lockinv (p:slprop) (r:ref bool) : slprop =
   h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
-let lock_t = ref bool & iname
+let lock_t = ref bool & erased iname
 
 let protects (l:lock_t) (p:slprop) : prop = snd l >--> lockinv p (fst l)
 
