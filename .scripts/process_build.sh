@@ -64,9 +64,9 @@ if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
 fi
 
 diag "*** Make package (clean build directory first) ***"
-cd src/ocaml-output
 git clean -dffx
-make package
+make -j6 package
+cd src/ocaml-output
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 diag "*** Unzip and verify the Package  ***"
