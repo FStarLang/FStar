@@ -33,7 +33,7 @@ let f4 (r:ty2 int) : int =
 
 let t = 42
 
-[@@expect_failure [341]]
+[@@expect_failure [346]]
 let not_a_record (r:ty2 int) : int =
   let open r as int in
   if y then x else -x
