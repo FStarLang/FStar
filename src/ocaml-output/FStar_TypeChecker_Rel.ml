@@ -10483,8 +10483,10 @@ and (solve_c :
                 uu___5
             else ());
            (let uu___3 =
-              let uu___4 = FStar_TypeChecker_Normalize.ghost_to_pure env c1 in
-              let uu___5 = FStar_TypeChecker_Normalize.ghost_to_pure env c2 in
+              let uu___4 =
+                FStar_TypeChecker_Normalize.maybe_ghost_to_pure env c1 in
+              let uu___5 =
+                FStar_TypeChecker_Normalize.maybe_ghost_to_pure env c2 in
               (uu___4, uu___5) in
             match uu___3 with
             | (c11, c21) ->

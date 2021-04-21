@@ -10908,7 +10908,7 @@ let (typeof_tot_or_gtot_term :
              if must_tot
              then
                let c1 =
-                 FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env1 c in
+                 FStar_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp env1 c in
                let uu___2 = FStar_TypeChecker_Common.is_total_lcomp c1 in
                (if uu___2
                 then (t, (c1.FStar_TypeChecker_Common.res_typ), g)

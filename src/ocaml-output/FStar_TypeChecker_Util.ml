@@ -2343,9 +2343,11 @@ let (bind :
                          (FStar_Options.Other "bind")) in
                   if uu___1 then f () else () in
                 let lc11 =
-                  FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env lc1 in
+                  FStar_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp env
+                    lc1 in
                 let lc21 =
-                  FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env lc2 in
+                  FStar_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp env
+                    lc2 in
                 let joined_eff = join_lcomp env lc11 lc21 in
                 let bind_flags =
                   let uu___1 =
