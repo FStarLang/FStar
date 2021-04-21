@@ -11,8 +11,7 @@
       * [Instructions for Windows](#instructions-for-windows)
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
-    * [Step 1. Building F* from the OCaml snapshot](#step-1-building-f-from-the-ocaml-snapshot)
-    * [Step 2l. Building the F* libraries](#step-2l-building-the-f-libraries)
+    * [Building F* and the libraries](#building-f-and-its-libraries)
   * [Bootstrapping F* in OCaml](#bootstrapping-f-in-ocaml)
     * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
     * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
@@ -267,13 +266,13 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
   The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
   ```
 
-### Building F\* and its libraries from the OCaml snapshot ###
+### Building F\* and its libraries ###
 
 Once you have a working OCaml setup (see above) just run the following
 command (you can use -j N, where N is a parallel factor suitable for
 your machine):
 
-    $ make -j6
+    $ make -j N
 
 This does three things:
 
