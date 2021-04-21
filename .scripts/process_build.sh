@@ -110,6 +110,15 @@ diag "-- Versions --"
 bin/fstar.exe --version
 bin/z3 --version
 
+diag "-- Verify ulib --"
+make -j6 -C ulib
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  exit 1
+else
+  echo -e "* ${GREEN}PASSED!${NC} for ulib"
+fi
+
 diag "-- Verify micro benchmarks --"
 make -C tests/micro-benchmarks
 if [ $? -ne 0 ]; then
@@ -117,15 +126,6 @@ if [ $? -ne 0 ]; then
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
-fi
-
-diag "-- Rebuilding ulib/ml (to make sure it works) --"
-make -C ulib rebuild
-if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
-  exit 1
-else
-  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
 fi
 
 diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
@@ -140,13 +140,13 @@ else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello"
 fi
 
-diag "-- Verify ulib --"
-make -j6 -C ulib
+diag "-- Rebuilding ulib/ml (to make sure it works) --"
+make -C ulib rebuild
 if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for ulib - make returned $?"
+  echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
   exit 1
 else
-  echo -e "* ${GREEN}PASSED!${NC} for ulib"
+  echo -e "* ${GREEN}PASSED!${NC} for install-fstarlib"
 fi
 
 diag "-- Verify all examples --"
