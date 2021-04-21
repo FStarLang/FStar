@@ -1477,24 +1477,20 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
-  let m1 = Env.norm_eff_name env m1 in
-  let m2 = Env.norm_eff_name env m2 in
-
-  let m1_erasable = Env.is_erasable_effect env m1 in
-  let m2_erasable = Env.is_erasable_effect env m2 in
-
   let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
                                 BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
                                   (string_of_lid m1) (string_of_lid m2) reason) r in
 
-  if m2_erasable     &&
-     not m1_erasable &&
-     not (lid_equals m1 PC.effect_PURE_lid)
-  then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
-  else if m1_erasable &&
-          m2_erasable &&
-          lid_equals m1 PC.effect_GHOST_lid
-  then err "lifts from GHOST to erasable effects are not allowed (F* will use lifts from PURE for these cases)"
+  let m1 = Env.norm_eff_name env m1 in
+  if lid_equals m1 PC.effect_GHOST_lid
+  then err "lifts from GHOST effect are not allowed"
+  else
+    let m1_erasable = Env.is_erasable_effect env m1 in
+    let m2_erasable = Env.is_erasable_effect env m2 in
+    if m2_erasable     &&
+       not m1_erasable &&
+       not (lid_equals m1 PC.effect_PURE_lid)
+    then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
 
 let tc_lift env sub r =
   let check_and_gen env t k =
@@ -1656,25 +1652,26 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
 
 
 let check_polymonadic_bind_for_erasable_effects env m n p r =
-  let m = Env.norm_eff_name env m in
-  let n = Env.norm_eff_name env n in
-  let p = Env.norm_eff_name env p in
-
-  let m_erasable = Env.is_erasable_effect env m in
-  let n_erasable = Env.is_erasable_effect env n in
-  let p_erasable = Env.is_erasable_effect env p in
-
   let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
                                 BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
                                   (string_of_lid m) (string_of_lid n) (string_of_lid p) reason) r in
 
-  if p_erasable &&
-     ((not m_erasable && not (lid_equals m PC.effect_PURE_lid))||
-      (not n_erasable && not (lid_equals n PC.effect_PURE_lid)))
-  then err "p is erasable and one of m or n is neither erasable nor PURE"
-  else if (m_erasable && lid_equals n PC.effect_GHOST_lid) ||
-          (n_erasable && lid_equals m PC.effect_GHOST_lid)
-  then err "one of m or n is erasable, and other is GHOST"
+  let m = Env.norm_eff_name env m in
+  let n = Env.norm_eff_name env n in
+
+  if lid_equals m PC.effect_GHOST_lid ||
+     lid_equals n PC.effect_GHOST_lid
+  then err "polymonadic binds are not allowed for GHOST"
+  else
+    let m_erasable = Env.is_erasable_effect env m in
+    let n_erasable = Env.is_erasable_effect env n in
+    let p_erasable = Env.is_erasable_effect env p in
+
+
+    if p_erasable &&
+       ((not m_erasable && not (lid_equals m PC.effect_PURE_lid))||
+        (not n_erasable && not (lid_equals n PC.effect_PURE_lid)))
+    then err "p is erasable and one of m or n is neither erasable nor PURE"
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
