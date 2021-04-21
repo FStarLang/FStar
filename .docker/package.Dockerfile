@@ -1,8 +1,10 @@
 # This Dockerfile should be run from the root FStar directory
+# It builds and tests a binary package for F*.
 # It is a potential alternative to .scripts/process_build.sh
 
+# Build the package
 ARG ocaml_version=4.12
-FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
+FROM ocaml/opam:ubuntu-ocaml-$ocaml_version AS fstarbuild
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4
@@ -17,21 +19,29 @@ ARG opamthreads=24
 RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' make PACKAGE_DOCS=0 -C FStar -j $opamthreads package_unknown_platform
 
 # Create a separate image to test the package
-# Reinstall deps
+FROM ocaml/opam:ubuntu-ocaml-$ocaml_version AS fstarbin
 
-FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
+# Reinstall deps
 ENV fstar_opam_deps="ocamlfind batteries stdint zarith ppx_deriving_yojson pprint ppxlib ocaml-compiler-libs"
 RUN opam depext $fstar_opam_deps
 RUN opam install $fstar_opam_deps
 
 # Copy the F* binary package
-COPY --from=0 /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/opam/fstar.tar.gz
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/opam/fstar.tar.gz
 RUN tar xzf fstar.tar.gz
-
-# Test the F* binary package
 ENV FSTAR_HOME /home/opam/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
+
+# Test the F* binary package
+
+# Case 1: test the fresh package
+FROM fstarbin
 RUN eval $(opam env) && make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
+RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
+RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+
+# Case 2: rebuild ulib and test again
+FROM fstarbin
 RUN eval $(opam env) && make -C $FSTAR_HOME/ulib rebuild -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/examples/hello -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
