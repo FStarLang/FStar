@@ -3726,7 +3726,7 @@ let typeof_tot_or_gtot_term env e must_tot =
         with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
     in
     if must_tot then
-      let c = N.ghost_to_pure_lcomp env c in
+      let c = N.maybe_ghost_to_pure_lcomp env c in
       if TcComm.is_total_lcomp c
       then t, c.res_typ, g
       else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)

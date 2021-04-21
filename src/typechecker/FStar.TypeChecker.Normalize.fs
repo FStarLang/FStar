@@ -2850,14 +2850,18 @@ let non_info_norm env t =
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
 *)
-let ghost_to_pure env c =
+let maybe_promote_t env non_informative_only t =
+  not non_informative_only || non_info_norm env t
+
+let ghost_to_pure_aux env non_informative_only c =
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) when non_info_norm env t -> {c with n = Total (t, uopt)}
+    | GTotal (t, uopt) ->
+      if maybe_promote_t env non_informative_only t then {c with n = Total (t, uopt)} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l
-        && non_info_norm env ct.result_typ
+        && maybe_promote_t env non_informative_only ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
@@ -2870,16 +2874,20 @@ let ghost_to_pure env c =
         else c
     | _ -> c
 
-let ghost_to_pure_lcomp env (lc:lcomp) =
+let ghost_to_pure_lcomp_aux env non_informative_only (lc:lcomp) =
     if U.is_ghost_effect lc.eff_name
-    && non_info_norm env lc.res_typ
+    && maybe_promote_t env non_informative_only lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
-           { TcComm.apply_lcomp (ghost_to_pure env) (fun g -> g) lc
+           { TcComm.apply_lcomp (ghost_to_pure_aux env non_informative_only) (fun g -> g) lc
              with eff_name = pure_eff }
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
+
+let maybe_ghost_to_pure env c = ghost_to_pure_aux env true c
+let maybe_ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env true lc
+
 
 let term_to_string env t =
   let t =
