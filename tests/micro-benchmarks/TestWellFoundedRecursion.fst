@@ -94,3 +94,30 @@ let rec fmap_stream (#a #b:Type) (f:a -> b) (x:stream a) : stream b =
   | SCons h t ->
     let ft () = fmap_stream f (t ()) in
     SCons (f h) ft
+
+noeq
+type test1 (a:Type) =
+  | Test1: f:(nat -> a) -> test1 a
+
+noeq
+type test2 (a:Type) =
+  | Test2: g:test1 (test2 a) -> test2 a
+
+let wf_test1 (#a:_) (x:test1 a) (y:nat)
+  : Lemma (Test1?.f x y << x)
+  = ()
+
+let rec map_test2 (#a #b:Type) (t:test2 a) (f: a -> b) : test2 b =
+    let Test2 (Test1 g) = t in
+    Test2 (Test1 (fun (x:nat) -> wf_test1 (Test1 g) x; map_test2 #a #b (g x) f))
+
+//////////////////////////////////////////////////////////////////////////////////////////
+module F = FStar.FunctionalExtensionality
+open FStar.FunctionalExtensionality
+noeq
+type tf =
+  | TF: f:(nat ^-> tf) -> tf
+
+let rec test_tf (f:tf) =
+    match f with
+    | TF g -> TF (on_dom nat (fun x -> test_tf (g x)))
