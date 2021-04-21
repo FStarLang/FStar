@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.EncodeTerm
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -34,7 +35,7 @@ open FStar.SMTEncoding.Env
 module BU = FStar.Util
 val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list<term> -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
-val maybe_curry_app : rng:Range.range -> head:BU.either<op,term> -> arity:int -> args:list<term> -> term
+val maybe_curry_app : rng:Range.range -> head:either<op,term> -> arity:int -> args:list<term> -> term
 val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list<term> -> term
 val mkForall_fuel : string -> Range.range -> (list<(list<pat>)> * fvs * term -> term)  //first arg is the module name
 

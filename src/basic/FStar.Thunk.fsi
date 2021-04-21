@@ -17,7 +17,7 @@
 *)
 #light "off"
 module FStar.Thunk
-
+open FStar.Pervasives
 open FStar.Util
 open FStar.ST
 

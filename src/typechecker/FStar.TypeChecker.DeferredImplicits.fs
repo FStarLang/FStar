@@ -120,7 +120,7 @@ let solve_deferred_to_tactic_goals env g =
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
-    let prob_as_implicit (reason, prob)
+    let prob_as_implicit (_, reason, prob)
       : implicit * sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
@@ -134,11 +134,11 @@ let solve_deferred_to_tactic_goals env g =
             if is_flex tp.lhs then tp.lhs
             else tp.rhs
           in
-          env.type_of env_lax t
+          env.typeof_tot_or_gtot_term env_lax t true  //AR: TODO: can we call type_of_well_typed?
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
         in
         let imp =
             { imp_reason = "";
@@ -149,7 +149,9 @@ let solve_deferred_to_tactic_goals env g =
         in
         let sigelt =
             if is_flex tp.lhs
-            then find_user_tac_for_uvar env (flex_uvar_head tp.lhs)
+            then (match find_user_tac_for_uvar env (flex_uvar_head tp.lhs) with
+              | None -> if is_flex tp.rhs then find_user_tac_for_uvar env (flex_uvar_head tp.rhs) else None
+              | v -> v)
             else if is_flex tp.rhs
             then find_user_tac_for_uvar env (flex_uvar_head tp.rhs)
             else None

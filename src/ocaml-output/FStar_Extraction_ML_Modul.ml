@@ -59,7 +59,7 @@ let (always_fail :
           let uu___1 =
             FStar_Syntax_Syntax.lid_as_fv lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
-          FStar_Util.Inr uu___1 in
+          FStar_Pervasives.Inr uu___1 in
         {
           FStar_Syntax_Syntax.lbname = uu___;
           FStar_Syntax_Syntax.lbunivs = [];
@@ -221,12 +221,11 @@ let (extract_metadata :
   FStar_Syntax_Syntax.term Prims.list ->
     FStar_Extraction_ML_Syntax.meta Prims.list)
   = fun metas -> FStar_List.choose extract_meta metas
-let binders_as_mlty_binders :
-  'uuuuu .
-    FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv * 'uuuuu) Prims.list ->
-        (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
-          Prims.list)
+let (binders_as_mlty_binders :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.binder Prims.list ->
+      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
+        Prims.list))
   =
   fun env ->
     fun bs ->
@@ -234,14 +233,16 @@ let binders_as_mlty_binders :
         (fun env1 ->
            fun uu___ ->
              match uu___ with
-             | (bv, uu___1) ->
+             | { FStar_Syntax_Syntax.binder_bv = bv;
+                 FStar_Syntax_Syntax.binder_qual = uu___1;
+                 FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
                  let env2 = FStar_Extraction_ML_UEnv.extend_ty env1 bv false in
                  let name =
-                   let uu___2 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
-                   match uu___2 with
-                   | FStar_Util.Inl ty ->
+                   let uu___3 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
+                   match uu___3 with
+                   | FStar_Pervasives.Inl ty ->
                        ty.FStar_Extraction_ML_UEnv.ty_b_name
-                   | uu___3 -> failwith "Impossible" in
+                   | uu___4 -> failwith "Impossible" in
                  (env2, name)) env bs
 type data_constructor =
   {
@@ -375,21 +376,31 @@ let (bundle_as_inductive_families :
                                                                     uu___8)
                                                                     with
                                                                     | 
-                                                                    ((b',
-                                                                    uu___9),
-                                                                    (b,
-                                                                    uu___10))
+                                                                    ({
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    = b';
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___9;
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___10;_},
+                                                                    {
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    = b;
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___11;
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___12;_})
                                                                     ->
-                                                                    let uu___11
+                                                                    let uu___13
                                                                     =
-                                                                    let uu___12
+                                                                    let uu___14
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     b in
                                                                     (b',
-                                                                    uu___12) in
+                                                                    uu___14) in
                                                                     FStar_Syntax_Syntax.NT
-                                                                    uu___11)
+                                                                    uu___13)
                                                                 bs_params bs1 in
                                                             let t5 =
                                                               let uu___7 =
@@ -448,8 +459,8 @@ type iface =
       Prims.list
     ;
   iface_tydefs:
-    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration) FStar_Util.either
-      Prims.list
+    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration)
+      FStar_Pervasives.either Prims.list
     ;
   iface_type_names:
     (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_Syntax.mlpath) Prims.list }
@@ -470,8 +481,8 @@ let (__proj__Mkiface__item__iface_bindings :
         -> iface_bindings
 let (__proj__Mkiface__item__iface_tydefs :
   iface ->
-    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration) FStar_Util.either
-      Prims.list)
+    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration)
+      FStar_Pervasives.either Prims.list)
   =
   fun projectee ->
     match projectee with
@@ -507,7 +518,8 @@ let (iface_of_bindings :
 let (iface_of_tydefs : FStar_Extraction_ML_UEnv.tydef Prims.list -> iface) =
   fun tds ->
     let uu___ = empty_iface in
-    let uu___1 = FStar_List.map (fun uu___2 -> FStar_Util.Inl uu___2) tds in
+    let uu___1 =
+      FStar_List.map (fun uu___2 -> FStar_Pervasives.Inl uu___2) tds in
     let uu___2 =
       FStar_List.map
         (fun td ->
@@ -593,13 +605,13 @@ let print_tydef :
   'uuuuu 'uuuuu1 .
     FStar_Extraction_ML_Syntax.mlpath ->
       (FStar_Extraction_ML_UEnv.tydef, (Prims.string * 'uuuuu * 'uuuuu1))
-        FStar_Util.either -> Prims.string
+        FStar_Pervasives.either -> Prims.string
   =
   fun cm ->
     fun tydef ->
       let uu___ =
         match tydef with
-        | FStar_Util.Inl tydef1 ->
+        | FStar_Pervasives.Inl tydef1 ->
             let uu___1 =
               let uu___2 = FStar_Extraction_ML_UEnv.tydef_fv tydef1 in
               FStar_Syntax_Print.fv_to_string uu___2 in
@@ -607,7 +619,7 @@ let print_tydef :
               let uu___3 = FStar_Extraction_ML_UEnv.tydef_def tydef1 in
               tscheme_to_string cm uu___3 in
             (uu___1, uu___2)
-        | FStar_Util.Inr (p, uu___1, uu___2) -> (p, "None") in
+        | FStar_Pervasives.Inr (p, uu___1, uu___2) -> (p, "None") in
       match uu___ with
       | (name, defn) -> FStar_Util.format2 "(%s, %s)" name defn
 let (iface_to_string : iface -> Prims.string) =
@@ -985,7 +997,8 @@ let (extract_type_declaration :
                              FStar_Syntax_Syntax.t_unit
                              FStar_Pervasives_Native.None in
                          {
-                           FStar_Syntax_Syntax.lbname = (FStar_Util.Inr fv);
+                           FStar_Syntax_Syntax.lbname =
+                             (FStar_Pervasives.Inr fv);
                            FStar_Syntax_Syntax.lbunivs = univs;
                            FStar_Syntax_Syntax.lbtyp = t;
                            FStar_Syntax_Syntax.lbeff =
@@ -1011,7 +1024,7 @@ let (extract_type_declaration :
                                     (uu___5.iface_module_name);
                                   iface_bindings = (uu___5.iface_bindings);
                                   iface_tydefs =
-                                    [FStar_Util.Inr
+                                    [FStar_Pervasives.Inr
                                        ((FStar_Pervasives_Native.snd mlp),
                                          meta, (FStar_List.length bs))];
                                   iface_type_names =
@@ -1107,7 +1120,7 @@ let (extract_reifiable_effect :
                (FStar_Pervasives_Native.Some
                   ((a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos))
                FStar_Syntax_Syntax.tun in
-           FStar_Util.Inl uu___2 in
+           FStar_Pervasives.Inl uu___2 in
          let lb =
            FStar_Syntax_Syntax.mk_lb
              (lbname, (a.FStar_Syntax_Syntax.action_univs),
@@ -1537,7 +1550,7 @@ let (extract_iface :
                    FStar_List.map
                      (fun uu___2 ->
                         match uu___2 with
-                        | FStar_Util.Inl td ->
+                        | FStar_Pervasives.Inl td ->
                             let uu___3 =
                               let uu___4 =
                                 FStar_Extraction_ML_UEnv.tydef_mlpath td in
@@ -1547,10 +1560,11 @@ let (extract_iface :
                             let uu___5 =
                               let uu___6 =
                                 FStar_Extraction_ML_UEnv.tydef_def td in
-                              FStar_Util.Inl uu___6 in
+                              FStar_Pervasives.Inl uu___6 in
                             (uu___3, uu___4, uu___5)
-                        | FStar_Util.Inr (p, m, n) ->
-                            (p, m, (FStar_Util.Inr n))) iface1.iface_tydefs in
+                        | FStar_Pervasives.Inr (p, m, n) ->
+                            (p, m, (FStar_Pervasives.Inr n)))
+                     iface1.iface_tydefs in
                  let uu___2 =
                    FStar_Extraction_ML_UEnv.extend_with_module_name g1
                      modul.FStar_Syntax_Syntax.name in
@@ -1600,10 +1614,14 @@ let (extract_bundle :
               FStar_List.map
                 (fun uu___2 ->
                    match uu___2 with
-                   | ({ FStar_Syntax_Syntax.ppname = ppname;
-                        FStar_Syntax_Syntax.index = uu___3;
-                        FStar_Syntax_Syntax.sort = uu___4;_},
-                      uu___5) -> FStar_Ident.string_of_id ppname) bs
+                   | {
+                       FStar_Syntax_Syntax.binder_bv =
+                         { FStar_Syntax_Syntax.ppname = ppname;
+                           FStar_Syntax_Syntax.index = uu___3;
+                           FStar_Syntax_Syntax.sort = uu___4;_};
+                       FStar_Syntax_Syntax.binder_qual = uu___5;
+                       FStar_Syntax_Syntax.binder_attrs = uu___6;_} ->
+                       FStar_Ident.string_of_id ppname) bs
           | uu___1 -> [] in
         let tys = (ml_tyvars, mlt) in
         let fvv =

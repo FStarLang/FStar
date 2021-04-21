@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Errors
+open FStar.Pervasives
 open FStar.String
 open FStar.ST
 open FStar.Exn

@@ -7,7 +7,6 @@ WP from intensional information about the operations in the tree. *)
 
 open Common
 open FStar.Calc
-module WF = FStar.WellFounded
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
@@ -69,9 +68,9 @@ let rec interp_as_wp #a (t : Alg.tree a [Read;Write]) : st_wp a =
   match t with
   | Return x -> return_wp x
   | Op Read _ k ->
-    bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
+    bind_wp read_wp (fun s -> interp_as_wp (k s))
   | Op Write s k ->
-    bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
+    bind_wp (write_wp s) (fun (o:unit) -> interp_as_wp (k o))
 
 (* With handlers. Can only be done into []? See the use of `run`. *)
 let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
@@ -109,14 +108,12 @@ let rec interp_monotonic #a #l (c:rwtree a l) : Lemma (wp_is_monotonic (interp_a
   | Return x -> ()
   | Op Read _ k ->
     let aux (x:state) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic #_ #l (k x)
     in
     Classical.forall_intro aux;
     bind_preserves_mon read_wp (fun x -> interp_as_wp (k x))
   | Op Write s k ->
     let aux (x:unit) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic #_ #l (k x)
     in
     Classical.forall_intro aux;
@@ -139,7 +136,6 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
     | Op Read _ k ->
       let aux (o:state) : Lemma (interp_as_wp (k o) s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind #_ #_ #l1 #l2 (k o) f) s0 p) =
-        WF.axiom1 k o;
         interp_morph #_ #_ #l1 #l2 (k o) f p s0
       in
       Classical.forall_intro aux
@@ -147,7 +143,6 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
     | Op Write s k ->
       let aux (o:unit) : Lemma (interp_as_wp (k o) s (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind #_ #_ #l1 #l2 (k o) f) s p) =
-        WF.axiom1 k o;
         interp_morph #_ #_ #l1 #l2 (k o) f p s
       in
       Classical.forall_intro aux
@@ -273,10 +268,8 @@ let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
-      WF.axiom1 k s0;
       interp_sem (k s0) s0
     | Op Write i k ->
-      WF.axiom1 k ();
       interp_sem (k ()) i
 
 let quotient_ro #a (w : st_wp a) : st_wp a =
@@ -295,7 +288,6 @@ let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
-      WF.axiom1 k s0;
       interp_ro (k s0) s0
 
 let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
@@ -347,7 +339,6 @@ let rec ro_tree_wp #a (t : tree a [Read])
     | Return x -> ()
     | Op Read i k ->
       let aux (x:state) : Lemma (is_ro (interp_as_wp (k x))) =
-        WF.axiom1 k x;
         ro_tree_wp (k x)
       in
       Classical.forall_intro aux;
@@ -387,7 +378,6 @@ let rec null_ro_tree_wp #a (t : tree a [Read])
     | Return x -> ()
     | Op Read i k ->
       let aux (x:state) : Lemma (null_ro `stronger` interp_as_wp (k x)) =
-        WF.axiom1 k x;
         null_ro_tree_wp (k x)
       in
       Classical.forall_intro aux;

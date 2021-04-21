@@ -26,6 +26,7 @@ open System.Security.Cryptography
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Json
 open System.Text.RegularExpressions
+open FStar.Pervasives
 
 let return_all x = x
 
@@ -512,10 +513,6 @@ let stderr: out_channel = stderr
 let stdout: out_channel = stdout
 
 let fprint f s args = Printf.fprintf f "%s" (format s args)
-
-type either<'a,'b> =
-  | Inl of 'a
-  | Inr of 'b
 
 let is_left = function
   | Inl _ -> true

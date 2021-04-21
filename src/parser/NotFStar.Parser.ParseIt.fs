@@ -17,6 +17,7 @@
 #light "off"
 module FStar.Parser.ParseIt
 open FStar
+open FStar.Pervasives
 open FStar.Util
 open FStar.Errors
 

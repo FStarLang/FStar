@@ -208,14 +208,12 @@ let (goal_of_implicit :
              (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
            FStar_TypeChecker_Env.tc_term =
              (uu___1.FStar_TypeChecker_Env.tc_term);
-           FStar_TypeChecker_Env.type_of =
-             (uu___1.FStar_TypeChecker_Env.type_of);
-           FStar_TypeChecker_Env.type_of_well_typed =
-             (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
+           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
+             (uu___1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
            FStar_TypeChecker_Env.universe_of =
              (uu___1.FStar_TypeChecker_Env.universe_of);
-           FStar_TypeChecker_Env.check_type_of =
-             (uu___1.FStar_TypeChecker_Env.check_type_of);
+           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
+             (uu___1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -252,41 +250,46 @@ let (goal_of_implicit :
              (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
          }) i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
-let rename_binders :
-  'uuuuu .
-    FStar_Syntax_Syntax.subst_elt Prims.list ->
-      (FStar_Syntax_Syntax.bv * 'uuuuu) Prims.list ->
-        (FStar_Syntax_Syntax.bv * 'uuuuu) Prims.list
+let (rename_binders :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.binder Prims.list ->
+      FStar_Syntax_Syntax.binder Prims.list)
   =
   fun subst ->
     fun bs ->
       FStar_All.pipe_right bs
         (FStar_List.map
            (fun uu___ ->
-              match uu___ with
-              | (x, imp) ->
-                  let y =
-                    let uu___1 = FStar_Syntax_Syntax.bv_to_name x in
-                    FStar_Syntax_Subst.subst subst uu___1 in
-                  let uu___1 =
-                    let uu___2 = FStar_Syntax_Subst.compress y in
-                    uu___2.FStar_Syntax_Syntax.n in
-                  (match uu___1 with
-                   | FStar_Syntax_Syntax.Tm_name y1 ->
-                       let uu___2 =
-                         let uu___3 = y1 in
-                         let uu___4 =
-                           FStar_Syntax_Subst.subst subst
-                             x.FStar_Syntax_Syntax.sort in
-                         {
-                           FStar_Syntax_Syntax.ppname =
-                             (uu___3.FStar_Syntax_Syntax.ppname);
-                           FStar_Syntax_Syntax.index =
-                             (uu___3.FStar_Syntax_Syntax.index);
-                           FStar_Syntax_Syntax.sort = uu___4
-                         } in
-                       (uu___2, imp)
-                   | uu___2 -> failwith "Not a renaming")))
+              let x = uu___.FStar_Syntax_Syntax.binder_bv in
+              let y =
+                let uu___1 = FStar_Syntax_Syntax.bv_to_name x in
+                FStar_Syntax_Subst.subst subst uu___1 in
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Subst.compress y in
+                uu___2.FStar_Syntax_Syntax.n in
+              match uu___1 with
+              | FStar_Syntax_Syntax.Tm_name y1 ->
+                  let uu___2 = uu___ in
+                  let uu___3 =
+                    let uu___4 = uu___.FStar_Syntax_Syntax.binder_bv in
+                    let uu___5 =
+                      FStar_Syntax_Subst.subst subst
+                        x.FStar_Syntax_Syntax.sort in
+                    {
+                      FStar_Syntax_Syntax.ppname =
+                        (uu___4.FStar_Syntax_Syntax.ppname);
+                      FStar_Syntax_Syntax.index =
+                        (uu___4.FStar_Syntax_Syntax.index);
+                      FStar_Syntax_Syntax.sort = uu___5
+                    } in
+                  {
+                    FStar_Syntax_Syntax.binder_bv = uu___3;
+                    FStar_Syntax_Syntax.binder_qual =
+                      (uu___2.FStar_Syntax_Syntax.binder_qual);
+                    FStar_Syntax_Syntax.binder_attrs =
+                      (uu___2.FStar_Syntax_Syntax.binder_attrs)
+                  }
+              | uu___2 -> failwith "Not a renaming"))
 let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
   fun subst ->
     fun goal1 ->

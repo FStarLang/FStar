@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Syntax.DsEnv
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -784,13 +785,13 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                 (* Ignore parameters, we don't create projectors for them *)
                 let _params, formals = BU.first_N n all_formals in
                 let is_rec = is_record typename_quals in
-                let formals' = formals |> List.collect (fun (x,q) ->
-                        if S.is_null_bv x
-                        || (is_rec && S.is_implicit q)
+                let formals' = formals |> List.collect (fun f ->
+                        if S.is_null_bv f.binder_bv
+                        || (is_rec && S.is_implicit f.binder_qual)
                         then []
-                        else [(x,q)] )
+                        else [f] )
                 in
-                let fields' = formals' |> List.map (fun (x,q) -> (x.ppname, x.sort))
+                let fields' = formals' |> List.map (fun f -> (f.binder_bv.ppname, f.binder_bv.sort))
                 in
                 let fields = fields'
                 in

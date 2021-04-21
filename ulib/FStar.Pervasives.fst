@@ -72,6 +72,8 @@ let erasable = ()
 
 let allow_informative_binders = ()
 
+let ite_soundness_forall = ()
+
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
@@ -98,6 +100,7 @@ type norm_step =
   // idem
   | UnfoldFully : list string -> norm_step
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
+  | UnfoldQual : list string -> norm_step
 
 let simplify = Simpl
 
@@ -124,6 +127,8 @@ let delta_only s = UnfoldOnly s
 let delta_fully s = UnfoldFully s
 
 let delta_attr s = UnfoldAttr s
+
+let delta_qualifier s = UnfoldAttr s
 
 let norm _ #_ x = x
 

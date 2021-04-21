@@ -124,7 +124,57 @@ let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee -> match projectee with | NonTrivial _0 -> _0
-type deferred = (Prims.string * prob) Prims.list
+type deferred_reason =
+  | Deferred_univ_constraint 
+  | Deferred_occur_check_failed 
+  | Deferred_first_order_heuristic_failed 
+  | Deferred_flex 
+  | Deferred_free_names_check_failed 
+  | Deferred_not_a_pattern 
+  | Deferred_flex_flex_nonpattern 
+  | Deferred_delay_match_heuristic 
+  | Deferred_to_user_tac 
+let (uu___is_Deferred_univ_constraint : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_univ_constraint -> true | uu___ -> false
+let (uu___is_Deferred_occur_check_failed : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_occur_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_first_order_heuristic_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_first_order_heuristic_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_flex : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_flex -> true | uu___ -> false
+let (uu___is_Deferred_free_names_check_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_free_names_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_not_a_pattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
+let (uu___is_Deferred_flex_flex_nonpattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_flex_flex_nonpattern -> true
+    | uu___ -> false
+let (uu___is_Deferred_delay_match_heuristic : deferred_reason -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Deferred_delay_match_heuristic -> true
+    | uu___ -> false
+let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_to_user_tac -> true | uu___ -> false
+type deferred = (deferred_reason * Prims.string * prob) Prims.list
 type univ_ineq =
   (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 let (mk_by_tactic :
@@ -180,12 +230,12 @@ let rec (decr_delta_depth :
 type identifier_info =
   {
   identifier:
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Util.either ;
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
   identifier_range: FStar_Range.range }
 let (__proj__Mkidentifier_info__item__identifier :
   identifier_info ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Util.either)
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
   =
   fun projectee ->
     match projectee with
@@ -259,6 +309,15 @@ let (__proj__Mkid_info_table__item__id_info_buffer :
 let (id_info_table_empty : id_info_table) =
   let uu___ = FStar_Util.psmap_empty () in
   { id_info_enabled = false; id_info_db = uu___; id_info_buffer = [] }
+let (print_identifier_info : identifier_info -> Prims.string) =
+  fun info ->
+    let uu___ = FStar_Range.string_of_range info.identifier_range in
+    let uu___1 =
+      match info.identifier with
+      | FStar_Pervasives.Inl x -> FStar_Syntax_Print.bv_to_string x
+      | FStar_Pervasives.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
+    let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
+    FStar_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
     (Prims.int * identifier_info) Prims.list FStar_Util.pimap
@@ -274,12 +333,15 @@ let (id_info__insert :
         let use_range =
           let uu___ = FStar_Range.use_range range in
           FStar_Range.set_def_range range uu___ in
+        let id_ty =
+          match info.identifier with
+          | FStar_Pervasives.Inr uu___ -> info.identifier_ty
+          | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
         let info1 =
           let uu___ = info in
-          let uu___1 = ty_map info.identifier_ty in
           {
             identifier = (uu___.identifier);
-            identifier_ty = uu___1;
+            identifier_ty = id_ty;
             identifier_range = use_range
           } in
         let fn = FStar_Range.file_of_range use_range in
@@ -299,8 +361,8 @@ let (id_info__insert :
             FStar_All.pipe_right uu___1 (FStar_Util.psmap_add db fn)
 let (id_info_insert :
   id_info_table ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Util.either ->
-      FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table)
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either
+      -> FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table)
   =
   fun table ->
     fun id ->
@@ -324,7 +386,7 @@ let (id_info_insert_bv :
         if table.id_info_enabled
         then
           let uu___ = FStar_Syntax_Syntax.range_of_bv bv in
-          id_info_insert table (FStar_Util.Inl bv) ty uu___
+          id_info_insert table (FStar_Pervasives.Inl bv) ty uu___
         else table
 let (id_info_insert_fv :
   id_info_table ->
@@ -336,7 +398,7 @@ let (id_info_insert_fv :
         if table.id_info_enabled
         then
           let uu___ = FStar_Syntax_Syntax.range_of_fv fv in
-          id_info_insert table (FStar_Util.Inr fv) ty uu___
+          id_info_insert table (FStar_Pervasives.Inr fv) ty uu___
         else table
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table ->
@@ -440,11 +502,13 @@ let (check_uvar_ctx_invariant :
                   uu___3::uu___4) ->
                    let uu___5 = FStar_Util.prefix bs in
                    (match uu___5 with
-                    | (uu___6, (x, uu___7)) ->
+                    | (uu___6, x) ->
                         (match hd with
                          | FStar_Syntax_Syntax.Binding_var x' when
-                             FStar_Syntax_Syntax.bv_eq x x' -> ()
-                         | uu___8 -> fail ()))
+                             FStar_Syntax_Syntax.bv_eq
+                               x.FStar_Syntax_Syntax.binder_bv x'
+                             -> ()
+                         | uu___7 -> fail ()))
                | uu___2 -> fail ())
 type implicit =
   {
@@ -595,7 +659,7 @@ type lcomp =
   cflags: FStar_Syntax_Syntax.cflag Prims.list ;
   comp_thunk:
     (unit -> (FStar_Syntax_Syntax.comp * guard_t), FStar_Syntax_Syntax.comp)
-      FStar_Util.either FStar_ST.ref
+      FStar_Pervasives.either FStar_ST.ref
     }
 let (__proj__Mklcomp__item__eff_name : lcomp -> FStar_Ident.lident) =
   fun projectee ->
@@ -613,7 +677,7 @@ let (__proj__Mklcomp__item__cflags :
 let (__proj__Mklcomp__item__comp_thunk :
   lcomp ->
     (unit -> (FStar_Syntax_Syntax.comp * guard_t), FStar_Syntax_Syntax.comp)
-      FStar_Util.either FStar_ST.ref)
+      FStar_Pervasives.either FStar_ST.ref)
   =
   fun projectee ->
     match projectee with
@@ -628,19 +692,19 @@ let (mk_lcomp :
     fun res_typ ->
       fun cflags ->
         fun comp_thunk ->
-          let uu___ = FStar_Util.mk_ref (FStar_Util.Inl comp_thunk) in
+          let uu___ = FStar_Util.mk_ref (FStar_Pervasives.Inl comp_thunk) in
           { eff_name; res_typ; cflags; comp_thunk = uu___ }
 let (lcomp_comp : lcomp -> (FStar_Syntax_Syntax.comp * guard_t)) =
   fun lc ->
     let uu___ = FStar_ST.op_Bang lc.comp_thunk in
     match uu___ with
-    | FStar_Util.Inl thunk ->
+    | FStar_Pervasives.Inl thunk ->
         let uu___1 = thunk () in
         (match uu___1 with
          | (c, g) ->
-             (FStar_ST.op_Colon_Equals lc.comp_thunk (FStar_Util.Inr c);
+             (FStar_ST.op_Colon_Equals lc.comp_thunk (FStar_Pervasives.Inr c);
               (c, g)))
-    | FStar_Util.Inr c -> (c, trivial_guard)
+    | FStar_Pervasives.Inr c -> (c, trivial_guard)
 let (apply_lcomp :
   (FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp) ->
     (guard_t -> guard_t) -> lcomp -> lcomp)
@@ -809,15 +873,16 @@ let (simplify :
         | uu___1 -> FStar_Pervasives_Native.None in
       let rec args_are_binders args bs =
         match (args, bs) with
-        | ((t, uu___)::args1, (bv, uu___1)::bs1) ->
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Subst.compress t in
-              uu___3.FStar_Syntax_Syntax.n in
-            (match uu___2 with
+        | ((t, uu___)::args1, b::bs1) ->
+            let uu___1 =
+              let uu___2 = FStar_Syntax_Subst.compress t in
+              uu___2.FStar_Syntax_Syntax.n in
+            (match uu___1 with
              | FStar_Syntax_Syntax.Tm_name bv' ->
-                 (FStar_Syntax_Syntax.bv_eq bv bv') &&
-                   (args_are_binders args1 bs1)
-             | uu___3 -> false)
+                 (FStar_Syntax_Syntax.bv_eq b.FStar_Syntax_Syntax.binder_bv
+                    bv')
+                   && (args_are_binders args1 bs1)
+             | uu___2 -> false)
         | ([], []) -> true
         | (uu___, uu___1) -> false in
       let is_applied bs t =
@@ -868,25 +933,25 @@ let (simplify :
           let uu___1 = FStar_Syntax_Subst.compress phi in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
-        | FStar_Syntax_Syntax.Tm_match (uu___1, br::brs) ->
-            let uu___2 = br in
-            (match uu___2 with
-             | (uu___3, uu___4, e) ->
+        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, br::brs) ->
+            let uu___3 = br in
+            (match uu___3 with
+             | (uu___4, uu___5, e) ->
                  let r =
-                   let uu___5 = simp_t e in
-                   match uu___5 with
+                   let uu___6 = simp_t e in
+                   match uu___6 with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
                    | FStar_Pervasives_Native.Some b ->
-                       let uu___6 =
+                       let uu___7 =
                          FStar_List.for_all
-                           (fun uu___7 ->
-                              match uu___7 with
-                              | (uu___8, uu___9, e') ->
-                                  let uu___10 = simp_t e' in
-                                  uu___10 = (FStar_Pervasives_Native.Some b))
+                           (fun uu___8 ->
+                              match uu___8 with
+                              | (uu___9, uu___10, e') ->
+                                  let uu___11 = simp_t e' in
+                                  uu___11 = (FStar_Pervasives_Native.Some b))
                            brs in
-                       if uu___6
+                       if uu___7
                        then FStar_Pervasives_Native.Some b
                        else FStar_Pervasives_Native.None in
                  r)

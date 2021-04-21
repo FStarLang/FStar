@@ -62,31 +62,36 @@ let report_errors fmods =
 
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
+    let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
     let ml_module_name m = FStar.Extraction.ML.Util.ml_module_name_of_lid m in
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file (cmxs |> Options.prepend_output_dir) with
+        match FStar.Options.find_file cmxs with
         | Some f -> f
         | None ->
-        match FStar.Options.find_file (ml_file m |> Options.prepend_output_dir) with
-        | None ->
-            E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                         Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
-        | Some ml ->
-            let dir = Util.dirname ml in
-            FStar.Tactics.Load.compile_modules dir [ml_module_name m];
-            begin match FStar.Options.find_file cmxs with
+          if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
+          then E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                            Util.format1 "Could not find %s to load" cmxs)
+          else  //else try to find and compile the ml file
+            match FStar.Options.find_file (ml_file m) with
             | None ->
-                E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                         Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
-            | Some f -> f
-            end
+              E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                           Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+            | Some ml ->
+              let dir = Util.dirname ml in
+              FStar.Tactics.Load.compile_modules dir [ml_module_name m];
+              begin match FStar.Options.find_file cmxs with
+                | None ->
+                  E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                               Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
+                | Some f -> f
+              end
     in
-    let cmxs_files = modules_to_load |> List.map cmxs_file in
+    let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     if Options.debug_any () then
       Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
-    if not (Options.no_load_fstartaclib ()) && not (FStar.Platform.system = FStar.Platform.Windows) then
+    if not (Options.no_load_fstartaclib ()) then
         Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;

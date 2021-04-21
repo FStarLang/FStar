@@ -15,7 +15,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f4cb837d3aef59c7c83ec5145befc405"
+      "e61b99767d8799fbc7cb7cb494097c87"
     ],
     [
       "Problem01.prefix",
@@ -31,7 +31,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ddc84dcddaac0a1eef6601431772a89d"
+      "d37cf730efb10ded54af4029d8519f28"
     ],
     [
       "Problem01.prefix",
@@ -66,7 +66,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "146e5435a183e27bd5e0bc096cc8d373"
+      "82b93d640db3d10199fa8f66669ba580"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e67e19dfd99b9f664fcbf9da37915135"
+      "2bd794a40e248a2e144e5b90890c28c2"
     ],
     [
       "Problem01.test_prefix",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "1147fee2fd8d0e7b2aa7e52862658def"
+      "afce5d25b2bcab4c520251eaf06a53ae"
     ],
     [
       "Problem01.test_prefix",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "a5e712ba5ea0f88e4df889b0de817517"
+      "2c07ad26294f2487e40e7088cfd6b4e7"
     ],
     [
       "Problem01.test_prefix",
@@ -136,15 +136,15 @@
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_066ec34605b99f46d413e3ab3b1e988e",
-        "refinement_interpretation_Tm_refine_335af5c3a02c136fd065fd0818074cd6",
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_bb7758cc8dcd21cd4832291c7528fcaa",
         "refinement_interpretation_Tm_refine_f7dce0fb4d4620c1462f9a7589022c50",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "27420612c28573a84709a9d8c5ea5fdb"
+      "4a934709f331f41651d3033b66699683"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -156,7 +156,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "94a56f78d9edcb9f1ca8c7b48b34a96f"
+      "68d7f4afeca88cd2014870408a62587b"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -195,31 +195,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "61f0a451a20b3011558f67ba6c4b2746"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "a01d15925c46d192d896519527d15bbc"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "caaee09cb4bb0597328a18b428ca0a74"
+      "832dd59092cb8169ff25eae370d3ee75"
     ],
     [
       "Problem01.test_prefix_iff",
@@ -241,7 +217,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "98a4272fe518c6d75f3a9b710836386b"
+      "01e505e7ff7fa1801f725361466ed817"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -277,7 +253,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "9aaa890d8ee063aa2bd12d97f57af45d"
+      "0b9f0a6f15d16d6e5b0b4329819a9409"
     ]
   ]
 ]

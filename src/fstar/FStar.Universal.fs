@@ -17,6 +17,7 @@
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -119,10 +120,9 @@ let init_env deps : TcEnv.env =
       TcEnv.initial_env
         deps
         TcTerm.tc_term
-        TcTerm.type_of_tot_term
-        TcTerm.type_of_well_typed_term
+        TcTerm.typeof_tot_or_gtot_term
+        TcTerm.typeof_tot_or_gtot_term_fastpath
         TcTerm.universe_of
-        TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
         (NBE.normalize

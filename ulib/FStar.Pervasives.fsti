@@ -702,6 +702,17 @@ val erasable : unit
     the code should not be extracted *)
 val allow_informative_binders : unit
 
+(** Use this attribute for subcomp binders of a layered effect that are irrelevant
+    for the proof of soundness of the if_then_else combinator
+
+    Put another way, these binders may be unconstrained in subcomp
+    (e.g. instantiated using a tactic), and this attribute says that to
+    prove the soundness of if_then_else, use fresh names for these binders
+
+    See examples/layeredeffects/IteSoundness.fst *)
+val ite_soundness_forall : unit
+
+
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 
@@ -849,6 +860,25 @@ val delta_fully (s: list string) : Tot norm_step
 
   *)
 val delta_attr (s: list string) : Tot norm_step
+
+(**
+    For example, given:
+
+      {[
+        unfold
+        let f0 = 0
+
+        inline_for_extraction
+        let f1 = f0 + 1
+
+      ]}
+
+   {[norm [delta_qualifier ["unfold"; "inline_for_extraction"]] f1]}
+
+   will reduce to [0 + 1].
+
+  *)
+val delta_qualifier (s: list string) : Tot norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)

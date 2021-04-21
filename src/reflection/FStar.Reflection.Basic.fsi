@@ -57,8 +57,8 @@ val pack_sigelt    : sigelt_view -> sigelt
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * aqualv
-val pack_binder    : bv -> aqualv -> binder
+val inspect_binder : binder -> bv * (aqualv * list<term>)
+val pack_binder    : bv -> aqualv -> list<term> -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual

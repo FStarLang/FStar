@@ -95,7 +95,7 @@ val index_of: string -> char -> Tot int
 /// `sub s i len`
 ///     Second argument is a length, not an index.
 ///     Returns a substring of length `len` beginning at `i`
-val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot string
+val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot (r: string {length r = l})
 
 /// `collect f s`: maps `f` over each character of `s`
 ///  from left to right, appending and flattening the result

@@ -13,7 +13,7 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 
-$(CACHE_DIR)/Coercions1Phase.fst.checked: OTHERFLAGS += --use_two_phase_tc false
+$(CACHE_DIR)/Coercions1Phase.fst.checked: OTHERFLAGS +=
 $(CACHE_DIR)/Coercions1Phase.fst.checked: Coercions1Phase.fst
 
 Coercions1Phase.fst: Coercions.fst

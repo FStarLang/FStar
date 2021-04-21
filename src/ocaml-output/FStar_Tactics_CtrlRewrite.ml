@@ -1,4 +1,7 @@
 open Prims
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Range.range) =
+  fun g ->
+    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
@@ -96,15 +99,14 @@ let (__do_rewrite :
                                       (uu___4.FStar_TypeChecker_Env.uvar_subtyping);
                                     FStar_TypeChecker_Env.tc_term =
                                       (uu___4.FStar_TypeChecker_Env.tc_term);
-                                    FStar_TypeChecker_Env.type_of =
-                                      (uu___4.FStar_TypeChecker_Env.type_of);
-                                    FStar_TypeChecker_Env.type_of_well_typed
+                                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term
                                       =
-                                      (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
+                                      (uu___4.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
                                     FStar_TypeChecker_Env.universe_of =
                                       (uu___4.FStar_TypeChecker_Env.universe_of);
-                                    FStar_TypeChecker_Env.check_type_of =
-                                      (uu___4.FStar_TypeChecker_Env.check_type_of);
+                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
                                     FStar_TypeChecker_Env.use_bv_sorts =
                                       (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
                                     FStar_TypeChecker_Env.qtbl_name_and_index
@@ -167,7 +169,8 @@ let (__do_rewrite :
                  else
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let uu___4 =
-                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ in
+                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
+                        (rangeof g0) in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with
@@ -230,10 +233,10 @@ let (do_rewrite :
           FStar_Tactics_Monad.bind uu___
             (fun uu___1 ->
                match uu___1 with
-               | FStar_Util.Inl (FStar_Tactics_Common.TacticFailure "SKIP")
-                   -> FStar_Tactics_Monad.ret tm
-               | FStar_Util.Inl e -> FStar_Tactics_Monad.traise e
-               | FStar_Util.Inr tm' -> FStar_Tactics_Monad.ret tm')
+               | FStar_Pervasives.Inl (FStar_Tactics_Common.TacticFailure
+                   "SKIP") -> FStar_Tactics_Monad.ret tm
+               | FStar_Pervasives.Inl e -> FStar_Tactics_Monad.traise e
+               | FStar_Pervasives.Inr tm' -> FStar_Tactics_Monad.ret tm')
 type 'a ctac =
   'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 let seq_ctac : 'a . 'a ctac -> 'a ctac -> 'a ctac =
@@ -428,7 +431,7 @@ and (on_subterms :
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue)
-                | FStar_Syntax_Syntax.Tm_match (hd, brs) ->
+                | FStar_Syntax_Syntax.Tm_match (hd, asc_opt, brs) ->
                     let c_branch br =
                       let uu___1 = FStar_Syntax_Subst.open_branch br in
                       match uu___1 with
@@ -455,11 +458,11 @@ and (on_subterms :
                          match uu___2 with
                          | ((hd1, brs1), flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_match (hd1, brs1)),
-                                 flag))
+                               ((FStar_Syntax_Syntax.Tm_match
+                                   (hd1, asc_opt, brs1)), flag))
                 | FStar_Syntax_Syntax.Tm_let
                     ((false,
-                      { FStar_Syntax_Syntax.lbname = FStar_Util.Inl bv;
+                      { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl bv;
                         FStar_Syntax_Syntax.lbunivs = uu___1;
                         FStar_Syntax_Syntax.lbtyp = uu___2;
                         FStar_Syntax_Syntax.lbeff = uu___3;
