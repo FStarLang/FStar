@@ -122,7 +122,7 @@ let effect_as_etag =
     let l = delta_norm_eff g l in
     if lid_equals l PC.effect_PURE_lid
     then E_PURE
-    else if TcUtil.is_erasable_effect (tcenv_of_uenv g) l
+    else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
     then E_GHOST
     else
          // Reifiable effects should be pure. Added guard because some effect declarations

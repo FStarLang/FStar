@@ -9302,7 +9302,7 @@ and (check_inner_let :
                    is_inline_let &&
                      (let uu___4 =
                         pure_or_ghost ||
-                          (FStar_TypeChecker_Util.is_erasable_effect env2
+                          (FStar_TypeChecker_Env.is_erasable_effect env2
                              c1.FStar_TypeChecker_Common.eff_name) in
                       Prims.op_Negation uu___4) in
                  if uu___3
@@ -9383,12 +9383,12 @@ and (check_inner_let :
                                       (FStar_Syntax_Util.is_unit
                                          c1.FStar_TypeChecker_Common.res_typ))
                                      ||
-                                     ((FStar_TypeChecker_Util.is_erasable_effect
+                                     ((FStar_TypeChecker_Env.is_erasable_effect
                                          env2
                                          c1.FStar_TypeChecker_Common.eff_name)
                                         &&
                                         (let uu___5 =
-                                           FStar_TypeChecker_Util.is_erasable_effect
+                                           FStar_TypeChecker_Env.is_erasable_effect
                                              env2
                                              cres.FStar_TypeChecker_Common.eff_name in
                                          Prims.op_Negation uu___5))) in

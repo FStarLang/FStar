@@ -4173,6 +4173,18 @@ let (reify_comp :
          | FStar_Pervasives_Native.None ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
+let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
+  fun env1 ->
+    fun l ->
+      let uu___ = FStar_All.pipe_right l (norm_eff_name env1) in
+      FStar_All.pipe_right uu___
+        (fun l1 ->
+           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
+             (let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv l1
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                  FStar_Pervasives_Native.None in
+              FStar_All.pipe_right uu___1 (fv_has_erasable_attr env1)))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env1 ->
     fun s ->

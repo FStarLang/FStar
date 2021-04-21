@@ -167,7 +167,7 @@ let (effect_as_etag :
       else
         (let uu___2 =
            let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-           FStar_TypeChecker_Util.is_erasable_effect uu___3 l1 in
+           FStar_TypeChecker_Env.is_erasable_effect uu___3 l1 in
          if uu___2
          then FStar_Extraction_ML_Syntax.E_GHOST
          else
