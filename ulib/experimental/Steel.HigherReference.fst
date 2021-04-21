@@ -348,75 +348,43 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
 
 (*** GHOST REFERENCES ***)
 
-let ghost_ref a = erased (ref (erased a))
+let ghost_ref a = erased (ref a)
 
 [@@__reduce__]
-let ghost_pts_to #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to (reveal r) p (Ghost.hide x)
+let ghost_pts_to #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to (reveal r) p x
 
-let ghost_alloc_aux (#a:Type) (#u:_) (x:erased a)
-  : SteelGhostT (ref (erased a)) u
+let ghost_alloc_aux (#a:Type) (#u:_) (x:a)
+  : SteelGhostT (ref a) u
                  emp
                  (fun r -> pts_to r full_perm (Ghost.hide x))
-  = let v : fractional (erased a) = Some (x, full_perm) in
+  = let v : fractional a = Some (x, full_perm) in
     assert (FStar.PCM.composable pcm_frac v None);
     assert (compatible pcm_frac v v);
-    let r : ref (erased a) = as_atomic_action_ghost #_ #_ (Steel.Memory.alloc_action u v) in
-    change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
-      (fun m -> emp_unit (pts_to_raw r full_perm (hide x));
-             pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m);
+    let r : ref a = as_atomic_action_ghost #_ #_ (Steel.Memory.alloc_action u v) in
+    change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm x)
+      (fun m -> emp_unit (pts_to_raw r full_perm x);
+             pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m);
     r
 
 let ghost_alloc #a #u x =
-  let r = ghost_alloc_aux #a #u x in
-  change_slprop (pts_to r full_perm (Ghost.hide x))
-                (ghost_pts_to (hide r) full_perm x)
-                (fun _ -> ());
+  let r = ghost_alloc_aux #a #u (reveal x) in
+  rewrite_context ();
   hide r
 
-let ghost_share_aux (#a:Type) (#u:_)
-                    (#p:perm)
-                    (#x:erased a)
-                    (r:ref (erased a))
-  : SteelGhostT unit u
-      (pts_to r p (Ghost.hide x))
-      (fun _ -> pts_to r (half_perm p) (Ghost.hide x) `star`
-             pts_to r (half_perm p) (Ghost.hide x))
-  = share r
-
-let ghost_share #a #u #p #x r =
-  ghost_share_aux (reveal r);
-  rewrite_context ()
-
-let ghost_gather_aux (#a:Type) (#u:_)
-                     (#p0 #p1:perm)
-                     (#x0 #x1:erased a)
-                     (r:ref (erased a))
-  : SteelGhost unit u
-      (pts_to r p0 (Ghost.hide x0) `star`
-       pts_to r p1 (Ghost.hide x1))
-      (fun _ -> pts_to r (sum_perm p0 p1) (Ghost.hide x0))
-      (requires fun _ -> True)
-      (ensures fun _ _ _ -> x0 == x1) =
-  gather #(erased a) #u #p0 #p1 #(hide x0) #(hide x1) r
-
+let ghost_share #a #u #p #x r = share (reveal r); rewrite_context ()
 let ghost_gather #a #u #p0 #p1 #x0 #x1 r =
-  ghost_gather_aux #a #u #p0 #p1 #x0 #x1 (reveal r);
-  rewrite_context ()
+  gather #_ #_ #p0 #p1 #x0 #x1 (reveal r); rewrite_context ()
 
-let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
-  : SteelGhost unit u (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
-                     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
-                (requires fun _ -> True)
-                (ensures fun _ _ _ -> v0 == v1)
-  = higher_ref_pts_to_injective_eq (reveal r)
+let ghost_pts_to_injective_eq #a #u #p #q r v0 v1 =
+  higher_ref_pts_to_injective_eq (reveal r)
 
-let ghost_write_aux (#a:Type) (#u:_) (#v:erased a) (r:ref (erased a)) (x:erased a)
+let ghost_write_aux (#a:Type) (#u:_) (#v:erased a) (r:ref a) (x:a)
   : SteelGhostT unit u
-      (pts_to r full_perm (Ghost.hide v))
+      (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (Ghost.hide x))
-  = let v_old : erased (fractional (erased a)) = Ghost.hide (Some (v, full_perm)) in
-    let v_new : fractional (erased a) = Some (x, full_perm) in
-    change_slprop (pts_to r full_perm (hide v))
+  = let v_old : erased (fractional a) = Ghost.hide (Some (reveal v, full_perm)) in
+    let v_new : fractional a = Some (x, full_perm) in
+    change_slprop (pts_to r full_perm v)
                   (Mem.pts_to r v_old `star` pure (perm_ok full_perm))
                   (fun _ -> ());
     let _ = elim_perm_ok full_perm in
@@ -427,5 +395,5 @@ let ghost_write_aux (#a:Type) (#u:_) (#v:erased a) (r:ref (erased a)) (x:erased 
                          pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m)
 
 let ghost_write #a #u #v r x =
-  ghost_write_aux (reveal r) x;
+  ghost_write_aux (reveal r) (reveal x);
   rewrite_context ()
