@@ -22,4 +22,4 @@ intfiles:			\
 	@cat $< FStar_Ints.ml.body >> $@
 
 clean:
-	+$(MAKE) -C .. clean
+	+$(MAKE) -C .. clean_ocaml
