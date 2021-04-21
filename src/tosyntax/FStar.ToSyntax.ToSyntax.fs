@@ -1319,11 +1319,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let pat =
           (* All of the fields are explicit arguments of the constructor, hence the None below *)
           mk_pattern (PatApp (mk_pattern (PatName constrname),
-                              List.map (fun (field, _) -> mk_pattern (PatVar (field, None))) record.fields))
+                              List.map (fun (field, _) -> mk_pattern (PatVar (field, None, []))) record.fields))
         in
         let branch = (pat, None, e) in
         let r = mk_term (Ascribed (r, rty, None)) r.range Expr in
-        { top with tm = Match (r, [branch]) }
+        { top with tm = Match (r, None, [branch]) }
       in
       desugar_term_maybe_top top_level env elab
 
