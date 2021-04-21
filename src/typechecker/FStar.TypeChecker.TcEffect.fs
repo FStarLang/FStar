@@ -1412,7 +1412,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
           lift_t_shape_error "either not an arrow, or not enough binders") r in
 
     if (not ((lid_equals lift_eff PC.effect_PURE_lid) ||
-             (lid_equals lift_eff PC.effect_GHOST_lid && TcUtil.is_erasable_effect env sub.source)))
+             (lid_equals lift_eff PC.effect_GHOST_lid && Env.is_erasable_effect env sub.source)))
     then raise_error (Errors.Fatal_UnexpectedExpressionType,
                       lift_t_shape_error "the lift combinator has an unexpected effect: \
                         it must either be PURE or if the source effect is erasable then may be GHOST") r;
@@ -1476,10 +1476,32 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   sub
 
+let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
+  let m1 = Env.norm_eff_name env m1 in
+  let m2 = Env.norm_eff_name env m2 in
+
+  let m1_erasable = Env.is_erasable_effect env m1 in
+  let m2_erasable = Env.is_erasable_effect env m2 in
+
+  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
+                                BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
+                                  (string_of_lid m1) (string_of_lid m2) reason) r in
+
+  if m2_erasable     &&
+     not m1_erasable &&
+     not (lid_equals m1 PC.effect_PURE_lid)
+  then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
+  else if m1_erasable &&
+          m2_erasable &&
+          lid_equals m1 PC.effect_GHOST_lid
+  then err "lifts from GHOST to erasable effects are not allowed (F* will use lifts from PURE for these cases)"
+
 let tc_lift env sub r =
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     Gen.generalize_universes env (tc_check_trivial_guard env t k) in
+
+  check_lift_for_erasable_effects env sub.source sub.target r;
 
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
@@ -1632,12 +1654,36 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   end;
   (lid, uvs, tps, c)
 
+
+let check_polymonadic_bind_for_erasable_effects env m n p r =
+  let m = Env.norm_eff_name env m in
+  let n = Env.norm_eff_name env n in
+  let p = Env.norm_eff_name env p in
+
+  let m_erasable = Env.is_erasable_effect env m in
+  let n_erasable = Env.is_erasable_effect env n in
+  let p_erasable = Env.is_erasable_effect env p in
+
+  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
+                                BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
+                                  (string_of_lid m) (string_of_lid n) (string_of_lid p) reason) r in
+
+  if p_erasable &&
+     ((not m_erasable && not (lid_equals m PC.effect_PURE_lid))||
+      (not n_erasable && not (lid_equals n PC.effect_PURE_lid)))
+  then err "p is erasable and one of m or n is neither erasable nor PURE"
+  else if (m_erasable && lid_equals n PC.effect_GHOST_lid) ||
+          (n_erasable && lid_equals m PC.effect_GHOST_lid)
+  then err "one of m or n is erasable, and other is GHOST"
+
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
     (m |> ident_of_lid |> string_of_id)
     (n |> ident_of_lid |> string_of_id)
     (p |> ident_of_lid |> string_of_id) in
   let r = (snd ts).pos in
+
+  check_polymonadic_bind_for_erasable_effects env m n p r;
 
   //p should be non-reifiable, reification of polymonadic binds is not yet implemented
   (*
@@ -1742,6 +1788,8 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
 
 let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let r = (snd ts).pos in
+
+  check_lift_for_erasable_effects env0 m n r;
 
   let combinator_name =
     (m |> ident_of_lid |> string_of_id) ^ " <: " ^

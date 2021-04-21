@@ -357,6 +357,8 @@ val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
 
+val is_erasable_effect     : env -> lident -> bool
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 val is_reifiable_effect      : env -> lident -> bool

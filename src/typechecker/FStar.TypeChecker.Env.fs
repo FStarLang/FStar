@@ -1291,6 +1291,13 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
+
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////

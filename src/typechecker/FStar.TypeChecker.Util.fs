@@ -640,13 +640,6 @@ let is_pure_or_ghost_effect env l =
   lid_equals l C.effect_PURE_lid
   || lid_equals l C.effect_GHOST_lid
 
-let is_erasable_effect env l =
-  l
-  |> Env.norm_eff_name env
-  |> (fun l -> lid_equals l C.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
-           |> Env.fv_has_erasable_attr env)
-
 let lax_mk_tot_or_comp_l mname u_result result flags =
     if Ident.lid_equals mname C.effect_Tot_lid
     then S.mk_Total' result (Some u_result)
@@ -796,6 +789,16 @@ let mk_indexed_bind env
     (m |> Ident.ident_of_lid |> string_of_id)
     (n |> Ident.ident_of_lid |> string_of_id)
     (p |> Ident.ident_of_lid |> string_of_id) in
+
+  if (Env.is_erasable_effect env m &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct1.result_typ)) ||
+     (Env.is_erasable_effect env n &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct2.result_typ))
+  then raise_error (Errors.Fatal_UnexpectedEffect,
+                    BU.format2 "Cannot apply bind %s since %s is not erasable and one of the computations is informative"
+                      bind_name (string_of_lid p)) r1;
 
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Binding c1:%s and c2:%s {\n"
@@ -2560,21 +2563,7 @@ let maybe_lift env e c1 c2 t =
     || (U.is_pure_effect c1 && U.is_ghost_effect c2)
     || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
-    else begin
-      //raise an error if c1 is erasable, c2 is not erasable, and t is informative
-      if is_erasable_effect env m1       &&
-         not (is_erasable_effect env m2) &&
-         not (N.non_info_norm env t)
-      then Errors.raise_error
-             (Errors.Error_TypeError,
-              BU.format4 "Cannot lift erasable expression %s from %s ~> %s since its type %s is informative"
-                (Print.term_to_string e)
-                (string_of_lid m1)
-                (string_of_lid m2)
-                (Print.term_to_string t))
-             e.pos;
-      mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
-    end
+    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
 
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
@@ -2803,7 +2792,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
            let bs, c = U.arrow_formals_comp t in
            let env = FStar.TypeChecker.Env.push_binders env bs in
            (U.is_ghost_effect (U.comp_effect_name c))
-           || (is_erasable_effect env (U.comp_effect_name c))
+           || (Env.is_erasable_effect env (U.comp_effect_name c))
            || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
       | Tm_refine({sort=t}, _) ->
            aux env t
@@ -2890,6 +2879,20 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
 
+
+let check_non_informative_type_for_lift env m1 m2 t r : unit =
+  //raise an error if m1 is erasable, m2 is not erasable, and t is informative
+  if Env.is_erasable_effect env m1       &&
+     not (Env.is_erasable_effect env m2) &&
+     not (N.non_info_norm env t)
+  then Errors.raise_error
+         (Errors.Error_TypeError,
+          BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+            (string_of_lid m1)
+            (string_of_lid m2)
+            (Print.term_to_string t))
+         r
+
 (*
  * Lifting a comp c to the layered effect eff_name
  *
@@ -2916,6 +2919,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
   let r = Env.get_range env in
 
   let ct = U.comp_to_comp_typ c in
+
+  check_non_informative_type_for_lift env ct.effect_name tgt ct.result_typ r;
 
   let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
 
@@ -3036,6 +3041,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   else
     let mk_mlift_wp ts env c =
       let ct = U.comp_to_comp_typ c in
+      check_non_informative_type_for_lift env ct.effect_name sub.target ct.result_typ env.range;
       let _, lift_t = inst_tscheme_with ts ct.comp_univs in
       let wp = List.hd ct.effect_args in
       S.mk_Comp ({ ct with

@@ -3218,7 +3218,7 @@ and check_inner_let env e =
        let is_inline_let = BU.for_some (U.is_fvar FStar.Parser.Const.inline_let_attr) lb.lbattrs in
        let _ =
         if is_inline_let
-        && not (pure_or_ghost || TcUtil.is_erasable_effect env c1.eff_name)  //inline let allowed on erasable effects
+        && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let allowed on erasable effects
         then raise_error (Errors.Fatal_ExpectedPureExpression,
                           BU.format2 "Definitions marked @inline_let are expected to be pure or ghost; \
                                       got an expression \"%s\" with effect \"%s\""
@@ -3266,8 +3266,8 @@ and check_inner_let env e =
              not is_inline_let &&  //the letbinding is not already inline_let, and
              ((pure_or_ghost &&  //either it is pure/ghost with unit type, or
                U.is_unit c1.res_typ) ||
-              (TcUtil.is_erasable_effect env c1.eff_name &&  //c1 is erasable and cres is not
-               not (TcUtil.is_erasable_effect env cres.eff_name))) in
+              (Env.is_erasable_effect env c1.eff_name &&  //c1 is erasable and cres is not
+               not (Env.is_erasable_effect env cres.eff_name))) in
            if add_inline_let
            then U.inline_let_attr::lb.lbattrs
            else lb.lbattrs in
