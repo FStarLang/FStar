@@ -1175,8 +1175,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || debug env <| Options.Other "bind"
       then f ()
   in
-  let lc1 = N.maybe_ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
-  let lc2 = N.maybe_ghost_to_pure_lcomp env lc2 in
+  let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
   let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1
@@ -1529,6 +1528,8 @@ let maybe_return_e2_and_bind
      match x with
      | None -> env
      | Some x -> Env.push_bv env x in
+
+   let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in
 
    //AR: use c1's effect to return c2 into
    let lc2 =
