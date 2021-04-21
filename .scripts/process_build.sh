@@ -68,7 +68,7 @@ fi
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
 git clean -dffx
-make -j6 -C .. package
+make -j6 -C ../.. package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 diag "*** Unzip and verify the Package  ***"
