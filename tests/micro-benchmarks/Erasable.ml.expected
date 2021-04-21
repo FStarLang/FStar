@@ -18,6 +18,8 @@ let bind :
   fun f -> fun g -> g f
 
 
+let lift_PURE_MPURE : 'a 'wp . (unit -> 'a) -> ('a, unit) repr =
+  fun f -> f ()
 let (f_mpure : unit -> Prims.int) =
   fun uu___ -> failwith "Not yet implemented:f_mpure"
 let (eff_test1 : unit -> Prims.int) = fun uu___ -> f_mpure ()
@@ -39,3 +41,9 @@ let lift_MGHOST_MDIV : 'a . ('a, unit) repr -> ('a, unit) repr = fun f -> f
 let (f_mdiv : unit -> Prims.int) =
   fun uu___ -> failwith "Not yet implemented:f_mdiv"
 let (eff_test7 : unit -> Prims.int) = fun uu___ -> f_mdiv ()
+let bind_PURE_M1 :
+  'a 'b 'wp . (unit -> 'a) -> ('a -> ('b, unit) repr) -> ('b, unit) repr =
+  fun f -> fun g -> g (f ())
+let (f_m1 : unit -> Prims.int) =
+  fun uu___ -> failwith "Not yet implemented:f_m1"
+
