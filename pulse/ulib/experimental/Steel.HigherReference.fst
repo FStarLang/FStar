@@ -371,7 +371,7 @@ let ghost_alloc #a #u x =
   rewrite_context ();
   hide r
 
-let ghost_share #a #u #p #x r = share (reveal r); rewrite_context ()
+let ghost_share r = share (reveal r); rewrite_context ()
 let ghost_gather #a #u #p0 #p1 #x0 #x1 r =
   gather #_ #_ #p0 #p1 #x0 #x1 (reveal r); rewrite_context ()
 
