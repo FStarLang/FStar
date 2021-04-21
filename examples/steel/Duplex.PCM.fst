@@ -158,8 +158,7 @@ module Mem = Steel.Memory
 
 let chan (p:dprot) = ref (t p) (pcm p)
 
-val pts_to (#p:dprot) (r:chan p) (v:t p) : slprop u#1
-let pts_to r v = Mem.pts_to r v
+let pts_to (#p:dprot) (r:chan p) ([@@@smt_fallback] v:t p) : slprop u#1 = Mem.pts_to r v
 
 let endpoint_a (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
   pts_to c (if is_send next
@@ -876,7 +875,7 @@ let write_a
   (tr:trace p next)
   (x:msg_t next)
   :SteelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
-  = change_slprop (pts_to r (A_W next tr)) (pts_to r (reveal (hide (A_W next tr)))) (fun _ -> ());
+  = //change_slprop (pts_to r (A_W next tr)) (pts_to r (reveal (hide (A_W next tr)))) (fun _ -> ());
     let v = hide (
       if is_send (step next x)
       then A_W (step next x) (extend tr x)
