@@ -8091,11 +8091,15 @@ let (ghost_to_pure2 :
           let c11 = maybe_ghost_to_pure env1 c1 in
           let c21 = maybe_ghost_to_pure env1 c2 in
           let c1_eff =
-            FStar_TypeChecker_Env.norm_eff_name env1
-              (FStar_Syntax_Util.comp_effect_name c11) in
+            let uu___1 =
+              FStar_All.pipe_right c11 FStar_Syntax_Util.comp_effect_name in
+            FStar_All.pipe_right uu___1
+              (FStar_TypeChecker_Env.norm_eff_name env1) in
           let c2_eff =
-            FStar_TypeChecker_Env.norm_eff_name env1
-              (FStar_Syntax_Util.comp_effect_name c21) in
+            let uu___1 =
+              FStar_All.pipe_right c21 FStar_Syntax_Util.comp_effect_name in
+            FStar_All.pipe_right uu___1
+              (FStar_TypeChecker_Env.norm_eff_name env1) in
           let c1_erasable =
             FStar_TypeChecker_Env.is_erasable_effect env1 c1_eff in
           let c2_erasable =
