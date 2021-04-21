@@ -137,17 +137,20 @@ $(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
 	$(Q)rm -rf $(TACLIB_DIR)
 	$(Q)mv $(TACLIB_DIR)_new $(TACLIB_DIR)
 
-clean_checked:
-	@echo "[CLEAN-CHECKED     ulib/]"
-	$(Q)rm -f *.checked *.checked.lax .cache/*.checked .cache/*.checked.lax
-
-clean: clean_checked clean_ocaml
+clean:
 	@echo "[CLEAN     ulib/]"
 	$(Q)rm -f .depend .depend.extract
+	$(Q)rm -f *.mgen
+	$(Q)rm -f *.checked *.checked.lax .cache/*.checked .cache/*.checked.lax
 	$(Q)rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
+	$(Q)rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
+	$(Q)rm -f $(FSTARLIB_DIR)/*.cm[aiox]
+	$(Q)rm -f $(FSTARLIB_DIR)/*.cmx[as]
+	$(Q)rm -f $(TACLIB_DIR)/*.cm[aiox]
+	$(Q)rm -f $(TACLIB_DIR)/*.cmx[as]
+	$(Q)rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 clean_ocaml:
-	@echo "[CLEAN-OCAML     ulib/]"
 	rm -f *.mgen
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
 	rm -f $(FSTARLIB_DIR)/*.cm[aiox]

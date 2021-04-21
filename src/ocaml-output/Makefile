@@ -262,16 +262,12 @@ package:
 	rm -f $(NAME).zip $(NAME).tar.gz
 	mkdir -p $(PREFIX)
 	@# Install the F* binary
-	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
+	$(call fexport-all,bin)
 	@# Then the standard library.
-	$(call fexport,ulib)
-	$(call fexport-all,ulib/.cache/.)
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_Int*.ml $(PREFIX)/ulib/ml
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_UInt*.ml $(PREFIX)/ulib/ml
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	@# Here we export everything, including the .cmi and .checked files
+	$(call fexport-all,ulib)
 	cp ../../version.txt $(PREFIX)/
 	cp ../../_tags $(PREFIX)/
 	cp ../../.common.mk $(PREFIX)/
