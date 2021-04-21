@@ -264,7 +264,6 @@ package:
 	@# Install the F* binary
 	mkdir -p $(PREFIX)/bin/
 	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
-	$(call fexport-all,bin/fstar-compiler-lib)
 	@# Then the standard library.
 	$(call fexport,ulib)
 	$(call fexport-all,ulib/.cache/.)
