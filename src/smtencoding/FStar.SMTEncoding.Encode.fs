@@ -1576,8 +1576,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                           mkForall (Ident.range_of_lid d)
                                    ([[mk_Precedes lex_t lex_t fun_app dapp]],
                                      bs',
-                                     mkImp (mk_and_l guards',
-                                           mk_Precedes lex_t lex_t fun_app dapp))
+                                     mkImp (mk_and_l (ty_pred::guards'),
+                                            mk_Precedes lex_t lex_t fun_app dapp))
                           :: codomain_prec_l,
                           bs_decls @ cod_decls)
                     ([],[])
@@ -1589,9 +1589,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   [], cod_decls
                 | _ ->
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                         ([[ty_pred]],
-                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                          mkImp(ty_pred, mk_and_l codomain_prec_l)),
+                                          ([[ty_pred]],
+                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                           mk_and_l codomain_prec_l),
                                  Some "well-founded ordering on codomain",
                                  ("well_founded_ordering_on_codomain_"^ddconstrsym))],
                   cod_decls

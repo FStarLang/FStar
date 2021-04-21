@@ -5888,7 +5888,9 @@ and (encode_sigelt' :
                                                                     let uu___38
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
-                                                                    guards'1 in
+                                                                    (ty_pred
+                                                                    ::
+                                                                    guards'1) in
                                                                     let uu___39
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
@@ -5959,16 +5961,8 @@ and (encode_sigelt' :
                                                                     arg_binders) in
                                                                     let uu___35
                                                                     =
-                                                                    let uu___36
-                                                                    =
-                                                                    let uu___37
-                                                                    =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     codomain_prec_l in
-                                                                    (ty_pred,
-                                                                    uu___37) in
-                                                                    FStar_SMTEncoding_Util.mkImp
-                                                                    uu___36 in
                                                                     ([
                                                                     [ty_pred]],
                                                                     uu___34,
@@ -6589,7 +6583,9 @@ and (encode_sigelt' :
                                                                     let uu___35
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
-                                                                    guards'1 in
+                                                                    (ty_pred
+                                                                    ::
+                                                                    guards'1) in
                                                                     let uu___36
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_Precedes
@@ -6660,16 +6656,8 @@ and (encode_sigelt' :
                                                                     arg_binders) in
                                                                     let uu___32
                                                                     =
-                                                                    let uu___33
-                                                                    =
-                                                                    let uu___34
-                                                                    =
                                                                     FStar_SMTEncoding_Util.mk_and_l
                                                                     codomain_prec_l in
-                                                                    (ty_pred,
-                                                                    uu___34) in
-                                                                    FStar_SMTEncoding_Util.mkImp
-                                                                    uu___33 in
                                                                     ([
                                                                     [ty_pred]],
                                                                     uu___31,
