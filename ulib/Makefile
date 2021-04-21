@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all benchmark extra install-fstarlib install-fstar-tactics rebuild clean_checked clean_ocaml clean fstardoc
 
 FSTAR_HOME=..
 
@@ -155,7 +155,9 @@ clean_ocaml:
 	rm -f $(TACLIB_DIR)/*.cmx[as]
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
-rebuild: clean_ocaml install-fstarlib install-fstar-tactics
+rebuild: clean_ocaml
+	+$(MAKE) install-fstarlib
+	+$(MAKE) install-fstar-tactics
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \

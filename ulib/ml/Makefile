@@ -1,8 +1,7 @@
 .PHONY: intfiles
 
 all: intfiles
-	+$(MAKE) -C .. install-fstarlib
-	+$(MAKE) -C .. install-fstar-tactics
+	+$(MAKE) -C .. rebuild
 
 intfiles:			\
 	FStar_Int8.ml		\

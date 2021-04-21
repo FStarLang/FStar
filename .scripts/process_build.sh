@@ -120,7 +120,7 @@ else
 fi
 
 diag "-- Rebuilding ulib/ml (to make sure it works) --"
-make -C ulib/ml clean && make -C ulib install-fstarlib
+make -C ulib rebuild
 if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for install-fstarlib - make returned $?"
   exit 1

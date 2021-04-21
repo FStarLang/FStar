@@ -105,7 +105,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
 4. If you have a working OCaml setup and intend to extract and compile OCaml code
    against our OCaml support library, please build it first with:
 
-        $ make -C ulib install-fstarlib
+        $ make -C ulib rebuild
 
    Then the following command should print "Hello F\*!"
 
