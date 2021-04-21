@@ -17,38 +17,31 @@ let conditional_inv (r:ghost_ref bool) (p:slprop) =
 let ex_conditional_inv (r:ghost_ref bool) (p:slprop) =
     h_exists (conditional_inv r p)
 
-let inv (p:slprop) = (r:ghost_ref bool & Steel.Memory.inv (ex_conditional_inv r p))
+let inv (p:slprop) = erased (r:ghost_ref bool & Steel.Memory.inv (ex_conditional_inv r p))
 
 let name (#p:_) (i:inv p) = dsnd i
 let gref (#p:_) (i:inv p) = dfst i
 
 [@@__reduce__]
 let active (#p:_) ([@@@smt_fallback]f:perm) (i:inv p) =
-    ghost_pts_to (gref i) (half_perm f) (hide true)
+  ghost_pts_to (gref i) (half_perm f) (hide true)
 
-let new_inv (#u:_) (p:slprop)
-  : SteelGhostT (inv p) u p (active full_perm)
-  = let r = ghost_alloc (Ghost.hide true) in
-    ghost_share r;
-    A.intro_exists true (conditional_inv r p);
-    let i = A.new_invariant u (ex_conditional_inv r p) in
-    (| r, i |)
+let new_inv #u p =
+  let r = ghost_alloc (Ghost.hide true) in
+  ghost_share r;
+  A.intro_exists true (conditional_inv r p);
+  let i = A.new_invariant u (ex_conditional_inv r p) in
+  rewrite_context ();
+  (| r, i |)
 
-let share (#p:slprop) (#f:perm) (#u:_) (i:inv p)
-  : SteelGhostT unit u
-    (active f i)
-    (fun _ -> active (half_perm f) i `star` active (half_perm f) i)
-  = ghost_share (gref i)
+let share #p #f #u i = ghost_share (gref i)
 
-let gather (#p:slprop) (#f0 #f1:perm) (#u:_) (i:inv p)
-  : SteelGhostT unit u
-    (active f0 i `star` active f1 i)
-    (fun _ -> active (sum_perm f0 f1) i)
-  = ghost_gather #_ #_ #(half_perm f0) (gref i);
-    A.change_slprop
-      (ghost_pts_to (gref i) (sum_perm (half_perm f0) (half_perm f1)) (hide true))
-      (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
-      (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
+let gather #p #f0 #f1 #u i =
+  ghost_gather #_ #_ #(half_perm f0) (gref i);
+  A.change_slprop
+    (ghost_pts_to (gref i) (sum_perm (half_perm f0) (half_perm f1)) (hide true))
+    (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
+    (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
 
 let dispose #p #u i
   : SteelGhostT unit u

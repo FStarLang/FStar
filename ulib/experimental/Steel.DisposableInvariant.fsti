@@ -7,6 +7,7 @@ open Steel.Effect.Atomic
 
 open FStar.Ghost
 
+[@@ erasable]
 val inv (p:slprop u#1) : Type0
 
 val name (#p:_) (i:inv p) : Ghost.erased iname
