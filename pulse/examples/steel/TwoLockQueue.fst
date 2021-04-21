@@ -143,7 +143,8 @@ let enqueue (#a:_) (hdl:t a) (x:a)
         Q.enqueue tl node;
         ghost_write hdl.tail.ghost node;
         ghost_share #_ #_ hdl.tail.ghost;
-        pack_queue_invariant _ _ _ _
+        pack_queue_invariant _ _ hdl.head hdl.tail;
+        steela_return ()
     in
     let r1 = with_invariant hdl.inv enqueue_core in
     let r2 = write hdl.tail.ptr node in
@@ -180,7 +181,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       rewrite
         (ghost_pts_to hdl.head.ghost _ _)
         (maybe_ghost_pts_to _ _ _);
-      o
+      steela_return o
 
     | Some p ->
       rewrite (Q.dequeue_post _ _ _) (Q.dequeue_post_success _ _ _);
@@ -193,7 +194,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       rewrite
         (ghost_pts_to hdl.head.ghost _ _ `star` h_exists (pts_to hd full_perm))
         (maybe_ghost_pts_to _ _ _);
-      o
+      steela_return o
 
 let dequeue (#a:_) (hdl:t a)
   : SteelT (option a) emp (fun _ -> emp)
