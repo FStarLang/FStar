@@ -44,7 +44,7 @@ let alloc_cell
   let gres = Ghost.hide ({ vcell_data = data; vcell_next = next }) in
   let res = (pres, gres) in
   change_slprop (pts_to rdata full_perm data `star` pts_to rnext full_perm next) (ccell (fst res) full_perm (snd res)) (fun _ -> ());
-  res
+  steela_return res
 
 let free_cell
   #a c v
