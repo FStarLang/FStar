@@ -1576,7 +1576,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                           mkForall (Ident.range_of_lid d)
                                    ([[mk_Precedes lex_t lex_t fun_app dapp]],
                                      bs',
-                                     mkImp (mk_and_l (ty_pred::guards'),
+                                     //need to use ty_pred' here, to avoid variable capture
+                                     //Note, ty_pred' is indexed by fuel, not S_fuel
+                                     //That's ok, since the outer pattern is guarded on S_fuel
+                                     mkImp (mk_and_l (ty_pred'::guards'),
                                             mk_Precedes lex_t lex_t fun_app dapp))
                           :: codomain_prec_l,
                           bs_decls @ cod_decls)
@@ -1589,7 +1592,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   [], cod_decls
                 | _ ->
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred]],
+                                          ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
                                            add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
                                            mk_and_l codomain_prec_l),
                                  Some "well-founded ordering on codomain",

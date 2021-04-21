@@ -5888,7 +5888,7 @@ and (encode_sigelt' :
                                                                     let uu___38
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
-                                                                    (ty_pred
+                                                                    (ty_pred'
                                                                     ::
                                                                     guards'1) in
                                                                     let uu___39
@@ -6583,7 +6583,7 @@ and (encode_sigelt' :
                                                                     let uu___35
                                                                     =
                                                                     FStar_SMTEncoding_Util.mk_and_l
-                                                                    (ty_pred
+                                                                    (ty_pred'
                                                                     ::
                                                                     guards'1) in
                                                                     let uu___36
