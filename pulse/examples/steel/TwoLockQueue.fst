@@ -116,7 +116,7 @@ let new_queue (#a:_) (x:a)
     let tail = new_qptr hd in
     pack_queue_invariant _ _ head tail;
     let inv = new_invariant _ _ in
-    { head; tail; inv }
+    steela_return ({ head; tail; inv })
 
 #push-options "--ide_id_info_off"
 #restart-solver

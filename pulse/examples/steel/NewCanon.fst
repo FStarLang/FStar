@@ -110,7 +110,7 @@ open Steel.Effect.Atomic
 
 assume val alloc2 (x:int)  : SteelAtomicT ref Set.empty emp (fun y -> ptr y)
 assume val free2 (r:ref) : SteelAtomicT unit Set.empty (ptr r) (fun _ -> emp)
-assume val ghost_read (r:ref) : SteelGhostT int Set.empty (ptr r) (fun _ -> ptr r)
+assume val ghost_read (r:ref) : SteelGhostT (erased int) Set.empty (ptr r) (fun _ -> ptr r)
 
 let test21 (x:int) : SteelAtomicT ref Set.empty emp ptr =
   let y = alloc2 x in y
@@ -121,7 +121,7 @@ let test22 (x:int) : SteelAtomicT unit Set.empty emp (fun _ -> emp) =
   let y = alloc2 x in
   free2 y
 
-let test23 (r:ref) : SteelGhostT int Set.empty (ptr r) (fun _ -> ptr r)
+let test23 (r:ref) : SteelGhostT (erased int) Set.empty (ptr r) (fun _ -> ptr r)
   = let x = ghost_read r in
     let y = ghost_read r in
     x
@@ -143,4 +143,4 @@ let test26 (r1 r2:ref) : SteelAtomicT unit Set.empty (ptr r1 `star` ptr r2) (fun
 let test27 (a:unit) : SteelAtomicT ref Set.empty emp (fun y -> ptr y) =
   let x = alloc2 0 in
   let v = ghost_read x in
-  x
+  steela_return x

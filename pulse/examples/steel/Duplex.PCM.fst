@@ -207,7 +207,7 @@ val select_refine (#p:dprot)
 let select_refine #p r x f =
   let v = select_refine' r x f in
   change_slprop (Mem.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
-  v
+  steela_return v
 
 let rec is_trace_prefix
   (#from:dprot) (#to #to':dprot)
@@ -625,7 +625,7 @@ let get_a_r #p c q tr =
     (pts_to c (f_a_r q tr v))
     (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
     (fun _ -> ());
-  tr'
+  steela_return tr'
 
 val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
   : SteelT (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')})
@@ -640,7 +640,7 @@ let get_b_r #p c q tr =
     (pts_to c (f_b_r q tr v))
     (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
     (fun _ -> ());
-  tr'
+  steela_return tr'
 
 val upd_gen_action (#p:dprot)
                    (r:chan p)
@@ -914,7 +914,7 @@ val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
 let alloc x =
   let r = alloc x in
   change_slprop (Mem.pts_to r x) (pts_to r x) (fun _ -> ());
-  r
+  steela_return r
 
 val split (#p:dprot) (r:chan p) (v_full v0 v1:t p) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
   : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
@@ -1005,7 +1005,7 @@ let rec recv_a #p c next tr =
         (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R next tr else extend_node_a_r tr tr'))
         (endpoint_a c (step next x) (extend tr x))
         (fun _ -> ());
-      x
+      steela_return x
   )
 
 val recv_b
@@ -1034,7 +1034,7 @@ let rec recv_b #p c next tr =
         (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
         (endpoint_b c (step next x) (extend tr x))
         (fun _ -> ());
-      x
+      steela_return x
   )
 
 
@@ -1088,7 +1088,7 @@ let recv_aux (#p:dprot) (name:party) (c:chan p)
       let x = recv_a c next t in
       change_slprop (endpoint_a c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ());
-      x
+      steela_return x
     end
     else begin
       change_slprop (endpoint _ _ _ _ )
@@ -1096,7 +1096,7 @@ let recv_aux (#p:dprot) (name:party) (c:chan p)
       let x = recv_b c next t in
       change_slprop (endpoint_b c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ());
-      x
+      steela_return x
     end
 
 module HR = Steel.HigherReference
@@ -1135,7 +1135,7 @@ let read_trace_ref (#p:dprot)
     let tr : trace p next = dsnd x in
     change_slprop (HR.pts_to r _ _)
                   (HR.pts_to r _ _) (fun _ -> ());
-    tr
+    steela_return tr
 
 let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
   (next:(if is_send then send_next_dprot_t name else recv_next_dprot_t name))
@@ -1152,7 +1152,7 @@ let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
 
     change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
                   (endpoint name (fst c) next tr) (fun _ -> ());
-    tr
+    steela_return tr
 
 let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
   (#w:(next:dprot & trace p next))

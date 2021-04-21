@@ -602,7 +602,7 @@ let new_dlist' (#a:Type) (init:a)
     let p = alloc cell in
     intro_dlist_nil' p null;
     intro_dlist_cons_cons p p null cell [];
-    (p, hide cell)
+    steela_return (p, hide cell)
 
 let elist a = erased (list a)
 let datas #a (l:elist (cell a)) : elist a = hide (List.Tot.map (fun x -> x.data) (reveal l))
@@ -613,7 +613,7 @@ let esnoc #a (xs:erased (list a)) (x:erased a) = hide (List.snoc (reveal xs, rev
 
 assume
 val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelGhost (ecell a & elist (cell a)) u
+    : SteelGhost (erased (ecell a & elist (cell a))) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to tail (fst x) `star`
@@ -623,7 +623,7 @@ val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
 
 assume
 val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelGhost (ecell a & elist (cell a)) u
+    : SteelGhost (erased (ecell a & elist (cell a))) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to head (fst x) `star`

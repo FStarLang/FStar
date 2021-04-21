@@ -84,11 +84,11 @@ let with_invariant (#a:Type)
                    (#p:slprop)
                    (#perm:_)
                    (i:inv p)
-                   ($f:unit -> SteelAtomicT a (Set.singleton (name i))
+                   ($f:unit -> SteelAtomicT a (Set.singleton (Ghost.reveal (name i)))
                                              (p `star` fp)
                                              (fun x -> p `star` fp' x))
   : SteelT a (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
-  = assert (Set.equal (Set.singleton (name i)) (set_add (name i) Set.empty));
+  = assert (Set.equal (Set.singleton (Ghost.reveal (name i))) (set_add (name i) Set.empty));
     with_invariant i f
 
 (**** Definition of the invariant slprop ****)
@@ -182,9 +182,9 @@ let inv_slprop_conditional (r:ref int) (r_mine r_other:ghost_ref int) (b:bool) =
  *   consuming and restoring inv_slprop_conditional
  *)
 let incr_with_inv_slprop
-  (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:_)
+  (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:Ghost.erased iname)
   ()
-  : SteelAtomicT unit (Set.singleton name)
+  : SteelAtomicT unit (Set.singleton (Ghost.reveal name))
       (inv_slprop_conditional r r_mine r_other b
        `star`
        ghost_pts_to r_mine (P.half_perm full_perm) n_ghost)
