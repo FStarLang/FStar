@@ -62,7 +62,6 @@ let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : Steel unit
 = 
   change_slprop emp (ccellp c p None) (fun _ -> ())
 
-#push-options "--admit_smt_queries true"
 let ccellp_is_null
   (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a)))
 : Steel unit
@@ -84,7 +83,6 @@ let ccellp_is_null
       | _ -> pure_interp False m
     );
   elim_pure (ccell_ptrvalue_is_null c == None? (Ghost.reveal v))
-#pop-options
 
 val alloc_cell
   (#a: Type0)
