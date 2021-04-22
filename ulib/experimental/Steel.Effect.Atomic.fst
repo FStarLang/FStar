@@ -228,7 +228,12 @@ let drop #_ p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
 let witness_h_exists #a #u #p s = SteelGhost?.reflect (Steel.Memory.witness_h_exists #u p)
 let lift_h_exists_atomic #a #u p = SteelGhost?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
-let elim_pure #uses p = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+
+let elim_pure_aux #uses (p:prop)
+  : SteelGhostT (_:unit{p}) uses (pure p) (fun _ -> emp)
+  = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+
+let elim_pure #uses p = elim_pure_aux p
 
 let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)  
 
