@@ -77,7 +77,7 @@ let gather_invariant (#p:slprop) (#uses:inames) (i:inv p)
  *
  * We will use it when composing with_invariant with Steel.Effect.par
  *)
-
+inline_for_extraction
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
@@ -181,6 +181,7 @@ let inv_slprop_conditional (r:ref int) (r_mine r_other:ghost_ref int) (b:bool) =
  * It increments the counter and the ghost ref r_mine
  *   consuming and restoring inv_slprop_conditional
  *)
+inline_for_extraction
 let incr_with_inv_slprop
   (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:Ghost.erased iname)
   ()
@@ -207,6 +208,7 @@ let incr_with_inv_slprop
 (*
  * A with_invariant wrapper over incr_with_inv_slprop
  *)
+inline_for_extraction
 let incr_with_invariant
   (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool)
   (i:inv (inv_slprop_conditional r r_mine r_other b))
@@ -220,6 +222,7 @@ let incr_with_invariant
 (*
  * The main thread
  *)
+#set-options "--debug OWGCounterInv --debug_level Extraction --print_implicits --ugly"
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
