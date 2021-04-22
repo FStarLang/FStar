@@ -404,9 +404,11 @@ val h_exists_cong_atomic (#a:_) (#u:_) (p:a -> slprop) (q:a -> slprop {forall x.
                 (fun _ -> h_exists q)
 
 val elim_pure (#uses:_) (p:prop)
-  : SteelGhostT (_:unit{p}) uses
-                (pure p)
-                (fun _ -> emp)
+  : SteelGhost unit uses
+               (pure p)
+               (fun _ -> emp)
+               (fun _ -> True)
+               (fun _ _ _ -> p)
 
 let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
   : SteelGhostT (u:unit{q}) uses p (fun _ -> p)
