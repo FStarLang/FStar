@@ -2717,8 +2717,11 @@ let (is_sub_singleton : FStar_Syntax_Syntax.term -> Prims.bool) =
           let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
         (match uu___2 with
          | FStar_Syntax_Syntax.Tm_fvar fv ->
-             (((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Parser_Const.squash_lid)
+             ((((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                                 FStar_Parser_Const.unit_lid)
+                                ||
+                                (FStar_Syntax_Syntax.fv_eq_lid fv
+                                   FStar_Parser_Const.squash_lid))
                                ||
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.auto_squash_lid))

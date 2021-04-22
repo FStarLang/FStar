@@ -1346,7 +1346,8 @@ let is_sub_singleton t =
     let head, _ = head_and_args (unmeta t) in
     match (un_uinst head).n with
     | Tm_fvar fv ->
-          Syntax.fv_eq_lid fv PC.squash_lid
+          Syntax.fv_eq_lid fv PC.unit_lid
+        || Syntax.fv_eq_lid fv PC.squash_lid
         || Syntax.fv_eq_lid fv PC.auto_squash_lid
         || Syntax.fv_eq_lid fv PC.and_lid
         || Syntax.fv_eq_lid fv PC.or_lid

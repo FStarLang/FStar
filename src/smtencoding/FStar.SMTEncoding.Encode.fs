@@ -1516,54 +1516,87 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 ("subterm_ordering_"^ddconstrsym))
               in
               let codomain_ordering, codomain_decls =
-                let tot_or_gtot_inductive_codomain c =
-                  let is_inductive l =
-                      match FStar.TypeChecker.Env.lookup_sigelt env.tcenv l with
-                      | Some ({sigel=Sig_inductive_typ _}) -> true
-                      | _ -> false
-                  in
-                  let res =
-                   if not (U.is_tot_or_gtot_comp c)
-                   then false
-                   else let head, _ = U.head_and_args (U.comp_result c) in
-                        BU.for_some
-                          (fun mutual -> is_inductive mutual && U.is_fvar mutual head)
-                          mutuals
-                  in
-                  res
-                in
+                let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
+                let _, vars' = BU.first_N n_tps vars in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
-                        let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
-                        match bs with
-                        | [] -> codomain_prec_l, cod_decls
-                        | _ when not (tot_or_gtot_inductive_codomain c) -> codomain_prec_l, cod_decls
-                        | _ ->
-                         //var bs << D ... var ...
-                         let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
-                         let fun_app = mk_Apply (mkFreeV var) bs' in
-                         mkForall (Ident.range_of_lid d)
-                                  ([[mk_Precedes lex_t lex_t fun_app dapp]],
-                                   bs',
-                                   mkImp (mk_and_l guards',
-                                          mk_Precedes lex_t lex_t fun_app dapp))
-                         :: codomain_prec_l,
-                         bs_decls @ cod_decls)
+                        let rec binder_and_codomain_type t =
+                            let t = U.unrefine t in
+                            match (SS.compress t).n with
+                            | Tm_arrow _ ->
+                              let bs, c = U.arrow_formals_comp (U.unrefine t) in
+                              begin
+                              match bs with
+                              | [] -> None
+                              | _ when not (U.is_tot_or_gtot_comp c) -> None
+                              | _ ->
+                                if U.is_lemma_comp c
+                                then None //not useful for lemmas
+                                else
+                                  let t = U.unrefine (U.comp_result c) in
+                                  if is_type t || U.is_sub_singleton t
+                                  then None //ordering on Type and squashed values is not useful
+                                  else Some (bs, c)
+                              end
+                            | _ ->
+                              let head, _ = U.head_and_args t in
+                              let t' = N.unfold_whnf' [Env.AllowUnboundUniverses;
+                                                       Env.EraseUniverses;
+                                                       Env.Unascribe;
+                                                       //we don't know if this will terminate; so don't do recursive steps
+                                                       Env.Exclude Env.Zeta]
+                                                       env''.tcenv
+                                                       t
+                              in
+                              let head', _ = U.head_and_args t' in
+                              match U.eq_tm head head' with
+                              | U.Equal -> None //no progress after whnf
+                              | U.NotEqual -> binder_and_codomain_type t'
+                              | _ ->
+                                //Did we actually make progress? Be conservative to avoid an infinite loop
+                                match (SS.compress head).n with
+                                | Tm_fvar _
+                                | Tm_name _
+                                | Tm_uinst _ ->
+                                  //The underlying name must have changed, otherwise we would have got Equal
+                                  //so, we made some progress
+                                  binder_and_codomain_type t'
+                                | _ ->
+                                  //unclear if we made progress or not
+                                  None
+
+                        in
+                        match binder_and_codomain_type formal.binder_bv.sort with
+                        | None -> codomain_prec_l, cod_decls
+                        | Some (bs, c) ->
+                          //var bs << D ... var ...
+                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                          let fun_app = mk_Apply (mkFreeV var) bs' in
+                          mkForall (Ident.range_of_lid d)
+                                   ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                     bs',
+                                     //need to use ty_pred' here, to avoid variable capture
+                                     //Note, ty_pred' is indexed by fuel, not S_fuel
+                                     //That's ok, since the outer pattern is guarded on S_fuel
+                                     mkImp (mk_and_l (ty_pred'::guards'),
+                                            mk_Precedes lex_t lex_t fun_app dapp))
+                          :: codomain_prec_l,
+                          bs_decls @ cod_decls)
                     ([],[])
-                    formals
-                    vars
+                    formals'
+                    vars'
                 in
                 match codomain_prec_l with
                 | [] ->
                   [], cod_decls
                 | _ ->
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                         ([[ty_pred]],
-                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                          mkImp(ty_pred, mk_and_l codomain_prec_l)),
+                                          ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
+                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                           mk_and_l codomain_prec_l),
                                  Some "well-founded ordering on codomain",
-                                 ("well_founded_ordering_on_comdain_"^ddconstrsym))],
+                                 ("well_founded_ordering_on_codomain_"^ddconstrsym))],
                   cod_decls
               in
               arg_decls @ codomain_decls,
