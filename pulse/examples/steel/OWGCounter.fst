@@ -47,7 +47,10 @@ module A = Steel.Effect.Atomic
 
 let half_perm = half_perm full_perm
 
+noextract
 let fst = fst
+
+noextract
 let snd = snd
 
 [@@ __reduce__]
@@ -84,8 +87,8 @@ let lock_inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
     ()
 #pop-options
 
-inline_for_extraction
-let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
+inline_for_extraction noextract
+let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
   : SteelT unit
@@ -108,8 +111,8 @@ let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
       rewrite_context #_ #(lock_inv r r_other r_mine) #(lock_inv r r_mine r_other) ()
     end
 
-inline_for_extraction
-let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
+inline_for_extraction noextract
+let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
   : SteelT unit
@@ -137,7 +140,7 @@ let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
  *)
 let g_incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
 
-inline_for_extraction
+inline_for_extraction noextract
 let incr_ctr (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
@@ -148,7 +151,7 @@ let incr_ctr (#v:G.erased int) (r:ref int)
                   (pts_to r full_perm (g_incr v))
                   (fun _ -> ())
 
-inline_for_extraction
+inline_for_extraction noextract
 let rewrite_perm(#a:Type) (#v:G.erased a) (r:ghost_ref a) (p1 p2:P.perm)
   : Steel unit
       (ghost_pts_to r p1 v)
@@ -159,7 +162,7 @@ let rewrite_perm(#a:Type) (#v:G.erased a) (r:ghost_ref a) (p1 p2:P.perm)
                   (ghost_pts_to r p2 v)
                   (fun _ -> ())
 
-inline_for_extraction
+inline_for_extraction noextract
 let incr_ghost_contrib (#v1 #v2:G.erased int) (r:ghost_ref int)
   : Steel unit
       (ghost_pts_to r half_perm v1 `star`
@@ -178,7 +181,7 @@ let incr_ghost_contrib (#v1 #v2:G.erased int) (r:ghost_ref int)
                    ghost_pts_to r half_perm (g_incr v2))
                   (fun _ -> ())
 
-let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
+let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
   (n_ghost:G.erased int)
