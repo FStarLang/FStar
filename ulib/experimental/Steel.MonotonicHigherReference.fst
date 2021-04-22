@@ -278,12 +278,11 @@ let extract_pure #a #uses #p #f
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
-    let (u:unit{history_val h v f}) = elim_pure (history_val h v f) in
+    elim_pure (history_val h v f);
     change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m
-    );
-    u
+    )
 
 let elim_pure #a #uses #p #f
                  (r:ref a p)
