@@ -1,10 +1,6 @@
 type heap = unit
 
-(* https://www.lexifi.com/blog/references-physical-equality *)
-type 'a ref = {
-  mutable contents: 'a;
-  id: int
-}
+type nonrec 'a ref = 'a ref
 
 type ('a, 'b) mref = 'a ref
             
