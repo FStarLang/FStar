@@ -44,29 +44,27 @@ type send_next_dprot_t (name:party) =
 type recv_next_dprot_t (name:party) =
   next:dprot{more next /\ tag_of next == (if name = A then Recv else Send)}
 
-val channel (p:dprot) : Type0
+val ch : Type u#1
 
-val endpt (#p:dprot) (name:party) (c:channel p) (next:dprot) : slprop u#1
+val ep (name:party) (c:ch) (next:dprot) : slprop u#1
 
 val new_channel (p:dprot)
-  : SteelT (channel p & channel p) emp
-           (fun cc -> endpt A (fst cc) p `star` endpt B (snd cc) p)
+  : SteelT (ch & ch) emp
+           (fun cc -> ep A (fst cc) p `star` ep B (snd cc) p)
 
 val channel_send (#name:party)
-         (#p:dprot)
-         (#next:send_next_dprot_t name)
-         (c:channel p) (x:msg_t next)
+                 (#next:send_next_dprot_t name)
+                 (c:ch) (x:msg_t next)
   : SteelT unit
-      (endpt name c next)
-      (fun _ -> endpt name c (step next x))
+           (ep name c next)
+           (fun _ -> ep name c (step next x))
 
 val channel_recv (#name:party)
-         (#p:dprot)
-         (#next:recv_next_dprot_t name)
-         (c:channel p)
+                 (#next:recv_next_dprot_t name)
+                 (c:ch)
   : SteelT (msg_t next)
-      (endpt name c next)
-      (fun x -> endpt name c (step next x))
+           (ep name c next)
+           (fun x -> ep name c (step next x))
 
 ////////////////////////////////////////////////////////////////////////////////
 // An example
@@ -77,10 +75,10 @@ let pingpong : dprot =
   y <-- recv (y:int{y > x});
   done
 
-let client (c:channel pingpong)
+let client (c:ch)
   : SteelT unit
-           (endpt A c pingpong)
-           (fun _ -> endpt A c done)
+           (ep A c pingpong)
+           (fun _ -> ep A c done)
   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17
     channel_send #A c 17;
     let y = channel_recv #A c in

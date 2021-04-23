@@ -1153,8 +1153,11 @@ let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
  * The final API
  *)
 
+let ch : Type u#1 = (p:dprot & channel p)
 
-let new_channel (p:dprot)
+let ep (name:party) (c:ch) (next:dprot) = endpt name (dsnd c) next
+
+let new_channel' (p:dprot)
   : SteelT (channel p & channel p) emp
            (fun cc -> endpt A (fst cc) p `star` endpt B (snd cc) p)
   =
@@ -1187,8 +1190,23 @@ let new_channel (p:dprot)
   intro_exists v (endpt_pred B cB p);
   (cA, cB)
 
+let channel_as_ch (#p:dprot) party (c:channel p) prot
+  : SteelT unit (endpt party c prot)
+                (fun _ -> ep party (| p, c |) prot)
+  = change_slprop (endpt party c prot)
+                  (ep party (|p, c|) prot)
+                  (fun _ -> ()); ()
 
-let channel_send (#name:party)
+let new_channel  (p:dprot)
+  : SteelT (ch & ch) emp
+           (fun cc -> ep A (fst cc) p `star` ep B (snd cc) p)
+  = let cc = new_channel' p in
+    channel_as_ch #p A (fst cc) p;
+    channel_as_ch #p B (snd cc) p;
+     (| p, fst cc |),
+     (| p, snd cc |)
+
+let channel_send' (#name:party)
                  (#p:dprot)
                  (#next:send_next_dprot_t name)
                  (c:channel p)
@@ -1200,7 +1218,29 @@ let channel_send (#name:party)
     send_aux name (fst c) x tr;
     pack_trace_ref name c true x
 
-let channel_recv (#name:party)
+let ch_as_channel party (c:ch) prot
+  : SteelT unit
+           (ep party c prot)
+           (fun _ -> endpt party (dsnd c) prot)
+  = change_slprop (ep party c prot)
+                  (endpt party (dsnd c) prot)
+                  (fun _ -> ())
+
+let channel_send (#name:party)
+                 (#next:send_next_dprot_t name)
+                 (c:ch)
+                 (x:msg_t next)
+  : SteelT unit
+      (ep name c next)
+      (fun _ -> ep name c (step next x))
+  = ch_as_channel _ _ _;
+    channel_send' (dsnd c) x;
+    channel_as_ch _ _ _;
+    change_slprop (ep name (| dfst c, dsnd c |) (step next x))
+                  (ep name c (step next x))
+                  (fun _ -> ())
+
+let channel_recv' (#name:party)
                  (#p:dprot)
                  (#next:recv_next_dprot_t name)
                  (c:channel p)
@@ -1210,4 +1250,18 @@ let channel_recv (#name:party)
   = let tr = unpack_trace_ref name c false next in
     let x = recv_aux name (fst c) tr in
     pack_trace_ref name c false x;
+    x
+
+let channel_recv (#name:party)
+                 (#next:recv_next_dprot_t name)
+                 (c:ch)
+  : SteelT (msg_t next)
+           (ep name c next)
+           (fun x -> ep name c (step next x))
+  = ch_as_channel _ _ _;
+    let x = channel_recv' (dsnd c) in
+    channel_as_ch _ _ _;
+    change_slprop (ep name (| dfst c, dsnd c |) (step next x))
+                  (ep name c (step next x))
+                  (fun _ -> ());
     x
