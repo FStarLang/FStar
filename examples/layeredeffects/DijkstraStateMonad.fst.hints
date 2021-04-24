@@ -74,7 +74,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "96a35c9fb2a6d4056ff682c018449d34"
+      "f83bc8d83a4bbc26ce98be26b666c6b4"
     ],
     [
       "DijkstraStateMonad.wp_of",
@@ -93,7 +93,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "eb26c5b29bcdc48e37af8339fd92872f"
+      "47081894ac17eb7271486b36317cfeb6"
     ],
     [
       "DijkstraStateMonad.run",
@@ -162,7 +162,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "6c756d975d49e9622014b5d133b7b588"
+      "f00b38318e4618f64f39596059b4704f"
     ],
     [
       "DijkstraStateMonad.ireturn",
@@ -274,7 +274,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "1123ef4c760937f5f439ba9ba330c1c7"
+      "5509aca1417fea36d75154143ff5a3c0"
     ],
     [
       "DijkstraStateMonad.bind_wp_lem'",
@@ -303,7 +303,7 @@
         "typing_DijkstraStateMonad.wp_of", "unit_typing"
       ],
       0,
-      "d32053faa4022032f10e32a0b0012373"
+      "b856644e543b9a5026f72ffbb853e52e"
     ],
     [
       "DijkstraStateMonad.bind_wp_lem",
