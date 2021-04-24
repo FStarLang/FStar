@@ -348,6 +348,103 @@ let refine_slprop sl f = H.as_slprop (a_mem_prop_as_a_heap_prop sl f)
 let interp_refine_slprop sl f m =
   assert ((interp sl m /\ f m) <==> interp sl (core_mem m) /\ f (core_mem m))
 
+let dep_hprop
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (h: H.heap)
+: Tot prop
+= exists (h1: H.heap) . exists (h2: H.heap) . interp s (mem_of_heap h1) /\ H.disjoint h1 h2 /\ interp (f (mem_of_heap h1)) (mem_of_heap h2) /\ h == h1 `H.join` h2
+
+let dep_hprop_is_affine0
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (h h': H.heap)
+  (sq' : squash (dep_hprop s f h /\ H.disjoint h h'))
+: Lemma
+  (H.disjoint h h' /\ dep_hprop s f (H.join h h'))
+=
+  let p2 (h h1 h2: H.heap) : Tot prop =
+    interp s (mem_of_heap h1) /\
+    H.disjoint h1 h2 /\ interp (f (mem_of_heap h1)) (mem_of_heap h2) /\ h == h1 `H.join` h2
+  in
+  let p1 (h h1: H.heap) : Tot prop =
+    (exists h2 . p2 h h1 h2)
+  in
+  let h1 =
+    FStar.IndefiniteDescription.indefinite_description_ghost H.heap (p1 h)
+  in
+  let h2 =
+    FStar.IndefiniteDescription.indefinite_description_ghost H.heap (p2 h h1)
+  in
+  H.disjoint_join h' h1 h2;
+  assert (H.disjoint h2 h');
+  let h2' = H.join h2 h' in
+  assert (h2' == H.join h' h2);
+  assert (H.disjoint h1 h2');
+  assert (mem_of_heap h2' == mem_of_heap h2 `join` mem_of_heap h');
+  interp_depends_only_on (f (mem_of_heap h1));
+  assert (interp (f (mem_of_heap h1)) (mem_of_heap h2'));
+  H.join_associative h' h2 h1;
+  assert (H.join h h' == h1 `H.join` h2')
+
+let impl_intro_gen (#p: Type0) (#q: Type0) ($prf: (squash p -> Lemma (q )))
+    : Lemma (p ==> q)
+= Classical.impl_intro_gen #p #(fun _ -> q) prf
+
+let dep_hprop_is_affine1
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (h0 h1: H.heap)
+: Lemma
+  ((dep_hprop s f h0 /\ H.disjoint h0 h1) ==> (H.disjoint h0 h1 /\ dep_hprop s f (H.join h0 h1)))
+= impl_intro_gen (dep_hprop_is_affine0 s f h0 h1)
+
+let dep_hprop_is_affine
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Lemma
+  (H.heap_prop_is_affine (dep_hprop s f))
+= Classical.forall_intro_2 (dep_hprop_is_affine1 s f)
+
+let sdep
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Tot slprop
+=
+  dep_hprop_is_affine s f;
+  H.as_slprop (dep_hprop s f)
+
+let interp_sdep
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (m: mem)
+: Lemma
+  (requires (dep_slprop_is_affine s f))
+  (ensures (
+    interp (sdep s f) m <==> (exists m1 . exists m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
+  ))
+= 
+  dep_hprop_is_affine s f;
+  assert (forall m1 m2 . (interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m) ==> (
+    interp s (mem_of_heap m1.heap) /\ interp (f (mem_of_heap m1.heap)) (mem_of_heap m2.heap) /\
+    H.disjoint m1.heap m2.heap /\
+    H.join m1.heap m2.heap == m.heap
+  ));
+  interp_depends_only_on s;
+  Classical.forall_intro (fun m -> interp_depends_only_on (f m));
+  assert (forall h1 h2 . (interp s (mem_of_heap h1) /\ interp (f (mem_of_heap h1)) (mem_of_heap h2) /\ H.disjoint h1 h2 /\ H.join h1 h2 == m.heap) ==> (
+    core_mem (mem_of_heap h1) == core_mem (mem_set_heap m h1) /\
+    interp s (core_mem (mem_of_heap h1)) /\
+    interp s (mem_set_heap m h1) /\
+    core_mem (mem_of_heap h1) == core_mem (mem_set_heap m h1) /\
+    f (mem_set_heap m h1) `equiv` f (mem_of_heap h1) /\
+    interp (f (mem_set_heap m h1)) (mem_of_heap h2) /\
+    interp (f (mem_set_heap m h1)) (mem_set_heap m h2) /\
+    disjoint (mem_set_heap m h1) (mem_set_heap m h2) /\
+    join (mem_set_heap m h1) (mem_set_heap m h2) == m
+  ));
+  ()
+
 let h_exists_cong (#a:Type) (p q : a -> slprop)
     : Lemma
       (requires (forall x. p x `equiv` q x))

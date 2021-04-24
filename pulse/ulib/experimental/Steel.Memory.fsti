@@ -55,8 +55,9 @@ val join_commutative (m0 m1:mem)
     (requires
       disjoint m0 m1)
     (ensures
-      (disjoint_sym m0 m1;
+      (disjoint m1 m0 /\
        join m0 m1 == join m1 m0))
+    [SMTPat (join m0 m1)]
 
 (** Disjointness distributes over join *)
 val disjoint_join (m0 m1 m2:mem)
@@ -300,6 +301,28 @@ val interp_refine_slprop
 : Lemma
   (interp (refine_slprop sl f) m <==> (interp sl m /\ f m))
   [SMTPat (interp (refine_slprop sl f) m)]
+
+val sdep
+  (s: slprop u#a)
+  (f: (hmem s -> Tot (slprop u#a)))
+: Tot (slprop u#a)
+
+let dep_slprop_is_affine
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Tot prop
+= (forall (h: hmem s) . f h `equiv`  f (core_mem h))
+
+val interp_sdep
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (m: mem)
+: Lemma
+  (requires (dep_slprop_is_affine s f))
+  (ensures (
+    interp (sdep s f) m <==> (exists m1 . exists m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
+  ))
+  [SMTPat (interp (sdep s f) m)]
 
 (** See [Steel.Heap.h_exists_cong] *)
 val h_exists_cong (#a:Type) (p q : a -> slprop)

@@ -67,8 +67,9 @@ val join_commutative (h0 h1:heap)
     (requires
       disjoint h0 h1)
     (ensures
-      (disjoint_sym h0 h1;
+      (disjoint h1 h0 /\
        join h0 h1 == join h1 h0))
+    [SMTPat (join h0 h1)]
 
 (** Disjointness distributes over join *)
 val disjoint_join (h0 h1 h2:heap)
@@ -86,7 +87,8 @@ val join_associative (h0 h1 h2:heap)
       disjoint h1 h2 /\
       disjoint h0 (join h1 h2))
     (ensures
-      (disjoint_join h0 h1 h2;
+      (disjoint h0 h1 /\
+       disjoint (join h0 h1) h2 /\
        join h0 (join h1 h2) == join (join h0 h1) h2))
 
 (**** Separation logic over heaps *)
