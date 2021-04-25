@@ -201,6 +201,34 @@ let elim_star p q m =
   assert (interp q mr);
   ()
 
+let interp_star
+  (p q: slprop)
+  (m: mem)
+: Lemma
+  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
+= let left = interp (p `star` q) m in
+  let right = exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m in
+  let f ()
+  : Lemma
+    (requires left)
+    (ensures right)
+  =
+    elim_star p q m
+  in
+  let g ()
+  : Lemma
+    (requires right)
+    (ensures left)
+  =
+    Classical.exists_elim left #_ #(fun mp -> exists (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m) () (fun mp ->
+      Classical.exists_elim left #_ #(fun mq -> disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m) () (fun mq ->
+        intro_star p q mp mq
+      )
+    )
+  in
+  Classical.move_requires f ();
+  Classical.move_requires g ()
+
 let star_commutative (p1 p2:slprop) =
   H.star_commutative p1 p2
 
