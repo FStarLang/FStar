@@ -246,18 +246,25 @@ let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
 [@__steel_reduce__]
 let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
 
-val vdep_hp (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot (slprop u#1)
+val vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (slprop u#1)
 
-val interp_vdep_hp (v: vprop) (p: (normal (t_of v) -> Tot vprop)) (m: mem) : Lemma
+val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
   (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
 
 [@__steel_reduce__]
-let vdep_t (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot Type
-= dtuple2 (t_of v) (fun x -> t_of (p x))
+let vdep_payload
+  (v: vprop) (p: ( (t_of v) -> Tot vprop))
+  (x: t_of v)
+: Tot Type
+= t_of (p x)
 
-val vdep_sel (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
+[@__steel_reduce__]
+let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
+= dtuple2 (t_of v) (vdep_payload v p)
 
-val vdep_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
+val vdep_sel (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
+
+val vdep_sel_eq (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
   (
     interp (hp_of v) m /\
     begin let x = sel_of v m in
@@ -267,14 +274,14 @@ val vdep_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot vprop)) (m: hmem (vdep_hp
   )
 
 [@__steel_reduce__]
-let vdep' (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot vprop' = {
+let vdep' (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot vprop' = {
   hp = vdep_hp v p;
   t = vdep_t v p;
   sel = vdep_sel v p;
 }
 
 [@__steel_reduce__]
-let vdep (v: vprop) (p: (normal (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
+let vdep (v: vprop) (p: ( (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
 
 val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
 

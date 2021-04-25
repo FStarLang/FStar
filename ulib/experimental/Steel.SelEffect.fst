@@ -551,6 +551,31 @@ let change_slprop_rel0 (p q:vprop)
 
 let change_slprop_rel p q rel proof = SteelSel?.reflect (change_slprop_rel0 p q rel proof)
 
+let change_slprop_rel_with_cond0 (p q:vprop)
+  (cond: t_of p -> prop)
+  (rel : (t_of p) -> (t_of q) -> prop)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures
+      interp (hp_of p) m /\
+      interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : repr unit false p (fun _ -> q) (fun m -> cond (m p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  = fun frame ->
+      let m = nmst_get () in
+
+      proof (core_mem m);
+      let h0 = mk_rmem p (core_mem m) in
+      let h1 = mk_rmem q (core_mem m) in
+      reveal_mk_rmem p (core_mem m) p;
+      reveal_mk_rmem q (core_mem m) q;
+      intro_star p q (frame `Mem.star` locks_invariant Set.empty m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof
+
+let change_slprop_rel_with_cond
+  p q cond rel proof
+=
+  SteelSel?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
+
 let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
@@ -769,6 +794,104 @@ let elim_vrefine v p =
       interp_vrefine_hp v p m;
       vrefine_sel_eq v p m
     )
+
+let vdep_cond
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+: Tot prop
+= q == p (fst x1)
+
+let vdep_rel
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+  (x2: (t_of (vdep v p)))
+: Tot prop
+=
+  q == p (fst x1) /\
+  dfst (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == fst x1 /\
+  dsnd (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == snd x1
+
+let intro_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (v `star` q)) m /\
+    q == p (fst (sel_of (v `star` q) m))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
+
+let intro_vdep
+  v q p
+=
+  change_slprop_rel_with_cond
+    (v `star` q)
+    (vdep v p)
+    (vdep_cond v q p)
+    (vdep_rel v q p)
+    (fun m -> intro_vdep_lemma v q p m)
+
+let vdep_cond_recip
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+  (x2: t_of (vdep v p))
+: Tot prop
+= q == p (dfst (x2 <: dtuple2 (t_of v) (vdep_payload v p)))
+
+let vdep_rel_recip
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x2: (t_of (vdep v p)))
+  (x1: t_of (v `star` q))
+: Tot prop
+=
+  vdep_rel v q p x1 x2
+
+let elim_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (vdep v p)) m /\
+    q == p (dfst (sel_of (vdep v p) m <: dtuple2 (t_of v) (vdep_payload v p)))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
+
+let elim_vdep
+  v p q
+=
+  change_slprop_rel_with_cond
+    (vdep v p)
+    (v `star` q)
+    (vdep_cond_recip v p q)
+    (vdep_rel_recip v q p)
+    (fun m -> elim_vdep_lemma v q p m)
 
 let intro_vrewrite
   v #t f
