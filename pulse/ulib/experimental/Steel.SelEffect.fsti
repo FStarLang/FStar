@@ -289,6 +289,15 @@ val change_slprop_rel (p q:vprop)
       rel (sel_of p m) (sel_of q m))
   ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
 
+val change_slprop_rel_with_cond (p q:vprop)
+  (cond:  (t_of p) -> prop)
+  (rel :  (t_of p) ->  (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSel unit p (fun _ -> q) (fun h0 -> cond (h0 p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
 val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
@@ -391,6 +400,38 @@ val elim_vrefine
 : SteelSel unit (vrefine v p) (fun _ -> v)
   (requires (fun _ -> True))
   (ensures (fun h _ h' -> normal (h' v == h (vrefine v p))))
+
+val intro_vdep
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+: SteelSel unit
+    (v `star` q)
+    (fun _ -> vdep v p)
+    (requires (fun h -> q == p (fst (h (v `star` q)))))
+    (ensures (fun h _ h' ->
+      let x1 = h (v `star` q) in
+      let x2 = h' (vdep v p) in
+      q == p (fst x1) /\
+      dfst x2 == fst x1 /\
+      dsnd x2 == snd x1
+    ))
+
+val elim_vdep
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelSel unit
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h _ h' ->
+      let x1 = h' (v `star` q) in
+      let x2 = h (vdep v p) in
+      q == p (fst x1) /\
+      dfst x2 == fst x1 /\
+      dsnd x2 == snd x1
+  ))
 
 val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
