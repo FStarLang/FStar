@@ -246,6 +246,36 @@ let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
 [@__steel_reduce__]
 let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
 
+val vdep_hp (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot (slprop u#1)
+
+val interp_vdep_hp (v: vprop) (p: (normal (t_of v) -> Tot vprop)) (m: mem) : Lemma
+  (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
+
+[@__steel_reduce__]
+let vdep_t (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot Type
+= dtuple2 (t_of v) (fun x -> t_of (p x))
+
+val vdep_sel (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
+
+val vdep_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    begin let x = sel_of v m in
+      interp (hp_of (p x)) m /\
+      vdep_sel v p m == (| x, sel_of (p x) m |)
+    end
+  )
+
+[@__steel_reduce__]
+let vdep' (v: vprop) (p: (normal (t_of v) -> Tot vprop)) : Tot vprop' = {
+  hp = vdep_hp v p;
+  t = vdep_t v p;
+  sel = vdep_sel v p;
+}
+
+[@__steel_reduce__]
+let vdep (v: vprop) (p: (normal (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
+
 val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
 
 val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: hmem (normal (hp_of v))) : Lemma

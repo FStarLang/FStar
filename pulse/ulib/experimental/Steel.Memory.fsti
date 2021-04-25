@@ -209,6 +209,11 @@ val elim_star (p q:slprop) (m:hmem (p `star` q))
     (ensures exists ml mr.
       disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
 
+val interp_star
+  (p q: slprop)
+  (m: mem)
+: Lemma
+  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
 
 val star_commutative (p1 p2:slprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))

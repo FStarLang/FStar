@@ -69,6 +69,58 @@ let vrefine_sel_eq
   v p m
 = ()
 
+let vdep_hp_payload
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (h: hmem (hp_of v))
+: Tot slprop
+= hp_of (p (sel_of v h))
+
+let vdep_hp
+  v p
+=
+  sdep (hp_of v) (vdep_hp_payload v p)
+
+let interp_vdep_hp
+  v p m
+=
+  interp_sdep (hp_of v) (vdep_hp_payload v p) m;
+  let left = interp (vdep_hp v p) m in
+  let right = interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m in
+  let f ()
+  : Lemma
+    (requires left)
+    (ensures right)
+  = interp_star (hp_of v) (hp_of (p (sel_of v m))) m
+  in
+  let g ()
+  : Lemma
+    (requires right)
+    (ensures left)
+  = interp_star (hp_of v) (hp_of (p (sel_of v m))) m
+  in
+  Classical.move_requires f ();
+  Classical.move_requires g ()
+
+let vdep_sel'
+  (v: vprop)
+  (p: t_of v -> Tot vprop)
+: Tot (selector' (vdep_t v p) (vdep_hp v p))
+=
+  fun (m: hmem (vdep_hp v p)) ->
+    interp_vdep_hp v p m;
+    let x = sel_of v m in
+    let y = sel_of (p (sel_of v m)) m in
+    (| x, y |)
+
+let vdep_sel
+  v p
+= vdep_sel' v p
+
+let vdep_sel_eq
+  v p m
+= ()
+
 let vrewrite_sel
   v #t f
 =
