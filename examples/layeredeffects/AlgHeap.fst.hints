@@ -106,8 +106,7 @@
         "assumption_AlgHeap.op__uu___haseq",
         "binder_x_bfe6865375d9e3a5d62c8bd2da2213dd_3",
         "disc_equation_AlgHeap.Op", "disc_equation_AlgHeap.Return",
-        "equality_tok_Prims.LexTop@tok", "equality_tok_Prims.T@tok",
-        "equation_AlgHeap.ops", "equation_Prims.l_Forall",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_Forall",
         "equation_Prims.l_True", "equation_Prims.l_and",
         "equation_Prims.squash", "equation_Prims.subtype_of",
         "fuel_guarded_inversion_AlgHeap.tree0",
@@ -115,10 +114,10 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "typing_tok_Prims.T@tok",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "e310ac05aa72d0f07458e140d1c13840"
+      "70498aa8dc28a7c71f1ed053c90bce37"
     ],
     [
       "AlgHeap.interp_at",
@@ -226,8 +225,7 @@
         "constructor_distinct_AlgHeap.Op",
         "constructor_distinct_AlgHeap.Return",
         "data_typing_intro_AlgHeap.Write@tok", "disc_equation_AlgHeap.Op",
-        "disc_equation_AlgHeap.Return", "equality_tok_Prims.LexTop@tok",
-        "equation_AlgHeap.ops", "equation_AlgHeap.sublist",
+        "disc_equation_AlgHeap.Return", "equation_AlgHeap.sublist",
         "equation_with_fuel_AlgHeap.abides.fuel_instrumented",
         "fuel_guarded_inversion_AlgHeap.tree0", "l_and-interp",
         "l_quant_interp_a54c91e92db6ceaa94cb23ae6a87fe97",
@@ -237,10 +235,10 @@
         "projection_inverse_AlgHeap.Return__0",
         "projection_inverse_AlgHeap.Return_a",
         "projection_inverse_BoxBool_proj_0",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "c9175a0069be048f7ff10855d6f0ddfc"
+      "bb5ce021a4e45e7ee1ba70c9cf58a32d"
     ],
     [
       "AlgHeap.abides_at_self",
@@ -311,8 +309,7 @@
         "binder_x_d1a5ef0bcbf845c469b0cc25f4046dcc_5",
         "binder_x_fe28d8bcde588226b4e538b35321de05_2",
         "constructor_distinct_AlgHeap.Op", "disc_equation_AlgHeap.Op",
-        "disc_equation_AlgHeap.Return", "equality_tok_Prims.LexTop@tok",
-        "equation_AlgHeap.ops", "equation_AlgHeap.tree",
+        "disc_equation_AlgHeap.Return", "equation_AlgHeap.tree",
         "equation_with_fuel_AlgHeap.abides.fuel_instrumented",
         "fuel_guarded_inversion_AlgHeap.tree0", "l_and-interp",
         "l_quant_interp_a54c91e92db6ceaa94cb23ae6a87fe97",
@@ -321,10 +318,10 @@
         "projection_inverse_AlgHeap.Op_op",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "759f9e19a53646612e975e17d9b3c80d"
+      "9dc4adb72af4f40ec802dad2fc61e260"
     ],
     [
       "AlgHeap.handler_ty",
@@ -613,15 +610,15 @@
         "constructor_distinct_AlgHeap.Write",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_AlgHeap.Op", "data_elim_Prims.Cons",
+        "data_typing_intro_AlgHeap.Op@tok",
         "data_typing_intro_AlgHeap.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_AlgHeap.Op",
         "disc_equation_AlgHeap.Read", "disc_equation_AlgHeap.Return",
         "disc_equation_AlgHeap.Write", "equality_tok_AlgHeap.Read@tok",
-        "equality_tok_AlgHeap.Write@tok", "equality_tok_Prims.LexTop@tok",
-        "equation_AlgHeap.op_out", "equation_AlgHeap.ops",
-        "equation_AlgHeap.rwtree", "equation_AlgHeap.tree",
-        "equation_Prims.eqtype",
+        "equality_tok_AlgHeap.Write@tok", "equation_AlgHeap.op_out",
+        "equation_AlgHeap.ops", "equation_AlgHeap.rwtree",
+        "equation_AlgHeap.tree", "equation_Prims.eqtype",
         "equation_with_fuel_AlgHeap.abides.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_AlgHeap.op",
@@ -638,10 +635,10 @@
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
         "typing_FStar.List.Tot.Base.mem", "typing_tok_AlgHeap.Read@tok",
         "typing_tok_AlgHeap.Write@tok", "unit_inversion", "unit_typing",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "fe8928ae9002b604f0c8dbc604a017a8"
+      "740a8b5012f845bfab8beb75ff7238a9"
     ],
     [
       "AlgHeap.interp_rdwr_tree",
@@ -660,7 +657,9 @@
         "constructor_distinct_AlgHeap.Read",
         "constructor_distinct_AlgHeap.Write",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_AlgHeap.Op", "data_typing_intro_Prims.Cons@tok",
+        "data_elim_AlgHeap.Op", "data_elim_Prims.Cons",
+        "data_typing_intro_AlgHeap.Op@tok",
+        "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_AlgHeap.Op",
         "disc_equation_AlgHeap.Read", "disc_equation_AlgHeap.Return",
         "disc_equation_AlgHeap.Write", "equality_tok_AlgHeap.Read@tok",
@@ -683,10 +682,10 @@
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
         "typing_FStar.List.Tot.Base.mem", "typing_tok_AlgHeap.Read@tok",
         "typing_tok_AlgHeap.Write@tok", "unit_typing",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "83ad47fc2714e8c0e34f714ef250749a"
+      "d6c8f2df22b168da14aa82df2c4428ca"
     ],
     [
       "AlgHeap.interp_ret",
@@ -781,16 +780,16 @@
         "constructor_distinct_AlgHeap.Write",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_AlgHeap.Op", "data_elim_Prims.Cons",
+        "data_typing_intro_AlgHeap.Op@tok",
         "data_typing_intro_AlgHeap.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_AlgHeap.Op",
         "disc_equation_AlgHeap.Read", "disc_equation_AlgHeap.Return",
         "disc_equation_AlgHeap.Write", "equality_tok_AlgHeap.Read@tok",
-        "equality_tok_AlgHeap.Write@tok", "equality_tok_Prims.LexTop@tok",
-        "equation_AlgHeap.op_inp", "equation_AlgHeap.op_out",
-        "equation_AlgHeap.ops", "equation_AlgHeap.rwtree",
-        "equation_AlgHeap.tree", "equation_AlgHeap.wp_is_monotonic",
-        "equation_Prims.eqtype",
+        "equality_tok_AlgHeap.Write@tok", "equation_AlgHeap.op_inp",
+        "equation_AlgHeap.op_out", "equation_AlgHeap.ops",
+        "equation_AlgHeap.rwtree", "equation_AlgHeap.tree",
+        "equation_AlgHeap.wp_is_monotonic", "equation_Prims.eqtype",
         "equation_with_fuel_AlgHeap.abides.fuel_instrumented",
         "equation_with_fuel_AlgHeap.interp_as_wp.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -817,10 +816,10 @@
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
         "typing_FStar.List.Tot.Base.mem", "typing_tok_AlgHeap.Read@tok",
         "typing_tok_AlgHeap.Write@tok", "unit_inversion", "unit_typing",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "f509f5de0ec3b6d25defe5e24de42c19"
+      "75ccdc0867ccca576e42f8638ba654e0"
     ],
     [
       "AlgHeap.elim_str",
@@ -872,6 +871,7 @@
         "constructor_distinct_AlgHeap.Write",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_AlgHeap.Op", "data_elim_Prims.Cons",
+        "data_typing_intro_AlgHeap.Op@tok",
         "data_typing_intro_AlgHeap.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_AlgHeap.Op",
@@ -919,10 +919,10 @@
         "typing_Tm_abs_a755f7a82084ad9826bf4703876f4efd",
         "typing_tok_AlgHeap.Read@tok", "typing_tok_AlgHeap.Write@tok",
         "unit_inversion", "unit_typing",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "aa14e7333005e800275857332be2b3fd"
+      "0552202b4875ec9d76d6d812b970a90e"
     ],
     [
       "AlgHeap.interp_bind",
@@ -1312,10 +1312,10 @@
         "token_correspondence_AlgHeap.interp_as_wp",
         "typing_AlgHeap.interp_as_wp", "typing_tok_AlgHeap.Read@tok",
         "typing_tok_AlgHeap.Write@tok", "unit_typing",
-        "well_founded_ordering_on_comdain_AlgHeap.Op"
+        "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "88ebfe7193ad3da453c7afad86d0f114"
+      "88c49a336d137f56c84b023d63122d20"
     ],
     [
       "AlgHeap.soundness",
