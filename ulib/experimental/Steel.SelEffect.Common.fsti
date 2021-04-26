@@ -482,6 +482,9 @@ let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (am
     let new_term = mk_app hd new_args in
     update a new_term am, uvar_terms@prev_uvar_terms
 
+let fail_atoms (#a:Type) (l1 l2:list atom) (am:amap term) : Tac a
+  = fail ("could not find a solution for unifying\n" ^ print_atoms l1 am ^ "\nand\n" ^ print_atoms l2 am)
+
 let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool) =
   match l1 with
@@ -510,8 +513,7 @@ let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:am
       if n' >= n then
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        fail ("could not find a solution for unifying\n" ^ print_atoms rem1 am ^ "\nand\n" ^ print_atoms rem2 am)
-//        fail ("could not find candidate for this scrutinee " ^ term_to_string (get_head rem2 am))
+        fail_atoms rem1 rem2 am
       else equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' am
 
 let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list term)
@@ -525,7 +527,7 @@ let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list t
    that the two lists are unifiable at any point
    The boolean indicates if there is a leftover empty frame
    *)
-let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
+let rec equivalent_lists' (n:nat) (use_smt:bool) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool * list term) =
   match l1 with
   | [] -> begin match l2 with
@@ -550,13 +552,16 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
-      if n' >= n then
+      if n' >= n then (
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
-        let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
-        l1_f, l2_f, b, uvar_terms
-      else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
+        if use_smt then
+          // SMT fallback is allowed
+          let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
+          let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
+          l1_f, l2_f, b, uvar_terms
+        else fail_atoms rem1 rem2 am
+      ) else equivalent_lists' n' use_smt rem1 rem2 l1_del' l2_del' am
 
 (* Checks if term for atom t unifies with fall uvars in l *)
 let rec unifies_with_all_uvars (t:term) (l:list atom) (am:amap term) : Tac bool =
@@ -587,12 +592,12 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
    If it succeeds, returns permutations of l1, l2, and a boolean indicating
    if l2 has a trailing empty frame to be unified
 *)
-let equivalent_lists (l1 l2:list atom) (am:amap term)
+let equivalent_lists (use_smt:bool) (l1 l2:list atom) (am:amap term)
   : Tac (list atom * list atom * bool * list term)
 = let l1, l2, l1_del, l2_del = trivial_cancels l1 l2 am in
   let l1 = most_restricted_at_top l1 l2 am in
   let n = List.Tot.length l1 in
-  let l1_del, l2_del, emp_frame, uvar_terms = equivalent_lists' n l1 l2 l1_del l2_del am in
+  let l1_del, l2_del, emp_frame, uvar_terms = equivalent_lists' n use_smt l1 l2 l1_del l2_del am in
   l1_del, l2_del, emp_frame, uvar_terms
 
 open FStar.Reflection.Derived.Lemmas
@@ -1099,7 +1104,7 @@ let close_equality_typ' (t:term) : Tac unit =
 let close_equality_typ (t:term) : Tac unit =
   visit_tm close_equality_typ' t
 
-let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
+let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CE.CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
@@ -1108,7 +1113,7 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
 // Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
   let l1_raw, l2_raw, emp_frame, uvar_terms =
     try
-      let res = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+      let res = equivalent_lists use_smt (flatten r1_raw) (flatten r2_raw) am in
       raise (Result res) with
     | TacticFailure m -> fail m
     | Result res -> res
@@ -1170,7 +1175,7 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
            exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
-let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
+let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
@@ -1184,7 +1189,7 @@ let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
        then (
          match index xy (length xy - 2) , index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           canon_l_r eq m pr pr_bind lhs rhs
+           canon_l_r use_smt eq m pr pr_bind lhs rhs
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )
        else (
@@ -1195,8 +1200,8 @@ let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
 
 (* Try to integrate it into larger tactic *)
 
-let canon' (pr:term) (pr_bind:term) : Tac unit =
-  canon_monoid (`req) (`rm) pr pr_bind
+let canon' (use_smt:bool) (pr:term) (pr_bind:term) : Tac unit =
+  canon_monoid use_smt (`req) (`rm) pr pr_bind
 
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
@@ -1235,7 +1240,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
                               `%fst; `%snd];
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
-                       canon' (`true_p) (`true_p)));
+                       canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1267,7 +1272,7 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' p p_bind));
+              canon' true p p_bind));
 
         true
 
@@ -1301,7 +1306,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                    `%fst; `%snd];
                 delta_attr [`%__reduce__];
                  primops; iota; zeta];
-            canon' (`true_p) (`true_p)));
+            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1336,7 +1341,7 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' pr p_bind));
+              canon' true pr p_bind));
 
         true
 
@@ -1370,7 +1375,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                     `%fst; `%snd];
                                   delta_attr [`%__reduce__];
                                   primops; iota; zeta];
-                            canon'(`true_p) (`true_p)));
+                            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1397,7 +1402,7 @@ let solve_equiv (args:list argv) : Tac bool =
                       `%fst; `%snd];
                     delta_attr [`%__reduce__];
                     primops; iota; zeta];
-              canon'(`true_p) (`true_p)));
+              canon' false (`true_p) (`true_p)));
         true
 
       ) else false
@@ -1433,7 +1438,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                     `%fst; `%snd];
                                   delta_attr [`%__reduce__];
                                   primops; iota; zeta];
-                            canon'(`true_p) (`true_p)));
+                            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1710,4 +1715,4 @@ let selector_tactic () : Tac unit =
          `%fst; `%snd];
        delta_attr [`%__reduce__];
        primops; iota; zeta];
-  canon' (`true_p) (`true_p)
+  canon' false (`true_p) (`true_p)
