@@ -1,10 +1,7 @@
-(*
- * AR: This is unsound in the presence of concurrency, see PR#2276
- *)
 type 'a ref = 'a FStar_ST.ref
 
 (*
- * TODO: What about null and is_null?
+ * TODO: null and is_null?
  *)
 
 let alloc = FStar_ST.alloc
