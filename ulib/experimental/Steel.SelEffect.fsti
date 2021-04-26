@@ -266,6 +266,18 @@ val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
 
+let gget (p: vprop) : SteelSel (Ghost.erased (t_of p))
+  p (fun _ -> p)
+  (requires (fun _ -> True))
+  (ensures (fun h0 res h1 ->
+    h1 p == h0 p /\
+    Ghost.reveal res == h0 p /\
+    Ghost.reveal res == h1 p
+  ))
+=
+  let m = get #p () in
+  Ghost.hide (m p)
+
 val change_slprop (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
@@ -432,6 +444,50 @@ val elim_vdep
       dfst x2 == fst x1 /\
       dsnd x2 == snd x1
   ))
+
+let elim_vdep2
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelSel (Ghost.erased (t_of v))
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h res h' ->
+      let x1 = h' (v `star` q) in
+      let x2 = h (vdep v p) in
+      q == p (fst x1) /\
+      dfst x2 == fst x1 /\
+      dsnd x2 == snd x1 /\
+      Ghost.reveal res == fst x1
+  ))
+=
+  elim_vdep v p q;
+  let r = gget (v `star` q) in
+  Ghost.hide (fst (Ghost.reveal r))
+
+(* FIXME: WHY WHY WHY does this version fail:
+let elim_vdep3
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelSel (Ghost.erased (t_of v))
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h res h' ->
+      let x1 = h' (v `star` q) in
+      let x2 = h (vdep v p) in
+      q == p (fst x1) /\
+      dfst x2 == fst x1 /\
+      dsnd x2 == snd x1 /\
+      Ghost.reveal res == fst x1
+  ))
+=
+  let r = gget (vdep v p) in
+  elim_vdep v p q; // FAIL here: cannot prove precondition
+  Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r))
+*)
 
 val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
