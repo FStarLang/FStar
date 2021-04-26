@@ -449,7 +449,7 @@ let interp_sdep
 : Lemma
   (requires (dep_slprop_is_affine s f))
   (ensures (
-    interp (sdep s f) m <==> (exists m1 . exists m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
+    interp (sdep s f) m <==> (exists m1 m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
   ))
 = 
   dep_hprop_is_affine s f;
