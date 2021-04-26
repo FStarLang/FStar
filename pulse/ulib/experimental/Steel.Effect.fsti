@@ -232,12 +232,12 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 (* Exposing actions as Steel functions *)
 
 val par (#aL:Type u#a)
+        (#aR:Type u#a)
         (#preL:slprop u#1)
         (#postL:aL -> slprop u#1)
         (#lpreL:req_t preL)
         (#lpostL:ens_t preL aL postL)
         ($f:unit -> Steel aL preL postL lpreL lpostL)
-        (#aR:Type u#a)
         (#preR:slprop u#1)
         (#postR:aR -> slprop u#1)
         (#lpreR:req_t preR)
