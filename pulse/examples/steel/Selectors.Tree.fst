@@ -4,7 +4,7 @@ open Selectors.Tree.Core
 open Steel.Memory
 open Steel.SelEffect
 
-module Spec = FStar.Trees
+module Spec = Trees
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 50"
 

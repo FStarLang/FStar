@@ -5,7 +5,7 @@ open Steel.FractionalPermission
 
 module Mem = Steel.Memory
 module R = Steel.Reference
-module Spec = FStar.Trees
+module Spec = Trees
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 15"
 
