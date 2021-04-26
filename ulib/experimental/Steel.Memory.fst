@@ -407,12 +407,16 @@ let dep_hprop_is_affine0
   H.disjoint_join h' h1 h2;
   assert (H.disjoint h2 h');
   let h2' = H.join h2 h' in
+  H.join_commutative h2 h' ;
   assert (h2' == H.join h' h2);
   assert (H.disjoint h1 h2');
   assert (mem_of_heap h2' == mem_of_heap h2 `join` mem_of_heap h');
   interp_depends_only_on (f (mem_of_heap h1));
   assert (interp (f (mem_of_heap h1)) (mem_of_heap h2'));
+  H.join_commutative h1 h2;
   H.join_associative h' h2 h1;
+  H.join_commutative h' h;
+  H.join_commutative h2' h1;
   assert (H.join h h' == h1 `H.join` h2')
 
 let impl_intro_gen (#p: Type0) (#q: Type0) ($prf: (squash p -> Lemma (q )))

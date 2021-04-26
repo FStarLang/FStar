@@ -55,9 +55,9 @@ val join_commutative (m0 m1:mem)
     (requires
       disjoint m0 m1)
     (ensures
-      (disjoint m1 m0 /\
+      (disjoint m0 m1 /\
+       disjoint m1 m0 /\
        join m0 m1 == join m1 m0))
-    [SMTPat (join m0 m1)]
 
 (** Disjointness distributes over join *)
 val disjoint_join (m0 m1 m2:mem)
