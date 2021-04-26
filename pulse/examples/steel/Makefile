@@ -11,7 +11,7 @@ include ../Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
 
-OCAML_DEFAULT_FLAGS += -thread
+OCAML_DEFAULT_FLAGS += -I $(OUTPUT_DIRECTORY) -w -31
 
-counter: _output/OWGCounter.ml
-	$(OCAMLOPT) $< -o counter.exe
+counter: _output/OWGCounter.ml OWGCounterTest.ml
+	$(OCAMLC) -o counter.exe $^
