@@ -108,8 +108,11 @@ $(TACLIB_OBJECTS): _fstartaclib
 FSTARLIB_DIR=../bin/fstarlib
 TACLIB_DIR=../bin/fstar-tactics-lib
 
-FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
-	*.cmi *.cmx extracted/*.cmi extracted/*.cmx $(FSTARLIB_OBJECTS))
+FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/, \
+	ml/*.cmi ml/*.cmx \
+        experimental/ml/*.cmi experimental/ml/*.cmx \
+        ml/extracted/*.cmi ml/extracted/*.cmx \
+        $(addprefix ml/, $(FSTARLIB_OBJECTS)))
 TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
 
