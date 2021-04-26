@@ -64,6 +64,7 @@ OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS
 
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
   -I ulib/ml \
+  -I ulib/experimental/ml \
   -I ulib/ml/extracted
 
 TACLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/tactics_ml/_build \
@@ -71,8 +72,8 @@ TACLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/tactics_ml/_build \
   -I ulib/tactics_ml/extracted \
   -I ulib/tactics_ml/fstarlib_leftovers
 
-ml/fstarlib.mllib: fstarlib.mgen $(wildcard ml/*.ml ml/extracted/*.ml)
-	./gen_mllib.sh ml ml/extracted > $@
+ml/fstarlib.mllib: fstarlib.mgen $(wildcard ml/*.ml experimental/ml/*.ml ml/extracted/*.ml)
+	./gen_mllib.sh ml experimental/ml ml/extracted > $@
 
 # Please don't create an empty fstartactics.ml: ocamlbuild < 0.11 gives higher
 # priority to its cmx -> cmxs rule than to the cmxa -> cmx one, so an empty
