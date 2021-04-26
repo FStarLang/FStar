@@ -114,10 +114,10 @@ let free #a #v r =
   change_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
   H.free #_ #v' r
 
-let share_atomic #a #uses #p #v r =
+let share #a #uses #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
   change_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
-  H.share_atomic #_ #_ #p #v' r;
+  H.share #_ #_ #p #v' r;
   change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ());
   change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ())
 
@@ -131,12 +131,12 @@ let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
     assert (U.downgrade_val (U.raise_val (reveal v0)) == U.downgrade_val (U.raise_val (reveal v1)) <==>
             v0 == v1)
 
-let gather_atomic #a #uses #p0 #p1 #v0 #v1 r =
+let gather #a #uses #p0 #p1 #v0 #v1 r =
   let v0' = Ghost.hide (U.raise_val (Ghost.reveal v0)) in
   let v1' = Ghost.hide (U.raise_val (Ghost.reveal v1)) in
   change_slprop (pts_to r p0 v0) (H.pts_to r p0 v0') (fun _ -> ());
   change_slprop (pts_to r p1 v1) (H.pts_to r p1 v1') (fun _ -> ());
-  let (u:unit{v0' == v1'}) = H.gather_atomic #_ #_ #p0 #p1 #v0' #v1' r in
+  let (u:unit{v0' == v1'}) = H.gather #_ #_ #p0 #p1 #v0' #v1' r in
   change_slprop (H.pts_to r (sum_perm p0 p1) v0') (pts_to r (sum_perm p0 p1) v0) (fun _ -> ());
   u
 
@@ -201,7 +201,7 @@ let raise_erased (#a:Type0) (x:erased a)
 let ghost_pts_to #a r p x = H.ghost_pts_to #(U.raise_t a) r p (raise_erased x)
 
 let ghost_alloc (#a:Type) (#u:_) (x:erased a)
-  : SteelAtomicT (ghost_ref a) u unobservable
+  : SteelGhostT (ghost_ref a) u
     emp
     (fun r -> ghost_pts_to r full_perm x)
   =
@@ -225,7 +225,7 @@ let ghost_gather (#a:Type) (#u:_)
                  (#p0 #p1:perm)
                  (#x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
@@ -234,7 +234,7 @@ let ghost_gather (#a:Type) (#u:_)
   = H.ghost_gather r
 
 let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
-  : SteelAtomic unit u unobservable
+  : SteelGhost unit u
     (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
@@ -242,7 +242,7 @@ let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
   = H.ghost_pts_to_injective_eq r (raise_erased v0) (raise_erased v1)
 
 let ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
-  : SteelAtomicT unit u unobservable
+  : SteelGhostT unit u
     (ghost_pts_to r full_perm v)
     (fun _ -> ghost_pts_to r full_perm x)
   = H.ghost_write r (raise_erased x)

@@ -10,7 +10,7 @@ let pure_upd_next
 assume
 val upd_next
   (#a: Type0) (#u: _) (#v: Ghost.erased (cell a)) (x:t a) (nxt:t a)
-     : SteelAtomic unit u observable (pts_to x v)
+     : SteelAtomic unit u (pts_to x v)
                             (fun _ -> pts_to x (pure_upd_next v nxt))
                             (requires (fun _ -> True))
                             (ensures (fun _ _ _ -> True))
@@ -137,7 +137,7 @@ let new_queue
 #push-options "--ide_id_info_off --print_implicits"
 
 let witness_h_exists_erased (#a:Type) (#opened_invariants:_) (#p: Ghost.erased a -> slprop) (_:unit)
-  : SteelAtomicT (Ghost.erased a) opened_invariants unobservable
+  : SteelGhostT (Ghost.erased a) opened_invariants
                 (h_exists p) (fun x -> p x)
 =
   let w = witness_h_exists #(Ghost.erased a) #_ #p () in
@@ -174,7 +174,7 @@ let enqueue
   let lhd = Ghost.hide (unsnoc_hd (Ghost.reveal lc)) in
   let ltl = Ghost.hide (unsnoc_tl (Ghost.reveal lc)) in
   L.lemma_append_last lhd [Ghost.reveal ltl];
-  next_last_correct hd lc;  
+  next_last_correct hd lc;
   change_slprop
     (fragment hd lc)
     (fragment hd lhd `star` (pts_to tl (Ghost.hide (snd ltl)) `star` emp `star` pure (next_last hd lhd == fst ltl)))
@@ -206,7 +206,7 @@ let enqueue
 
 assume
 val read_next (#a: _) (#u: _) (#v: _) (x:t a)
-    : SteelAtomic (t a) u observable (pts_to x v)
+    : SteelAtomic (t a) u (pts_to x v)
                             (fun _ -> pts_to x v)
                             (requires (fun _ -> True))
                             (ensures (fun _ res _ -> res == v.next))

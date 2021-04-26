@@ -670,7 +670,7 @@ let queue_equiv
 
 let peek_pure
   (#uses:_) (p:prop)
-  : SteelAtomicT (_:unit{p}) uses unobservable
+  : SteelGhostT (_:unit{p}) uses
                 (pure p)
                 (fun _ -> pure p)
 =

@@ -39,7 +39,7 @@ let return a (x:a) (#[@@@ framing_implicit] p: a -> slprop) : steelK a true (ret
 private
 let rearrange3 (p q r:slprop) : Lemma
   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q)))
-  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon' (`true_p) (`true_p)
+  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon' false (`true_p) (`true_p)
 
 let bind (a:Type) (b:Type)
   (#framed_f:eqtype_as_type bool) (#framed_g:eqtype_as_type bool)

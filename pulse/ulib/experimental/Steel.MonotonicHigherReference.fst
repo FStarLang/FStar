@@ -273,9 +273,8 @@ let extract_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomicT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
-           unobservable
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
@@ -290,9 +289,8 @@ let elim_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomicT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
-           unobservable
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
   = let _ = extract_pure r v h in

@@ -38,7 +38,7 @@ assume atomic field update primitive:
  wriet (c.next) = last
 *)
 val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:Ghost.erased (cell a)) (last:t a)
-  : SteelAtomic unit u observable
+  : SteelAtomic unit u
                 (queue hd tl `star` pts_to last v)
                 (fun _ -> queue hd last)
                 (requires fun _ -> v.next == null)
@@ -71,6 +71,6 @@ let dequeue_post (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
       dequeue_post_success tl hd p
 
 val dequeue (#a:_) (#u:_) (#tl:Ghost.erased (t a)) (hd:t a)
-  : SteelAtomicT (option (t a)) u observable
+  : SteelAtomicT (option (t a)) u
                  (queue hd tl)
                  (dequeue_post tl hd)

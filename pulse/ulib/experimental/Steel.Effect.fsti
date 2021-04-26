@@ -149,7 +149,7 @@ let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) 
 = fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
 let if_then_else (a:Type)
-  (#framed:eqtype_as_type bool)// (#framed_g:eqtype_as_type bool)
+  (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
@@ -222,35 +222,12 @@ val bind_pure_steel_ (a:Type) (b:Type)
 
 polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 
-// AF: The lift below works, but the framing tactic currently requires annotations
-// when scope restriction occurs (i.e. during returns). See for instance the comment
-// on test7 in Steel.FramingTestSuite. When a lift is available, returns are not inserted,
-// which leads to errors
-
-// unfold
-// let lift_pure_steel__req (#a:Type) (wp:pure_wp a)
-// : req_t emp
-// = fun m -> as_requires wp /\ True
-
-// unfold
-// let lift_pure_steel__ens (#a:Type) (wp:pure_wp a)
-// : ens_t emp a (fun _ -> emp)
-// = fun m0 r m1 -> as_requires wp /\ as_ensures wp r
-
-// val lift_pure_steel
-//   (a:Type)
-//   (#[@@@ framing_implicit] wp:pure_wp a)
-//   (f:eqtype_as_type unit -> PURE a wp)
-//   : repr a false emp (fun _ -> emp) (lift_pure_steel__req wp) (lift_pure_steel__ens wp)
-
-// sub_effect PURE ~> SteelBase = lift_pure_steel
-
 (*
 //  * Annotations without the req and ens
 //  *)
 
 effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
-  SteelBase a false pre post (fun _ -> True) (fun _ _ _ -> True)
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (* Exposing actions as Steel functions *)
 
