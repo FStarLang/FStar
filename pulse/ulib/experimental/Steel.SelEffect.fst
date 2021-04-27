@@ -885,13 +885,13 @@ let elim_vdep_lemma
 
 let elim_vdep
   v p q
-=
-  change_slprop_rel_with_cond
+= change_slprop_rel_with_cond
     (vdep v p)
     (v `star` q)
     (vdep_cond_recip v p q)
     (vdep_rel_recip v q p)
-    (fun m -> elim_vdep_lemma v q p m)
+    (fun m -> elim_vdep_lemma v q p m);
+  reveal_star v q
 
 let intro_vrewrite
   v #t f
