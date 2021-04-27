@@ -178,7 +178,7 @@ let as_atomic_action_ghost f = SteelGhost?.reflect f
 let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
 
 (*
- * AR: SteelAtomic ang SteelGhost are not marked reifiable since we intend to run Steel programs natively
+ * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
  *     However to implement the with_inv combinators we need to reify their thunks to reprs
  *     We could implement it better by having support for reification only in the .fst file
  *     But for now assuming a function

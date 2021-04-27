@@ -195,7 +195,6 @@ let if_then_else (a:Type)
     (if_then_else_req s_pre req_then req_else p)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
-[@@allow_informative_binders]
 reflectable
 effect {
   SteelSelBase
