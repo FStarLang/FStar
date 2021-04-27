@@ -452,11 +452,12 @@ val elim_vdep
   (fun _ -> v `star` q)
   (requires (fun h -> q == p (dfst (h (vdep v p)))))
   (ensures (fun h _ h' ->
-      let x1 = h' (v `star` q) in
+      let fs = h' v in
+      let sn = h' q in
       let x2 = h (vdep v p) in
-      q == p (fst x1) /\
-      dfst x2 == fst x1 /\
-      dsnd x2 == snd x1
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
   ))
 
 let elim_vdep2
@@ -468,19 +469,19 @@ let elim_vdep2
   (fun _ -> v `star` q)
   (requires (fun h -> q == p (dfst (h (vdep v p)))))
   (ensures (fun h res h' ->
-      let x1 = h' (v `star` q) in
+      let fs = h' v in
+      let sn = h' q in
       let x2 = h (vdep v p) in
-      q == p (fst x1) /\
-      dfst x2 == fst x1 /\
-      dsnd x2 == snd x1 /\
-      Ghost.reveal res == fst x1
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn /\
+      Ghost.reveal res == fs
   ))
 =
   elim_vdep v p q;
-  let r = gget (v `star` q) in
-  Ghost.hide (fst (Ghost.reveal r))
+  let r = gget v in
+  r
 
-(* FIXME: WHY WHY WHY does this version fail:
 let elim_vdep3
   (v: vprop)
   (p: (t_of v -> Tot vprop))
@@ -490,18 +491,18 @@ let elim_vdep3
   (fun _ -> v `star` q)
   (requires (fun h -> q == p (dfst (h (vdep v p)))))
   (ensures (fun h res h' ->
-      let x1 = h' (v `star` q) in
+      let fs = h' v in
+      let sn = h' q in
       let x2 = h (vdep v p) in
-      q == p (fst x1) /\
-      dfst x2 == fst x1 /\
-      dsnd x2 == snd x1 /\
-      Ghost.reveal res == fst x1
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn /\
+      Ghost.reveal res == fs
   ))
 =
   let r = gget (vdep v p) in
   elim_vdep v p q; // FAIL here: cannot prove precondition
   Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r))
-*)
 
 val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
