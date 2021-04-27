@@ -222,7 +222,6 @@ let incr_with_invariant
 (*
  * The main thread
  *)
-#set-options "--debug OWGCounterInv --debug_level Extraction --print_implicits --ugly"
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
