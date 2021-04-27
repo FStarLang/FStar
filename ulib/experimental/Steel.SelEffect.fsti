@@ -25,12 +25,33 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
 
 (* State that all "atomic" subresources have the same selectors on both views *)
 
+(* AF 04/27/2021: The linear equality generation, where equalities are only
+   generated for leaf, VUnit nodes, works well for concrete code, but does
+   not allow to propagate information when handling abstract vprops.
+   While defining generic combinators on vprops such as vrefine and vdep,
+   Tahina encountered issues with this. For instance, elim_vdep returns
+   a v `star` q, where v and q are abstract vprops. As such, equalities
+   on the selectors of v and q are not propagated: Normalization gets stuck
+   on both v and q, since they are neither a VUnit nor a VStar.
+   An earlier fix was creating a "top-level" equality on the full vprop
+   to handle most generic vprops cases. Unfortunately, this does not
+   help when we have atomic, abstract vprops as in v `star` q.
+   For now, I'm reenabling quadratic equality generation. But we need
+   to find a better way to handle generic vprops selectors while avoiding
+   a context blowup; furthermore, equalities on composite resources are mostly
+   irrelevant because of AC-rewriting, and because we do not provide patterns
+   on lemmas relating sel (p * q) with (sel p, sel q), or sel (p * q) with
+   sel (q * p) for instance.
+   We should instead have a better way to define atomic vprops, which encapsulates
+   atomic, abstract vprops
+*)
 [@@ __steel_reduce__]
-let rec frame_equalities'
+let rec frame_equalities
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
-  = begin match frame with
-    | VUnit p -> h0 frame == h1 frame
+  = h0 frame == h1 frame /\
+    begin match frame with
+    | VUnit p -> True
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -42,16 +63,9 @@ let rec frame_equalities'
         let h12 = focus_rmem h1 p2 in
 
 
-        frame_equalities' p1 h01 h11 /\
-        frame_equalities' p2 h02 h12
+        frame_equalities p1 h01 h11 /\
+        frame_equalities p2 h02 h12
     end
-
-(* In addition to equalities on atomic subresources, we need an equality at the toplevel,
-   in case we are handling an abstract vprop where reduction through frame_equalities'
-   would be stuck *)
-[@@ __steel_reduce__]
-let frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) : prop =
-  h0 frame == h1 frame /\ frame_equalities' frame h0 h1
 
 (* Defining the Steel effect with selectors *)
 
