@@ -3218,7 +3218,7 @@ and check_inner_let env e =
        let is_inline_let = BU.for_some (U.is_fvar FStar.Parser.Const.inline_let_attr) lb.lbattrs in
        let _ =
         if is_inline_let
-        && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let allowed on erasable effects
+        && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let is allowed on erasable effects
         then raise_error (Errors.Fatal_ExpectedPureExpression,
                           BU.format2 "Definitions marked @inline_let are expected to be pure or ghost; \
                                       got an expression \"%s\" with effect \"%s\""

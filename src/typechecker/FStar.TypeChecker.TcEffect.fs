@@ -1483,7 +1483,7 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
 
   let m1 = Env.norm_eff_name env m1 in
   if lid_equals m1 PC.effect_GHOST_lid
-  then err "lifts from GHOST effect are not allowed"
+  then err "user-defined lifts from GHOST effect are not allowed"
   else
     let m1_erasable = Env.is_erasable_effect env m1 in
     let m2_erasable = Env.is_erasable_effect env m2 in
@@ -1651,7 +1651,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   (lid, uvs, tps, c)
 
 
-let check_polymonadic_bind_for_erasable_effects env m n p r =
+let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) r =
   let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
                                 BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
                                   (string_of_lid m) (string_of_lid n) (string_of_lid p) reason) r in
@@ -1661,17 +1661,18 @@ let check_polymonadic_bind_for_erasable_effects env m n p r =
 
   if lid_equals m PC.effect_GHOST_lid ||
      lid_equals n PC.effect_GHOST_lid
-  then err "polymonadic binds are not allowed for GHOST"
+  then err "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
   else
     let m_erasable = Env.is_erasable_effect env m in
     let n_erasable = Env.is_erasable_effect env n in
     let p_erasable = Env.is_erasable_effect env p in
 
 
-    if p_erasable &&
-       ((not m_erasable && not (lid_equals m PC.effect_PURE_lid))||
-        (not n_erasable && not (lid_equals n PC.effect_PURE_lid)))
-    then err "p is erasable and one of m or n is neither erasable nor PURE"
+    if p_erasable
+    then if not m_erasable && not (lid_equals m PC.effect_PURE_lid)
+         then err (BU.format1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid m))
+         else if not n_erasable && not (lid_equals n PC.effect_PURE_lid)
+         then err (BU.format1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid n))
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"

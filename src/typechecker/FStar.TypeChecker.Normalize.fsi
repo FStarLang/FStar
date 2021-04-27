@@ -63,7 +63,7 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
  * The two input computations are to be composed or related by subcomp
  * These functions first call the maybe versions of ghost_to_pure, and then
  *   if one of them is erasable, and the other is GHOST,
- *   the GHOST one is promoted to PURE
+ *   the GHOST one is promoted to PURE, see their implementation for more details
  *)
 val ghost_to_pure2 : Env.env -> (comp * comp) -> (comp * comp)
 val ghost_to_pure_lcomp2 : Env.env -> (lcomp * lcomp) -> (lcomp * lcomp)

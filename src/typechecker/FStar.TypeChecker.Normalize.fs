@@ -2847,9 +2847,18 @@ let non_info_norm env t =
   in
   non_informative env (normalize steps env t)
 
-(* Promotes Ghost T, when T is not informative to Pure T
-        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
-*)
+(*
+ * Ghost T to Pure T promotion
+ *
+ * The promotion applies in two scenarios:
+ *
+ * One when T is non-informative, where
+ *     Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
+ *
+ * Second when Ghost T is being composed with or lifted to another
+ *   erasable effect
+ *)
+
 let maybe_promote_t env non_informative_only t =
   not non_informative_only || non_info_norm env t
 
@@ -2885,44 +2894,52 @@ let ghost_to_pure_lcomp_aux env non_informative_only (lc:lcomp) =
            lc
     else lc
 
+(* only promote non-informative types *)
 let maybe_ghost_to_pure env c = ghost_to_pure_aux env true c
 let maybe_ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env true lc
+
+(* promote unconditionally *)
 let ghost_to_pure env c = ghost_to_pure_aux env false c
 let ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env false lc
 
+(*
+ * The following functions implement GHOST to PURE promotion
+ *   when the GHOST effect is being composed with or lifted to
+ *   another erasable effect
+ * In that case the "ghostness" or erasability of GHOST is already
+ *   accounted for in the erasable effect
+ *)
 let ghost_to_pure2 env (c1, c2) =
-  let c1 = maybe_ghost_to_pure env c1 in
-  let c2 = maybe_ghost_to_pure env c2 in
+  let c1, c2 = maybe_ghost_to_pure env c1, maybe_ghost_to_pure env c2 in
 
   let c1_eff = c1 |> U.comp_effect_name |> Env.norm_eff_name env in
   let c2_eff = c2 |> U.comp_effect_name |> Env.norm_eff_name env in
 
-  let c1_erasable = Env.is_erasable_effect env c1_eff in
-  let c2_erasable = Env.is_erasable_effect env c2_eff in
-  
   if Ident.lid_equals c1_eff c2_eff then c1, c2
-  else if c1_erasable && Ident.lid_equals c2_eff PC.effect_GHOST_lid
-  then c1, ghost_to_pure env c2
-  else if c2_erasable && Ident.lid_equals c1_eff PC.effect_GHOST_lid
-  then ghost_to_pure env c1, c2
-  else c1, c2
+  else let c1_erasable = Env.is_erasable_effect env c1_eff in
+       let c2_erasable = Env.is_erasable_effect env c2_eff in
+  
+       if c1_erasable && Ident.lid_equals c2_eff PC.effect_GHOST_lid
+       then c1, ghost_to_pure env c2
+       else if c2_erasable && Ident.lid_equals c1_eff PC.effect_GHOST_lid
+       then ghost_to_pure env c1, c2
+       else c1, c2
 
 let ghost_to_pure_lcomp2 env (lc1, lc2) =
-  let lc1 = maybe_ghost_to_pure_lcomp env lc1 in
-  let lc2 = maybe_ghost_to_pure_lcomp env lc2 in
+  let lc1, lc2 = maybe_ghost_to_pure_lcomp env lc1, maybe_ghost_to_pure_lcomp env lc2 in
 
   let lc1_eff = Env.norm_eff_name env lc1.eff_name in
   let lc2_eff = Env.norm_eff_name env lc2.eff_name in
 
-  let lc1_erasable = Env.is_erasable_effect env lc1_eff in
-  let lc2_erasable = Env.is_erasable_effect env lc2_eff in
-  
   if Ident.lid_equals lc1_eff lc2_eff then lc1, lc2
-  else if lc1_erasable && Ident.lid_equals lc2_eff PC.effect_GHOST_lid
-  then lc1, ghost_to_pure_lcomp env lc2
-  else if lc2_erasable && Ident.lid_equals lc1_eff PC.effect_GHOST_lid
-  then ghost_to_pure_lcomp env lc1, lc2
-  else lc1, lc2
+  else let lc1_erasable = Env.is_erasable_effect env lc1_eff in
+       let lc2_erasable = Env.is_erasable_effect env lc2_eff in
+  
+       if lc1_erasable && Ident.lid_equals lc2_eff PC.effect_GHOST_lid
+       then lc1, ghost_to_pure_lcomp env lc2
+       else if lc2_erasable && Ident.lid_equals lc1_eff PC.effect_GHOST_lid
+       then ghost_to_pure_lcomp env lc1, lc2
+       else lc1, lc2
 
 let term_to_string env t =
   let t =
