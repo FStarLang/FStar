@@ -469,10 +469,10 @@ let unsnoc #a l =
     element itself. *)
 val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
 let split3 #a l i =
-  let a, as = splitAt i l in
+  let x, xs = splitAt i l in
   lemma_splitAt_snd_length i l;
-  let b :: c = as in
-  a, b, c
+  let y :: z = xs in
+  x, y, z
 
 (** Sorting (implemented as quicksort) **)
 

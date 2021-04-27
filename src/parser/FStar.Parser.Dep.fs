@@ -863,6 +863,10 @@ let collect_one
         | LetOpen (lid, t) ->
             add_to_parsing_data (P_open (true, lid));
             collect_term t
+        | LetOpenRecord (r, rty, e) ->
+            collect_term r;
+            collect_term rty;
+            collect_term e
         | Bind(_, t1, t2)
         | Seq (t1, t2) ->
             collect_term t1;

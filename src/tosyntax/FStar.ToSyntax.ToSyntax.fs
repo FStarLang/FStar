@@ -1290,6 +1290,43 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let env = Env.push_namespace env lid in
       (if Env.expect_typ env then desugar_typ_aq else desugar_term_aq) env e
 
+    | LetOpenRecord (r, rty, e) ->
+      let rec head_of (t:term) : term =
+        match t.tm with
+        | App (t, _, _) -> head_of t
+        | _ -> t
+      in
+      let tycon = head_of rty in
+      let tycon_name =
+        match tycon.tm with
+        | Var l -> l
+        | _ ->
+          raise_error (Errors.Error_BadLetOpenRecord,
+                       BU.format1 "This type must be a (possibly applied) record name" (term_to_string rty))
+                      rty.range
+      in
+      let record =
+        match Env.try_lookup_record_type env tycon_name with
+        | Some r -> r
+        | None ->
+          raise_error (Errors.Error_BadLetOpenRecord,
+                       BU.format1 "Not a record type: `%s`" (term_to_string rty))
+                      rty.range
+      in
+      let constrname = lid_of_ns_and_id (ns_of_lid record.typename) record.constrname in
+      let mk_pattern p = mk_pattern p r.range in
+      let elab =
+        let pat =
+          (* All of the fields are explicit arguments of the constructor, hence the None below *)
+          mk_pattern (PatApp (mk_pattern (PatName constrname),
+                              List.map (fun (field, _) -> mk_pattern (PatVar (field, None, []))) record.fields))
+        in
+        let branch = (pat, None, e) in
+        let r = mk_term (Ascribed (r, rty, None)) r.range Expr in
+        { top with tm = Match (r, None, [branch]) }
+      in
+      desugar_term_maybe_top top_level env elab
+
     | Let(qual, lbs, body) ->
       let is_rec = qual = Rec in
       let ds_let_rec_or_app () =
