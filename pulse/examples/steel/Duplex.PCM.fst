@@ -1188,7 +1188,7 @@ let new_channel' (p:dprot)
             endpt_pred B cB p v);
   intro_exists v (endpt_pred A cA p);
   intro_exists v (endpt_pred B cB p);
-  (cA, cB)
+  steela_return (cA, cB)
 
 let channel_as_ch (#p:dprot) party (c:channel p) prot
   : SteelT unit (endpt party c prot)
@@ -1264,4 +1264,4 @@ let channel_recv (#name:party)
     change_slprop (ep name (| dfst c, dsnd c |) (step next x))
                   (ep name c (step next x))
                   (fun _ -> ());
-    x
+    steela_return x
