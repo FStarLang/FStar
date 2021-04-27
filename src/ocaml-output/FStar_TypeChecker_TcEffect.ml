@@ -5299,7 +5299,7 @@ let (check_lift_for_erasable_effects :
           let uu___ =
             FStar_Ident.lid_equals m11 FStar_Parser_Const.effect_GHOST_lid in
           if uu___
-          then err "lifts from GHOST effect are not allowed"
+          then err "user-defined lifts from GHOST effect are not allowed"
           else
             (let m1_erasable =
                FStar_TypeChecker_Env.is_erasable_effect env m11 in
@@ -6017,7 +6017,9 @@ let (check_polymonadic_bind_for_erasable_effects :
                 (FStar_Ident.lid_equals n1
                    FStar_Parser_Const.effect_GHOST_lid) in
             if uu___
-            then err "polymonadic binds are not allowed for GHOST"
+            then
+              err
+                "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
             else
               (let m_erasable =
                  FStar_TypeChecker_Env.is_erasable_effect env m1 in
@@ -6025,23 +6027,38 @@ let (check_polymonadic_bind_for_erasable_effects :
                  FStar_TypeChecker_Env.is_erasable_effect env n1 in
                let p_erasable =
                  FStar_TypeChecker_Env.is_erasable_effect env p in
-               let uu___2 =
-                 p_erasable &&
-                   (((Prims.op_Negation m_erasable) &&
-                       (let uu___3 =
-                          FStar_Ident.lid_equals m1
-                            FStar_Parser_Const.effect_PURE_lid in
-                        Prims.op_Negation uu___3))
-                      ||
-                      ((Prims.op_Negation n_erasable) &&
-                         (let uu___3 =
+               if p_erasable
+               then
+                 let uu___2 =
+                   (Prims.op_Negation m_erasable) &&
+                     (let uu___3 =
+                        FStar_Ident.lid_equals m1
+                          FStar_Parser_Const.effect_PURE_lid in
+                      Prims.op_Negation uu___3) in
+                 (if uu___2
+                  then
+                    let uu___3 =
+                      let uu___4 = FStar_Ident.string_of_lid m1 in
+                      FStar_Util.format1
+                        "target effect is erasable but %s is neither erasable nor PURE"
+                        uu___4 in
+                    err uu___3
+                  else
+                    (let uu___4 =
+                       (Prims.op_Negation n_erasable) &&
+                         (let uu___5 =
                             FStar_Ident.lid_equals n1
                               FStar_Parser_Const.effect_PURE_lid in
-                          Prims.op_Negation uu___3))) in
-               if uu___2
-               then
-                 err
-                   "p is erasable and one of m or n is neither erasable nor PURE"
+                          Prims.op_Negation uu___5) in
+                     if uu___4
+                     then
+                       let uu___5 =
+                         let uu___6 = FStar_Ident.string_of_lid n1 in
+                         FStar_Util.format1
+                           "target effect is erasable but %s is neither erasable nor PURE"
+                           uu___6 in
+                       err uu___5
+                     else ()))
                else ())
 let (tc_polymonadic_bind :
   FStar_TypeChecker_Env.env ->

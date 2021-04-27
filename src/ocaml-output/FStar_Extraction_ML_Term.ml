@@ -169,7 +169,7 @@ let (effect_as_etag :
            let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
            FStar_TypeChecker_Env.is_erasable_effect uu___3 l1 in
          if uu___2
-         then FStar_Extraction_ML_Syntax.E_GHOST
+         then FStar_Extraction_ML_Syntax.E_ERASABLE
          else
            (let ed_opt =
               let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
@@ -1878,7 +1878,7 @@ let (maybe_promote_effect :
     fun tag ->
       fun t ->
         match (tag, t) with
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
            FStar_Extraction_ML_Syntax.MLTY_Erased) ->
             (FStar_Extraction_ML_Syntax.ml_unit,
               FStar_Extraction_ML_Syntax.E_PURE)
@@ -2304,7 +2304,7 @@ let rec (check_term_as_mlexpr :
                FStar_Util.print3 "Checking %s at type %s and eff %s\n" uu___2
                  uu___3 uu___4);
           (match (f, ty) with
-           | (FStar_Extraction_ML_Syntax.E_GHOST, uu___1) ->
+           | (FStar_Extraction_ML_Syntax.E_ERASABLE, uu___1) ->
                (FStar_Extraction_ML_Syntax.ml_unit,
                  FStar_Extraction_ML_Syntax.MLTY_Erased)
            | (FStar_Extraction_ML_Syntax.E_PURE,
@@ -2323,7 +2323,7 @@ let rec (check_term_as_mlexpr :
                       (uu___4, ty)
                     else
                       (match (tag, f, ty) with
-                       | (FStar_Extraction_ML_Syntax.E_GHOST,
+                       | (FStar_Extraction_ML_Syntax.E_ERASABLE,
                           FStar_Extraction_ML_Syntax.E_PURE,
                           FStar_Extraction_ML_Syntax.MLTY_Erased) ->
                            let uu___5 =
@@ -2573,9 +2573,9 @@ and (term_as_mlexpr' :
        | FStar_Syntax_Syntax.Tm_meta
            (t1, FStar_Syntax_Syntax.Meta_monadic_lift (m1, _m2, _ty)) when
            let uu___1 = effect_as_etag g m1 in
-           uu___1 = FStar_Extraction_ML_Syntax.E_GHOST ->
+           uu___1 = FStar_Extraction_ML_Syntax.E_ERASABLE ->
            (FStar_Extraction_ML_Syntax.ml_unit,
-             FStar_Extraction_ML_Syntax.E_GHOST,
+             FStar_Extraction_ML_Syntax.E_ERASABLE,
              FStar_Extraction_ML_Syntax.MLTY_Erased)
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
@@ -3550,7 +3550,7 @@ and (term_as_mlexpr' :
                                   | (FStar_Extraction_ML_Syntax.E_PURE,
                                      FStar_Extraction_ML_Syntax.MLTY_Erased)
                                       -> [FStar_Extraction_ML_Syntax.Erased]
-                                  | (FStar_Extraction_ML_Syntax.E_GHOST,
+                                  | (FStar_Extraction_ML_Syntax.E_ERASABLE,
                                      FStar_Extraction_ML_Syntax.MLTY_Erased)
                                       -> [FStar_Extraction_ML_Syntax.Erased]
                                   | uu___5 -> [] in
