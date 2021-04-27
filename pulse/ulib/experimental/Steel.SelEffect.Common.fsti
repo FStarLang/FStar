@@ -250,14 +250,12 @@ val vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (slprop u#1)
 val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
   (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
 
-[@__steel_reduce__]
 let vdep_payload
   (v: vprop) (p: ( (t_of v) -> Tot vprop))
   (x: t_of v)
 : Tot Type
 = t_of (p x)
 
-[@__steel_reduce__]
 let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
 = dtuple2 (t_of v) (vdep_payload v p)
 
