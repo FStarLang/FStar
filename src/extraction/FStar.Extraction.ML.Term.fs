@@ -105,7 +105,7 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f1))
 
 (***********************************************************************)
-(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
+(* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
 let effect_as_etag =
     let cache = BU.smap_create 20 in
@@ -123,7 +123,7 @@ let effect_as_etag =
     if lid_equals l PC.effect_PURE_lid
     then E_PURE
     else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
-    then E_GHOST
+    then E_ERASABLE
     else
          // Reifiable effects should be pure. Added guard because some effect declarations
          // don't seem to be in the environment at this point, in particular FStar.All.ML
@@ -1016,7 +1016,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
 
 let maybe_promote_effect ml_e tag t =
     match tag, t with
-    | E_GHOST, MLTY_Erased
+    | E_ERASABLE, MLTY_Erased
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
@@ -1154,14 +1154,14 @@ let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * 
                         (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
     match f, ty with
-    | E_GHOST, _
+    | E_ERASABLE, _
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
-           | E_GHOST, E_PURE, MLTY_Erased -> //effect downgrading for erased results
+           | E_ERASABLE, E_PURE, MLTY_Erased -> //effect downgrading for erased results
              maybe_coerce e.pos g ml_e t ty, ty
            | _ ->
              err_unexpected_eff g e ty f tag;
@@ -1264,8 +1264,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
          end
 
         | Tm_meta (t, Meta_monadic_lift (m1, _m2, _ty))
-          when effect_as_etag g m1 = E_GHOST ->
-          ml_unit, E_GHOST, MLTY_Erased
+          when effect_as_etag g m1 = E_ERASABLE ->
+          ml_unit, E_ERASABLE, MLTY_Erased
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
@@ -1670,7 +1670,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               let meta =
                   match f, ty with
                   | E_PURE, MLTY_Erased
-                  | E_GHOST, MLTY_Erased -> [Erased]
+                  | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
               f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
