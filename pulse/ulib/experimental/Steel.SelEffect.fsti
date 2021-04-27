@@ -196,7 +196,7 @@ let if_then_else (a:Type)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 [@@allow_informative_binders]
-reifiable reflectable
+reflectable
 effect {
   SteelSelBase
     (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
