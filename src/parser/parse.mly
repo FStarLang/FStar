@@ -715,11 +715,21 @@ noSeqTerm:
         mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
 
-  | LET OPEN uid=quident IN e=term
-      { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
+  | LET OPEN t=term IN e=term
+      {
+            match t.tm with
+            | Ascribed(r, rty, None) ->
+              mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
 
-  | LET OPEN r=term AS rty=typ IN e=term
-      { mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 7) Expr }
+            | Name uid ->
+              mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr
+
+            | _ ->
+              raise_error (Fatal_SyntaxError, "Syntax error: local opens expects either opening\n\
+                                               a module or namespace using `let open T in e`\n\
+                                               or, a record type with `let open e <: t in e'`")
+                          (rhs parseState 3)
+      }
 
   | attrs=ioption(attribute)
     LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term

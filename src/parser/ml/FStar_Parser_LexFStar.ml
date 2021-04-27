@@ -45,7 +45,6 @@ let () =
   Hashtbl.add keywords "noeq"          NOEQUALITY  ;
   Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;
   Hashtbl.add keywords "and"           AND         ;
-  Hashtbl.add keywords "as"            AS          ;
   Hashtbl.add keywords "assert"        ASSERT      ;
   Hashtbl.add keywords "assume"        ASSUME      ;
   Hashtbl.add keywords "begin"         BEGIN       ;
