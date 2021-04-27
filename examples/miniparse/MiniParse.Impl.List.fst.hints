@@ -160,7 +160,9 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_MiniParse.Spec.List.parse_nlist_.fuel_instrumented",
-        "@query", "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
+        "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
@@ -292,7 +294,7 @@
         "typing_MiniParse.Spec.List.parse_nlist"
       ],
       0,
-      "70f69d69416b1b2f9885dc3485b5f568"
+      "20f9eca9ff8d578a53867bfd2801a572"
     ],
     [
       "MiniParse.Impl.List.list_rev",
