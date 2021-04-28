@@ -453,7 +453,7 @@ and translate_let env flavor lb: option<decl> =
         let env = add_binders env args in
         let cc = translate_cc meta in
         let meta = match eff, t with
-          | E_GHOST, _
+          | E_ERASABLE, _
           | E_PURE, TUnit -> MustDisappear :: translate_flags meta
           | _ -> translate_flags meta
         in

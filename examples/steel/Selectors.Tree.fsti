@@ -4,7 +4,7 @@ open Selectors.Tree.Core
 open Steel.Memory
 open Steel.SelEffect
 
-module Spec = FStar.Trees
+module Spec = Trees
 
 (**** High-level operations on trees *)
 

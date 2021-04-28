@@ -61,4 +61,4 @@ let pop #a ptr l =
   let n = next hd in
   drop (pts_to ptr full_perm c);
   change_slprop (llist (next hd) tl) (llist (next (L.hd l)) (L.tl l)) (fun _ -> ());
-  data c
+  return (data c)

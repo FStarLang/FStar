@@ -1568,7 +1568,7 @@ and (encode_term :
                                       let is_pure =
                                         let uu___8 =
                                           FStar_All.pipe_right res
-                                            (FStar_TypeChecker_Normalize.ghost_to_pure
+                                            (FStar_TypeChecker_Normalize.maybe_ghost_to_pure
                                                env.FStar_SMTEncoding_Env.tcenv) in
                                         FStar_All.pipe_right uu___8
                                           FStar_Syntax_Util.is_pure_comp in

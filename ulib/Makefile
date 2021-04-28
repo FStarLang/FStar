@@ -62,17 +62,18 @@ OCAMLPATH:="../../../bin/$(OCAMLPATH_SEP)$(OCAMLPATH)"
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
+# relative to ulib
+DIRS_WITH_FSTARLIB_ML_FILES = ml experimental/ml ml/extracted
+DIRS_WITH_TACLIB_ML_FILES = tactics_ml tactics_ml/extracted tactics_ml/fstarlib_leftovers
+
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
-  -I ulib/ml \
-  -I ulib/ml/extracted
+  $(addprefix -I ulib/,$(DIRS_WITH_FSTARLIB_ML_FILES))
 
 TACLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/tactics_ml/_build \
-  -I ulib/tactics_ml/ \
-  -I ulib/tactics_ml/extracted \
-  -I ulib/tactics_ml/fstarlib_leftovers
+  $(addprefix -I ulib/,$(DIRS_WITH_TACLIB_ML_FILES))
 
-ml/fstarlib.mllib: fstarlib.mgen $(wildcard ml/*.ml ml/extracted/*.ml)
-	./gen_mllib.sh ml ml/extracted > $@
+ml/fstarlib.mllib: fstarlib.mgen $(wildcard $(addsuffix /*.ml,$(DIRS_WITH_FSTARLIB_ML_FILES)))
+	./gen_mllib.sh $(DIRS_WITH_FSTARLIB_ML_FILES) > $@
 
 # Please don't create an empty fstartactics.ml: ocamlbuild < 0.11 gives higher
 # priority to its cmx -> cmxs rule than to the cmxa -> cmx one, so an empty
@@ -86,9 +87,9 @@ ml/fstarlib.mllib: fstarlib.mgen $(wildcard ml/*.ml ml/extracted/*.ml)
 # modules twice, once from the compiler and once from fstarlib (the compiler
 # relies on some realized files from ulib/ml).  Our workaround is to include in
 # fstartaclib all fstarlib modules not already in the compiler.
-TACLIB_ML=$(wildcard tactics_ml/*.ml tactics_ml/extracted/*.ml tactics_ml/fstarlib_leftovers/*.ml)
+TACLIB_ML=$(wildcard $(addsuffix /*.ml,$(DIRS_WITH_TACLIB_ML_FILES)))
 tactics_ml/fstartaclib.mllib: fstartaclib.mgen $(TACLIB_ML)
-	./gen_mllib.sh tactics_ml tactics_ml/extracted tactics_ml/fstarlib_leftovers > $@
+	./gen_mllib.sh $(DIRS_WITH_TACLIB_ML_FILES) > $@
 
 FSTARLIB_OBJECTS=fstarlib.a fstarlib.cma fstarlib.cmxs fstarlib.cmxa
 TACLIB_OBJECTS=fstartaclib.cma fstartaclib.cmxs fstartaclib.cmxa
@@ -107,10 +108,15 @@ $(TACLIB_OBJECTS): _fstartaclib
 FSTARLIB_DIR=../bin/fstarlib
 TACLIB_DIR=../bin/fstar-tactics-lib
 
-FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
-	*.cmi *.cmx extracted/*.cmi extracted/*.cmx $(FSTARLIB_OBJECTS))
-TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
-	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
+FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/, \
+        $(addsuffix /*.cmi,$(DIRS_WITH_FSTARLIB_ML_FILES)) \
+        $(addsuffix /*.cmx,$(DIRS_WITH_FSTARLIB_ML_FILES)) \
+        $(addprefix ml/,$(FSTARLIB_OBJECTS)))
+
+TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/, \
+        $(addsuffix /*.cmi,$(DIRS_WITH_TACLIB_ML_FILES)) \
+        $(addsuffix /*.cmx,$(DIRS_WITH_TACLIB_ML_FILES)) \
+        $(addprefix tactics_ml/,$(TACLIB_OBJECTS)))
 
 install-fstarlib: $(FSTARLIB_DIR)/META
 install-fstar-tactics: $(TACLIB_DIR)/META
