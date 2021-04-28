@@ -44,7 +44,7 @@ let v_c_dep
   (n: Ghost.erased nat)
   (#a: Type0)
   (r: t a)
-  (nllist: (n': Ghost.erased nat) -> (r: t a  { Ghost.reveal n' << Ghost.reveal n }) -> Pure vprop (requires True) (ensures (fun y -> t_of y == list a)))
+  (nllist: (n': Ghost.erased nat) -> (r: t a  { Ghost.reveal n' < Ghost.reveal n }) -> Pure vprop (requires True) (ensures (fun y -> t_of y == list a)))
   (c: normal (t_of (vrefine (vptr r) (v_c n r))))
 : Tot vprop
 = nllist c.tail_fuel c.next
@@ -53,7 +53,7 @@ let v_c_l_rewrite
   (n: Ghost.erased nat)
   (#a: Type0)
   (r: t a)
-  (nllist: (n': Ghost.erased nat) -> (r: t a { Ghost.reveal n' << Ghost.reveal n }) -> Pure vprop (requires True) (ensures (fun y -> t_of y == list a)))
+  (nllist: (n': Ghost.erased nat) -> (r: t a { Ghost.reveal n' < Ghost.reveal n }) -> Pure vprop (requires True) (ensures (fun y -> t_of y == list a)))
   (res: normal (t_of ((vptr r `vrefine` v_c n r) `vdep` v_c_dep n r nllist)))
 : Tot (list a)
 = let (| c, l |) = res in
