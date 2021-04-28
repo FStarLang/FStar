@@ -21,12 +21,6 @@ friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let observability = bool
-let has_eq_observability () = ()
-let observable = true
-let unobservable = false
-let observability_unequal = ()
-
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma
     (requires (interp hp m0 /\ disjoint m0 m1))
@@ -85,7 +79,7 @@ let repr a framed opened_invariants f pre post req ens =
 
 let return a x opened_invariants #p = fun _ -> x
 
-#push-options "--fuel 0 --ifuel 0"
+#push-options "--fuel 0 --ifuel 1"
 
 let interp_trans_left
   (o:inames)
@@ -195,7 +189,7 @@ let with_invariant #a #fp #fp' #opened i f =
 assume val reify_steel_ghost_comp
   (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
   (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelGhostBase a already_framed opened_invariants unobservable pre post req ens)
+  ($f:unit -> SteelGhostBase a already_framed opened_invariants Unobservable pre post req ens)
   : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let with_invariant_g #a #fp #fp' #opened i f =
@@ -208,7 +202,7 @@ let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
 
 let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
   (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : repr unit false opened unobservable p (fun _ -> p)
+  : repr unit false opened Unobservable p (fun _ -> p)
       (fun _ -> True)
       (fun _ _ _ -> fact)
   = fun frame ->
