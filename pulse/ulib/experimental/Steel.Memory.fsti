@@ -34,6 +34,10 @@ val mem  : Type u#(a + 1)
 *)
 val core_mem (m:mem u#a) : mem u#a
 
+val core_mem_invol (m: mem u#a) : Lemma
+  (core_mem (core_mem m) == core_mem m)
+  [SMTPat (core_mem (core_mem m))]
+
 (** A predicate describing non-overlapping memories. Based on [Steel.Heap.disjoint] *)
 val disjoint (m0 m1:mem u#h) : prop
 
@@ -51,7 +55,8 @@ val join_commutative (m0 m1:mem)
     (requires
       disjoint m0 m1)
     (ensures
-      (disjoint_sym m0 m1;
+      (disjoint m0 m1 /\
+       disjoint m1 m0 /\
        join m0 m1 == join m1 m0))
 
 (** Disjointness distributes over join *)
@@ -204,6 +209,11 @@ val elim_star (p q:slprop) (m:hmem (p `star` q))
     (ensures exists ml mr.
       disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
 
+val interp_star
+  (p q: slprop)
+  (m: mem)
+: Lemma
+  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
 
 val star_commutative (p1 p2:slprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
@@ -259,8 +269,8 @@ let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
 (** Any separation logic proposition valid over [m] is also valid on [core_mem m] *)
 val core_mem_interp (hp:slprop u#a) (m:mem u#a)
     : Lemma
-      (requires interp hp m)
-      (ensures interp hp (core_mem m))
+      (requires True)
+      (ensures (interp hp (core_mem m) <==> interp hp m))
       [SMTPat (interp hp (core_mem m))]
 
 (** Interpretation is an affine heap proposition. See [Steel.Heap.interp_depends_only_on] *)
@@ -274,6 +284,50 @@ let affine_star_smt (p q:slprop u#a) (m:mem u#a)
     : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
       [SMTPat (interp (p `star` q) m)]
     = affine_star p q m
+
+let mem_prop_is_affine
+  (sl: slprop u#a)
+  (f: (hmem sl -> Tot prop))
+: Tot prop
+= (forall m . f m <==> f (core_mem m)) /\
+  (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
+
+let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
+
+val refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+: Tot (slprop u#a)
+
+val interp_refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+  (m: mem u#a)
+: Lemma
+  (interp (refine_slprop sl f) m <==> (interp sl m /\ f m))
+  [SMTPat (interp (refine_slprop sl f) m)]
+
+val sdep
+  (s: slprop u#a)
+  (f: (hmem s -> Tot (slprop u#a)))
+: Tot (slprop u#a)
+
+let dep_slprop_is_affine
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Tot prop
+= (forall (h: hmem s) . f h `equiv`  f (core_mem h))
+
+val interp_sdep
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (m: mem)
+: Lemma
+  (requires (dep_slprop_is_affine s f))
+  (ensures (
+    interp (sdep s f) m <==> (exists m1 m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
+  ))
+  [SMTPat (interp (sdep s f) m)]
 
 (** See [Steel.Heap.h_exists_cong] *)
 val h_exists_cong (#a:Type) (p q : a -> slprop)

@@ -503,6 +503,18 @@ let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
 
 let change_slprop p q vp vq l  = SteelSel?.reflect (change_slprop0 p q vp vq l)
 
+let change_equal_slprop
+  p q
+= let m = get #p () in
+  let x : Ghost.erased (t_of p) = m p in
+  let y : Ghost.erased (t_of q) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    p
+    q
+    x
+    y
+    (fun _ -> ())
+
 #push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
 let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
   (proof:(m:mem) -> Lemma
@@ -538,6 +550,31 @@ let change_slprop_rel0 (p q:vprop)
       intro_star p q (frame `Mem.star` locks_invariant Set.empty m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof
 
 let change_slprop_rel p q rel proof = SteelSel?.reflect (change_slprop_rel0 p q rel proof)
+
+let change_slprop_rel_with_cond0 (p q:vprop)
+  (cond: t_of p -> prop)
+  (rel : (t_of p) -> (t_of q) -> prop)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures
+      interp (hp_of p) m /\
+      interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : repr unit false p (fun _ -> q) (fun m -> cond (m p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  = fun frame ->
+      let m = nmst_get () in
+
+      proof (core_mem m);
+      let h0 = mk_rmem p (core_mem m) in
+      let h1 = mk_rmem q (core_mem m) in
+      reveal_mk_rmem p (core_mem m) p;
+      reveal_mk_rmem q (core_mem m) q;
+      intro_star p q (frame `Mem.star` locks_invariant Set.empty m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof
+
+let change_slprop_rel_with_cond
+  p q cond rel proof
+=
+  SteelSel?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
 
 let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -729,3 +766,185 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
     write0 v r x;
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
+
+let vptr_not_null
+  #a r
+= change_slprop_rel
+    (vptr r)
+    (vptr r)
+    (fun x y -> x == y /\ R.is_null r == false)
+    (fun m -> R.pts_to_not_null r full_perm (ptr_sel r m) m)
+
+
+let intro_vrefine v p =
+  let m = get () in
+  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+  let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    v
+    (vrefine v p)
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
+
+let elim_vrefine v p =
+  let m = get () in
+  let x : Ghost.erased (vrefine_t v p) = Ghost.hide (m (vrefine v p)) in
+  let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    (vrefine v p)
+    v
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
+
+let vdep_cond
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+: Tot prop
+= q == p (fst x1)
+
+let vdep_rel
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+  (x2: (t_of (vdep v p)))
+: Tot prop
+=
+  q == p (fst x1) /\
+  dfst (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == fst x1 /\
+  dsnd (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == snd x1
+
+let intro_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (v `star` q)) m /\
+    q == p (fst (sel_of (v `star` q) m))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
+
+let intro_vdep
+  v q p
+=
+  reveal_star v q;
+  change_slprop_rel_with_cond
+    (v `star` q)
+    (vdep v p)
+    (vdep_cond v q p)
+    (vdep_rel v q p)
+    (fun m -> intro_vdep_lemma v q p m)
+
+let vdep_cond_recip
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+  (x2: t_of (vdep v p))
+: Tot prop
+= q == p (dfst (x2 <: dtuple2 (t_of v) (vdep_payload v p)))
+
+let vdep_rel_recip
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x2: (t_of (vdep v p)))
+  (x1: t_of (v `star` q))
+: Tot prop
+=
+  vdep_rel v q p x1 x2
+
+let elim_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (vdep v p)) m /\
+    q == p (dfst (sel_of (vdep v p) m <: dtuple2 (t_of v) (vdep_payload v p)))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
+
+let elim_vdep0
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelSel unit
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h _ h' ->
+      let fs = h' v in
+      let sn = h' q in
+      let x2 = h (vdep v p) in
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
+  ))
+= change_slprop_rel_with_cond
+    (vdep v p)
+    (v `star` q)
+    (vdep_cond_recip v p q)
+    (vdep_rel_recip v q p)
+    (fun m -> elim_vdep_lemma v q p m);
+  reveal_star v q
+
+let elim_vdep
+  v p
+=
+  let r = gget (vdep v p) in
+  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
+  elim_vdep0 v p (p (Ghost.reveal res));
+  res
+
+let intro_vrewrite
+  v #t f
+=
+  let m = get () in
+  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+  let x' : Ghost.erased t = Ghost.hide (f (Ghost.reveal x)) in
+  change_slprop
+    v
+    (vrewrite v f)
+    x
+    x'
+    (fun m ->
+      vrewrite_sel_eq v f m
+    )
+
+let elim_vrewrite
+  v #t f
+=
+  change_slprop_rel
+    (vrewrite v f)
+    v
+    (fun y x -> y == f x)
+    (fun m -> vrewrite_sel_eq v f m)
