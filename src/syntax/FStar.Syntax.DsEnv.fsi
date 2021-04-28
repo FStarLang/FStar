@@ -101,6 +101,7 @@ arguments are instantiated. *)
 val try_lookup_root_effect_name: env -> lident -> option<lident>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
+val try_lookup_record_type: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool
 val try_lookup_dc_by_field_name: env -> lident -> option<(lident * bool)>
 val try_lookup_definition: env -> lident -> option<term>

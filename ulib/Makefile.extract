@@ -31,8 +31,9 @@ $(OUTPUT_DIRECTORY)/%.ml:
 	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 .depend.extract:
-	mkdir -p .cache.lax
-	$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract
+	$(Q)mkdir -p .cache.lax
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract
+	@echo "[DEPEND]"
 
 depend.extract: .depend.extract
 

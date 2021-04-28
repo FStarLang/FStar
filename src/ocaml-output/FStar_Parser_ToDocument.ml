@@ -2539,6 +2539,25 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if ps in uu___1 uu___
+        | FStar_Parser_AST.LetOpenRecord (r, rty, e1) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = str "let open" in
+                  let uu___4 = p_term false pb r in
+                  let uu___5 = str "as" in
+                  FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
+                    uu___3 uu___4 uu___5 in
+                let uu___3 =
+                  let uu___4 = p_term false pb rty in
+                  let uu___5 =
+                    let uu___6 = str "in" in
+                    let uu___7 = p_term false pb e1 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+              FStar_Pprint.group uu___1 in
+            let uu___1 = paren_if ps in uu___1 uu___
         | FStar_Parser_AST.Let (q, lbs, e1) ->
             let p_lb q1 uu___ is_last =
               match uu___ with
@@ -3960,6 +3979,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Let uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.LetOpen uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.LetOpenRecord uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.Seq uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1

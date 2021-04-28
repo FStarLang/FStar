@@ -710,6 +710,11 @@ let (string_of_exported_id_kind : exported_id_kind -> Prims.string) =
     match uu___ with
     | Exported_id_field -> "field"
     | Exported_id_term_type -> "term/type"
+let (is_exported_id_termtype : exported_id_kind -> Prims.bool) =
+  fun uu___ ->
+    match uu___ with | Exported_id_term_type -> true | uu___1 -> false
+let (is_exported_id_field : exported_id_kind -> Prims.bool) =
+  fun uu___ -> match uu___ with | Exported_id_field -> true | uu___1 -> false
 let find_in_module_with_includes :
   'a .
     exported_id_kind ->
@@ -754,8 +759,6 @@ let find_in_module_with_includes :
                      | Cont_ignore -> aux (FStar_List.append mincludes q)
                      | uu___1 -> look_into) in
               aux [ns]
-let (is_exported_id_field : exported_id_kind -> Prims.bool) =
-  fun uu___ -> match uu___ with | Exported_id_field -> true | uu___1 -> false
 let try_lookup_id'' :
   'a .
     env ->
@@ -820,6 +823,11 @@ let try_lookup_id'' :
                              let uu___2 = FStar_Ident.ns_of_lid lid in
                              find_in_record uu___2 id1 r k_record)
                           Cont_ignore env1 uu___1 id
+                    | Record_or_dc r when is_exported_id_termtype eikind ->
+                        let uu___1 =
+                          let uu___2 = FStar_Ident.ident_of_lid r.typename in
+                          FStar_Ident.ident_equals uu___2 id in
+                        if uu___1 then k_record r else Cont_ignore
                     | uu___1 -> Cont_ignore in
                   let rec aux uu___ =
                     match uu___ with
@@ -2076,6 +2084,31 @@ let (try_lookup_record_by_field_name :
       | FStar_Pervasives_Native.Some r when r.is_record ->
           FStar_Pervasives_Native.Some r
       | uu___1 -> FStar_Pervasives_Native.None
+let (try_lookup_record_type :
+  env -> FStar_Ident.lident -> record_or_dc FStar_Pervasives_Native.option) =
+  fun env1 ->
+    fun typename ->
+      let find_in_cache name =
+        let uu___ =
+          let uu___1 = FStar_Ident.ns_of_lid name in
+          let uu___2 = FStar_Ident.ident_of_lid name in (uu___1, uu___2) in
+        match uu___ with
+        | (ns, id) ->
+            let uu___1 = peek_record_cache () in
+            FStar_Util.find_map uu___1
+              (fun record ->
+                 let uu___2 =
+                   let uu___3 = FStar_Ident.ident_of_lid record.typename in
+                   FStar_Ident.ident_equals uu___3 id in
+                 if uu___2
+                 then FStar_Pervasives_Native.Some record
+                 else FStar_Pervasives_Native.None) in
+      resolve_in_open_namespaces'' env1 typename Exported_id_term_type
+        (fun uu___ -> Cont_ignore) (fun uu___ -> Cont_ignore)
+        (fun r -> Cont_ok r)
+        (fun l ->
+           let uu___ = find_in_cache l in cont_of_option Cont_ignore uu___)
+        (fun k -> fun uu___ -> k)
 let (belongs_to_record :
   env -> FStar_Ident.lident -> record_or_dc -> Prims.bool) =
   fun env1 ->
