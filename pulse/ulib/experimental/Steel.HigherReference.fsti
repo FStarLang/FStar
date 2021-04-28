@@ -104,6 +104,7 @@ val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
 
 (*** Ghost references ***)
 
+[@@ erasable]
 val ghost_ref (a:Type u#1) : Type u#0
 
 val ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:erased a) : slprop u#1
