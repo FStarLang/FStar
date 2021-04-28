@@ -1,11 +1,13 @@
 module Steel.DisposableInvariant
+
+open FStar.Ghost
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Memory
 open Steel.FractionalPermission
 module A = Steel.Effect.Atomic
 #push-options "--ide_id_info_off"
 open Steel.Reference
-open FStar.Ghost
 
 [@@__reduce__]
 let conditional_inv (r:ghost_ref bool) (p:slprop) =
@@ -31,7 +33,7 @@ let new_inv #u p =
   ghost_share r;
   A.intro_exists true (conditional_inv r p);
   let i = A.new_invariant u (ex_conditional_inv r p) in
-  rewrite_context ();
+  rewrite_context ();  //TODO: this is rewriting gref (hide (| r, x |)) to r, revisit
   (| r, i |)
 
 let share #p #f #u i = ghost_share (gref i)
@@ -84,7 +86,7 @@ let with_invariant #a #fp #fp' #u #p #perm i f
       A.change_slprop (if b then p else emp) p (fun _ -> ());
       let x = f() in
       A.intro_exists true (conditional_inv r p);
-      steela_return x
+      return x
     in
     A.with_invariant (name i)
                      (with_invariant_aux (gref i))

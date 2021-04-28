@@ -54,7 +54,7 @@ let return_req (p:slprop u#1) : req_t p = fun _ -> True
 unfold
 let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ -> r == x
 
-val return (a:Type u#a)
+val return_ (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
    (#[@@@ framing_implicit] p:a -> slprop u#1)
@@ -195,7 +195,11 @@ effect {
                 (post:a -> slprop u#1)
                 (req:req_t pre)
                 (ens:ens_t pre a post)
-  with { repr; return; bind; subcomp; if_then_else }
+  with { repr = repr;
+         return = return_;
+         bind = bind;
+         subcomp = subcomp;
+         if_then_else = if_then_else }
 }
 
 total
@@ -425,5 +429,5 @@ val sghost (#a:Type) (#opened_invariants:inames)
   ($f:unit -> SteelGhostBase a false opened_invariants Unobservable pre post req ens)
   : SteelAtomicBase a false opened_invariants Unobservable pre post req ens
 
-val steela_return (#a:Type) (#opened_invariants:inames) (#p:a -> slprop) (x:a)
+val return (#a:Type) (#opened_invariants:inames) (#p:a -> slprop) (x:a)
   : SteelAtomicBase a true opened_invariants Unobservable (return_pre (p x)) p (fun _ -> True) (fun _ r _ -> r == x)

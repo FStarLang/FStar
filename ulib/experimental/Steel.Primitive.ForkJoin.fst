@@ -15,12 +15,12 @@
 *)
 
 module Steel.Primitive.ForkJoin
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 module L = Steel.SpinLock
 open Steel.FractionalPermission
-open FStar.Ghost
 open Steel.Reference
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ let acquire (#p:slprop) (t:thread p)
   = L.acquire t.l;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
-    steela_return b
+    return b
 
 let spawn (#p #q:slprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))

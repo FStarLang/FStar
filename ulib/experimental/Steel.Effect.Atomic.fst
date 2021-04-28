@@ -77,7 +77,7 @@ let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mp
 let repr a framed opened_invariants f pre post req ens =
     action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
-let return a x opened_invariants #p = fun _ -> x
+let return_ a x opened_invariants #p = fun _ -> x
 
 let interp_trans_left
   (o:inames)
@@ -229,5 +229,5 @@ let elim_pure #uses p = elim_pure_aux p
 
 let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)  
 
-let steela_return #a #opened_invariants #p x =
+let return #a #opened_invariants #p x =
   SteelAtomicBase?.reflect (fun _ -> x)

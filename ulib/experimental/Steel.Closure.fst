@@ -25,6 +25,6 @@ let new_counter' () =
   let f : ctr x = next x in
   let res : ctr_t = (| repr x, f |) in
   change_slprop (repr x 0) (dfst res 0) (fun _ -> ());
-  steela_return res
+  return res
 
 let new_counter = new_counter'

@@ -1265,6 +1265,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_meta (t, Meta_monadic_lift (m1, _m2, _ty))
           when effect_as_etag g m1 = E_ERASABLE ->
+          (*
+           * We would come here if m2 is not erasable,
+           *   because if it is, we would not have descended into the outer expression
+           *
+           * So if m2 is not erasable, how is erasing this lift justified?
+           *
+           * A: The typechecker ensures that _ty is non-informative
+           *)
           ml_unit, E_ERASABLE, MLTY_Erased
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output

@@ -37,4 +37,4 @@ let alloc_cllist
   let gres = Ghost.hide ({ vllist_head = head; vllist_tail = tail }) in
   let res = ({ head = rhead; tail = rtail; all_or_none_null = (); }, gres) in
   change_slprop (pts_to rhead full_perm head `star` pts_to rtail full_perm tail) (cllist (fst res) full_perm (snd res)) (fun _ -> ());
-  steela_return res
+  return res

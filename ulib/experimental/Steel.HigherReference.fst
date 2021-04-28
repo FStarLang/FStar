@@ -15,10 +15,10 @@
 *)
 
 module Steel.HigherReference
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open FStar.Ghost
 open FStar.Real
 open FStar.PCM
 open Steel.FractionalPermission
@@ -157,7 +157,7 @@ let alloc #a x =
   let r = Steel.Effect.alloc v in
   change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
     (fun m -> emp_unit (pts_to_raw r full_perm x); pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m);
-  steela_return r
+  return r
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
@@ -169,7 +169,7 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
     assert (compatible pcm_frac v1 v2);
     let Some (x, _) = v2 in
     change_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
-    steela_return x
+    return x
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
@@ -184,7 +184,7 @@ let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
     let v = read #a #p #vs r in
 
     change_slprop (pts_to r p v `star` q vs) (pts_to r p v `star` q v) (fun _ -> ());
-    steela_return v
+    return v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
