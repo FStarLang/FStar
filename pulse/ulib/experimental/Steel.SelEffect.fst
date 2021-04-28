@@ -847,6 +847,7 @@ let intro_vdep_lemma
 let intro_vdep
   v q p
 =
+  reveal_star v q;
   change_slprop_rel_with_cond
     (v `star` q)
     (vdep v p)
@@ -892,8 +893,22 @@ let elim_vdep_lemma
   interp_vdep_hp v p m;
   vdep_sel_eq v p m
 
-let elim_vdep
-  v p q
+let elim_vdep0
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelSel unit
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h _ h' ->
+      let fs = h' v in
+      let sn = h' q in
+      let x2 = h (vdep v p) in
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
+  ))
 = change_slprop_rel_with_cond
     (vdep v p)
     (v `star` q)
@@ -901,6 +916,14 @@ let elim_vdep
     (vdep_rel_recip v q p)
     (fun m -> elim_vdep_lemma v q p m);
   reveal_star v q
+
+let elim_vdep
+  v p
+=
+  let r = gget (vdep v p) in
+  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
+  elim_vdep0 v p (p (Ghost.reveal res));
+  res
 
 let intro_vrewrite
   v #t f

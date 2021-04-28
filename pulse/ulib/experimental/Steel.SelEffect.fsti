@@ -448,33 +448,15 @@ val intro_vdep
 : SteelSel unit
     (v `star` q)
     (fun _ -> vdep v p)
-    (requires (fun h -> q == p (fst (h (v `star` q)))))
+    (requires (fun h -> q == p (h v)))
     (ensures (fun h _ h' ->
-      let x1 = h (v `star` q) in
       let x2 = h' (vdep v p) in
-      q == p (fst x1) /\
-      dfst x2 == fst x1 /\
-      dsnd x2 == snd x1
+      q == p (h v) /\
+      dfst x2 == (h v) /\
+      dsnd x2 == (h q)
     ))
 
 val elim_vdep
-  (v: vprop)
-  (p: (t_of v -> Tot vprop))
-  (q: vprop)
-: SteelSel unit
-  (vdep v p)
-  (fun _ -> v `star` q)
-  (requires (fun h -> q == p (dfst (h (vdep v p)))))
-  (ensures (fun h _ h' ->
-      let fs = h' v in
-      let sn = h' q in
-      let x2 = h (vdep v p) in
-      q == p fs /\
-      dfst x2 == fs /\
-      dsnd x2 == sn
-  ))
-
-let elim_vdep2
   (v: vprop)
   (p: (t_of v -> Tot vprop))
 : SteelSel (Ghost.erased (t_of v))
@@ -489,11 +471,6 @@ let elim_vdep2
       dfst x2 == fs /\
       dsnd x2 == sn
   ))
-=
-  let r = gget (vdep v p) in
-  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
-  elim_vdep v p (p (Ghost.reveal res));
-  res
 
 val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))

@@ -134,10 +134,9 @@ let nllist_of_llist0
       (llist0 r)
       ((vptr r `vdep` llist_vdep r) `vrewrite` llist_vrewrite r);
     elim_vrewrite (vptr r `vdep` llist_vdep r) (llist_vrewrite r);
-    let gk : normal (Ghost.erased (t_of (vptr r))) = elim_vdep2 (vptr r) (llist_vdep r) in
+    let gk : normal (Ghost.erased (t_of (vptr r))) = elim_vdep (vptr r) (llist_vdep r) in
     let res = Ghost.hide (Ghost.reveal (Ghost.reveal gk).tail_fuel + 1) in
     intro_vrefine (vptr r) (v_c res r);
-    reveal_star (vptr r `vrefine` v_c res r) (llist_vdep r (Ghost.reveal gk));
     intro_vdep
       (vptr r `vrefine` v_c res r)
       (llist_vdep r (Ghost.reveal gk))
@@ -174,9 +173,8 @@ let llist0_of_nllist
       (nllist a n r)
       (((vptr r `vrefine` v_c n r) `vdep` v_c_dep n r (nllist a)) `vrewrite` v_c_l_rewrite n r (nllist a));
     elim_vrewrite ((vptr r `vrefine` v_c n r) `vdep` v_c_dep n r (nllist a)) (v_c_l_rewrite n r (nllist a));
-    let gk = elim_vdep2 (vptr r `vrefine` v_c n r) (v_c_dep n r (nllist a)) in
+    let gk = elim_vdep (vptr r `vrefine` v_c n r) (v_c_dep n r (nllist a)) in
     elim_vrefine (vptr r) (v_c n r);
-    reveal_star (vptr r) (v_c_dep n r (nllist a) (Ghost.reveal gk));
     intro_vdep
       (vptr r)
       (v_c_dep n r (nllist a) (Ghost.reveal gk))
@@ -264,7 +262,6 @@ let is_nil
 let intro_llist_cons
   #a ptr1 ptr2
 =
-  reveal_star (vptr ptr1) (llist ptr2);
   llist0_of_llist ptr2;
   let n = nllist_of_llist0 ptr2 in
   (* set the fuel of the new cons cell *)
@@ -273,7 +270,6 @@ let intro_llist_cons
   write ptr1 c' ;
   (* actually cons the cell *)
   vptr_not_null ptr1;
-  reveal_star (vptr ptr1) (nllist a n ptr2);
   intro_vdep
     (vptr ptr1)
     (nllist a n ptr2)
@@ -294,7 +290,7 @@ let tail
     (llist0 ptr)
     ((vptr ptr `vdep` llist_vdep ptr) `vrewrite` llist_vrewrite ptr);
   elim_vrewrite (vptr ptr `vdep` llist_vdep ptr) (llist_vrewrite ptr);
-  let gc = elim_vdep2 (vptr ptr) (llist_vdep ptr) in
+  let gc = elim_vdep (vptr ptr) (llist_vdep ptr) in
   (* reset tail fuel to match mk_cell *)
   let c = read ptr in
   let c' = {c with tail_fuel = Ghost.hide 0} in
