@@ -415,6 +415,20 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
 
+val vptr_not_null
+  (#a: Type)
+  (r: ref a)
+: SteelSel unit
+    (vptr r)
+    (fun _ -> vptr r)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      h1 (vptr r) == h0 (vptr r) /\
+      R.is_null r == false
+    )
+
+(* Introduction and elimination principles for vprop combinators *)
+
 val intro_vrefine
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelSel unit v (fun _ -> vrefine v p)
