@@ -463,46 +463,23 @@ val elim_vdep
 let elim_vdep2
   (v: vprop)
   (p: (t_of v -> Tot vprop))
-  (q: vprop)
 : SteelSel (Ghost.erased (t_of v))
   (vdep v p)
-  (fun _ -> v `star` q)
-  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (fun res -> v `star` p (Ghost.reveal res))
+  (requires (fun _ -> True))
   (ensures (fun h res h' ->
       let fs = h' v in
-      let sn = h' q in
+      let sn : t_of (p (Ghost.reveal res)) = h' (p (Ghost.reveal res)) in
       let x2 = h (vdep v p) in
-      q == p fs /\
+      Ghost.reveal res == fs /\
       dfst x2 == fs /\
-      dsnd x2 == sn /\
-      Ghost.reveal res == fs
-  ))
-=
-  elim_vdep v p q;
-  let r = gget v in
-  r
-
-let elim_vdep3
-  (v: vprop)
-  (p: (t_of v -> Tot vprop))
-  (q: vprop)
-: SteelSel (Ghost.erased (t_of v))
-  (vdep v p)
-  (fun _ -> v `star` q)
-  (requires (fun h -> q == p (dfst (h (vdep v p)))))
-  (ensures (fun h res h' ->
-      let fs = h' v in
-      let sn = h' q in
-      let x2 = h (vdep v p) in
-      q == p fs /\
-      dfst x2 == fs /\
-      dsnd x2 == sn /\
-      Ghost.reveal res == fs
+      dsnd x2 == sn
   ))
 =
   let r = gget (vdep v p) in
-  elim_vdep v p q; // FAIL here: cannot prove precondition
-  Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r))
+  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
+  elim_vdep v p (p (Ghost.reveal res));
+  res
 
 val intro_vrewrite
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
