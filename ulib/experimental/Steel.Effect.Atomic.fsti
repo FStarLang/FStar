@@ -22,20 +22,19 @@ include Steel.Effect.Common
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-val observability : Type0
-val has_eq_observability (_:unit) : Lemma (hasEq observability)
-val observable : observability
-val unobservable : observability
-val observability_unequal : squash (observable =!= unobservable)
+type observability : eqtype =
+  | Observable
+  | Unobservable
 
-let obs_at_most_one o1 o2 =
-  o1==unobservable \/ o2==unobservable
+unfold
+let obs_at_most_one (o1 o2:observability) =
+  o1=Unobservable || o2=Unobservable
 
+unfold
 let join_obs (o1:observability) (o2:observability) =
-  has_eq_observability();
-  if observable = o1 || observable = o2
-  then observable
-  else unobservable
+  if o1 = Observable || o2 = Observable
+  then Observable
+  else Unobservable
 
 (*** SteelAGCommon effect ***)
 
@@ -59,7 +58,7 @@ val return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
    (#[@@@ framing_implicit] p:a -> slprop u#1)
-  : repr a true opened_invariants unobservable
+  : repr a true opened_invariants Unobservable
       (return_pre (p x)) p
       (return_req (p x)) (return_ens a x p)
 
@@ -95,8 +94,8 @@ let bind_ens (#a:Type) (#b:Type)
 
 val bind (a:Type) (b:Type)
   (opened_invariants:inames)
-  (o1:observability)
-  (o2:observability)
+  (o1:eqtype_as_type observability)
+  (o2:eqtype_as_type observability)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -134,8 +133,8 @@ let subcomp_pre (#a:Type)
 
 val subcomp (a:Type)
   (opened_invariants:inames)
-  (o1:observability)
-  (o2:observability)
+  (o1:eqtype_as_type observability)
+  (o2:eqtype_as_type observability)
   (#framed_f: eqtype_as_type bool)
   (#framed_g: eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -146,7 +145,7 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
   (f:repr a framed_f opened_invariants o1 pre_f post_f req_f ens_f)
 : Pure (repr a framed_g opened_invariants o2 pre_g post_g req_g ens_g)
-       (requires (o1 == observable ==> o2 == observable) /\
+       (requires (o1 = Unobservable || o2 = Observable) /\
          subcomp_pre req_f ens_f req_g ens_g p1 p2)
        (ensures fun _ -> True)
 
@@ -169,6 +168,7 @@ let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) 
 
 let if_then_else (a:Type)
   (o:inames)
+  (obs:eqtype_as_type observability)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
@@ -176,11 +176,11 @@ let if_then_else (a:Type)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
   (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
-  (f:repr a framed o unobservable pre_f post_f req_then ens_then)
-  (g:repr a framed o unobservable pre_g post_g req_else ens_else)
+  (f:repr a framed o obs pre_f post_f req_then ens_then)
+  (g:repr a framed o obs pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a framed o unobservable pre_f post_f
+= repr a framed o obs pre_f post_f
        (if_then_else_req s_pre req_then req_else p)
        (if_then_else_ens s_pre s_post ens_then ens_else p)
 
@@ -208,7 +208,7 @@ effect SteelAtomic (a:Type)
   (post:a -> slprop u#1)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelAtomicBase a false opened observable pre post req ens
+  = SteelAtomicBase a false opened Observable pre post req ens
 
 effect SteelAtomicF (a:Type)
   (opened:inames)
@@ -216,7 +216,7 @@ effect SteelAtomicF (a:Type)
   (post:a -> slprop u#1)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelAtomicBase a true opened observable pre post req ens
+  = SteelAtomicBase a true opened Observable pre post req ens
 
 unfold
 let bind_pure_steela__req (#a:Type) (wp:pure_wp a)
@@ -233,7 +233,7 @@ let bind_pure_steela__ens (#a:Type) (#b:Type)
 
 val bind_pure_steela_ (a:Type) (b:Type)
   (opened_invariants:inames)
-  (o:observability)
+  (o:eqtype_as_type observability)
   (#[@@@ framing_implicit] wp:pure_wp a)
   (#framed: eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
@@ -264,7 +264,7 @@ effect SteelGhost (a:Type)
   (post:a -> slprop u#1)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelGhostBase a false opened unobservable pre post req ens
+  = SteelGhostBase a false opened Unobservable pre post req ens
 
 effect SteelGhostF (a:Type)
   (opened:inames)
@@ -272,7 +272,7 @@ effect SteelGhostF (a:Type)
   (post:a -> slprop u#1)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelGhostBase a true opened unobservable pre post req ens
+  = SteelGhostBase a true opened Unobservable pre post req ens
 
 polymonadic_bind (PURE, SteelGhostBase) |> SteelGhostBase = bind_pure_steela_
 
@@ -287,14 +287,14 @@ val lift_ghost_atomic
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t a)
   (#[@@@ framing_implicit] req:req_t pre) (#[@@@ framing_implicit] ens:ens_t pre a post)
-  (f:repr a framed opened unobservable pre post req ens)
-  : repr a framed opened unobservable pre post req ens
+  (f:repr a framed opened Unobservable pre post req ens)
+  : repr a framed opened Unobservable pre post req ens
 
 sub_effect SteelGhostBase ~> SteelAtomicBase = lift_ghost_atomic
 
 val lift_atomic_steel
   (a:Type)
-  (o:observability)
+  (o:eqtype_as_type observability)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t a)
   (#[@@@ framing_implicit] req:req_t pre) (#[@@@ framing_implicit] ens:ens_t pre a post)
@@ -422,8 +422,8 @@ let drop_f (#opened:inames) (#p #f:slprop) ()
 val sghost (#a:Type) (#opened_invariants:inames)
   (#pre:slprop u#1) (#post:a -> slprop u#1)
   (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelGhostBase a false opened_invariants unobservable pre post req ens)
-  : SteelAtomicBase a false opened_invariants unobservable pre post req ens
+  ($f:unit -> SteelGhostBase a false opened_invariants Unobservable pre post req ens)
+  : SteelAtomicBase a false opened_invariants Unobservable pre post req ens
 
 val steela_return (#a:Type) (#opened_invariants:inames) (#p:a -> slprop) (x:a)
-  : SteelAtomicBase a true opened_invariants unobservable (return_pre (p x)) p (fun _ -> True) (fun _ r _ -> r == x)
+  : SteelAtomicBase a true opened_invariants Unobservable (return_pre (p x)) p (fun _ -> True) (fun _ r _ -> r == x)
