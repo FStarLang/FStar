@@ -35,7 +35,7 @@ let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ 
  * Return is parametric in post (cf. return-scoping.txt)
  * The return is already framed (the post captures the full context)
  *)
-val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
+val return_ (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> slprop)
 : repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
 
 (*
@@ -167,7 +167,11 @@ let if_then_else (a:Type)
 reflectable
 effect {
   SteelBase (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
-  with { repr; return; bind; subcomp; if_then_else }
+  with { repr = repr;
+         return = return_;
+         bind = bind;
+         subcomp = subcomp;
+         if_then_else = if_then_else }
 }
 
 effect Steel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =

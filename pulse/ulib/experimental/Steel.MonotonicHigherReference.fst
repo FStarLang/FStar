@@ -1,10 +1,10 @@
 module Steel.MonotonicHigherReference
+open FStar.Ghost
 open FStar.PCM
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
-open FStar.Ghost
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
 module M = Steel.Memory
@@ -358,7 +358,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
       (pts_to r q (hval_tot hv) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))))
       (pts_to r q v `star` f v)
       (fun _ -> ());
-    steela_return v
+    return v
 
 
 let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)

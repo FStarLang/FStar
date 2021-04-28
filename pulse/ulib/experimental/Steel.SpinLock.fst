@@ -15,13 +15,13 @@
 *)
 
 module Steel.SpinLock
+
+open FStar.Ghost
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
 open Steel.FractionalPermission
 module Atomic = Steel.Effect.Atomic
-
-open FStar.Ghost
 
 let available = false
 let locked = true
@@ -107,7 +107,7 @@ let acquire_core #p #u r i =
   change_slprop (if res then pts_to r full_perm (Ghost.hide locked) else pts_to r full_perm ghost) (pts_to r full_perm locked) (fun _ -> ());
 
   intro_lockinv_locked p r;
-  steela_return res
+  return res
 
 let acquire' (#p:slprop) (l:lock p)
   : SteelAtomicT bool Set.empty emp (fun b -> if b then p else emp)
@@ -141,7 +141,7 @@ let release_core #p #u r i =
   change_slprop (if res then pts_to r full_perm (Ghost.hide available) else pts_to r full_perm v) (pts_to r full_perm available) (fun _ -> ());
 
   intro_lockinv_available p r;
-  steela_return res
+  return res
 
 let release' (#p:slprop) (l:lock p)
   : SteelAtomicT unit Set.empty p (fun _ -> emp)

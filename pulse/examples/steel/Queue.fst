@@ -132,7 +132,7 @@ let new_queue
   change_slprop ((pts_to pc c `star` emp `star` pure (Ghost.reveal (Ghost.hide pc) == pc)) `star` pure (queue_lc_prop pc [v] [(pc, c)])) (queue_lc pc pc [v] [(pc, c)]) (fun _ -> ());
   intro_exists (Ghost.hide [(pc, c)]) (queue_lc pc pc [v]);
   intro_exists (Ghost.hide [v]) (queue_l pc pc);
-  steela_return pc
+  return pc
 
 #push-options "--ide_id_info_off --print_implicits"
 
@@ -246,7 +246,7 @@ let dequeue
     change_slprop (fragment hd lc0 `star` pure (queue_lc_prop tl l lc0)) (queue_lc hd tl l lc0) (fun _ -> ());
     intro_exists lc0 (queue_lc hd tl l);
     intro_exists l (queue_l hd tl);
-    steela_return None
+    return None
   end else begin
     change_slprop
       (fragment (snd lhd).next ltl)
@@ -261,5 +261,5 @@ let dequeue
     intro_exists l2 (queue_l p tl);
     intro_pure (Ghost.reveal p == (Ghost.reveal (Ghost.hide (snd lhd))).next);
     intro_exists (Ghost.hide (snd lhd)) (fun (c: Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl);
-    steela_return (Some p)
+    return (Some p)
   end

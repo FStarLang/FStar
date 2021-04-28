@@ -143,4 +143,4 @@ let test26 (r1 r2:ref) : SteelAtomicT unit Set.empty (ptr r1 `star` ptr r2) (fun
 let test27 (a:unit) : SteelAtomicT ref Set.empty emp (fun y -> ptr y) =
   let x = alloc2 0 in
   let v = ghost_read x in
-  steela_return x
+  return x

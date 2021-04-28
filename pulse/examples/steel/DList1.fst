@@ -16,12 +16,13 @@
    Author(s): N. Swamy
 *)
 module DList1
+
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
-open FStar.Ghost
 module L = FStar.List.Tot
 module U = Steel.Utils
 
@@ -602,7 +603,7 @@ let new_dlist' (#a:Type) (init:a)
     let p = alloc cell in
     intro_dlist_nil' p null;
     intro_dlist_cons_cons p p null cell [];
-    steela_return (p, hide cell)
+    return (p, hide cell)
 
 let elist a = erased (list a)
 let datas #a (l:elist (cell a)) : elist a = hide (List.Tot.map (fun x -> x.data) (reveal l))
