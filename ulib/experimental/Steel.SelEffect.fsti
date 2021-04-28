@@ -25,13 +25,33 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
 
 (* State that all "atomic" subresources have the same selectors on both views *)
 
+(* AF 04/27/2021: The linear equality generation, where equalities are only
+   generated for leaf, VUnit nodes, works well for concrete code, but does
+   not allow to propagate information when handling abstract vprops.
+   While defining generic combinators on vprops such as vrefine and vdep,
+   Tahina encountered issues with this. For instance, elim_vdep returns
+   a v `star` q, where v and q are abstract vprops. As such, equalities
+   on the selectors of v and q are not propagated: Normalization gets stuck
+   on both v and q, since they are neither a VUnit nor a VStar.
+   An earlier fix was creating a "top-level" equality on the full vprop
+   to handle most generic vprops cases. Unfortunately, this does not
+   help when we have atomic, abstract vprops as in v `star` q.
+   For now, I'm reenabling quadratic equality generation. But we need
+   to find a better way to handle generic vprops selectors while avoiding
+   a context blowup; furthermore, equalities on composite resources are mostly
+   irrelevant because of AC-rewriting, and because we do not provide patterns
+   on lemmas relating sel (p * q) with (sel p, sel q), or sel (p * q) with
+   sel (q * p) for instance.
+   We should instead have a better way to define atomic vprops, which encapsulates
+   atomic, abstract vprops
+*)
 [@@ __steel_reduce__]
 let rec frame_equalities
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
-  = match frame with
-    | VUnit p ->
-        h0 frame == h1 frame
+  = h0 frame == h1 frame /\
+    begin match frame with
+    | VUnit p -> True
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -45,7 +65,7 @@ let rec frame_equalities
 
         frame_equalities p1 h01 h11 /\
         frame_equalities p2 h02 h12
-
+    end
 
 (* Defining the Steel effect with selectors *)
 
@@ -142,8 +162,12 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= normal ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
+= (forall (m0:rmem pre_g). normal (req_g m0 ==> req_f (focus_rmem m0 pre_f))) /\
+  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). normal (
+      ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1
+    )
+  )
+
 
 val subcomp (a:Type)
   (#framed_f:eqtype_as_type bool)
@@ -166,7 +190,10 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> normal ((p ==> req_then h) /\ ((~ p) ==> req_else (focus_rmem h pre_g)))
+= fun h -> normal (
+    (p ==> req_then h) /\
+    ((~ p) ==> req_else (focus_rmem h pre_g))
+  )
 
 unfold
 let if_then_else_ens (#a:Type)
@@ -176,8 +203,10 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> normal ((p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
-  ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
+= fun h0 x h1 -> normal (
+    (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
+    ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
+  )
 
 let if_then_else (a:Type)
   (#framed:eqtype_as_type bool)
@@ -251,11 +280,26 @@ val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
 
+let gget (p: vprop) : SteelSel (Ghost.erased (t_of p))
+  p (fun _ -> p)
+  (requires (fun _ -> True))
+  (ensures (fun h0 res h1 ->
+    h1 p == h0 p /\
+    Ghost.reveal res == h0 p /\
+    Ghost.reveal res == h1 p
+  ))
+=
+  let m = get #p () in
+  Ghost.hide (m p)
+
 val change_slprop (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_equal_slprop (p q: vprop)
+  : SteelSel unit p (fun _ -> q) (fun _ -> p == q) (fun h0 _ h1 -> p == q /\ h1 q == h0 p)
 
 val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
   (l:(m:mem) -> Lemma
@@ -270,6 +314,15 @@ val change_slprop_rel (p q:vprop)
     (ensures interp (hp_of q) m /\
       rel (sel_of p m) (sel_of q m))
   ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
+val change_slprop_rel_with_cond (p q:vprop)
+  (cond:  (t_of p) -> prop)
+  (rel :  (t_of p) ->  (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSel unit p (fun _ -> q) (fun h0 -> cond (h0 p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
 
 val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -361,3 +414,72 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
 let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
+
+val vptr_not_null
+  (#a: Type)
+  (r: ref a)
+: SteelSel unit
+    (vptr r)
+    (fun _ -> vptr r)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      h1 (vptr r) == h0 (vptr r) /\
+      R.is_null r == false
+    )
+
+(* Introduction and elimination principles for vprop combinators *)
+
+val intro_vrefine
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
+: SteelSel unit v (fun _ -> vrefine v p)
+  (requires (fun h -> p (h v)))
+  (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
+
+val elim_vrefine
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
+: SteelSel unit (vrefine v p) (fun _ -> v)
+  (requires (fun _ -> True))
+  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p))))
+
+val intro_vdep
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+: SteelSel unit
+    (v `star` q)
+    (fun _ -> vdep v p)
+    (requires (fun h -> q == p (h v)))
+    (ensures (fun h _ h' ->
+      let x2 = h' (vdep v p) in
+      q == p (h v) /\
+      dfst x2 == (h v) /\
+      dsnd x2 == (h q)
+    ))
+
+val elim_vdep
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+: SteelSel (Ghost.erased (t_of v))
+  (vdep v p)
+  (fun res -> v `star` p (Ghost.reveal res))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+      let fs = h' v in
+      let sn : t_of (p (Ghost.reveal res)) = h' (p (Ghost.reveal res)) in
+      let x2 = h (vdep v p) in
+      Ghost.reveal res == fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
+  ))
+
+val intro_vrewrite
+  (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
+: SteelSel unit v (fun _ -> vrewrite v f) (fun _ -> True) (fun h _ h' -> h' (vrewrite v f) == f (h v))
+
+val elim_vrewrite
+  (v: vprop)
+  (#t: Type)
+  (f: (normal (t_of v) -> GTot t))
+: SteelSel unit (vrewrite v f) (fun _ -> v)
+    (fun _ -> True)
+    (fun h _ h' -> h (vrewrite v f) == f (h' v))

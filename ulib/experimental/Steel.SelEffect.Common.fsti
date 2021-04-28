@@ -216,6 +216,86 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_commutative
      star_congruence
 
+val vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (slprop u#1)
+
+val interp_vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: mem) : Lemma
+  (interp (vrefine_hp v p) m <==> (interp (hp_of v) m /\ p (sel_of v m)))
+//  [SMTPat (interp (vrefine_hp v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrefine_t (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot Type
+= (x: t_of v {p x})
+
+val vrefine_sel (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
+
+val vrefine_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    vrefine_sel v p m == sel_of v m
+  )
+//  [SMTPat ((vrefine_sel v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
+  hp = vrefine_hp v p;
+  t = vrefine_t v p;
+  sel = vrefine_sel v p;
+}
+
+[@__steel_reduce__]
+let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
+
+val vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (slprop u#1)
+
+val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
+  (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
+
+let vdep_payload
+  (v: vprop) (p: ( (t_of v) -> Tot vprop))
+  (x: t_of v)
+: Tot Type
+= t_of (p x)
+
+let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
+= dtuple2 (t_of v) (vdep_payload v p)
+
+val vdep_sel (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
+
+val vdep_sel_eq (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    begin let x = sel_of v m in
+      interp (hp_of (p x)) m /\
+      vdep_sel v p m == (| x, sel_of (p x) m |)
+    end
+  )
+
+[@__steel_reduce__]
+let vdep' (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot vprop' = {
+  hp = vdep_hp v p;
+  t = vdep_t v p;
+  sel = vdep_sel v p;
+}
+
+[@__steel_reduce__]
+let vdep (v: vprop) (p: ( (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
+
+val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
+
+val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: hmem (normal (hp_of v))) : Lemma
+  ((vrewrite_sel v f <: selector' _ _) h == f ((normal (sel_of v) <: selector' _ _) h))
+//  [SMTPat (vrewrite_sel v f h)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrewrite' (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop' = {
+  hp = normal (hp_of v);
+  t = t;
+  sel = vrewrite_sel v f;
+}
+
+[@__steel_reduce__]
+let vrewrite (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop = VUnit (vrewrite' v f)
+
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
 
