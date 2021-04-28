@@ -79,8 +79,6 @@ let repr a framed opened_invariants f pre post req ens =
 
 let return a x opened_invariants #p = fun _ -> x
 
-#push-options "--fuel 0 --ifuel 1"
-
 let interp_trans_left
   (o:inames)
   (p1 p2 frame:slprop)
