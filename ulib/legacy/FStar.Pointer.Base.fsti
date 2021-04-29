@@ -228,6 +228,7 @@ let type_of_struct_field''
   List.Tot.assoc_precedes f l y;
   type_of_typ y
 
+[@@ unifier_hint_injective]
 let type_of_struct_field'
   (l: struct_typ)
   (type_of_typ: (

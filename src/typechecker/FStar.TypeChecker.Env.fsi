@@ -270,6 +270,7 @@ val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val fv_has_strict_args     : env -> fv -> option<(list<int>)>
+val fv_has_erasable_attr   : env -> fv -> bool
 val non_informative        : env -> typ -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
@@ -355,6 +356,8 @@ val comp_to_comp_typ       : env -> comp -> comp_typ
 val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
+
+val is_erasable_effect     : env -> lident -> bool
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)

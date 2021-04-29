@@ -21,12 +21,6 @@ friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let observability = bool
-let has_eq_observability () = ()
-let observable = true
-let unobservable = false
-let observability_unequal = ()
-
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma
     (requires (interp hp m0 /\ disjoint m0 m1))
@@ -80,17 +74,10 @@ let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mp
 : mprop2 pre post
 = fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-let atomic_repr a framed opened_invariants f pre post req ens =
+let repr a framed opened_invariants f pre post req ens =
     action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
-let return (a:Type u#a)
-   (x:a)
-   (opened_invariants:inames)
-   (#[@@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a true opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
-  = fun _ -> x
-
-#push-options "--fuel 0 --ifuel 0"
+let return_ a x opened_invariants #p = fun _ -> x
 
 let interp_trans_left
   (o:inames)
@@ -173,30 +160,38 @@ let bind_pure_steela_ (a:Type) (b:Type) opened o #wp #pre #post #req #ens f g
     let x = f () in
     g x frame
 
-let ghost_repr a already_framed opened pre post req ens =
-    action_except_full a opened pre post (req_to_act_req req) (ens_to_act_ens ens)
-
-let greturn = return
-
-let gbind a b opened = bind a b opened unobservable unobservable
-
-let gsubcomp a opened = subcomp a opened unobservable unobservable
-
-let bind_pure_steelg_ a b opened = bind_pure_steela_ a b opened unobservable
-
 let lift_ghost_atomic a o f = f
 
 let lift_atomic_steel a o #framed #pre #post #req #ens f = f
 
-let as_atomic_action f = SteelGhost?.reflect f
+let as_atomic_action f = SteelAtomic?.reflect f
+let as_atomic_action_ghost f = SteelGhost?.reflect f
 
 let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
 
+(*
+ * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
+ *     However to implement the with_inv combinators we need to reify their thunks to reprs
+ *     We could implement it better by having support for reification only in the .fst file
+ *     But for now assuming a function
+ *)
+assume val reify_steel_atomic_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames) (#g:observability)
+  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelAtomicBase a already_framed opened_invariants g pre post req ens)
+  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
+
 let with_invariant #a #fp #fp' #opened i f =
-  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
+  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_atomic_comp f))
+
+assume val reify_steel_ghost_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
+  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelGhostBase a already_framed opened_invariants Unobservable pre post req ens)
+  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let with_invariant_g #a #fp #fp' #opened i f =
-  SteelGhost?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
+  SteelGhost?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_ghost_comp f))
 
 let change_slprop #opened p q proof =
   SteelGhost?.reflect (Steel.Memory.change_slprop #opened p q proof)
@@ -205,7 +200,7 @@ let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
 
 let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
   (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : ghost_repr unit false opened p (fun _ -> p)
+  : repr unit false opened Unobservable p (fun _ -> p)
       (fun _ -> True)
       (fun _ _ _ -> fact)
   = fun frame ->
@@ -225,4 +220,14 @@ let drop #_ p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
 let witness_h_exists #a #u #p s = SteelGhost?.reflect (Steel.Memory.witness_h_exists #u p)
 let lift_h_exists_atomic #a #u p = SteelGhost?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
-let elim_pure #uses p = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+
+let elim_pure_aux #uses (p:prop)
+  : SteelGhostT (_:unit{p}) uses (pure p) (fun _ -> emp)
+  = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+
+let elim_pure #uses p = elim_pure_aux p
+
+let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)  
+
+let return #a #opened_invariants #p x =
+  SteelAtomicBase?.reflect (fun _ -> x)

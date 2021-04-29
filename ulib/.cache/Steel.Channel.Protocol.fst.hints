@@ -142,19 +142,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_743f89765738f45cbc6c1b060d33fce4_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "data_elim_Steel.Channel.Protocol.DoWhile",
         "data_elim_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.DoWhile",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Return",
-        "equality_tok_Prims.LexTop@tok",
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
         "projection_inverse_BoxBool_proj_0",
         "subterm_ordering_Steel.Channel.Protocol.DoWhile",
-        "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
+        "typing_Steel.Channel.Protocol.uu___is_Return",
+        "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "07a7006f65ed07afaf604f156429c4bf"
+      "631f00ea78cd84e1eb1229224c5b3c93"
     ],
     [
       "Steel.Channel.Protocol.flip_tag",
@@ -192,11 +193,10 @@
         "data_elim_Steel.Channel.Protocol.DoWhile",
         "data_elim_Steel.Channel.Protocol.Msg",
         "data_typing_intro_Steel.Channel.Protocol.Msg@tok",
+        "data_typing_intro_Steel.Channel.Protocol.Recv@tok",
         "disc_equation_Steel.Channel.Protocol.DoWhile",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Return",
-        "equality_tok_Prims.LexTop@tok",
-        "equality_tok_Steel.Channel.Protocol.Send@tok",
         "equation_Steel.Channel.Protocol.protocol",
         "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot", "l_and-interp",
@@ -214,11 +214,11 @@
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
         "subterm_ordering_Steel.Channel.Protocol.DoWhile",
         "typing_Steel.Channel.Protocol.flip_tag",
-        "typing_tok_Steel.Channel.Protocol.Send@tok",
-        "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
+        "typing_Steel.Channel.Protocol.uu___is_Return",
+        "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "742777a9fcb1ca8efe80d65a3792d9e1"
+      "1342086326358cff675ea720eb0977e6"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -245,8 +245,7 @@
         "disc_equation_Steel.Channel.Protocol.DoWhile",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Return",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.l_and",
-        "equation_Steel.Channel.Protocol.protocol",
+        "equation_Prims.l_and", "equation_Steel.Channel.Protocol.protocol",
         "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot", "l_and-interp",
         "l_quant_interp_3123446cc963c8ba07d8f2d7a3bf5b0b",
@@ -260,10 +259,10 @@
         "projection_inverse_Steel.Channel.Protocol.Msg_k",
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
         "subterm_ordering_Steel.Channel.Protocol.DoWhile",
-        "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
+        "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "2e78b62475fdbd5d76f050371356564a"
+      "82b79f0518e7cf56a14526fa14e44335"
     ],
     [
       "Steel.Channel.Protocol.return",

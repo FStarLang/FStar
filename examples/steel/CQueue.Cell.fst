@@ -39,12 +39,11 @@ let alloc_cell
     pts_to_not_null rnext full_perm next m;
     pure_star_interp (pts_to rnext full_perm next) (rnext =!= null) m
   );
-  elim_pure (rnext =!= null);  
-  let pres = ({ data = rdata; next = rnext; all_or_none_null = (); }) in
+  elim_pure (rnext =!= null);
   let gres = Ghost.hide ({ vcell_data = data; vcell_next = next }) in
-  let res = (pres, gres) in
+  let res = ({ data = rdata; next = rnext; all_or_none_null = () }, gres) in
   change_slprop (pts_to rdata full_perm data `star` pts_to rnext full_perm next) (ccell (fst res) full_perm (snd res)) (fun _ -> ());
-  res
+  return res
 
 let free_cell
   #a c v

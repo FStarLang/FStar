@@ -21,14 +21,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
-        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.WellFounded.acc_inv",
         "fuel_guarded_inversion_FStar.WellFounded.acc",
         "token_correspondence_FStar.WellFounded.acc_inv",
-        "well_founded_ordering_on_comdain_FStar.WellFounded.AccIntro"
+        "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "373798c2c6f737eed42157699ca44212"
+      "48fe32335e7691fcf3c27c6f9c74f168"
     ]
   ]
 ]

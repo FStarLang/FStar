@@ -3386,6 +3386,16 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           let stronger_t = stronger_t_opt |> must in
           let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
+          if is_polymonadic &&
+             Env.is_erasable_effect env c1.effect_name &&
+             not (Env.is_erasable_effect env c2.effect_name) &&
+             not (N.non_info_norm env c1.result_typ)
+          then Errors.raise_error (Errors.Error_TypeError,
+                                   BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+                                     (string_of_lid c1.effect_name)
+                                     (string_of_lid c2.effect_name)
+                                     (Print.term_to_string c1.result_typ)) r;
+
           (*
            * AR: 04/08: Suppose we have a subcomp problem of the form:
            *            M a ?u <: M a wp or M a wp <: M a ?u
@@ -3605,7 +3615,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c1)
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
-         let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
+         let c1, c2 = N.ghost_to_pure2 env (c1, c2) in
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl

@@ -9298,30 +9298,28 @@ and (check_inner_let :
                    (FStar_Syntax_Util.is_fvar
                       FStar_Parser_Const.inline_let_attr)
                    lb.FStar_Syntax_Syntax.lbattrs in
-               (if is_inline_let && (Prims.op_Negation pure_or_ghost)
-                then
-                  (let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Syntax_Print.term_to_string e1 in
-                       let uu___6 =
+               ((let uu___3 =
+                   is_inline_let &&
+                     (let uu___4 =
+                        pure_or_ghost ||
+                          (FStar_TypeChecker_Env.is_erasable_effect env2
+                             c1.FStar_TypeChecker_Common.eff_name) in
+                      Prims.op_Negation uu___4) in
+                 if uu___3
+                 then
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 = FStar_Syntax_Print.term_to_string e1 in
+                       let uu___7 =
                          FStar_Syntax_Print.lid_to_string
                            c1.FStar_TypeChecker_Common.eff_name in
                        FStar_Util.format2
                          "Definitions marked @inline_let are expected to be pure or ghost; got an expression \"%s\" with effect \"%s\""
-                         uu___5 uu___6 in
-                     (FStar_Errors.Fatal_ExpectedPureExpression, uu___4) in
-                   FStar_Errors.raise_error uu___3 e1.FStar_Syntax_Syntax.pos)
-                else ();
-                (let attrs =
-                   let uu___3 =
-                     (pure_or_ghost && (Prims.op_Negation is_inline_let)) &&
-                       (FStar_Syntax_Util.is_unit
-                          c1.FStar_TypeChecker_Common.res_typ) in
-                   if uu___3
-                   then FStar_Syntax_Util.inline_let_attr ::
-                     (lb.FStar_Syntax_Syntax.lbattrs)
-                   else lb.FStar_Syntax_Syntax.lbattrs in
-                 let x =
+                         uu___6 uu___7 in
+                     (FStar_Errors.Fatal_ExpectedPureExpression, uu___5) in
+                   FStar_Errors.raise_error uu___4 e1.FStar_Syntax_Syntax.pos
+                 else ());
+                (let x =
                    let uu___3 = FStar_Util.left lb.FStar_Syntax_Syntax.lbname in
                    {
                      FStar_Syntax_Syntax.ppname =
@@ -9378,6 +9376,26 @@ and (check_inner_let :
                               cres.FStar_TypeChecker_Common.eff_name
                               c21.FStar_TypeChecker_Common.res_typ in
                           let lb1 =
+                            let attrs =
+                              let add_inline_let =
+                                (Prims.op_Negation is_inline_let) &&
+                                  ((pure_or_ghost &&
+                                      (FStar_Syntax_Util.is_unit
+                                         c1.FStar_TypeChecker_Common.res_typ))
+                                     ||
+                                     ((FStar_TypeChecker_Env.is_erasable_effect
+                                         env2
+                                         c1.FStar_TypeChecker_Common.eff_name)
+                                        &&
+                                        (let uu___5 =
+                                           FStar_TypeChecker_Env.is_erasable_effect
+                                             env2
+                                             cres.FStar_TypeChecker_Common.eff_name in
+                                         Prims.op_Negation uu___5))) in
+                              if add_inline_let
+                              then FStar_Syntax_Util.inline_let_attr ::
+                                (lb.FStar_Syntax_Syntax.lbattrs)
+                              else lb.FStar_Syntax_Syntax.lbattrs in
                             FStar_Syntax_Util.mk_letbinding
                               (FStar_Pervasives.Inl x1) []
                               c1.FStar_TypeChecker_Common.res_typ
@@ -10890,7 +10908,7 @@ let (typeof_tot_or_gtot_term :
              if must_tot
              then
                let c1 =
-                 FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env1 c in
+                 FStar_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp env1 c in
                let uu___2 = FStar_TypeChecker_Common.is_total_lcomp c1 in
                (if uu___2
                 then (t, (c1.FStar_TypeChecker_Common.res_typ), g)

@@ -7,6 +7,10 @@ else
 endif
 include $(FSTAR_ULIB)/gmake/z3.mk
 include $(FSTAR_ULIB)/gmake/fstar.mk
+
+#for getting macros for OCaml commands to compile extracted code
+include $(FSTAR_ULIB)/ml/Makefile.include
+
 ifdef FSTAR_HOME
   include $(FSTAR_HOME)/.common.mk
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
@@ -95,8 +99,11 @@ include .depend
 	@echo "[OUTPUT    $(basename $(notdir $@))]"
 	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
-%.fst-in %.fsti-in:
-	@echo $(OTHERFLAGS) $(addprefix --include , $(INCLUDE_PATHS))
-
 clean:
 	rm -rf $(CACHE_DIR)
+
+#----------------------------------------------------------------------------------
+
+#extract F* files to OCaml
+$(OUTPUT_DIRECTORY)/%.ml:
+	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))

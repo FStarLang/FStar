@@ -82,13 +82,12 @@
         "binder_x_fe106f13eba69455e767d7c7b4689d1a_0",
         "disc_equation_Postprocess.A1", "disc_equation_Postprocess.B1",
         "disc_equation_Postprocess.C1", "equality_tok_Postprocess.A1@tok",
-        "equality_tok_Prims.LexTop@tok",
-        "fuel_guarded_inversion_Postprocess.t1", "int_inversion",
+        "fuel_guarded_inversion_Postprocess.t1",
         "projection_inverse_BoxBool_proj_0", "typing_tok_Postprocess.A1@tok",
-        "well_founded_ordering_on_comdain_Postprocess.C1"
+        "well_founded_ordering_on_codomain_Postprocess.C1"
       ],
       0,
-      "b1750642a58d47cea6dfd209a1c166e8"
+      "db6e7a1e18898ae80a9a285f75cb81b7"
     ],
     [
       "Postprocess.lemA",

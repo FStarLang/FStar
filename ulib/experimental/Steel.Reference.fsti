@@ -103,6 +103,7 @@ val cas (#t:eqtype)
 
 (*** Ghost references ***)
 
+[@@ erasable]
 val ghost_ref (a:Type u#0) : Type u#0
 
 val ghost_pts_to (#a:_) (r:ghost_ref a) ([@@@ smt_fallback] p:perm) ([@@@ smt_fallback] x:erased a) : slprop u#1

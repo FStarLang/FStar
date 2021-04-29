@@ -1314,6 +1314,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
       paren_if ps (
         group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term false pb e)
       )
+  | LetOpenRecord (r, rty, e) ->
+      paren_if ps (
+        group (surround 2 1 (str "let open") (p_term false pb r) (str "as") ^/^ (p_term false pb rty)
+               ^/^ str "in" ^/^ p_term false pb e)
+      )
   | Let(q, lbs, e) ->
     (* We wish to print let-bindings as follows.
      *
@@ -1912,6 +1917,7 @@ and p_projectionLHS e = match e.tm with
   | App _       (* p_appTerm *)
   | Let _       (* p_noSeqTerm *)
   | LetOpen _   (* p_noSeqTerm *)
+  | LetOpenRecord _ (* p_noSeqTerm *)
   | Seq _       (* p_term *)
   | Bind _      (* p_term *)
   | If _        (* p_noSeqTerm *)

@@ -1,4 +1,6 @@
 module TwoLockQueue
+
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
@@ -17,7 +19,6 @@ let full = full_perm
 let half = half_perm full
 let fst x = fst x
 let snd x = snd x
-open FStar.Ghost
 
 let ghost_gather (#a:Type) (#u:_)
                  (#p0 #p1:perm) (#p:perm{p == sum_perm p0 p1})
@@ -116,7 +117,7 @@ let new_queue (#a:_) (x:a)
     let tail = new_qptr hd in
     pack_queue_invariant _ _ head tail;
     let inv = new_invariant _ _ in
-    { head; tail; inv }
+    return ({ head; tail; inv })
 
 #push-options "--ide_id_info_off"
 #restart-solver
@@ -143,7 +144,8 @@ let enqueue (#a:_) (hdl:t a) (x:a)
         Q.enqueue tl node;
         ghost_write hdl.tail.ghost node;
         ghost_share #_ #_ hdl.tail.ghost;
-        pack_queue_invariant _ _ _ _
+        pack_queue_invariant _ _ hdl.head hdl.tail;
+        return ()
     in
     let r1 = with_invariant hdl.inv enqueue_core in
     let r2 = write hdl.tail.ptr node in
@@ -180,7 +182,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       rewrite
         (ghost_pts_to hdl.head.ghost _ _)
         (maybe_ghost_pts_to _ _ _);
-      o
+      return o
 
     | Some p ->
       rewrite (Q.dequeue_post _ _ _) (Q.dequeue_post_success _ _ _);
@@ -193,7 +195,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       rewrite
         (ghost_pts_to hdl.head.ghost _ _ `star` h_exists (pts_to hd full_perm))
         (maybe_ghost_pts_to _ _ _);
-      o
+      return o
 
 let dequeue (#a:_) (hdl:t a)
   : SteelT (option a) emp (fun _ -> emp)

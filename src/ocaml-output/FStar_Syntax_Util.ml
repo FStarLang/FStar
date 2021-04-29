@@ -1029,6 +1029,21 @@ let rec (eq_tm :
           let uu___ =
             eq_tm t13.FStar_Syntax_Syntax.sort t23.FStar_Syntax_Syntax.sort in
           eq_and uu___ (fun uu___1 -> eq_tm phi1 phi2)
+      | (FStar_Syntax_Syntax.Tm_abs (bs1, body1, _rc1),
+         FStar_Syntax_Syntax.Tm_abs (bs2, body2, _rc2)) when
+          (FStar_List.length bs1) = (FStar_List.length bs2) ->
+          let uu___ =
+            FStar_List.fold_left2
+              (fun r ->
+                 fun b1 ->
+                   fun b2 ->
+                     eq_and r
+                       (fun uu___1 ->
+                          eq_tm
+                            (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                            (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
+              Equal bs1 bs2 in
+          eq_and uu___ (fun uu___1 -> eq_tm body1 body2)
       | uu___ -> Unknown
 and (eq_quoteinfo :
   FStar_Syntax_Syntax.quoteinfo -> FStar_Syntax_Syntax.quoteinfo -> eq_result)
@@ -2717,8 +2732,11 @@ let (is_sub_singleton : FStar_Syntax_Syntax.term -> Prims.bool) =
           let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
         (match uu___2 with
          | FStar_Syntax_Syntax.Tm_fvar fv ->
-             (((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Parser_Const.squash_lid)
+             ((((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                                 FStar_Parser_Const.unit_lid)
+                                ||
+                                (FStar_Syntax_Syntax.fv_eq_lid fv
+                                   FStar_Parser_Const.squash_lid))
                                ||
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.auto_squash_lid))

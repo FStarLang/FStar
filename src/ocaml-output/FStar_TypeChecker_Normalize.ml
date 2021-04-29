@@ -7938,108 +7938,243 @@ let (non_info_norm :
         FStar_TypeChecker_Env.ForExtraction] in
       let uu___ = normalize steps env1 t in
       FStar_TypeChecker_Env.non_informative env1 uu___
-let (ghost_to_pure :
+let (maybe_promote_t :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+    Prims.bool -> FStar_Syntax_Syntax.term -> Prims.bool)
   =
   fun env1 ->
-    fun c ->
-      match c.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total uu___ -> c
-      | FStar_Syntax_Syntax.GTotal (t, uopt) when non_info_norm env1 t ->
-          let uu___ = c in
-          {
-            FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Total (t, uopt));
-            FStar_Syntax_Syntax.pos = (uu___.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
-          }
-      | FStar_Syntax_Syntax.Comp ct ->
-          let l =
-            FStar_TypeChecker_Env.norm_eff_name env1
-              ct.FStar_Syntax_Syntax.effect_name in
-          let uu___ =
-            (FStar_Syntax_Util.is_ghost_effect l) &&
-              (non_info_norm env1 ct.FStar_Syntax_Syntax.result_typ) in
-          if uu___
-          then
-            let ct1 =
-              let uu___1 =
-                downgrade_ghost_effect_name
-                  ct.FStar_Syntax_Syntax.effect_name in
-              match uu___1 with
-              | FStar_Pervasives_Native.Some pure_eff ->
-                  let flags =
-                    let uu___2 =
-                      FStar_Ident.lid_equals pure_eff
-                        FStar_Parser_Const.effect_Tot_lid in
-                    if uu___2
-                    then FStar_Syntax_Syntax.TOTAL ::
-                      (ct.FStar_Syntax_Syntax.flags)
-                    else ct.FStar_Syntax_Syntax.flags in
-                  let uu___2 = ct in
-                  {
-                    FStar_Syntax_Syntax.comp_univs =
-                      (uu___2.FStar_Syntax_Syntax.comp_univs);
-                    FStar_Syntax_Syntax.effect_name = pure_eff;
-                    FStar_Syntax_Syntax.result_typ =
-                      (uu___2.FStar_Syntax_Syntax.result_typ);
-                    FStar_Syntax_Syntax.effect_args =
-                      (uu___2.FStar_Syntax_Syntax.effect_args);
-                    FStar_Syntax_Syntax.flags = flags
-                  }
-              | FStar_Pervasives_Native.None ->
-                  let ct2 = FStar_TypeChecker_Env.unfold_effect_abbrev env1 c in
-                  let uu___2 = ct2 in
-                  {
-                    FStar_Syntax_Syntax.comp_univs =
-                      (uu___2.FStar_Syntax_Syntax.comp_univs);
-                    FStar_Syntax_Syntax.effect_name =
-                      FStar_Parser_Const.effect_PURE_lid;
-                    FStar_Syntax_Syntax.result_typ =
-                      (uu___2.FStar_Syntax_Syntax.result_typ);
-                    FStar_Syntax_Syntax.effect_args =
-                      (uu___2.FStar_Syntax_Syntax.effect_args);
-                    FStar_Syntax_Syntax.flags =
-                      (uu___2.FStar_Syntax_Syntax.flags)
-                  } in
-            let uu___1 = c in
-            {
-              FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
-              FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
-              FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
-            }
-          else c
-      | uu___ -> c
+    fun non_informative_only ->
+      fun t ->
+        (Prims.op_Negation non_informative_only) || (non_info_norm env1 t)
+let (ghost_to_pure_aux :
+  FStar_TypeChecker_Env.env ->
+    Prims.bool ->
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+  =
+  fun env1 ->
+    fun non_informative_only ->
+      fun c ->
+        match c.FStar_Syntax_Syntax.n with
+        | FStar_Syntax_Syntax.Total uu___ -> c
+        | FStar_Syntax_Syntax.GTotal (t, uopt) ->
+            let uu___ = maybe_promote_t env1 non_informative_only t in
+            if uu___
+            then
+              let uu___1 = c in
+              {
+                FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Total (t, uopt));
+                FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
+                FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
+              }
+            else c
+        | FStar_Syntax_Syntax.Comp ct ->
+            let l =
+              FStar_TypeChecker_Env.norm_eff_name env1
+                ct.FStar_Syntax_Syntax.effect_name in
+            let uu___ =
+              (FStar_Syntax_Util.is_ghost_effect l) &&
+                (maybe_promote_t env1 non_informative_only
+                   ct.FStar_Syntax_Syntax.result_typ) in
+            if uu___
+            then
+              let ct1 =
+                let uu___1 =
+                  downgrade_ghost_effect_name
+                    ct.FStar_Syntax_Syntax.effect_name in
+                match uu___1 with
+                | FStar_Pervasives_Native.Some pure_eff ->
+                    let flags =
+                      let uu___2 =
+                        FStar_Ident.lid_equals pure_eff
+                          FStar_Parser_Const.effect_Tot_lid in
+                      if uu___2
+                      then FStar_Syntax_Syntax.TOTAL ::
+                        (ct.FStar_Syntax_Syntax.flags)
+                      else ct.FStar_Syntax_Syntax.flags in
+                    let uu___2 = ct in
+                    {
+                      FStar_Syntax_Syntax.comp_univs =
+                        (uu___2.FStar_Syntax_Syntax.comp_univs);
+                      FStar_Syntax_Syntax.effect_name = pure_eff;
+                      FStar_Syntax_Syntax.result_typ =
+                        (uu___2.FStar_Syntax_Syntax.result_typ);
+                      FStar_Syntax_Syntax.effect_args =
+                        (uu___2.FStar_Syntax_Syntax.effect_args);
+                      FStar_Syntax_Syntax.flags = flags
+                    }
+                | FStar_Pervasives_Native.None ->
+                    let ct2 =
+                      FStar_TypeChecker_Env.unfold_effect_abbrev env1 c in
+                    let uu___2 = ct2 in
+                    {
+                      FStar_Syntax_Syntax.comp_univs =
+                        (uu___2.FStar_Syntax_Syntax.comp_univs);
+                      FStar_Syntax_Syntax.effect_name =
+                        FStar_Parser_Const.effect_PURE_lid;
+                      FStar_Syntax_Syntax.result_typ =
+                        (uu___2.FStar_Syntax_Syntax.result_typ);
+                      FStar_Syntax_Syntax.effect_args =
+                        (uu___2.FStar_Syntax_Syntax.effect_args);
+                      FStar_Syntax_Syntax.flags =
+                        (uu___2.FStar_Syntax_Syntax.flags)
+                    } in
+              let uu___1 = c in
+              {
+                FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
+                FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
+                FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
+              }
+            else c
+        | uu___ -> c
+let (ghost_to_pure_lcomp_aux :
+  FStar_TypeChecker_Env.env ->
+    Prims.bool ->
+      FStar_TypeChecker_Common.lcomp -> FStar_TypeChecker_Common.lcomp)
+  =
+  fun env1 ->
+    fun non_informative_only ->
+      fun lc ->
+        let uu___ =
+          (FStar_Syntax_Util.is_ghost_effect
+             lc.FStar_TypeChecker_Common.eff_name)
+            &&
+            (maybe_promote_t env1 non_informative_only
+               lc.FStar_TypeChecker_Common.res_typ) in
+        if uu___
+        then
+          let uu___1 =
+            downgrade_ghost_effect_name lc.FStar_TypeChecker_Common.eff_name in
+          match uu___1 with
+          | FStar_Pervasives_Native.Some pure_eff ->
+              let uu___2 =
+                FStar_TypeChecker_Common.apply_lcomp
+                  (ghost_to_pure_aux env1 non_informative_only) (fun g -> g)
+                  lc in
+              {
+                FStar_TypeChecker_Common.eff_name = pure_eff;
+                FStar_TypeChecker_Common.res_typ =
+                  (uu___2.FStar_TypeChecker_Common.res_typ);
+                FStar_TypeChecker_Common.cflags =
+                  (uu___2.FStar_TypeChecker_Common.cflags);
+                FStar_TypeChecker_Common.comp_thunk =
+                  (uu___2.FStar_TypeChecker_Common.comp_thunk)
+              }
+          | FStar_Pervasives_Native.None -> lc
+        else lc
+let (maybe_ghost_to_pure :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+  = fun env1 -> fun c -> ghost_to_pure_aux env1 true c
+let (maybe_ghost_to_pure_lcomp :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.lcomp -> FStar_TypeChecker_Common.lcomp)
+  = fun env1 -> fun lc -> ghost_to_pure_lcomp_aux env1 true lc
+let (ghost_to_pure :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+  = fun env1 -> fun c -> ghost_to_pure_aux env1 false c
 let (ghost_to_pure_lcomp :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.lcomp -> FStar_TypeChecker_Common.lcomp)
+  = fun env1 -> fun lc -> ghost_to_pure_lcomp_aux env1 false lc
+let (ghost_to_pure2 :
+  FStar_TypeChecker_Env.env ->
+    (FStar_Syntax_Syntax.comp * FStar_Syntax_Syntax.comp) ->
+      (FStar_Syntax_Syntax.comp * FStar_Syntax_Syntax.comp))
   =
   fun env1 ->
-    fun lc ->
-      let uu___ =
-        (FStar_Syntax_Util.is_ghost_effect
-           lc.FStar_TypeChecker_Common.eff_name)
-          && (non_info_norm env1 lc.FStar_TypeChecker_Common.res_typ) in
-      if uu___
-      then
-        let uu___1 =
-          downgrade_ghost_effect_name lc.FStar_TypeChecker_Common.eff_name in
-        match uu___1 with
-        | FStar_Pervasives_Native.Some pure_eff ->
-            let uu___2 =
-              FStar_TypeChecker_Common.apply_lcomp (ghost_to_pure env1)
-                (fun g -> g) lc in
-            {
-              FStar_TypeChecker_Common.eff_name = pure_eff;
-              FStar_TypeChecker_Common.res_typ =
-                (uu___2.FStar_TypeChecker_Common.res_typ);
-              FStar_TypeChecker_Common.cflags =
-                (uu___2.FStar_TypeChecker_Common.cflags);
-              FStar_TypeChecker_Common.comp_thunk =
-                (uu___2.FStar_TypeChecker_Common.comp_thunk)
-            }
-        | FStar_Pervasives_Native.None -> lc
-      else lc
+    fun uu___ ->
+      match uu___ with
+      | (c1, c2) ->
+          let uu___1 =
+            let uu___2 = maybe_ghost_to_pure env1 c1 in
+            let uu___3 = maybe_ghost_to_pure env1 c2 in (uu___2, uu___3) in
+          (match uu___1 with
+           | (c11, c21) ->
+               let c1_eff =
+                 let uu___2 =
+                   FStar_All.pipe_right c11
+                     FStar_Syntax_Util.comp_effect_name in
+                 FStar_All.pipe_right uu___2
+                   (FStar_TypeChecker_Env.norm_eff_name env1) in
+               let c2_eff =
+                 let uu___2 =
+                   FStar_All.pipe_right c21
+                     FStar_Syntax_Util.comp_effect_name in
+                 FStar_All.pipe_right uu___2
+                   (FStar_TypeChecker_Env.norm_eff_name env1) in
+               let uu___2 = FStar_Ident.lid_equals c1_eff c2_eff in
+               if uu___2
+               then (c11, c21)
+               else
+                 (let c1_erasable =
+                    FStar_TypeChecker_Env.is_erasable_effect env1 c1_eff in
+                  let c2_erasable =
+                    FStar_TypeChecker_Env.is_erasable_effect env1 c2_eff in
+                  let uu___4 =
+                    c1_erasable &&
+                      (FStar_Ident.lid_equals c2_eff
+                         FStar_Parser_Const.effect_GHOST_lid) in
+                  if uu___4
+                  then let uu___5 = ghost_to_pure env1 c21 in (c11, uu___5)
+                  else
+                    (let uu___6 =
+                       c2_erasable &&
+                         (FStar_Ident.lid_equals c1_eff
+                            FStar_Parser_Const.effect_GHOST_lid) in
+                     if uu___6
+                     then
+                       let uu___7 = ghost_to_pure env1 c11 in (uu___7, c21)
+                     else (c11, c21))))
+let (ghost_to_pure_lcomp2 :
+  FStar_TypeChecker_Env.env ->
+    (FStar_TypeChecker_Common.lcomp * FStar_TypeChecker_Common.lcomp) ->
+      (FStar_TypeChecker_Common.lcomp * FStar_TypeChecker_Common.lcomp))
+  =
+  fun env1 ->
+    fun uu___ ->
+      match uu___ with
+      | (lc1, lc2) ->
+          let uu___1 =
+            let uu___2 = maybe_ghost_to_pure_lcomp env1 lc1 in
+            let uu___3 = maybe_ghost_to_pure_lcomp env1 lc2 in
+            (uu___2, uu___3) in
+          (match uu___1 with
+           | (lc11, lc21) ->
+               let lc1_eff =
+                 FStar_TypeChecker_Env.norm_eff_name env1
+                   lc11.FStar_TypeChecker_Common.eff_name in
+               let lc2_eff =
+                 FStar_TypeChecker_Env.norm_eff_name env1
+                   lc21.FStar_TypeChecker_Common.eff_name in
+               let uu___2 = FStar_Ident.lid_equals lc1_eff lc2_eff in
+               if uu___2
+               then (lc11, lc21)
+               else
+                 (let lc1_erasable =
+                    FStar_TypeChecker_Env.is_erasable_effect env1 lc1_eff in
+                  let lc2_erasable =
+                    FStar_TypeChecker_Env.is_erasable_effect env1 lc2_eff in
+                  let uu___4 =
+                    lc1_erasable &&
+                      (FStar_Ident.lid_equals lc2_eff
+                         FStar_Parser_Const.effect_GHOST_lid) in
+                  if uu___4
+                  then
+                    let uu___5 = ghost_to_pure_lcomp env1 lc21 in
+                    (lc11, uu___5)
+                  else
+                    (let uu___6 =
+                       lc2_erasable &&
+                         (FStar_Ident.lid_equals lc1_eff
+                            FStar_Parser_Const.effect_GHOST_lid) in
+                     if uu___6
+                     then
+                       let uu___7 = ghost_to_pure_lcomp env1 lc11 in
+                       (uu___7, lc21)
+                     else (lc11, lc21))))
 let (term_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env1 ->

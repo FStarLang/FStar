@@ -321,6 +321,7 @@ type tokenId =
     | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
+    | TOKEN_AS
     | TOKEN_AND
     | TOKEN_AMP
     | TOKEN_end_of_input

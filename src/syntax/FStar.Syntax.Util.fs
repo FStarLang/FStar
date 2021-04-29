@@ -482,7 +482,7 @@ let canon_app t =
     mk_Tm_app hd args t.pos
 
 (* ---------------------------------------------------------------------- *)
-(* <eq_tm> Syntactic equality of zero-order terms                         *)
+(* <eq_tm> Syntactic equality of terms                                    *)
 (* ---------------------------------------------------------------------- *)
 type eq_result =
     | Equal
@@ -623,6 +623,17 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
       eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
+
+      (*
+       * AR: ignoring residual comp here, that's an ascription added by the typechecker
+       *     do we care if that's different?
+       *)
+    | Tm_abs (bs1, body1, _rc1), Tm_abs (bs2, body2, _rc2)
+      when List.length bs1 = List.length bs2 ->
+      
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+                Equal bs1 bs2)
+             (fun () -> eq_tm body1 body2)
 
     | _ -> Unknown
 
@@ -1346,7 +1357,8 @@ let is_sub_singleton t =
     let head, _ = head_and_args (unmeta t) in
     match (un_uinst head).n with
     | Tm_fvar fv ->
-          Syntax.fv_eq_lid fv PC.squash_lid
+          Syntax.fv_eq_lid fv PC.unit_lid
+        || Syntax.fv_eq_lid fv PC.squash_lid
         || Syntax.fv_eq_lid fv PC.auto_squash_lid
         || Syntax.fv_eq_lid fv PC.and_lid
         || Syntax.fv_eq_lid fv PC.or_lid
