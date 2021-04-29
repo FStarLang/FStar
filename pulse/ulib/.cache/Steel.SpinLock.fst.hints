@@ -1,5 +1,5 @@
 [
-  "a.ri„P‚³øi*4‹<6",
+  "Éÿ\u0002¸„Ó\\œ¢Ú_Ê-a:",
   [
     [
       "Steel.SpinLock.elim_lockinv",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.SpinLock.lockinv" ],
       0,
-      "fc0561e55a90bf4c49f3e1fce143691a"
+      "2e12dfb63e37f32fcd94e4020766f740"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -26,11 +26,11 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_1deeb20268a5c4d4fffeebd3d94d85e9",
+        "refinement_interpretation_Tm_refine_e0c9085c3e6c39729ffea491bdd0b647",
         "true_interp"
       ],
       0,
-      "926157d7619f5e57dcfa9c40f4fab404"
+      "bf0582381e7e0bd493bedf3c6ea57548"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -42,7 +42,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "f464d59779840e4acd98ec12c7e06cb5"
+      "9a30a2036e17ce4d842684d00a965a21"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -73,7 +73,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "49691e8978246c9be8f99d8f55665c65"
+      "96734cb95b157c601085a4180dec00f3"
     ],
     [
       "Steel.SpinLock.acquire'",
@@ -82,20 +82,32 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Steel.Effect.Atomic.obs_at_most_one",
         "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Memory.inames", "equation_Steel.Memory.mem_inv",
         "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lock_t",
+        "equation_Steel.SpinLock.lockinv",
         "equation_Steel.SpinLock.protects",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.bool", "lemma_FStar.Set.mem_empty",
+        "function_token_typing_Prims.bool",
+        "interpretation_Tm_abs_d716b89c7122244f867c074692bc6a31",
+        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.Set.mem_empty",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_55e9a1e20a0937d9a783b828f83347d7",
-        "true_interp", "typing_FStar.Pervasives.Native.snd",
-        "typing_Steel.Memory.iname", "typing_Steel.Reference.ref"
+        "refinement_interpretation_Tm_refine_65079789b5ee069d4dcb71b5d5562419",
+        "true_interp", "typing_FStar.Ghost.elift2",
+        "typing_FStar.Ghost.erased", "typing_FStar.Ghost.hide",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd", "typing_FStar.Set.empty",
+        "typing_FStar.Set.set", "typing_Steel.Memory.iname",
+        "typing_Steel.Memory.mem_inv", "typing_Steel.Reference.ref",
+        "typing_Steel.SpinLock.lockinv",
+        "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "6d235592fb03c973090138d4616a83c2"
+      "57c7a9a10bff884187db03634fbb96a3"
     ],
     [
       "Steel.SpinLock.acquire",
@@ -104,7 +116,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "67017d99ed24107a070f8bbd70076aea"
+      "6177eda95eb0a5ff7079f02e0951e83f"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -135,7 +147,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "152fb7c9eb3b83e9a3f5e38f78e610ed"
+      "e87c3a3a57aea31cf76284ab8bf1397a"
     ],
     [
       "Steel.SpinLock.release'",
@@ -144,20 +156,32 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Steel.Effect.Atomic.obs_at_most_one",
         "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Memory.inames", "equation_Steel.Memory.mem_inv",
         "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lock_t",
+        "equation_Steel.SpinLock.lockinv",
         "equation_Steel.SpinLock.protects",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.bool", "lemma_FStar.Set.mem_empty",
+        "function_token_typing_Prims.bool",
+        "interpretation_Tm_abs_d716b89c7122244f867c074692bc6a31",
+        "lemma_FStar.Ghost.reveal_hide", "lemma_FStar.Set.mem_empty",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_55e9a1e20a0937d9a783b828f83347d7",
-        "true_interp", "typing_FStar.Pervasives.Native.snd",
-        "typing_Steel.Memory.iname", "typing_Steel.Reference.ref"
+        "refinement_interpretation_Tm_refine_65079789b5ee069d4dcb71b5d5562419",
+        "true_interp", "typing_FStar.Ghost.elift2",
+        "typing_FStar.Ghost.erased", "typing_FStar.Ghost.hide",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd", "typing_FStar.Set.empty",
+        "typing_FStar.Set.set", "typing_Steel.Memory.iname",
+        "typing_Steel.Memory.mem_inv", "typing_Steel.Reference.ref",
+        "typing_Steel.SpinLock.lockinv",
+        "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "4593812e91e84be59cd3132221eff0d2"
+      "669f67f23e2d86d46dee091681ef921d"
     ]
   ]
 ]

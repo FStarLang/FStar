@@ -1,0 +1,56 @@
+[
+  "\tE¿;µ$æq<ÄBI9è/5",
+  [
+    [
+      "Queue.enqueue",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_Queue.Def.cell",
+        "interpretation_Tm_abs_1c0f9bb4b5f3fce66372ac26b0718ea8",
+        "kinding_Queue.Def.cell@tok",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "proj_equation_Queue.Def.Mkcell_next",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_FStar.Ghost.reveal", "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "2744b2d67226b68916d3a0eb5cfe601b"
+    ],
+    [
+      "Queue.dequeue_post_success",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "lemma_FStar.Ghost.reveal_hide",
+        "proj_equation_Queue.Def.Mkcell_next",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_Queue.Def.t"
+      ],
+      0,
+      "eb14d22f4ff3b5ec94b047ac8b25f85b"
+    ],
+    [
+      "Queue.dequeue_post",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
+      ],
+      0,
+      "fef60ed7af837eafd1e9fce1d877ace9"
+    ]
+  ]
+]

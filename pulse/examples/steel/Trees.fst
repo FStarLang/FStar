@@ -1,4 +1,4 @@
-module FStar.Trees
+module Trees
 
 module M = FStar.Math.Lib
 

@@ -1,11 +1,13 @@
 module Steel.DisposableInvariant
+
+open FStar.Ghost
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Memory
 open Steel.FractionalPermission
 module A = Steel.Effect.Atomic
 #push-options "--ide_id_info_off"
 open Steel.Reference
-open FStar.Ghost
 
 [@@__reduce__]
 let conditional_inv (r:ghost_ref bool) (p:slprop) =
@@ -17,45 +19,38 @@ let conditional_inv (r:ghost_ref bool) (p:slprop) =
 let ex_conditional_inv (r:ghost_ref bool) (p:slprop) =
     h_exists (conditional_inv r p)
 
-let inv (p:slprop) = (r:ghost_ref bool & Steel.Memory.inv (ex_conditional_inv r p))
+let inv (p:slprop) = erased (r:ghost_ref bool & Steel.Memory.inv (ex_conditional_inv r p))
 
 let name (#p:_) (i:inv p) = dsnd i
 let gref (#p:_) (i:inv p) = dfst i
 
 [@@__reduce__]
 let active (#p:_) ([@@@smt_fallback]f:perm) (i:inv p) =
-    ghost_pts_to (gref i) (half_perm f) (hide true)
+  ghost_pts_to (gref i) (half_perm f) (hide true)
 
-let new_inv (#u:_) (p:slprop)
-  : SteelGhostT (inv p) u p (active full_perm)
-  = let r = ghost_alloc (Ghost.hide true) in
-    ghost_share r;
-    A.intro_exists true (conditional_inv r p);
-    let i = A.new_invariant u (ex_conditional_inv r p) in
-    (| r, i |)
+let new_inv #u p =
+  let r = ghost_alloc (Ghost.hide true) in
+  ghost_share r;
+  A.intro_exists true (conditional_inv r p);
+  let i = A.new_invariant u (ex_conditional_inv r p) in
+  rewrite_context ();  //TODO: this is rewriting gref (hide (| r, x |)) to r, revisit
+  (| r, i |)
 
-let share (#p:slprop) (#f:perm) (#u:_) (i:inv p)
-  : SteelGhostT unit u
-    (active f i)
-    (fun _ -> active (half_perm f) i `star` active (half_perm f) i)
-  = ghost_share (gref i)
+let share #p #f #u i = ghost_share (gref i)
 
-let gather (#p:slprop) (#f0 #f1:perm) (#u:_) (i:inv p)
-  : SteelGhostT unit u
-    (active f0 i `star` active f1 i)
-    (fun _ -> active (sum_perm f0 f1) i)
-  = ghost_gather #_ #_ #(half_perm f0) (gref i);
-    A.change_slprop
-      (ghost_pts_to (gref i) (sum_perm (half_perm f0) (half_perm f1)) (hide true))
-      (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
-      (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
+let gather #p #f0 #f1 #u i =
+  ghost_gather #_ #_ #(half_perm f0) (gref i);
+  A.change_slprop
+    (ghost_pts_to (gref i) (sum_perm (half_perm f0) (half_perm f1)) (hide true))
+    (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
+    (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
 
-let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
+let dispose #p #u i
   : SteelGhostT unit u
     (active full_perm i)
     (fun _ -> p)
   = let dispose_aux (r:ghost_ref bool) (_:unit)
-    : SteelGhostT unit (set_add (name i) u)
+    : SteelGhostT unit (add_inv u i)
        (ex_conditional_inv r p `star`
         ghost_pts_to r (half_perm full_perm) true)
        (fun _ ->
@@ -75,20 +70,10 @@ let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
     A.with_invariant_g (name i)
                        (dispose_aux (gref i))
 
-let with_invariant (#a:Type)
-                   (#fp:slprop)
-                   (#fp':a -> slprop)
-                   (#u:inames)
-                   (#p:slprop)
-                   (#perm:_)
-                   (i:inv p{not (name i `Set.mem` u)})
-                   ($f:unit -> SteelAtomicT a (set_add (name i) u)
-                                             (p `star` fp)
-                                             (fun x -> p `star` fp' x))
-  : SteelAtomicT a u (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+let with_invariant #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelAtomicT a (set_add (name i) u)
+      : SteelAtomicT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))
@@ -101,25 +86,15 @@ let with_invariant (#a:Type)
       A.change_slprop (if b then p else emp) p (fun _ -> ());
       let x = f() in
       A.intro_exists true (conditional_inv r p);
-      x
+      return x
     in
     A.with_invariant (name i)
                      (with_invariant_aux (gref i))
 
-let with_invariant_g (#a:Type)
-                   (#fp:slprop)
-                   (#fp':a -> slprop)
-                   (#u:inames)
-                   (#p:slprop)
-                   (#perm:_)
-                   (i:inv p{not (name i `Set.mem` u)})
-                   ($f:unit -> SteelGhostT a (set_add (name i) u)
-                                             (p `star` fp)
-                                             (fun x -> p `star` fp' x))
-  : SteelGhostT a u (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+let with_invariant_g #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelGhostT a (set_add (name i) u)
+      : SteelGhostT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))

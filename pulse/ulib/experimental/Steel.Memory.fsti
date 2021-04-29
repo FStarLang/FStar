@@ -237,7 +237,7 @@ module S = FStar.Set
 (** Invariants have a name *)
 val iname : eqtype
 
-let inames = S.set iname
+let inames = erased (S.set iname)
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val inames_ok (e:inames) (m:mem) : prop
@@ -498,7 +498,12 @@ val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
 val ( >--> ) (i:iname) (p:slprop u#1) : prop
 
 (**[i : inv p] is an invariant whose content is [p] *)
-let inv (p:slprop) = i:iname{i >--> p}
+let inv (p:slprop) = i:(erased iname){reveal i >--> p}
+
+let mem_inv (#p:slprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
+
+let add_inv (#p:slprop) (e:inames) (i:inv p) : inames =
+  Set.union (Set.singleton (reveal i)) (reveal e)
 
 (** Creates a new invariant from a separation logic predicate [p] owned at the time of the call *)
 val new_invariant (e:inames) (p:slprop)
@@ -509,8 +514,8 @@ val with_invariant (#a:Type)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (i:inv p{not (i `Set.mem` opened_invariants)})
-                   (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
+                   (i:inv p{not (mem_inv opened_invariants i)})
+                   (f:action_except a (add_inv opened_invariants i) (p `star` fp) (fun x -> p `star` fp' x))
   : action_except a opened_invariants fp fp'
 
 

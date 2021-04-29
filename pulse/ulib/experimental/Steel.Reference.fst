@@ -15,11 +15,12 @@
 *)
 
 module Steel.Reference
+
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
-open FStar.Ghost
 module H = Steel.HigherReference
 module U = FStar.Universe
 module A = Steel.Effect.Atomic
@@ -81,7 +82,7 @@ let pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
 let alloc x =
   let r = H.alloc (U.raise_val x) in
   change_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());
-  r
+  return r
 
 let read #a #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
@@ -89,7 +90,7 @@ let read #a #p #v r =
   let x = H.read #_ #p #v' r in
   let v':a = U.downgrade_val x in
   change_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
-  v'
+  return v'
 
 let read_refine #a #p q r =
   A.lift_h_exists_atomic (fun (v:a) -> pts_to r p v `star` q v);
@@ -100,7 +101,7 @@ let read_refine #a #p q r =
     (H.pts_to r p (hide x) `star` U.lift_dom q x)
     (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x)) (fun _ -> ());
 
-  (U.downgrade_val x)
+  return (U.downgrade_val x)
 
 let write #a #v r x =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in

@@ -1,5 +1,5 @@
 [
-  "\u0004\u0006q½ëMýdAê9ŒÁ•3\u0018",
+  "\b\u0019¹bÃå\u0005vMmã¦ëþÈ’",
   [
     [
       "Steel.HigherReference.higher_ref_pts_to_injective_eq",
@@ -20,7 +20,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "a89e38ac421628b08b85d35c13c5541b"
+      "ef0de3c078cfa6c86ac854b26924a65b"
     ],
     [
       "Steel.HigherReference.read",
@@ -41,7 +41,28 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "8bb111734e58c5795f02c50635d5406b"
+      "129624c44e0491faf4b5e1b4b026a378"
+    ],
+    [
+      "Steel.HigherReference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67", "eq2-interp",
+        "equality_tok_Prims.T@tok", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.ens_depends_only_on",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "interpretation_Tm_abs_e1d13656cf2c94b0300daef875e848fa",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "82c0e8aea79bc43f22246ac187ac92e9"
     ],
     [
       "Steel.HigherReference.ghost_gather",
@@ -62,7 +83,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "725dbc9733edb8107cb9af62c5651a44"
+      "6eedbf43491728c3f71abf4b9916e073"
     ],
     [
       "Steel.HigherReference.ghost_pts_to_injective_eq",
@@ -83,7 +104,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "1d237b3566a9a87d2d8ebb2a4b1bb45d"
+      "f01c56eb1e8dbde2c2c5d0481dc535ed"
     ]
   ]
 ]
