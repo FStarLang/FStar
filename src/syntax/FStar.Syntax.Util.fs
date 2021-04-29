@@ -631,9 +631,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_abs (bs1, body1, _rc1), Tm_abs (bs2, body2, _rc2)
       when List.length bs1 = List.length bs2 ->
       
-      eq_and (List.fold_left2 (λ r b1 b2 -> eq_and r (λ _ → eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
                 Equal bs1 bs2)
-             (λ _ → eq_tm body1 body2)
+             (fun () -> eq_tm body1 body2)
 
     | _ -> Unknown
 
