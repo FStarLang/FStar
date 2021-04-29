@@ -22,7 +22,7 @@
         "true_interp", "typing_FStar.Ghost.reveal", "typing_tok_Prims.T@tok"
       ],
       0,
-      "88c3e26588319ee94ccf71e0680d9072"
+      "2744b2d67226b68916d3a0eb5cfe601b"
     ],
     [
       "Queue.dequeue_post_success",
@@ -39,7 +39,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "11e5018cbfc21943a3616a9da50c1e33"
+      "eb14d22f4ff3b5ec94b047ac8b25f85b"
     ],
     [
       "Queue.dequeue_post",
@@ -50,7 +50,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "dea2999a6f841531d486fa5a426cd9a9"
+      "fef60ed7af837eafd1e9fce1d877ace9"
     ]
   ]
 ]
