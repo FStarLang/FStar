@@ -1,5 +1,5 @@
 [
-  "\u001aFÝD\u0018mÏ\u0007\u001b4Q“ß¦» ",
+  "º38\u0017Æò\u0011:*ñ÷É\u0012\u001c¢Ñ",
   [
     [
       "Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_msg",
@@ -22,7 +22,7 @@
         "unit_typing"
       ],
       0,
-      "8f165f2984ecab3941233bed4d214318"
+      "ef74e06c4dbd1558774d2ebd82c0becf"
     ],
     [
       "Steel.Channel.Simplex.step",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "70b3ce01319e6ee6acc02a5f0069d380"
+      "eb781eef81cfb3f6b18329d7a7ba3318"
     ],
     [
       "Steel.Channel.Simplex.chan_inv_step_p",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "12824af55a3be09ab10c40e986cac27a"
+      "cdc2edb5aadb34ba468a310734f204ca"
     ],
     [
       "Steel.Channel.Simplex.chan_inv_cond",
@@ -68,7 +68,7 @@
         "unit_typing"
       ],
       0,
-      "d1e7858634a8e6904fe511590cde7ac5"
+      "a9ad0206d16371178b34d3067b4d7ed5"
     ],
     [
       "Steel.Channel.Simplex.trace_until_prop",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9c785f83cf7bd40df5a7ab02864466e8"
+      "fe0a3cbae672eda7ad8366541166706b"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -98,7 +98,7 @@
         "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "a57acb0d4dd94d39122e2bd3acf50c20"
+      "60e6333abb2295c147353bbf169fc072"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -112,7 +112,7 @@
         "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "6e52533ca6510b5025f176ea35d2fceb"
+      "ceff6321415729ff268a09c0d1af02f4"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -133,7 +133,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "601fe6a9d5828edc30b027089c04e4bc"
+      "a6ede96d10dd8ea4728e6781f32300a6"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -150,7 +150,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9025e99f242c19d3092732e2e56d4ee3"
+      "e498babad1567d9d24a7c1e5b676fee5"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -170,7 +170,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "c082c1959472e02c245fd7e33829b47f"
+      "b938335f1fe69057b94b22c729fd4a60"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_stepT",
@@ -196,7 +196,7 @@
         "typing_Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_prot"
       ],
       0,
-      "a0df31dd0f9d6a3d38dd2faaffe35ee3"
+      "24fd07c18f4e7479fd9d9a796cc0d4f6"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_auxT",
@@ -208,7 +208,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "c36f3f12051f845f4c78d8c7585f81f1"
+      "8ef52eb4477a06ce5a96bf6011cf478a"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_stepT",
@@ -217,7 +217,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3f1adeba3886567076837c77a0d11670"
+      "2f18f84f0b187db102346d449eeb5d72"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_eqT",
@@ -231,7 +231,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6c6d8a65f9a2c70fe6fbd82535cea7ad"
+      "644206ce0709bcf18fd6e28f6eb07359"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_eqT",
@@ -248,7 +248,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "541c3872bb7841418d764edb61215cba"
+      "b7fbb684f22b9b5f56cd03277a472b7e"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_eqT",
@@ -266,7 +266,7 @@
         "true_interp"
       ],
       0,
-      "f8c1ad522a892e44c2d4c9a559bbdbfb"
+      "8c977a7026e3ea591e37b02050e93133"
     ],
     [
       "Steel.Channel.Simplex.__proj__Mkchan__item__chan_lock",
@@ -278,7 +278,7 @@
         "projection_inverse_Steel.Channel.Simplex.Mkchan_chan_chan"
       ],
       0,
-      "fdc74c92ed495db2012b39ea50aba9ba"
+      "2077bea572446c49dd782017232a76d0"
     ],
     [
       "Steel.Channel.Simplex.in_state_prop",
@@ -293,7 +293,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "53d942a04ea3f4777ed3c245799bf981"
+      "6d5c39687bb8c9eba64f2d46d6a19448"
     ],
     [
       "Steel.Channel.Simplex.next_chan_val",
@@ -329,7 +329,7 @@
         "unit_typing"
       ],
       0,
-      "e0075191337e03f1d588dd58ec1c0753"
+      "fad272d6df2787ff55ba1186e086d1e3"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv",
@@ -347,7 +347,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "bacfaf25e5c698e9e2c40f22bcdbbd45"
+      "84fe544cda886a9aac047191cc886e79"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv",
@@ -361,7 +361,7 @@
         "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "40957ebaccb68d7fac14e6580d3e2409"
+      "0b13060fed4503b637829b7c70897d9e"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv",
@@ -379,7 +379,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c9260a41fcf2cdb9db79d2679107de86"
+      "50fa2c510e0437e928b707dbcd2da891"
     ],
     [
       "Steel.Channel.Simplex.intro_in_state",
@@ -395,7 +395,7 @@
         "true_interp"
       ],
       0,
-      "e20f8c1eb50178c4c9caa671203b6123"
+      "c47eac7433e04e3471c548f4f86f5ad1"
     ],
     [
       "Steel.Channel.Simplex.initial_trace",
@@ -408,7 +408,7 @@
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to"
       ],
       0,
-      "fb4385c54266df9b86014171f357cc14"
+      "7eb011c97859898fdc213ffea693ebcf"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until",
@@ -427,7 +427,7 @@
         "unit_typing"
       ],
       0,
-      "805508fc722b931f981dfb9f811f0cb4"
+      "7f86195c1c905b54c6094fed39c532bc"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until",
@@ -444,7 +444,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b5083768b7c6623b397ee45ea416b40a"
+      "b9a73e39f263e4626c6f860969f7df0a"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until",
@@ -464,7 +464,7 @@
         "true_interp"
       ],
       0,
-      "b79ab8f210d0fc6496f9356051b31214"
+      "a7133974a30b53ba6f7e85dd1ff3ac29"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until_init",
@@ -486,7 +486,7 @@
         "typing_Steel.Channel.Simplex.initial_trace", "unit_typing"
       ],
       0,
-      "7af363faf2101dcd43f24194e2c80e22"
+      "6fab8b0affdd690151a4007cfc424d62"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until_init",
@@ -505,7 +505,7 @@
         "refinement_interpretation_Tm_refine_9ac47a057edc2f3a949fbac39ed3b49b"
       ],
       0,
-      "906a399ab443243e9ab13a73a3723dff"
+      "288f12929476ad7a737ea16e6ef7f5b6"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until_init",
@@ -545,7 +545,7 @@
         "typing_Steel.Channel.Simplex.initial_trace"
       ],
       0,
-      "dc89346ed4e2977df680f5d12f5499ae"
+      "58faa53faa52422bcfa3c70c3f9caa4f"
     ],
     [
       "Steel.Channel.Simplex.mk_chan",
@@ -564,7 +564,7 @@
         "true_interp"
       ],
       0,
-      "6fda65f69c803929b7e1db89153bade7"
+      "79dc7b04d3663f10b3c64b35c48c761b"
     ],
     [
       "Steel.Channel.Simplex.new_chan",
@@ -628,7 +628,7 @@
         "typing_Steel.Channel.Simplex.msg", "unit_typing"
       ],
       0,
-      "ca1c75f816ea2f7f0f7d1b2495636480"
+      "600c5d4db2bf0d63b2f2b151ea489eed"
     ],
     [
       "Steel.Channel.Simplex.send_recv_in_sync",
@@ -642,7 +642,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b49721d965051478f814c81a0366738e"
+      "7927f8c9fd0f7ab9443768771108f9ea"
     ],
     [
       "Steel.Channel.Simplex.update_channel",
@@ -660,7 +660,7 @@
         "true_interp"
       ],
       0,
-      "c313e791919d36d70fdf562daac6809a"
+      "6e43b62b969b816fec08189f40676077"
     ],
     [
       "Steel.Channel.Simplex.gather_r",
@@ -698,7 +698,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "9c537d7d2c255a8bfa05948d5cb60e20"
+      "702311e960652590d4f05d969f69b245"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -712,7 +712,7 @@
         "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "d87a5f93a02f319c57b4fdd331109459"
+      "c6be5d671a60a32e2c5acd4915313b48"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -726,7 +726,7 @@
         "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "2ca2ed5f6c21a87098c3cb5351e1c987"
+      "4fe0c25277dcf42aa08acd9dd518bb38"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -740,7 +740,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "80a61530207347f783c07df00443d4b1"
+      "1e0e8611842491669bffe8f99357044b"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -757,7 +757,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "10b9602a460c5311c0abea6517459536"
+      "2b6392db042743ee4677d3b1b6b8615f"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -771,7 +771,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "adbbdf2bea22d07b7c8ceb6617bdc2ce"
+      "31f79c9b5f9f6371c98976b8725a84a4"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -788,7 +788,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f2f2389fce400f03d859639acf32aba3"
+      "bcb0eb3e6acddb8d5c142bf1335124b4"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -808,7 +808,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "82057d47f982ec10702ffa9c0347d0c7"
+      "aa3ce6bd0f269fb50e7c62f5f6c1be78"
     ],
     [
       "Steel.Channel.Simplex.next_trace",
@@ -843,7 +843,7 @@
         "typing_Steel.Channel.Simplex.step"
       ],
       0,
-      "106f025c32d18eaef620d82d59562989"
+      "53cdd2135ed7e57b31902246e5797c69"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -888,7 +888,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "8c1e5072db8ba8c21fb1bf22a1ae7b5c"
+      "b24e341a940766f1214118c10fa5ef5f"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -907,7 +907,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "cefe03d17ea5c8c7091cd2dc0c2fdee9"
+      "7e8112bc0eb0adbb008732574719577b"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -923,7 +923,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a1a0c09251c5a74b449c602579ff02df"
+      "b649df459b66f62916c2434f3dcf1074"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -940,7 +940,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d1c600473806375ae5030b3072bf3d34"
+      "9bf03a4623e24030a24475a4d73532c8"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -983,7 +983,7 @@
         "typing_Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_msg"
       ],
       0,
-      "2e7d386b35540ce404a5eaf7673d3785"
+      "851f4a4ee8d86c999f0a0fdbbc56ce16"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1002,7 +1002,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "6d3dca93f87de6180b53609046d947bc"
+      "5f0ed79991bf4db2a1db771637dd178a"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1018,7 +1018,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ab0914d4eb6b8909c51b3b4ab2841484"
+      "26d7cc9010ccfbff5541f855be5c303f"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1035,7 +1035,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7b6f52e599b32440ce323297e0b6096d"
+      "c002a683b95b962879edb7143f8d4de4"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1051,7 +1051,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9a91bd560a20c10b3cc82bbfd6dce61f"
+      "e123ad79a348f8c629650a208bc99e6a"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1070,7 +1070,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "4af5927096eb789081f6a4dd30c310e6"
+      "f7b32e55b753746ba8f49f4b2c540197"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -1112,7 +1112,7 @@
         "typing_Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_msg"
       ],
       0,
-      "a16d9d3a5bf95c7397700cf70c883a92"
+      "9c33a9f2607e50cfda85521ce3211d60"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1132,7 +1132,7 @@
         "unit_typing"
       ],
       0,
-      "0185a5ad8ee49cd4fc0d616f50d029e8"
+      "f9a5d8024a7e60e158f5eb3b232c9a60"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1151,7 +1151,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "801d8bd24580c576d9d592dc29c94ce7"
+      "efb447924a21e50701759e42f2cfe641"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1167,7 +1167,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "24378afd834a62ea291a52649297027f"
+      "6750142e11924e8b1d4fba24542f949a"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1184,7 +1184,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "01e08246eae47d41bf77a262b777abbc"
+      "b091e2c772c1f20e718027f2b4323d90"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1200,7 +1200,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "153f3dce593d9d4a7422a937ae54b4c0"
+      "daee421022613d134790e6e75f8dfb7d"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1219,7 +1219,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "b1d5d3f3059202c7f3a0d71c32bba5d8"
+      "78858c27f97d3437e3307346d113e4f9"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1235,7 +1235,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "76309b8209abbaf2600eff2136103195"
+      "69fc8be7135c3966a915ee772856d422"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1252,7 +1252,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2bfe03f7ae2ce834499a3874f58b48e1"
+      "d8e7c2624f691df6466fff86cb016e46"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1268,7 +1268,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9caa8e6e1e172c5898deb2945b9190aa"
+      "29fc930ab24a4d36d650b4c69ac57576"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1284,7 +1284,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e8321cedd11d2ea0eea18397fd6c605b"
+      "d250f2b3b94e703472a10524c585f76c"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -1321,7 +1321,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "a5ac8fe569c6e30cf360aff32132ad8c"
+      "73ccc96edae32e1e1252c230299a369e"
     ],
     [
       "Steel.Channel.Simplex.recv_availableT",
@@ -1348,7 +1348,7 @@
         "typing_Steel.Channel.Simplex.step"
       ],
       0,
-      "d5b79da7552a466ee897dfc9ff245628"
+      "821e269dd57e2a2cb08441d6000dd3f5"
     ],
     [
       "Steel.Channel.Simplex.send_receive_prelude",
@@ -1363,7 +1363,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "ad90d6ead3b7659e154f01c810103b2e"
+      "8b203e55198be58a1c157aba030b43ff"
     ],
     [
       "Steel.Channel.Simplex.send",
@@ -1377,7 +1377,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "415e044691974872c22fa0b58e39e945"
+      "67c2690e073f0f168cdd2dd8b99743fd"
     ],
     [
       "Steel.Channel.Simplex.send",
@@ -1391,7 +1391,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "eab1b056c149c0844d5ad829934b31e1"
+      "b5c30fc1c28d6fc47ce5ffc90d87a550"
     ],
     [
       "Steel.Channel.Simplex.send",
@@ -1415,7 +1415,7 @@
         "true_interp"
       ],
       0,
-      "d5e2b84a6bc8bb67d1224b1bdebc208b"
+      "6ba7018db903e11feda48abbd3e81925"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -1429,7 +1429,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "377282f35901b2f8af36759691f2222d"
+      "48360ede4f3565b445c82dbca8688074"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -1443,7 +1443,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "006d09e03a5b7a8d6f785a1295456ea7"
+      "dc0fc582226e10259cf2532e69bbbe6e"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -1467,7 +1467,7 @@
         "true_interp"
       ],
       0,
-      "cc7065742ade066876bbed16b59dd99b"
+      "f6e20a9e4718d996dc0f8b2238710d8b"
     ],
     [
       "Steel.Channel.Simplex.history_p'",
@@ -1481,7 +1481,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "badadecf7b5000275569b3fec46e16bb"
+      "459918f257be102ba9d19302cc76da81"
     ],
     [
       "Steel.Channel.Simplex.history_p",
@@ -1503,7 +1503,7 @@
         "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "d425278baa1974da39744b620bd399aa"
+      "4f8eb2b37ba19c59c8479e2928c3cc64"
     ],
     [
       "Steel.Channel.Simplex.recall_trace_ref",
@@ -1527,7 +1527,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1ee892cd0898f706eac13678c3109075"
+      "1b583ac9e2c935b2838413834df540f9"
     ],
     [
       "Steel.Channel.Simplex.prot_equals",
@@ -1559,7 +1559,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c0a17988bb137477601eeb8825bd893a"
+      "d1d98af7715ae55dfe642ba630bd1bb8"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -1577,7 +1577,7 @@
         "unit_typing"
       ],
       0,
-      "cec44a6c9c1778ae504870dd0a653b81"
+      "240db135a81d0549dd81cfc2f92628ce"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -1594,7 +1594,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d5c68dd0f5b5feb0cdbac37d703b5cfd"
+      "10c8e205ce883edddfed3b118c7ccadc"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -1610,7 +1610,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "50c9ba71003483df17accb329d8d612a"
+      "fc910b78e53a810538d4e2623b286758"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -1627,7 +1627,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "09bccedc2fb926ba07733ff097a609e2"
+      "832f2db4a61e804559518ffa842ee970"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -1657,7 +1657,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "ac8b78418a9ef971b4a9da579992ee81"
+      "b2662eaae9a3ee8eac29b55797cc5d68"
     ],
     [
       "Steel.Channel.Simplex.trace",
@@ -1666,7 +1666,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a173ff754e86e56ef3086190702a94e4"
+      "bdd236c4fcae8b5bf2e6b15c6535e9e8"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1692,7 +1692,7 @@
         "unit_typing"
       ],
       0,
-      "ba1dc42c9a2fd6a080b46afe6c111147"
+      "db6b11a31867fb75bd4ed492bdeafc18"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1711,7 +1711,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "e7b4e60ee7bdc528711f8c8b2d7986ac"
+      "91468238808f156fcc0d0c4d9b9ffdd1"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1727,7 +1727,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4551bcd8dd857ddb384c3a323b5a7af3"
+      "f3a997d85b93b75e5f284475beaa2598"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1746,7 +1746,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "07f4b0fa99ffb4f0d62a08e632acdbae"
+      "53ee80b1e72cefc76587ba1546fabd21"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1762,7 +1762,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "8881609a3618a0e1a0105a72ec6d6048"
+      "63a921be327a8f706aae4cd26414aa32"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1779,7 +1779,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f8a3ead6033c90ab4946f7fe55f10e38"
+      "36369208e00f651a9b3ce37da555ae2a"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1795,7 +1795,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "942bafa49a84d8a5370e1c0ccc833f26"
+      "582cd977986fbc8731178ebdf9a03268"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1812,7 +1812,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0560cc772e8b761eceeae68dd8619fc4"
+      "0c743681852b3e6161004fdab1820091"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1828,7 +1828,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6b9b9b315fe0a8f7a939f6139a8cfbe8"
+      "0b9ce46c7830859c9c4b4ded95e20fbd"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1845,7 +1845,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3a9a7bc62859a773fcc775cef76c0515"
+      "36ac7d496f9d9d7edb46c84e7fd3d8c7"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1861,7 +1861,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "30cd931bad7992fc7ba65bce58cc9bc5"
+      "6e2c5fb721aa6cf5086274525560da22"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1878,7 +1878,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "285dc898c55ebd89a6f8cd17ddda9e1c"
+      "0cc46b550c40d73eb659789f78af7374"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1894,7 +1894,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "61550c19be58a263590686bc0736ab92"
+      "2bbd0fb06bcb45f346276cdfcc7eb222"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1911,7 +1911,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "84b457cfe18611ea8f41854870cf9083"
+      "f2c3975e738c042a85cdac17be7dfde3"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1927,7 +1927,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dadfab99181d6a7b84468dc99564b873"
+      "2f05b1235da3ae1281b835f833bb4c65"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1944,7 +1944,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4de5cd1227a578a655d3c57fae699f71"
+      "df696f8d2585c9efa842b98f8217d59b"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1975,7 +1975,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "4ebb35e72343c98aa915be5951cf0859"
+      "6e49b7351bbdced8d58eae95eae8578c"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -1992,7 +1992,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ea9fdda063136666b33491691fec8050"
+      "a708fcd0e3a3b353b4843049ab5e3a23"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2008,7 +2008,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f03a4abfcc5667b8dc7cfb735e4d093c"
+      "d767c8150e12294b56562a214b8e7cce"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2027,7 +2027,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "66cb3b904a14e06789a01655851b83bb"
+      "63ac9a3c39b468a1888936db0af401e1"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2043,7 +2043,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "862dfc95411528e902f78b6ed0347c29"
+      "d6032cc96753ca20d56f666b09912afb"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2060,7 +2060,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5a8173d4448cdc3890e52bb5c57480ca"
+      "681e38636d6ed959013354b940db954b"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2076,7 +2076,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e64678cc124b2befe7ef96b84c12808d"
+      "e6d3244002134a60806cf3ef097a518a"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2095,7 +2095,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "bfc569e0201179a8b664fb7e77c16e74"
+      "e368ef86f52a92ce4c37a75cf31ca2cc"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2111,7 +2111,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b6d23f4c9bf29f71e1aa7e9ad285b58d"
+      "84335b740b3bd5f547e791da0c87ab84"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2128,7 +2128,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3957cf80d76828fc6b1d4a3db7c36fbc"
+      "0f5e2392ac970b5b127332d333b462f9"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2144,7 +2144,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d3a27099829df7f025e82b5d5c8df1c1"
+      "f06fb8d487b37ac795faaccb41307413"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2163,7 +2163,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "9512294f3f3a01b072739faab93d0d4d"
+      "c49164574e680107cfe2c819c86f425b"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2179,7 +2179,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c3b55b3aea5f2d8c0fe4ef61f52079e5"
+      "3eb01b66022b2cab74521ccb29ec3b88"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2196,7 +2196,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "781133d53c44bc83d58f201fefffcd47"
+      "0dd63f8cd53b9a550ca29741b8093ead"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -2227,7 +2227,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "13666dae25e200027875346ff1e7cb45"
+      "3e5f0dbbe27bdd8e8b1b96b786518ab4"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2242,7 +2242,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1c3cea1a2501f8fadf176f15bc736767"
+      "70c66fc26505bdafc53d809141f6c6d9"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2261,7 +2261,7 @@
         "unit_typing"
       ],
       0,
-      "28ea37aeeca83838fea59dda64fd9208"
+      "6712e470a78f6b3cda622729e57a1b9c"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2279,7 +2279,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "4a74792038ef0b77de4bf1be105fc1d8"
+      "f05210ce74d95ce48be9108bfd355a4e"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2294,7 +2294,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f2698a3e5fa0160f746d4e24e77a4c8b"
+      "45de377e6cb4a9fb9da707381e93419a"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2312,7 +2312,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "51d7162adfe074ec1df7736d5d85fcd9"
+      "8b90600f182ed9d2f253c1078c804f5a"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2327,7 +2327,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3e636190e5b22908819efe633e8a598f"
+      "10b0d4426e03c7f5e8025a5310cc3dcd"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2345,7 +2345,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "2dd94dc69b61115ca1542afa224657fa"
+      "89e2fd1b48283dc2d1d01bdc62cb7c0d"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2360,7 +2360,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d4411479b3075f68830e50c9487605fa"
+      "2d38e8f27dcafa9f84fda31f552d9475"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2375,7 +2375,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "980ba95201ac64a1000c1a5c16f5fd5b"
+      "a2297eae615c19fa7c3f3738856a9b14"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2390,7 +2390,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "192de1a6823193971d9b8a33e0ed4611"
+      "29588a610907fc38a58648855bbc2fd2"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2405,7 +2405,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a0f2b5f0cd699442469d3d5649475c16"
+      "6150a576b27ff38336391af50708a982"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2423,7 +2423,7 @@
         "true_interp"
       ],
       0,
-      "746ad72f50353259d0d83fbe5380afcd"
+      "f67d9948db7fb95a3018911e54c3c8b7"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2441,7 +2441,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "77185d7ebe62d988c99fbf5d10490d64"
+      "7c68d4094a3dfbf7a05a2ab13107e219"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2456,7 +2456,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "750cdb70f372e288e52539059e0a4dab"
+      "2a32a375c5decfb672f7c3ce40f835a5"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2471,7 +2471,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f9b3193aa59eff5dc9487bd0221d9d4e"
+      "17580b13b617d46caf177ab4711a4727"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2486,7 +2486,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0329f69bd5d624eeff8ef4e1a33f5fe6"
+      "5619e9330ae6075d32f217e03f386bf0"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2504,7 +2504,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "4ae423127f2f6b0d01a1636bdbda040c"
+      "2e3ff8f560826b65a973ec1b797cc7f1"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2519,7 +2519,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "375a9ff2371052a24f48ddc0f1d4b44d"
+      "bfad0e7c80ec47643b3fd7e53ffbd133"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2534,7 +2534,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "947f796b10b1ea947447056ba4fbdde9"
+      "9ee6a3652f9f75d6542ecbc4a31da52f"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2549,7 +2549,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "268c179f80e64cb0280837c19bab0b0c"
+      "7d9abad57c84a51c569b330010159511"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2567,7 +2567,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "0eb3744886580fc3df9e9691d830234c"
+      "e3d930756e7ab4356948dc696db6b587"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2582,7 +2582,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b17801375078cc312c6aa13fb58ae3e3"
+      "6c5868b505215b0bfab7ad1f85192a14"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2600,7 +2600,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "c274a6999dcea9ba0f9ae5ff7c471584"
+      "f785fa2c6cf5176171705287a4415ede"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -2618,7 +2618,7 @@
         "true_interp"
       ],
       0,
-      "dc06c0aa03b52ef2d8801051e1a6236a"
+      "91a922b83f8fc6b6a01eb12719eac634"
     ]
   ]
 ]
