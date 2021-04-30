@@ -1102,18 +1102,6 @@
       "b09942da4d6c007a4b2868c3b85ceb8a"
     ],
     [
-      "StlcCbvDbParSubst.extend_gen_typing_conversion",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_StlcCbvDbParSubst.extend_gen",
-        "primitive_Prims.op_Equality"
-      ],
-      0,
-      "5520b40834612a7fb9e784beec30fbce"
-    ],
-    [
       "StlcCbvDbParSubst.preservation",
       1,
       2,
@@ -1123,7 +1111,7 @@
         "refinement_interpretation_Tm_refine_a1a9f2b954f3c5a7c2ac682c70117cd2"
       ],
       0,
-      "ae6b9063630487ce5a519ae0857273e6"
+      "2ffe45ecf438b2a08871547c55c91ae8"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1135,7 +1123,7 @@
         "refinement_interpretation_Tm_refine_820e1b440550be464370f79bc3e7f097"
       ],
       0,
-      "7279cde570d594fa5d50d03fc9adb5f8"
+      "8cffb571ce92a336939a4d46106e0ba6"
     ],
     [
       "StlcCbvDbParSubst.preservation",
@@ -1211,7 +1199,7 @@
         "typing_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "91b421de3da100439b6479b419bdc516"
+      "ca63b98e6880f95b4caa7e712515d27f"
     ]
   ]
 ]

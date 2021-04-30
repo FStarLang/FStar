@@ -1052,7 +1052,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "bf015bde43421f8bbc35919b63d4a97e"
+      "97a046b62f0f3e68580e353ab248c841"
     ],
     [
       "Steel.HigherReference.ghost_alloc",
@@ -1072,7 +1072,7 @@
         "typing_Steel.HigherReference.ref"
       ],
       0,
-      "b0f3f27ef951ba9a809fb1d44a9a2e80"
+      "103c4ca09db17e7cde73ce7228d46402"
     ],
     [
       "Steel.HigherReference.ghost_share",
@@ -1090,7 +1090,7 @@
         "typing_Steel.HigherReference.ref", "typing_Steel.Memory.star"
       ],
       0,
-      "2851a948a210704294641bbef01a9765"
+      "da76fddf3fd333485a49bd5db865cd60"
     ],
     [
       "Steel.HigherReference.ghost_gather",
@@ -1129,7 +1129,7 @@
         "typing_Steel.HigherReference.ref"
       ],
       0,
-      "db5e1448d76c85ad3da81d07b89bf814"
+      "ec7671baf094dfc683c94840bccc4a3d"
     ],
     [
       "Steel.HigherReference.ghost_pts_to_injective_eq",
@@ -1232,7 +1232,7 @@
         "typing_Steel.Memory.pts_to", "typing_Steel.Memory.star"
       ],
       0,
-      "419bbde4deb41839df3b67777b53528b"
+      "0c4f05ae2d1f5d2b734a95e378a67d39"
     ],
     [
       "Steel.HigherReference.ghost_write",
@@ -1251,7 +1251,7 @@
         "typing_Steel.HigherReference.ref"
       ],
       0,
-      "2495e6740849ef867ba717033fc7e1ae"
+      "74f377100c1e163b6bcf3d6dfde6a570"
     ]
   ]
 ]

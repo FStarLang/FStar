@@ -1219,7 +1219,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "a4c91827164f3798de2610d782da3376"
+      "28b9da5ed5891befc8d79af04497e533"
     ],
     [
       "DList1.elim_dlist_cons_head",
@@ -1241,7 +1241,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "6b2c467d37b1d8f4e2bb27547a5ed799"
+      "16dc547fc294ec6771a41a83b10a4a7b"
     ],
     [
       "DList1.concat",

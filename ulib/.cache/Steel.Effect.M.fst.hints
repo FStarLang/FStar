@@ -68,24 +68,6 @@
       ],
       0,
       "f98c638e710d7c5b58463a2dd7f1d10c"
-    ],
-    [
-      "Steel.Effect.M.lift_m",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "cfac46c6a52ccf1615c63e533450b21f"
-    ],
-    [
-      "Steel.Effect.M.bind_lift",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "db21272ab67df8f8f4d1b711bafec1a4"
     ]
   ]
 ]
