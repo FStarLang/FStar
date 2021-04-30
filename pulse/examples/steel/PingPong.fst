@@ -21,8 +21,6 @@ open Steel.Effect
 open Steel.Channel.Protocol
 module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
-//open Steel.SteelT.Basics
-
 
 (** Specification and implementation of a pingpong protocol *)
 
