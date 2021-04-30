@@ -23,6 +23,8 @@ open Steel.Reference
 open Steel.FractionalPermission
 module Atomic = Steel.Effect.Atomic
 
+#set-options "--ide_id_info_off --fuel 0 --ifuel 0"
+
 let available = false
 let locked = true
 
@@ -51,42 +53,15 @@ let intro_lockinv_locked #uses p r =
     (fun b -> pts_to r full_perm (Ghost.hide b) `star`
           (if b then emp else p))
 
-val elim_lockinv (#uses:inames) (p:slprop) (r:ref bool)
-  : SteelGhostT unit uses (lockinv p r) (fun _ -> h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)))
-
-let elim_lockinv #uses p r =
-  change_slprop (lockinv p r) (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))) (fun _ -> ())
-
 val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
 let new_inv p = new_invariant Set.empty p
-
-#set-options "--fuel 0 --ifuel 0"
 
 let new_lock (p:slprop)
   : SteelT (lock p) p (fun _ -> emp) =
   let r = alloc available in
   intro_lockinv_available p r;
   let i:inv (lockinv p r) = new_inv (lockinv p r) in
-  let l:lock p = (r, i) in
-  l
-
-#set-options "--fuel 0 --ifuel 0"
-val cas_frame
-  (#t:eqtype)
-  (#uses:inames)
-  (r:ref t)
-  (v:Ghost.erased t)
-  (v_old:t)
-  (v_new:t)
-  (frame:slprop)
-  : SteelAtomicT
-    (b:bool{b <==> (Ghost.reveal v == v_old)})
-    uses
-    (pts_to r full_perm v `star` frame)
-    (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
-let cas_frame #t #uses r v v_old v_new frame =
-  let x = Steel.Reference.cas r v v_old v_new in
-  x
+  (r, i)
 
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomicT bool u
@@ -94,10 +69,7 @@ val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (fun b -> lockinv p r  `star` (if b then p else emp))
 
 let acquire_core #p #u r i =
-  let ghost = witness_h_exists #_ #_ #(fun (b:bool) -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) (
-    pts_to_witinv r full_perm;
-    star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
-  ) in
+  let ghost = witness_h_exists () in
 
   let res = cas r ghost available locked in
 
@@ -109,17 +81,17 @@ let acquire_core #p #u r i =
   intro_lockinv_locked p r;
   return res
 
-let acquire' (#p:slprop) (l:lock p)
-  : SteelAtomicT bool Set.empty emp (fun b -> if b then p else emp)
-  = let r:ref bool = fst l in
-    let i: inv (lockinv p r) = snd l in
-    let b = with_invariant  i (fun _ -> acquire_core r i) in
-    b
-
 let rec acquire #p l =
-  let b = acquire' l in
-  if b then (change_slprop (if b then p else emp) p (fun _ -> ()); noop ())
-  else (change_slprop (if b then p else emp) emp (fun _ -> ()); acquire l)
+  let r:ref bool = fst l in
+  let i: inv (lockinv p r) = snd l in
+  let b = with_invariant i (fun _ -> acquire_core r i) in
+  if b then (
+    change_slprop (if b then p else emp) p (fun _ -> ());
+    noop ()
+  ) else (
+    change_slprop (if b then p else emp) emp (fun _ -> ());
+    acquire l
+  )
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomicT bool u
@@ -127,11 +99,7 @@ val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (fun b -> lockinv p r `star` (if b then emp else p))
 
 let release_core #p #u r i =
-  let open Atomic in
-  let v = Atomic.witness_h_exists #_ #u #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) (
-    pts_to_witinv r full_perm;
-    star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
-  ) in
+  let v = witness_h_exists () in
 
   let res = cas r v locked available in
 
@@ -143,13 +111,8 @@ let release_core #p #u r i =
   intro_lockinv_available p r;
   return res
 
-let release' (#p:slprop) (l:lock p)
-  : SteelAtomicT unit Set.empty p (fun _ -> emp)
-  =
+let release (#p:slprop) (l:lock p) =
   let r:ref bool = fst l in
   let i: inv (lockinv p r) = snd l in
   let b = with_invariant i (fun _ -> release_core r i) in
   drop (if b then emp else p)
-
-let release (#p:slprop) (l:lock p) : SteelT unit p (fun _ -> emp) =
-  release' #p l
