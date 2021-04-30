@@ -6,6 +6,8 @@ open Steel.SelEffect
 
 module Spec = Trees
 
+#set-options "--ide_id_info_off"
+
 (**** High-level operations on trees *)
 
 val append_left (#a: Type0) (ptr: t a) (v: a)
