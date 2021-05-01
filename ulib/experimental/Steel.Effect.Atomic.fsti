@@ -16,7 +16,6 @@
 
 
 module Steel.Effect.Atomic
-open FStar.PCM
 open Steel.Memory
 include Steel.Effect.Common
 
