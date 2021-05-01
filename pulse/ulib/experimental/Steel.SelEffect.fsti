@@ -269,6 +269,13 @@ val bind_pure_steel_ (a:Type) (b:Type)
 
 polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
 
+(*
+//  * Annotations without the req and ens
+//  *)
+
+effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
+  SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
+
 (* Some helper functions *)
 
 val noop (_:unit)
