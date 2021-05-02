@@ -1636,7 +1636,8 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         ignore (forall_intro ());
         apply_lemma (`equiv_can_be_split)
       ) else if term_eq hd (`equiv_forall) then (
-        fail "equiv_forall"
+        apply_lemma (`equiv_forall_elim);
+        ignore (forall_intro ())
       ) else if term_eq hd (`can_be_split_post) then (
         apply_lemma (`can_be_split_post_elim);
         dismiss_slprops();
