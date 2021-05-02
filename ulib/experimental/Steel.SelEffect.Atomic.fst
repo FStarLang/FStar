@@ -424,6 +424,8 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
 
 let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
 
+let noop _ = change_slprop_rel vemp vemp (fun _ _ -> True) (fun _ -> ())
+
 let sladmit _ = SteelSelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let reveal_star0 (#opened:inames) (p1 p2:vprop)
