@@ -185,12 +185,11 @@ let rec is_balanced #a ptr =
   pack_tree ptr (get_left node) (get_right node);
   (lbal && rbal) && ((rh - lh) >= -1 && (rh - lh) <= 1))
 
-#push-options "--z3rlimit 100"
+#push-options "--ifuel 2"
 let rebalance_avl #a cmp ptr =
   let h = get () in
 
   if is_balanced ptr then (
-    noop();
     return ptr
   ) else (
 
@@ -232,14 +231,14 @@ let rebalance_avl #a cmp ptr =
         pack_tree ptr (get_left node) (get_right node);
 
         if rlh > rrh then (
-            rotate_right_left ptr
+          rotate_right_left ptr
         ) else (
-            rotate_left ptr
+          rotate_left ptr
         )
 
       ) else (
-          pack_tree ptr (get_left node) (get_right node);
-          ptr
+        pack_tree ptr (get_left node) (get_right node);
+        ptr
       )
     )
   )
