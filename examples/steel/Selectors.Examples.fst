@@ -1,5 +1,6 @@
 module Selectors.Examples
 
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 (* Some tests *)

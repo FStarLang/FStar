@@ -4,8 +4,6 @@ open Steel.FractionalPermission
 module Mem = Steel.Memory
 module R = Steel.Reference
 
-// friend Steel.SelEffect
-
 #push-options "--__no_positivity"
 noeq
 type cell (a: Type0) = {
