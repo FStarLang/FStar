@@ -1,9 +1,11 @@
 module Selectors.PtrLList
 
+open FStar.Ghost
 open Steel.FractionalPermission
 module Mem = Steel.Memory
 module R = Steel.Reference
-open FStar.Ghost
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 
 #push-options "--__no_positivity"
 noeq
@@ -230,7 +232,7 @@ val unpack_ind_full (#a:Type0) (r:ref (ref a))
                sel p h1 == snd (v_full r h0))
 
 let unpack_ind_full r =
-    let h = get #(ind_ptr_full r) () in
+    let h = get () in
     let s = hide (v_full r h) in
     let gp = hide (fst (reveal s)) in
     let gl = hide (snd (reveal s)) in
@@ -243,8 +245,7 @@ let unpack_ind_full r =
     reveal_star (vptr r) (vptr (reveal gp));
     let p = read r in
     change_slprop_rel (vptr (reveal gp)) (vptr p) (fun x y -> x == y) (fun _ -> ());
-    p
-
+    return p
 
 val unpack_ind (#a:Type0) (r:ref (ref a))
   : SteelSel (ref a)
@@ -432,7 +433,7 @@ let intro_cons_lemma (#a:Type0) (ptr1:t a)
 #push-options "--fuel 1 --ifuel 1"
 
 let intro_llist_cons ptr1 ptr2 r =
-  let h = get #(vptr ptr1 `star` llist_ptr ptr2 `star` vptr r) () in
+  let h = get () in
   let x = hide (sel ptr1 h) in
   let v = hide (sel r h) in
   let l = hide (v_ptrlist ptr2 h) in
@@ -502,7 +503,7 @@ let elim_cons_cell_lemma (#a:Type0) (r:t a) (l:list (cell a * a)) (m:mem) : Lemm
     Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
 
 let elim_cons_cell #a ptr =
-  let h = get #(llist_cell ptr) () in
+  let h = get () in
   let l = hide (v_cell ptr h) in
   reveal_non_empty_cell ptr;
   let gc = hide (fst (L.hd l)) in
@@ -515,11 +516,11 @@ let elim_cons_cell #a ptr =
   let c = read ptr in
   change_slprop (llist_cell (next gc)) (llist_cell (next c)) (L.tl l) (L.tl l) (fun _ -> ());
   change_slprop (vptr (data gc)) (vptr (data c)) (snd (L.hd l)) (snd (L.hd l)) (fun _ -> ());
-  c
+  return c
 
 let elim_llist_cons ptr =
   change_slprop_rel (llist_ptr ptr) (llist_cell ptr) (fun x y -> x == datas y) (fun _ -> ());
-  let h = get #(llist_cell ptr) () in
+  let h = get () in
   let c = elim_cons_cell ptr in
   change_slprop_rel (llist_cell (next c)) (llist_ptr (next c)) (fun x y -> datas x == y) (fun _ -> ());
-  c
+  return c

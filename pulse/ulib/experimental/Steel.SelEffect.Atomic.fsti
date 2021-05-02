@@ -336,7 +336,7 @@ sub_effect SteelSelAtomicBase ~> Steel.SelEffect.SteelSelBase = lift_atomic_stee
 
 open FStar.Ghost
 
-val get (#p:vprop) (#opened:inames) (_:unit) : SteelSelGhostF (rmem p)
+val get (#p:vprop) (#opened:inames) (_:unit) : SteelSelGhostF (erased (rmem p))
   opened
   p (fun _ -> p)
   (requires fun _ -> True)
@@ -353,7 +353,7 @@ let gget (#opened:inames) (p: vprop) : SteelSelGhost (erased (t_of p))
   ))
 =
   let m = get #p () in
-  hide (m p)
+  hide ((reveal m) p)
 
 val change_slprop
   (#opened:inames)
@@ -427,14 +427,14 @@ val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
      h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
    )
 
-val return (#a:Type u#a)
+let return (#a:Type u#a)
   (#opened_invariants:inames)
   (#p:a -> vprop)
   (x:a)
   : SteelSelAtomicBase a true opened_invariants Unobservable
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
-
+  = SteelSelAtomicBase?.reflect (return_ a x opened_invariants #p)
 
 (* Introduction and elimination principles for vprop combinators *)
 
