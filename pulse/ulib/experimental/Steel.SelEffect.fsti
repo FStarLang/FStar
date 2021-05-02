@@ -221,11 +221,6 @@ polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
 effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
   SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-(* Some helper functions *)
-
-val noop (_:unit)
-  : SteelSel unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
-
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
    It cannot be part of a selector, as it is not invariant when joining with a disjoint memory

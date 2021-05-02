@@ -399,6 +399,9 @@ val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
+val noop (#opened:inames) (_:unit)
+  : SteelSelGhost unit opened vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
+
 val sladmit (#a:Type)
             (#opened:inames)
             (#p:pre_t)

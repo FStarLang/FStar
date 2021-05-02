@@ -451,12 +451,6 @@ let bind_div_steel (a:Type) (b:Type)
 polymonadic_bind (DIV, SteelSelBase) |> SteelSelBase = bind_div_steel
 #pop-options
 
-let noop0 (_:unit)
-  : repr unit false vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
-  = fun frame -> ()
-
-let noop () = SteelSel?.reflect (noop0 ())
-
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
    It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
