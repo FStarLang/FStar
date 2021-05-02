@@ -279,7 +279,7 @@ let lift_atomic_steel a o f = f
 
 (* Some helpers *)
 
-let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (rmem p)
+let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
   true opened Unobservable p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
@@ -329,8 +329,8 @@ let change_slprop p q vp vq l  = SteelSelGhost?.reflect (change_slprop0 p q vp v
 
 let change_equal_slprop
   p q
-= let m = get #p () in
-  let x : Ghost.erased (t_of p) = m p in
+= let m = get () in
+  let x : Ghost.erased (t_of p) = hide ((reveal m) p) in
   let y : Ghost.erased (t_of q) = Ghost.hide (Ghost.reveal x) in
   change_slprop
     p
@@ -466,7 +466,7 @@ let reveal_star_3 p1 p2 p3 = SteelSelGhost?.reflect (reveal_star_30 p1 p2 p3)
 
 let intro_vrefine v p =
   let m = get () in
-  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+  let x : Ghost.erased (t_of v) = gget v in
   let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
   change_slprop
     v
@@ -479,8 +479,8 @@ let intro_vrefine v p =
     )
 
 let elim_vrefine v p =
-  let m = get () in
-  let x : Ghost.erased (vrefine_t v p) = Ghost.hide (m (vrefine v p)) in
+  let h = get() in
+  let x : Ghost.erased (vrefine_t v p) = gget (vrefine v p) in
   let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
   change_slprop
     (vrefine v p)
@@ -615,9 +615,7 @@ let elim_vdep
 
 let intro_vrewrite
   v #t f
-=
-  let m = get () in
-  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
+= let x : Ghost.erased (t_of v) = gget v in
   let x' : Ghost.erased t = Ghost.hide (f (Ghost.reveal x)) in
   change_slprop
     v
