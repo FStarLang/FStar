@@ -407,7 +407,7 @@ val sladmit (#a:Type)
             (#p:pre_t)
             (#q:post_t a)
             (_:unit)
-  : SteelSelGhostF a opened (admit_pre p) (admit_post q) (requires fun _ -> True) (ensures fun _ _ _ -> False)
+  : SteelSelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 val reveal_star (#opened:inames) (p1 p2:vprop)
  : SteelSelGhost unit opened (p1 `star` p2) (fun _ -> p1 `star` p2)

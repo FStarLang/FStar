@@ -373,7 +373,7 @@ val sladmit (#a:Type)
             (#p:pre_t)
             (#q:post_t a)
             (_:unit)
-  : SteelGhostF a opened (admit_pre p) (admit_post q)
+  : SteelGhostF a opened p q
                  (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 val slassert (#opened_invariants:_) (p:slprop)
