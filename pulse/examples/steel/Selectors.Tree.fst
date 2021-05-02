@@ -185,6 +185,7 @@ let rec is_balanced #a ptr =
   pack_tree ptr (get_left node) (get_right node);
   (lbal && rbal) && ((rh - lh) >= -1 && (rh - lh) <= 1))
 
+#push-options "--z3rlimit 100"
 let rebalance_avl #a cmp ptr =
   let h = get () in
 
@@ -242,6 +243,7 @@ let rebalance_avl #a cmp ptr =
       )
     )
   )
+#pop-options
 
 let rec insert_avl #a cmp ptr v =
   if is_null_t ptr then (
