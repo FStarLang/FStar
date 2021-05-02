@@ -227,8 +227,6 @@ let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.emp
 let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
-let noop () = change_slprop emp emp (fun _ -> ())
-
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
 
 let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)
