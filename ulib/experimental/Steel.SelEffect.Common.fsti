@@ -86,9 +86,6 @@ type post_t (a:Type) = a -> vprop
 
 let return_pre (p:vprop) : vprop = p
 
-let admit_pre (p:pre_t) : pre_t = p
-let admit_post (#a:Type) (p:post_t a) : post_t a = p
-
 val can_be_split (p q:pre_t) : Type0
 val reveal_can_be_split (_:unit) : Lemma
   (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
@@ -1652,29 +1649,6 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         fail (loc ^ " goal in unexpected position")
     | _ -> fail (loc ^ " unexpected goal")
 
-let rec solve_sladmits (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let t = goal_type hd in
-    let is_preadmit = term_appears_in (`admit_pre) t in
-    let is_postadmit = term_appears_in (`admit_post) t in
-    if is_preadmit || is_postadmit then (
-      focus (fun _ ->
-        goal_to_equiv t "sladmit";
-        norm [delta_only [`%admit_pre; `%admit_post]];
-        apply_lemma (`equiv_refl);
-        // If we had both a preadmit and a postadmit, we had two successive sladmits calls,
-        // and this constraint corresponds to the inner equivalence, where slprops are
-        // irrelevant. We arbitrarily set them to emp
-        match goals () with
-        | [] -> ()
-        | [hd] -> if is_preadmit && is_postadmit then exact (`emp) else fail "sladmit case not supported"
-        | _ -> fail "solving sladmit generated too many goals, should not happen"
-      )
-    ) else later ();
-    solve_sladmits tl
-
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
   | [] -> ()
@@ -1822,13 +1796,7 @@ let init_sel_resolve_tac () : Tac unit =
   // Once unification has been done, we can then safely normalize and remove all return_pre
   norm_return_pre (goals());
 
-  // Handle all sladmits here. They are outside the scope of our calculus since
-  // they are not once-removed unitriangular. As such, they need a special handling
-  solve_sladmits (goals());
-
-  // TODO: If we had better handling of lifts from PURE, we might prove a true
-  // sl_implies here, "losing" extra assertions"
-
+  // Finally running the core of the tactic, scheduling and solving goals
   resolve_tac ();
 
   // We now solve the requires/ensures goals, which are all equalities
