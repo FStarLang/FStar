@@ -191,7 +191,7 @@ let rebalance_avl #a cmp ptr =
 
   if is_balanced ptr then (
     noop();
-    ptr
+    return ptr
   ) else (
 
     node_is_not_null ptr;
