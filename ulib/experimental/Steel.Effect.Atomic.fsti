@@ -203,7 +203,7 @@ effect {
 
 total
 reflectable
-new_effect SteelAtomicBase =SteelAGCommon
+new_effect SteelAtomicBase = SteelAGCommon
 
 effect SteelAtomic (a:Type)
   (opened:inames)
