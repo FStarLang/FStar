@@ -457,6 +457,53 @@ let noop0 (_:unit)
 
 let noop () = SteelSel?.reflect (noop0 ())
 
+(* Simple Reference library, only full permissions.
+   AF: Permissions would likely need to be an index of the vprop ptr.
+   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
+   Using the value of the ref as a selector is ok because refs with fractional permissions
+   all share the same value.
+   Refs on PCM are more complicated, and likely not usable with selectors
+*)
+
+
+(* AF: Temporary duplication before refs are moved to their own module and can import
+   both effect modules *)
+
+val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
+  p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
+val change_slprop
+  (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q)
+                    (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_rel (p q:vprop)
+  (rel : normal (t_of p) -> normal (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
+val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : SteelSel unit p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
 let get0 (#p:vprop) (_:unit) : repr (rmem p)
   true p (fun _ -> p)
   (requires fun _ -> True)
@@ -503,18 +550,6 @@ let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
 
 let change_slprop p q vp vq l  = SteelSel?.reflect (change_slprop0 p q vp vq l)
 
-let change_equal_slprop
-  p q
-= let m = get #p () in
-  let x : Ghost.erased (t_of p) = m p in
-  let y : Ghost.erased (t_of q) = Ghost.hide (Ghost.reveal x) in
-  change_slprop
-    p
-    q
-    x
-    y
-    (fun _ -> ())
-
 #push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
 let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
   (proof:(m:mem) -> Lemma
@@ -551,31 +586,6 @@ let change_slprop_rel0 (p q:vprop)
 
 let change_slprop_rel p q rel proof = SteelSel?.reflect (change_slprop_rel0 p q rel proof)
 
-let change_slprop_rel_with_cond0 (p q:vprop)
-  (cond: t_of p -> prop)
-  (rel : (t_of p) -> (t_of q) -> prop)
-  (proof:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ cond (sel_of p m))
-    (ensures
-      interp (hp_of p) m /\
-      interp (hp_of q) m /\
-      rel (sel_of p m) (sel_of q m))
-  ) : repr unit false p (fun _ -> q) (fun m -> cond (m p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
-  = fun frame ->
-      let m = nmst_get () in
-
-      proof (core_mem m);
-      let h0 = mk_rmem p (core_mem m) in
-      let h1 = mk_rmem q (core_mem m) in
-      reveal_mk_rmem p (core_mem m) p;
-      reveal_mk_rmem q (core_mem m) q;
-      intro_star p q (frame `Mem.star` locks_invariant Set.empty m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof
-
-let change_slprop_rel_with_cond
-  p q cond rel proof
-=
-  SteelSel?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
-
 let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
@@ -591,53 +601,8 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
 
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
-let sladmit _ = SteelSelF?.reflect (fun _ -> NMST.nmst_admit ())
+(* End duplication *)
 
-let reveal_star0 (p1 p2:vprop)
-  : repr unit false (p1 `star` p2) (fun _ -> p1 `star` p2)
-   (fun _ -> True)
-   (fun h0 _ h1 ->
-     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\
-     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
-     h1 (p1 `star` p2) == (h1 p1, h1 p2)
-   )
- = fun frame ->
-     let m = nmst_get() in
-     let h0 = mk_rmem (p1 `star` p2) (core_mem m) in
-     reveal_mk_rmem (p1 `star` p2) m (p1 `star` p2);
-     reveal_mk_rmem (p1 `star` p2) m p1;
-     reveal_mk_rmem (p1 `star` p2) m p2
-
-let reveal_star p1 p2 = SteelSel?.reflect (reveal_star0 p1 p2)
-
-let reveal_star_30 (p1 p2 p3:vprop)
- : repr unit false (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
-   (requires fun _ -> True)
-   (ensures fun h0 _ h1 ->
-     can_be_split (p1 `star` p2 `star` p3) p1 /\
-     can_be_split (p1 `star` p2 `star` p3) p2 /\
-     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
-     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
-     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
-   )
- = fun frame ->
-     let m = nmst_get () in
-     let h0 = mk_rmem (p1 `star` p2 `star` p3) (core_mem m) in
-     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p1;
-     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p2;
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2 `star` p3);
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2);
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m p3
-
-let reveal_star_3 p1 p2 p3 = SteelSel?.reflect (reveal_star_30 p1 p2 p3)
-
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
-   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
-   Using the value of the ref as a selector is ok because refs with fractional permissions
-   all share the same value.
-   Refs on PCM are more complicated, and likely not usable with selectors
-*)
 
 module R = Steel.Reference
 open Steel.FractionalPermission
@@ -774,177 +739,3 @@ let vptr_not_null
     (vptr r)
     (fun x y -> x == y /\ R.is_null r == false)
     (fun m -> R.pts_to_not_null r full_perm (ptr_sel r m) m)
-
-
-let intro_vrefine v p =
-  let m = get () in
-  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
-  let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
-  change_slprop
-    v
-    (vrefine v p)
-    x
-    x'
-    (fun m ->
-      interp_vrefine_hp v p m;
-      vrefine_sel_eq v p m
-    )
-
-let elim_vrefine v p =
-  let m = get () in
-  let x : Ghost.erased (vrefine_t v p) = Ghost.hide (m (vrefine v p)) in
-  let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
-  change_slprop
-    (vrefine v p)
-    v
-    x
-    x'
-    (fun m ->
-      interp_vrefine_hp v p m;
-      vrefine_sel_eq v p m
-    )
-
-let vdep_cond
-  (v: vprop)
-  (q: vprop)
-  (p: (t_of v -> Tot vprop))
-  (x1: t_of (v `star` q))
-: Tot prop
-= q == p (fst x1)
-
-let vdep_rel
-  (v: vprop)
-  (q: vprop)
-  (p: (t_of v -> Tot vprop))
-  (x1: t_of (v `star` q))
-  (x2: (t_of (vdep v p)))
-: Tot prop
-=
-  q == p (fst x1) /\
-  dfst (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == fst x1 /\
-  dsnd (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == snd x1
-
-let intro_vdep_lemma
-  (v: vprop)
-  (q: vprop)
-  (p: (t_of v -> Tot vprop))
-  (m: mem)
-: Lemma
-  (requires (
-    interp (hp_of (v `star` q)) m /\
-    q == p (fst (sel_of (v `star` q) m))
-  ))
-  (ensures (
-    interp (hp_of (v `star` q)) m /\
-    interp (hp_of (vdep v p)) m /\
-    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
-  ))
-=
-  Mem.interp_star (hp_of v) (hp_of q) m;
-  interp_vdep_hp v p m;
-  vdep_sel_eq v p m
-
-let intro_vdep
-  v q p
-=
-  reveal_star v q;
-  change_slprop_rel_with_cond
-    (v `star` q)
-    (vdep v p)
-    (vdep_cond v q p)
-    (vdep_rel v q p)
-    (fun m -> intro_vdep_lemma v q p m)
-
-let vdep_cond_recip
-  (v: vprop)
-  (p: (t_of v -> Tot vprop))
-  (q: vprop)
-  (x2: t_of (vdep v p))
-: Tot prop
-= q == p (dfst (x2 <: dtuple2 (t_of v) (vdep_payload v p)))
-
-let vdep_rel_recip
-  (v: vprop)
-  (q: vprop)
-  (p: (t_of v -> Tot vprop))
-  (x2: (t_of (vdep v p)))
-  (x1: t_of (v `star` q))
-: Tot prop
-=
-  vdep_rel v q p x1 x2
-
-let elim_vdep_lemma
-  (v: vprop)
-  (q: vprop)
-  (p: (t_of v -> Tot vprop))
-  (m: mem)
-: Lemma
-  (requires (
-    interp (hp_of (vdep v p)) m /\
-    q == p (dfst (sel_of (vdep v p) m <: dtuple2 (t_of v) (vdep_payload v p)))
-  ))
-  (ensures (
-    interp (hp_of (v `star` q)) m /\
-    interp (hp_of (vdep v p)) m /\
-    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
-  ))
-=
-  Mem.interp_star (hp_of v) (hp_of q) m;
-  interp_vdep_hp v p m;
-  vdep_sel_eq v p m
-
-let elim_vdep0
-  (v: vprop)
-  (p: (t_of v -> Tot vprop))
-  (q: vprop)
-: SteelSel unit
-  (vdep v p)
-  (fun _ -> v `star` q)
-  (requires (fun h -> q == p (dfst (h (vdep v p)))))
-  (ensures (fun h _ h' ->
-      let fs = h' v in
-      let sn = h' q in
-      let x2 = h (vdep v p) in
-      q == p fs /\
-      dfst x2 == fs /\
-      dsnd x2 == sn
-  ))
-= change_slprop_rel_with_cond
-    (vdep v p)
-    (v `star` q)
-    (vdep_cond_recip v p q)
-    (vdep_rel_recip v q p)
-    (fun m -> elim_vdep_lemma v q p m);
-  reveal_star v q
-
-let elim_vdep
-  v p
-=
-  let r = gget (vdep v p) in
-  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
-  elim_vdep0 v p (p (Ghost.reveal res));
-  res
-
-let intro_vrewrite
-  v #t f
-=
-  let m = get () in
-  let x : Ghost.erased (t_of v) = Ghost.hide (m v) in
-  let x' : Ghost.erased t = Ghost.hide (f (Ghost.reveal x)) in
-  change_slprop
-    v
-    (vrewrite v f)
-    x
-    x'
-    (fun m ->
-      vrewrite_sel_eq v f m
-    )
-
-let elim_vrewrite
-  v #t f
-=
-  change_slprop_rel
-    (vrewrite v f)
-    v
-    (fun y x -> y == f x)
-    (fun m -> vrewrite_sel_eq v f m)

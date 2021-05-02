@@ -331,3 +331,156 @@ val lift_atomic_steel
   : Steel.SelEffect.repr a framed pre post req ens
 
 sub_effect SteelSelAtomicBase ~> Steel.SelEffect.SteelSelBase = lift_atomic_steel
+
+(* Some helper functions *)
+
+open FStar.Ghost
+
+val get (#p:vprop) (#opened:inames) (_:unit) : SteelSelGhostF (rmem p)
+  opened
+  p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
+let gget (#opened:inames) (p: vprop) : SteelSelGhost (erased (t_of p))
+  opened
+  p (fun _ -> p)
+  (requires (fun _ -> True))
+  (ensures (fun h0 res h1 ->
+    h1 p == h0 p /\
+    reveal res == h0 p /\
+    reveal res == h1 p
+  ))
+=
+  let m = get #p () in
+  hide (m p)
+
+val change_slprop
+  (#opened:inames)
+  (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSelGhost unit opened p (fun _ -> q)
+                    (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_equal_slprop (#opened:inames) (p q: vprop)
+  : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> p == q) (fun h0 _ h1 -> p == q /\ h1 q == h0 p)
+
+val change_slprop_2 (#opened:inames) (p q:vprop) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_rel (#opened:inames) (p q:vprop)
+  (rel : normal (t_of p) -> normal (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
+val change_slprop_rel_with_cond (#opened:inames)
+  (p q:vprop)
+  (cond:  (t_of p) -> prop)
+  (rel :  (t_of p) ->  (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSelGhost unit opened p (fun _ -> q) (fun h0 -> cond (h0 p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
+val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : SteelSelGhost unit opened p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
+val sladmit (#a:Type)
+            (#opened:inames)
+            (#p:pre_t)
+            (#q:post_t a)
+            (_:unit)
+  : SteelSelGhostF a opened (admit_pre p) (admit_post q) (requires fun _ -> True) (ensures fun _ _ _ -> False)
+
+val reveal_star (#opened:inames) (p1 p2:vprop)
+ : SteelSelGhost unit opened (p1 `star` p2) (fun _ -> p1 `star` p2)
+   (requires fun _ -> True)
+   (ensures fun h0 _ h1 ->
+     h0 p1 == h1 p1 /\
+     h0 p2 == h1 p2 /\
+     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
+     h1 (p1 `star` p2) == (h1 p1, h1 p2)
+   )
+
+val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
+ : SteelSelGhost unit opened (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
+   (requires fun _ -> True)
+   (ensures fun h0 _ h1 ->
+     can_be_split (p1 `star` p2 `star` p3) p1 /\
+     can_be_split (p1 `star` p2 `star` p3) p2 /\
+     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
+     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
+     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
+   )
+
+(* Introduction and elimination principles for vprop combinators *)
+
+val intro_vrefine (#opened:inames)
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
+: SteelSelGhost unit opened v (fun _ -> vrefine v p)
+  (requires (fun h -> p (h v)))
+  (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
+
+val elim_vrefine (#opened:inames)
+  (v: vprop) (p: (normal (t_of v) -> Tot prop))
+: SteelSelGhost unit opened (vrefine v p) (fun _ -> v)
+  (requires (fun _ -> True))
+  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p))))
+
+val intro_vdep (#opened:inames)
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+: SteelSelGhost unit opened
+    (v `star` q)
+    (fun _ -> vdep v p)
+    (requires (fun h -> q == p (h v)))
+    (ensures (fun h _ h' ->
+      let x2 = h' (vdep v p) in
+      q == p (h v) /\
+      dfst x2 == (h v) /\
+      dsnd x2 == (h q)
+    ))
+
+val elim_vdep (#opened:inames)
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+: SteelSelGhost (Ghost.erased (t_of v)) opened
+  (vdep v p)
+  (fun res -> v `star` p (Ghost.reveal res))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+      let fs = h' v in
+      let sn : t_of (p (Ghost.reveal res)) = h' (p (Ghost.reveal res)) in
+      let x2 = h (vdep v p) in
+      Ghost.reveal res == fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
+  ))
+
+val intro_vrewrite (#opened:inames)
+  (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
+: SteelSelGhost unit opened v (fun _ -> vrewrite v f)
+                (fun _ -> True) (fun h _ h' -> h' (vrewrite v f) == f (h v))
+
+val elim_vrewrite (#opened:inames)
+  (v: vprop)
+  (#t: Type)
+  (f: (normal (t_of v) -> GTot t))
+: SteelSelGhost unit opened (vrewrite v f) (fun _ -> v)
+    (fun _ -> True)
+    (fun h _ h' -> h (vrewrite v f) == f (h' v))
