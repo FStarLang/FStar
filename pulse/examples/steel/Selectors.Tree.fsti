@@ -2,6 +2,7 @@ module Selectors.Tree
 
 open Selectors.Tree.Core
 open Steel.Memory
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 module Spec = Trees
