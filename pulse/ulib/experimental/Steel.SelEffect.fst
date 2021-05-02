@@ -153,7 +153,7 @@ let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_
         lemma_frame_equalities_refl p1 h1;
         lemma_frame_equalities_refl p2 h2
 
-let return a x #p = fun _ ->
+let return_ a x #p = fun _ ->
       let m0 = nmst_get () in
       let h0 = mk_rmem (p x) (core_mem m0) in
       lemma_frame_equalities_refl (p x) h0;

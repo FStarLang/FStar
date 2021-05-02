@@ -427,6 +427,15 @@ val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
      h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
    )
 
+val return (#a:Type u#a)
+  (#opened_invariants:inames)
+  (#p:a -> vprop)
+  (x:a)
+  : SteelSelAtomicBase a true opened_invariants Unobservable
+         (return_pre (p x)) p
+         (return_req (p x)) (return_ens a x p)
+
+
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)

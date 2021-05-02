@@ -22,7 +22,7 @@ let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
 (*
  * Return is parametric in post (cf. return-scoping.txt)
  *)
-val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
+val return_ (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
 : repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
 
 unfold
@@ -169,7 +169,11 @@ reflectable
 effect {
   SteelSelBase
     (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
-  with { repr; return; bind; subcomp; if_then_else }
+  with { repr = repr;
+         return = return_;
+         bind = bind;
+         subcomp = subcomp;
+         if_then_else = if_then_else }
 }
 
 

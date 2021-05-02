@@ -366,6 +366,8 @@ val extract_info (#opened_invariants:inames) (p:slprop) (fact:prop)
       (fun _ -> True)
       (fun _ _ _ -> fact)
 
+val noop (#opened:inames) (u:unit) : SteelGhostT unit opened emp (fun _ -> emp)
+
 val sladmit (#a:Type)
             (#opened:inames)
             (#p:pre_t)
