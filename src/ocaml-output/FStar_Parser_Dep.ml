@@ -966,7 +966,7 @@ let (collect_one :
             let key = lowercase_join_longident lid true in
             let r =
               enter_namespace original_map1 working_map key implicit_open in
-            if Prims.op_Negation r
+            if (Prims.op_Negation r) && (Prims.op_Negation implicit_open)
             then
               let uu___ = FStar_Ident.range_of_lid lid in
               let uu___1 =
