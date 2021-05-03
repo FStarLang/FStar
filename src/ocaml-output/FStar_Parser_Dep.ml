@@ -13,9 +13,26 @@ let (uu___is_VerifyUserList : verify_mode -> Prims.bool) =
 let (uu___is_VerifyFigureItOut : verify_mode -> Prims.bool) =
   fun projectee ->
     match projectee with | VerifyFigureItOut -> true | uu___ -> false
-type files_for_module_name =
+type intf_and_impl =
   (Prims.string FStar_Pervasives_Native.option * Prims.string
-    FStar_Pervasives_Native.option) FStar_Util.smap
+    FStar_Pervasives_Native.option)
+type files_for_module_name = intf_and_impl FStar_Util.smap
+let (intf_and_impl_to_string :
+  (Prims.string FStar_Pervasives_Native.option * Prims.string
+    FStar_Pervasives_Native.option) -> Prims.string)
+  =
+  fun ii ->
+    match ii with
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+        "<None>, <None>"
+    | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.None) ->
+        intf
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some impl) ->
+        impl
+    | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.Some impl)
+        ->
+        let uu___ = FStar_String.op_Hat ", " impl in
+        FStar_String.op_Hat intf uu___
 let (files_for_module_name_to_string : files_for_module_name -> unit) =
   fun m ->
     FStar_Util.print_string "Printing the file system map {\n";
@@ -25,11 +42,9 @@ let (files_for_module_name_to_string : files_for_module_name -> unit) =
        | FStar_Pervasives_Native.Some s -> s in
      FStar_Util.smap_iter m
        (fun k ->
-          fun uu___2 ->
-            match uu___2 with
-            | (intf, impl) ->
-                FStar_Util.print3 "%s:(%s, %s)\n" k (str_opt_to_string intf)
-                  (str_opt_to_string impl));
+          fun v ->
+            let uu___2 = intf_and_impl_to_string v in
+            FStar_Util.print2 "%s:%s\n" k uu___2);
      FStar_Util.print_string "}\n")
 type color =
   | White 
@@ -871,20 +886,28 @@ let (enter_namespace :
                      FStar_String.substring k (FStar_String.length prefix1)
                        ((FStar_String.length k) -
                           (FStar_String.length prefix1)) in
-                   let uu___2 =
-                     implicit_open &&
-                       (let uu___3 =
-                          FStar_All.pipe_right suffix
-                            (FStar_Util.smap_try_find original_map) in
-                        FStar_All.pipe_right uu___3 suffix_exists) in
-                   (if uu___2
-                    then ()
-                    else
-                      (let filename =
-                         let uu___4 = FStar_Util.smap_try_find original_map k in
-                         FStar_Util.must uu___4 in
-                       FStar_Util.smap_add working_map suffix filename;
-                       FStar_ST.op_Colon_Equals found true))
+                   ((let suffix_filename =
+                       FStar_Util.smap_try_find original_map suffix in
+                     if implicit_open && (suffix_exists suffix_filename)
+                     then
+                       let str =
+                         let uu___3 =
+                           FStar_All.pipe_right suffix_filename
+                             FStar_Util.must in
+                         FStar_All.pipe_right uu___3 intf_and_impl_to_string in
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_Util.format4
+                             "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
+                             prefix1 suffix str str in
+                         (FStar_Errors.Warning_UnexpectedFile, uu___4) in
+                       FStar_Errors.log_issue FStar_Range.dummyRange uu___3
+                     else ());
+                    (let filename =
+                       let uu___3 = FStar_Util.smap_try_find original_map k in
+                       FStar_Util.must uu___3 in
+                     FStar_Util.smap_add working_map suffix filename;
+                     FStar_ST.op_Colon_Equals found true))
                  else ());
           FStar_ST.op_Bang found
 let (collect_one :
