@@ -637,10 +637,10 @@ let collect_one
          end
        in
 
-       let record_open_namespace lid (implicit_open:bool) =
+         let record_open_namespace lid (implicit_open:bool) =
          let key = lowercase_join_longident lid true in
          let r = enter_namespace original_map working_map key implicit_open in
-         if not r then
+         if not r && not implicit_open then  //suppress the warning for implicit opens
            FStar.Errors.log_issue (range_of_lid lid)
              (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
              that name either" (string_of_lid lid true)))
