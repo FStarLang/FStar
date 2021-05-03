@@ -3,7 +3,10 @@ FSTAR_HOME=../..
 FSTAR_FILES=$(wildcard *.fst)
 # FSTAR_FILES+= Coercions1Phase.fst
 
-all: verify-all
+all: verify-all ns-resolution
+
+ns-resolution:
+	+$(MAKE) -C ns_resolution
 
 include $(FSTAR_HOME)/examples/Makefile.common
 

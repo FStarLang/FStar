@@ -53,7 +53,26 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type files_for_module_name = smap<(option<string> * option<string>)>
+type intf_and_impl = option<string> * option<string>
+
+type files_for_module_name = smap<intf_and_impl>
+
+let intf_and_impl_to_string ii =
+  match ii with
+  | None, None -> "<None>, <None>"
+  | Some intf, None -> intf
+  | None, Some impl -> impl
+  | Some intf, Some impl -> intf ^ ", " ^ impl
+
+
+let files_for_module_name_to_string (m:files_for_module_name) =
+  BU.print_string "Printing the file system map {\n";
+  let str_opt_to_string sopt =
+    match sopt with
+    | None -> "<None>"
+    | Some s -> s in
+  smap_iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
+  BU.print_string "}\n"
 
 type color = | White | Gray | Black
 
@@ -141,7 +160,7 @@ type dependence_graph = //maps file names to the modules it depends on
 type parsing_data_elt =
   | P_begin_module of lident  //begin_module
   | P_open of bool * lident  //record_open
-  | P_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
+  | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
   | P_dep of bool * lident  //add_dep_on_module
   | P_alias of ident * lident  //record_module_alias
   | P_lid of lident  //record_lid
@@ -158,7 +177,7 @@ let str_of_parsing_data_elt elt =
   match elt with
   | P_begin_module lid -> "P_begin_module (" ^ (string_of_lid lid) ^ ")"
   | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
-  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_implicit_open_module_or_namespace (k, lid) -> "P_implicit_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
   | P_alias (id, lid) -> "P_alias (" ^ (string_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
@@ -172,7 +191,8 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   match e1, e2 with
   | P_begin_module l1, P_begin_module l2 -> lid_equals l1 l2
   | P_open (b1, l1), P_open (b2, l2) -> b1 = b2 && lid_equals l1 l2
-  | P_open_module_or_namespace (k1, l1), P_open_module_or_namespace (k2, l2) -> k1 = k2 && lid_equals l1 l2
+  | P_implicit_open_module_or_namespace (k1, l1), P_implicit_open_module_or_namespace (k2, l2) ->
+    k1 = k2 && lid_equals l1 l2
   | P_dep (b1, l1), P_dep (b2, l2) -> b1 = b2 && lid_equals l1 l2
   | P_alias (i1, l1), P_alias (i2, l2) -> string_of_id i1 = string_of_id i2 && lid_equals l1 l2
   | P_lid l1, P_lid l2 -> lid_equals l1 l2
@@ -442,24 +462,6 @@ let build_map (filenames: list<string>): files_for_module_name =
   ) filenames;
   map
 
-(** For all items [i] in the map that start with [prefix], add an additional
-    entry where [i] stripped from [prefix] points to the same value. Returns a
-    boolean telling whether the map was modified. *)
-let enter_namespace (original_map: files_for_module_name) (working_map: files_for_module_name) (prefix: string): bool =
-  let found = BU.mk_ref false in
-  let prefix = prefix ^ "." in
-  smap_iter original_map (fun k _ ->
-    if Util.starts_with k prefix then
-      let suffix =
-        String.substring k (String.length prefix) (String.length k - String.length prefix)
-      in
-      let filename = must (smap_try_find original_map k) in
-      smap_add working_map suffix filename;
-      found := true
-  );
-  !found
-
-
 let string_of_lid (l: lident) (last: bool) =
   let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
   let names = List.map (fun x -> (string_of_id x)) (ns_of_lid l) @ suffix in
@@ -491,23 +493,73 @@ let core_modules =
    Options.pervasives_native_basename ()]
   |> List.map module_name_of_file
 
+let implicit_ns_deps =
+  [ Const.fstar_ns_lid ]
+
+let implicit_module_deps =
+  [ Const.prims_lid; Const.pervasives_lid ]
+
 let hard_coded_dependencies full_filename =
   let filename : string = basename full_filename in
 
+  let implicit_module_deps = List.map (fun l -> l, Open_module) implicit_module_deps in
+  let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
+
   (* The core libraries do not have any implicit dependencies *)
   if List.mem (module_name_of_file filename) core_modules then []
-  else let implicit_deps =
-           [ (Const.fstar_ns_lid, Open_namespace);
-             (Const.prims_lid, Open_module);
-             (Const.pervasives_lid, Open_module) ] in
-       match (namespace_of_module (lowercase_module_name full_filename)) with
-       | None -> implicit_deps
-       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
+  else match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_ns_deps @ implicit_module_deps
+         (*
+          * AR: we open FStar, and then ns
+          *       which means that enter_namespace will be called first for F*, and then for ns
+          *       giving precedence to My.M over FStar.M
+          *)
+       | Some ns -> implicit_ns_deps @ implicit_module_deps @ [(ns, Open_namespace)]
 
 let dep_subsumed_by d d' =
       match d, d' with
       | PreferInterface l', FriendImplementation l -> l=l'
       | _ -> d = d'
+
+(** For all items [i] in the map that start with [prefix], add an additional
+    entry where [i] stripped from [prefix] points to the same value. Returns a
+    boolean telling whether the map was modified.
+    
+    If the open is an implicit open (as indicated by the flag),
+    and doing so shadows an existing entry, warn! *)
+let enter_namespace
+  (original_map: files_for_module_name)
+  (working_map: files_for_module_name)
+  (prefix: string)
+  (implicit_open:bool) : bool =
+  let found = BU.mk_ref false in
+  let prefix = prefix ^ "." in
+  let suffix_exists mopt =
+    match mopt with
+    | None -> false
+    | Some (intf, impl) -> is_some intf || is_some impl in
+  smap_iter original_map (fun k _ ->
+    if Util.starts_with k prefix then
+      let suffix =
+        String.substring k (String.length prefix) (String.length k - String.length prefix)
+      in
+
+      begin
+        let suffix_filename = smap_try_find original_map suffix in
+        if implicit_open &&
+           suffix_exists suffix_filename
+        then let str = suffix_filename |> must |> intf_and_impl_to_string in
+             FStar.Errors.log_issue Range.dummyRange
+               (Errors.Warning_UnexpectedFile,
+                BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
+                  avoid conflicts" prefix suffix str str)
+      end;
+
+      let filename = must (smap_try_find original_map k) in
+      smap_add working_map suffix filename;
+      found := true
+  );
+  !found
 
 (*
  * Get parsing data for a file
@@ -542,6 +594,7 @@ let collect_one
     =  let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
        let has_inline_for_extraction = BU.mk_ref false in
 
+
        let mo_roots =
          let mname = lowercase_module_name filename in
          if is_interface filename
@@ -551,7 +604,7 @@ let collect_one
        in
 
        let auto_open = hard_coded_dependencies filename |> List.map (fun (lid, k) ->
-         P_open_module_or_namespace (k, lid))
+         P_implicit_open_module_or_namespace (k, lid))
        in
 
        let working_map = smap_copy original_map in
@@ -603,10 +656,10 @@ let collect_one
          end
        in
 
-       let record_open_namespace lid =
+         let record_open_namespace lid (implicit_open:bool) =
          let key = lowercase_join_longident lid true in
-         let r = enter_namespace original_map working_map key in
-         if not r then
+         let r = enter_namespace original_map working_map key implicit_open in
+         if not r && not implicit_open then  //suppress the warning for implicit opens
            FStar.Errors.log_issue (range_of_lid lid)
              (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
              that name either" (string_of_lid lid true)))
@@ -616,12 +669,12 @@ let collect_one
          if record_open_module let_open lid
          then ()
          else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
-         then record_open_namespace lid
+         then record_open_namespace lid false
        in
 
-       let record_open_module_or_namespace (lid, kind) =
+       let record_implicit_open_module_or_namespace (lid, kind) =
          match kind with
-         | Open_namespace -> record_open_namespace lid
+         | Open_namespace -> record_open_namespace lid true
          | Open_module -> let _ = record_open_module false lid in ()
        in
 
@@ -675,7 +728,7 @@ let collect_one
              match elt with
              | P_begin_module lid -> begin_module lid
              | P_open (b, lid) -> record_open b lid
-             | P_open_module_or_namespace (k, lid) -> record_open_module_or_namespace (lid, k)
+             | P_implicit_open_module_or_namespace (k, lid) -> record_implicit_open_module_or_namespace (lid, k)
              | P_dep (b, lid) -> add_dep_on_module lid b
              | P_alias (id, lid) -> ignore (record_module_alias id lid)
              | P_lid lid -> record_lid lid

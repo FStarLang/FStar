@@ -26,7 +26,7 @@ fstarlib.mgen: *.fst *.fsti experimental/*.fst experimental/*.fsti legacy/*.fst 
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=ml/extracted \
-	    EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics -FStar.InteractiveHelpers $(NOEXTRACT_MODULES)'" \
+	    EXTRACT_MODULES="--extract '-Prims +FStar +LowStar -FStar.Tactics -FStar.Reflection -FStar.InteractiveHelpers $(NOEXTRACT_MODULES)'" \
 	    $(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
