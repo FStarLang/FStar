@@ -523,3 +523,45 @@ let elim_llist_cons ptr =
   let c = elim_cons_cell ptr in
   change_slprop_rel (llist_cell (next c)) (llist_ptr (next c)) (fun x y -> datas x == y) (fun _ -> ());
   c
+
+
+assume
+val elim_cons_cell_alt (#a:Type0) (ptr:t a)
+  : SteelSel unit
+             (llist_cell ptr)
+             (fun c -> vemp)
+             (requires fun _ -> ptr =!= null_llist)
+             (ensures fun h0 c h1 ->
+                     Cons? (v_cell ptr h0))
+
+assume
+val list_ptr_to_cell (#a:Type0) (ptr:t a)
+  : SteelSel unit (llist_ptr ptr)
+                  (fun _ -> llist_cell ptr)
+                  (fun _ -> True)
+                  (fun h0 q h1 -> h0 (llist_ptr ptr) == datas (h1 (llist_cell ptr)))
+
+assume
+val snap (#a:Type0) (ptr:t a)
+  : SteelSelF (rmem (llist_cell ptr))
+              (llist_cell ptr)
+              (fun _ -> llist_cell ptr)
+              (requires fun _ -> True)
+              (ensures fun h0 r h1 ->
+                       h0 (llist_cell ptr) == h1 (llist_cell ptr) /\
+                       r (llist_cell ptr) == h1 (llist_cell ptr)) //Seem to need both these conjuncts
+
+val elim_llist_cons_alt (#a:Type0) (ptr:t a)
+  : SteelSel unit
+             (llist_ptr ptr)
+             (fun c -> vemp)
+             (requires fun h -> ptr =!= null_llist)
+             (ensures fun h0 c h1 ->
+               Cons? (v_ptrlist ptr h0))
+
+#push-options "--query_stats --log_queries"
+#restart-solver
+let elim_llist_cons_alt ptr =
+  list_ptr_to_cell ptr;
+  let h = snap ptr in
+  elim_cons_cell_alt ptr
