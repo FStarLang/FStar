@@ -134,6 +134,20 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * Record opening syntax: Inspired in part by Agda's records as
+     modules, you can now write
+
+     ```
+     type ty = {x:int; y:bool}
+
+     let f (r:ty) : int =
+       let open r <: ty in
+       if y then x else -x
+     ```
+
+     See tests/micro-benchmarks/RecordOpen.fst for more examples.
+
    * Support for binder attributes in the reflection APIs `pack_binder`
      and `inspect_binder`. This is a breaking change, see
      https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
@@ -154,10 +168,10 @@ Guidelines for the changelog:
      a semicolon separated list of terms. The old syntax will soon
      be deprecated.
 
-   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e., 
-     @@@ instead of @@. This is a breaking change that enables 
-     using attributes on explicit binders, record fields and more. See 
-     https://github.com/FStarLang/FStar/pull/2192 for more details. 
+   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e.,
+     @@@ instead of @@. This is a breaking change that enables
+     using attributes on explicit binders, record fields and more. See
+     https://github.com/FStarLang/FStar/pull/2192 for more details.
 
 ## Extraction
 

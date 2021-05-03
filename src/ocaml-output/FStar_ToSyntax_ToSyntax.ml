@@ -2949,6 +2949,75 @@ and (desugar_term_maybe_top :
               let uu___2 = FStar_Syntax_DsEnv.expect_typ env1 in
               if uu___2 then desugar_typ_aq else desugar_term_aq in
             uu___1 env1 e
+        | FStar_Parser_AST.LetOpenRecord (r, rty, e) ->
+            let rec head_of t =
+              match t.FStar_Parser_AST.tm with
+              | FStar_Parser_AST.App (t1, uu___1, uu___2) -> head_of t1
+              | uu___1 -> t in
+            let tycon = head_of rty in
+            let tycon_name =
+              match tycon.FStar_Parser_AST.tm with
+              | FStar_Parser_AST.Var l -> l
+              | uu___1 ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = FStar_Parser_AST.term_to_string rty in
+                      FStar_Util.format1
+                        "This type must be a (possibly applied) record name"
+                        uu___4 in
+                    (FStar_Errors.Error_BadLetOpenRecord, uu___3) in
+                  FStar_Errors.raise_error uu___2 rty.FStar_Parser_AST.range in
+            let record =
+              let uu___1 =
+                FStar_Syntax_DsEnv.try_lookup_record_type env tycon_name in
+              match uu___1 with
+              | FStar_Pervasives_Native.Some r1 -> r1
+              | FStar_Pervasives_Native.None ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = FStar_Parser_AST.term_to_string rty in
+                      FStar_Util.format1 "Not a record type: `%s`" uu___4 in
+                    (FStar_Errors.Error_BadLetOpenRecord, uu___3) in
+                  FStar_Errors.raise_error uu___2 rty.FStar_Parser_AST.range in
+            let constrname =
+              let uu___1 =
+                FStar_Ident.ns_of_lid record.FStar_Syntax_DsEnv.typename in
+              FStar_Ident.lid_of_ns_and_id uu___1
+                record.FStar_Syntax_DsEnv.constrname in
+            let mk_pattern p =
+              FStar_Parser_AST.mk_pattern p r.FStar_Parser_AST.range in
+            let elab =
+              let pat =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      FStar_List.map
+                        (fun uu___4 ->
+                           match uu___4 with
+                           | (field, uu___5) ->
+                               mk_pattern
+                                 (FStar_Parser_AST.PatVar
+                                    (field, FStar_Pervasives_Native.None, [])))
+                        record.FStar_Syntax_DsEnv.fields in
+                    ((mk_pattern (FStar_Parser_AST.PatName constrname)),
+                      uu___3) in
+                  FStar_Parser_AST.PatApp uu___2 in
+                mk_pattern uu___1 in
+              let branch = (pat, FStar_Pervasives_Native.None, e) in
+              let r1 =
+                FStar_Parser_AST.mk_term
+                  (FStar_Parser_AST.Ascribed
+                     (r, rty, FStar_Pervasives_Native.None))
+                  r.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+              let uu___1 = top in
+              {
+                FStar_Parser_AST.tm =
+                  (FStar_Parser_AST.Match
+                     (r1, FStar_Pervasives_Native.None, [branch]));
+                FStar_Parser_AST.range = (uu___1.FStar_Parser_AST.range);
+                FStar_Parser_AST.level = (uu___1.FStar_Parser_AST.level)
+              } in
+            desugar_term_maybe_top top_level env elab
         | FStar_Parser_AST.Let (qual, lbs, body) ->
             let is_rec = qual = FStar_Parser_AST.Rec in
             let ds_let_rec_or_app uu___1 =

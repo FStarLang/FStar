@@ -136,14 +136,13 @@
         "disc_equation_Lang.Alloc", "disc_equation_Lang.Bind",
         "disc_equation_Lang.Read", "disc_equation_Lang.Return",
         "disc_equation_Lang.Write", "equality_tok_Lang.Alloc@tok",
-        "equality_tok_Prims.LexTop@tok", "equation_Lang.addr",
-        "fuel_guarded_inversion_Lang.command",
+        "equation_Lang.addr", "fuel_guarded_inversion_Lang.command",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Lang.Bind",
         "typing_tok_Lang.Alloc@tok", "unit_typing",
-        "well_founded_ordering_on_comdain_Lang.Bind"
+        "well_founded_ordering_on_codomain_Lang.Bind"
       ],
       0,
-      "0346ab453cc78e70e1c1495bbdeb1d8c"
+      "9b0b635d785ace452020c2f23cac22ac"
     ]
   ]
 ]

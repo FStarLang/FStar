@@ -6,7 +6,7 @@ FSTAR_FILES=$(wildcard *.fst)
 # 241: "unable to load checked file"
 # 247: "checked file was not written"
 # 333: "unable to read hints"
-OTHERFLAGS+=--warn_error -241-247-333
+OTHERFLAGS+=--warn_error -241-247-333-274
 
 # Sorry, without this we can get noise in error locations.
 # See issue #1993. Also, warnings from dependencies would

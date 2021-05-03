@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module MSTTotal
+module FStar.MST
 
 module P = FStar.Preorder
 
@@ -29,7 +29,7 @@ type repr
       (ens:post_t state a)
     =
   s0:state ->
-  PURE (a & state)
+  DIV (a & state)
   (fun p ->
     req s0 /\
     (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))
@@ -96,29 +96,28 @@ let if_then_else
     : Type
     =
   repr a state rel
-    (fun s -> (b2t p ==> req_then s) /\ ((~ (b2t p)) ==> req_else s))
-    (fun s0 x s1 -> (b2t p ==> ens_then s0 x s1) /\ ((~ (b2t p)) ==> ens_else s0 x s1))
+    (fun s -> (p ==> req_then s) /\ ((~ p) ==> req_else s))
+    (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
-total
 reifiable reflectable
 effect {
-  MSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a)
+  MSTATE (a:Type) (state:Type u#2) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a)
   with { repr; return; bind; subcomp; if_then_else }
 }
 
 let get (#state:Type u#2) (#rel:P.preorder state) ()
-    : MSTATETOT state state rel
+    : MSTATE state state rel
       (fun _ -> True)
       (fun s0 r s1 -> s0 == r /\ r == s1)
     =
-  MSTATETOT?.reflect (fun s0 -> s0, s0)
+  MSTATE?.reflect (fun s0 -> s0, s0)
 
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
-    : MSTATETOT unit state rel
+    : MSTATE unit state rel
       (fun s0 -> rel s0 s)
       (fun _ _ s1 -> s1 == s)
     =
-  MSTATETOT?.reflect (fun _ -> (), s)
+  MSTATE?.reflect (fun _ -> (), s)
 
 type s_predicate (state:Type u#2) = state -> Type0
 
@@ -128,12 +127,12 @@ let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
 assume val witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) : prop
 
 assume val witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : MSTATETOT unit state rel
+    : MSTATE unit state rel
       (fun s0 -> p s0 /\ stable state rel p)
       (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
 
 assume val recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : MSTATETOT unit state rel
+    : MSTATE unit state rel
       (fun _ -> witnessed state rel p)
       (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
@@ -166,7 +165,7 @@ assume val recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
  *   The wp (fun _ -> True) below helps add that assumption to the second conjunct
  *)
 
-let lift_pure_mst_total
+let lift_pure_mst
       (a:Type)
       (state:Type u#2)
       (rel:P.preorder state)
@@ -181,20 +180,59 @@ let lift_pure_mst_total
     let x = f () in
     x, s0
 
-sub_effect PURE ~> MSTATETOT = lift_pure_mst_total
+sub_effect PURE ~> MSTATE = lift_pure_mst
 
 
-let mst_tot_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
-    : MSTATETOT unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
+(*
+ * A polymonadic bind between DIV and MSTATE
+ *
+ * This is ultimately used when defining par and frame in Steel.Effect.fst (via NMST layer)
+ * par and frame try to compose reified Steel with Steel, since Steel is non total, its reification
+ *   incurs a Div effect, and so, we need a way to compose Div and Steel
+ *
+ * To do so, we have to go all the way down and have a story for MST and NMST too
+ *
+ * This polymonadic bind gives us bare minimum to realize that
+ * It is quite imprecise, in that it doesn't say anything about the post of the Div computation
+ * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
+ *   the way it is done for PURE and GHOST
+ *
+ * However, since the reification usecase gives us Dv anyway, this is fine for now
+ *)
+let bind_div_mst (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (state:Type u#2) (rel:P.preorder state) (req:a -> pre_t state) (ens:a -> post_t state b)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b state rel (req x) (ens x)))
+: repr b state rel
+    (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
+    (fun s0 y s1 -> exists x. (ens x) s0 y s1)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun s0 ->
+  let x = f () in
+  (g x) s0
+
+polymonadic_bind (DIV, MSTATE) |> MSTATE = bind_div_mst
+
+
+let mst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+    : MSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assume p
 
-let mst_tot_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
-    : MSTATETOT a state rel (fun _ -> True) (fun _ _ _ -> False)
+let mst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
+    : MSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
     =
   admit ()
 
-let mst_tot_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
-    : MSTATETOT unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
+let mst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+    : MSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
+
+let lift_mst_total_mst (a:Type) (state:Type u#2) (rel:P.preorder state)
+  (req:pre_t state) (ens:post_t state a)
+  (f:MSTTotal.repr a state rel req ens)
+: repr a state rel req ens
+= fun s0 -> f s0
+
+sub_effect MSTTotal.MSTATETOT ~> MSTATE = lift_mst_total_mst

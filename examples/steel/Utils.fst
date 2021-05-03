@@ -28,6 +28,7 @@ let return (#a:_)
          (requires fun _ -> p == q x)
          (ensures fun _ y _ -> y == x)
     = change_slprop p (q x) (fun _ -> ());
+      noop ();
       x
 
 let return' (#a:_)
@@ -35,4 +36,4 @@ let return' (#a:_)
             (x:a)
             ()
     : SteelT a (q x) q
-    = change_slprop (q x) (q x) (fun _ -> ()); x
+    = noop (); x

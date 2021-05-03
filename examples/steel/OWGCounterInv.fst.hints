@@ -1,5 +1,5 @@
 [
-  "˝à>o É∏8Âh\n†ü\u000b÷„",
+  "OÊÍÀ?ÁcÆ\u001a\tc_ûòê\u000f",
   [
     [
       "OWGCounterInv.ghost_gather",
@@ -29,7 +29,7 @@
         "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "83dc1743d6064a917389af28098d340d"
+      "7b53fb470411620a68f463fd746f11c9"
     ],
     [
       "OWGCounterInv.ghost_share",
@@ -49,7 +49,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1622702794235a7226288451387f60e8"
+      "398aeda14f2aa3e3f1bd30d70a979b4c"
     ],
     [
       "OWGCounterInv.gather_invariant",
@@ -70,7 +70,7 @@
         "real_inversion", "typing_FStar.Real.one"
       ],
       0,
-      "3582fa319c72fbb64c1a2bb60c4f303b"
+      "4fc5af0e5a20b6eb35c484804faef472"
     ],
     [
       "OWGCounterInv.with_invariant",
@@ -79,17 +79,23 @@
       0,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Prims.eqtype",
+        "equation_Steel.DisposableInvariant.mem_inv",
         "equation_Steel.Effect.Atomic.set_add",
-        "equation_Steel.Memory.inames", "lemma_FStar.Set.lemma_equal_elim",
+        "equation_Steel.Memory.inames", "lemma_FStar.Ghost.reveal_hide",
+        "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
-        "primitive_Prims.op_BarBar", "typing_FStar.Set.empty",
-        "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
+        "primitive_Prims.op_BarBar",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Set.empty",
+        "typing_FStar.Set.mem", "typing_FStar.Set.set",
+        "typing_FStar.Set.singleton", "typing_FStar.Set.union",
         "typing_Steel.DisposableInvariant.name",
         "typing_Steel.Effect.Atomic.set_add", "typing_Steel.Memory.iname"
       ],
       0,
-      "a07739b66dc896c73d286da590e551d9"
+      "704d1ef64dae9b0dc06f5a886984248b"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -121,7 +127,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "3d5478656257b02c3d0de384c8f3862a"
+      "926006ba88a714612a3299f1f33b43dc"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -134,7 +140,7 @@
         "refinement_interpretation_Tm_refine_312e2cdbaffb78c47b833133bf2059a2"
       ],
       0,
-      "109c10b738145a6be20ac8b3a95b4d61"
+      "e486845036c8238ff74320bffa2f10a3"
     ],
     [
       "OWGCounterInv.incr_ghost_contrib",
@@ -155,7 +161,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1f6a0e2dfd7f19aea7449d7cd614a437"
+      "bc7995cd92773b323c77f04e79e1f0c0"
     ],
     [
       "OWGCounterInv.incr_with_inv_slprop",
@@ -182,7 +188,7 @@
         "typing_OWGCounterInv.inv_slprop"
       ],
       0,
-      "aa7164d64361dfa88f7ca9952580fa0b"
+      "905ffd77a6fc1a61e6fd5daf658e6669"
     ],
     [
       "OWGCounterInv.incr_main",
@@ -193,6 +199,7 @@
         "@MaxIFuel_assumption", "@query", "equation_OWGCounterInv.incr",
         "equation_OWGCounterInv.inv_slprop", "equation_Prims.eqtype",
         "equation_Prims.l_True", "equation_Prims.prop",
+        "equation_Steel.DisposableInvariant.mem_inv",
         "equation_Steel.Effect.Common.ens_depends_only_on",
         "equation_Steel.Effect.Common.true_p",
         "equation_Steel.FractionalPermission.full_perm",
@@ -211,7 +218,8 @@
         "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
         "refinement_interpretation_Tm_refine_f935112a2bbd45581a847b83c1286ab3",
         "true_interp", "typing_FStar.Ghost.hide",
-        "typing_FStar.Ghost.reveal", "typing_OWGCounterInv.incr",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Set.empty",
+        "typing_FStar.Set.set", "typing_OWGCounterInv.incr",
         "typing_OWGCounterInv.inv_slprop",
         "typing_Steel.DisposableInvariant.name",
         "typing_Steel.Effect.Common.true_p",
@@ -220,7 +228,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "9cf637b2ac9fc6a31385780da93c7b0a"
+      "cc97f496f50f981aa98ec2e1f0943e81"
     ]
   ]
 ]

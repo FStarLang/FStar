@@ -790,6 +790,16 @@ let mk_indexed_bind env
     (n |> Ident.ident_of_lid |> string_of_id)
     (p |> Ident.ident_of_lid |> string_of_id) in
 
+  if (Env.is_erasable_effect env m &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct1.result_typ)) ||
+     (Env.is_erasable_effect env n &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct2.result_typ))
+  then raise_error (Errors.Fatal_UnexpectedEffect,
+                    BU.format2 "Cannot apply bind %s since %s is not erasable and one of the computations is informative"
+                      bind_name (string_of_lid p)) r1;
+
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Binding c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
@@ -1165,8 +1175,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || debug env <| Options.Other "bind"
       then f ()
   in
-  let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
-  let lc2 = N.ghost_to_pure_lcomp env lc2 in
+  let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
   let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1
@@ -1519,6 +1528,8 @@ let maybe_return_e2_and_bind
      match x with
      | None -> env
      | Some x -> Env.push_bv env x in
+
+   let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in
 
    //AR: use c1's effect to return c2 into
    let lc2 =
@@ -2707,6 +2718,14 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                      (Print.term_to_string body))
                     body.pos
 
+          | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
+            if not (List.contains TotalEffect quals)
+            then raise_error
+                   (Errors.Fatal_QulifierListNotPermitted,
+                    BU.format1
+                      "Effect %s is marked erasable but only total effects are allowed to be erasable"
+                      (string_of_lid eff_name)) r
+
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,
@@ -2773,7 +2792,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
       | Tm_arrow _ ->
            let bs, c = U.arrow_formals_comp t in
            let env = FStar.TypeChecker.Env.push_binders env bs in
-           (U.is_ghost_effect (U.comp_effect_name c))
+           (Env.is_erasable_effect env (U.comp_effect_name c))  //includes GHOST
            || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
       | Tm_refine({sort=t}, _) ->
            aux env t
@@ -2860,6 +2879,20 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
      | _ -> fail sig_tm)
   | _ -> fail sig_tm
 
+
+let check_non_informative_type_for_lift env m1 m2 t r : unit =
+  //raise an error if m1 is erasable, m2 is not erasable, and t is informative
+  if Env.is_erasable_effect env m1       &&
+     not (Env.is_erasable_effect env m2) &&
+     not (N.non_info_norm env t)
+  then Errors.raise_error
+         (Errors.Error_TypeError,
+          BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+            (string_of_lid m1)
+            (string_of_lid m2)
+            (Print.term_to_string t))
+         r
+
 (*
  * Lifting a comp c to the layered effect eff_name
  *
@@ -2887,6 +2920,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let ct = U.comp_to_comp_typ c in
 
+  check_non_informative_type_for_lift env ct.effect_name tgt ct.result_typ r;
+
   let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
 
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
@@ -2900,7 +2935,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       (Ident.string_of_lid ct.effect_name) (Ident.string_of_lid tgt)
       s (Print.term_to_string lift_t) in
 
-  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE a wp)
+  let a_b, (rest_bs, [f_b]), lift_c =  //lift_c is the computation type of the lift combinator (PURE/GHOST a wp)
     match (SS.compress lift_t).n with
     | Tm_arrow (bs, c) when List.length bs >= 2 ->
       let ((a_b::bs), c) = SS.open_comp bs c in
@@ -3006,6 +3041,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   else
     let mk_mlift_wp ts env c =
       let ct = U.comp_to_comp_typ c in
+      check_non_informative_type_for_lift env ct.effect_name sub.target ct.result_typ env.range;
       let _, lift_t = inst_tscheme_with ts ct.comp_univs in
       let wp = List.hd ct.effect_args in
       S.mk_Comp ({ ct with

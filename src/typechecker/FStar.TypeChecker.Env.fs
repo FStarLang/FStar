@@ -915,7 +915,7 @@ let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
   | Some r ->
     r
 
-let type_is_erasable env fv =
+let fv_has_erasable_attr env fv =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
      ex,erasable
@@ -935,7 +935,7 @@ let rec non_informative env t =
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
-      || type_is_erasable env fv
+      || fv_has_erasable_attr env fv
     | Tm_app(head, _) -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow(_, c) ->
@@ -1290,6 +1290,13 @@ let reify_comp env c u_c : term =
     match effect_repr_aux true env c u_c with
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
+
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
 
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
