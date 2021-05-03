@@ -1,7 +1,5 @@
 module My.PreorderClient
 
-open My
-
 (*
  * Preorder resolves to My.Preorder
  *)
