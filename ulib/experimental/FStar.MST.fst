@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module MST
+module FStar.MST
 
 module P = FStar.Preorder
 

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module NMSTTotal
+module FStar.NMSTTotal
 
 module P = FStar.Preorder
 
