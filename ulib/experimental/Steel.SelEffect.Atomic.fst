@@ -638,8 +638,19 @@ let elim_vrewrite
     (fun m -> vrewrite_sel_eq v f m)
 
 
-(*** Ghost pointers *)
+(*** Lemmas on references *)
+
 open Steel.FractionalPermission
+
+let vptr_not_null
+  #opened #a r
+= change_slprop_rel
+    (vptr r)
+    (vptr r)
+    (fun x y -> x == y /\ R.is_null r == false)
+    (fun m -> R.pts_to_not_null r full_perm (ptr_sel r m) m)
+
+(*** Ghost pointers *)
 
 val ghost_ptr_sel' (#a:Type0) (r: ghost_ref a) : selector' a (ghost_ptr r)
 let ghost_ptr_sel' #a r = fun h ->

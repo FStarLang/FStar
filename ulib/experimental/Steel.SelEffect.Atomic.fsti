@@ -497,9 +497,23 @@ val elim_vrewrite (#opened:inames)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
 
-(*** Ghost references ***)
+(*** Lemmas on references *)
 
 module R = Steel.Reference
+
+val vptr_not_null (#opened: _)
+  (#a: Type)
+  (r: R.ref a)
+: SteelSelGhost unit opened
+    (Steel.SelEffect.vptr r)
+    (fun _ -> Steel.SelEffect.vptr r)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      h1 (Steel.SelEffect.vptr r) == h0 (Steel.SelEffect.vptr r) /\
+      R.is_null r == false
+    )
+
+(*** Ghost references ***)
 
 [@@ erasable]
 let ghost_ref (a:Type u#0) : Type u#0 = R.ghost_ref a
