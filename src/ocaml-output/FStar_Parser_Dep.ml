@@ -852,7 +852,7 @@ let (hard_coded_dependencies :
          namespace_of_module uu___3 in
        match uu___2 with
        | FStar_Pervasives_Native.None ->
-           FStar_List.append implicit_module_deps1 implicit_ns_deps1
+           FStar_List.append implicit_ns_deps1 implicit_module_deps1
        | FStar_Pervasives_Native.Some ns ->
            FStar_List.append implicit_ns_deps1
              (FStar_List.append implicit_module_deps1 [(ns, Open_namespace)]))
