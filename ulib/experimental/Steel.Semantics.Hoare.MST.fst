@@ -20,7 +20,7 @@ module P = FStar.Preorder
 
 open FStar.Tactics
 
-open NMST
+open FStar.NMST
 
 
 (*
@@ -46,7 +46,7 @@ open NMST
 /// Disabling projectors because we don't use them and they increase the typechecking time
 
 #push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --print_implicits --print_universes \
-   --using_facts_from 'Prims FStar.Pervasives FStar.Preorder MST NMST Steel.Semantics.Hoare.MST'"
+   --using_facts_from 'Prims FStar.Pervasives FStar.Preorder FStar.MST FStar.NMST Steel.Semantics.Hoare.MST'"
 
 (**** Begin state defn ****)
 
@@ -280,7 +280,7 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) = fp_prop2 pre p
 (**** End expects, provides, requires,
       and ensures defns ****)
 
-open NMSTTotal
+open FStar.NMSTTotal
 let full_mem (st:st) = m:st.mem{st.full_mem_pred m}
 
 effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
@@ -1054,7 +1054,7 @@ let step_act
 
   Step (post x) post (fun h -> lpost h x h) lpost (Ret post x lpost)
 
-module M = MST
+module M = FStar.MST
 
 let step_bind_ret_aux
       (#st:st)

@@ -18,7 +18,7 @@ module FStar.NMSTTotal
 
 module P = FStar.Preorder
 
-module M = MSTTotal
+module M = FStar.MSTTotal
 
 type tape = nat -> bool
 
