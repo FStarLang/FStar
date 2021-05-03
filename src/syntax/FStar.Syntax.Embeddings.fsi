@@ -2,6 +2,7 @@
 module FStar.Syntax.Embeddings
 
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Char
@@ -25,6 +26,7 @@ type norm_step =
     | UnfoldOnly  of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr  of list<string>
+    | UnfoldQual  of list<string>
     | NBE
 
 val steps_Simpl         : term
@@ -49,7 +51,7 @@ val steps_NBE           : term
  * able to unembed.
  *)
 
-type norm_cb = FStar.Util.either<Ident.lident, term> -> term // a callback to the normalizer
+type norm_cb = either<Ident.lident, term> -> term // a callback to the normalizer
 val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
@@ -103,7 +105,7 @@ val e_vconfig     : embedding<vconfig>
 val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
-val e_either      : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a, 'b>>
+val e_either      : embedding<'a> -> embedding<'b> -> embedding<either<'a, 'b>>
 val e_string_list : embedding<list<string>>
 val e_arrow       : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 

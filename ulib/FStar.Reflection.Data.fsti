@@ -71,7 +71,7 @@ type term_view =
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
-  | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
+  | Tv_Match  : scrutinee:term -> ret:option (either term comp & option term) -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
@@ -79,8 +79,8 @@ type term_view =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> decr:(option term) -> comp_view
-  | C_GTotal    : ret:typ -> decr:(option term) -> comp_view
+  | C_Total     : ret:typ -> decr:(list term) -> comp_view
+  | C_GTotal    : ret:typ -> decr:(list term) -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:(list unit) -> (* TODO: expose universes properly,
                                              pass them back as obtained for now, or [] *)
@@ -182,8 +182,8 @@ let smaller (tv:term_view) (t:term) : Type0 =
     | Tv_Let r attrs bv t1 t2 ->
         (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
 
-    | Tv_Match t1 brs ->
-        t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
+    | Tv_Match t1 ret_opt brs ->
+        t1 << t /\ ret_opt << t /\ (forall_list (fun (b, t') -> t' << t) brs)
 
     | Tv_AscribedT e ty tac ->
       e << t /\ ty << t /\ tac << t
@@ -202,10 +202,9 @@ let smaller (tv:term_view) (t:term) : Type0 =
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
-    | C_Total t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+    | C_Total t md -> t << c /\ md << c
     | C_GTotal t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+        t << c /\ md << c
     | C_Lemma pre post pats ->
         pre << c /\ post << c /\ pats << c
     | C_Eff us eff res args ->

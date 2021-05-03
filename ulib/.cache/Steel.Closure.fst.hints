@@ -1,5 +1,5 @@
 [
-  "¢*AVõÖÂ‹¨UÐ‘8\u0004\u001aå",
+  "WÊ¥²Öæ2vøÝæM5‚Eµ",
   [
     [
       "Steel.Closure.next",
@@ -8,13 +8,30 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Steel.Effect.Common.true_p",
         "function_token_typing_Prims.int", "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_05deae8075574da77b869b5d53096f10",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Ghost.reveal"
+        "true_interp", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "dc91d1925b993bbfdd72055a4181b60a"
+      "47d6e27527d23f407bbcc1fad4645cdb"
+    ],
+    [
+      "Steel.Closure.new_counter'",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Effect.Common.true_p",
+        "function_token_typing_Steel.Closure.repr",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "token_correspondence_FStar.Pervasives.dfst", "true_interp"
+      ],
+      0,
+      "0d5d30432f8a2aec5e50fdde989465e4"
     ]
   ]
 ]

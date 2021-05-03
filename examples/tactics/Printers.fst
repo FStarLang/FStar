@@ -48,7 +48,7 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
 let mk_printer_type (t : term) : Tac term =
     let b = fresh_binder_named "arg" t in
     let str = pack (Tv_FVar (pack_fv string_lid)) in
-    let c = pack_comp (C_Total str None) in
+    let c = pack_comp (C_Total str []) in
     pack (Tv_Arrow b c)
 
 
@@ -90,7 +90,7 @@ let mk_printer_fun (dom : term) : Tac term =
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument
-        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) None branches) in
         (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function

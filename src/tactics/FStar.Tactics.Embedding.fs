@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
 open FStar
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
@@ -140,11 +141,11 @@ let e_proofstate_nbe =
                  ; rng = Range.dummyRange }
         in
         let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
-        NBETerm.mk_t (NBETerm.Lazy (BU.Inl li, thunk))
+        NBETerm.mk_t (NBETerm.Lazy (Inl li, thunk))
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
         match NBETerm.nbe_t_of_t t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}, _) ->
+        | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_proofstate}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
           if !Options.debug_embedding then
@@ -185,11 +186,11 @@ let e_goal_nbe =
                  ; rng = Range.dummyRange }
         in
         let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
-        NBETerm.mk_t <| NBETerm.Lazy (BU.Inl li, thunk)
+        NBETerm.mk_t <| NBETerm.Lazy (Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =
         match NBETerm.nbe_t_of_t t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}, _) ->
+        | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_goal}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then

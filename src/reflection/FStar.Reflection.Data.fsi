@@ -45,18 +45,18 @@ type aqualv =
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of bv
-    | Tv_BVar   of bv
-    | Tv_FVar   of fv
-    | Tv_App    of term * argv
-    | Tv_Abs    of binder * term
-    | Tv_Arrow  of binder * comp
-    | Tv_Type   of unit
-    | Tv_Refine of bv * term
-    | Tv_Const  of vconst
-    | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * list<term> * bv * term * term
-    | Tv_Match  of term * list<branch>
+    | Tv_Var       of bv
+    | Tv_BVar      of bv
+    | Tv_FVar      of fv
+    | Tv_App       of term * argv
+    | Tv_Abs       of binder * term
+    | Tv_Arrow     of binder * comp
+    | Tv_Type      of unit
+    | Tv_Refine    of bv * term
+    | Tv_Const     of vconst
+    | Tv_Uvar      of Z.t * ctx_uvar_and_subst
+    | Tv_Let       of bool * list<term> * bv * term * term
+    | Tv_Match     of term * option<(either<term, comp> * option<term>)> * list<branch>
     | Tv_AscribedT of term * term * option<term>
     | Tv_AscribedC of term * comp * option<term>
     | Tv_Unknown
@@ -96,8 +96,8 @@ type bv_view = {
 type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
-    | C_Total of typ * option<term>  //optional decreases clause
-    | C_GTotal of typ * option<term> //idem
+    | C_Total of typ * list<term>  //decreases clause
+    | C_GTotal of typ * list<term> //idem
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
@@ -268,6 +268,7 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Val         = fstar_refl_data_const "Sg_Val"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)

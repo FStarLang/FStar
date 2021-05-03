@@ -138,6 +138,7 @@ val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
 val ide                         : unit    -> bool
+val ide_id_info_off             : unit    -> bool
 val include_path                : unit    -> list<string>
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
@@ -147,6 +148,7 @@ val interactive                 : unit    -> bool
 val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
+val load_cmxs                   : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
@@ -233,7 +235,6 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -854,7 +855,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         // the check on the continuation to ensure it is a monadic computation
         ensure_m
 
-  | Tm_match (e0, branches) ->
+  | Tm_match (e0, _, branches) ->
       // This is similar to the [let] case above. The [match] checks that the
       // types of the branches work; it also demands that the scrutinee be a
       // non-monadic computation.
@@ -1102,7 +1103,7 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_let ((false, [ binding ]), e2) ->
       mk_let env binding e2 infer check_m
 
-  | Tm_match (e0, branches) ->
+  | Tm_match (e0, _, branches) ->
       mk_match env e0 branches infer
 
   | Tm_uinst (e, _)
@@ -1178,20 +1179,20 @@ and mk_match env e0 branches f =
     let u_branches = List.map close_branch u_branches in
     let s_e =
       U.abs [ S.mk_binder p ]
-            (mk (Tm_match (s_e0, s_branches)))
+            (mk (Tm_match (s_e0, None, s_branches)))
             (Some (U.residual_tot U.ktype0))
     in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
     mk (Tm_ascribed (s_e, (Inl t1_star, None), None)) ,
-    mk (Tm_match (u_e0, u_branches))
+    mk (Tm_match (u_e0, None, u_branches))
   end else begin
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let t1_star = t1 in
     N t1,
-    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), (Inl t1_star, None), None)),
-    mk (Tm_match (u_e0, u_branches))
+    mk (Tm_ascribed (mk (Tm_match (s_e0, None, s_branches)), (Inl t1_star, None), None)),
+    mk (Tm_match (u_e0, None, u_branches))
   end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)

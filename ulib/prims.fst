@@ -205,17 +205,19 @@ type l_not (p: logical) : logical = l_imp p False
 unfold
 type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p ==> r)
 
-(** One of the main axioms provided by prims is [precedes], a a
+
+(** One of the main axioms provided by prims is [precedes], a
     built-in well-founded partial order over all terms. It's typically
     written with an infix binary [<<].
 
     The [<<] order includes:
         * The [<] ordering on natural numbers
         * The subterm ordering on inductive types
-        * A lexicographic ordering on the lex_t type, below
-        * And, via FStar.WellFounded, relating [f x << f] *)
+        * [f x << D f] for data constructors D of an inductive t whose
+          arguments include a ghost or total function returning a t *)
+
 assume
-type precedes : #a: Type -> #b: Type -> a -> b -> Type0 
+type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to
@@ -568,23 +570,6 @@ effect M (a: Type) = Tot a (attributes cps)
 (** Returning a value into the [M] effect *)
 let returnM (a: Type) (x: a) : M a = x
 
-(** The type of lexicographically ordered tuples.
-
-    Its values are usually written [%[a;b;c]] instead of
-    [LexCons a (LexCons b (LexCons c LexTop))]
-
-    Its main interest is in its ordering. In particular
-
-    [{
-      %[a;b] << %[c;d] <==> a << c  \/ (a == c /\ b << d)
-    }]
-    
-    TODO: Rather than exposing this as an an inductive type, we plan
-          to revise this as an abstract type.  *)
-type lex_t =
-  | LexTop : lex_t
-  | LexCons : #a: Type -> a -> lex_t -> lex_t
-
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
@@ -696,4 +681,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 31
+let __cache_version_number__ = 34

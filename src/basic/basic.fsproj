@@ -69,6 +69,7 @@
     <Compile Include="mul-fake.fs" />
     <Compile Include="fs/char.fsi" />
     <Compile Include="fs/char.fs" />
+    <Compile Include="boot/NotFStar.Pervasives.fs" />    
     <Compile Include="boot/FStar.BigInt.fsi" />
     <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="boot/FStar.String.fsi" />

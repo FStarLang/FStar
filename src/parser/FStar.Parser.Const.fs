@@ -36,29 +36,27 @@ let pervasives_lid        = p2l ["FStar"; "Pervasives"]
 let fstar_ns_lid          = p2l ["FStar"]
 
 (* Primitive types *)
-let bool_lid        = pconst "bool"
-let unit_lid        = pconst "unit"
-let squash_lid      = pconst "squash"
-let auto_squash_lid = pconst "auto_squash"
-let string_lid      = pconst "string"
-let bytes_lid       = pconst "bytes"
-let int_lid         = pconst "int"
-let exn_lid         = pconst "exn"
-let list_lid        = pconst "list"
-let eqtype_lid      = pconst "eqtype"
-let option_lid      = psnconst "option"
-let either_lid      = psconst "either"
-let pattern_lid     = psconst "pattern"
-let precedes_lid    = pconst "precedes"
-let lex_t_lid       = pconst "lex_t"
-let lexcons_lid     = pconst "LexCons"
-let lextop_lid      = pconst "LexTop"
-let smtpat_lid      = psconst "smt_pat"
-let smtpatOr_lid    = psconst "smt_pat_or"
-let monadic_lid     = pconst "M"
-let spinoff_lid     = psconst "spinoff"
-let inl_lid         = psconst "Inl"
-let inr_lid         = psconst "Inr"
+let bool_lid         = pconst "bool"
+let unit_lid         = pconst "unit"
+let squash_lid       = pconst "squash"
+let auto_squash_lid  = pconst "auto_squash"
+let string_lid       = pconst "string"
+let bytes_lid        = pconst "bytes"
+let int_lid          = pconst "int"
+let exn_lid          = pconst "exn"
+let list_lid         = pconst "list"
+let eqtype_lid       = pconst "eqtype"
+let option_lid       = psnconst "option"
+let either_lid       = psconst "either"
+let pattern_lid      = psconst "pattern"
+let lex_t_lid        = pconst "lex_t"
+let precedes_lid     = pconst "precedes"
+let smtpat_lid       = psconst "smt_pat"
+let smtpatOr_lid     = psconst "smt_pat_or"
+let monadic_lid      = pconst "M"
+let spinoff_lid      = psconst "spinoff"
+let inl_lid          = psconst "Inl"
+let inr_lid          = psconst "Inr"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -303,6 +301,7 @@ let steps_reify         = psconst "reify_"
 let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
+let steps_unfoldqual    = psconst "delta_qualifier"
 let steps_nbe           = psconst "nbe"
 
 (* attributes *)
@@ -330,6 +329,7 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let ite_soundness_forall_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_forall"]
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 let gen_reset =

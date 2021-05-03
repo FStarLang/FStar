@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.Driver
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All

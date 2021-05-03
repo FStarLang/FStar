@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Tactics.CtrlRewrite
 
+open FStar.Pervasives
 open FStar.All
 open FStar.Util
 open FStar.Syntax.Syntax
@@ -25,6 +26,8 @@ module TcComm = FStar.TypeChecker.Common
 module N      = FStar.TypeChecker.Normalize
 module Const  = FStar.Const
 module Errors = FStar.Errors
+
+let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 (* WHY DO I NEED TO COPY THESE? *)
 type controller_ty = term -> tac<(bool * ctrl_flag)>
@@ -86,7 +89,7 @@ let __do_rewrite
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
-    bind (new_uvar "do_rewrite.rhs" env typ) (fun (ut, uvar_ut) ->
+    bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->
@@ -236,8 +239,9 @@ and on_subterms
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
-       * and do not go into patterns. *)
-      | Tm_match (hd, brs) ->
+       * and do not go into patterns.
+       * also ignoring the return annotations *)
+      | Tm_match (hd, asc_opt, brs) ->
         let c_branch (br:S.branch) : tac<(S.branch * ctrl_flag)> =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
@@ -246,7 +250,7 @@ and on_subterms
           ret (br, flag))
         in
         bind (par_ctac rr (map_ctac c_branch) (hd, brs)) (fun ((hd, brs), flag) ->
-        ret (Tm_match (hd, brs), flag))
+        ret (Tm_match (hd, asc_opt, brs), flag))
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)

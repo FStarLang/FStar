@@ -122,6 +122,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
     Turns a pattern p into a triple:
 *)
 let pat_as_exp (introduce_bv_uvars:bool)
+               (inst_pat_cons_univs:bool)
                (env:Env.env)
                (p:pat)
     : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
@@ -157,9 +158,9 @@ let pat_as_exp (introduce_bv_uvars:bool)
 
            | Pat_dot_term(x, _) ->
              let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_untyped None in
+             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_ghost None in
              let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_untyped None in
+             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_ghost None in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, conj_guard g g', p)
 
@@ -183,7 +184,13 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
-             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) p.p in
+             let hd =
+               let hd = Syntax.fv_to_tm fv in
+               if not inst_pat_cons_univs then hd
+               else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
+                    if List.length us = 0 then hd
+                    else Syntax.mk_Tm_uinst hd us in
+             let e = mk_Tm_app hd (args |> List.rev) p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
               List.rev w |> List.flatten,

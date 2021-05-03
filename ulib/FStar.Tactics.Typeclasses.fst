@@ -147,7 +147,8 @@ let mk_class (nm:string) : Tac decls =
                   let sfv : fv = sfv in
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
                   let se = set_sigelt_quals to_propagate se in
-                  //let se = set_sigelt_attrs [`tcnorm] se in
+                  let _, (_, attrs) = inspect_binder b in
+                  let se = set_sigelt_attrs attrs se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se
     ) bs

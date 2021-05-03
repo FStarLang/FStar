@@ -1,6 +1,5 @@
-FSTAR_HOME=../..
 include ../Makefile.include
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 eta_expand: out Eta_expand.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Eta_expand.fst

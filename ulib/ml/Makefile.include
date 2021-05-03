@@ -1,8 +1,6 @@
 # You should include this Makefile in your Makefile to make sure you remain
 # future-proof w.r.t. realized modules!
 
-# This Makefile assumes that $(FSTAR_HOME) is properly defined.
-
 FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
 	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
@@ -20,8 +18,14 @@ NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
   -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel
 
 FSTAR_DEFAULT_ARGS=
-ULIB_ML=$(FSTAR_HOME)/ulib/ml
-FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
+ifdef FSTAR_HOME
+  ULIB_ML=$(FSTAR_HOME)/ulib/ml
+  FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
+else
+  FSTAR_PREFIX=$(dir $(shell which fstar.exe))/..
+  ULIB_ML=$(FSTAR_PREFIX)/lib/fstar/ml
+  FSTARLIB_DIR=$(FSTAR_PREFIX)/lib/fstar-compiler-lib
+endif
 FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 # Left as an example if we were to add multiple versions of fstarlib
@@ -29,8 +33,13 @@ FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 #	OCAML_DEFAULT_FLAGS=-predicates hyperstack
 # endif
 
-OCAMLOPT_BARE=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt
+ifdef FSTAR_HOME
+  WITH_OCAMLPATH=OCAMLPATH="$(FSTAR_HOME)/bin"
+else
+  WITH_OCAMLPATH=
+endif
+OCAMLOPT_BARE=$(WITH_OCAMLPATH) ocamlfind opt
 OCAMLOPT_=$(OCAMLOPT_BARE) -package fstarlib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
-OCAMLC_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind c -package fstarlib -linkpkg -g
+OCAMLC_=$(WITH_OCAMLPATH) ocamlfind c -package fstarlib -linkpkg -g
 OCAMLC=$(OCAMLC_) $(OCAML_DEFAULT_FLAGS)

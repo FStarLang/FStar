@@ -23,6 +23,7 @@
 *)
 module FStar.Parser.Dep
 
+open FStar.Pervasives
 open FStar.ST   //for ref
 open FStar.All  //for failwith
 
@@ -776,7 +777,10 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t) -> collect_term t) identterms
+            List.iter (fun (_, aq, attrs, t) -> 
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
@@ -859,15 +863,23 @@ let collect_one
         | LetOpen (lid, t) ->
             add_to_parsing_data (P_open (true, lid));
             collect_term t
+        | LetOpenRecord (r, rty, e) ->
+            collect_term r;
+            collect_term rty;
+            collect_term e
         | Bind(_, t1, t2)
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, t2, t3) ->
+        | If (t1, ret_opt, t2, t3) ->
             collect_term t1;
+            iter_opt ret_opt collect_term;
             collect_term t2;
             collect_term t3
-        | Match (t, bs)
+        | Match (t, ret_opt, bs) ->
+            collect_term t;
+            iter_opt ret_opt collect_term;
+            collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;
             collect_branches bs
@@ -906,9 +918,10 @@ let collect_one
             collect_term t
         | Requires (t, _)
         | Ensures (t, _)
-        | Decreases (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->

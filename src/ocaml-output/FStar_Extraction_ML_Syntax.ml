@@ -172,12 +172,12 @@ type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
   | E_PURE 
-  | E_GHOST 
+  | E_ERASABLE 
   | E_IMPURE 
 let (uu___is_E_PURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_PURE -> true | uu___ -> false
-let (uu___is_E_GHOST : e_tag -> Prims.bool) =
-  fun projectee -> match projectee with | E_GHOST -> true | uu___ -> false
+let (uu___is_E_ERASABLE : e_tag -> Prims.bool) =
+  fun projectee -> match projectee with | E_ERASABLE -> true | uu___ -> false
 let (uu___is_E_IMPURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_IMPURE -> true | uu___ -> false
 type mlloc = (Prims.int * Prims.string)

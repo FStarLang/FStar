@@ -1,0 +1,40 @@
+[
+  "[3V©5x0IqxG\u0003BÜU/",
+  [
+    [
+      "Selectors.PtrLList.v_ptrlist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_4d6111bd31a4d49d36a6b6c2b9097fd9",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "173bb4b874384007dcfdf7e12c330331"
+    ],
+    [
+      "Selectors.PtrLList.intro_llist_cons",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "04c45e35f711bafac23d162548d89a83"
+    ],
+    [
+      "Selectors.PtrLList.elim_llist_cons",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f01d893a4279179400bb17cad2642a74"
+    ]
+  ]
+]

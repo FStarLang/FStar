@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcEffect
-
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -648,6 +648,17 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   and then discharge it
    * 
    * Similarly for the g case
+   *
+   * 02/16/2021: We expect the `_` that we apply to subcomp to be instantiated
+   *             by the unifier
+   *
+   *             However, in some cases, the binders that correspond to these `_`
+   *             may be unconstrained, and hence we may fail in solving them
+   *
+   *             As an escape hatch, these binders can be decorated with
+   *             the ite_soundness_forall attribute, in which case, instead of `_`,
+   *             we use fresh names, essentially saying forall values of these
+   *             binders, the proof should work
    *)
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
@@ -669,7 +680,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
-    let env, ite_t_applied, f_t, g_t, p_t =
+    let env, ite_t_applied, a_b, f_t, g_t, p_t =
       match (SS.compress ite_t).n with
       | Tm_abs (bs, _, _) ->
         let bs = SS.open_binders bs in
@@ -679,40 +690,57 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> snd
           |> List.map (fun b -> b.binder_bv)
           |> List.map S.bv_to_name
-          |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
+          |> (fun l -> let [f; g; p] = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
           (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
           r,
-        f, g, p
+        bs |> List.hd, f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
 
-    let subcomp_f, subcomp_g =
+    let env, subcomp_f, subcomp_g =
       let _, subcomp_t, subcomp_ty = stronger_repr in
       let _, subcomp_t = SS.open_univ_vars us subcomp_t in
 
-      let aqs_except_last, last_aq =
+      let bs_except_last, aqs_except_last, last_aq =
         let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
         match (SS.compress subcomp_ty).n with
         | Tm_arrow (bs, _) ->
+          let bs = SS.open_binders bs in
           let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
+          bs_except_last,
           bs_except_last |> List.map (fun b -> b.binder_qual, b.binder_attrs),
           last_b |> List.hd |> (fun b -> b.binder_qual, b.binder_attrs)
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-     let aqs_except_last, last_aq =
-       aqs_except_last |> List.map binder_aq_to_arg_aq,
-       last_aq |> binder_aq_to_arg_aq in
+      //use the a:Type binder as in the if_then_else combinator
+      let bs_except_last =
+        let s = [NT (bs_except_last |> List.hd |> (fun b -> b.binder_bv),
+                     a_b |> (fun b -> S.bv_to_name b.binder_bv))] in
+        a_b::(bs_except_last |> List.tl |> SS.subst_binders s) in
 
-     let aux t =
-      let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
+      //add all these fresh names to env
+      //note that due to dependencies, if we have a binder with
+      //the ite_soundness_forall attribute, we may need other binders before it
+      //for well-formedness of gamma
+      let env = Env.push_binders env (List.tl bs_except_last) in
 
-      S.mk_Tm_app
-        subcomp_t
-        (tun_args@[t, last_aq])
-        r in
+      let aqs_except_last, last_aq =
+        aqs_except_last |> List.map binder_aq_to_arg_aq,
+        last_aq |> binder_aq_to_arg_aq in
 
-     aux f_t, aux g_t in
+      let aux t =
+        let args = List.fold_left2 (fun args b aq ->
+          if U.has_attribute b.binder_attrs PC.ite_soundness_forall_attr
+          then args@[S.bv_to_name b.binder_bv, aq]  //use name
+          else args@[S.tun, aq]) [] bs_except_last aqs_except_last in
+
+        S.mk_Tm_app
+          subcomp_t
+          (args@[t, last_aq])
+          r in
+
+      env, aux f_t, aux g_t in
 
     let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
       let aux t =
@@ -1372,15 +1400,22 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     //a:Type u
 
     //other binders
-    let rest_bs =
+    let rest_bs, lift_eff =
       match (SS.compress lift_ty).n with
-      | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      | Tm_arrow (bs, c) when List.length bs >= 2 ->
         let (({binder_bv=a'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
+           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)],
+        U.comp_effect_name c |> Env.norm_eff_name env
       | _ ->
         raise_error (Errors.Fatal_UnexpectedExpressionType,
           lift_t_shape_error "either not an arrow, or not enough binders") r in
+
+    if (not ((lid_equals lift_eff PC.effect_PURE_lid) ||
+             (lid_equals lift_eff PC.effect_GHOST_lid && Env.is_erasable_effect env sub.source)))
+    then raise_error (Errors.Fatal_UnexpectedExpressionType,
+                      lift_t_shape_error "the lift combinator has an unexpected effect: \
+                        it must either be PURE or if the source effect is erasable then may be GHOST") r;
 
     let f_b, g_f_b =
       let f_sort, g = TcUtil.fresh_effect_repr_en
@@ -1400,15 +1435,15 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
-      effect_name = PC.effect_PURE_lid;
+      effect_name = lift_eff;
       result_typ = repr;
       effect_args = [ pure_wp_uvar |> S.as_arg ];
       flags = [] }) in
 
     U.arrow (bs@[f_b]) c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
+  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  then BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
 
   let g = Rel.teq env lift_ty k in
   Rel.force_trivial_guard env g_k; Rel.force_trivial_guard env g;
@@ -1441,10 +1476,28 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   sub
 
+let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
+  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
+                                BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
+                                  (string_of_lid m1) (string_of_lid m2) reason) r in
+
+  let m1 = Env.norm_eff_name env m1 in
+  if lid_equals m1 PC.effect_GHOST_lid
+  then err "user-defined lifts from GHOST effect are not allowed"
+  else
+    let m1_erasable = Env.is_erasable_effect env m1 in
+    let m2_erasable = Env.is_erasable_effect env m2 in
+    if m2_erasable     &&
+       not m1_erasable &&
+       not (lid_equals m1 PC.effect_PURE_lid)
+    then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
+
 let tc_lift env sub r =
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     Gen.generalize_universes env (tc_check_trivial_guard env t k) in
+
+  check_lift_for_erasable_effects env sub.source sub.target r;
 
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
@@ -1597,12 +1650,38 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   end;
   (lid, uvs, tps, c)
 
+
+let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) r =
+  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
+                                BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
+                                  (string_of_lid m) (string_of_lid n) (string_of_lid p) reason) r in
+
+  let m = Env.norm_eff_name env m in
+  let n = Env.norm_eff_name env n in
+
+  if lid_equals m PC.effect_GHOST_lid ||
+     lid_equals n PC.effect_GHOST_lid
+  then err "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
+  else
+    let m_erasable = Env.is_erasable_effect env m in
+    let n_erasable = Env.is_erasable_effect env n in
+    let p_erasable = Env.is_erasable_effect env p in
+
+
+    if p_erasable
+    then if not m_erasable && not (lid_equals m PC.effect_PURE_lid)
+         then err (BU.format1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid m))
+         else if not n_erasable && not (lid_equals n PC.effect_PURE_lid)
+         then err (BU.format1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid n))
+
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
     (m |> ident_of_lid |> string_of_id)
     (n |> ident_of_lid |> string_of_id)
     (p |> ident_of_lid |> string_of_id) in
   let r = (snd ts).pos in
+
+  check_polymonadic_bind_for_erasable_effects env m n p r;
 
   //p should be non-reifiable, reification of polymonadic binds is not yet implemented
   (*
@@ -1707,6 +1786,8 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
 
 let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let r = (snd ts).pos in
+
+  check_lift_for_erasable_effects env0 m n r;
 
   let combinator_name =
     (m |> ident_of_lid |> string_of_id) ^ " <: " ^

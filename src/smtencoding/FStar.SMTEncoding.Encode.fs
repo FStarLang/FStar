@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Encode
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -726,7 +727,7 @@ let encode_top_level_let :
                binders@more_binders, body, comp
           else binders, body, comp
       in
-      binders, U.ascribe body (BU.Inl (U.comp_result comp), None), comp
+      binders, U.ascribe body (Inl (U.comp_result comp), None), comp
     in
 
 
@@ -894,7 +895,7 @@ let encode_top_level_let :
             let vars_tm = List.map mkFreeV vars in
             let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
-            let mk_g_app args = maybe_curry_app rng (BU.Inl (Var g)) (fvb.smt_arity + 1) args in
+            let mk_g_app args = maybe_curry_app rng (Inl (Var g)) (fvb.smt_arity + 1) args in
             let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::vars_tm) in
             let gmax = mk_g_app (mkApp("MaxFuel", [])::vars_tm) in
             let body_tm, decls2 = encode_term body env' in
@@ -1112,6 +1113,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             List.flatten decls2, env
 
      | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
+        //precedes is added in the prelude, see FStar.SMTEncoding.Term.fs
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
@@ -1156,7 +1158,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=BU.Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
        let xx = mk_fv ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1364,8 +1366,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                         Some "name-token correspondence",
                                                         ("token_correspondence_"^ttok)) in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
-            if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
-            else tname_decl@tok_decls, env in
+            tname_decl@tok_decls, env in
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =
@@ -1389,8 +1390,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @binder_decls
                 @aux in
         g, env
-
-    | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, _, t, _, n_tps, mutuals) ->
         let quals = se.sigquals in
@@ -1517,54 +1516,87 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 ("subterm_ordering_"^ddconstrsym))
               in
               let codomain_ordering, codomain_decls =
-                let tot_or_gtot_inductive_codomain c =
-                  let is_inductive l =
-                      match FStar.TypeChecker.Env.lookup_sigelt env.tcenv l with
-                      | Some ({sigel=Sig_inductive_typ _}) -> true
-                      | _ -> false
-                  in
-                  let res =
-                   if not (U.is_tot_or_gtot_comp c)
-                   then false
-                   else let head, _ = U.head_and_args (U.comp_result c) in
-                        BU.for_some
-                          (fun mutual -> is_inductive mutual && U.is_fvar mutual head)
-                          mutuals
-                  in
-                  res
-                in
+                let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
+                let _, vars' = BU.first_N n_tps vars in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
-                        let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
-                        match bs with
-                        | [] -> codomain_prec_l, cod_decls
-                        | _ when not (tot_or_gtot_inductive_codomain c) -> codomain_prec_l, cod_decls
-                        | _ ->
-                         //var bs << D ... var ...
-                         let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
-                         let fun_app = mk_Apply (mkFreeV var) bs' in
-                         mkForall (Ident.range_of_lid d)
-                                  ([[mk_Precedes lex_t lex_t fun_app dapp]],
-                                   bs',
-                                   mkImp (mk_and_l guards',
-                                          mk_Precedes lex_t lex_t fun_app dapp))
-                         :: codomain_prec_l,
-                         bs_decls @ cod_decls)
+                        let rec binder_and_codomain_type t =
+                            let t = U.unrefine t in
+                            match (SS.compress t).n with
+                            | Tm_arrow _ ->
+                              let bs, c = U.arrow_formals_comp (U.unrefine t) in
+                              begin
+                              match bs with
+                              | [] -> None
+                              | _ when not (U.is_tot_or_gtot_comp c) -> None
+                              | _ ->
+                                if U.is_lemma_comp c
+                                then None //not useful for lemmas
+                                else
+                                  let t = U.unrefine (U.comp_result c) in
+                                  if is_type t || U.is_sub_singleton t
+                                  then None //ordering on Type and squashed values is not useful
+                                  else Some (bs, c)
+                              end
+                            | _ ->
+                              let head, _ = U.head_and_args t in
+                              let t' = N.unfold_whnf' [Env.AllowUnboundUniverses;
+                                                       Env.EraseUniverses;
+                                                       Env.Unascribe;
+                                                       //we don't know if this will terminate; so don't do recursive steps
+                                                       Env.Exclude Env.Zeta]
+                                                       env''.tcenv
+                                                       t
+                              in
+                              let head', _ = U.head_and_args t' in
+                              match U.eq_tm head head' with
+                              | U.Equal -> None //no progress after whnf
+                              | U.NotEqual -> binder_and_codomain_type t'
+                              | _ ->
+                                //Did we actually make progress? Be conservative to avoid an infinite loop
+                                match (SS.compress head).n with
+                                | Tm_fvar _
+                                | Tm_name _
+                                | Tm_uinst _ ->
+                                  //The underlying name must have changed, otherwise we would have got Equal
+                                  //so, we made some progress
+                                  binder_and_codomain_type t'
+                                | _ ->
+                                  //unclear if we made progress or not
+                                  None
+
+                        in
+                        match binder_and_codomain_type formal.binder_bv.sort with
+                        | None -> codomain_prec_l, cod_decls
+                        | Some (bs, c) ->
+                          //var bs << D ... var ...
+                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                          let fun_app = mk_Apply (mkFreeV var) bs' in
+                          mkForall (Ident.range_of_lid d)
+                                   ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                     bs',
+                                     //need to use ty_pred' here, to avoid variable capture
+                                     //Note, ty_pred' is indexed by fuel, not S_fuel
+                                     //That's ok, since the outer pattern is guarded on S_fuel
+                                     mkImp (mk_and_l (ty_pred'::guards'),
+                                            mk_Precedes lex_t lex_t fun_app dapp))
+                          :: codomain_prec_l,
+                          bs_decls @ cod_decls)
                     ([],[])
-                    formals
-                    vars
+                    formals'
+                    vars'
                 in
                 match codomain_prec_l with
                 | [] ->
                   [], cod_decls
                 | _ ->
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                         ([[ty_pred]],
-                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                          mkImp(ty_pred, mk_and_l codomain_prec_l)),
+                                          ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
+                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                           mk_and_l codomain_prec_l),
                                  Some "well-founded ordering on codomain",
-                                 ("well_founded_ordering_on_comdain_"^ddconstrsym))],
+                                 ("well_founded_ordering_on_codomain_"^ddconstrsym))],
                   cod_decls
               in
               arg_decls @ codomain_decls,

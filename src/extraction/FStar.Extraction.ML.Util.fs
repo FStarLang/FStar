@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Extraction.ML.Util
 open Prims
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -48,6 +49,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
+let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -102,6 +104,10 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | Const_range r ->
         mlexpr_of_range r
 
+    | Const_real s ->
+        let str = mlconst_of_const p (Const_string(s, p)) in
+        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
+
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
@@ -147,22 +153,22 @@ let udelta_unfold (g:UEnv.uenv) = function
 
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true
-    | E_GHOST, E_GHOST   -> true
+    | E_ERASABLE, E_ERASABLE   -> true
     | E_IMPURE, E_IMPURE -> true
     | _ -> false
 
 let eff_to_string = function
     | E_PURE -> "Pure"
-    | E_GHOST -> "Ghost"
+    | E_ERASABLE -> "Erasable"
     | E_IMPURE -> "Impure"
 
 let join r f f' = match f, f' with
     | E_IMPURE, E_PURE
     | E_PURE  , E_IMPURE
     | E_IMPURE, E_IMPURE -> E_IMPURE
-    | E_GHOST , E_GHOST  -> E_GHOST
-    | E_PURE  , E_GHOST  -> E_GHOST
-    | E_GHOST , E_PURE   -> E_GHOST
+    | E_ERASABLE , E_ERASABLE  -> E_ERASABLE
+    | E_PURE  , E_ERASABLE  -> E_ERASABLE
+    | E_ERASABLE , E_PURE   -> E_ERASABLE
     | E_PURE  , E_PURE   -> E_PURE
     | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
@@ -201,7 +207,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
             if type_leq unfold_ty t1' t1
             && eff_leq f f'
             then if f=E_PURE
-                && f'=E_GHOST
+                && f'=E_ERASABLE
                 then if type_leq unfold_ty t2 t2'
                     then let body = if type_leq unfold_ty t2 ml_unit_ty
                                     then ml_unit

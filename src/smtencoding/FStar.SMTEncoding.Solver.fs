@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar

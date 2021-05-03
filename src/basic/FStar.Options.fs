@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.Pervasives
 open FStar.String
 open FStar.ST
 open FStar.Exn
@@ -190,6 +191,7 @@ let defaults =
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("ide_id_info_off"              , Bool false);
       ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
@@ -202,6 +204,7 @@ let defaults =
       ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
+      ("load_cmxs"                    , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -270,7 +273,6 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -333,7 +335,6 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
-    "use_two_phase_tc";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -373,6 +374,7 @@ let get_hint_dir                ()      = lookup_opt "hint_dir"                 
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
@@ -382,6 +384,7 @@ let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
+let get_load_cmxs               ()      = lookup_opt "load_cmxs"                (as_list as_string) 
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -449,7 +452,6 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -832,6 +834,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "JSON-based interactive mode for IDEs");
 
        ( noshort,
+        "ide_id_info_off",
+        Const (Bool true),
+        "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
+
+       ( noshort,
         "lsp",
         Const (Bool true),
         "Language Server Protocol-based interactive mode for IDEs");
@@ -915,7 +922,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
       ( noshort,
        "load",
         ReverseAccumulated (PathStr "module"),
-        "Load compiled module");
+        "Load OCaml module, compiling it if necessary");
+
+      ( noshort,
+       "load_cmxs",
+        ReverseAccumulated (PathStr "module"),
+        "Load compiled module, fails hard if the module is not already compiled");
 
        ( noshort,
         "log_types",
@@ -1285,11 +1297,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "use_two_phase_tc",
-        BoolStr,
-        "Use the two phase typechecker (default 'true')");
-
-       ( noshort,
         "__no_positivity",
         Const (Bool true),
         "Don't check positivity of inductive types");
@@ -1381,8 +1388,10 @@ let settable = function
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
+    | "ide_id_info_off"
     | "lax"
     | "load"
+    | "load_cmxs"
     | "log_queries"
     | "log_types"
     | "max_fuel"
@@ -1429,7 +1438,6 @@ let settable = function
     | "ugly"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
-    | "use_two_phase_tc"
     | "using_facts_from"
     | "vcgen.optimize_bind_as_seq"
     | "warn_error"
@@ -1702,6 +1710,7 @@ let hint_file_for_src src_filename =
         in
         Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
+let ide_id_info_off              () = get_ide_id_info_off             ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
@@ -1709,6 +1718,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
+let load_cmxs                    () = get_load_cmxs                   ()
 let legacy_interactive           () = get_in                          ()
 let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
@@ -1788,8 +1798,6 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let use_two_phase_tc             () = get_use_two_phase_tc            ()
-                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -1925,7 +1933,6 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
-    use_two_phase_tc                          = get_use_two_phase_tc ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
@@ -1963,7 +1970,6 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
   set_option "z3seed"                                    (Int vcfg.z3seed);
-  set_option "use_two_phase_tc"                          (Bool vcfg.use_two_phase_tc);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()

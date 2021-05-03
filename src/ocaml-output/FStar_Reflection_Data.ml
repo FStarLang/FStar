@@ -98,7 +98,10 @@ type term_view =
   | Tv_Let of (Prims.bool * FStar_Syntax_Syntax.term Prims.list *
   FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
-  | Tv_Match of (FStar_Syntax_Syntax.term * branch Prims.list) 
+  | Tv_Match of (FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.term,
+  FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
+  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  FStar_Pervasives_Native.option * branch Prims.list) 
   | Tv_AscribedT of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) 
   | Tv_AscribedC of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
@@ -163,8 +166,12 @@ let (uu___is_Tv_Match : term_view -> Prims.bool) =
   fun projectee ->
     match projectee with | Tv_Match _0 -> true | uu___ -> false
 let (__proj__Tv_Match__item___0 :
-  term_view -> (FStar_Syntax_Syntax.term * branch Prims.list)) =
-  fun projectee -> match projectee with | Tv_Match _0 -> _0
+  term_view ->
+    (FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.term,
+      FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.option * branch Prims.list))
+  = fun projectee -> match projectee with | Tv_Match _0 -> _0
 let (uu___is_Tv_AscribedT : term_view -> Prims.bool) =
   fun projectee ->
     match projectee with | Tv_AscribedT _0 -> true | uu___ -> false
@@ -301,10 +308,8 @@ let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
 type binder_view =
   (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
 type comp_view =
-  | C_Total of (typ * FStar_Syntax_Syntax.term
-  FStar_Pervasives_Native.option) 
-  | C_GTotal of (typ * FStar_Syntax_Syntax.term
-  FStar_Pervasives_Native.option) 
+  | C_Total of (typ * FStar_Syntax_Syntax.term Prims.list) 
+  | C_GTotal of (typ * FStar_Syntax_Syntax.term Prims.list) 
   | C_Lemma of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
   | C_Eff of (unit Prims.list * name * FStar_Syntax_Syntax.term * argv
@@ -312,16 +317,14 @@ type comp_view =
 let (uu___is_C_Total : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Total _0 -> true | uu___ -> false
 let (__proj__C_Total__item___0 :
-  comp_view ->
-    (typ * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | C_Total _0 -> _0
+  comp_view -> (typ * FStar_Syntax_Syntax.term Prims.list)) =
+  fun projectee -> match projectee with | C_Total _0 -> _0
 let (uu___is_C_GTotal : comp_view -> Prims.bool) =
   fun projectee ->
     match projectee with | C_GTotal _0 -> true | uu___ -> false
 let (__proj__C_GTotal__item___0 :
-  comp_view ->
-    (typ * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | C_GTotal _0 -> _0
+  comp_view -> (typ * FStar_Syntax_Syntax.term Prims.list)) =
+  fun projectee -> match projectee with | C_GTotal _0 -> _0
 let (uu___is_C_Lemma : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Lemma _0 -> true | uu___ -> false
 let (__proj__C_Lemma__item___0 :
@@ -660,6 +663,7 @@ let (ref_C_Lemma : refl_constant) = fstar_refl_data_const "C_Lemma"
 let (ref_C_Eff : refl_constant) = fstar_refl_data_const "C_Eff"
 let (ref_Sg_Let : refl_constant) = fstar_refl_data_const "Sg_Let"
 let (ref_Sg_Inductive : refl_constant) = fstar_refl_data_const "Sg_Inductive"
+let (ref_Sg_Val : refl_constant) = fstar_refl_data_const "Sg_Val"
 let (ref_Unk : refl_constant) = fstar_refl_data_const "Unk"
 let (ref_qual_Assumption : refl_constant) =
   fstar_refl_data_const "Assumption"

@@ -7,7 +7,11 @@
 ### lack implementations
 ################################################################################
 
-FSTAR_HOME=../../../..
+# This is needed because ../Makefile.common includes
+# ../../../Makefile.common, but GNU Make does not support chained
+# includes with relative paths
+FSTAR_EXAMPLES = $(realpath ../../..)
+
 ROOTS=B.fst
 EXTRACT=A B
 

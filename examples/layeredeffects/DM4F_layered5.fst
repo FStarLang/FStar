@@ -85,7 +85,7 @@ let subcomp
   (a:Type)
   (st:Type0)
   (wpf wpg : wp st a)
-  (#[@@refine] u : squash (stronger wpg wpf))
+  (#[@@@ refine] u : squash (stronger wpg wpf))
   (f : repr a st wpf)
   : repr a st wpg
   = f

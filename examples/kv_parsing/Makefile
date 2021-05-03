@@ -1,5 +1,8 @@
-FSTAR_HOME=../..
 include ../Makefile.include
+
+ifndef KREMLIN_HOME
+     $(error "Please define the `KREMLIN_HOME` variable.")
+endif
 
 FST_FILES :=	Slice.fst \
 		Parsing.fst \
