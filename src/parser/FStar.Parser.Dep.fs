@@ -53,7 +53,17 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type files_for_module_name = smap<(option<string> * option<string>)>
+type intf_and_impl = option<string> * option<string>
+
+type files_for_module_name = smap<intf_and_impl>
+
+let intf_and_impl_to_string ii =
+  match ii with
+  | None, None -> "<None>, <None>"
+  | Some intf, None -> intf
+  | None, Some impl -> impl
+  | Some intf, Some impl -> intf ^ ", " ^ impl
+
 
 let files_for_module_name_to_string (m:files_for_module_name) =
   BU.print_string "Printing the file system map {\n";
@@ -61,7 +71,7 @@ let files_for_module_name_to_string (m:files_for_module_name) =
     match sopt with
     | None -> "<None>"
     | Some s -> s in
-  smap_iter m (fun k (intf, impl) -> BU.print3 "%s:(%s, %s)\n" k (str_opt_to_string intf) (str_opt_to_string impl));
+  smap_iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
   BU.print_string "}\n"
 
 type color = | White | Gray | Black
@@ -516,7 +526,7 @@ let dep_subsumed_by d d' =
     boolean telling whether the map was modified.
     
     If the open is an implicit open (as indicated by the flag),
-    make sure that we don't overshadow any existing entry *)
+    and doing so shadows an existing entry, warn! *)
 let enter_namespace
   (original_map: files_for_module_name)
   (working_map: files_for_module_name)
@@ -533,12 +543,21 @@ let enter_namespace
       let suffix =
         String.substring k (String.length prefix) (String.length k - String.length prefix)
       in
-      if implicit_open &&
-         suffix |> smap_try_find original_map |> suffix_exists
-      then ()
-      else let filename = must (smap_try_find original_map k) in
-           smap_add working_map suffix filename;
-           found := true
+
+      begin
+        let suffix_filename = smap_try_find original_map suffix in
+        if implicit_open &&
+           suffix_exists suffix_filename
+        then let str = suffix_filename |> must |> intf_and_impl_to_string in
+             FStar.Errors.log_issue Range.dummyRange
+               (Errors.Warning_UnexpectedFile,
+                BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
+                  avoid conflicts" prefix suffix str str)
+      end;
+
+      let filename = must (smap_try_find original_map k) in
+      smap_add working_map suffix filename;
+      found := true
   );
   !found
 
