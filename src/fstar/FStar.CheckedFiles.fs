@@ -43,7 +43,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 34
+let cache_version_number = 35
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
