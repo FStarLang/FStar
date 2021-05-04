@@ -166,9 +166,15 @@ let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) 
 : ens_t pre_f a post_f
 = fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
+(*
+ * The if-then-else combinator is only defined for ghost (Unobservable)
+ *   computations
+ *
+ * The Observable computations are atomic, and composing them using if-then-else
+ *   will not be
+ *)
 let if_then_else (a:Type)
   (o:inames)
-  (obs:eqtype_as_type observability)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
@@ -176,11 +182,11 @@ let if_then_else (a:Type)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
   (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
-  (f:repr a framed o obs pre_f post_f req_then ens_then)
-  (g:repr a framed o obs pre_g post_g req_else ens_else)
+  (f:repr a framed o Unobservable pre_f post_f req_then ens_then)
+  (g:repr a framed o Unobservable pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a framed o obs pre_f post_f
+= repr a framed o Unobservable pre_f post_f
        (if_then_else_req s_pre req_then req_else p)
        (if_then_else_ens s_pre s_post ens_then ens_else p)
 
