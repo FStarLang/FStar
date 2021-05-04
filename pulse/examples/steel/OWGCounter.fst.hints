@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "df617a4a1628969667d4daac5e88278f"
+      "8be661bc560a9da80adef2937444bf04"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "f5ad83c5b5337112483fb62f7f12f4af"
+      "42c90689a8d1c49e8d68f1d2a44abe4b"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "935ee61b2176181883d185b3ebe4d8fa"
+      "338c83f44b952f15264b2ca1de45c2f9"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "2c0f46c8bc442f5e3fea71e0fb753231"
+      "cedd501e27234b610a498ecab276ea09"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "b138e9a5dd6d65ddb58bfe7b56045aca"
+      "61375f55648448d936f8c0fad7205d36"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "76aedc5bca5461e78b8395233403fd42"
+      "c0df54a61c522df82d1e24fbe671448b"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "64a87497d0c22e776e497bf4d33b56d7"
+      "17cf8eb9b0d0124c8703219db09c16e1"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "7db2de20861006ebae0f8c57a5515084"
+      "b46ecafa668d955810906958940da07f"
     ],
     [
       "OWGCounter.incr_main",
@@ -210,7 +210,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "180d53d93fe2d36b20c905d3bc491577"
+      "8fb98164e334d102cde422669d704a86"
     ]
   ]
 ]
