@@ -4,11 +4,11 @@ open FStar.PCM
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.PCMReference
 open Steel.FractionalPermission
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
 module M = Steel.Memory
-//module SB = Steel.SteelT.Basics
 module Atomic = Steel.Effect.Atomic
 open FStar.Real
 
@@ -265,7 +265,7 @@ let intro_pure_full #a #p #f
 let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
   = let h = Current [v] full_perm in
     assert (compatible pcm_history h h);
-    let x : ref a p = Steel.Effect.alloc h in
+    let x : ref a p = alloc h in
     intro_pure_full x v h;
     x
 
@@ -402,8 +402,7 @@ let witness_thunk (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (_:unit)
   : SteelT unit (M.pts_to r v)
                 (fun _ -> M.pts_to r v `star` pure (M.witnessed r fact))
-  = Steel.Effect.witness r fact v ()
-
+  = witness r fact v ()
 
 let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
@@ -434,7 +433,7 @@ let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
   = let h = witness_h_exists #_ #_ #(pts_to_body r q v) () in
     let _ = elim_pure #_ #_ #_ #q r v h in
 
-    let h1 = Steel.Effect.recall r h in
+    let h1 = recall r h in
 
     change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);

@@ -72,6 +72,7 @@ open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.PCMReference
 
 // Use erased values here to avoid some rewritings
 val pts_to (r:ref stepper p) (v:erased stepper) : slprop u#1

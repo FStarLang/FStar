@@ -39,6 +39,7 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.PCMReference
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
   : SteelT unit
