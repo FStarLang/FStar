@@ -653,7 +653,7 @@ let as_steelsel (#a:Type)
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = as_steelsel1 (Steel.Effect.reify_steel_comp f)
 
-let _:squash (hp_of vemp == emp /\ t_of vemp == unit) = reveal_vemp ()
+let _:squash (hp_of emp == Mem.emp /\ t_of emp == unit) = reveal_emp ()
 
 unfold
 let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
@@ -664,7 +664,7 @@ unfold
 let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
 
 val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
-  vemp (fun r -> vptr_tmp r full_perm x)
+  emp (fun r -> vptr_tmp r full_perm x)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> True)
 
@@ -689,7 +689,7 @@ let alloc x =
   change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
   r
 
-let free r = change_slprop_2 (vptr r) vemp () intro_emp
+let free r = change_slprop_2 (vptr r) emp () intro_emp
 
 val read0 (#a:Type0) (r:ref a) (v:erased a) : SteelSel a
   (vptr_tmp r full_perm v) (fun x -> vptr_tmp r full_perm x)

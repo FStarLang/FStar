@@ -24,12 +24,12 @@ let intro_can_be_split_frame p q frame = ()
 let can_be_split_post_elim t1 t2 = ()
 let equiv_forall_elim t1 t2 = ()
 
-let vemp':vprop' =
+let emp':vprop' =
   { hp = emp;
     t = unit;
     sel = fun _ -> ()}
 
-let reveal_vemp () = ()
+let reveal_emp () = ()
 
 let equiv_refl x = ()
 let equiv_sym x y = ()
@@ -37,7 +37,7 @@ let equiv_trans x y z = ()
 
 let cm_identity x =
   Mem.emp_unit (hp_of x);
-  Mem.star_commutative (hp_of x) emp
+  Mem.star_commutative (hp_of x) Mem.emp
 let star_commutative p1 p2 = Mem.star_commutative (hp_of p1) (hp_of p2)
 let star_associative p1 p2 p3 = Mem.star_associative (hp_of p1) (hp_of p2) (hp_of p3)
 let star_congruence p1 p2 p3 p4 = Mem.star_congruence (hp_of p1) (hp_of p2) (hp_of p3) (hp_of p4)

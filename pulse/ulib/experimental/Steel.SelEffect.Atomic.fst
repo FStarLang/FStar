@@ -424,7 +424,7 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
 
 let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
 
-let noop _ = change_slprop_rel vemp vemp (fun _ _ -> True) (fun _ -> ())
+let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
 let sladmit _ = SteelSelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
@@ -704,7 +704,7 @@ let as_steelselghost (#a:Type) (#opened: _)
 : SteelSelGhost a opened pre post (fun _ -> req) (fun _ x _ -> ens x)
   = as_steelselghost1 (Steel.Effect.Atomic.reify_steel_ghost_comp f)
 
-let _:squash (hp_of vemp == emp /\ t_of vemp == unit) = reveal_vemp ()
+let _:squash (hp_of emp == Mem.emp /\ t_of emp == unit) = reveal_emp ()
 
 unfold
 let ghost_vptr_tmp' (#a:Type) (r:ghost_ref a) (p:perm) (v:erased a) : vprop' =
@@ -715,7 +715,7 @@ unfold
 let ghost_vptr_tmp r p v : vprop = VUnit (ghost_vptr_tmp' r p v)
 
 val ghost_alloc0 (#a:Type0) (#opened: _) (x:a) : SteelSelGhost (ghost_ref a) opened
-  vemp (fun r -> ghost_vptr_tmp r full_perm x)
+  emp (fun r -> ghost_vptr_tmp r full_perm x)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> True)
 
@@ -738,7 +738,7 @@ let ghost_alloc x =
   change_slprop (ghost_vptr_tmp r full_perm (Ghost.reveal x)) (ghost_vptr r) () x (intro_ghost_vptr r x);
   r
 
-let ghost_free r = change_slprop_rel (ghost_vptr r) vemp (fun _ _ -> True) intro_emp
+let ghost_free r = change_slprop_rel (ghost_vptr r) emp (fun _ _ -> True) intro_emp
 
 val ghost_write0 (#a:Type0) (#opened: _) (v:erased a) (r:ghost_ref a) (x:a)
   : SteelSelGhost unit opened
@@ -748,8 +748,7 @@ val ghost_write0 (#a:Type0) (#opened: _) (v:erased a) (r:ghost_ref a) (x:a)
 let ghost_write0 #a #opened v r x = as_steelselghost (fun _ -> R.ghost_write #a #opened #v r x)
 
 let ghost_write r x
-  = 
-    let v = gget (ghost_vptr r) in
+  = let v = gget (ghost_vptr r) in
     change_slprop (ghost_vptr r) (ghost_vptr_tmp r full_perm v) v () (elim_ghost_vptr r v);
     ghost_write0 v r (Ghost.reveal x);
     change_slprop (ghost_vptr_tmp r full_perm (Ghost.reveal x)) (ghost_vptr r) () x (intro_ghost_vptr r x)

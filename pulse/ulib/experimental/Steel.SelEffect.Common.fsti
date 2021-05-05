@@ -158,15 +158,15 @@ val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
 
 
 (* Empty assertion *)
-val vemp' :vprop'
+val emp' :vprop'
 [@__reduce__]
-unfold let vemp = VUnit vemp'
+unfold let emp = VUnit emp'
 
-val reveal_vemp (_:unit) : Lemma (hp_of vemp == emp /\ t_of vemp == unit)
+val reveal_emp (_:unit) : Lemma (hp_of emp == Mem.emp /\ t_of emp == unit)
 
-let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == vemp else True
+let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
 let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
-  if framed then (forall x. frame x == vemp) else True
+  if framed then (forall x. frame x == emp) else True
 
 (* focus_rmem is an additional restriction of our view of memory.
    We expose it here to be able to reduce through normalization;
@@ -249,7 +249,7 @@ inline_for_extraction noextract let req : CE.equiv vprop =
      equiv_sym
      equiv_trans
 
-val cm_identity (x:vprop) : Lemma ((vemp `star` x) `equiv` x)
+val cm_identity (x:vprop) : Lemma ((emp `star` x) `equiv` x)
 
 val star_commutative (p1 p2:vprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
@@ -265,7 +265,7 @@ val star_congruence (p1 p2 p3 p4:vprop)
 
 [@__steel_reduce__]
 inline_for_extraction noextract let rm : CE.cm vprop req =
-  CE.CM vemp
+  CE.CM emp
      star
      cm_identity
      star_associative
@@ -1417,7 +1417,7 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
   | _ -> fail "ill-formed can_be_split_dep"
 
 val emp_unit_variant (p:vprop) : Lemma
-   (ensures can_be_split p (p `star` vemp))
+   (ensures can_be_split p (p `star` emp))
 
 let solve_can_be_split_forall (args:list argv) : Tac bool =
   match args with
