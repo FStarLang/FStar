@@ -26,7 +26,7 @@ let is_null #a ptr = R.is_null ptr
 
 let v_null_rewrite
   (a: Type0)
-  (_: t_of vemp)
+  (_: t_of emp)
 : Tot (list a)
 = []
 
@@ -66,7 +66,7 @@ let rec nllist
   (ensures (fun y -> t_of y == list a))
   (decreases (Ghost.reveal n))
 = if is_null r
-  then vemp `vrewrite` v_null_rewrite a
+  then emp `vrewrite` v_null_rewrite a
   else ((vptr r `vrefine` v_c n r) `vdep` v_c_dep n r (nllist a)) `vrewrite` v_c_l_rewrite n r (nllist a)
 
 let nllist_eq_not_null
@@ -80,7 +80,7 @@ let nllist_eq_not_null
   ))
 = assert_norm (nllist a n r ==
     begin if is_null r
-    then vemp `vrewrite` v_null_rewrite a
+    then emp `vrewrite` v_null_rewrite a
     else ((vptr r `vrefine` v_c n r) `vdep` v_c_dep n r (nllist a)) `vrewrite` v_c_l_rewrite n r (nllist a)
     end
   )
@@ -106,7 +106,7 @@ let llist0
   (requires True)
   (ensures (fun y -> t_of y == list a))
 = if is_null r
-  then vemp `vrewrite` v_null_rewrite a
+  then emp `vrewrite` v_null_rewrite a
   else (vptr r `vdep` llist_vdep r) `vrewrite` llist_vrewrite r
 
 let nllist_of_llist0
@@ -222,9 +222,9 @@ let llist0_of_llist
     (fun _ -> ())
 
 let intro_llist_nil a =
-  intro_vrewrite vemp (v_null_rewrite a);
+  intro_vrewrite emp (v_null_rewrite a);
   change_equal_slprop
-    (vemp `vrewrite` v_null_rewrite a)
+    (emp `vrewrite` v_null_rewrite a)
     (llist0 (null_llist #a));
   llist_of_llist0 (null_llist #a)
 
@@ -237,11 +237,11 @@ let is_nil
   then begin
     change_equal_slprop
       (llist0 ptr)
-      (vemp `vrewrite` v_null_rewrite a);
-    elim_vrewrite vemp (v_null_rewrite a);
-    intro_vrewrite vemp (v_null_rewrite a);
+      (emp `vrewrite` v_null_rewrite a);
+    elim_vrewrite emp (v_null_rewrite a);
+    intro_vrewrite emp (v_null_rewrite a);
     change_equal_slprop
-      (vemp `vrewrite` v_null_rewrite a)
+      (emp `vrewrite` v_null_rewrite a)
       (llist0 ptr)
   end else begin
     change_equal_slprop

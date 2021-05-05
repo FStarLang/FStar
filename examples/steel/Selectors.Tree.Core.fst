@@ -113,7 +113,7 @@ let tree_sel_interp (#a: Type0) (ptr: t a) (t: tree (node a)) (m: mem) : Lemma
     tree_sl'_witinv ptr
 
 let intro_leaf_lemma (a:Type0) (m:mem) : Lemma
-    (requires interp (hp_of vemp) m)
+    (requires interp (hp_of emp) m)
     (ensures interp (tree_sl (null_t #a)) m /\ tree_sel (null_t #a) m == Spec.Leaf)
     = let ptr:t a = null_t in
       pure_interp (ptr == null_t) m;
@@ -122,7 +122,7 @@ let intro_leaf_lemma (a:Type0) (m:mem) : Lemma
       tree_sel_interp ptr Spec.Leaf m
 
 let intro_linked_tree_leaf #a _ =
-    change_slprop_2 vemp (linked_tree (null_t #a)) (Spec.Leaf <: tree a) (intro_leaf_lemma a)
+    change_slprop_2 emp (linked_tree (null_t #a)) (Spec.Leaf <: tree a) (intro_leaf_lemma a)
 
 let elim_leaf_lemma (#a:Type0) (ptr:t a) (m:mem) : Lemma
     (requires interp (tree_sl ptr) m /\ ptr == null_t)
