@@ -400,7 +400,7 @@ val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
 val noop (#opened:inames) (_:unit)
-  : SteelSelGhost unit opened vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
+  : SteelSelGhost unit opened emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
 
 val sladmit (#a:Type)
             (#opened:inames)
@@ -536,12 +536,12 @@ unfold
 let ghost_vptr r = VUnit (ghost_vptr' r)
 
 val ghost_alloc (#a:Type0) (#opened:inames) (x:Ghost.erased a) : SteelSelGhost (ghost_ref a) opened
-  vemp (fun r -> ghost_vptr r)
+  emp (fun r -> ghost_vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> h1 (ghost_vptr r) == Ghost.reveal x)
 
 val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost unit opened
-  (ghost_vptr r) (fun _ -> vemp)
+  (ghost_vptr r) (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
 
