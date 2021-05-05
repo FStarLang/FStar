@@ -2,9 +2,12 @@ module Selectors.Tree
 
 open Selectors.Tree.Core
 open Steel.Memory
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 module Spec = Trees
+
+#set-options "--ide_id_info_off"
 
 (**** High-level operations on trees *)
 
@@ -83,5 +86,4 @@ val insert_avl (#a: Type) (cmp:Spec.cmp a) (ptr: t a) (v: a)
     : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
     (requires fun h0 -> Spec.is_avl cmp (v_linked_tree ptr h0))
     (ensures fun h0 ptr' h1 ->
-        Spec.is_avl cmp (v_linked_tree ptr h0) /\
         Spec.insert_avl cmp (v_linked_tree ptr h0) v == v_linked_tree ptr' h1)

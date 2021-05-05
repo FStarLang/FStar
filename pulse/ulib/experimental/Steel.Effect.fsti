@@ -324,8 +324,6 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
-val noop (u:unit) : SteelT unit emp (fun _ -> emp)
-
 /// Operations on PCM Refs
 
 open FStar.PCM

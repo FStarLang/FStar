@@ -1,11 +1,14 @@
 module Selectors.Tree.Core
 
-open Steel.SelEffect
+open FStar.Ghost
 open Steel.FractionalPermission
 
 module Mem = Steel.Memory
 module R = Steel.Reference
 module Spec = Trees
+
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 15"
 
@@ -132,8 +135,6 @@ let elim_linked_tree_leaf #a ptr =
   change_slprop_rel (linked_tree ptr) (linked_tree ptr)
     (fun x y -> x == y /\ y == Spec.Leaf)
     (fun m -> elim_leaf_lemma ptr m)
-
-open FStar.Ghost
 
 let lemma_node_not_null (#a:Type) (ptr:t a) (t:tree a) (m:mem) : Lemma
     (requires interp (tree_sl ptr) m /\ tree_sel ptr m == t /\ Spec.Node? t)
@@ -381,7 +382,7 @@ let unpack_tree_node #a ptr =
   change_slprop_rel (tree_node (get_left gn)) (tree_node (get_left n)) (fun x y -> x == y) (fun _ -> ());
   change_slprop_rel (tree_node (get_right gn)) (tree_node (get_right n)) (fun x y -> x == y) (fun _ -> ());
 
-  n
+  return n
 
 let unpack_tree #a ptr =
   let h = get() in
@@ -400,4 +401,4 @@ let unpack_tree #a ptr =
     (linked_tree (get_right n))
     (fun x y -> tree_view x == y)
     (fun _ -> ());
-  n
+  return n

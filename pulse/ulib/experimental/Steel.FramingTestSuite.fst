@@ -76,6 +76,8 @@ let test7 (_:unit) : SteelT ref emp ptr
     write r 0;
     r
 
+open Steel.Effect.Atomic
+
 let test_if1 (b:bool) : SteelT unit emp (fun _ -> emp)
   = if b then noop () else noop ()
 
@@ -85,8 +87,6 @@ let test_if2 (b:bool) (r: ref) : SteelT unit (ptr r) (fun _ -> ptr r)
 let test_if3 (b:bool) (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
   = if b then noop () else noop ();
     () // Mandatory until we have a framing subcomp
-
-//#set-options "--tactic_trace_d 2"
 
 (* Need a bind in the else branch, else we have SteelF and Steel which cannot be composed *)
 let test_if4 (b:bool) : SteelT unit emp (fun _ -> emp)
@@ -134,8 +134,7 @@ let test_if10 (b:bool) (r1 r2 r3: ref) : SteelT unit
 (* Tests if_then_else depending on previously created local var *)
 let test_if11 () : SteelT ref emp ptr =
   let r = alloc 0 in
-  if true then (noop (); r) else (noop (); r)
-
+  if true then (noop (); return r) else (noop (); return r)
 
 // Test for refinement types in return values. cf PR 2227
 assume

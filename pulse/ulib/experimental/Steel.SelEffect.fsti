@@ -8,45 +8,6 @@ include Steel.SelEffect.Common
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-(* focus_rmem is an additional restriction of our view of memory.
-   We expose it here to be able to reduce through normalization;
-   Any valid application of focus_rmem h will be reduced to the application of h *)
-
-[@@ __steel_reduce__]
-unfold
-let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
-  = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
-
-[@@ __steel_reduce__]
-let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
- = FExt.on_dom_g
-   (r':vprop{can_be_split r0 r'})
-   (unrestricted_focus_rmem h r0)
-
-(* State that all "atomic" subresources have the same selectors on both views *)
-
-[@@ __steel_reduce__]
-let rec frame_equalities
-  (frame:vprop)
-  (h0:rmem frame) (h1:rmem frame) : prop
-  = match frame with
-    | VUnit p ->
-        h0 frame == h1 frame
-    | VStar p1 p2 ->
-        can_be_split_star_l p1 p2;
-        can_be_split_star_r p1 p2;
-
-        let h01 = focus_rmem h0 p1 in
-        let h11 = focus_rmem h1 p1 in
-
-        let h02 = focus_rmem h0 p2 in
-        let h12 = focus_rmem h1 p2 in
-
-
-        frame_equalities p1 h01 h11 /\
-        frame_equalities p2 h02 h12
-
-
 (* Defining the Steel effect with selectors *)
 
 val repr (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
@@ -61,7 +22,7 @@ let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
 (*
  * Return is parametric in post (cf. return-scoping.txt)
  *)
-val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
+val return_ (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
 : repr a true (return_pre (p x)) p (return_req (p x)) (return_ens a x p)
 
 unfold
@@ -142,8 +103,12 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= normal ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
+= (forall (m0:rmem pre_g). normal (req_g m0 ==> req_f (focus_rmem m0 pre_f))) /\
+  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). normal (
+      ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1
+    )
+  )
+
 
 val subcomp (a:Type)
   (#framed_f:eqtype_as_type bool)
@@ -166,7 +131,10 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> normal ((p ==> req_then h) /\ ((~ p) ==> req_else (focus_rmem h pre_g)))
+= fun h -> normal (
+    (p ==> req_then h) /\
+    ((~ p) ==> req_else (focus_rmem h pre_g))
+  )
 
 unfold
 let if_then_else_ens (#a:Type)
@@ -176,8 +144,10 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> normal ((p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
-  ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
+= fun h0 x h1 -> normal (
+    (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
+    ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
+  )
 
 let if_then_else (a:Type)
   (#framed:eqtype_as_type bool)
@@ -199,7 +169,11 @@ reflectable
 effect {
   SteelSelBase
     (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
-  with { repr; return; bind; subcomp; if_then_else }
+  with { repr = repr;
+         return = return_;
+         bind = bind;
+         subcomp = subcomp;
+         if_then_else = if_then_else }
 }
 
 
@@ -240,71 +214,12 @@ val bind_pure_steel_ (a:Type) (b:Type)
 
 polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
 
-(* Some helper functions *)
+(*
+//  * Annotations without the req and ens
+//  *)
 
-val noop (_:unit)
-  : SteelSel unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
-
-val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
-  p (fun _ -> p)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
-
-val change_slprop (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
-
-val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m)
-    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
-
-val change_slprop_rel (p q:vprop)
-  (rel : normal (t_of p) -> normal (t_of q) -> prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m)
-    (ensures interp (hp_of q) m /\
-      rel (sel_of p m) (sel_of q m))
-  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
-
-val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-    (ensures fact)
-  ) : SteelSel unit p (fun _ -> p)
-      (fun h -> h p == reveal vp)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-
-val sladmit (#a:Type)
-            (#p:pre_t)
-            (#q:post_t a)
-            (_:unit)
-  : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
-
-val reveal_star (p1 p2:vprop)
- : SteelSel unit (p1 `star` p2) (fun _ -> p1 `star` p2)
-   (requires fun _ -> True)
-   (ensures fun h0 _ h1 ->
-     h0 p1 == h1 p1 /\
-     h0 p2 == h1 p2 /\
-     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
-     h1 (p1 `star` p2) == (h1 p1, h1 p2)
-   )
-
-val reveal_star_3 (p1 p2 p3:vprop)
- : SteelSel unit (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
-   (requires fun _ -> True)
-   (ensures fun h0 _ h1 ->
-     can_be_split (p1 `star` p2 `star` p3) p1 /\
-     can_be_split (p1 `star` p2 `star` p3) p2 /\
-     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
-     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
-     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
-   )
-
+effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
+  SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.

@@ -25,7 +25,7 @@ let pop #a p =
   let h1 = get #(llist tl) () in
   let l = Ghost.hide (v_llist tl h1) in
   change_slprop (llist tl) (llist (Res?.n (Res v tl))) l l (fun _ -> ());
-  Res v tl
+  return (Res v tl)
 
 let ind_pop r =
   let h = get #(ind_llist r) () in
