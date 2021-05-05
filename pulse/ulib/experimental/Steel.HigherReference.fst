@@ -154,7 +154,7 @@ let alloc #a x =
   let v = Some (x, full_perm) in
   assert (FStar.PCM.composable pcm_frac v None);
   assert (compatible pcm_frac v v);
-  let r = Steel.Effect.alloc v in
+  let r = Steel.PCMReference.alloc v in
   change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
     (fun m -> emp_unit (pts_to_raw r full_perm x); pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m);
   return r
@@ -163,7 +163,7 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     change_slprop (pts_to r p v) (Mem.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());
     let _ = elim_perm_ok p in
-    let v2 = Steel.Effect.read r v1 in
+    let v2 = Steel.PCMReference.read r v1 in
     change_slprop (Steel.Memory.pts_to r v1) (pts_to r p v)
         (fun m -> emp_unit (pts_to_raw r p v); pure_star_interp (pts_to_raw r p v) (perm_ok p) m);
     assert (compatible pcm_frac v1 v2);
@@ -193,7 +193,7 @@ let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
     change_slprop (pts_to r full_perm v) (Mem.pts_to r v_old `star` pure (perm_ok full_perm)) (fun _ -> ());
 
     let _ = elim_perm_ok full_perm in
-    Steel.Effect.write r v_old v_new;
+    Steel.PCMReference.write r v_old v_new;
     change_slprop (Mem.pts_to r v_new) (pts_to r full_perm x)
         (fun m -> emp_unit (pts_to_raw r full_perm x); pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m)
 
@@ -205,7 +205,7 @@ let free (#a:Type) (#v:erased a) (r:ref a)
       (Mem.pts_to r v_old `star` pure (perm_ok full_perm))
       (fun _ -> ());
     let _ = elim_perm_ok full_perm in
-    Steel.Effect.free r v_old;
+    Steel.PCMReference.free r v_old;
     drop (Mem.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
 
 (* move these to Mem *)
