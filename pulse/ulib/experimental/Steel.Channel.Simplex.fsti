@@ -39,15 +39,16 @@ val send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
 val recv (#p:prot) (#next:prot{more next}) (c:chan p)
   : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
 
-val history (#p:prot) (c:chan p) (t:partial_trace_of p) : slprop
-
-val history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
-  : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
+val history (#p:prot) (c:chan p) (t:partial_trace_of p) : prop
 
 val trace (#q:prot) (cc:chan q)
-  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
+  : Steel (partial_trace_of q) emp (fun _ -> emp)
+          (requires fun _ -> True)
+          (ensures fun _ tr _ -> history cc tr)
 
 val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
-  : SteelT (extension_of previous)
-           (receiver c next `star` history c previous)
-           (fun t -> receiver c next `star` history c t `star` pure (until t == next))
+  : Steel (extension_of previous)
+          (receiver c next)
+          (fun t -> receiver c next)
+          (requires fun _ -> history c previous)
+          (ensures fun _ t _ -> until t == next /\ history c t)

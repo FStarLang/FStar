@@ -10,7 +10,7 @@ module Preorder = FStar.Preorder
 val ref (a:Type u#1) (p:Preorder.preorder a)
   : Type u#0
 
-val pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a)
+val pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:erased a)
   : slprop u#1
 
 val alloc (#a:Type) (p:Preorder.preorder a) (v:a)
@@ -22,9 +22,11 @@ val read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> slprop
              (fun v -> pts_to r q v `star` frame v)
 
 val write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
-          (r:ref a p) (x:a{p v x})
-  : SteelT unit (pts_to r full_perm v)
-                (fun v -> pts_to r full_perm x)
+          (r:ref a p) (x:a)
+  : Steel unit (pts_to r full_perm v)
+               (fun v -> pts_to r full_perm x)
+               (requires fun _ -> p v x /\ True)
+               (ensures fun _ _ _ -> True)
 
 let property (a:Type)
   = a -> prop
@@ -37,12 +39,17 @@ let stable_property (#a:Type) (p:Preorder.preorder a)
 
 val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
-            (v:Ghost.erased a)
+            (v:erased a)
             (_:squash (fact v))
-  : SteelT unit (pts_to r q v)
-                (fun _ -> pts_to r q v `star` pure (witnessed r fact))
+  : Steel unit (pts_to r q v)
+               (fun _ -> pts_to r q v)
+               (requires fun _ -> True)
+               (ensures fun _ _ _ -> witnessed r fact)
 
-val recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-           (r:ref a p) (v:(Ghost.erased a))
-  : SteelT unit (pts_to r q v `star` pure (witnessed r fact))
-                (fun _ -> pts_to r q v `star` pure (fact v))
+val recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
+           (fact:property a)
+           (r:ref a p) (v:erased a)
+  : Steel unit (pts_to r q v)
+               (fun _ -> pts_to r q v)
+               (requires fun _ -> witnessed r fact)
+               (ensures fun _ _ _ -> fact v)
