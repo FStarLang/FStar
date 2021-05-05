@@ -636,3 +636,120 @@ let elim_vrewrite
     v
     (fun y x -> y == f x)
     (fun m -> vrewrite_sel_eq v f m)
+
+
+(*** Lemmas on references *)
+
+open Steel.FractionalPermission
+
+let vptr_not_null
+  #opened #a r
+= change_slprop_rel
+    (vptr r)
+    (vptr r)
+    (fun x y -> x == y /\ R.is_null r == false)
+    (fun m -> R.pts_to_not_null r full_perm (ptr_sel r m) m)
+
+(*** Ghost pointers *)
+
+val ghost_ptr_sel' (#a:Type0) (r: ghost_ref a) : selector' a (ghost_ptr r)
+let ghost_ptr_sel' #a r = fun h ->
+  let x = id_elim_exists #(erased a) (R.ghost_pts_to r full_perm) h in
+  reveal (reveal x)
+
+let ghost_ptr_sel_depends_only_on (#a:Type0) (r:ghost_ref a)
+  (m0:Mem.hmem (ghost_ptr r)) (m1:mem{disjoint m0 m1})
+  : Lemma (ghost_ptr_sel' r m0 == ghost_ptr_sel' r (Mem.join m0 m1))
+  = let x = reveal (id_elim_exists #(erased a) (R.ghost_pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.ghost_pts_to r full_perm) (Mem.join m0 m1)) in
+    R.ghost_pts_to_witinv r full_perm;
+    elim_wi (R.ghost_pts_to r full_perm) x y (Mem.join m0 m1)
+
+let ghost_ptr_sel_depends_only_on_core (#a:Type0) (r:ghost_ref a)
+  (m0:Mem.hmem (ghost_ptr r))
+  : Lemma (ghost_ptr_sel' r m0 == ghost_ptr_sel' r (core_mem m0))
+  = let x = reveal (id_elim_exists #(erased a) (R.ghost_pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.ghost_pts_to r full_perm) (core_mem m0)) in
+    R.ghost_pts_to_witinv r full_perm;
+    elim_wi (R.ghost_pts_to r full_perm) x y (core_mem m0)
+
+let ghost_ptr_sel r =
+  Classical.forall_intro_2 (ghost_ptr_sel_depends_only_on r);
+  Classical.forall_intro (ghost_ptr_sel_depends_only_on_core r);
+  ghost_ptr_sel' r
+
+let ghost_ptr_sel_interp #a r m = R.ghost_pts_to_witinv r full_perm
+
+friend Steel.Effect.Atomic
+module Eff = Steel.Effect.Atomic
+
+let as_steelselghost0 (#a:Type) (#opened: _)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  ($f:Eff.repr a false opened Eff.Unobservable (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: repr a false opened Unobservable pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = fun frame -> f frame
+
+let as_steelselghost1 (#a:Type) (#opened: _)
+  (#pre:vprop) (#post:a -> vprop)
+  (#req:prop) (#ens:a -> prop)
+  ($f:Eff.repr a false opened Eff.Unobservable (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSelGhost a opened pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = SteelSelGhost?.reflect (as_steelselghost0 f)
+
+let as_steelselghost (#a:Type) (#opened: _)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  ($f:unit -> Eff.SteelGhost a opened (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSelGhost a opened pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = as_steelselghost1 (Steel.Effect.Atomic.reify_steel_ghost_comp f)
+
+let _:squash (hp_of vemp == emp /\ t_of vemp == unit) = reveal_vemp ()
+
+unfold
+let ghost_vptr_tmp' (#a:Type) (r:ghost_ref a) (p:perm) (v:erased a) : vprop' =
+  { hp = R.ghost_pts_to r p v;
+    t = unit;
+    sel = fun _ -> ()}
+unfold
+let ghost_vptr_tmp r p v : vprop = VUnit (ghost_vptr_tmp' r p v)
+
+val ghost_alloc0 (#a:Type0) (#opened: _) (x:a) : SteelSelGhost (ghost_ref a) opened
+  vemp (fun r -> ghost_vptr_tmp r full_perm x)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> True)
+
+let ghost_alloc0 #a x = as_steelselghost (fun _ -> R.ghost_alloc x)
+
+let intro_ghost_vptr (#a:Type) (r:ghost_ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (ghost_vptr_tmp r full_perm v)) m)
+  (ensures interp (hp_of (ghost_vptr r)) m /\ sel_of (ghost_vptr r) m == reveal v)
+  = Mem.intro_h_exists v (R.ghost_pts_to r full_perm) m;
+    R.ghost_pts_to_witinv r full_perm
+
+let elim_ghost_vptr (#a:Type) (r:ghost_ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (ghost_vptr r)) m /\ sel_of (ghost_vptr r) m == reveal v)
+  (ensures interp (hp_of (ghost_vptr_tmp r full_perm v)) m)
+  = Mem.elim_h_exists (R.ghost_pts_to r full_perm) m;
+    R.ghost_pts_to_witinv r full_perm
+
+let ghost_alloc x =
+  let r = ghost_alloc0 (Ghost.reveal x) in
+  change_slprop (ghost_vptr_tmp r full_perm (Ghost.reveal x)) (ghost_vptr r) () x (intro_ghost_vptr r x);
+  r
+
+let ghost_free r = change_slprop_rel (ghost_vptr r) vemp (fun _ _ -> True) intro_emp
+
+val ghost_write0 (#a:Type0) (#opened: _) (v:erased a) (r:ghost_ref a) (x:a)
+  : SteelSelGhost unit opened
+    (ghost_vptr_tmp r full_perm v) (fun _ -> ghost_vptr_tmp r full_perm x)
+    (fun _ -> True) (fun _ _ _ -> True)
+
+let ghost_write0 #a #opened v r x = as_steelselghost (fun _ -> R.ghost_write #a #opened #v r x)
+
+let ghost_write r x
+  = 
+    let v = gget (ghost_vptr r) in
+    change_slprop (ghost_vptr r) (ghost_vptr_tmp r full_perm v) v () (elim_ghost_vptr r v);
+    ghost_write0 v r (Ghost.reveal x);
+    change_slprop (ghost_vptr_tmp r full_perm (Ghost.reveal x)) (ghost_vptr r) () x (intro_ghost_vptr r x)
