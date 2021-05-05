@@ -189,44 +189,4 @@ let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set
   : repr a false p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
 
-val add_action (#a:Type)
-               (#p:slprop)
-               (#q:a -> slprop)
-               (f:action_except a Set.empty p q)
-  : SteelT a p q
-
-let add_action f = Steel?.reflect (action_as_repr f)
-
-val change_slprop (p q:slprop)
-                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
-let change_slprop p q proof =
-  Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
-
-let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
-let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
-let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
-let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
-
-val split' (#a:Type)
-          (#p:FStar.PCM.pcm a)
-          (r:ref a p)
-          (v0:Ghost.erased a)
-          (v1:Ghost.erased a{FStar.PCM.composable p v0 v1})
-  : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
-                (fun _ -> pts_to r v0 `star` pts_to r v1)
-
-let split' #a #p r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
-
-let split #a #p r v v0 v1 =
-  change_slprop (pts_to r v) (pts_to r (FStar.PCM.op p v0 v1)) (fun _ -> ());
-  split' r v0 v1
-
-let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
-let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
-let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
-
-let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
-
-let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)
+let as_action f = Steel?.reflect (action_as_repr f)
