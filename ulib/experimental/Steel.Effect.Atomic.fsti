@@ -16,7 +16,6 @@
 
 
 module Steel.Effect.Atomic
-open FStar.PCM
 open Steel.Memory
 include Steel.Effect.Common
 
@@ -210,7 +209,7 @@ effect {
 
 total
 reflectable
-new_effect SteelAtomicBase =SteelAGCommon
+new_effect SteelAtomicBase = SteelAGCommon
 
 effect SteelAtomic (a:Type)
   (opened:inames)
@@ -373,12 +372,14 @@ val extract_info (#opened_invariants:inames) (p:slprop) (fact:prop)
       (fun _ -> True)
       (fun _ _ _ -> fact)
 
+val noop (#opened:inames) (u:unit) : SteelGhostT unit opened emp (fun _ -> emp)
+
 val sladmit (#a:Type)
             (#opened:inames)
             (#p:pre_t)
             (#q:post_t a)
             (_:unit)
-  : SteelGhostF a opened (admit_pre p) (admit_post q)
+  : SteelGhostF a opened p q
                  (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 val slassert (#opened_invariants:_) (p:slprop)

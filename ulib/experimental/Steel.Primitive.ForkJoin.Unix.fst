@@ -4,12 +4,11 @@ module Steel.Primitive.ForkJoin.Unix
 of SteelT to get a direct style (or Unix style) fork/join. Very much a
 prototype for now. *)
 
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open FStar.Ghost
 open Steel.Reference
-//open Steel.SteelT.Basics
 open Steel.Primitive.ForkJoin
 
 module U = FStar.Universe
@@ -33,13 +32,13 @@ type steelK (t:Type u#aa) (framed:bool) (pre : slprop u#1) (post:t->slprop u#1) 
   SteelT unit (frame `star` pre) (fun _ -> postf)
 
 (* The classic continuation monad *)
-let return a (x:a) (#[@@@ framing_implicit] p: a -> slprop) : steelK a true (return_pre (p x)) p =
+let return_ a (x:a) (#[@@@ framing_implicit] p: a -> slprop) : steelK a true (return_pre (p x)) p =
   fun k -> k x
 
 private
 let rearrange3 (p q r:slprop) : Lemma
   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q)))
-  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon' (`true_p) (`true_p)
+  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon' false (`true_p) (`true_p)
 
 let bind (a:Type) (b:Type)
   (#framed_f:eqtype_as_type bool) (#framed_g:eqtype_as_type bool)
@@ -108,7 +107,7 @@ layered_effect {
   SteelKBase : a:Type -> framed:bool -> pre:(slprop u#1) -> post:(a->slprop u#1) -> Effect
   with
   repr = steelK;
-  return = return;
+  return = return_;
   bind = bind;
   subcomp = subcomp
   // if_then_else = if_then_else
@@ -144,7 +143,7 @@ let test_lift #p #q (f : unit -> SteelK unit p (fun _ -> q)) : SteelK unit p (fu
 (* Identity cont with frame, to eliminate a SteelK *)
 
 let idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
-  = noop(); x
+  = noop(); return x
 
 let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
 : SteelK (thread q) p (fun _ -> emp)
@@ -213,13 +212,11 @@ let example2 (r:ref int) : SteelK (thread (pts_to r full_perm 1)) (pts_to r full
   let p1 = kfork (fun _ -> write #_ #0 r 1) in
   p1
 
-
 let example3 (r:ref int) : SteelK (ref int) (pts_to r full_perm 0) (fun x -> pts_to r full_perm 1 `star` pts_to x full_perm 2) =
   let p1 = kfork (fun _ -> write #_ #0 r 1) in
   let x = alloc 2 in
   kjoin p1;
   x
-
 
 let example4 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
   let x = alloc 0 in

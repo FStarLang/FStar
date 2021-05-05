@@ -153,7 +153,7 @@ let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_
         lemma_frame_equalities_refl p1 h1;
         lemma_frame_equalities_refl p2 h2
 
-let return a x #p = fun _ ->
+let return_ a x #p = fun _ ->
       let m0 = nmst_get () in
       let h0 = mk_rmem (p x) (core_mem m0) in
       lemma_frame_equalities_refl (p x) h0;
@@ -451,11 +451,52 @@ let bind_div_steel (a:Type) (b:Type)
 polymonadic_bind (DIV, SteelSelBase) |> SteelSelBase = bind_div_steel
 #pop-options
 
-let noop0 (_:unit)
-  : repr unit false vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
-  = fun frame -> ()
+(* Simple Reference library, only full permissions.
+   AF: Permissions would likely need to be an index of the vprop ptr.
+   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
+   Using the value of the ref as a selector is ok because refs with fractional permissions
+   all share the same value.
+   Refs on PCM are more complicated, and likely not usable with selectors
+*)
 
-let noop () = SteelSel?.reflect (noop0 ())
+
+(* AF: Temporary duplication before refs are moved to their own module and can import
+   both effect modules *)
+
+val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
+  p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
+val change_slprop
+  (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q)
+                    (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_rel (p q:vprop)
+  (rel : normal (t_of p) -> normal (t_of q) -> prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+
+val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : SteelSel unit p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
 let get0 (#p:vprop) (_:unit) : repr (rmem p)
   true p (fun _ -> p)
@@ -554,53 +595,8 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
 
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
-let sladmit _ = SteelSelF?.reflect (fun _ -> NMST.nmst_admit ())
+(* End duplication *)
 
-let reveal_star0 (p1 p2:vprop)
-  : repr unit false (p1 `star` p2) (fun _ -> p1 `star` p2)
-   (fun _ -> True)
-   (fun h0 _ h1 ->
-     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\
-     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
-     h1 (p1 `star` p2) == (h1 p1, h1 p2)
-   )
- = fun frame ->
-     let m = nmst_get() in
-     let h0 = mk_rmem (p1 `star` p2) (core_mem m) in
-     reveal_mk_rmem (p1 `star` p2) m (p1 `star` p2);
-     reveal_mk_rmem (p1 `star` p2) m p1;
-     reveal_mk_rmem (p1 `star` p2) m p2
-
-let reveal_star p1 p2 = SteelSel?.reflect (reveal_star0 p1 p2)
-
-let reveal_star_30 (p1 p2 p3:vprop)
- : repr unit false (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
-   (requires fun _ -> True)
-   (ensures fun h0 _ h1 ->
-     can_be_split (p1 `star` p2 `star` p3) p1 /\
-     can_be_split (p1 `star` p2 `star` p3) p2 /\
-     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
-     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
-     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
-   )
- = fun frame ->
-     let m = nmst_get () in
-     let h0 = mk_rmem (p1 `star` p2 `star` p3) (core_mem m) in
-     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p1;
-     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p2;
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2 `star` p3);
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2);
-     reveal_mk_rmem (p1 `star` p2 `star` p3) m p3
-
-let reveal_star_3 p1 p2 p3 = SteelSel?.reflect (reveal_star_30 p1 p2 p3)
-
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
-   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
-   Using the value of the ref as a selector is ok because refs with fractional permissions
-   all share the same value.
-   Refs on PCM are more complicated, and likely not usable with selectors
-*)
 
 module R = Steel.Reference
 open Steel.FractionalPermission
