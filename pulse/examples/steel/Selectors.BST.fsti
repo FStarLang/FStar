@@ -74,7 +74,7 @@ val is_null_t (#a #b: Type0) {| Spec.ordered a |} (r: t a b) : (b:bool{b <==> r 
 
 val intro_linked_tree_leaf (#a #b: Type0) {| Spec.ordered a |} (_: unit)
     : SteelSel unit
-      vemp (fun _ -> linked_tree (null_t #a #b))
+      emp (fun _ -> linked_tree (null_t #a #b))
       (requires (fun _ -> True))
       (ensures (fun _ _ h1 -> v_linked_tree #a #b (null_t #a #b) h1 == Spec.Leaf))
 

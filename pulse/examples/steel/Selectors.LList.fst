@@ -119,7 +119,7 @@ let llist_sel_interp (#a:Type0) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
     llist_sl'_witinv ptr
 
 let intro_nil_lemma (a:Type0) (m:mem) : Lemma
-    (requires interp (hp_of vemp) m)
+    (requires interp (hp_of emp) m)
     (ensures interp (llist_sl (null_llist #a)) m /\ llist_sel (null_llist #a) m == [])
     = let ptr:t a = null_llist in
       pure_interp (ptr == null_llist) m;
@@ -128,7 +128,7 @@ let intro_nil_lemma (a:Type0) (m:mem) : Lemma
       llist_sel_interp ptr [] m
 
 let intro_llist_nil a =
-    change_slprop_2 vemp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
+    change_slprop_2 emp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
 
 let elim_nil_lemma (#a:Type0) (ptr:t a) (m:mem) : Lemma
     (requires interp (llist_sl ptr) m /\ ptr == null_llist)

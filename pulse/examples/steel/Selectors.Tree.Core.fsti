@@ -71,7 +71,7 @@ let v_linked_tree
 
 val intro_linked_tree_leaf (#a: Type0) (_: unit)
     : SteelSel unit
-      vemp (fun _ -> linked_tree (null_t #a))
+      emp (fun _ -> linked_tree (null_t #a))
       (requires (fun _ -> True))
       (ensures (fun _ _ h1 -> v_linked_tree #a null_t h1 == Spec.Leaf))
 
