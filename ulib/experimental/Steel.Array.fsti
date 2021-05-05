@@ -57,7 +57,7 @@ val write (#t:Type) (#p:perm{is_writeable p}) (#r:contents t) (a:array t) (i:U32
 
 val adjacent (#t:_) (al ar:array t) : prop
 
-val split (#t:Type) (#p:perm) (#r:contents t) (a:array t) (i:U32.t { U32.v i < length r })
+val split (#t:Type) (#p:perm) (#r:contents t) (a:array t) (i:U32.t { U32.v i <= length r })
   : Steel (array t & array t)
           (is_array a p r)
           (fun (al, ar) ->

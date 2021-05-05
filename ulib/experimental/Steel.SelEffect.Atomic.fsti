@@ -496,3 +496,67 @@ val elim_vrewrite (#opened:inames)
 : SteelSelGhost unit opened (vrewrite v f) (fun _ -> v)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
+
+(*** Lemmas on references *)
+
+module R = Steel.Reference
+
+val vptr_not_null (#opened: _)
+  (#a: Type)
+  (r: R.ref a)
+: SteelSelGhost unit opened
+    (Steel.SelEffect.vptr r)
+    (fun _ -> Steel.SelEffect.vptr r)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      h1 (Steel.SelEffect.vptr r) == h0 (Steel.SelEffect.vptr r) /\
+      R.is_null r == false
+    )
+
+(*** Ghost references ***)
+
+[@@ erasable]
+let ghost_ref (a:Type u#0) : Type u#0 = R.ghost_ref a
+let ghost_ptr (#a: Type0) (r: ghost_ref a) : Tot (slprop u#1) = h_exists (R.ghost_pts_to r Steel.FractionalPermission.full_perm)
+
+val ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
+
+val ghost_ptr_sel_interp (#a:Type0) (r:ghost_ref a) (m:mem) : Lemma
+  (requires interp (ghost_ptr r) m)
+  (ensures interp (R.ghost_pts_to r Steel.FractionalPermission.full_perm (ghost_ptr_sel r m)) m)
+
+[@@ __steel_reduce__]
+let ghost_vptr' #a r : vprop' =
+  {hp = ghost_ptr r;
+   t = a;
+   sel = ghost_ptr_sel r}
+
+[@@ __steel_reduce__]
+unfold
+let ghost_vptr r = VUnit (ghost_vptr' r)
+
+val ghost_alloc (#a:Type0) (#opened:inames) (x:Ghost.erased a) : SteelSelGhost (ghost_ref a) opened
+  vemp (fun r -> ghost_vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> h1 (ghost_vptr r) == Ghost.reveal x)
+
+val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost unit opened
+  (ghost_vptr r) (fun _ -> vemp)
+  (requires fun _ -> True)
+  (ensures fun _ _ _ -> True)
+
+let ghost_read (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost (Ghost.erased a) opened
+  (ghost_vptr r) (fun _ -> ghost_vptr r)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> h0 (ghost_vptr r) == h1 (ghost_vptr r) /\ Ghost.reveal x == h1 (ghost_vptr r))
+= gget (ghost_vptr r)
+
+val ghost_write (#a:Type0) (#opened:inames) (r:ghost_ref a) (x:Ghost.erased a) : SteelSelGhost unit opened
+  (ghost_vptr r) (fun _ -> ghost_vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> Ghost.reveal x == h1 (ghost_vptr r))
+
+[@@ __steel_reduce__]
+let ghost_sel (#a:Type) (#p:vprop) (r:ghost_ref a)
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (ghost_vptr r) /\ True)})
+  = h (ghost_vptr r)

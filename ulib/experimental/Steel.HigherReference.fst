@@ -353,6 +353,15 @@ let ghost_ref a = erased (ref a)
 [@@__reduce__]
 let ghost_pts_to #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to (reveal r) p x
 
+let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (ghost_pts_to r p x) m /\ interp (ghost_pts_to r p y) m))
+            (ensures  (x == y))
+    =
+    Mem.pts_to_join (Ghost.reveal r) (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
 let ghost_alloc_aux (#a:Type) (#u:_) (x:a)
   : SteelGhostT (ref a) u
                  emp
