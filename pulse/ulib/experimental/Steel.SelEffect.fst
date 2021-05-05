@@ -725,11 +725,3 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
     write0 v r x;
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
-
-let vptr_not_null
-  #a r
-= change_slprop_rel
-    (vptr r)
-    (vptr r)
-    (fun x y -> x == y /\ R.is_null r == false)
-    (fun m -> R.pts_to_not_null r full_perm (ptr_sel r m) m)
