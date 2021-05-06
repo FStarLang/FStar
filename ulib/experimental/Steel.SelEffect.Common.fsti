@@ -86,9 +86,6 @@ type post_t (a:Type) = a -> vprop
 
 let return_pre (p:vprop) : vprop = p
 
-let admit_pre (p:pre_t) : pre_t = p
-let admit_post (#a:Type) (p:post_t a) : post_t a = p
-
 val can_be_split (p q:pre_t) : Type0
 val reveal_can_be_split (_:unit) : Lemma
   (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
@@ -171,6 +168,65 @@ let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == vemp else Tr
 let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =
   if framed then (forall x. frame x == vemp) else True
 
+(* focus_rmem is an additional restriction of our view of memory.
+   We expose it here to be able to reduce through normalization;
+   Any valid application of focus_rmem h will be reduced to the application of h *)
+
+[@@ __steel_reduce__]
+unfold
+let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
+  = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
+
+[@@ __steel_reduce__]
+let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
+ = FExt.on_dom_g
+   (r':vprop{can_be_split r0 r'})
+   (unrestricted_focus_rmem h r0)
+
+(* State that all "atomic" subresources have the same selectors on both views *)
+
+(* AF 04/27/2021: The linear equality generation, where equalities are only
+   generated for leaf, VUnit nodes, works well for concrete code, but does
+   not allow to propagate information when handling abstract vprops.
+   While defining generic combinators on vprops such as vrefine and vdep,
+   Tahina encountered issues with this. For instance, elim_vdep returns
+   a v `star` q, where v and q are abstract vprops. As such, equalities
+   on the selectors of v and q are not propagated: Normalization gets stuck
+   on both v and q, since they are neither a VUnit nor a VStar.
+   An earlier fix was creating a "top-level" equality on the full vprop
+   to handle most generic vprops cases. Unfortunately, this does not
+   help when we have atomic, abstract vprops as in v `star` q.
+   For now, I'm reenabling quadratic equality generation. But we need
+   to find a better way to handle generic vprops selectors while avoiding
+   a context blowup; furthermore, equalities on composite resources are mostly
+   irrelevant because of AC-rewriting, and because we do not provide patterns
+   on lemmas relating sel (p * q) with (sel p, sel q), or sel (p * q) with
+   sel (q * p) for instance.
+   We should instead have a better way to define atomic vprops, which encapsulates
+   atomic, abstract vprops
+*)
+[@@ __steel_reduce__]
+let rec frame_equalities
+  (frame:vprop)
+  (h0:rmem frame) (h1:rmem frame) : prop
+  = h0 frame == h1 frame /\
+    begin match frame with
+    | VUnit p -> True
+    | VStar p1 p2 ->
+        can_be_split_star_l p1 p2;
+        can_be_split_star_r p1 p2;
+
+        let h01 = focus_rmem h0 p1 in
+        let h11 = focus_rmem h1 p1 in
+
+        let h02 = focus_rmem h0 p2 in
+        let h12 = focus_rmem h1 p2 in
+
+
+        frame_equalities p1 h01 h11 /\
+        frame_equalities p2 h02 h12
+    end
+
 open FStar.Tactics
 
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
@@ -215,6 +271,86 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_associative
      star_commutative
      star_congruence
+
+val vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (slprop u#1)
+
+val interp_vrefine_hp (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: mem) : Lemma
+  (interp (vrefine_hp v p) m <==> (interp (hp_of v) m /\ p (sel_of v m)))
+//  [SMTPat (interp (vrefine_hp v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrefine_t (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot Type
+= (x: t_of v {p x})
+
+val vrefine_sel (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
+
+val vrefine_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    vrefine_sel v p m == sel_of v m
+  )
+//  [SMTPat ((vrefine_sel v p) m)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrefine' (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot vprop' = {
+  hp = vrefine_hp v p;
+  t = vrefine_t v p;
+  sel = vrefine_sel v p;
+}
+
+[@__steel_reduce__]
+let vrefine (v: vprop) (p: (normal (t_of v) -> Tot prop)) = VUnit (vrefine' v p)
+
+val vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (slprop u#1)
+
+val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
+  (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
+
+let vdep_payload
+  (v: vprop) (p: ( (t_of v) -> Tot vprop))
+  (x: t_of v)
+: Tot Type
+= t_of (p x)
+
+let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
+= dtuple2 (t_of v) (vdep_payload v p)
+
+val vdep_sel (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
+
+val vdep_sel_eq (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
+  (
+    interp (hp_of v) m /\
+    begin let x = sel_of v m in
+      interp (hp_of (p x)) m /\
+      vdep_sel v p m == (| x, sel_of (p x) m |)
+    end
+  )
+
+[@__steel_reduce__]
+let vdep' (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot vprop' = {
+  hp = vdep_hp v p;
+  t = vdep_t v p;
+  sel = vdep_sel v p;
+}
+
+[@__steel_reduce__]
+let vdep (v: vprop) (p: ( (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
+
+val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
+
+val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: hmem (normal (hp_of v))) : Lemma
+  ((vrewrite_sel v f <: selector' _ _) h == f ((normal (sel_of v) <: selector' _ _) h))
+//  [SMTPat (vrewrite_sel v f h)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
+
+[@__steel_reduce__]
+let vrewrite' (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop' = {
+  hp = normal (hp_of v);
+  t = t;
+  sel = vrewrite_sel v f;
+}
+
+[@__steel_reduce__]
+let vrewrite (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot vprop = VUnit (vrewrite' v f)
 
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
@@ -482,6 +618,9 @@ let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (am
     let new_term = mk_app hd new_args in
     update a new_term am, uvar_terms@prev_uvar_terms
 
+let fail_atoms (#a:Type) (l1 l2:list atom) (am:amap term) : Tac a
+  = fail ("could not find a solution for unifying\n" ^ print_atoms l1 am ^ "\nand\n" ^ print_atoms l2 am)
+
 let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool) =
   match l1 with
@@ -510,8 +649,7 @@ let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:am
       if n' >= n then
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        fail ("could not find a solution for unifying\n" ^ print_atoms rem1 am ^ "\nand\n" ^ print_atoms rem2 am)
-//        fail ("could not find candidate for this scrutinee " ^ term_to_string (get_head rem2 am))
+        fail_atoms rem1 rem2 am
       else equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' am
 
 let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list term)
@@ -525,7 +663,7 @@ let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list t
    that the two lists are unifiable at any point
    The boolean indicates if there is a leftover empty frame
    *)
-let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
+let rec equivalent_lists' (n:nat) (use_smt:bool) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool * list term) =
   match l1 with
   | [] -> begin match l2 with
@@ -550,13 +688,16 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
-      if n' >= n then
+      if n' >= n then (
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
-        let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
-        l1_f, l2_f, b, uvar_terms
-      else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
+        if use_smt then
+          // SMT fallback is allowed
+          let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
+          let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
+          l1_f, l2_f, b, uvar_terms
+        else fail_atoms rem1 rem2 am
+      ) else equivalent_lists' n' use_smt rem1 rem2 l1_del' l2_del' am
 
 (* Checks if term for atom t unifies with fall uvars in l *)
 let rec unifies_with_all_uvars (t:term) (l:list atom) (am:amap term) : Tac bool =
@@ -587,12 +728,12 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
    If it succeeds, returns permutations of l1, l2, and a boolean indicating
    if l2 has a trailing empty frame to be unified
 *)
-let equivalent_lists (l1 l2:list atom) (am:amap term)
+let equivalent_lists (use_smt:bool) (l1 l2:list atom) (am:amap term)
   : Tac (list atom * list atom * bool * list term)
 = let l1, l2, l1_del, l2_del = trivial_cancels l1 l2 am in
   let l1 = most_restricted_at_top l1 l2 am in
   let n = List.Tot.length l1 in
-  let l1_del, l2_del, emp_frame, uvar_terms = equivalent_lists' n l1 l2 l1_del l2_del am in
+  let l1_del, l2_del, emp_frame, uvar_terms = equivalent_lists' n use_smt l1 l2 l1_del l2_del am in
   l1_del, l2_del, emp_frame, uvar_terms
 
 open FStar.Reflection.Derived.Lemmas
@@ -1099,7 +1240,7 @@ let close_equality_typ' (t:term) : Tac unit =
 let close_equality_typ (t:term) : Tac unit =
   visit_tm close_equality_typ' t
 
-let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
+let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CE.CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
@@ -1108,7 +1249,7 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
 // Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
   let l1_raw, l2_raw, emp_frame, uvar_terms =
     try
-      let res = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+      let res = equivalent_lists use_smt (flatten r1_raw) (flatten r2_raw) am in
       raise (Result res) with
     | TacticFailure m -> fail m
     | Result res -> res
@@ -1170,7 +1311,7 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
            exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
-let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
+let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
@@ -1184,7 +1325,7 @@ let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
        then (
          match index xy (length xy - 2) , index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           canon_l_r eq m pr pr_bind lhs rhs
+           canon_l_r use_smt eq m pr pr_bind lhs rhs
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )
        else (
@@ -1195,8 +1336,8 @@ let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
 
 (* Try to integrate it into larger tactic *)
 
-let canon' (pr:term) (pr_bind:term) : Tac unit =
-  canon_monoid (`req) (`rm) pr pr_bind
+let canon' (use_smt:bool) (pr:term) (pr_bind:term) : Tac unit =
+  canon_monoid use_smt (`req) (`rm) pr pr_bind
 
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
@@ -1235,7 +1376,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
                               `%fst; `%snd];
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
-                       canon' (`true_p) (`true_p)));
+                       canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1267,7 +1408,7 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' p p_bind));
+              canon' true p p_bind));
 
         true
 
@@ -1301,7 +1442,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                    `%fst; `%snd];
                 delta_attr [`%__reduce__];
                  primops; iota; zeta];
-            canon' (`true_p) (`true_p)));
+            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1336,7 +1477,7 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
-              canon' pr p_bind));
+              canon' true pr p_bind));
 
         true
 
@@ -1370,7 +1511,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                     `%fst; `%snd];
                                   delta_attr [`%__reduce__];
                                   primops; iota; zeta];
-                            canon'(`true_p) (`true_p)));
+                            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1397,7 +1538,7 @@ let solve_equiv (args:list argv) : Tac bool =
                       `%fst; `%snd];
                     delta_attr [`%__reduce__];
                     primops; iota; zeta];
-              canon'(`true_p) (`true_p)));
+              canon' false (`true_p) (`true_p)));
         true
 
       ) else false
@@ -1433,7 +1574,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                     `%fst; `%snd];
                                   delta_attr [`%__reduce__];
                                   primops; iota; zeta];
-                            canon'(`true_p) (`true_p)));
+                            canon' false (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1492,7 +1633,8 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         ignore (forall_intro ());
         apply_lemma (`equiv_can_be_split)
       ) else if term_eq hd (`equiv_forall) then (
-        fail "equiv_forall"
+        apply_lemma (`equiv_forall_elim);
+        ignore (forall_intro ())
       ) else if term_eq hd (`can_be_split_post) then (
         apply_lemma (`can_be_split_post_elim);
         dismiss_slprops();
@@ -1506,29 +1648,6 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         // This should never happen
         fail (loc ^ " goal in unexpected position")
     | _ -> fail (loc ^ " unexpected goal")
-
-let rec solve_sladmits (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let t = goal_type hd in
-    let is_preadmit = term_appears_in (`admit_pre) t in
-    let is_postadmit = term_appears_in (`admit_post) t in
-    if is_preadmit || is_postadmit then (
-      focus (fun _ ->
-        goal_to_equiv t "sladmit";
-        norm [delta_only [`%admit_pre; `%admit_post]];
-        apply_lemma (`equiv_refl);
-        // If we had both a preadmit and a postadmit, we had two successive sladmits calls,
-        // and this constraint corresponds to the inner equivalence, where slprops are
-        // irrelevant. We arbitrarily set them to emp
-        match goals () with
-        | [] -> ()
-        | [hd] -> if is_preadmit && is_postadmit then exact (`emp) else fail "sladmit case not supported"
-        | _ -> fail "solving sladmit generated too many goals, should not happen"
-      )
-    ) else later ();
-    solve_sladmits tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
@@ -1677,13 +1796,7 @@ let init_sel_resolve_tac () : Tac unit =
   // Once unification has been done, we can then safely normalize and remove all return_pre
   norm_return_pre (goals());
 
-  // Handle all sladmits here. They are outside the scope of our calculus since
-  // they are not once-removed unitriangular. As such, they need a special handling
-  solve_sladmits (goals());
-
-  // TODO: If we had better handling of lifts from PURE, we might prove a true
-  // sl_implies here, "losing" extra assertions"
-
+  // Finally running the core of the tactic, scheduling and solving goals
   resolve_tac ();
 
   // We now solve the requires/ensures goals, which are all equalities
@@ -1710,4 +1823,4 @@ let selector_tactic () : Tac unit =
          `%fst; `%snd];
        delta_attr [`%__reduce__];
        primops; iota; zeta];
-  canon' (`true_p) (`true_p)
+  canon' false (`true_p) (`true_p)

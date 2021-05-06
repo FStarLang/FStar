@@ -1,10 +1,11 @@
 module Selectors.LList
 
+open FStar.Ghost
 open Steel.FractionalPermission
 module Mem = Steel.Memory
 module R = Steel.Reference
-
-// friend Steel.SelEffect
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 
 #push-options "--__no_positivity"
 noeq
@@ -141,8 +142,6 @@ let elim_llist_nil #a ptr =
     (fun x y -> x == y /\ y == [])
     (fun m -> elim_nil_lemma ptr m)
 
-open FStar.Ghost
-
 #set-options "--z3rlimit 20"
 
 let lemma_cons_not_null (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
@@ -157,7 +156,7 @@ let lemma_cons_not_null (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
           pure_star_interp p (ptr =!= null_llist) m
 
 let cons_is_not_null #a ptr =
-  let h = get #(llist ptr)  () in
+  let h = get () in
   let l = hide (v_llist ptr h) in
   extract_info (llist ptr) l (ptr =!= null_llist) (lemma_cons_not_null ptr l)
 
@@ -204,7 +203,7 @@ let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
     llist_sel_interp ptr1 (x::l') m
 
 let intro_llist_cons ptr1 ptr2 =
-  let h = get #(vptr ptr1 `star` llist ptr2) () in
+  let h = get () in
   let x = hide (sel ptr1 h) in
   let l = hide (v_llist ptr2 h) in
   reveal_star (vptr ptr1) (llist ptr2);
@@ -240,7 +239,7 @@ val reveal_non_empty_cell (#a:Type0) (ptr:t a)
              (ensures fun h0 _ h1 -> v_cell ptr h0 == v_cell ptr h1 /\ Cons? (v_cell ptr h0))
 
 let reveal_non_empty_cell #a ptr =
-  let h = get #(llist_cell ptr)  () in
+  let h = get () in
   let l = hide (v_cell ptr h) in
   extract_info (llist_cell ptr) l (is_cons l) (reveal_non_empty_lemma ptr l)
 
@@ -286,7 +285,7 @@ val tail_cell (#a:Type0) (ptr:t a)
                      v_cell n h1 == L.tl (v_cell ptr h0))
 
 let tail_cell #a ptr =
-  let h = get #(llist_cell ptr) () in
+  let h = get () in
   let l = hide (v_cell ptr h) in
   reveal_non_empty_cell ptr;
   let x = hide (L.hd l) in
@@ -295,7 +294,7 @@ let tail_cell #a ptr =
   reveal_star (vptr ptr) (llist_cell (next x));
   let v = read ptr in
   change_slprop (llist_cell (next x)) (llist_cell (next v)) (L.tl l) (L.tl l) (fun _ -> ());
-  next v
+  return (next v)
 
 val to_list_cell (#a:Type0) (ptr:t a)
   : SteelSel unit (llist ptr) (fun _ -> llist_cell ptr)
@@ -315,9 +314,9 @@ let from_list_cell ptr =
 
 let tail #a ptr =
   // AF: Not sure why these gets are needed for verification?
-  let h0 = get #(llist ptr) () in
+  let h0 = get () in
   to_list_cell ptr;
-  let h0' = get #(llist_cell ptr) () in
+  let h0' = get () in
   let n = tail_cell #a ptr in
   from_list_cell n;
   n
@@ -420,7 +419,7 @@ val unpack_ind_full (#a:Type0) (r:ref (t a))
                v_llist p h1 == snd (v_full r h0))
 
 let unpack_ind_full r =
-    let h = get #(ind_llist_full r) () in
+    let h = get () in
     let s = hide (v_full r h) in
     let gp = hide (fst (reveal s)) in
     let gl = hide (snd (reveal s)) in
@@ -433,7 +432,7 @@ let unpack_ind_full r =
     reveal_star (vptr r) (llist (reveal gp));
     let p = read r in
     change_slprop_rel (llist (reveal gp)) (llist p) (fun x y -> x == y) (fun _ -> ());
-    p
+    return p
 
 let unpack_ind r =
   change_slprop_rel (ind_llist r) (ind_llist_full r) (fun x y -> x == snd y) (fun _ -> ());
@@ -454,7 +453,7 @@ let pack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem)
     R.pts_to_witinv r full_perm
 
 let pack_ind r p =
-  let h = get #(vptr r `star` llist p) () in
+  let h = get () in
   reveal_star (vptr r) (llist p);
   let gl = hide (v_llist p h) in
   change_slprop (vptr r `star` llist p) (ind_llist r) (p, reveal gl) gl (fun m -> pack_ind_lemma r p gl m)

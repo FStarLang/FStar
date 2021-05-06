@@ -1,6 +1,9 @@
 module NewCanon
 
+open FStar.Ghost
+open Steel.FractionalPermission
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 
 assume val p (#n:int) (n2:int) : slprop
@@ -58,15 +61,11 @@ let test8 (x:ref) : SteelT int (ptr x) (fun _ -> ptr x)
     assert (1 == 1);
     v
 
-assume val noop (_:unit) : SteelT unit emp (fun _ -> emp)
-
 let test_dep_frame () : SteelT ref emp (fun r -> ptr r)
   = let r = alloc 0 in
     noop ();
-    r
+    return r
 
-open Steel.FractionalPermission
-open FStar.Ghost
 assume val reference (a:Type0) : Type0
 assume val pts_to (#a:Type0) (r:reference a) (p:perm) (v:erased a) : slprop u#1
 assume val rread (#a:Type) (#p:perm) (#v:erased a) (r:reference a) : SteelT (x:a{x == Ghost.reveal v}) (pts_to r p v) (fun _ -> pts_to r p v)
@@ -105,8 +104,6 @@ let swap2 (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
     rwrite r1 u0;
     rewrite_eq (pts_to r1 full_perm) (Ghost.hide u0) v0;
     rewrite_eq (pts_to r0 full_perm) (Ghost.hide u1) v1
-
-open Steel.Effect.Atomic
 
 assume val alloc2 (x:int)  : SteelAtomicT ref Set.empty emp (fun y -> ptr y)
 assume val free2 (r:ref) : SteelAtomicT unit Set.empty (ptr r) (fun _ -> emp)

@@ -1,10 +1,23 @@
 module Selectors.Examples
 
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 (* Some tests *)
 
-#push-options "--fuel 0 --ifuel 0"
+#push-options "--fuel 0 --ifuel 0 --ide_id_info_off"
+
+let swap (#a:Type0) (r1 r2:ref a) : SteelSel unit
+  (vptr r1 `star` vptr r2)
+  (fun _ -> vptr r1 `star` vptr r2)
+  (requires fun _ -> True)
+  (ensures fun h0 _ h1 ->
+    sel r1 h0 == sel r2 h1 /\
+    sel r2 h0 == sel r1 h1)
+  = let x1 = read r1 in
+    let x2 = read r2 in
+    write r2 x1;
+    write r1 x2
 
 let test0 (r:ref int) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
@@ -46,16 +59,3 @@ let test3 (r1 r2 r3:ref int) : SteelSel unit
     assert (sel r1 h1 == 1);
     assert (sel r2 h0 == sel r2 h1);
     write r1 0
-
-
-let swap (#a:Type0) (r1 r2:ref a) : SteelSel unit
-  (vptr r1 `star` vptr r2)
-  (fun _ -> vptr r1 `star` vptr r2)
-  (requires fun _ -> True)
-  (ensures fun h0 _ h1 ->
-    sel r1 h0 == sel r2 h1 /\
-    sel r2 h0 == sel r1 h1)
-  = let x1 = read r1 in
-    let x2 = read r2 in
-    write r2 x1;
-    write r1 x2

@@ -209,6 +209,8 @@ let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
 
 let extract_info #opened p fact proof = SteelGhost?.reflect (extract_info0 #opened p fact proof)
 
+let noop _ = change_slprop emp emp (fun _ -> ())
+
 let sladmit #a #opened #p #q _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let slassert p = change_slprop p p (fun m -> ())
@@ -227,7 +229,7 @@ let elim_pure_aux #uses (p:prop)
 
 let elim_pure #uses p = elim_pure_aux p
 
-let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)  
+let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)
 
 let return #a #opened_invariants #p x =
   SteelAtomicBase?.reflect (fun _ -> x)
