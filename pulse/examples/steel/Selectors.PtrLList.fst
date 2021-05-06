@@ -128,7 +128,7 @@ let v_cell (#a:Type0) (#p:vprop) (r:t a)
 
 let ind_ptr_sl' (#a:Type0) (r:ref (ref a)) (p: ref a) : slprop u#1 =
   R.pts_to r full_perm p `Mem.star` ptr p
-let ind_ptr_sl (#a:Type0) (r:ref (ref a)) = h_exists (ind_ptr_sl' r)
+let ind_ptr_sl (#a:Type0) (r:ref (ref a)) = Mem.h_exists (ind_ptr_sl' r)
 
 let ind_ptr_sel' (#a:Type0) (r:ref (ref a)) : selector' (ref a * a) (ind_ptr_sl r) =
   fun h ->

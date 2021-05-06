@@ -325,7 +325,7 @@ let tail #a ptr =
 
 let ind_llist_sl' (#a:Type0) (r:ref (t a)) (p:t a) : slprop u#1 =
   R.pts_to r full_perm p `Mem.star` llist_sl p
-let ind_llist_sl (#a:Type0) (r:ref (t a)) = h_exists (ind_llist_sl' r)
+let ind_llist_sl (#a:Type0) (r:ref (t a)) = Mem.h_exists (ind_llist_sl' r)
 
 let ind_llist_sel_full' (#a:Type0) (r:ref (t a)) : selector' (t a * list a) (ind_llist_sl r) =
   fun h ->
