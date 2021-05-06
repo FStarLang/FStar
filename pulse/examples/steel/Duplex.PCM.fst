@@ -1119,7 +1119,7 @@ let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
       (fun tr -> endpoint name (fst c) next tr `star`
               HR.pts_to (snd c) Perm.full_perm (| next, tr |))
   = let w : erased (next:dprot & trace p next) = witness_h_exists () in
-    Steel.Utils.elim_pure (eq2_prop (dfst w) next);
+    elim_pure (eq2_prop (dfst w) next);
     let tr = read_trace_ref (snd c) next in
 
     change_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))

@@ -187,7 +187,7 @@ let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
                 (fun _ -> trace_until c.trace v)
   = intro_pure (until (initial_trace p) == step v.chan_prot v.chan_msg);
     //TODO: Not sure why I need this assert
-    Steel.Utils.slassert (MRef.pts_to c.trace full_perm (initial_trace p) `star`
+    slassert (MRef.pts_to c.trace full_perm (initial_trace p) `star`
                           pure (until (initial_trace p) == step v.chan_prot v.chan_msg));
     intro_exists (initial_trace p) (trace_until_prop c.trace v)
 
@@ -284,7 +284,7 @@ let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:uni
   : SteelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
   = Steel.Utils.extract_pure (vs == vr);
     Steel.Utils.rewrite #_ #(send_recv_in_sync cc.chan_chan.send p cc.chan_chan vs) vr vs;
-    Steel.Utils.elim_pure (vs == vs);
+    elim_pure (vs == vs);
     gather_r cc.chan_chan.send vs;
     let next_vs = update_channel cc.chan_chan x vs cc.chan_chan.send in
     H.share cc.chan_chan.send;
@@ -310,7 +310,7 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
           (fun _ -> emp)
           (requires fun _ -> until tr == step vr.chan_prot vr.chan_msg)
           (ensures fun _ ts _ -> until ts == step vs.chan_prot vs.chan_msg)
-  = Steel.Utils.elim_pure (chan_inv_step_p vr vs);
+  = elim_pure (chan_inv_step_p vr vs);
     let ts : extension_of tr = next_trace vr vs tr () () in
     return ts
 
@@ -335,9 +335,9 @@ let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
   : SteelT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)
     (fun x -> receiver cc (step p x))
-  = Steel.Utils.elim_pure (chan_inv_step_p vr vs);
+  = elim_pure (chan_inv_step_p vr vs);
     gather_r cc.chan_chan.recv vr;
-    Steel.Utils.elim_pure (in_state_prop p vr);
+    elim_pure (in_state_prop p vr);
     H.write cc.chan_chan.recv vs;
     H.share cc.chan_chan.recv;
     assert (vs.chan_prot == p);
@@ -434,7 +434,7 @@ let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
   = let vr' = witness_h_exists () in
     H.higher_ref_pts_to_injective_eq #_ #_ #_ #_ #vr #_ cc.chan_chan.recv;
     change_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
-    Steel.Utils.elim_pure _;
+    elim_pure _;
     intro_in_state _ _ vr
 
 let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
