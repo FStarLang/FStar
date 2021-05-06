@@ -1,5 +1,5 @@
 [
-  "°@E\u000f+Ñ–ÍÉ\"U√{˘ÍO",
+  "7.\u0005$ÔKáƒÅÙıß„ ≠∑",
   [
     [
       "Steel.SelEffect.Common.true_p",
@@ -16,7 +16,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "af3d3eb6b9f4b9ab1edc56257ccac757"
+      "34e79568dbdb9deea1dd09d63dd8139d"
     ],
     [
       "Steel.SelEffect.Common.sel_depends_only_on",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "1285d796b47430e37bd2be445b6ce71a"
+      "6bd704348254f001ca1dacc4b00b3798"
     ],
     [
       "Steel.SelEffect.Common.sel_depends_only_on_core",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "d0c46eaba9b188029643b9cc414ac10f"
+      "75735d7cba450c08123b44510de94a9d"
     ],
     [
       "Steel.SelEffect.Common.__proj__Mkvprop'__item__sel",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Tm_refine_c3b5c178febb701cd7081ec519916f18"
       ],
       0,
-      "e0bbc4822a15da9e2479f593cfa56a41"
+      "fe15b329eb1385181aa9965daee5ffaa"
     ],
     [
       "Steel.SelEffect.Common.__proj__VUnit__item___0",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_16ff6e0b35b8de5cdf005fb9b1782eca"
       ],
       0,
-      "fd23ef4fc258cdc8421ed7ec5caef427"
+      "1ff91e973f75f380feaed8ed9f98e6f8"
     ],
     [
       "Steel.SelEffect.Common.__proj__VStar__item___0",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Tm_refine_0b4bb63494876e1147257a68371bef35"
       ],
       0,
-      "a961f83d34c64902239648622586bfbf"
+      "a0548228b7bd95e4117033e70c5bb2da"
     ],
     [
       "Steel.SelEffect.Common.__proj__VStar__item___1",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_0b4bb63494876e1147257a68371bef35"
       ],
       0,
-      "69bb8c59b07ddd68ba8903f571d7aa3b"
+      "34f0376ddb95396366116cdd3bcdc176"
     ],
     [
       "Steel.SelEffect.Common.hp_of",
@@ -112,7 +112,7 @@
         "subterm_ordering_Steel.SelEffect.Common.VStar"
       ],
       0,
-      "9eda2a476a9d2f32c6a7ddecfc7ecd7a"
+      "bc5d1a067eef8e839a56fe1ad3507644"
     ],
     [
       "Steel.SelEffect.Common.t_of",
@@ -130,7 +130,7 @@
         "subterm_ordering_Steel.SelEffect.Common.VStar"
       ],
       0,
-      "5e8543db92e374e500e2eb66b00ace43"
+      "cd0baf33064e7882d4f982a1f5bfc068"
     ],
     [
       "Steel.SelEffect.Common.sel_of",
@@ -176,7 +176,41 @@
         "typing_Steel.SelEffect.Common.hp_of"
       ],
       0,
-      "06ec23902b07a9ef00ad30f118035305"
+      "1c5464a7c707ee03749da99f2fc01faf"
+    ],
+    [
+      "Steel.SelEffect.Common.unrestricted_focus_rmem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e111b5782e27b8108a16e396ac682f97"
+      ],
+      0,
+      "4e0f067f6af9eae3e496781991d97c9e"
+    ],
+    [
+      "Steel.SelEffect.Common.frame_equalities",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ef2e4a15db08417fdc738dc6686fc767_0",
+        "disc_equation_Steel.SelEffect.Common.VStar",
+        "disc_equation_Steel.SelEffect.Common.VUnit", "equation_Prims.eq2",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Steel.SelEffect.Common.star",
+        "fuel_guarded_inversion_Steel.SelEffect.Common.vprop",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "lemma_Steel.SelEffect.Common.can_be_split_refl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "subterm_ordering_Steel.SelEffect.Common.VStar"
+      ],
+      0,
+      "2637a2defc5549935fdc957d412a717b"
     ],
     [
       "Steel.SelEffect.Common.rm",
@@ -192,7 +226,82 @@
         "token_correspondence_Steel.SelEffect.Common.equiv"
       ],
       0,
-      "024be7605caffb65efcbd86ae170ee34"
+      "cbff4a260d590ab452867d38af85f21d"
+    ],
+    [
+      "Steel.SelEffect.Common.interp_vrefine_hp",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@query",
+        "equation_with_fuel_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.SelEffect.Common.vprop"
+      ],
+      0,
+      "6f81c67a20d9c735c40dcdadbfd05044"
+    ],
+    [
+      "Steel.SelEffect.Common.vrefine_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@query",
+        "equation_with_fuel_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.SelEffect.Common.vprop"
+      ],
+      0,
+      "96a6ac20823f453fc73f6ec05837bd71"
+    ],
+    [
+      "Steel.SelEffect.Common.vrefine_sel_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d5af77f7502ff0d73e6f5e64492887f1"
+    ],
+    [
+      "Steel.SelEffect.Common.interp_vdep_hp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8d6f5b3a5d3909ee31dcbbc38ad9e789"
+    ],
+    [
+      "Steel.SelEffect.Common.vdep_sel_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8d5dfda584c8799af9bbf82e948a948d"
+    ],
+    [
+      "Steel.SelEffect.Common.vrewrite_sel_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "@query",
+        "equation_with_fuel_Steel.SelEffect.Common.t_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.SelEffect.Common.vprop"
+      ],
+      0,
+      "578c82a393ccdb5fff1e54b79a3c9a0f"
     ],
     [
       "Steel.SelEffect.Common.visit_tm",
@@ -222,7 +331,7 @@
         "typing_FStar.Reflection.Builtins.inspect_ln"
       ],
       0,
-      "79ec46c2a41756a8815aec39aa4486e4"
+      "11c9a662e918f4842251bc6e812ba980"
     ],
     [
       "Steel.SelEffect.Common.visit_tm",
@@ -241,7 +350,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "9552018fdad499123dc8d32ba71082eb"
+      "e16487182a82d3363d1f33a9fbb2bcc5"
     ],
     [
       "Steel.SelEffect.Common.atoms_to_string",
@@ -257,7 +366,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f5b7f237e04f628441209c1888941907"
+      "201845ff9acd426b4b2b343c9a2c536b"
     ],
     [
       "Steel.SelEffect.Common.exp",
@@ -271,7 +380,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dc292d0ccd95352ddee5707a80089dab"
+      "31fb53352bc8b8e9908996824d7952a4"
     ],
     [
       "Steel.SelEffect.Common.__proj__Mult__item___0",
@@ -283,7 +392,7 @@
         "refinement_interpretation_Tm_refine_ccaf7c8fe5194b40506faa1c948a0531"
       ],
       0,
-      "aeaafd0a6eb287edb04ba7db4077c10b"
+      "a471291cbb9d166fb74cffcb52a48ff7"
     ],
     [
       "Steel.SelEffect.Common.__proj__Mult__item___1",
@@ -295,7 +404,7 @@
         "refinement_interpretation_Tm_refine_ccaf7c8fe5194b40506faa1c948a0531"
       ],
       0,
-      "9746f0c11cd7fc20b5f796287d134ac1"
+      "5368a6f12d81c960667ab3ae67d948d1"
     ],
     [
       "Steel.SelEffect.Common.__proj__Atom__item___0",
@@ -307,7 +416,7 @@
         "refinement_interpretation_Tm_refine_d0b280db570ee2a3162a19c8c3a36041"
       ],
       0,
-      "63320cd2a66a0e41c910ef1c72a5886b"
+      "952b62ae4fb94b5a3a20c6d9bd6474eb"
     ],
     [
       "Steel.SelEffect.Common.get_candidates",
@@ -320,7 +429,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3f91953f17d2bfe54662313998d33bd0"
+      "cd969374a15e6fcc549e45b92da58b4c"
     ],
     [
       "Steel.SelEffect.Common.trivial_cancel",
@@ -336,7 +445,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "92e73e15fd840be7d1e12683cc8ffe63"
+      "19826049a987cdbc9a6f22dde1e770e5"
     ],
     [
       "Steel.SelEffect.Common.trivial_cancels",
@@ -349,7 +458,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d0ad08add8794f2baeb456d6dab13102"
+      "dd66cff050ec9b02c3ed0ed9302bf277"
     ],
     [
       "Steel.SelEffect.Common.try_candidates",
@@ -362,7 +471,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "007cea6587821d2df768c9956fe24721"
+      "166cd792a040d0162e454e54698618ef"
     ],
     [
       "Steel.SelEffect.Common.remove_from_list",
@@ -375,7 +484,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2e8c365ad2b9609e04578823696dc3dd"
+      "d5af4aa3a29c7385214457588621c871"
     ],
     [
       "Steel.SelEffect.Common.equivalent_lists_once",
@@ -388,7 +497,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "cfc9c64a6defe595172582b2b9362245"
+      "e9162344b4b120e0e01a6e6bc05a3da6"
     ],
     [
       "Steel.SelEffect.Common.get_head",
@@ -401,7 +510,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6db0233e53821968e9c3942724d98a92"
+      "b78a9f26de3a315709333c6717d447dc"
     ],
     [
       "Steel.SelEffect.Common.is_only_uvar",
@@ -421,7 +530,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "44e3bd9c1049084727cc9b954a171504"
+      "9fc775d23071e8e0de9ed4d2df0427e1"
     ],
     [
       "Steel.SelEffect.Common.try_unifying_remaining",
@@ -434,7 +543,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "84df139afc272e4a71d423235c91157b"
+      "ecca26445822d56acc4fb96ba2d8b57b"
     ],
     [
       "Steel.SelEffect.Common.print_atoms",
@@ -447,7 +556,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "14c9693752b1e9e620d02f73e883cd0f"
+      "71221dedd4da5c1cb6f55bf8244c0127"
     ],
     [
       "Steel.SelEffect.Common.unifies_with_all_uvars",
@@ -460,7 +569,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1c799f8265d9cd095cb3f9eb4f230de0"
+      "8f54d550f71f658aad3ae9ae45804f2c"
     ],
     [
       "Steel.SelEffect.Common.most_restricted_at_top",
@@ -473,7 +582,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0fc6079520325c6f07a6e79b62081306"
+      "7c690f470cacd66008c5617053ea81c8"
     ],
     [
       "Steel.SelEffect.Common.list_to_string",
@@ -486,7 +595,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "39e94c7876ac4c5630896169576e4084"
+      "9ab997d5014c09d5013c8c79ecbd9799"
     ],
     [
       "Steel.SelEffect.Common.mdenote",
@@ -507,7 +616,7 @@
         "typing_tok_Steel.SelEffect.Common.Unit@tok"
       ],
       0,
-      "8d14bb5ea20f35378d95e916d6995298"
+      "1197d7c1e2b8e6af4431d80d392f9737"
     ],
     [
       "Steel.SelEffect.Common.xsdenote",
@@ -523,7 +632,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "440b7f10a2e7e206b9dca0ef78e14a0d"
+      "bc39f3c89e8b1546a706341eb08d7eb2"
     ],
     [
       "Steel.SelEffect.Common.flatten",
@@ -544,7 +653,7 @@
         "typing_tok_Steel.SelEffect.Common.Unit@tok"
       ],
       0,
-      "6134725574aaa0784e87d419767d22a2"
+      "b3b1a91292ede75896d63c553be1060e"
     ],
     [
       "Steel.SelEffect.Common.flatten_correct_aux",
@@ -586,7 +695,7 @@
         "unit_typing"
       ],
       0,
-      "ecd74634002df2e9732cccc8f8e0978a"
+      "1d2544394d913be33b04adb17de8f494"
     ],
     [
       "Steel.SelEffect.Common.flatten_correct",
@@ -636,7 +745,7 @@
         "typing_tok_Steel.SelEffect.Common.Unit@tok"
       ],
       0,
-      "5147a92c7398be925546ae4950730bdf"
+      "7c5551d542298eb091ab5123edeea8be"
     ],
     [
       "Steel.SelEffect.Common.monoid_reflect",
@@ -648,7 +757,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fb855a149ab7c139d562b0e9286998f3"
+      "d3bed4450ec7bb2dbbd2de1f1f0be014"
     ],
     [
       "Steel.SelEffect.Common.lemma_xsdenote_aux",
@@ -676,7 +785,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "379f6e019e962af84c98462b44cf9e7a"
+      "7e12271fce9f783e6a6ca89533024543"
     ],
     [
       "Steel.SelEffect.Common.partition_equiv",
@@ -730,7 +839,7 @@
         "unit_typing"
       ],
       0,
-      "d6acd2d9c5d40277078972e9e145ef1c"
+      "73195f0cffdc35e86b45e2dd4c9b029a"
     ],
     [
       "Steel.SelEffect.Common.sort_correct_aux",
@@ -791,7 +900,7 @@
         "typing_Steel.SelEffect.Common.sort", "well-founded-ordering-on-nat"
       ],
       0,
-      "4cebe1ef2b534fee6bc9d0ff3e77c4fd"
+      "29f62296eb0fdf51a1362f910fb3fecd"
     ],
     [
       "Steel.SelEffect.Common.smt_reflexivity",
@@ -800,7 +909,7 @@
       0,
       [ "@query" ],
       0,
-      "4ea662fc53724bf82e8b3ad74c7bdb53"
+      "2b5abc0c39c7d9b09968a47bf4a7d09a"
     ],
     [
       "Steel.SelEffect.Common.identity_left_smt",
@@ -809,7 +918,7 @@
       0,
       [ "@query" ],
       0,
-      "59eedfbffc4734493fd790994dde8491"
+      "6b3789c22305de607f56bddefe5e657e"
     ],
     [
       "Steel.SelEffect.Common.identity_left",
@@ -818,7 +927,7 @@
       0,
       [ "@query" ],
       0,
-      "ba01a06a55dec8a11c44fa164fbef95c"
+      "15c6ced55f34c42c03b48c471bd30ce9"
     ],
     [
       "Steel.SelEffect.Common.identity_right_diff",
@@ -827,7 +936,7 @@
       0,
       [ "@query" ],
       0,
-      "b6f62db89e9d7cd0a855a36cf80a7de1"
+      "7dc52ba13fa5cdcc7e52bba3ecf1d646"
     ],
     [
       "Steel.SelEffect.Common.equivalent_sorted",
@@ -836,7 +945,7 @@
       0,
       [ "@query" ],
       0,
-      "ce12d48e8ef40344854a1d2918f1127b"
+      "3b56e3aba9076a99889ee0c209292d1d"
     ],
     [
       "Steel.SelEffect.Common.where_aux",
@@ -856,7 +965,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2d854a986b5be2d9faa7a0a81bc65924"
+      "c2029b4ba91127aab0893c8909dc9246"
     ],
     [
       "Steel.SelEffect.Common.fatom",
@@ -872,7 +981,7 @@
         "typing_Steel.SelEffect.Common.where"
       ],
       0,
-      "9a759887831813c81a714df558c212cb"
+      "785c2ffd4252b3b5a925b36cb374b2b5"
     ],
     [
       "Steel.SelEffect.Common.convert_map",
@@ -887,7 +996,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f3c1e631a834c8fe88e8e2021c2c4a65"
+      "7a41545c5d5074bb8136d69a5a5ecef2"
     ],
     [
       "Steel.SelEffect.Common.quote_exp",
@@ -908,7 +1017,7 @@
         "typing_tok_Steel.SelEffect.Common.Unit@tok"
       ],
       0,
-      "c783628e142bf0760d9759408146f5f3"
+      "fa1a14d2469fea28292f514e9aa6db47"
     ],
     [
       "Steel.SelEffect.Common.quote_atoms",
@@ -924,7 +1033,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b579e11dbd77b1493499e661fc4fb441"
+      "fc33969cdf50f45678026f07882e59fd"
     ],
     [
       "Steel.SelEffect.Common.normal_elim",
@@ -933,7 +1042,7 @@
       1,
       [ "@query", "equation_Steel.SelEffect.Common.normal_tac" ],
       0,
-      "59b96e7e58a3b7a858db6dc73e9e2dc3"
+      "e7af65fa01e00af7b53b3587e23bc7bf"
     ],
     [
       "Steel.SelEffect.Common.__proj__Result__item__uu___",
@@ -945,7 +1054,7 @@
         "refinement_interpretation_Tm_refine_edb1b3da8844880e6b488f3204b8874e"
       ],
       0,
-      "533af8df26c577f51681dbe41d6de6ad"
+      "b3739d8c0a978f7e8054b4fd2f595834"
     ],
     [
       "Steel.SelEffect.Common.canon_monoid",
@@ -963,7 +1072,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a5f37e8105bd824542c82910f19a8079"
+      "3d765eb6e0277b616e50833e0acc8ff7"
     ],
     [
       "Steel.SelEffect.Common.solve_indirection_eqs",
@@ -976,7 +1085,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a49a9b36ddb10b18e292a690baa9f86d"
+      "a264577ae537c7567d6da385d4955122"
     ],
     [
       "Steel.SelEffect.Common.solve_all_eqs",
@@ -989,7 +1098,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2b7d7cf00e459ca01ca68e7666fa2545"
+      "0f35e6151da76dd7971f0b153282582e"
     ],
     [
       "Steel.SelEffect.Common.solve_return_eqs",
@@ -1002,20 +1111,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "74de0ce2d347cdf891c8818f7896c7d5"
-    ],
-    [
-      "Steel.SelEffect.Common.solve_sladmits",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "af57a3be730cd791ba6a92c6a936701f"
+      "6cbf5d9dbda77cc03c36abf700937441"
     ],
     [
       "Steel.SelEffect.Common.solve_triv_eqs",
@@ -1028,7 +1124,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ed905e9e72bd6aae8ce545a2c42dc0a0"
+      "eba7a50cbac639292b5e17089719f751"
     ],
     [
       "Steel.SelEffect.Common.pick_next",
@@ -1041,7 +1137,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "41b43a982bac6b884ed8d5e8da521c09"
+      "25423ff0074ed56b8c794429b626ffe2"
     ],
     [
       "Steel.SelEffect.Common.filter_goals",
@@ -1058,7 +1154,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5251938ac62077e32add54bdb631f763"
+      "c1a31ac63f25b12b41e60483bafd006e"
     ],
     [
       "Steel.SelEffect.Common.solve_maybe_emps",
@@ -1071,7 +1167,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e3fcb48ee439f90ebab0d2fb672edfea"
+      "9b1fe79a95da010fa7e0be64a8fa6659"
     ],
     [
       "Steel.SelEffect.Common.norm_return_pre",
@@ -1084,7 +1180,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7f84d589d5a101ac77be5374af7152f6"
+      "8180453ffca10589b1fb1d08b3f96717"
     ]
   ]
 ]

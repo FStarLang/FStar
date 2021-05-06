@@ -1,15 +1,6 @@
 [
-  "…ˇ\u0002∏Ñ”\\ú¢⁄_ -aç:",
+  "\u0018wdâ•ô‚V+uUÍäQ÷,",
   [
-    [
-      "Steel.SpinLock.elim_lockinv",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.SpinLock.lockinv" ],
-      0,
-      "7607dc0fc6ec44032fd602347f4728ed"
-    ],
     [
       "Steel.SpinLock.new_lock",
       1,
@@ -30,19 +21,7 @@
         "true_interp"
       ],
       0,
-      "fb1ff1e64f1c2c5ce1bf1e4714b72717"
-    ],
-    [
-      "Steel.SpinLock.cas_frame",
-      1,
-      0,
-      0,
-      [
-        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
-        "equation_Steel.Effect.Common.true_p", "true_interp"
-      ],
-      0,
-      "55a7d70018a79b93e473a657e1d39931"
+      "b7f742e0ebff4d4193a2834c7133a6dd"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -73,10 +52,10 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "c2f5f5d277eed86686cd277c45febe9d"
+      "3b530698dc91995fd696e859cccaa35e"
     ],
     [
-      "Steel.SpinLock.acquire'",
+      "Steel.SpinLock.acquire",
       1,
       0,
       0,
@@ -107,16 +86,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "b9b387ae48261049508a8f69fe1edf3b"
-    ],
-    [
-      "Steel.SpinLock.acquire",
-      1,
-      0,
-      0,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "7316e60eec2c53910d0174bb3d06d9fc"
+      "a3e17dda6e91d3f1d73b9641bb4b1d96"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -147,10 +117,10 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal"
       ],
       0,
-      "4a309848ba400532683db453a3f93a94"
+      "986313ced3c583987eca0baf3120e6d9"
     ],
     [
-      "Steel.SpinLock.release'",
+      "Steel.SpinLock.release",
       1,
       0,
       0,
@@ -181,7 +151,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "50cdd37519c7a0fcbf2511c5eb4fccc2"
+      "9aa20b994e7566f36c50850ba6efd592"
     ]
   ]
 ]
