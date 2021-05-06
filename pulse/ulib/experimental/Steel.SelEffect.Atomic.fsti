@@ -495,6 +495,9 @@ val witness_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
   : SteelSelGhostT (erased a) opened_invariants
                 (h_exists p) (fun x -> p x)
 
+val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> vprop)
+  : SteelSelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)
