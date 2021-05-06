@@ -165,19 +165,19 @@ Basic syntactic structure
 
 An F* program is a collection of :ref:`modules<modules>`, with each
 module represented by a single file with the filename extension
-`.fst`. Later, we'll see that a module's interface is in a separate
+``.fst``. Later, we'll see that a module's interface is in a separate
 file.
 
 A module begins with the module's name and contains a sequence of
 top-level signatures and definitions.
 
-* Signatures ascribe a type to a definition, e.g., `val f : t`.
+* Signatures ascribe a type to a definition, e.g., ``val f : t``.
 
 Definitions come in several flavors: the two main forms we'll focus on
 in this section are
 
-* possibly recursive definitions (let bindings, `let [rec] f = e`)
-* and, inductive type definitions (datatypes, `type t = | D1 : t1 | ... | Dn : tn`)
+* possibly recursive definitions (let bindings, ``let [rec] f = e``)
+* and, inductive type definitions (datatypes, ``type t = | D1 : t1 | ... | Dn : tn``)
 
 In later sections, we'll see two other kinds of definition:
 user-defined indexed effects and sub-effects.
@@ -190,8 +190,8 @@ TODO:
 Comments
 ^^^^^^^^
 
-Block comments are delimited by `(*` and `*)`. Line comments begin
-with `//`. ::
+Block comments are delimited by ``(*`` and ``*)``. Line comments begin
+with ``//``. ::
 
   (* this is a
      block comment *)
@@ -209,42 +209,42 @@ definitions taken from the core F* module :ref:`Prims<corelib_Prims>`.
 Unit
 ^^^^
 
-The primitive type `unit` has a single element denoted `()`.
+The primitive type ``unit`` has a single element denoted ``()``.
 
 
 Booleans
 ^^^^^^^^
 
-The primitive type `bool` has two elements, `true` and
-`false`. `Prims` also provides the following primitive boolean
+The primitive type ``bool`` has two elements, ``true`` and
+``false``. ``Prims`` also provides the following primitive boolean
 operators
 
-* `&&`: Boolean conjunction (infix)
-* `||`: Boolean disjunction (infix)
-* `not`: Boolean negation (prefix)
+* ``&&``: Boolean conjunction (infix)
+* ``||``: Boolean disjunction (infix)
+* ``not``: Boolean negation (prefix)
 
 TODO: Precedence
 
 Integers
 ^^^^^^^^
 
-The type `int` represents unbounded, primitive mathematical
-integers. Its elements are formed from the literals `0, 1, 2, ...`,
+The type ``int`` represents unbounded, primitive mathematical
+integers. Its elements are formed from the literals ``0, 1, 2, ...``,
 and the following primitive operators:
 
-* `-`: Unary negation (prefix)
-* `-`: Subtraction (infix)
-* `+`: Addition (infix)
-* `/`: Euclidean division (infix)
-* `%`: Euclidean modulus (infix)
-* `op_Multiply`: Unfortunately, the traditional multiplication symbol
-  `*` is reserved by default for the :ref:`tuple<tuples>` type
-  constructor. Use the module `FStar.Mul` to treat `*` as integer
+* ``-``: Unary negation (prefix)
+* ``-``: Subtraction (infix)
+* ``+``: Addition (infix)
+* ``/``: Euclidean division (infix)
+* ``%``: Euclidean modulus (infix)
+* ``op_Multiply``: Unfortunately, the traditional multiplication symbol
+  ``*`` is reserved by default for the :ref:`tuple<tuples>` type
+  constructor. Use the module ``FStar.Mul`` to treat ``*`` as integer
   multiplication---see :ref:`this note<tuples>`.
-* `<` : Less than (infix)
-* `<=`: Less than or equal (infix)
-* `>` : Greater than (infix)
-* `>=`: Greater than or equal (infix)
+* ``<`` : Less than (infix)
+* ``<=``: Less than or equal (infix)
+* ``>`` : Greater than (infix)
+* ``>=``: Greater than or equal (infix)
 
 TODO: Precedence
 
@@ -261,7 +261,7 @@ The following are synonyms::
   let incr = fun (x:int) -> x + 1
   let incr (x:int) = x + 1
 
-You can also let F* infer the type of the parameter `x`::
+You can also let F* infer the type of the parameter ``x``::
 
   let incr x = x + 1
 
@@ -277,8 +277,8 @@ result type of a top-level definition.
 .. note::
 
    The type of any term in F* can be annotated using a *type
-   ascription*, `e <: t`. This form instructs F* to check that the
-   term `e` has the type `t`. For example, we could have written::
+   ascription*, ``e <: t``. This form instructs F* to check that the
+   term ``e`` has the type ``t``. For example, we could have written::
 
      let incr = fun (x:int) -> (x + 1 <: int)
 
@@ -292,8 +292,8 @@ User-defined operators and infix notation
 Most commonly, to call, or "apply", a function, just place the
 arguments to the right of the function. For example::
 
-  incr 0 // calls `incr` with the argument 0
-  more_than_twice 17 8 //calls `more_than_twice` with `17` and `8`
+  incr 0 // calls ``incr`` with the argument 0
+  more_than_twice 17 8 //calls ``more_than_twice`` with ``17`` and ``8``
 
 You can also immediately apply an unnamed function, or lambda term::
 
@@ -322,11 +322,11 @@ Boolean refinement types
 ........................
 
 Types are a way to describe collections of terms. For instance, the
-type `int` describes terms which compute integer results, i.e., when
-an `int`-typed term is reduced fully it produces a value in the set
-`{..., -2, -1, 0, 1, 2, ...}`. Similarly, the type `bool` is the type
+type ``int`` describes terms which compute integer results, i.e., when
+an ``int``-typed term is reduced fully it produces a value in the set
+``{..., -2, -1, 0, 1, 2, ...}``. Similarly, the type ``bool`` is the type
 of terms that compute or evaluate to one of the values in the set
-`{true,false}`.
+``{true,false}``.
 
 One (naive but useful) mental model is to think of a type as
 describing a set of values. With that in mind, and unlike in other
@@ -342,16 +342,16 @@ Some simple refinement types
        let nat = x:int{x >= 0}
 
 This is an instance of a boolean refinement type, whose general form
-is `x:t { e }` where `t` is a type, and `e` is a `bool`-typed term
-that may refer to the `t`-typed bound variable `x`. The term `e`
-*refines* the type `t`, in the sense that the set `S` denoted by `t`
-is restricted to those elements `x $\in$ S` for which `e` evaluates to
-`true`.
+is ``x:t { e }`` where ``t`` is a type, and ``e`` is a ``bool``-typed term
+that may refer to the ``t``-typed bound variable ``x``. The term ``e``
+*refines* the type ``t``, in the sense that the set ``S`` denoted by ``t``
+is restricted to those elements ``x $\in$ S`` for which ``e`` evaluates to
+``true``.
 
-That is the type `nat` describes the set of terms that evaluate to an
-element of the set `{0, 1, 2, 3, ...}`.
+That is the type ``nat`` describes the set of terms that evaluate to an
+element of the set ``{0, 1, 2, 3, ...}``.
 
-But, there's nothing particularly special about `nat`. You can define
+But, there's nothing particularly special about ``nat``. You can define
 arbitrary refinements of your choosing, e.g.,::
 
   let empty = x:int { false } //one type for the empty set
@@ -387,17 +387,17 @@ arbitrary refinements of your choosing, e.g.,::
 Refinement subtyping
 ^^^^^^^^^^^^^^^^^^^^
 
-We have seen so far how to define a new refinement type, like `nat` or
-`even`. However, to make use of refinement types we need rules that
+We have seen so far how to define a new refinement type, like ``nat`` or
+``even``. However, to make use of refinement types we need rules that
 allow us to:
 
 1. check that a program term has a given refinement type, e.g., to
-   check that `0` has type `nat`. This is sometimes called
+   check that ``0`` has type ``nat``. This is sometimes called
    *introducing* a refinement type.
 
-2. make use of a term that has a refinement type, e.g., given `x :
-   even` we would like to be write `x + 1`, treating `x` as an `int`
-   to add `1` to it. This is sometimes called *eliminating* a
+2. make use of a term that has a refinement type, e.g., given ``x :
+   even`` we would like to be write ``x + 1``, treating ``x`` as an ``int``
+   to add ``1`` to it. This is sometimes called *eliminating* a
    refinement type.
 
 The technical mechanism in F* that supports both these features is
@@ -405,33 +405,33 @@ called *refinement subtyping*.
 
 If you're used to a language like Java, C# or some other
 object-oriented language, you're familiar with the idea of
-subtyping. A type `t` is a subtype of `s` whenever a program term of
-type `t` can be safely treated as an `s`. For example, in Java, all
-object types are subtypes of the type `Object`, the base class of all
+subtyping. A type ``t`` is a subtype of ``s`` whenever a program term of
+type ``t`` can be safely treated as an ``s``. For example, in Java, all
+object types are subtypes of the type ``Object``, the base class of all
 objects.
 
 For boolean refinement types, the subtyping rules are as follows:
 
-* The type `x:t { p }` is a subtype of `t`. That is, given `e :
-  (x:t{p})`, it is always safe to *eliminate* the refinement and
-  consider `e` to also have type `t`.
+* The type ``x:t { p }`` is a subtype of ``t``. That is, given ``e :
+  (x:t{p})``, it is always safe to *eliminate* the refinement and
+  consider ``e`` to also have type ``t``.
 
-* For a term `e` of type `t` (i.e., `e : t`), `t` is a subtype of the
-  boolean refinement type `x:t { p }` whenever `p[e / x]` is provably
-  equal to `true`. In other words, to *introduce* `e : t` at the
-  boolean refinement type `x:t{ p }`, it suffices to prove that the
-  term `p` with `e` substituted for bound variable `x`, evaluates to
-  `true`.
+* For a term ``e`` of type ``t`` (i.e., ``e : t``), ``t`` is a subtype of the
+  boolean refinement type ``x:t { p }`` whenever ``p[e / x]`` is provably
+  equal to ``true``. In other words, to *introduce* ``e : t`` at the
+  boolean refinement type ``x:t{ p }``, it suffices to prove that the
+  term ``p`` with ``e`` substituted for bound variable ``x``, evaluates to
+  ``true``.
 
 The the elimination rule for refinement types (i.e., the first part
 above) is simple---with our intuition of types as sets, the refinement
-type `x:t{ p }` *refines* the set corresponding to `t` by the
-predicate `p`, i.e., the `x:t{ p }` denotes a subset of `t`, so, of
-course `x:t{ p }` is a subtype of `t`.
+type ``x:t{ p }`` *refines* the set corresponding to ``t`` by the
+predicate ``p``, i.e., the ``x:t{ p }`` denotes a subset of ``t``, so, of
+course ``x:t{ p }`` is a subtype of ``t``.
 
-The other direction is a bit more subtle: `x:t{ p }` is only a subtype
-of `p`, for those terms `e` that validate `p`. You're probably also
-wondering about how to prove that `p[e/x]` evaluates to `true`---this
+The other direction is a bit more subtle: ``x:t{ p }`` is only a subtype
+of ``p``, for those terms ``e`` that validate ``p``. You're probably also
+wondering about how to prove that ``p[e/x]`` evaluates to ``true``---this
 :ref:`part of the tutorial<tutorial:refinements>` should provide some
 answers. But, the short version is that F*, by default, uses an SMT
 solver to prove such fact, though you can also use tactics and other
@@ -441,25 +441,25 @@ techniques to do so. More information can be found
 An example
 ++++++++++
 
-Given `x:even`, consider typechecking `x + 1 : odd`; it takes a few
+Given ``x:even``, consider typechecking ``x + 1 : odd``; it takes a few
 steps:
 
-1. The operator `+` expects both its arguments to have type `int` and
-   returns an `int`.
+1. The operator ``+`` expects both its arguments to have type ``int`` and
+   returns an ``int``.
 
-2. To prove that the first argument `x:even` is a valid argument for
-   `+`, we use refinement subtyping to eliminate the refinement and
-   obtain `x:int`. The second argument `1:int` already has the
-   required type. Thus, `x + 1 : int`.
+2. To prove that the first argument ``x:even`` is a valid argument for
+   ``+``, we use refinement subtyping to eliminate the refinement and
+   obtain ``x:int``. The second argument ``1:int`` already has the
+   required type. Thus, ``x + 1 : int``.
 
-3. To conclude that `x + 1 : odd`, we need to introduce a refinement
-   type, by proving that the refinement predicate of `odd` evaluates
-   to true, i.e., `x + 1 % 2 = 1`. This is provable by SMT, since we
-   started with the knowledge that `x` is even.
+3. To conclude that ``x + 1 : odd``, we need to introduce a refinement
+   type, by proving that the refinement predicate of ``odd`` evaluates
+   to true, i.e., ``x + 1 % 2 = 1``. This is provable by SMT, since we
+   started with the knowledge that ``x`` is even.
 
 As such, F* applies subtyping repeatedly to introduce and eliminate
 refinement types, applying it multiple times even to check a simple
-term like `x + 1 : odd`.
+term like ``x + 1 : odd``.
 
 
 Function types or arrows
@@ -478,17 +478,17 @@ In its most basic form, function types have the shape::
 
 This is the type of a function that
 
-1. receives an argument `e` of type `t0`, and
+1. receives an argument ``e`` of type ``t0``, and
 
-2. always returns a value of type `t1[e / x]`, i.e., the type of the
-   returned value depends on the argument `e`.
+2. always returns a value of type ``t1[e / x]``, i.e., the type of the
+   returned value depends on the argument ``e``.
 
 It's worth emphasizing how this differs from function types in other
 languages.
 
 * F*'s function type are dependent---the type of the result depends on
   the argument. For example, we can write a function that returns a
-  `bool` when applied to an even number and returns a `string` when
+  ``bool`` when applied to an even number and returns a ``string`` when
   applied to an odd number.
 
 * In F*'s core language, all functions are total, i.e., a function
@@ -514,7 +514,7 @@ Some examples and common notation
 
 2. Not all functions are dependent and the name of the argument can be
    omitted when it is not needed. For example, here's a more concise
-   way to write the type of `(+)`::
+   way to write the type of ``(+)``::
 
      val (+) : int -> int -> int
 
@@ -526,21 +526,21 @@ Some examples and common notation
 
 4. Dependence between the arguments and the result type can be used to
    state relationships among them. For instance, there are several
-   types for the function `let incr = (fun (x:int) -> x + 1)`::
+   types for the function ``let incr = (fun (x:int) -> x + 1)``::
 
      val incr : int -> int
      val incr : x:int -> y:int{y > x}
      val incr : x:int -> y:int{y = x + 1}
 
-   The first type `(int -> int)` is its traditional type in languages
+   The first type ``(int -> int)`` is its traditional type in languages
    like OCaml.
 
-   The second type `(x:int -> y:int{y > x})` states that the returned
-   value `y` is greater than the argument `x`.
+   The second type ``(x:int -> y:int{y > x})`` states that the returned
+   value ``y`` is greater than the argument ``x``.
 
-   The third type is the most precise: `(x:int -> y:int{y = x + 1})`
-   states that the result `y` is exactly the increment of the argument
-   `x`.
+   The third type is the most precise: ``(x:int -> y:int{y = x + 1})``
+   states that the result ``y`` is exactly the increment of the argument
+   ``x``.
 
 5. It's often convenient to add refinements on arguments in a
    dependent function type. For instance::
@@ -548,21 +548,21 @@ Some examples and common notation
      val f : x:(x:int{ x >= 1 }) -> y:(y:int{ y > x }) -> z:int{ z > x + y }
 
    Since this style is so common, and it is inconvenient to have to
-   bind two names for the parameters `x` and `y`, F* allows (and
+   bind two names for the parameters ``x`` and ``y``, F* allows (and
    encourages) you to write::
 
      val f : x:int{ x >= 1 } -> y:int{ y > x } -> z:int{ z > x + y }
 
 6. To emphasize that functions in F*'s core are total functions (i.e.,
    they always return a result), we sometimes annotate the result type
-   with the effect label "`Tot`". This label is optional, but
+   with the effect label "``Tot``". This label is optional, but
    especially as we learn about :ref:`effects <effects>`, emphasizing
-   that some functions have no effects via the `Tot` label is
+   that some functions have no effects via the ``Tot`` label is
    useful. For example, one might typically write::
 
      val f : x:int{ x >= 1 } -> y:int{ y > x } -> Tot (z:int{ z > x + y })
 
-   adding a `Tot` annotation on the last arrow, to indicate that the
+   adding a ``Tot`` annotation on the last arrow, to indicate that the
    function has no side effects. One could also write::
 
      val f : x:int{ x >= 1 } -> Tot (y:int{ y > x } -> Tot (z:int{ z > x + y }))
@@ -585,8 +585,8 @@ called a *Pure Type System* or `PTS
 
 In F* (as in other PTSs) types have types too, functions can take
 types as arguments and return types as results, etc. In particular,
-the type of a type is `Type`, e.g., `bool : Type`, `int : Type`, `int
--> int : Type` etc. In fact, even `Type` has a type---as we'll see in
+the type of a type is ``Type``, e.g., ``bool : Type``, ``int : Type``, ``int
+-> int : Type`` etc. In fact, even ``Type`` has a type---as we'll see in
 the subsection on :ref:`universes <universes>`.
 
 Parametric polymorphism or generics
@@ -605,13 +605,13 @@ example, here's a polymorphic identity function::
 
 There are a several things to note here:
 
-* The type of `id` is a dependent function type, with two
-  arguments. The first argument is `a : Type`; the second argument is
-  a term of type `a`; and the result also has the same type `a`.
+* The type of ``id`` is a dependent function type, with two
+  arguments. The first argument is ``a : Type``; the second argument is
+  a term of type ``a``; and the result also has the same type ``a``.
 
-* The definition of `id` is a lambda term with two arguments `a :
-  Type` (corresponding to the first argument type) and `x : a`. The
-  function returns `x`---it's an identity function on the second
+* The definition of ``id`` is a lambda term with two arguments ``a :
+  Type`` (corresponding to the first argument type) and ``x : a``. The
+  function returns ``x``---it's an identity function on the second
   argument.
 
 Here are some equivalent ways to write it::
@@ -619,7 +619,7 @@ Here are some equivalent ways to write it::
   let id = fun (a:Type) (x:a) -> x <: a
   let id (a:Type) (x:a) : a = x
 
-To call `id`, one can apply and check its type as shown::
+To call ``id``, one can apply and check its type as shown::
 
   id bool true : bool
   id bool false : bool
@@ -639,62 +639,164 @@ To call `id`, one can apply and check its type as shown::
      let twice : <fill me in> = fun a f x -> compose a a a f f x
 
 It's quite tedious to have to explicitly provide that first type
-argument to `id`. Implicit arguments and type inference will help, as
-we'll see next.
+argument to ``id``. Implicit arguments and type inference will help, as
+we'll see in :ref:`a later section <inference>`.
+
+
+Type inference: Basics
+......................
+.. _inference:
+
+Like many other languages in the tradition of
+`Milner's ML <https://en.wikipedia.org/wiki/ML_%28programming_language%29>`_,
+type inference is a central component in F*'s design.
+
+You may be used to type inference in other languages, where one can
+leave out type annotations (e.g., on variables, or when using
+type-polymorphic (aka generic) functions) and the compiler determines
+an appropriate type based on the surrounding program context. F*'s
+type inference certainly includes such a feature, but is considerably
+more powerful. Like in other dependently typed language, F*'s
+inference engine is based on `higher-order unification
+<https://en.wikipedia.org/wiki/Unification_(computer_science)#Higher-order_unification>`_
+and can be used to infer arbitrary fragments of program text, not just
+type annotations on variables.
+
+Let's consider our simple example of the definition and use of the
+identity function again::
+
+  let id (a:Type) (x:a) : a = x
+
+  id bool true : bool
+  id bool false : bool
+  id int (-1) : int
+  id nat 17 : nat
+  id string "hello" : string
+  id (int -> int) (fun x -> x) 0 : int
+
+Instead of explicitly providing that first type argument when applying
+``id``, one could write it as follows, replacing the type arguments with
+an underscore ``_``::
+
+  id _ true : bool
+  id _ false : bool
+  id _ (-1) : int
+  id _ 17 : nat
+  id _ "hello" : string
+  id _ (fun x -> x) 0 : int
+
+The underscore symbols is a wildcard, or a hole in program, and it's
+the job of the F* typechecker to fill in the hole.
+
+.. note::
+
+   Program holes are a very powerful concept and form the basis of
+   Meta-F*, the metaprogramming and tactics framework embedded in
+   F*---we'll see more about holes in a :ref:`later
+   section<meta-fstar>`.
+
 
 Implicit arguments
-..................
-
+^^^^^^^^^^^^^^^^^^
 .. _implicits:
+
+Since it's tedious to write an ``_`` everywhere, F* has a notion of
+*implicit arguments*. That is, when defining a function, one can add
+annotations to indicate that certain arguments can be omitted at call
+sites and left for the typechecker to infer automatically.
+
+For example, one could write::
+
+  let id (#a:Type) (x:a) : a = x
+
+decorating the first argument ``a`` with a ``#``, to indicate that it is
+an implicit argument. Then at call sites, one can simply write::
+
+  id true
+  id 0
+  id (fun x -> x) 0
+
+And F* will figure out instantiations for the missing first argument
+to ``id``.
+
+In some cases, it may be useful to actually provide an implicit
+argument explicitly, rather than relying on the F* to pick one. For
+example, one could write the following::
+
+  id #nat 0
+  id #(x:int{x == 0}) 0
+  id #(x:int{x <> 1}) 0
+
+In each case, we provide the first argument of ``id`` explicitly, by
+preceding it with a ``#`` sign, which instructs F* to take the user's
+term rather than generating a hole and trying to fill it.
+
+Universes
+.........
+
+.. _universes:
+
+As mentioned before, every well-typed term in F* has a type, and this
+is true of the type ``Type`` itself. In some languages that are
+designed only for programming rather than both programs and proofs,
+the type of ``Type`` is itself ``Type``, a kind of circularity known
+as `impredicativity
+<https://en.wikipedia.org/wiki/Impredicativity>`_. This circularity
+leads to paradoxes and can make a logic inconsistent.
+
+As such, F*, like many other dependently typed systems, employ a
+system of *universes*. The type ``Type`` actually comes in (countably)
+infinite variants, written ``Type u#0``, ``Type u#1``, ``Type u#2``,
+etc. The ``u#i`` annotation following the ``Type`` is called a
+*universe level*, where ``Type u#i`` has type ``Type u#(i + 1)``. One
+way to think of it is the each universe level contains an entire copy
+of ``F*``'s type system, with higher universes being large enough to
+accommodate copies of the systems available at all lower levels.
+
+This may seem a bit mind-bending at first. And, indeed, the universe
+system of F* can often be ignored, since F* will infer universes
+levels, e.g., one can just write ``Type`` instead of picking a
+specific universe level. That said, occasionally, the universe
+constraints will make themselves known and preventy you from doing
+certain things that can break consistency. Nevertheless, universes are
+a crucial feature that allow F* programs to abstract over nearly all
+elements of the language (e.g., one can write functions from types to
+types, or store types within data structures) while remaining
+logically consistent.
+
+F*'s type system is universe polymorphic, meaning that by default, a defin
+
+
+
 
 
 
 Syntax of binders
-^^^^^^^^^^^^^^^^^
+.................
 
-..
-   \fstar syntax is
-   roughly modeled on OCaml (\ls$val$, \ls$let$, \ls$match$ etc.)
-   although there are many differences to account for the additional
-   typing features.
-   %
-   Binding occurrences \ls$b$ of variables take the form \ls$x:t$, declaring
-   a variable \ls$x$ at type \ls$t$; or \ls$#x:t$ indicating that the
-   binding is for an implicit argument.
-   %
-   The syntax
-   %
-   \ls@fun (b$_1$) ... (b$_n$) -> t@ introduces a lambda abstraction, whereas
-   %
-   \ls@b$_1$ -> ... -> b$_n$ -> c@ is the shape of a curried function type.
-   Refinement types are written \ls$b{t}$,
-   e.g., \ls$x:int{x>=0}$ is the type of non-negative integers
-   (i.e., \ls$nat$).
-   %
-   As usual, a bound variable is in scope to the right of its binding; we
-   omit the type in a binding when it can be inferred; and for
-   non-dependent function types, we omit the variable name.
-   %
-   For example, the type of the
-   pure append function on vectors is written
-   %
-   \ls$#a:Type -> #m:nat -> #n:nat -> vec a m -> vec a n -> vec a (m + n)$,
-   %
-   with the two explicit arguments and the return type depending on the
-   three implicit arguments marked with `\ls$#$'. The type of pairs in \fstar is
-   represented by \ls`a & b`
-   with \ls`a` and \ls`b` as the types of the first
-   and second components respectively. In contrast, dependent tuple types are
-   written as \ls`x:a & b` where \ls`x`
-   is bound in \ls`b`. A dependent pair value is
-   written \ls`(| e, f |)` and we
-   use \ls`x._1` and \ls`x._2` for the first and second dependent
-   projection maps.
+Having informally introduced implicit arguments, we can now present a
+first take at the syntax of binders in F*.
 
+**Binding occurrences**: A binding occurence `b` of a variable
+introduces a variable in a scope and is associated with one of several
+language constructs, including a lambda abstraction, a refinement
+type, a let binding, etc. Each binding occurrence is in one of several
+forms:
 
-Universes
-.........
-.. _universes:
+  1. The form ``x:t``, declaring a variable ``x`` at type ``t``
+
+  2. The ``#x:t``, indicating that the binding is for an implicit
+     argument ``x`` of type ``t``.
+
+In many cases the type annotation on a binder can be omitted,
+
+Later, we will see additional forms of binding occurrences, including
+versions that associate attributes with binders and others with
+various forms of type-inference hints.
+
+**Introducing binders**: The syntax ``fun (b1) ... (bn) -> t``
+introduces a lambda abstraction, whereas ``b1 -> .. bn -> t`` is the
+shape of a function type.
 
 
 Decidable equality and `eqtype`

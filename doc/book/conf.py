@@ -15,6 +15,12 @@
 import os
 import sys
 
+sys.path.insert(0, os.path.abspath('.'))
+import fstar_pygments
+from sphinx.highlighting import lexers
+
+lexers['fstar'] = fstar_pygments.CustomLexer()
+
 # -- Project information -----------------------------------------------------
 
 project = u'Programming with Proofs in F*'

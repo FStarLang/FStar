@@ -12,9 +12,6 @@ BUILDDIR      = _build
 
 html: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	find _build -name "*.html" | xargs sed -i 's/_static/static/g'
-	rm -rf _build/html/static
-	mv _build/html/_static _build/html/static
 
 # Put it first so that "make" without argument is like "make help".
 help:
