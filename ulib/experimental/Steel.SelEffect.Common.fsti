@@ -48,6 +48,14 @@ type vprop =
   | VUnit : vprop' -> vprop
   | VStar: vprop -> vprop -> vprop
 
+(* A generic lift from slprop to vprop with a non-informative selector *)
+
+[@@ __steel_reduce__]
+let to_vprop' (p:slprop) = {hp = p; t = unit; sel = fun _ -> ()}
+[@@ __steel_reduce__]
+unfold
+let to_vprop (p:slprop) = VUnit (to_vprop' p)
+
 unfold
 let normal (#a:Type) (x:a) =
   norm [
@@ -163,6 +171,11 @@ val emp' :vprop'
 unfold let emp = VUnit emp'
 
 val reveal_emp (_:unit) : Lemma (hp_of emp == Mem.emp /\ t_of emp == unit)
+
+(* Lifting pure to vprop *)
+
+[@@__steel_reduce__]
+unfold let pure (p:prop) = to_vprop (pure p)
 
 let maybe_emp (framed:bool) (frame:pre_t) = if framed then frame == emp else True
 let maybe_emp_dep (#a:Type) (framed:bool) (frame:post_t a) =

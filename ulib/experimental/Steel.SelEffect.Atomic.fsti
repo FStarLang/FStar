@@ -332,6 +332,22 @@ val lift_atomic_steel
 
 sub_effect SteelSelAtomicBase ~> Steel.SelEffect.SteelSelBase = lift_atomic_steel
 
+[@@warn_on_use "as_atomic_action is a trusted primitive"]
+val as_atomic_action (#a:Type u#a)
+                     (#opened_invariants:inames)
+                     (#fp:slprop)
+                     (#fp': a -> slprop)
+                     (f:action_except a opened_invariants fp fp')
+  : SteelSelAtomicT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+
+[@@warn_on_use "as_atomic_action is a trusted primitive"]
+val as_atomic_action_ghost (#a:Type u#a)
+                           (#opened_invariants:inames)
+                           (#fp:slprop)
+                           (#fp': a -> slprop)
+                           (f:action_except a opened_invariants fp fp')
+  : SteelSelGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+
 (* Some helper functions *)
 
 open FStar.Ghost
@@ -354,6 +370,14 @@ let gget (#opened:inames) (p: vprop) : SteelSelGhost (erased (t_of p))
 =
   let m = get #p () in
   hide ((reveal m) p)
+
+val rewrite_slprop
+  (#opened:inames)
+  (p q:vprop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m)
+  ) : SteelSelGhostT unit opened p (fun _ -> q)
 
 val change_slprop
   (#opened:inames)
@@ -430,6 +454,14 @@ val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
      h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
    )
 
+val intro_pure (#opened_invariants:_) (p:prop)
+  : SteelSelGhost unit opened_invariants emp (fun _ -> pure p)
+                (requires fun _ -> p) (ensures fun _ _ _ -> True)
+
+val elim_pure (#uses:_) (p:prop)
+  : SteelSelGhost unit uses (pure p) (fun _ -> emp)
+               (requires fun _ -> True) (ensures fun _ _ _ -> p)
+
 let return (#a:Type u#a)
   (#opened_invariants:inames)
   (#p:a -> vprop)
@@ -496,67 +528,3 @@ val elim_vrewrite (#opened:inames)
 : SteelSelGhost unit opened (vrewrite v f) (fun _ -> v)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
-
-(*** Lemmas on references *)
-
-module R = Steel.Reference
-
-val vptr_not_null (#opened: _)
-  (#a: Type)
-  (r: R.ref a)
-: SteelSelGhost unit opened
-    (Steel.SelEffect.vptr r)
-    (fun _ -> Steel.SelEffect.vptr r)
-    (fun _ -> True)
-    (fun h0 _ h1 ->
-      h1 (Steel.SelEffect.vptr r) == h0 (Steel.SelEffect.vptr r) /\
-      R.is_null r == false
-    )
-
-(*** Ghost references ***)
-
-[@@ erasable]
-let ghost_ref (a:Type u#0) : Type u#0 = R.ghost_ref a
-let ghost_ptr (#a: Type0) (r: ghost_ref a) : Tot (slprop u#1) = h_exists (R.ghost_pts_to r Steel.FractionalPermission.full_perm)
-
-val ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
-
-val ghost_ptr_sel_interp (#a:Type0) (r:ghost_ref a) (m:mem) : Lemma
-  (requires interp (ghost_ptr r) m)
-  (ensures interp (R.ghost_pts_to r Steel.FractionalPermission.full_perm (ghost_ptr_sel r m)) m)
-
-[@@ __steel_reduce__]
-let ghost_vptr' #a r : vprop' =
-  {hp = ghost_ptr r;
-   t = a;
-   sel = ghost_ptr_sel r}
-
-[@@ __steel_reduce__]
-unfold
-let ghost_vptr r = VUnit (ghost_vptr' r)
-
-val ghost_alloc (#a:Type0) (#opened:inames) (x:Ghost.erased a) : SteelSelGhost (ghost_ref a) opened
-  emp (fun r -> ghost_vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ r h1 -> h1 (ghost_vptr r) == Ghost.reveal x)
-
-val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost unit opened
-  (ghost_vptr r) (fun _ -> emp)
-  (requires fun _ -> True)
-  (ensures fun _ _ _ -> True)
-
-let ghost_read (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost (Ghost.erased a) opened
-  (ghost_vptr r) (fun _ -> ghost_vptr r)
-  (requires fun _ -> True)
-  (ensures fun h0 x h1 -> h0 (ghost_vptr r) == h1 (ghost_vptr r) /\ Ghost.reveal x == h1 (ghost_vptr r))
-= gget (ghost_vptr r)
-
-val ghost_write (#a:Type0) (#opened:inames) (r:ghost_ref a) (x:Ghost.erased a) : SteelSelGhost unit opened
-  (ghost_vptr r) (fun _ -> ghost_vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ _ h1 -> Ghost.reveal x == h1 (ghost_vptr r))
-
-[@@ __steel_reduce__]
-let ghost_sel (#a:Type) (#p:vprop) (r:ghost_ref a)
-  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (ghost_vptr r) /\ True)})
-  = h (ghost_vptr r)

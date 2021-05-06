@@ -221,57 +221,9 @@ polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
 effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
   SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
-   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
-   Using the value of the ref as a selector is ok because refs with fractional permissions
-   all share the same value.
-   Refs on PCM are more complicated, and likely not usable with selectors
-*)
-
-module R = Steel.Reference
-open Steel.FractionalPermission
-
-let ref (a:Type0) : Type0 = R.ref a
-let ptr (#a:Type0) (r:ref a) : slprop u#1 = h_exists (R.pts_to r full_perm)
-
-val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
-
-val ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
-  (requires interp (ptr r) m)
-  (ensures interp (R.pts_to r full_perm (ptr_sel r m)) m)
-
-[@@ __steel_reduce__]
-let vptr' #a r : vprop' =
-  {hp = ptr r;
-   t = a;
-   sel = ptr_sel r}
-
-[@@ __steel_reduce__]
-unfold
-let vptr r = VUnit (vptr' r)
-
-val alloc (#a:Type0) (x:a) : SteelSel (ref a)
-  emp (fun r -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ r h1 -> h1 (vptr r) == x /\ not (R.is_null r))
-
-val free (#a:Type0) (r:ref a) : SteelSel unit
-  (vptr r) (fun _ -> emp)
-  (requires fun _ -> True)
-  (ensures fun _ _ _ -> True)
-
-val read (#a:Type0) (r:ref a) : SteelSel a
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
-
-val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ _ h1 -> x == h1 (vptr r))
-
-[@@ __steel_reduce__]
-let sel (#a:Type) (#p:vprop) (r:ref a)
-  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
-  = h (vptr r)
+[@@warn_on_use "as_action is a trusted primitive"]
+val as_action  (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelSelT a (to_vprop p) (fun x -> to_vprop (q x))
