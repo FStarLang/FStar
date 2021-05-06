@@ -5,6 +5,8 @@ open Steel.SelEffect
 
 module Spec = Trees
 
+#set-options "--ide_id_info_off"
+
 (*** Type declarations *)
 
 (**** Base types *)

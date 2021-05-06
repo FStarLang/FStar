@@ -1,5 +1,6 @@
 module Selectors.LList.Derived
 
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 open Selectors.LList
