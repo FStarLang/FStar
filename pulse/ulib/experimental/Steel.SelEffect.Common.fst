@@ -7,6 +7,7 @@ open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
 module Eff = Steel.Effect
 
+let h_exists #a f = VUnit ({hp = Mem.h_exists (fun x -> hp_of (f x)); t = unit; sel = fun _ -> ()})
 
 let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 

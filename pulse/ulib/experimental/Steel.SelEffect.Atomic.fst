@@ -445,9 +445,27 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
 
 let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
 
+let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures fact)
+  ) : repr unit false opened Unobservable p (fun _ -> p)
+      (fun h -> True)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      l (core_mem m0)
+
+let extract_info_raw p fact l = SteelSelGhost?.reflect (extract_info_raw0 p fact l)
+
 let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
 let sladmit _ = SteelSelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+
+let drop p = rewrite_slprop p emp
+  (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
 
 let reveal_star0 (#opened:inames) (p1 p2:vprop)
   : repr unit false opened Unobservable (p1 `star` p2) (fun _ -> p1 `star` p2)
@@ -496,6 +514,12 @@ let elim_pure_aux #uses (p:prop)
 let elim_pure #uses p =
   let _ = elim_pure_aux p in
   rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ())
+
+let intro_exists #a #opened x p =
+  rewrite_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x (fun x -> hp_of (p x)) m)
+
+let witness_exists #a #u #p _ =
+  SteelSelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
 
 let intro_vrefine v p =
   let m = get () in
