@@ -97,7 +97,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = TcUtil.new_implicit_var reason r env pure_wp_t in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Allow_untyped None in
   pure_wp_uvar, guard_wp
 
 
