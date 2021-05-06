@@ -57,6 +57,20 @@ module TcComm = FStar.TypeChecker.Common
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
+let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option<(term * BU.time)>) =
+  if cfg.debug.print_normalized
+  then match dbg with
+       | Some (tm, time_then) ->
+         let time_now = BU.now () in
+                    // BU.print1 "Normalizer result timing (%s ms)\n"
+                    //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+         BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                       (Print.term_to_string tm)
+                       (Cfg.cfg_to_string cfg)
+                       (Print.term_to_string t)
+       | _ -> ()
+
 let cases f d = function
   | Some x -> f x
   | None -> d
@@ -81,8 +95,7 @@ type stack_elt =
  | CBVApp   of env * term * aqual * Range.range
  | Meta     of env * S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Cfg      of cfg
- | Debug    of term * BU.time
+ | Cfg      of cfg * option<(term * BU.time)>
 type stack = list<stack_elt>
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -117,7 +130,6 @@ let stack_elt_to_string = function
     | Meta (_, m,_) -> "Meta"
     | Let  _ -> "Let"
     | Cfg _ -> "Cfg"
-    | Debug (t, _) -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
 let stack_to_string s =
@@ -955,7 +967,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
 
         let meets_some_criterion =
             comb_or [
-            (match cfg.steps.unfold_only with
+            (if cfg.steps.for_extraction
+             then yesno <| Option.isSome (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
+             else no)
+           ;(match cfg.steps.unfold_only with
              | None -> no
              | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
            ;(match cfg.steps.unfold_attr with
@@ -976,17 +991,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                qs)
            ]
         in
-        if cfg.steps.for_extraction
-        then (
-          //in the case of extraction, we always enable the ambient inline_for_extraction/unfold
-          //rules. User-specified criteria an interpreted as further enabling additional unfoldings
-          //for extraction only
-          match meets_some_criterion with
-          | false, _, _ ->
-            yesno <| Option.isSome (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
-          | _ -> meets_some_criterion
-        )
-        else meets_some_criterion
+        meets_some_criterion
 
     // Nothing special, just check the depth
     | _ ->
@@ -1044,8 +1049,8 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
          * instantiation, but we do need to keep the old cfg. *)
         (* This is ugly, and a recurring problem, but I'm working around it for now *)
         let stack' = match stack with
-                     | UnivArgs (us, r) :: stack' -> UnivArgs (us, r) :: Cfg cfg :: stack'
-                     | stack' -> Cfg cfg :: stack'
+                     | UnivArgs (us, r) :: stack' -> UnivArgs (us, r) :: Cfg (cfg, None) :: stack'
+                     | stack' -> Cfg (cfg, None) :: stack'
         in
         Some (cfg', stack')
 
@@ -1202,12 +1207,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
+                else if cfg.steps.for_extraction
+                then [Env.Eager_unfolding_only; Env.InliningDelta]
                 else [NoDelta]
-              in
-              let delta_level =
-                  if cfg.steps.for_extraction
-                  then delta_level@[Env.Eager_unfolding_only; Env.InliningDelta]
-                  else delta_level
               in
               let cfg' = {cfg with steps = ({ to_fsteps s
                                               with in_full_norm_request=true;
@@ -1215,10 +1217,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
               let stack' =
-                let tail = (Cfg cfg)::stack in
-                if cfg.debug.print_normalized
-                then (Debug(tm, BU.now())::tail)
-                else tail in
+                let debug =
+                  if cfg.debug.print_normalized
+                  then Some (tm, BU.now())
+                  else None
+                in
+                Cfg (cfg, debug)::stack
+              in
               norm cfg' env stack' tm
             end
 
@@ -1288,7 +1293,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 | Cfg _ :: _
                 | Match _::_
-                | Debug _::_
                 | Meta _::_
                 | Let _ :: _
                 | App _ :: _
@@ -1309,7 +1313,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           Some ({rc with residual_typ=rct})
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
-                       let stack = (Cfg cfg)::stack in
+                       let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
@@ -1409,7 +1413,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
                 match stack with
-                | Cfg cfg :: stack ->
+                | Cfg (cfg, dbg) :: stack ->
+                  maybe_debug cfg t1 dbg;
                   let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
                   norm cfg env stack t
                 | _ ->
@@ -1422,7 +1427,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 && cfg.steps.weakly_reduce_scrutinee
                 && not cfg.steps.weak
             then let cfg' = { cfg with steps= { cfg.steps with weak = true } } in
-                 norm cfg' env (Cfg cfg :: stack) head
+                 norm cfg' env (Cfg (cfg, None) :: stack) head
             else norm cfg env stack head
 
           | Tm_let((b, lbs), lbody) when is_top_level lbs && cfg.steps.compress_uvars ->
@@ -1478,7 +1483,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbdef=norm cfg env [] lb.lbdef;
                                    lbattrs=List.map (norm cfg env []) lb.lbattrs} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                 let stack = (Cfg cfg)::stack in
+                 let stack = (Cfg (cfg, None))::stack in
                  let cfg = { cfg with strong = true } in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
@@ -1660,7 +1665,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                        delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
                    }
         in
-        cfg', (Cfg cfg)::stack
+        cfg', (Cfg (cfg, None))::stack
       else cfg, stack
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
@@ -2450,21 +2455,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       match stack with
       | [] -> t
 
-      | Debug (tm, time_then) :: stack ->
-        if cfg.debug.print_normalized
-        then begin
-          let time_now = BU.now () in
-          // BU.print1 "Normalizer result timing (%s ms)\n"
-          //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
-          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
-                       (Print.term_to_string tm)
-                       (Cfg.cfg_to_string cfg)
-                       (Print.term_to_string t)
-        end;
-        rebuild cfg env stack t
-
-      | Cfg cfg :: stack ->
+      | Cfg (cfg, dbg) :: stack ->
+        maybe_debug cfg t dbg;
         rebuild cfg env stack t
 
       | Meta(_, m, r)::stack ->

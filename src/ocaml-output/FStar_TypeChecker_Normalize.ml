@@ -1,4 +1,32 @@
 open Prims
+let (maybe_debug :
+  FStar_TypeChecker_Cfg.cfg ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.term * FStar_Util.time)
+        FStar_Pervasives_Native.option -> unit)
+  =
+  fun cfg ->
+    fun t ->
+      fun dbg ->
+        if
+          (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
+        then
+          match dbg with
+          | FStar_Pervasives_Native.Some (tm, time_then) ->
+              let time_now = FStar_Util.now () in
+              let uu___ =
+                let uu___1 =
+                  let uu___2 = FStar_Util.time_diff time_then time_now in
+                  FStar_Pervasives_Native.snd uu___2 in
+                FStar_Util.string_of_int uu___1 in
+              let uu___1 = FStar_Syntax_Print.term_to_string tm in
+              let uu___2 = FStar_TypeChecker_Cfg.cfg_to_string cfg in
+              let uu___3 = FStar_Syntax_Print.term_to_string t in
+              FStar_Util.print4
+                "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                uu___ uu___1 uu___2 uu___3
+          | uu___ -> ()
+        else ()
 let cases :
   'uuuuu 'uuuuu1 .
     ('uuuuu -> 'uuuuu1) ->
@@ -60,8 +88,8 @@ type stack_elt =
   | Meta of (env * FStar_Syntax_Syntax.metadata * FStar_Range.range) 
   | Let of (env * FStar_Syntax_Syntax.binders *
   FStar_Syntax_Syntax.letbinding * FStar_Range.range) 
-  | Cfg of FStar_TypeChecker_Cfg.cfg 
-  | Debug of (FStar_Syntax_Syntax.term * FStar_Util.time) 
+  | Cfg of (FStar_TypeChecker_Cfg.cfg * (FStar_Syntax_Syntax.term *
+  FStar_Util.time) FStar_Pervasives_Native.option) 
 let (uu___is_Arg : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Arg _0 -> true | uu___ -> false
 let (__proj__Arg__item___0 :
@@ -122,13 +150,11 @@ let (__proj__Let__item___0 :
   = fun projectee -> match projectee with | Let _0 -> _0
 let (uu___is_Cfg : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Cfg _0 -> true | uu___ -> false
-let (__proj__Cfg__item___0 : stack_elt -> FStar_TypeChecker_Cfg.cfg) =
-  fun projectee -> match projectee with | Cfg _0 -> _0
-let (uu___is_Debug : stack_elt -> Prims.bool) =
-  fun projectee -> match projectee with | Debug _0 -> true | uu___ -> false
-let (__proj__Debug__item___0 :
-  stack_elt -> (FStar_Syntax_Syntax.term * FStar_Util.time)) =
-  fun projectee -> match projectee with | Debug _0 -> _0
+let (__proj__Cfg__item___0 :
+  stack_elt ->
+    (FStar_TypeChecker_Cfg.cfg * (FStar_Syntax_Syntax.term * FStar_Util.time)
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Cfg _0 -> _0
 type stack = stack_elt Prims.list
 let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
@@ -200,9 +226,6 @@ let (stack_elt_to_string : stack_elt -> Prims.string) =
     | Meta (uu___1, m, uu___2) -> "Meta"
     | Let uu___1 -> "Let"
     | Cfg uu___1 -> "Cfg"
-    | Debug (t, uu___1) ->
-        let uu___2 = FStar_Syntax_Print.term_to_string t in
-        FStar_Util.format1 "Debug %s" uu___2
 let (stack_to_string : stack_elt Prims.list -> Prims.string) =
   fun s ->
     let uu___ = FStar_List.map stack_elt_to_string s in
@@ -2023,76 +2046,78 @@ let (should_unfold :
                       (let meets_some_criterion =
                          let uu___6 =
                            let uu___7 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                             with
-                             | FStar_Pervasives_Native.None -> no
-                             | FStar_Pervasives_Native.Some lids ->
-                                 let uu___8 =
-                                   FStar_Util.for_some
-                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                                 FStar_All.pipe_left yesno uu___8 in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then
+                               let uu___8 =
+                                 let uu___9 =
+                                   FStar_TypeChecker_Env.lookup_definition_qninfo
+                                     [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                     FStar_TypeChecker_Env.InliningDelta]
+                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                     qninfo in
+                                 FStar_Option.isSome uu___9 in
+                               FStar_All.pipe_left yesno uu___8
+                             else no in
                            let uu___8 =
                              let uu___9 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
                                    let uu___10 =
                                      FStar_Util.for_some
-                                       (fun at ->
-                                          FStar_Util.for_some
-                                            (fun lid ->
-                                               FStar_Syntax_Util.is_fvar lid
-                                                 at) lids) attrs in
+                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                       lids in
                                    FStar_All.pipe_left yesno uu___10 in
                              let uu___10 =
                                let uu___11 =
-                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                  with
                                  | FStar_Pervasives_Native.None -> no
                                  | FStar_Pervasives_Native.Some lids ->
                                      let uu___12 =
                                        FStar_Util.for_some
-                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                         lids in
-                                     FStar_All.pipe_left fullyno uu___12 in
+                                         (fun at ->
+                                            FStar_Util.for_some
+                                              (fun lid ->
+                                                 FStar_Syntax_Util.is_fvar
+                                                   lid at) lids) attrs in
+                                     FStar_All.pipe_left yesno uu___12 in
                                let uu___12 =
                                  let uu___13 =
-                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
                                    with
                                    | FStar_Pervasives_Native.None -> no
-                                   | FStar_Pervasives_Native.Some qs ->
+                                   | FStar_Pervasives_Native.Some lids ->
                                        let uu___14 =
                                          FStar_Util.for_some
-                                           (fun q ->
-                                              FStar_Util.for_some
-                                                (fun qual ->
-                                                   let uu___15 =
-                                                     FStar_Syntax_Print.qual_to_string
-                                                       qual in
-                                                   uu___15 = q) quals) qs in
-                                       FStar_All.pipe_left yesno uu___14 in
-                                 [uu___13] in
+                                           (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                           lids in
+                                       FStar_All.pipe_left fullyno uu___14 in
+                                 let uu___14 =
+                                   let uu___15 =
+                                     match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                     with
+                                     | FStar_Pervasives_Native.None -> no
+                                     | FStar_Pervasives_Native.Some qs ->
+                                         let uu___16 =
+                                           FStar_Util.for_some
+                                             (fun q ->
+                                                FStar_Util.for_some
+                                                  (fun qual ->
+                                                     let uu___17 =
+                                                       FStar_Syntax_Print.qual_to_string
+                                                         qual in
+                                                     uu___17 = q) quals) qs in
+                                         FStar_All.pipe_left yesno uu___16 in
+                                   [uu___15] in
+                                 uu___13 :: uu___14 in
                                uu___11 :: uu___12 in
                              uu___9 :: uu___10 in
                            uu___7 :: uu___8 in
                          comb_or uu___6 in
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         match meets_some_criterion with
-                         | (false, uu___6, uu___7) ->
-                             let uu___8 =
-                               let uu___9 =
-                                 FStar_TypeChecker_Env.lookup_definition_qninfo
-                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
-                                   FStar_TypeChecker_Env.InliningDelta]
-                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                   qninfo in
-                               FStar_Option.isSome uu___9 in
-                             FStar_All.pipe_left yesno uu___8
-                         | uu___6 -> meets_some_criterion
-                       else meets_some_criterion))
+                       meets_some_criterion))
                  | (uu___, uu___1, FStar_Pervasives_Native.Some uu___2,
                     uu___3, uu___4) ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -2104,76 +2129,78 @@ let (should_unfold :
                       (let meets_some_criterion =
                          let uu___6 =
                            let uu___7 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                             with
-                             | FStar_Pervasives_Native.None -> no
-                             | FStar_Pervasives_Native.Some lids ->
-                                 let uu___8 =
-                                   FStar_Util.for_some
-                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                                 FStar_All.pipe_left yesno uu___8 in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then
+                               let uu___8 =
+                                 let uu___9 =
+                                   FStar_TypeChecker_Env.lookup_definition_qninfo
+                                     [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                     FStar_TypeChecker_Env.InliningDelta]
+                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                     qninfo in
+                                 FStar_Option.isSome uu___9 in
+                               FStar_All.pipe_left yesno uu___8
+                             else no in
                            let uu___8 =
                              let uu___9 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
                                    let uu___10 =
                                      FStar_Util.for_some
-                                       (fun at ->
-                                          FStar_Util.for_some
-                                            (fun lid ->
-                                               FStar_Syntax_Util.is_fvar lid
-                                                 at) lids) attrs in
+                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                       lids in
                                    FStar_All.pipe_left yesno uu___10 in
                              let uu___10 =
                                let uu___11 =
-                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                  with
                                  | FStar_Pervasives_Native.None -> no
                                  | FStar_Pervasives_Native.Some lids ->
                                      let uu___12 =
                                        FStar_Util.for_some
-                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                         lids in
-                                     FStar_All.pipe_left fullyno uu___12 in
+                                         (fun at ->
+                                            FStar_Util.for_some
+                                              (fun lid ->
+                                                 FStar_Syntax_Util.is_fvar
+                                                   lid at) lids) attrs in
+                                     FStar_All.pipe_left yesno uu___12 in
                                let uu___12 =
                                  let uu___13 =
-                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
                                    with
                                    | FStar_Pervasives_Native.None -> no
-                                   | FStar_Pervasives_Native.Some qs ->
+                                   | FStar_Pervasives_Native.Some lids ->
                                        let uu___14 =
                                          FStar_Util.for_some
-                                           (fun q ->
-                                              FStar_Util.for_some
-                                                (fun qual ->
-                                                   let uu___15 =
-                                                     FStar_Syntax_Print.qual_to_string
-                                                       qual in
-                                                   uu___15 = q) quals) qs in
-                                       FStar_All.pipe_left yesno uu___14 in
-                                 [uu___13] in
+                                           (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                           lids in
+                                       FStar_All.pipe_left fullyno uu___14 in
+                                 let uu___14 =
+                                   let uu___15 =
+                                     match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                     with
+                                     | FStar_Pervasives_Native.None -> no
+                                     | FStar_Pervasives_Native.Some qs ->
+                                         let uu___16 =
+                                           FStar_Util.for_some
+                                             (fun q ->
+                                                FStar_Util.for_some
+                                                  (fun qual ->
+                                                     let uu___17 =
+                                                       FStar_Syntax_Print.qual_to_string
+                                                         qual in
+                                                     uu___17 = q) quals) qs in
+                                         FStar_All.pipe_left yesno uu___16 in
+                                   [uu___15] in
+                                 uu___13 :: uu___14 in
                                uu___11 :: uu___12 in
                              uu___9 :: uu___10 in
                            uu___7 :: uu___8 in
                          comb_or uu___6 in
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         match meets_some_criterion with
-                         | (false, uu___6, uu___7) ->
-                             let uu___8 =
-                               let uu___9 =
-                                 FStar_TypeChecker_Env.lookup_definition_qninfo
-                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
-                                   FStar_TypeChecker_Env.InliningDelta]
-                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                   qninfo in
-                               FStar_Option.isSome uu___9 in
-                             FStar_All.pipe_left yesno uu___8
-                         | uu___6 -> meets_some_criterion
-                       else meets_some_criterion))
+                       meets_some_criterion))
                  | (uu___, uu___1, uu___2, FStar_Pervasives_Native.Some
                     uu___3, uu___4) ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -2185,76 +2212,78 @@ let (should_unfold :
                       (let meets_some_criterion =
                          let uu___6 =
                            let uu___7 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                             with
-                             | FStar_Pervasives_Native.None -> no
-                             | FStar_Pervasives_Native.Some lids ->
-                                 let uu___8 =
-                                   FStar_Util.for_some
-                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                                 FStar_All.pipe_left yesno uu___8 in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then
+                               let uu___8 =
+                                 let uu___9 =
+                                   FStar_TypeChecker_Env.lookup_definition_qninfo
+                                     [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                     FStar_TypeChecker_Env.InliningDelta]
+                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                     qninfo in
+                                 FStar_Option.isSome uu___9 in
+                               FStar_All.pipe_left yesno uu___8
+                             else no in
                            let uu___8 =
                              let uu___9 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
                                    let uu___10 =
                                      FStar_Util.for_some
-                                       (fun at ->
-                                          FStar_Util.for_some
-                                            (fun lid ->
-                                               FStar_Syntax_Util.is_fvar lid
-                                                 at) lids) attrs in
+                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                       lids in
                                    FStar_All.pipe_left yesno uu___10 in
                              let uu___10 =
                                let uu___11 =
-                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                  with
                                  | FStar_Pervasives_Native.None -> no
                                  | FStar_Pervasives_Native.Some lids ->
                                      let uu___12 =
                                        FStar_Util.for_some
-                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                         lids in
-                                     FStar_All.pipe_left fullyno uu___12 in
+                                         (fun at ->
+                                            FStar_Util.for_some
+                                              (fun lid ->
+                                                 FStar_Syntax_Util.is_fvar
+                                                   lid at) lids) attrs in
+                                     FStar_All.pipe_left yesno uu___12 in
                                let uu___12 =
                                  let uu___13 =
-                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
                                    with
                                    | FStar_Pervasives_Native.None -> no
-                                   | FStar_Pervasives_Native.Some qs ->
+                                   | FStar_Pervasives_Native.Some lids ->
                                        let uu___14 =
                                          FStar_Util.for_some
-                                           (fun q ->
-                                              FStar_Util.for_some
-                                                (fun qual ->
-                                                   let uu___15 =
-                                                     FStar_Syntax_Print.qual_to_string
-                                                       qual in
-                                                   uu___15 = q) quals) qs in
-                                       FStar_All.pipe_left yesno uu___14 in
-                                 [uu___13] in
+                                           (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                           lids in
+                                       FStar_All.pipe_left fullyno uu___14 in
+                                 let uu___14 =
+                                   let uu___15 =
+                                     match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                     with
+                                     | FStar_Pervasives_Native.None -> no
+                                     | FStar_Pervasives_Native.Some qs ->
+                                         let uu___16 =
+                                           FStar_Util.for_some
+                                             (fun q ->
+                                                FStar_Util.for_some
+                                                  (fun qual ->
+                                                     let uu___17 =
+                                                       FStar_Syntax_Print.qual_to_string
+                                                         qual in
+                                                     uu___17 = q) quals) qs in
+                                         FStar_All.pipe_left yesno uu___16 in
+                                   [uu___15] in
+                                 uu___13 :: uu___14 in
                                uu___11 :: uu___12 in
                              uu___9 :: uu___10 in
                            uu___7 :: uu___8 in
                          comb_or uu___6 in
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         match meets_some_criterion with
-                         | (false, uu___6, uu___7) ->
-                             let uu___8 =
-                               let uu___9 =
-                                 FStar_TypeChecker_Env.lookup_definition_qninfo
-                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
-                                   FStar_TypeChecker_Env.InliningDelta]
-                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                   qninfo in
-                               FStar_Option.isSome uu___9 in
-                             FStar_All.pipe_left yesno uu___8
-                         | uu___6 -> meets_some_criterion
-                       else meets_some_criterion))
+                       meets_some_criterion))
                  | (uu___, uu___1, uu___2, uu___3,
                     FStar_Pervasives_Native.Some uu___4) ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -2266,76 +2295,78 @@ let (should_unfold :
                       (let meets_some_criterion =
                          let uu___6 =
                            let uu___7 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                             with
-                             | FStar_Pervasives_Native.None -> no
-                             | FStar_Pervasives_Native.Some lids ->
-                                 let uu___8 =
-                                   FStar_Util.for_some
-                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                                 FStar_All.pipe_left yesno uu___8 in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then
+                               let uu___8 =
+                                 let uu___9 =
+                                   FStar_TypeChecker_Env.lookup_definition_qninfo
+                                     [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                     FStar_TypeChecker_Env.InliningDelta]
+                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                     qninfo in
+                                 FStar_Option.isSome uu___9 in
+                               FStar_All.pipe_left yesno uu___8
+                             else no in
                            let uu___8 =
                              let uu___9 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
                                    let uu___10 =
                                      FStar_Util.for_some
-                                       (fun at ->
-                                          FStar_Util.for_some
-                                            (fun lid ->
-                                               FStar_Syntax_Util.is_fvar lid
-                                                 at) lids) attrs in
+                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                       lids in
                                    FStar_All.pipe_left yesno uu___10 in
                              let uu___10 =
                                let uu___11 =
-                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                  with
                                  | FStar_Pervasives_Native.None -> no
                                  | FStar_Pervasives_Native.Some lids ->
                                      let uu___12 =
                                        FStar_Util.for_some
-                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                         lids in
-                                     FStar_All.pipe_left fullyno uu___12 in
+                                         (fun at ->
+                                            FStar_Util.for_some
+                                              (fun lid ->
+                                                 FStar_Syntax_Util.is_fvar
+                                                   lid at) lids) attrs in
+                                     FStar_All.pipe_left yesno uu___12 in
                                let uu___12 =
                                  let uu___13 =
-                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                   match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
                                    with
                                    | FStar_Pervasives_Native.None -> no
-                                   | FStar_Pervasives_Native.Some qs ->
+                                   | FStar_Pervasives_Native.Some lids ->
                                        let uu___14 =
                                          FStar_Util.for_some
-                                           (fun q ->
-                                              FStar_Util.for_some
-                                                (fun qual ->
-                                                   let uu___15 =
-                                                     FStar_Syntax_Print.qual_to_string
-                                                       qual in
-                                                   uu___15 = q) quals) qs in
-                                       FStar_All.pipe_left yesno uu___14 in
-                                 [uu___13] in
+                                           (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                           lids in
+                                       FStar_All.pipe_left fullyno uu___14 in
+                                 let uu___14 =
+                                   let uu___15 =
+                                     match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_qual
+                                     with
+                                     | FStar_Pervasives_Native.None -> no
+                                     | FStar_Pervasives_Native.Some qs ->
+                                         let uu___16 =
+                                           FStar_Util.for_some
+                                             (fun q ->
+                                                FStar_Util.for_some
+                                                  (fun qual ->
+                                                     let uu___17 =
+                                                       FStar_Syntax_Print.qual_to_string
+                                                         qual in
+                                                     uu___17 = q) quals) qs in
+                                         FStar_All.pipe_left yesno uu___16 in
+                                   [uu___15] in
+                                 uu___13 :: uu___14 in
                                uu___11 :: uu___12 in
                              uu___9 :: uu___10 in
                            uu___7 :: uu___8 in
                          comb_or uu___6 in
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         match meets_some_criterion with
-                         | (false, uu___6, uu___7) ->
-                             let uu___8 =
-                               let uu___9 =
-                                 FStar_TypeChecker_Env.lookup_definition_qninfo
-                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
-                                   FStar_TypeChecker_Env.InliningDelta]
-                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                   qninfo in
-                               FStar_Option.isSome uu___9 in
-                             FStar_All.pipe_left yesno uu___8
-                         | uu___6 -> meets_some_criterion
-                       else meets_some_criterion))
+                       meets_some_criterion))
                  | uu___ -> default_unfolding ()) in
           FStar_TypeChecker_Cfg.log_unfolding cfg
             (fun uu___1 ->
@@ -2496,8 +2527,9 @@ let decide_unfolding :
                   let stack' =
                     match stack1 with
                     | (UnivArgs (us, r))::stack'1 -> (UnivArgs (us, r)) ::
-                        (Cfg cfg) :: stack'1
-                    | stack'1 -> (Cfg cfg) :: stack'1 in
+                        (Cfg (cfg, FStar_Pervasives_Native.None)) :: stack'1
+                    | stack'1 -> (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                        stack'1 in
                   FStar_Pervasives_Native.Some (cfg', stack')
               | Should_unfold_reify ->
                   let rec push e s =
@@ -2877,15 +2909,13 @@ let rec (norm :
                        then
                          [FStar_TypeChecker_Env.Unfold
                             FStar_Syntax_Syntax.delta_constant]
-                       else [FStar_TypeChecker_Env.NoDelta] in
-                     let delta_level1 =
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         FStar_List.append delta_level
+                       else
+                         if
+                           (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                         then
                            [FStar_TypeChecker_Env.Eager_unfolding_only;
                            FStar_TypeChecker_Env.InliningDelta]
-                       else delta_level in
+                         else [FStar_TypeChecker_Env.NoDelta] in
                      let cfg'1 =
                        let uu___4 = cfg in
                        let uu___5 =
@@ -2954,7 +2984,7 @@ let rec (norm :
                            (uu___4.FStar_TypeChecker_Cfg.tcenv);
                          FStar_TypeChecker_Cfg.debug =
                            (uu___4.FStar_TypeChecker_Cfg.debug);
-                         FStar_TypeChecker_Cfg.delta_level = delta_level1;
+                         FStar_TypeChecker_Cfg.delta_level = delta_level;
                          FStar_TypeChecker_Cfg.primitive_steps =
                            (uu___4.FStar_TypeChecker_Cfg.primitive_steps);
                          FStar_TypeChecker_Cfg.strong =
@@ -2966,16 +2996,15 @@ let rec (norm :
                            (uu___4.FStar_TypeChecker_Cfg.reifying)
                        } in
                      let stack' =
-                       let tail = (Cfg cfg) :: stack1 in
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
-                       then
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 = FStar_Util.now () in (tm, uu___6) in
-                           Debug uu___5 in
-                         uu___4 :: tail
-                       else tail in
+                       let debug =
+                         if
+                           (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
+                         then
+                           let uu___4 =
+                             let uu___5 = FStar_Util.now () in (tm, uu___5) in
+                           FStar_Pervasives_Native.Some uu___4
+                         else FStar_Pervasives_Native.None in
+                       (Cfg (cfg, debug)) :: stack1 in
                      norm cfg'1 env1 stack' tm))
            | FStar_Syntax_Syntax.Tm_type u ->
                let u1 = norm_universe cfg env1 u in
@@ -3126,7 +3155,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3204,85 +3235,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
-                             let cfg1 =
-                               let uu___7 = cfg in
-                               {
-                                 FStar_TypeChecker_Cfg.steps =
-                                   (uu___7.FStar_TypeChecker_Cfg.steps);
-                                 FStar_TypeChecker_Cfg.tcenv =
-                                   (uu___7.FStar_TypeChecker_Cfg.tcenv);
-                                 FStar_TypeChecker_Cfg.debug =
-                                   (uu___7.FStar_TypeChecker_Cfg.debug);
-                                 FStar_TypeChecker_Cfg.delta_level =
-                                   (uu___7.FStar_TypeChecker_Cfg.delta_level);
-                                 FStar_TypeChecker_Cfg.primitive_steps =
-                                   (uu___7.FStar_TypeChecker_Cfg.primitive_steps);
-                                 FStar_TypeChecker_Cfg.strong = true;
-                                 FStar_TypeChecker_Cfg.memoize_lazy =
-                                   (uu___7.FStar_TypeChecker_Cfg.memoize_lazy);
-                                 FStar_TypeChecker_Cfg.normalize_pure_lets =
-                                   (uu___7.FStar_TypeChecker_Cfg.normalize_pure_lets);
-                                 FStar_TypeChecker_Cfg.reifying =
-                                   (uu___7.FStar_TypeChecker_Cfg.reifying)
-                               } in
-                             norm cfg1 env'
-                               ((Abs
-                                   (env1, bs1, env', lopt1,
-                                     (t1.FStar_Syntax_Syntax.pos))) ::
-                               stack2) body1)))
-                | (Debug uu___2)::uu___3 ->
-                    if
-                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.weak
-                    then
-                      let t2 = closure_as_term cfg env1 t1 in
-                      rebuild cfg env1 stack1 t2
-                    else
-                      (let uu___5 = FStar_Syntax_Subst.open_term' bs body in
-                       match uu___5 with
-                       | (bs1, body1, opening) ->
-                           let env' =
-                             FStar_All.pipe_right bs1
-                               (FStar_List.fold_left
-                                  (fun env2 -> fun uu___6 -> dummy :: env2)
-                                  env1) in
-                           let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   (let uu___6 = rc in
-                                    {
-                                      FStar_Syntax_Syntax.residual_effect =
-                                        (uu___6.FStar_Syntax_Syntax.residual_effect);
-                                      FStar_Syntax_Syntax.residual_typ = rct;
-                                      FStar_Syntax_Syntax.residual_flags =
-                                        (uu___6.FStar_Syntax_Syntax.residual_flags)
-                                    })
-                             | uu___6 -> lopt in
-                           (FStar_TypeChecker_Cfg.log cfg
-                              (fun uu___7 ->
-                                 let uu___8 =
-                                   FStar_All.pipe_left
-                                     FStar_Util.string_of_int
-                                     (FStar_List.length bs1) in
-                                 FStar_Util.print1 "\tShifted %s dummies\n"
-                                   uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3360,7 +3315,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3438,7 +3395,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3516,7 +3475,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3594,7 +3555,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3672,7 +3635,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___8);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___7 = cfg in
                                {
@@ -3750,7 +3715,9 @@ let rec (norm :
                                      (FStar_List.length bs1) in
                                  FStar_Util.print1 "\tShifted %s dummies\n"
                                    uu___6);
-                            (let stack2 = (Cfg cfg) :: stack1 in
+                            (let stack2 =
+                               (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                               stack1 in
                              let cfg1 =
                                let uu___5 = cfg in
                                {
@@ -4038,16 +4005,18 @@ let rec (norm :
                        let tacopt1 =
                          FStar_Util.map_opt tacopt (norm cfg env1 []) in
                        match stack1 with
-                       | (Cfg cfg1)::stack2 ->
-                           let t2 =
-                             let uu___5 =
+                       | (Cfg (cfg1, dbg))::stack2 ->
+                           (maybe_debug cfg1 t12 dbg;
+                            (let t2 =
                                let uu___6 =
-                                 let uu___7 = FStar_Syntax_Util.unascribe t12 in
-                                 (uu___7, (tc1, tacopt1), l) in
-                               FStar_Syntax_Syntax.Tm_ascribed uu___6 in
-                             FStar_Syntax_Syntax.mk uu___5
-                               t1.FStar_Syntax_Syntax.pos in
-                           norm cfg1 env1 stack2 t2
+                                 let uu___7 =
+                                   let uu___8 =
+                                     FStar_Syntax_Util.unascribe t12 in
+                                   (uu___8, (tc1, tacopt1), l) in
+                                 FStar_Syntax_Syntax.Tm_ascribed uu___7 in
+                               FStar_Syntax_Syntax.mk uu___6
+                                 t1.FStar_Syntax_Syntax.pos in
+                             norm cfg1 env1 stack2 t2))
                        | uu___5 ->
                            let uu___6 =
                              let uu___7 =
@@ -4152,7 +4121,8 @@ let rec (norm :
                      FStar_TypeChecker_Cfg.reifying =
                        (uu___2.FStar_TypeChecker_Cfg.reifying)
                    } in
-                 norm cfg' env1 ((Cfg cfg) :: stack2) head
+                 norm cfg' env1 ((Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                   stack2) head
                else norm cfg env1 stack2 head
            | FStar_Syntax_Syntax.Tm_let ((b, lbs), lbody) when
                (FStar_Syntax_Syntax.is_top_level lbs) &&
@@ -4362,7 +4332,9 @@ let rec (norm :
                                   (FStar_List.fold_left
                                      (fun env2 ->
                                         fun uu___10 -> dummy :: env2) env1) in
-                              let stack2 = (Cfg cfg) :: stack1 in
+                              let stack2 =
+                                (Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                                stack1 in
                               let cfg1 =
                                 let uu___10 = cfg in
                                 {
@@ -4779,7 +4751,8 @@ and (reduce_impure_comp :
                       FStar_TypeChecker_Cfg.reifying =
                         (uu___1.FStar_TypeChecker_Cfg.reifying)
                     } in
-                  (cfg', ((Cfg cfg) :: stack1))
+                  (cfg', ((Cfg (cfg, FStar_Pervasives_Native.None)) ::
+                    stack1))
                 else (cfg, stack1) in
               match uu___ with
               | (cfg1, stack2) ->
@@ -7037,26 +7010,8 @@ and (rebuild :
              (let t1 = maybe_simplify cfg env1 stack1 t in
               match stack1 with
               | [] -> t1
-              | (Debug (tm, time_then))::stack2 ->
-                  (if
-                     (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
-                   then
-                     (let time_now = FStar_Util.now () in
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_Util.time_diff time_then time_now in
-                          FStar_Pervasives_Native.snd uu___6 in
-                        FStar_Util.string_of_int uu___5 in
-                      let uu___5 = FStar_Syntax_Print.term_to_string tm in
-                      let uu___6 = FStar_TypeChecker_Cfg.cfg_to_string cfg in
-                      let uu___7 = FStar_Syntax_Print.term_to_string t1 in
-                      FStar_Util.print4
-                        "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                        uu___4 uu___5 uu___6 uu___7)
-                   else ();
-                   rebuild cfg env1 stack2 t1)
-              | (Cfg cfg1)::stack2 -> rebuild cfg1 env1 stack2 t1
+              | (Cfg (cfg1, dbg))::stack2 ->
+                  (maybe_debug cfg1 t1 dbg; rebuild cfg1 env1 stack2 t1)
               | (Meta (uu___3, m, r))::stack2 ->
                   let t2 =
                     FStar_Syntax_Syntax.mk
