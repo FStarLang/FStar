@@ -6853,6 +6853,114 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                        | FStar_Syntax_Syntax.Tm_meta (t, uu___6) ->
                            may_relate t
                        | uu___6 -> false in
+                     let try_reveal_hide env2 t11 t21 =
+                       let payload_of_hide_reveal h args =
+                         match ((h.FStar_Syntax_Syntax.n), args) with
+                         | (FStar_Syntax_Syntax.Tm_uinst (uu___5, u::[]),
+                            (ty, FStar_Pervasives_Native.Some
+                             (FStar_Syntax_Syntax.Implicit uu___6))::
+                            (t, uu___7)::[]) when is_flex t ->
+                             FStar_Pervasives_Native.Some (u, ty, t)
+                         | uu___5 -> FStar_Pervasives_Native.None in
+                       let is_reveal_or_hide t =
+                         let uu___5 = FStar_Syntax_Util.head_and_args t in
+                         match uu___5 with
+                         | (h, args) ->
+                             let uu___6 =
+                               FStar_Syntax_Util.is_fvar
+                                 FStar_Parser_Const.reveal h in
+                             if uu___6
+                             then
+                               (match payload_of_hide_reveal h args with
+                                | FStar_Pervasives_Native.None ->
+                                    FStar_Pervasives_Native.None
+                                | FStar_Pervasives_Native.Some t3 ->
+                                    FStar_Pervasives_Native.Some
+                                      (FStar_Pervasives.Inl t3))
+                             else
+                               (let uu___8 =
+                                  FStar_Syntax_Util.is_fvar
+                                    FStar_Parser_Const.hide h in
+                                if uu___8
+                                then
+                                  match payload_of_hide_reveal h args with
+                                  | FStar_Pervasives_Native.None ->
+                                      FStar_Pervasives_Native.None
+                                  | FStar_Pervasives_Native.Some t3 ->
+                                      FStar_Pervasives_Native.Some
+                                        (FStar_Pervasives.Inr t3)
+                                else FStar_Pervasives_Native.None) in
+                       let mk_fv_app lid u args r =
+                         let fv =
+                           FStar_TypeChecker_Env.fvar_of_nonqual_lid env2 lid in
+                         let head = FStar_Syntax_Syntax.mk_Tm_uinst fv [u] in
+                         FStar_Syntax_Syntax.mk_Tm_app head args r in
+                       let uu___5 =
+                         let uu___6 = is_reveal_or_hide t11 in
+                         let uu___7 = is_reveal_or_hide t21 in
+                         (uu___6, uu___7) in
+                       match uu___5 with
+                       | (FStar_Pervasives_Native.None,
+                          FStar_Pervasives_Native.None) ->
+                           FStar_Pervasives_Native.None
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                          uu___6), FStar_Pervasives_Native.Some
+                          (FStar_Pervasives.Inl uu___7)) ->
+                           FStar_Pervasives_Native.None
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                          uu___6), FStar_Pervasives_Native.Some
+                          (FStar_Pervasives.Inr uu___7)) ->
+                           FStar_Pervasives_Native.None
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                          uu___6), FStar_Pervasives_Native.Some
+                          (FStar_Pervasives.Inr uu___7)) ->
+                           FStar_Pervasives_Native.None
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                          uu___6), FStar_Pervasives_Native.Some
+                          (FStar_Pervasives.Inl uu___7)) ->
+                           FStar_Pervasives_Native.None
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                          (u, ty, lhs)), FStar_Pervasives_Native.None) ->
+                           let rhs =
+                             mk_fv_app FStar_Parser_Const.hide u
+                               [(ty,
+                                  (FStar_Pervasives_Native.Some
+                                     (FStar_Syntax_Syntax.Implicit false)));
+                               (t21, FStar_Pervasives_Native.None)]
+                               t21.FStar_Syntax_Syntax.pos in
+                           FStar_Pervasives_Native.Some (lhs, rhs)
+                       | (FStar_Pervasives_Native.None,
+                          FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                          (u, ty, rhs))) ->
+                           let lhs =
+                             mk_fv_app FStar_Parser_Const.hide u
+                               [(ty,
+                                  (FStar_Pervasives_Native.Some
+                                     (FStar_Syntax_Syntax.Implicit false)));
+                               (t11, FStar_Pervasives_Native.None)]
+                               t11.FStar_Syntax_Syntax.pos in
+                           FStar_Pervasives_Native.Some (lhs, rhs)
+                       | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                          (u, ty, lhs)), FStar_Pervasives_Native.None) ->
+                           let rhs =
+                             mk_fv_app FStar_Parser_Const.reveal u
+                               [(ty,
+                                  (FStar_Pervasives_Native.Some
+                                     (FStar_Syntax_Syntax.Implicit false)));
+                               (t21, FStar_Pervasives_Native.None)]
+                               t21.FStar_Syntax_Syntax.pos in
+                           FStar_Pervasives_Native.Some (lhs, rhs)
+                       | (FStar_Pervasives_Native.None,
+                          FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
+                          (u, ty, rhs))) ->
+                           let lhs =
+                             mk_fv_app FStar_Parser_Const.reveal u
+                               [(ty,
+                                  (FStar_Pervasives_Native.Some
+                                     (FStar_Syntax_Syntax.Implicit false)));
+                               (t11, FStar_Pervasives_Native.None)]
+                               t11.FStar_Syntax_Syntax.pos in
+                           FStar_Pervasives_Native.Some (lhs, rhs) in
                      let uu___5 = try_match_heuristic env1 orig wl1 t1 t2 o in
                      (match uu___5 with
                       | FStar_Pervasives.Inl _defer_ok ->
@@ -6865,55 +6973,85 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                           wl2) -> solve env1 wl2
                       | FStar_Pervasives.Inr (FStar_Pervasives_Native.None)
                           ->
-                          let uu___6 =
-                            ((may_relate head1) || (may_relate head2)) &&
-                              wl1.smt_ok in
-                          if uu___6
-                          then
-                            let uu___7 = guard_of_prob env1 wl1 problem t1 t2 in
-                            (match uu___7 with
-                             | (guard, wl2) ->
+                          let uu___6 = try_reveal_hide env1 t1 t2 in
+                          (match uu___6 with
+                           | FStar_Pervasives_Native.Some (t1', t2') ->
+                               solve_t env1
+                                 (let uu___7 = problem in
+                                  {
+                                    FStar_TypeChecker_Common.pid =
+                                      (uu___7.FStar_TypeChecker_Common.pid);
+                                    FStar_TypeChecker_Common.lhs = t1';
+                                    FStar_TypeChecker_Common.relation =
+                                      (uu___7.FStar_TypeChecker_Common.relation);
+                                    FStar_TypeChecker_Common.rhs = t2';
+                                    FStar_TypeChecker_Common.element =
+                                      (uu___7.FStar_TypeChecker_Common.element);
+                                    FStar_TypeChecker_Common.logical_guard =
+                                      (uu___7.FStar_TypeChecker_Common.logical_guard);
+                                    FStar_TypeChecker_Common.logical_guard_uvar
+                                      =
+                                      (uu___7.FStar_TypeChecker_Common.logical_guard_uvar);
+                                    FStar_TypeChecker_Common.reason =
+                                      (uu___7.FStar_TypeChecker_Common.reason);
+                                    FStar_TypeChecker_Common.loc =
+                                      (uu___7.FStar_TypeChecker_Common.loc);
+                                    FStar_TypeChecker_Common.rank =
+                                      (uu___7.FStar_TypeChecker_Common.rank)
+                                  }) wl1
+                           | FStar_Pervasives_Native.None ->
+                               let uu___7 =
+                                 ((may_relate head1) || (may_relate head2))
+                                   && wl1.smt_ok in
+                               if uu___7
+                               then
                                  let uu___8 =
-                                   solve_prob orig
-                                     (FStar_Pervasives_Native.Some guard) []
-                                     wl2 in
-                                 solve env1 uu___8)
-                          else
-                            (let uu___8 =
-                               mklstr
-                                 (fun uu___9 ->
-                                    let uu___10 =
-                                      FStar_Syntax_Print.term_to_string head1 in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        let uu___13 =
-                                          delta_depth_of_term env1 head1 in
-                                        FStar_Util.bind_opt uu___13
-                                          (fun x ->
+                                   guard_of_prob env1 wl1 problem t1 t2 in
+                                 (match uu___8 with
+                                  | (guard, wl2) ->
+                                      let uu___9 =
+                                        solve_prob orig
+                                          (FStar_Pervasives_Native.Some guard)
+                                          [] wl2 in
+                                      solve env1 uu___9)
+                               else
+                                 (let uu___9 =
+                                    mklstr
+                                      (fun uu___10 ->
+                                         let uu___11 =
+                                           FStar_Syntax_Print.term_to_string
+                                             head1 in
+                                         let uu___12 =
+                                           let uu___13 =
                                              let uu___14 =
-                                               FStar_Syntax_Print.delta_depth_to_string
-                                                 x in
-                                             FStar_Pervasives_Native.Some
-                                               uu___14) in
-                                      FStar_Util.dflt "" uu___12 in
-                                    let uu___12 =
-                                      FStar_Syntax_Print.term_to_string head2 in
-                                    let uu___13 =
-                                      let uu___14 =
-                                        let uu___15 =
-                                          delta_depth_of_term env1 head2 in
-                                        FStar_Util.bind_opt uu___15
-                                          (fun x ->
+                                               delta_depth_of_term env1 head1 in
+                                             FStar_Util.bind_opt uu___14
+                                               (fun x ->
+                                                  let uu___15 =
+                                                    FStar_Syntax_Print.delta_depth_to_string
+                                                      x in
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___15) in
+                                           FStar_Util.dflt "" uu___13 in
+                                         let uu___13 =
+                                           FStar_Syntax_Print.term_to_string
+                                             head2 in
+                                         let uu___14 =
+                                           let uu___15 =
                                              let uu___16 =
-                                               FStar_Syntax_Print.delta_depth_to_string
-                                                 x in
-                                             FStar_Pervasives_Native.Some
-                                               uu___16) in
-                                      FStar_Util.dflt "" uu___14 in
-                                    FStar_Util.format4
-                                      "head mismatch (%s (%s) vs %s (%s))"
-                                      uu___10 uu___11 uu___12 uu___13) in
-                             giveup env1 uu___8 orig))
+                                               delta_depth_of_term env1 head2 in
+                                             FStar_Util.bind_opt uu___16
+                                               (fun x ->
+                                                  let uu___17 =
+                                                    FStar_Syntax_Print.delta_depth_to_string
+                                                      x in
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___17) in
+                                           FStar_Util.dflt "" uu___15 in
+                                         FStar_Util.format4
+                                           "head mismatch (%s (%s) vs %s (%s))"
+                                           uu___11 uu___12 uu___13 uu___14) in
+                                  giveup env1 uu___9 orig)))
                  | (HeadMatch (true), uu___3) when
                      problem.FStar_TypeChecker_Common.relation <>
                        FStar_TypeChecker_Common.EQ

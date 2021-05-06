@@ -13,9 +13,39 @@ let (uu___is_VerifyUserList : verify_mode -> Prims.bool) =
 let (uu___is_VerifyFigureItOut : verify_mode -> Prims.bool) =
   fun projectee ->
     match projectee with | VerifyFigureItOut -> true | uu___ -> false
-type files_for_module_name =
+type intf_and_impl =
   (Prims.string FStar_Pervasives_Native.option * Prims.string
-    FStar_Pervasives_Native.option) FStar_Util.smap
+    FStar_Pervasives_Native.option)
+type files_for_module_name = intf_and_impl FStar_Util.smap
+let (intf_and_impl_to_string :
+  (Prims.string FStar_Pervasives_Native.option * Prims.string
+    FStar_Pervasives_Native.option) -> Prims.string)
+  =
+  fun ii ->
+    match ii with
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+        "<None>, <None>"
+    | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.None) ->
+        intf
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some impl) ->
+        impl
+    | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.Some impl)
+        ->
+        let uu___ = FStar_String.op_Hat ", " impl in
+        FStar_String.op_Hat intf uu___
+let (files_for_module_name_to_string : files_for_module_name -> unit) =
+  fun m ->
+    FStar_Util.print_string "Printing the file system map {\n";
+    (let str_opt_to_string sopt =
+       match sopt with
+       | FStar_Pervasives_Native.None -> "<None>"
+       | FStar_Pervasives_Native.Some s -> s in
+     FStar_Util.smap_iter m
+       (fun k ->
+          fun v ->
+            let uu___2 = intf_and_impl_to_string v in
+            FStar_Util.print2 "%s:%s\n" k uu___2);
+     FStar_Util.print_string "}\n")
 type color =
   | White 
   | Gray 
@@ -156,7 +186,7 @@ let (__proj__Deps__item___0 : dependence_graph -> dep_node FStar_Util.smap) =
 type parsing_data_elt =
   | P_begin_module of FStar_Ident.lident 
   | P_open of (Prims.bool * FStar_Ident.lident) 
-  | P_open_module_or_namespace of (open_kind * FStar_Ident.lid) 
+  | P_implicit_open_module_or_namespace of (open_kind * FStar_Ident.lid) 
   | P_dep of (Prims.bool * FStar_Ident.lident) 
   | P_alias of (FStar_Ident.ident * FStar_Ident.lident) 
   | P_lid of FStar_Ident.lident 
@@ -172,14 +202,16 @@ let (uu___is_P_open : parsing_data_elt -> Prims.bool) =
 let (__proj__P_open__item___0 :
   parsing_data_elt -> (Prims.bool * FStar_Ident.lident)) =
   fun projectee -> match projectee with | P_open _0 -> _0
-let (uu___is_P_open_module_or_namespace : parsing_data_elt -> Prims.bool) =
+let (uu___is_P_implicit_open_module_or_namespace :
+  parsing_data_elt -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | P_open_module_or_namespace _0 -> true
+    | P_implicit_open_module_or_namespace _0 -> true
     | uu___ -> false
-let (__proj__P_open_module_or_namespace__item___0 :
+let (__proj__P_implicit_open_module_or_namespace__item___0 :
   parsing_data_elt -> (open_kind * FStar_Ident.lid)) =
-  fun projectee -> match projectee with | P_open_module_or_namespace _0 -> _0
+  fun projectee ->
+    match projectee with | P_implicit_open_module_or_namespace _0 -> _0
 let (uu___is_P_dep : parsing_data_elt -> Prims.bool) =
   fun projectee -> match projectee with | P_dep _0 -> true | uu___ -> false
 let (__proj__P_dep__item___0 :
@@ -224,7 +256,7 @@ let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
             FStar_String.op_Hat ", " uu___3 in
           FStar_String.op_Hat uu___1 uu___2 in
         FStar_String.op_Hat "P_open (" uu___
-    | P_open_module_or_namespace (k, lid) ->
+    | P_implicit_open_module_or_namespace (k, lid) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -232,7 +264,7 @@ let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
               FStar_String.op_Hat uu___3 ")" in
             FStar_String.op_Hat ", " uu___2 in
           FStar_String.op_Hat (str_of_open_kind k) uu___1 in
-        FStar_String.op_Hat "P_open_module_or_namespace (" uu___
+        FStar_String.op_Hat "P_implicit_open_module_or_namespace (" uu___
     | P_dep (b, lid) ->
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid lid in
@@ -281,8 +313,9 @@ let (parsing_data_elt_eq :
           FStar_Ident.lid_equals l1 l2
       | (P_open (b1, l1), P_open (b2, l2)) ->
           (b1 = b2) && (FStar_Ident.lid_equals l1 l2)
-      | (P_open_module_or_namespace (k1, l1), P_open_module_or_namespace
-         (k2, l2)) -> (k1 = k2) && (FStar_Ident.lid_equals l1 l2)
+      | (P_implicit_open_module_or_namespace (k1, l1),
+         P_implicit_open_module_or_namespace (k2, l2)) ->
+          (k1 = k2) && (FStar_Ident.lid_equals l1 l2)
       | (P_dep (b1, l1), P_dep (b2, l2)) ->
           (b1 = b2) && (FStar_Ident.lid_equals l1 l2)
       | (P_alias (i1, l1), P_alias (i2, l2)) ->
@@ -729,30 +762,6 @@ let (build_map : Prims.string Prims.list -> files_for_module_name) =
       (fun f -> let uu___2 = lowercase_module_name f in add_entry uu___2 f)
       filenames;
     map
-let (enter_namespace :
-  files_for_module_name ->
-    files_for_module_name -> Prims.string -> Prims.bool)
-  =
-  fun original_map ->
-    fun working_map ->
-      fun prefix ->
-        let found = FStar_Util.mk_ref false in
-        let prefix1 = FStar_String.op_Hat prefix "." in
-        FStar_Util.smap_iter original_map
-          (fun k ->
-             fun uu___1 ->
-               if FStar_Util.starts_with k prefix1
-               then
-                 let suffix =
-                   FStar_String.substring k (FStar_String.length prefix1)
-                     ((FStar_String.length k) - (FStar_String.length prefix1)) in
-                 let filename =
-                   let uu___2 = FStar_Util.smap_try_find original_map k in
-                   FStar_Util.must uu___2 in
-                 (FStar_Util.smap_add working_map suffix filename;
-                  FStar_ST.op_Colon_Equals found true)
-               else ());
-        FStar_ST.op_Bang found
 let (string_of_lid : FStar_Ident.lident -> Prims.bool -> Prims.string) =
   fun l ->
     fun last ->
@@ -820,33 +829,87 @@ let (core_modules : Prims.string Prims.list) =
       uu___3 :: uu___4 in
     uu___1 :: uu___2 in
   FStar_All.pipe_right uu___ (FStar_List.map module_name_of_file)
+let (implicit_ns_deps : FStar_Ident.lident Prims.list) =
+  [FStar_Parser_Const.fstar_ns_lid]
+let (implicit_module_deps : FStar_Ident.lident Prims.list) =
+  [FStar_Parser_Const.prims_lid; FStar_Parser_Const.pervasives_lid]
 let (hard_coded_dependencies :
   Prims.string -> (FStar_Ident.lident * open_kind) Prims.list) =
   fun full_filename ->
     let filename = FStar_Util.basename full_filename in
+    let implicit_module_deps1 =
+      FStar_List.map (fun l -> (l, Open_module)) implicit_module_deps in
+    let implicit_ns_deps1 =
+      FStar_List.map (fun l -> (l, Open_namespace)) implicit_ns_deps in
     let uu___ =
       let uu___1 = module_name_of_file filename in
       FStar_List.mem uu___1 core_modules in
     if uu___
     then []
     else
-      (let implicit_deps =
-         [(FStar_Parser_Const.fstar_ns_lid, Open_namespace);
-         (FStar_Parser_Const.prims_lid, Open_module);
-         (FStar_Parser_Const.pervasives_lid, Open_module)] in
-       let uu___2 =
+      (let uu___2 =
          let uu___3 = lowercase_module_name full_filename in
          namespace_of_module uu___3 in
        match uu___2 with
-       | FStar_Pervasives_Native.None -> implicit_deps
+       | FStar_Pervasives_Native.None ->
+           FStar_List.append implicit_ns_deps1 implicit_module_deps1
        | FStar_Pervasives_Native.Some ns ->
-           FStar_List.append implicit_deps [(ns, Open_namespace)])
+           FStar_List.append implicit_ns_deps1
+             (FStar_List.append implicit_module_deps1 [(ns, Open_namespace)]))
 let (dep_subsumed_by : dependence -> dependence -> Prims.bool) =
   fun d ->
     fun d' ->
       match (d, d') with
       | (PreferInterface l', FriendImplementation l) -> l = l'
       | uu___ -> d = d'
+let (enter_namespace :
+  files_for_module_name ->
+    files_for_module_name -> Prims.string -> Prims.bool -> Prims.bool)
+  =
+  fun original_map ->
+    fun working_map ->
+      fun prefix ->
+        fun implicit_open ->
+          let found = FStar_Util.mk_ref false in
+          let prefix1 = FStar_String.op_Hat prefix "." in
+          let suffix_exists mopt =
+            match mopt with
+            | FStar_Pervasives_Native.None -> false
+            | FStar_Pervasives_Native.Some (intf, impl) ->
+                (FStar_Util.is_some intf) || (FStar_Util.is_some impl) in
+          FStar_Util.smap_iter original_map
+            (fun k ->
+               fun uu___1 ->
+                 if FStar_Util.starts_with k prefix1
+                 then
+                   let suffix =
+                     FStar_String.substring k (FStar_String.length prefix1)
+                       ((FStar_String.length k) -
+                          (FStar_String.length prefix1)) in
+                   ((let suffix_filename =
+                       FStar_Util.smap_try_find original_map suffix in
+                     if implicit_open && (suffix_exists suffix_filename)
+                     then
+                       let str =
+                         let uu___3 =
+                           FStar_All.pipe_right suffix_filename
+                             FStar_Util.must in
+                         FStar_All.pipe_right uu___3 intf_and_impl_to_string in
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_Util.format4
+                             "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
+                             prefix1 suffix str str in
+                         (FStar_Errors.Warning_UnexpectedFile, uu___4) in
+                       FStar_Errors.log_issue FStar_Range.dummyRange uu___3
+                     else ());
+                    (let filename =
+                       let uu___3 = FStar_Util.smap_try_find original_map k in
+                       FStar_Util.must uu___3 in
+                     FStar_Util.smap_add working_map suffix filename;
+                     FStar_ST.op_Colon_Equals found true))
+                 else ());
+          FStar_ST.op_Bang found
 let (collect_one :
   files_for_module_name ->
     Prims.string ->
@@ -872,7 +935,8 @@ let (collect_one :
               (FStar_List.map
                  (fun uu___1 ->
                     match uu___1 with
-                    | (lid, k) -> P_open_module_or_namespace (k, lid))) in
+                    | (lid, k) ->
+                        P_implicit_open_module_or_namespace (k, lid))) in
           let working_map = FStar_Util.smap_copy original_map1 in
           let set_interface_inlining uu___ =
             let uu___1 = is_interface filename1 in
@@ -921,10 +985,11 @@ let (collect_one :
                   FStar_Errors.log_issue uu___3 uu___4)
                else ();
                false) in
-          let record_open_namespace lid =
+          let record_open_namespace lid implicit_open =
             let key = lowercase_join_longident lid true in
-            let r = enter_namespace original_map1 working_map key in
-            if Prims.op_Negation r
+            let r =
+              enter_namespace original_map1 working_map key implicit_open in
+            if (Prims.op_Negation r) && (Prims.op_Negation implicit_open)
             then
               let uu___ = FStar_Ident.range_of_lid lid in
               let uu___1 =
@@ -942,13 +1007,13 @@ let (collect_one :
             then ()
             else
               if Prims.op_Negation let_open
-              then record_open_namespace lid
+              then record_open_namespace lid false
               else () in
-          let record_open_module_or_namespace uu___ =
+          let record_implicit_open_module_or_namespace uu___ =
             match uu___ with
             | (lid, kind) ->
                 (match kind with
-                 | Open_namespace -> record_open_namespace lid
+                 | Open_namespace -> record_open_namespace lid true
                  | Open_module ->
                      let uu___1 = record_open_module false lid in ()) in
           let record_module_alias ident lid =
@@ -1022,8 +1087,8 @@ let (collect_one :
                        match elt with
                        | P_begin_module lid -> begin_module lid
                        | P_open (b, lid) -> record_open b lid
-                       | P_open_module_or_namespace (k, lid) ->
-                           record_open_module_or_namespace (lid, k)
+                       | P_implicit_open_module_or_namespace (k, lid) ->
+                           record_implicit_open_module_or_namespace (lid, k)
                        | P_dep (b, lid) -> add_dep_on_module lid b
                        | P_alias (id, lid) ->
                            let uu___1 = record_module_alias id lid in ()

@@ -108,7 +108,7 @@
         "typing_Tm_abs_93e14b647e5b70664580b7edd33040b4"
       ],
       0,
-      "29555b24bb7fb0a1f2005d6da5872c6c"
+      "88f6fc7620f40b5fe7519bf7111a5b9b"
     ],
     [
       "FStar.DM4F.Heap.upd",
@@ -152,7 +152,7 @@
         "typing_Tm_abs_93e14b647e5b70664580b7edd33040b4"
       ],
       0,
-      "11f167b85852caba6e6ea2dc9307fa33"
+      "ec85fb5d6ec2ef7a6122b1a580c6d5a6"
     ],
     [
       "FStar.DM4F.Heap.alloc",
@@ -214,7 +214,7 @@
         "typing_Tm_abs_bd95ed204d090b6f3c8a971f59c6521f"
       ],
       0,
-      "c7a57bb4586ceabd432d7cf769f54165"
+      "264412c164af9a24494d0a0b7fe80a69"
     ],
     [
       "FStar.DM4F.Heap.contains_a_well_typed_implies_contains",
@@ -357,7 +357,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "9b266d2cc21e2c5cc82ad52a80a4384d"
+      "15129ddaa863a9dee97da2c2b9191397"
     ],
     [
       "FStar.DM4F.Heap.sel_same_addr_of",

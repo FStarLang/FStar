@@ -122,15 +122,6 @@
       "4dfb777a5923313ed498429aaa4da47d"
     ],
     [
-      "Postprocess.lemC",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "41fe496e1ba5cfb64b0aabd63df3023c"
-    ],
-    [
       "Postprocess.congB",
       1,
       2,
@@ -141,7 +132,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "de40266f0182f1b6f2e9b19385b38c4c"
+      "b144a84b33f2f76e774ba2c66f3ffe39"
     ],
     [
       "Postprocess.congC",
@@ -154,7 +145,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2960541a27a4edbbff4be83fe9fb5e86"
+      "4edba8711bb2d2ca17cf2baf2384f08d"
     ],
     [
       "Postprocess.apply_feq_lem",
@@ -171,7 +162,7 @@
         "typing_Tm_abs_134069e179ddf4705519081c391c4e10"
       ],
       0,
-      "e57ad20be779571614497dc972bf5308"
+      "e44f607b5e6740525b184e63d07bb569"
     ],
     [
       "Postprocess._onL",
@@ -184,7 +175,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "941fc0160d65a6a31f3ccc8b940c90f4"
+      "d57d97fbfd904432ae731bc9501ab739"
     ],
     [
       "Postprocess.push_lifts'",
@@ -210,7 +201,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success", "unit_typing"
       ],
       0,
-      "e5dde6246afa1e7e4b4df95b53d27099"
+      "c1afc71271e9da18fc9bfc8c56605e85"
     ]
   ]
 ]
