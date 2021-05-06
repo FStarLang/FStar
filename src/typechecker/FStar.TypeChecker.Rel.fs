@@ -2803,21 +2803,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let try_reveal_hide env t1 t2 =
                 //tries to solve problems of the form
                 // 1.
-                // reveal x == y, where head y <> hide/reveal
-                //   by generating hide (reveal x) == hide y
-                //   and simplifying it to       x == hide y
+                // reveal ?u == y, where head y <> hide/reveal
+                //   by generating hide (reveal ?u) == hide y
+                //   and simplifying it to       ?u == hide y
                 //
                 // 2.
-                //  hide x == y, where head y <> hide/reveal
-                //  by generating reveal (hide x) == reveal y
-                //  and simplifying it to       x == reveal y
+                //  hide ?u == y, where head y <> hide/reveal
+                //  by generating reveal (hide ?u) == reveal y
+                //  and simplifying it to       ?u == reveal y
                 //
-                // 3.
-                //  reveal x == hide y, where head y <> hide/reveal
-
                 let payload_of_hide_reveal h args =
                     match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some (Implicit _)); (t, _)] -> Some (u, ty, t)
+                    | Tm_uinst(_, [u]), [(ty, Some (Implicit _)); (t, _)]
+                      when is_flex t ->
+                      Some (u, ty, t)
                     | _ -> None
                 in
                 let is_reveal_or_hide t =

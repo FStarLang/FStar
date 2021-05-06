@@ -6859,7 +6859,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                          | (FStar_Syntax_Syntax.Tm_uinst (uu___5, u::[]),
                             (ty, FStar_Pervasives_Native.Some
                              (FStar_Syntax_Syntax.Implicit uu___6))::
-                            (t, uu___7)::[]) ->
+                            (t, uu___7)::[]) when is_flex t ->
                              FStar_Pervasives_Native.Some (u, ty, t)
                          | uu___5 -> FStar_Pervasives_Native.None in
                        let is_reveal_or_hide t =
