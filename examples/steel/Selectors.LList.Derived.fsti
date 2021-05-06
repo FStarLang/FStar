@@ -2,6 +2,7 @@ module Selectors.LList.Derived
 
 open Steel.SelEffect.Atomic
 open Steel.SelEffect
+open Steel.SelReference
 
 open Selectors.LList
 module L = FStar.List.Tot

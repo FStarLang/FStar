@@ -1,5 +1,7 @@
 module Steel.SelArray
 
+open Steel.SelReference
+
 let array t = ref (Seq.seq t)
 
 let is_array r = ptr r
