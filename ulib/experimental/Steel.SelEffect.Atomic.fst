@@ -521,6 +521,10 @@ let intro_exists #a #opened x p =
 let witness_exists #a #u #p _ =
   SteelSelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
 
+let intro_exists_erased #a #opened x p =
+  rewrite_slprop (p x) (h_exists p)
+    (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) (fun x -> hp_of (p x)) m)
+
 let intro_vrefine v p =
   let m = get () in
   let x : Ghost.erased (t_of v) = gget v in
