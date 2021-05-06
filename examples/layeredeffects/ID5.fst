@@ -12,7 +12,7 @@ let monotonic (w:wp0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val wp (a : Type u#a) : Type u#(max 1 a)
-let wp a = w:(wp0 a)//{monotonic w}
+let wp a = pure_wp a //w:(wp0 a)//{monotonic w}
 
 let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
   // Hmmm, the explicit post bumps the universe level

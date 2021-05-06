@@ -4,7 +4,7 @@ open FStar.Ghost
 
 // The base type of WPs
 val wp0 (a : Type u#a) : Type u#(max 1 a)
-let wp0 a = (a -> Type0) -> Type0
+let wp0 a = pure_wp a
 
 // We require monotonicity of them
 let monotonic (w:wp0 'a) =

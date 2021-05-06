@@ -225,7 +225,14 @@ type rwtree a = tree a [Read;Write]
 
 let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> bind _ _ c f
 
-let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+let st_wp0 (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+
+let st_monotonic #a (w : st_wp0 a) : Type0 =
+  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
+  // ^ this version seems to be less SMT-friendly
+  forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
+
+type st_wp a = w:(st_wp0 a){st_monotonic w}
 
 unfold
 let return_wp #a x : st_wp a = fun s0 p -> p (x, s0)

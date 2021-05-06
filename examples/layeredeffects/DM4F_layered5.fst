@@ -14,14 +14,19 @@ let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b 
 type post_t st a =
   a -> st -> Type0
 
-type wp (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
   st -> post_t st a -> Type0
+
+let st_monotonic #st #a (w:wp0 st a) =
+  forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> (w s0 p1 ==> w s0 p2)
   
+type wp st a = wp:wp0 st a{st_monotonic wp}
+
 let iso1 #a #s (w : wp s a) : s -> (a & s -> Type0) -> Type0 =
   fun s p -> w s (curry p)
-  
-let iso2 #a #s (w : s -> (a & s -> Type0) -> Type0) : wp s a=
-  fun s p -> w s (uncurry p)
+
+// let iso2 #a #s (w : s -> (a & s -> Type0) -> Type0) : wp s a=
+//   fun s p -> w s (uncurry p)
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
   s0:st -> ID (a & st) (fun p -> wp s0 (curry p))
