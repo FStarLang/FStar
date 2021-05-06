@@ -260,7 +260,7 @@ let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref c
   : SteelT chan_val
            (pts_to r full_perm vs `star` in_state_slprop p vs)
            (fun vs' -> pts_to r full_perm vs' `star` (in_state_slprop (step p x) vs' `star` chan_inv_step vs vs'))
-  = Steel.Utils.elim_pure (in_state_prop p vs);
+  = elim_pure (in_state_prop p vs);
     let vs' = next_chan_val x vs in
     H.write r vs';
     intro_pure (in_state_prop (step p x) vs');
@@ -275,7 +275,7 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     (pts_to r half v `star` in_state r p)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = let v' = witness_h_exists () in
-    Steel.Utils.higher_ref_pts_to_injective_eq r v _;
+    H.higher_ref_pts_to_injective_eq #_ #_ #_ #_ #v #_ r;
     H.gather #_ #_ #half #half #v #v r;
     change_slprop (pts_to r (sum_perm half half) v) (pts_to r full_perm v) (fun _ -> ());
     change_slprop (in_state_slprop p v') (in_state_slprop p v) (fun _ -> ())
@@ -432,7 +432,7 @@ let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
           (requires fun _ -> True)
           (ensures fun _ _ _ -> step vr.chan_prot vr.chan_msg == p)
   = let vr' = witness_h_exists () in
-    Steel.Utils.higher_ref_pts_to_injective_eq cc.chan_chan.recv vr _;
+    H.higher_ref_pts_to_injective_eq #_ #_ #_ #_ #vr #_ cc.chan_chan.recv;
     change_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
     Steel.Utils.elim_pure _;
     intro_in_state _ _ vr

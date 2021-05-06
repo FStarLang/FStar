@@ -75,8 +75,6 @@ val vptr_not_null (#opened: _)
       R.is_null r == false
     )
 
-
-
 [@@ __steel_reduce__]
 let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
