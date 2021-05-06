@@ -16,7 +16,7 @@
 
 module FStar.Monotonic.Pure
 
-assume val wp_monotonic_pure (_:unit)
+let wp_monotonic_pure (_:unit)
     : Lemma
       (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
-        (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
+        (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))) = ()

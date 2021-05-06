@@ -176,7 +176,6 @@ let lift_pure_mst_total
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
     =
-  FStar.Monotonic.Pure.wp_monotonic_pure ();
   fun s0 ->
     let x = f () in
     x, s0

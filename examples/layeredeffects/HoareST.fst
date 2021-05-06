@@ -129,21 +129,13 @@ let get ()
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
 = HoareST?.reflect get
 
-assume val wp_monotonic_pure (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
 /// lift from PURE
 
 let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))
-= wp_monotonic_pure ();
-  fun _ -> f ()
+= fun _ -> f ()
 
 sub_effect PURE ~> HoareST = lift_pure_hoarest
 

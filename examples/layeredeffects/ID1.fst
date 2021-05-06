@@ -105,8 +105,7 @@ open FStar.Tactics
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r)) by (dump "")
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
-   f ()
+ = f ()
 
 unfold
 let nomon #a (w:wp a) : pure_wp a = fun p -> w p

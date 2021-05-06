@@ -709,8 +709,7 @@ let lift_PURE_HIFC (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
   : Pure (hifc a bot bot [] (fun _ -> True) (fun s0 _ s1 -> s0 == s1))
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
-    return a (f ())
+  = return a (f ())
 sub_effect PURE ~> HIFC = lift_PURE_HIFC
 
 (* reflecting the flow refinement into the effect *)

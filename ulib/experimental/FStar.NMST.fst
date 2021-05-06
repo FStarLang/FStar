@@ -152,7 +152,6 @@ let lift_pure_nmst
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
     =
   fun (_, n) ->
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
     let x = f () in
     x, n
 
@@ -182,8 +181,7 @@ let bind_div_nmst (a:Type) (b:Type)
 : repr b state rel
     (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
     (fun s0 y s1 -> exists x. (ens x) s0 y s1)
-= FStar.Monotonic.Pure.wp_monotonic_pure ();
-  fun s0 ->
+= fun s0 ->
   let x = f () in
   (g x) s0
 

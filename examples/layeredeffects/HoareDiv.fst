@@ -72,12 +72,6 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-assume WP_pure_monotonic:
-  forall (a:Type) (wp:pure_wp a).
-    (forall (p q:pure_post a).
-       (forall (x:a). p x ==> q x) ==>
-       (wp p ==> wp q))
-
 let lift_pure_meff (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a
   (wp (fun _ -> True))
