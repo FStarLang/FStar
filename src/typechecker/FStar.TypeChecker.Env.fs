@@ -1816,6 +1816,10 @@ let def_check_vars_in_set rng msg vset t =
                                       (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
     end
 
+
+let too_early_in_prims env =
+  not (lid_exists env Const.effect_GTot_lid)
+
 let def_check_closed_in rng msg l t =
     if not (Options.defensive ()) then () else
     def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
