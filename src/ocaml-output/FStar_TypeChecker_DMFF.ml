@@ -3940,6 +3940,7 @@ let (cps_and_elaborate :
                                                let uu___14 = apply_last f xs in
                                                x :: uu___14 in
                                          let register maybe_admit name item =
+                                           let maybe_admit1 = true in
                                            let p =
                                              FStar_Ident.path_of_lid
                                                ed.FStar_Syntax_Syntax.mname in
@@ -3990,7 +3991,7 @@ let (cps_and_elaborate :
                                                (match uu___15 with
                                                 | (sigelt, fv) ->
                                                     let sigelt1 =
-                                                      if maybe_admit
+                                                      if maybe_admit1
                                                       then
                                                         let uu___16 = sigelt in
                                                         {

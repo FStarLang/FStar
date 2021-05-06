@@ -5740,6 +5740,10 @@ let (def_check_vars_in_set :
                FStar_Errors.log_issue rng uu___2
              else ())
           else ()
+let (too_early_in_prims : env -> Prims.bool) =
+  fun env1 ->
+    let uu___ = lid_exists env1 FStar_Parser_Const.effect_GTot_lid in
+    Prims.op_Negation uu___
 let (def_check_closed_in :
   FStar_Range.range ->
     Prims.string ->

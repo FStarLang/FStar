@@ -125,7 +125,8 @@ let (pure_wp_uvar :
                   [uu___3] in
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
-            FStar_TypeChecker_Util.new_implicit_var reason r env pure_wp_t in
+            FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
+              FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
 let (check_no_subtyping_for_layered_combinator :

@@ -9,6 +9,12 @@ let id : 'a . 'a -> 'a = fun x -> x
 type ('a, 'uuuuu) trivial_pure_post = unit
 type ('uuuuu, 'uuuuu1) ambient = unit
 
+type ('a, 'x, 'uuuuu) div_return = unit
+type ('r1, 'a, 'b, 'wp1, 'wp2, 'uuuuu) div_bind = 'wp1
+type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) div_if_then_else = unit
+type ('a, 'wp, 'uuuuu) div_ite_wp = unit
+type ('a, 'b, 'wp, 'uuuuu) div_close_wp = unit
+type ('a, 'uuuuu) div_null_wp = unit
 type 'heap st_pre_h = unit
 type ('heap, 'a, 'pre) st_post_h' = unit
 type ('heap, 'a) st_post_h = unit
