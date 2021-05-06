@@ -133,11 +133,44 @@ val intro_ambient (#a: Type) (x: a) : Tot (squash (ambient x))
 
 /// The [DIV] effect for divergent computations
 
+
+unfold
+let div_return (a:Type) (x:a) : pure_wp a = pure_return a x
+
+unfold
+let div_bind
+  (r1:range)
+  (a b:Type)
+  (wp1:pure_wp a)
+  (wp2:a → GTot (pure_wp b))
+  : pure_wp b = pure_bind_wp r1 a b wp1 wp2
+
+unfold
+let div_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
+  pure_if_then_else a p wp_then wp_else
+
+unfold
+let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a = pure_ite_wp a wp
+
+unfold
+let div_close_wp (a b:Type) (wp:b → GTot (pure_wp a)) : pure_wp a =
+  pure_close_wp a b wp
+
 (** The effect of divergence: from a specificational perspective it is
     identical to PURE, however the specs are given a partial
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
-new_effect DIV = PURE
+new_effect {
+  DIV : a:Type → wp:pure_wp a → Effect
+  with
+    return_wp = div_return
+  ; bind_wp = div_bind
+  ; if_then_else = div_if_then_else
+  ; ite_wp = div_ite_wp
+  ; stronger = pure_stronger
+  ; close_wp = div_close_wp
+  ; trivial = pure_trivial
+}
 
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
 sub_effect PURE ~> DIV { lift_wp = purewp_id }
@@ -146,8 +179,11 @@ sub_effect PURE ~> DIV { lift_wp = purewp_id }
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   DIV a (fun (p: pure_post a) -> pre /\ (forall a. post a ==> p a))
 
+unfold
+let div_null_wp (a:Type) : pure_wp a = pure_null_wp a
+
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a: Type) = DIV a (fun (p: pure_post a) -> (forall (x: a). p x))
+effect Dv (a: Type) = DIV a (div_null_wp a)
 
 (** We use the [EXT] effect to underspecify external system calls
     as being impure but having no observable effect on the state *)
