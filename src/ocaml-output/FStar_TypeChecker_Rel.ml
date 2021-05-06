@@ -6891,23 +6891,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         (FStar_Pervasives.Inr t3)
                                 else FStar_Pervasives_Native.None) in
                        let mk_fv_app lid u args r =
-                         let qn = FStar_TypeChecker_Env.lookup_qname env2 lid in
-                         let dd =
-                           let dummy_fv =
-                             FStar_Syntax_Syntax.lid_as_fv lid
-                               (FStar_Syntax_Syntax.Delta_constant_at_level
-                                  Prims.int_zero)
-                               FStar_Pervasives_Native.None in
-                           let uu___5 =
-                             FStar_TypeChecker_Env.delta_depth_of_qninfo
-                               dummy_fv qn in
-                           match uu___5 with
-                           | FStar_Pervasives_Native.None ->
-                               failwith "Unexpected no delta_depth"
-                           | FStar_Pervasives_Native.Some dd1 -> dd1 in
                          let fv =
-                           FStar_Syntax_Syntax.fvar lid dd
-                             FStar_Pervasives_Native.None in
+                           FStar_TypeChecker_Env.fvar_of_nonqual_lid env2 lid in
                          let head = FStar_Syntax_Syntax.mk_Tm_uinst fv [u] in
                          FStar_Syntax_Syntax.mk_Tm_app head args r in
                        let uu___5 =

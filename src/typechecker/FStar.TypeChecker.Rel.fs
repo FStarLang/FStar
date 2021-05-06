@@ -2832,14 +2832,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   else None
                 in
                 let mk_fv_app lid u args r =
-                  let qn = Env.lookup_qname env lid in
-                  let dd =
-                    let dummy_fv = lid_as_fv lid (Delta_constant_at_level 0) None in
-                    match Env.delta_depth_of_qninfo dummy_fv qn with
-                    | None -> failwith "Unexpected no delta_depth"
-                    | Some dd -> dd
-                  in
-                  let fv = fvar lid dd None in
+                  let fv = Env.fvar_of_nonqual_lid env lid in
                   let head = S.mk_Tm_uinst fv [u]  in
                   S.mk_Tm_app head args r
                 in

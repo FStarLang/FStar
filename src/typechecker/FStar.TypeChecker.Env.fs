@@ -823,10 +823,8 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
-    let lid = fv.fv_name.v in
-    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else match qn with
+let delta_depth_of_qninfo_lid lid (qn:qninfo) : option<delta_depth> =
+    match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
     | Some (Inr(se, _), _) ->
@@ -854,6 +852,12 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_polymonadic_bind _
       | Sig_polymonadic_subcomp _ -> None
 
+
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+    let lid = fv.fv_name.v in
+    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    else delta_depth_of_qninfo_lid lid qn
+    
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
   if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
@@ -2017,3 +2021,12 @@ let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
+
+let fvar_of_nonqual_lid env lid =
+    let qn = lookup_qname env lid in
+    let dd =
+        match delta_depth_of_qninfo_lid lid qn with
+        | None -> failwith "Unexpected no delta_depth"
+        | Some dd -> dd
+    in
+    fvar lid dd None
