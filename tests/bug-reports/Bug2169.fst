@@ -26,7 +26,7 @@ let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = (w0 a)
+let w a = pure_wp a
 
 val w_ord (#a : Type) : w a -> w a -> Type0
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p

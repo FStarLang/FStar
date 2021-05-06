@@ -30,3 +30,18 @@ let h #req #ens f x = f x
 
 val g : x:int -> Pure int (b2t (x > 0)) (fun y -> y == x + 1)
 let g = h (as_Pure f)
+
+
+(*
+ * We enforce monotonicity of pure wps
+ *)
+
+[@@ expect_failure]
+val bad_wp : unit -> PURE unit (fun p -> ~ (p ()))
+
+[@@expect_failure]
+val bad_wp : unit -> PURE int (fun p -> ~ (p 3))
+
+
+val good_wp : unit -> PURE int (fun p -> p 3)
+val good_hoare : unit -> Pure int True (fun r -> r == 3)

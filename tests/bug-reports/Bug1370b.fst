@@ -25,4 +25,4 @@ effect Good3 (a:Type) (x:int) = Tot a
 
 effect Good4 (a:Type) (x:int) = PURE a (fun p -> x > 0 /\ (forall y. p y))
 
-effect Good5 (a:Type) (wp:((a -> Type0) -> Type0)) = PURE a wp
+effect Good5 (a:Type) (wp:pure_wp a) = PURE a wp

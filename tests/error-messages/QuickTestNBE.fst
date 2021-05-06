@@ -32,12 +32,12 @@ let label (r:range) (msg:string) (p:Type0) : Ghost Type (requires True) (ensures
 
 noeq type quickCodes (a:Type0) : Type =
 | QEmpty: a -> quickCodes a
-| QPURE: r:range -> msg:string -> pre:((unit -> GTot Type0) -> GTot Type0) ->
+| QPURE: r:range -> msg:string -> pre:pure_wp unit ->
     (unit -> PURE unit pre) -> quickCodes a -> quickCodes a
 
 [@va_qattr]
 let qPURE
-    (#pre:(unit -> GTot Type0) -> GTot Type0) (#a:Type0) (r:range) (msg:string)
+    (#pre:pure_wp unit) (#a:Type0) (r:range) (msg:string)
     ($l:unit -> PURE unit pre) (qcs:quickCodes a)
   : quickCodes a =
   QPURE r msg pre l qcs
