@@ -21,10 +21,11 @@ open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 module R = Steel.Reference
+module Mem = Steel.Memory
 open Steel.FractionalPermission
 
 let ref (a:Type0) : Type0 = R.ref a
-let ptr (#a:Type0) (r:ref a) : slprop u#1 = h_exists (R.pts_to r full_perm)
+let ptr (#a:Type0) (r:ref a) : slprop u#1 = Mem.h_exists (R.pts_to r full_perm)
 
 val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
 
@@ -85,7 +86,7 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
 
 [@@ erasable]
 let ghost_ref (a:Type u#0) : Type u#0 = R.ghost_ref a
-let ghost_ptr (#a: Type0) (r: ghost_ref a) : Tot (slprop u#1) = h_exists (R.ghost_pts_to r full_perm)
+let ghost_ptr (#a: Type0) (r: ghost_ref a) : Tot (slprop u#1) = Mem.h_exists (R.ghost_pts_to r full_perm)
 
 val ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
 
