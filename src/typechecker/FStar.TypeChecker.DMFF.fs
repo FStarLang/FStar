@@ -1540,6 +1540,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | (x::xs) -> x :: (apply_last f xs)
   in
   let register maybe_admit name item =
+    let maybe_admit = true in
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
     let l' = lid_of_path p' ed_range in
