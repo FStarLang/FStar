@@ -3,6 +3,7 @@ module Selectors.PtrLList
 open Steel.Memory
 open Steel.SelEffect.Atomic
 open Steel.SelEffect
+open Steel.SelReference
 
 module L = FStar.List.Tot
 

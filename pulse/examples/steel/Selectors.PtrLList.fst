@@ -6,6 +6,7 @@ module Mem = Steel.Memory
 module R = Steel.Reference
 open Steel.SelEffect.Atomic
 open Steel.SelEffect
+open Steel.SelReference
 
 #push-options "--__no_positivity"
 noeq
@@ -28,12 +29,12 @@ let is_null #a ptr = R.is_null ptr
 let rec llist_ptr_sl' (#a:Type0) (ptr:t a) (l:list (cell a * a))
   : Tot slprop (decreases l)
   = match l with
-    | [] -> pure (ptr == null_llist)
+    | [] -> Mem.pure (ptr == null_llist)
     | (hd, v) :: tl ->
       R.pts_to ptr full_perm hd `Mem.star`
       llist_ptr_sl' (next hd) tl `Mem.star`
       R.pts_to (data hd) full_perm v `Mem.star`
-      pure (ptr =!= null_llist)
+      Mem.pure (ptr =!= null_llist)
 
 let llist_ptr_sl ptr = Mem.h_exists (llist_ptr_sl' ptr)
 
@@ -321,7 +322,7 @@ let intro_nil_lemma (a:Type0) (m:mem) : Lemma
     = let ptr:t a = null_llist in
       pure_interp (ptr == null_llist) m;
       let open FStar.Tactics in
-      assert (llist_ptr_sl' ptr [] == pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
+      assert (llist_ptr_sl' ptr [] == Mem.pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
       llist_sel_interp ptr [] m
 
 let intro_llist_nil a =

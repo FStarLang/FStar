@@ -2,6 +2,7 @@ module Selectors.Examples
 
 open Steel.SelEffect.Atomic
 open Steel.SelEffect
+open Steel.SelReference
 
 (* Some tests *)
 

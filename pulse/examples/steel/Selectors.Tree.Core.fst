@@ -9,6 +9,7 @@ module Spec = Trees
 
 open Steel.SelEffect.Atomic
 open Steel.SelEffect
+open Steel.SelReference
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 15"
 
@@ -35,7 +36,7 @@ let is_null_t #a ptr = R.is_null ptr
 
 let rec tree_sl' (#a: Type0) (ptr: t a) (tree: Spec.tree (node a)) : Tot slprop (decreases tree) =
   match tree with
-  | Spec.Leaf -> pure (ptr == null_t)
+  | Spec.Leaf -> Mem.pure (ptr == null_t)
   | Spec.Node data left right ->
     R.pts_to ptr full_perm data `Mem.star`
     tree_sl' data.left left `Mem.star`
@@ -118,7 +119,7 @@ let intro_leaf_lemma (a:Type0) (m:mem) : Lemma
     = let ptr:t a = null_t in
       pure_interp (ptr == null_t) m;
       let open FStar.Tactics in
-      assert (tree_sl' ptr Spec.Leaf == pure (ptr == null_t)) by (norm [delta; zeta; iota]);
+      assert (tree_sl' ptr Spec.Leaf == Mem.pure (ptr == null_t)) by (norm [delta; zeta; iota]);
       tree_sel_interp ptr Spec.Leaf m
 
 let intro_linked_tree_leaf #a _ =
