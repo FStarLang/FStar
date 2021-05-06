@@ -423,6 +423,15 @@ val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
+val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures fact)
+  ) : SteelSelGhost unit opened p (fun _ -> p)
+      (fun h -> True)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
+
 val noop (#opened:inames) (_:unit)
   : SteelSelGhost unit opened emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
 
@@ -432,6 +441,8 @@ val sladmit (#a:Type)
             (#q:post_t a)
             (_:unit)
   : SteelSelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
+
+val drop (#opened:inames) (p:vprop) : SteelSelGhostT unit opened p (fun _ -> emp)
 
 val reveal_star (#opened:inames) (p1 p2:vprop)
  : SteelSelGhost unit opened (p1 `star` p2) (fun _ -> p1 `star` p2)
@@ -470,6 +481,19 @@ let return (#a:Type u#a)
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
   = SteelSelAtomicBase?.reflect (return_ a x opened_invariants #p)
+
+(* h_exists combinator *)
+
+let h_exists_sl (#a:Type u#b) (p: (a -> vprop)) : slprop = h_exists (fun x -> hp_of (p x))
+[@@__steel_reduce__]
+unfold let h_exists #a (p:a -> vprop) : vprop = to_vprop (h_exists_sl p)
+
+val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> vprop)
+  : SteelSelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+
+val witness_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
+  : SteelSelGhostT (erased a) opened_invariants
+                (h_exists p) (fun x -> p x)
 
 (* Introduction and elimination principles for vprop combinators *)
 
