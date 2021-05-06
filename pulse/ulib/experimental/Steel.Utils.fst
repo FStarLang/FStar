@@ -55,28 +55,6 @@ let slassert (p:slprop)
   : SteelT unit p (fun _ -> p)
   = noop (); ()
 
-let pts_to_injective_eq #a #p #q (r:ref a) (v0 v1:Ghost.erased a)
-  : Steel unit (pts_to r p v0 `star` pts_to r q v1)
-               (fun _ -> pts_to r p v0 `star` pts_to r q v0)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> v0 == v1)
-  = change_slprop_ens (pts_to r p v0 `star` pts_to r q v1)
-                      (pts_to r p v0 `star` pts_to r q v0)
-                      (v0 == v1)
-                      (pts_to_ref_injective r p q v0 v1)
-
-module H = Steel.HigherReference
-let higher_ref_pts_to_injective_eq #a #p #q (r:H.ref a) (v0 v1:Ghost.erased a)
-  : Steel unit (H.pts_to r p v0 `star` H.pts_to r q v1)
-               (fun _ -> H.pts_to r p v0 `star` H.pts_to r q v0)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> v0 == v1)
-  = let open H in
-    change_slprop_ens (pts_to r p v0 `star` pts_to r q v1)
-                      (pts_to r p v0 `star` pts_to r q v0)
-                      (v0 == v1)
-                      (pts_to_ref_injective r p q v0 v1)
-
 let rewrite #a (#p:a -> slprop)(x y:a)
   : Steel unit (p x) (fun _ -> p y)
     (requires fun _ -> x == y)
