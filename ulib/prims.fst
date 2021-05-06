@@ -282,7 +282,13 @@ let pure_post (a: Type) = pure_post' a True
 
 (** A pure weakest precondition transforms postconditions on [a]-typed
     results to pure preconditions *)
-let pure_wp (a: Type) = pure_post a -> GTot pure_pre
+let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
+
+unfold
+let pure_wp_monotonic (#a:Type) (wp:pure_wp' a) =
+  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
+
+let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic wp}
 
 (** This predicate is an internal detail, used to optimize the
     encoding of some quantifiers to SMT by omitting their typing
@@ -404,15 +410,15 @@ let purewp_id (a: Type) (wp: pure_wp a) = wp
     vice versa) using just the identity lifting on pure wps *)
 sub_effect PURE ~> GHOST { lift_wp = purewp_id }
 
-(** As with [Tot], the primitive effect [GTot] is definitionally equal
-    to an instance of GHOST *)
-effect GTot (a: Type) = GHOST a (pure_null_wp a)
-
 (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
 effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
   GHOST a
     (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
     )
+
+(** As with [Tot], the primitive effect [GTot] is definitionally equal
+    to an instance of GHOST *)
+effect GTot (a: Type) = GHOST a (pure_null_wp a)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
