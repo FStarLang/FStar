@@ -1,5 +1,6 @@
 module Steel.SelArray
 
+open Steel.SelEffect.Atomic
 open Steel.SelReference
 
 let array t = ref (Seq.seq t)
@@ -12,6 +13,7 @@ let alloc x n =
   alloc s
 
 let index r i =
+  let h = get() in
   let s = read r in
   Seq.index s (U32.v i)
 
