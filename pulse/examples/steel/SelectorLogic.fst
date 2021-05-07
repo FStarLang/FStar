@@ -72,14 +72,13 @@ let modus_ponens_derive_sel (p q:vprop)
 
 (* One example of selector *)
 
-module R = Steel.Reference
 open Steel.FractionalPermission
+open Steel.SelReference
 
-let ref (a:Type0) : Type0 = R.ref a
-let ptr (#a:Type0) (r:ref a) : slprop u#1 = h_exists (R.pts_to r full_perm)
+let ref (a:Type0) : Type0 = ref a
+let ptr (#a:Type0) (r:ref a) : slprop u#1 = ptr r
 
-assume
-val ptr_sel (#a:Type0) (r:ref a) : selector (ptr r) (fun _ -> a)
+let ptr_sel (#a:Type0) (r:ref a) : selector (ptr r) (fun _ -> a) = ptr_sel r
 
 let vptr' #a r : vprop =
   {hp = ptr r;

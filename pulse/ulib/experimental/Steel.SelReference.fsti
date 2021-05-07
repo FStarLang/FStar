@@ -125,6 +125,11 @@ val ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
   (requires interp (ptr r) m)
   (ensures interp (pts_to_sl r full_perm (ptr_sel r m)) m)
 
+val intro_ptr_interp (#a:Type0) (r:ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (pts_to_sl r full_perm v) m)
+  (ensures interp (ptr r) m)
+
+
 [@@ __steel_reduce__]
 let vptr' #a r : vprop' =
   {hp = ptr r;
