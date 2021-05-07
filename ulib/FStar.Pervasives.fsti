@@ -142,7 +142,7 @@ let div_bind
   (r1:range)
   (a b:Type)
   (wp1:pure_wp a)
-  (wp2:a → GTot (pure_wp b))
+  (wp2:a -> GTot (pure_wp b))
   : pure_wp b = pure_bind_wp r1 a b wp1 wp2
 
 unfold
@@ -153,7 +153,7 @@ unfold
 let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a = pure_ite_wp a wp
 
 unfold
-let div_close_wp (a b:Type) (wp:b → GTot (pure_wp a)) : pure_wp a =
+let div_close_wp (a b:Type) (wp:b -> GTot (pure_wp a)) : pure_wp a =
   pure_close_wp a b wp
 
 (** The effect of divergence: from a specificational perspective it is
@@ -161,7 +161,7 @@ let div_close_wp (a b:Type) (wp:b → GTot (pure_wp a)) : pure_wp a =
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
 new_effect {
-  DIV : a:Type → wp:pure_wp a → Effect
+  DIV : a:Type -> wp:pure_wp a -> Effect
   with
     return_wp = div_return
   ; bind_wp = div_bind
