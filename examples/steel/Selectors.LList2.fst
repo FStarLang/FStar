@@ -2,7 +2,6 @@ module Selectors.LList2
 
 open Steel.FractionalPermission
 module Mem = Steel.Memory
-module R = Steel.Reference
 
 #push-options "--__no_positivity"
 noeq
@@ -21,8 +20,8 @@ let mk_cell #a (n: t a) (d:a) = {
   data = d
 }
 
-let null_llist #a = R.null
-let is_null #a ptr = R.is_null ptr
+let null_llist #a = null
+let is_null #a ptr = is_null ptr
 
 let v_null_rewrite
   (a: Type0)

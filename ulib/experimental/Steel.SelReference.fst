@@ -224,15 +224,6 @@ let ptr_sel' #a r = fun h ->
   let x = id_elim_exists #(erased a) (pts_to_sl r full_perm) h in
   reveal (reveal x)
 
-let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
-: Lemma
-  (interp hp (join m0 m1))
-  [SMTPat (interp hp (join m0 m1))]
-= let open Steel.Memory in
-  intro_emp m1;
-  intro_star hp emp m0 m1;
-  affine_star hp emp (join m0 m1)
-
 let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
   (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
   : Lemma (ptr_sel' r m0 == ptr_sel' r (Mem.join m0 m1))
@@ -255,6 +246,8 @@ let ptr_sel r =
   ptr_sel' r
 
 let ptr_sel_interp #a r m = pts_to_witinv r full_perm
+
+let intro_ptr_interp r v m = intro_h_exists v (pts_to_sl r full_perm) m
 
 let intro_vptr_lemma (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
   (requires interp (pts_to_sl r full_perm v) m)

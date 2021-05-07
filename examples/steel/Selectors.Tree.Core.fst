@@ -4,7 +4,6 @@ open FStar.Ghost
 open Steel.FractionalPermission
 
 module Mem = Steel.Memory
-module R = Steel.Reference
 module Spec = Trees
 
 open Steel.SelEffect.Atomic
@@ -31,14 +30,14 @@ let mk_node #a data left right = {
   right
 }
 
-let null_t #a = R.null
-let is_null_t #a ptr = R.is_null ptr
+let null_t #a = null
+let is_null_t #a ptr = is_null ptr
 
 let rec tree_sl' (#a: Type0) (ptr: t a) (tree: Spec.tree (node a)) : Tot slprop (decreases tree) =
   match tree with
   | Spec.Leaf -> Mem.pure (ptr == null_t)
   | Spec.Node data left right ->
-    R.pts_to ptr full_perm data `Mem.star`
+    pts_to_sl ptr full_perm data `Mem.star`
     tree_sl' data.left left `Mem.star`
     tree_sl' data.right right
 
@@ -62,20 +61,20 @@ let tree_sl'_witinv (#a: Type0) (ptr: t a) : Lemma(is_witness_invariant (tree_sl
          | Spec.Leaf -> ()
          | Spec.Node data left right ->
            Mem.pure_interp (ptr == null_t) m;
-           Mem.affine_star (R.pts_to ptr full_perm data `Mem.star` tree_sl' (get_left data) left)
+           Mem.affine_star (pts_to_sl ptr full_perm data `Mem.star` tree_sl' (get_left data) left)
              (tree_sl' (get_right data) right) m;
-           Mem.affine_star (R.pts_to ptr full_perm data) (tree_sl' (get_left data) left) m;
-           R.pts_to_not_null ptr full_perm data m
+           Mem.affine_star (pts_to_sl ptr full_perm data) (tree_sl' (get_left data) left) m;
+           pts_to_not_null ptr full_perm data m
        end
       | Spec.Node data1 left1 right1 -> begin match y with
         | Spec.Leaf ->
            Mem.pure_interp (ptr == null_t) m;
-           Mem.affine_star (R.pts_to ptr full_perm data1 `Mem.star` tree_sl' (get_left data1) left1)
+           Mem.affine_star (pts_to_sl ptr full_perm data1 `Mem.star` tree_sl' (get_left data1) left1)
              (tree_sl' (get_right data1) right1) m;
-           Mem.affine_star (R.pts_to ptr full_perm data1) (tree_sl' (get_left data1) left1) m;
-           R.pts_to_not_null ptr full_perm data1 m
+           Mem.affine_star (pts_to_sl ptr full_perm data1) (tree_sl' (get_left data1) left1) m;
+           pts_to_not_null ptr full_perm data1 m
         | Spec.Node data2 left2 right2 ->
-           R.pts_to_witinv ptr full_perm;
+           pts_to_witinv ptr full_perm;
            aux (get_left data1) left1 left2 m;
            aux (get_right data1) right1 right2 m
       end
@@ -146,35 +145,35 @@ let lemma_node_not_null (#a:Type) (ptr:t a) (t:tree a) (m:mem) : Lemma
        match reveal t' with
       | Spec.Node data left right ->
            Mem.affine_star
-             (R.pts_to ptr full_perm (hide data) `Mem.star` tree_sl' (get_left data) left)
+             (pts_to_sl ptr full_perm (hide data) `Mem.star` tree_sl' (get_left data) left)
              (tree_sl' (get_right data) right) m;
-           Mem.affine_star (R.pts_to ptr full_perm data) (tree_sl' (get_left data) left) m;
-           R.pts_to_not_null ptr full_perm data m
+           Mem.affine_star (pts_to_sl ptr full_perm data) (tree_sl' (get_left data) left) m;
+           pts_to_not_null ptr full_perm data m
 
 let node_is_not_null #a ptr =
-  let h = get #(linked_tree ptr)  () in
+  let h = get () in
   let t = hide (v_linked_tree ptr h) in
   extract_info (linked_tree ptr) t (ptr =!= null_t) (lemma_node_not_null ptr t)
 
 let pack_tree_lemma_aux (#a:Type0) (pt:t a)
   (x: node a) (l r:tree (node a)) (m:mem) : Lemma
   (requires
-    interp (R.pts_to pt full_perm x `Mem.star`
+    interp (pts_to_sl pt full_perm x `Mem.star`
       tree_sl' (get_left x) l `Mem.star`
       tree_sl' (get_right x) r)
     m)
   (ensures interp (tree_sl' pt (Spec.Node x l r)) m)
-  = affine_star (R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l)
+  = affine_star (pts_to_sl pt full_perm x `Mem.star` tree_sl' (get_left x) l)
                 (tree_sl' (get_right x) r)
                 m;
-    affine_star (R.pts_to pt full_perm x) (tree_sl' (get_left x) l) m;
+    affine_star (pts_to_sl pt full_perm x) (tree_sl' (get_left x) l) m;
 
-    R.pts_to_not_null pt full_perm x m;
+    pts_to_not_null pt full_perm x m;
 
-    emp_unit (R.pts_to pt full_perm x `Mem.star`
+    emp_unit (pts_to_sl pt full_perm x `Mem.star`
       tree_sl' (get_left x) l `Mem.star`
       tree_sl' (get_right x) r);
-    pure_star_interp (R.pts_to pt full_perm x `Mem.star`
+    pure_star_interp (pts_to_sl pt full_perm x `Mem.star`
       tree_sl' (get_left x) l `Mem.star`
       tree_sl' (get_right x) r)
       (pt =!= null_t)
@@ -201,7 +200,7 @@ let pack_tree_lemma (#a:Type0) (pt left right:t a)
         ptr_sel pt ml1 == x
       )
       (ensures interp
-        (R.pts_to pt full_perm x `Mem.star`
+        (pts_to_sl pt full_perm x `Mem.star`
          tree_sl' left l' `Mem.star`
          tree_sl' right r')
        m)
@@ -221,9 +220,9 @@ let pack_tree_lemma (#a:Type0) (pt left right:t a)
         assert (r2 == r');
         assert (interp (tree_sl' right r') mr);
 
-        intro_star (R.pts_to pt full_perm x) (tree_sl' left l') ml1 ml2;
+        intro_star (pts_to_sl pt full_perm x) (tree_sl' left l') ml1 ml2;
         intro_star
-          (R.pts_to pt full_perm x `Mem.star` tree_sl' left l')
+          (pts_to_sl pt full_perm x `Mem.star` tree_sl' left l')
           (tree_sl' right r')
           (join ml1 ml2) mr
     in
@@ -324,7 +323,7 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
 
     tree_sel_interp pt t m;
 
-    let sl = R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l `Mem.star` tree_sl' (get_right x) r in
+    let sl = pts_to_sl pt full_perm x `Mem.star` tree_sl' (get_left x) l `Mem.star` tree_sl' (get_right x) r in
 
     pure_star_interp sl (pt =!= null_t) m;
     emp_unit sl;
@@ -332,7 +331,7 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
 
     let aux (m:mem) (ml1 ml2 mr:mem) : Lemma
       (requires disjoint ml1 ml2 /\ disjoint (join ml1 ml2) mr /\ m == join (join ml1 ml2) mr /\
-        interp (R.pts_to pt full_perm x) ml1 /\
+        interp (pts_to_sl pt full_perm x) ml1 /\
         interp (tree_sl' (get_left x) l) ml2 /\
         interp (tree_sl' (get_right x) r) mr)
       (ensures
@@ -340,9 +339,9 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
         sel_of (vptr pt) m == x /\
         tree_sel_node (get_left x) m == l /\
         tree_sel_node (get_right x) m == r)
-      = intro_h_exists (hide x) (R.pts_to pt full_perm) ml1;
+      = intro_ptr_interp pt (hide x) ml1;
         ptr_sel_interp pt ml1;
-        R.pts_to_witinv pt full_perm;
+        pts_to_witinv pt full_perm;
 
         tree_sel_interp (get_left x) l ml2;
         intro_star (ptr pt) (tree_sl (get_left x)) ml1 ml2;
@@ -358,11 +357,11 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
 
     in
     elim_star
-      (R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l)
+      (pts_to_sl pt full_perm x `Mem.star` tree_sl' (get_left x) l)
       (tree_sl' (get_right x) r)
       m;
     Classical.forall_intro (Classical.move_requires
-      (elim_star (R.pts_to pt full_perm x) (tree_sl' (get_left x) l)));
+      (elim_star (pts_to_sl pt full_perm x) (tree_sl' (get_left x) l)));
     Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
 
 let unpack_tree_node #a ptr =
