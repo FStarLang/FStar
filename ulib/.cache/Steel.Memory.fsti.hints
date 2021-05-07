@@ -77,7 +77,7 @@
       1,
       [ "@query" ],
       0,
-      "a3f975fe6ccb2918e6fd38da2dc409e1"
+      "d9e46357e19aea1f0aa1caf48210635c"
     ],
     [
       "Steel.Memory.mem_prop_is_affine",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "af84d50c41f4c1d8c8e5d2cf1659a125"
+      "c96cdbc5da9c1afcca37d2559010c8c4"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -103,7 +103,7 @@
       1,
       [ "@query" ],
       0,
-      "f42dfae41a44793d54b49f40eaecdd29"
+      "2f9950caaba8ca9bf986a7b254bbb6ae"
     ],
     [
       "Steel.Memory.dep_slprop_is_affine",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "10e09b26a5a0947cdbee0294dcbc56ad"
+      "628903eb6c94efee2d83ae1b434f63db"
     ],
     [
       "Steel.Memory.action_except",
