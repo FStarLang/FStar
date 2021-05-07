@@ -522,7 +522,7 @@ val elim_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelSelGhost unit opened (vrefine v p) (fun _ -> v)
   (requires (fun _ -> True))
-  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p))))
+  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p)) /\ p (h' v)))
 
 val intro_vdep (#opened:inames)
   (v: vprop)
