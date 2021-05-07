@@ -47,3 +47,20 @@ let rec memcpy
       memcpy len (cur + 1ul) src dest //recurse
     )
 // SNIPPET_END: memcpy
+
+
+// SNIPPET_START: alloc_copy_free
+let alloc_copy_free 
+        (len:uint32)
+        (src:lbuffer len uint8)
+  : ST (lbuffer len uint8)
+       (requires fun h -> 
+         live h src)
+       (ensures fun h0 dest h1 -> 
+         live h1 dest /\
+         equal h0 src h1 dest)
+  = let dest = alloc len 0uy in
+    memcpy len src dest;
+    free src;
+    dest
+// SNIPPET_END: alloc_copy_free

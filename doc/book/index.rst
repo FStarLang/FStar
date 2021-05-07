@@ -7,7 +7,7 @@
    <http://research.microsoft.com/en-us>`_, `MSR-Inria
    <http://www.msr-inria.fr/>`_, and `Inria <https://www.inria.fr/>`_.
 
-Proof Oriented Programming in F*
+Proof-Oriented Programming in F*
 ================================
 
 F* is a dependently typed programming language and proof
@@ -19,10 +19,95 @@ program's behavior, including properties like functional correctness
 security properties (e.g., ensuring that a program never leaks certain
 secrets), and bounds on resource usage.
 
+
+
+A Capsule Summary of F*
+.......................
+
+F* is a dependently type programming language that aims to play
+several roles:
+
+* A general purpose programming language, which encourages
+  higher-order functional programming with effects, in the tradition
+  of the ML family of languages.
+
+* A compiler, which translates F* programs to OCaml or F#, and even C
+  or Wasm, for execution.
+
+* A proof assistant, in which to state and prove properties of
+  programs.
+
+* A program verification engine, leveraging SMT solvers to partially
+  automate proofs of programs.
+
+* A metaprogramming system, supporting the programmatic construction
+  of F* programs and proof automation procedures.
+
+To achieve these goals, the design of F* revolves around a few key
+elements.
+
+* A core language of total functions with full dependent types,
+  including an extensional form of type conversion, indexed inductive
+  types, and pattern matching, recursive functions with semantic
+  termination checking, dependent refinement types and subtyping, and
+  polymorphism over a predicative hierarchy of universes.
+
+* A system of user-defined indexed effects, for modeling,
+  encapsulating, and statically reasoning about various forms of
+  computational effects, including a primitive notion of general
+  recursion and divergence, as well as an open system of user-defined
+  effects, with examples including state, exceptions, concurrency,
+  algebraic effects, and several others.
+
+* A built-in encoding of a classical fragment of F*'s logic into the
+  first order logic of an SMT solver, allowing many proofs to be
+  automatically discharged.
+
+* A reflection within F* of the syntax and proof state of F*, enabling
+  Meta-F* programs to manipulate F* syntax and proof goals and for
+  users to build proofs interactively with tactics.
+
+
+DSLs Embedded in F*
+^^^^^^^^^^^^^^^^^^^
+
+In practice, rather than a single language, the F* ecosystem is also a
+collection of domain-specific languages (DSLs). A common use of F* is
+to embed within it programming languages at different levels of
+abstraction or for specific programming tasks, and for the embedded
+language to be engineered with domain-specific reasoning, proof
+automation, and compilaton backends. Some examples include:
+
+* Low*, an shallowly embedded DSL for sequential programming against a
+  C-like memory model including explicit memory management on the
+  stack and heap; a Hoare logic for partial correctness based on
+  implicit dynamic frames; and a custom backend (Kremlin) to compile
+  Low* programs to C for further compilation by off-the-shelf C
+  compilers.
+
+* EverParse, a shallow embedding of a DSL (layered on top of the Low*
+  DSL) of parser and serializer combinators, for low-level binary
+  formats.
+
+* Vale, a deeply embedded DSL for structured programming in a
+  user-defined assembly language, with a Hoare logic for total
+  correctness, and a printer to emit verified programs in a assembly
+  syntax compatible with various standard assemblers.
+
+* Steel, a shallow embedding of concurrency as an effect in F*, with
+  an extensible concurrent separation logic for partial correctness as
+  a core program logic, and proof automation built using a combination
+  of Meta-F* tactics, higher-order unification, and SMT.
+
+.. _Intro_Vec:
+
+F* in Action
+............
+
 To get a taste of F*, let's dive right in with some examples.
 
 F* is a dependently typed language
-..................................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dependently typed programming enables one to more precisely capture
 properties and invariants of a program using types. Here's a classic
@@ -79,7 +164,7 @@ chapter <TypeConversion>`.
 
 
 F* supports user-defined effectful programming
-..............................................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While functional programming is at the heart of the language, F* is
 about more than just pure functions. In fact, F* is a Turing complete
@@ -97,36 +182,35 @@ concurrency, IO, etc.
 
 Here below is some code in an F* dialect called :ref:`Low* <LowStar>`
 which provides a sequential, imperative C-like programming model with
-mutable memory. The function ``memcpy`` copies the contents of an
-array of bytes ``src`` into a destination array ``dest`` of the same
-length.
+mutable memory. The function ``alloc_copy_free`` allocates an array
+``dest``, copies the contents of an array of bytes ``src`` into a
+``dest``, deallocates, ``src`` and returns ``dest``.
 
 .. literalinclude:: MemCpy.fst
    :language: fstar
-   :start-after: SNIPPET_START: memcpy
-   :end-before: SNIPPET_END: memcpy
+   :start-after: SNIPPET_START: alloc_copy_free
+   :end-before: SNIPPET_END: alloc_copy_free
 
-It'll take us until :ref:`much later<LowStar>` to explain ``memcpy``
-fully. But, here are two main points to take away:
+It'll take us until :ref:`much later<LowStar>` to explain this code in
+full detail, but here are two main points to take away:
 
-  * ``memcpy``'s type signature claims that under specific constraints
-    on a caller, ``memcpy`` is *safe* to execute (e.g., it does not
-    read outside the bounds of allocated memory) and that it is
-    *correct* (i.e., that it successfully copies ``src`` to ``dest``
-    without modifying any other memory)
+  * The type signature of the procedure claims that under specific
+    constraints on a caller, ``alloc_copy_free`` is *safe* to execute
+    (e.g., it does not read outside the bounds of allocated memory)
+    and that it is *correct* (i.e., that it successfully copies
+    ``src`` to ``dest`` without modifying any other memory)
 
-  * Given the implementation of ``memcpy``, F* actually builds a
-    mathematical proof that ``memcpy`` is safe and correct with
-    respect to its signature.
+  * Given the implementation of a procedure F* actually builds a
+    mathematical proof that it is safe and correct with respect to its
+    signature.
 
 While other program verifiers offer features similar to what we've
-used in ``memcpy``, a notable thing about F* is that the semantics of
-programs with side effects (like reading and writing memory) is
-entirely encoded within F*'s logic using a system of user-defined
-effects.
+used here, a notable thing about F* is that the semantics of programs
+with side effects (like reading and writing memory) is entirely
+encoded within F*'s logic using a system of user-defined effects.
 
-Whereas ``memcpy`` is programmed in Low* and specified using a
-particular kind of `Floyd-Hoare logic
+Whereas ``alloc_copy_free`` is programmed in Low* and specified using
+a particular kind of `Floyd-Hoare logic
 <https://en.wikipedia.org/wiki/Hoare_logic>`_, there's nothing
 particularly special about it in F*.
 
@@ -147,7 +231,7 @@ program proof abstractions to match your needs. You'll learn more
 about this in the section on :ref:`user-defined effects <effects>`.
 
 F* proofs use SMT solving, symbolic computation and tactics
-...........................................................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Stating a theorem or lemma in F* amounts to declaring a type signature
 and a doing a proof corresponds to providing an implementation of that
@@ -242,11 +326,11 @@ proof of the theorem.
 Tactics are an instance of a more general metaprogramming system in
 F*, which allows an F* program to generate other F* programs. You'll
 learn more about tactics and metaprograming in :ref:`this chapter
-<meta-fstar>`.
+<MetaFStar>`.
 
 
 F* programs compile to OCaml and F#, C and Wasm
-...........................................................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Of course, you'll want a way to actually execute the programs you
 write. For this, F* provides several ways to compile a program to
@@ -281,411 +365,235 @@ bit overwhelming, if you're new to program proofs. So, you may be
 wondering now about whether it's worth learning F* or not. Here are
 some things to consider.
 
-**Proofs of programs**: If you like programming and want to get better
- at it, no matter what your level is, learning about program proofs
- will help. Proving a program, or even just writing down a
- specification for it, forces you to think about aspects of your
- program that you may never have considered before. There are many
- excellent resources available to learn about program proofs, using a
- variety of other tools, including some of the following:
+If you like programming and want to get better at it, no matter what
+your level is, learning about program proofs will help. Proving a
+program, or even just writing down a specification for it, forces you
+to think about aspects of your program that you may never have
+considered before. There are many excellent resources available to
+learn about program proofs, using a variety of other tools, including
+some of the following:
 
-  * `Software Foundations <>`_:
+  * `Software Foundations
+    <https://softwarefoundations.cis.upenn.edu/>`_: A comprehensive
+    overview of programming language semantics and formal proofs in
+    the Coq proof assistant.
 
-  * `Certified Programming with Dependent Types <>`_:
+  * `A Proof Assistant for Higher-Order Logic
+    <https://isabelle.in.tum.de/doc/tutorial.pdf>`_: A tutorial on the
+    Isabelle/HOL proof assistant.
 
-  * `Type-driven Development <>`_:
+  * `Certified Programming with Dependent Types
+    <http://adam.chlipala.net/cpdt/>`_: Provides an introduction to
+    proof engineering in Coq.
 
-  * `The Lean book <>`_
+  * `Type-driven Development
+    <https://www.manning.com/books/type-driven-development-with-idris>`_:
+    Introduces using dependent types to developing programs corretly
+    in Idris.
 
-  * `Program Proofs <>`_:
+  * `Theorem Proving in Lean
+    <https://leanprover.github.io/theorem_proving_in_lean/>`_: This is
+    the standard reference for learning abou the Lean theorem prover,
+    though there are several other `resources
+    <https://leanprover-community.github.io/learn.html>`_ too.
 
+  * `Dafny resources
+    <https://github.com/dafny-lang/dafny#read-more>`_: A different
+    flavor than all of the above, Dafny is an SMT powered program
+    verifier for imperative programs.
 
-** **
+  * `Liquid Haskell
+    <http://ucsd-progsys.github.io/liquidhaskell-tutorial/>`_: This
+    tutorial showcases proving programs with refinement types.
 
+All of these are excellent resources and each tool has unique
+offerings. This book about F* offers a few unique things too. We
+discuss a few pros and cons, next.
 
+**Dependent Types and Extensionality**
 
+F*'s dependent types are similar in expressiveness to Coq, Lean, Agda,
+or Idris, i.e., the expressive power allows formalizing nearly all
+kinds of mathematics. What sets F* apart from these other languages
+(and more like Nuprl) is its extensional notion of type equality,
+making many programming patterns significantly smoother in F* (cf. the
+:ref:`vector <Intro_Vec>` example). However, this design also makes
+typechecking in F* undedicable. The practical consequences of this are
+that F* typechecker can time-out and refuse to accept your
+program. Other dependently typed languages have decidable
+typechecking, though they can, in principle, take arbitrarily long to
+decide whether or not your program is type correct.
 
+**A Variety of Proof Automation Tools**
 
+F*'s use of an SMT solver for proof automation is unique among
+languages with dependent types, though in return, one needs to also
+trust the combination of F* and Z3 to believe in the validity of an F*
+proof. Isabelle/HOL provides similar SMT-assisted automation (in its
+Sledgehammer tool), for the weaker logic provided by HOL, though
+Sledghammer's design ensures that the SMT solver need not be
+trusted. F*'s use of SMT is also similar to what program verifiers
+like Dafny and Liquid Haskell offer. However, unlike their SMT-only
+proof strategies, F*, like Coq and Lean, also provides symbolic
+reduction, tactics, and metaprogramming. That said, F*'s tactic and
+metaprogramming engines are less mature than other systems where
+tactics are the primary way of conducting proofs.
 
+**A Focus on Programming**
+
+Other dependently typed languages shine in their usage in formalizing
+mathematics---Lean's `mathlib
+<https://github.com/leanprover-community/mathlib>`_ and Coq's
+`Mathematical Components <https://math-comp.github.io/>`_ are two
+great examples. In comparison, to date, relatively little pure
+mathematics has been formalized in F*. Rather, F*, with its focus on
+effectful programming and compilation to mainstream languages like C,
+has been used to it produce industrial-grade high-assurance software,
+deployed in settings like the `Windows
+<https://www.microsoft.com/en-us/research/blog/everparse-hardening-critical-attack-surfaces-with-formally-proven-message-parsers/>`_
+and `Linux <https://lwn.net/Articles/770750/>`_ kernels, among `many
+others <https://project-everest.github.io>`_.
+
+**Maturity and Community**
+
+Isabelle/HOL and Coq are mature tools that have been developed and
+maintained for many decades, have strong user communities in academia,
+and many sources of documentation. Lean's community is growing fast
+and also has a strong community and excellent tools and
+documentation. F* is less mature, its design has been the subject of
+several research papers, making it somewhat more experimental. The F*
+community is also smaller, its documentation is more sparse, and F*
+users are usually in relatively close proximity to the F* development
+team. However, F* developments also have a good and growing track
+record of industrial adoption.
 
 
 A Bit of F* History
 ...................
 
+F* is an open source project at `GitHub
+<https://github.com/FStarLang/FStar>`_ by researchers at a number of
+institutions, including `Microsoft Research
+<http://research.microsoft.com/en-us>`_, `MSR-Inria
+<http://www.msr-inria.fr/>`_, `Inria <https://www.inria.fr/>`_,
+`Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, `Carnegie-Mellon
+<https://www.cs.cmu.edu/>`_.
+
+**The name** The F in F* is a homage to System F
+(https://en.wikipedia.org/wiki/System_F) which was the base calculus
+of an early version of F*. We've moved beyond it for some years now,
+however. The F part of the name is also derived from several prior
+languages that many authors of F* worked on, including `Fable
+<https://ieeexplore.ieee.org/document/4531165>`_, `F7
+<https://www.microsoft.com/en-us/research/project/f7-refinement-types-for-f/>`_,
+`F9
+<https://link.springer.com/chapter/10.1007/978-3-642-11957-6_28>`_,
+`F5
+<https://prosecco.gforge.inria.fr/personal/hritcu/publications/rcf-and-or-coq-tosca2011-post.pdf>`_,
+`FX
+<https://www.microsoft.com/en-us/research/wp-content/uploads/2011/01/plpv11k-borgstrom.pdf>`_,
+and even `F# <https://fsharp.org>`_.
+
+The "\*" was meant as a kind of fixpoint operator, and F* was meant to
+be a sort of fixpoint of all those languages. The first version of F*
+also had affine types and part of the intention then was to use affine
+types to encode separation logic---so the "\*" was also meant to evoke
+the separation logic "\*". But, the early affine versions of F* never
+really did have separation logic in that version. It took until almost
+a decade later to have a separation logic embedded in F* (see Steel),
+though without relying on affine types.
+
+.. _LowStar:
+.. _Steel:
 
 Structure of this book
 ......................
 
-
-
-Comparing F* to other program verifiers
-.......................................
-
-If you're coming to F* having learned about other SMT-backed
-verification-oriented languages like `Dafny <dafny>`_ or `Vcc <vcc>`_,
-you might be wondering if F* is really any different. Here are some
-points of similarity and contrast.
-
-**User-defined language abstractions**
-
-Perhaps the biggest difference with other program verifiers, is that
-rather than offering a fixed set of constructs in which to specify and
-verify a progam, F* offers a framework in which users can design their
-own abstractions, often at the level of a domain-specific language, in
-which to build their programs and proofs.
-
-More concretely, ``memcpy`` is programmed in a user-defined language
-embedded in F* called :ref:`Low* <LowStar>`, which targets sequential,
-imperative C-like programming model with mutable heap- and
-stack-allocated memory.
-
-There's nothing particular special about Low*. Here's
-
-
-There are a few differences
-
-
-
-The signature of ``memcpy``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The type signature of ``memcpy`` is very detailed, specifying many
-properties about the safety and correctness of ``memcpy``, much more
-than in most other languages.
-
-**The arguments of ``memcpy``**
-
-  * ``len``, a 32 bit unsigned integer, or a ``uint32``
-
-  * ``cur``, also a ``uint32``, representing the current iteration
-    index, but with a constraint requiring it to be bounded by ``len``.
-
-  * ``src`` and ``dest``, pointers to arrays of bytes (``uint8``),
-    both with length at least ``len``.
-
-**The return type and effect**
-
-The next line ``ST unit`` states that ``memcpy`` is a function, that
-may, as a side effect, read, write, allocate or deallocate memory, and
-returns a value of type ``unit``---if the ``unit`` type is unfamiliar
-to you, from a C or Java programmer's perspective, think of it as
-returning ``void``.
-
-**The precondition**
-
-Now we get to the really interesting part, the ``requires`` and
-``ensures`` clauses, describing the pre- and postconditions of
-``memcpy``. In order to safely invoke ``memcpy``, a caller must prove
-the following properties when the current state of the program is
-``h``:
-
-  * ``live h src``: The ``src`` array has been allocated in memory and
-    not deallocated yet. This is to ensure that ``memcpy`` does not
-    attempt to read memory that is not currently allocated, protecting
-    against common violations of `memory safety
-    <http://www.pl-enthusiast.net/2014/07/21/memory-safety/>`_, like
-    `use-after-free bugs
-    <https://cwe.mitre.org/data/definitions/416.html>`_.
-
-  * ``live h dest``: Likewise, the ``dest`` array is also allocated
-    and not deallocated yet.
-
-  * ``disjoint src dest``: The ``src`` and ``dest`` arrays should
-    point to non-overlapping arrays in memory---if they did not, then
-    writing to the ``dest`` array could overwrite the contents of the
-    ``src`` array.
-
-  * ``prefix_equal h src dest cur``: The contents of the ``src`` and
-    ``dest`` arrays are equal until the current iteration index
-    ``cur``.
-
-**The postcondition**
-
-Finally, the ``ensures`` clause describes what ``memcpy`` guarantees,
-by relating the contents of the memory state ``h0`` in when ``memcpy``
-was called to the memory state ``h1`` at the time ``memcpy`` returns.
-
-  * ``modifies1 dest h0 h1`` guarantees that ``memcpy`` only modified
-    the ``dest``
-
-  * ``prefix_equal h1 src dest len`` guarantees that the ``src`` and
-    ``dest`` arrays have equal contents all the way up to ``len``
-
-The implementation and proof of ``memcpy``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The signature of ``memcpy`` is significantly longer than its
-implementation---that's because many aspects of safety are left
-implicit in the implementation and, in this simple case, the
-implementation of ``memcpy`` is really quite simple. It just checks if
-the ``cur`` index is still less than the length of the array, and, if
-so, copies one byte over and recurses while advancing the ``cur``
-position.
-
-What's left implicit here is a proof that ``memcpy`` actually does
-obey its signature. F* actually builds a mathematical proof behind the
-scenes that ``memcpy`` is safe and correct with respect to its
-specification. In this case, that proof is done by F*'s typechecker,
-which makes use of an automated theorem prover called `Z3
-<https://www.microsoft.com/en-us/research/blog/the-inner-magic-behind-the-z3-theorem-prover/>`_
-behind the scenes. As such, if you're willing to trust the
-implementations of F* and Z3, you can be confident that ``memcpy``
-does exactly what its specification states, i.e., that the signature
-of ``memcpy`` is a *mathematical theorem* about all its executions.
-
-Compiling ``memcpy`` for execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-F* provides several ways to compile a program to other languaegs for
-execution, including support to compile programs to OCaml, F#, C and Wasm.
-
-In this case, using a tool called `KReMLin
-<https://github.com/FStarLang/kremlin>`_, a compiler used with F*, we
-get the following C code for ``memcpy``.
-
-.. literalinclude:: MemCpy.c
-   :language: c
-
-Notice that the code we get contains no additional runtime checks: the
-detailed requires and ensures clauses are all gone and what's left is
-just a plain C code. Later we'll see how to actually write loops, so
-that you're not left with recursive functions in C. The point is that
-all the proof and specification effort is done before the program is
-compiled, imposing no runtime overhead at all.
-
-
-
-It is closely related to several other languages, including other
-dependently typed languages like `Coq <https://coq.inria.fr>`_, `Agda
-<agda>`_, `Idris <idris>`_, and `Lean <lean>`_, and other SMT-based program
-verification engines, like `Dafny <dafny>`_ or `Liquid Haskell <lh>`_.
-
-What makes F* unique is a combination of several elements.
-
-* Unlike most other dependently typed languages, F* is Turing complete
-  and has a notion of user-defined effects. It encourages higher-order
-  functional programming, including general recursion as well as a
-  user-extensible system of computational effects powerful enough to
-  express mutable state, exceptions, continuations, algebraic effects
-  etc.
-
-* F* is proof assistant, in which to state and prove properties of
-  programs. Dependently typed proof assistants like
-
-* A program verification engine, leveraging SMT solvers to partially
-  automate proofs of programs.
-
-* A framework within which to embed programming languages, developing
-  their semantics in a manner suitable for formal proof and enabling
-  their compilation to a variety of backends, including OCaml, F\#, C,
-  assembly, Wasm, etc.
-
-* A metaprogramming system, supporting the programmatic construction
-  of programs, interactive proofs, and proof automation procedures.
-
-Many other programming languages are
-
-
-Why not F*?
-...........
-
-
-
-
-To achieve these goals, the design of F* revolves around a few key
-elements.
-
-* A core language of total functions with full dependent types,
-  including an extensional form of type conversion, indexed inductive
-  types, and pattern matching, recursive functions with semantic
-  termination checking, dependent refinement types and subtyping, and
-  polymorphism over a predicative hierarchy of universes.
-
-* A system of user-defined indexed effects, for modeling,
-  encapsulating, and statically reasoning about various forms of
-  computational effects, including a primitive notion of general
-  recursion and divergence, as well as an open system of user-defined
-  effects, with examples including state, exceptions, concurrency,
-  algebraic effects, and several others.
-
-* A built-in encoding of a classical fragment of F*'s logic into the
-  first order logic of an SMT solver, allowing many proofs to be
-  automatically discharged.
-
-* A reflection within F* of the syntax and proof state of F*, enabling
-  Meta-F* programs to manipulate F* syntax and proof goals.
-
-
-Many other programming languages are closely related to F* and address
-some of these goals, including other dependently typed languages like
-Coq, Agda, Idris and Lean. In comparison with these languages, the
-distinctive features of F* include its extensional type conversion and
-SMT-based proof automation (both of which make typechecking more
-flexible but also undecidable); the use of refinement types (enabling
-a concise form of lightweight specification); and its user-defined
-effect system.
-
-This tutorial provides a first taste of
-verified programming in F\*. More information about F\*, including
-papers and technical reports, can be found on the `F\* website
-<http://www.fstar-lang.org>`_.
-
-It will help if you are already familiar with functional programming
-languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
-with [Haskell]---we provide a quick review of some basic concepts if
-you're a little rusty, but if you feel you need more background, there
-are many useful resources freely available on the web, e.g., [Learn
-F#], [F# for fun and profit], [Introduction to Caml], the [Real World
-OCaml] book, or the [OCaml MOOC].
-
-[OCaml]: https://ocaml.org
-[F#]: http://fsharp.org/
-[Standard ML]: http://sml-family.org/
-[Haskell]: https://www.haskell.org
-
-[Learn F#]: https://fsharp.org/learn.html
-[F# for fun and profit]: http://fsharpforfunandprofit.com/
-[Introduction to Caml]: https://pl.cs.jhu.edu/pl/lectures/caml-intro.html
-[Real World OCaml]: https://realworldocaml.org/
-[OCaml MOOC]: https://www.fun-mooc.fr/courses/course-v1:parisdiderot+56002+session03/about
-
-~KK
-Without any experience in ML or Ocaml my experience has been that the later
-exercises are very hard to solve, as some of the notation was not obvious to me. Even
-knowing the correct solution, I had to either infer syntax from the exercise
-code (which is fine) or go by trial and error (which was frustrating at times).
-I will leave comments on the exercises detailing what kind of notation I was (or
-am still) missing. Is there a resource (maybe in the wiki) that we can point
-readers to, that includes examples for most of the concepts? Something like the
-[F# reference] would be really helpful. Also, it might help to specify the
-audience of this tutorial a bit more. As a programmer with slightly faded memory
-of how inductive proofs work, the lemmas are not very straight forward. As
-someone who has never seen ML or has never done any functional programming, the
-syntax and some of the patterns are hard to grasp, I feel.
-~
-
-[F# reference]: https://docs.microsoft.com/en-us/dotnet/articles/fsharp/language-reference/
-
-The easiest way to try F\* and solve the verification exercises in this tutorial is
-directly in your browser by using the [online F\* editor]. You can
-load the boilerplate code needed for each exercise into the online
-editor by clicking the "Load in editor" link in the body of each
-exercise. Your progress on each exercise will be stored in browser
-local storage, so you can return to your code later (e.g. if your
-browser crashes, etc).
-
-[online F\* editor]: https://www.fstar-lang.org/run.php
-
-You can also do this tutorial by installing F\* locally on your
-machine.  F\* is open source and cross-platform, and you can get
-[binary packages] for Windows, Linux, and MacOS X or compile F\* from
-the [source code on github] using these [instructions].
-
-[binary packages]: https://github.com/FStarLang/FStar/releases
-[source code on github]: http://github.com/FStarLang/FStar
-[instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
-
-You can edit F\* code using your favorite text editor, but for Emacs
-the community maintains [fstar-mode.el], a sophisticated extension that adds special
-support for F\*, including syntax highlighting, completion, type
-hints, navigation, documentation queries, and interactive development
-(in the style of CoqIDE or ProofGeneral).
-You can find more details about [editor support] on the [F\* wiki].
-
-The code for the exercises in this tutorial and their solutions are in the [F\*
-repository] on Github. For some exercises, you have to include
-additional libraries, as done by the provided Makefiles.
-To include libraries for the Emacs interactive mode follow the
-[instructions here](https://github.com/FStarLang/fstar-mode.el#including-non-standard-libraries-when-using-fstar-mode).
-
-~KK
-The code available on the tutorial page and on github differs
-quite a bit (as does the F\* version I guess). In my case, this lead to some
-unexpected errors when copying code from the online-editor to Emacs. It would be
-nice to have a pointer to the actual file and maybe the proper parameters to
-verify it, in case someone prefers emacs over the online editor.
-~
-
-[fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
-[Atom]: https://github.com/FStarLang/fstar-interactive
-[Vim]: https://github.com/FStarLang/VimFStar
-[editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
-[F\* wiki]: https://github.com/FStarLang/FStar/wiki
-[F\* repository]: https://github.com/FStarLang/FStar/tree/master/doc/tutorial/code/
-
-By default F\* only verifies the input code, **it does not execute it**.
-To execute F\* code one needs to extract it to OCaml or F# and then
-compile it using the OCaml or F# compiler. More details on
-[executing F\* code] on the [F\* wiki].
-
-[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
-
-<!-- CH: TODO: add a chapter on extraction to tutorial -->
-
-<!-- CH: this is just distraction
-**A note on compatibility with F\#**: The syntax of F\* and F\#
-overlap on a common subset. In fact, the F\* compiler is currently
-programmed entirely in this intersection. Aside from this, the
-languages and their implementations are entirely distinct. In this
-tutorial, we will use the full syntax of F\*, even when it is possible
-to express the same program in the fragment shared with F\#. The F\*
-compiler sources are a good resource to turn to when trying to figure
-out the syntax of this shared fragment.
--->
-
-<!-- # Getting started  { #sec-getstarted } -->
-
-
-F* is a programming language and proof assistant.
-
-Part 1: F* Manual
+The first four parts of this book explain the main features of the
+language using a variety of examples. You should read them
+sequentially, following along with the associated code samples and
+exercises. These first four parts are arranged in increasing order of
+complexity---you can stop after any of them and have a working
+knowledge of useful fragments of F*.
+
+The remaining parts of the book are more loosely connected and either
+provide a reference guide to the compiler and libraries, or develop
+case studies that the reader can choose depending on their
+interest. Of course, some of those case studies come with
+prerequisites, e.g., you must have read about effects before tackling
+the case study on parsers and formatters.
 
 .. _SMTProofs:
 
-1. F* Quick Start: Online tutorial (chapters 1--6, ported here)
-
 .. _refinements:
 
-2. The Design of F*
+Part 1: Basic F*
+^^^^^^^^^^^^^^^^
 
-   A Verification-oriented Programming Language and Proof Assistant
-   (general context from mumon paper)
+The first part of this book provides a basic introduction to
+programming with pure total functions, refinement types, and SMT-based
+proofs. This part of the book is also available as an online tutorial
+and is targeted at an audience familiar with programming though with
+no background in formal proofs. Even if you are familiar with program
+proofs and dependent types, it will be useful to quickly go through
+this part, since it some elements are quite specific to F*.
 
-   * Types
-       * Dependent refinement types
-       * Intensional vs extensional, undecidability etc.
-       * Equality: Definitional and provable equality
-       * Subtyping
-       * Proof irrelevance
+Part 2: Purely Functional Programs and Proofs in F*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   * Effects
-       * Indexed Monads and Effects
-       * Subsumption and sub-effecting
-       * Effect abstraction, reification and reflecition
+.. _TypeConversion:
 
-   * Modules and Interfaces
-       *
+  * Working with indexed data structures
+    - Vectors
+    - Red-black trees
+    - Merkle trees
 
-   * A Mental Model of the F* Typechecker
-       * Type inference based on higher order unification
-       * Normalization and proofs by reflection
-       * SMT Solving
+  * Indexed types for proofs
+    - Type soundness for the simply typed lambda calculus
 
-   * Extraction
-       * Computational irrelevance and erasure (Ghost)
-       * Normalization for extraction
-           * inlining, pure subterms, postprocess(fwd to meta)
+  * Proof irrelevance and classical logic: prop and squash
 
-.. _meta-fstar:
+  * More termination proofs
+    - Infinitely branching trees and ordinal numbers
+    - Lexicographic orderings and unification
 
-   * Scripting F* with Metaprogramming
-       * Proof states
-       * Reflecting on syntax
-       * Quotation
-       * Scripting extraction
-       * Hooks
+  * Calculational Proofs
 
-3. A User's Guide
+  * Generic programming
+    - Printf
+    - Integer overloading
+
+  * Typeclasses
+
+Part 3: Effects
+^^^^^^^^^^^^^^^
+
+  * Ghost: An Effect for Erasable Computations
+
+  * Nontermination: The Effect of Divergence
+
+  * State
+
+  * Exceptions
+
+  * Concurrency
+
+  * Algebraic Effects
+
+.. _MetaFStar:
+
+Part 4: Tactics and Metaprogramming
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. _corelib_prims:
+
+Part 5: F* Libraries
+^^^^^^^^^^^^^^^^^^^^
+
+
+Part 6: A User's Guide to Structuring and Maintaining F* Developments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    * The Build System
        * Dependence Analysis
@@ -731,76 +639,19 @@ Part 1: F* Manual
 
    * FAQ
 
-4. Core libraries
 
-.. _corelib_Prims:
-
-Part 2: F* in Action
-
-.. _TypeConversion:
-
-1. Foundations of Programming Languages
-
-   a. Simply Typed Lambda Calculus: Syntatic Type Safety
-
-   b. Normalization for STLC
-      - Hereditary Substitutions: A Syntactic Normalization Technique
-      - Logical Relations
-
-   c. Semantics of an Imperative Language
-
-   d. Floyd-Hoare Logic
-      - Hoare triples
-      - Weakest Preconditions
-
-2. User-defined Effects
-
-   a. A language with an ML-style heap
-
-   b. Monotonic State
-
-   c. Exceptions
-
-   d. Algebraic Effects
-
-   e. Concurrency
+Part 7: Application to High-assurance Cryptography
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-.. _LowStar:
+Part 8: Application to Programming Language Semantics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-3. Low*: An Embedded DSL and Hoare Logic for Programming
+Part 9: Application to Parsers and Formatters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-   - Building on 4a and 4b.
-
-   - Integrating / referencing the Kremlin tutorial
-
-4. A Verified Embedding of a Verified Assembly Language
-
-5. Modeling and Proving Cryptography Security
-
-   - UF-CMA MAC
-
-   - IND-CPA Encryption
-
-   - Authenticated Encryption
-
-6. Verified Cryptographic Implementations
-
-.. _Steel:
-
-7. Steel: An Extensible Concurrent Separation Logic
-
-8. EverParse?
-   * Miniparse
-
-9. An End-to-end Verified Low-level App
-
-Part 3: Other resources
-
-   * Recorded coding session
-   * Talks, presentations
-   * Exemplary code
+Part 10: An End-to-end System with Formal Proofs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 .. toctree::

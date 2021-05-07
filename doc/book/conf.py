@@ -23,7 +23,7 @@ lexers['fstar'] = fstar_pygments.CustomLexer()
 
 # -- Project information -----------------------------------------------------
 
-project = u'Programming with Proofs in F*'
+project = u'Proof-Oriented Programming in F*'
 copyright = u'2020, Microsoft Research'
 author = u'F* development team'
 
