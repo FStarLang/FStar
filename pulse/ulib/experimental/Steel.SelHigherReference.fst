@@ -139,20 +139,6 @@ let higher_ref_pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
 let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to_sl r p)) =
   pts_to_witinv r p
 
-// let intro_perm_ok #uses (p:perm{perm_ok p}) (q:vprop)
-//   : SteelSelGhostT unit uses
-//                 q
-//                 (fun _ -> q `star` pure (perm_ok p))
-//   = change_slprop q (q `star` pure (perm_ok p))
-//     (fun m -> emp_unit q; pure_star_interp q (perm_ok p) m)
-
-// let elim_perm_ok #uses (p:perm)
-//   : SteelGhostT (q:perm{perm_ok q /\ q == p}) uses
-//                 (pure (perm_ok p))
-//                 (fun _ -> emp)
-//   = let _ = Atomic.elim_pure (perm_ok p) in
-//     p
-
 let intro_pts_to (p:perm) #a #uses (#v:erased a) (r:ref a)
   : SteelSelGhost unit uses
                 (pts_to_raw r p v)
@@ -172,7 +158,9 @@ let alloc #a x =
       emp_unit (hp_of (pts_to_raw r full_perm x));
       pure_star_interp (hp_of (pts_to_raw r full_perm x)) (perm_ok full_perm) m
     );
-  return r
+  extract_info_raw (pts_to r full_perm x) (~ (is_null r))
+    (fun m -> pts_to_not_null r full_perm x m);
+   return r
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
@@ -405,10 +393,34 @@ let ghost_alloc x =
   rewrite_slprop (pts_to r full_perm (hide (reveal x))) (ghost_pts_to r full_perm x) (fun _ -> ());
   hide r
 
+let ghost_free #a #u #v r =
+  let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+    rewrite_slprop
+      (pts_to r full_perm v)
+      (RP.pts_to r v_old `star` pure (perm_ok full_perm))
+      (fun _ -> ());
+    elim_pure (perm_ok full_perm);
+    as_atomic_action_ghost (free_action u r v_old);
+    drop (RP.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
+
 let ghost_share r = share (reveal r)
 let ghost_gather r = gather (reveal r)
 
 let ghost_pts_to_injective_eq r v0 v1 = higher_ref_pts_to_injective_eq (reveal r)
+
+let ghost_read #a #u #p #v r
+  = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
+    rewrite_slprop (pts_to r p v) (RP.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());
+    elim_pure (perm_ok p);
+    let v2 = as_atomic_action_ghost (sel_action u r v1) in
+    rewrite_slprop (RP.pts_to r v1) (pts_to r p v)
+      (fun m ->
+        emp_unit (hp_of (pts_to_raw r p v));
+        pure_star_interp (hp_of (pts_to_raw r p v)) (perm_ok p) m);
+    assert (compatible pcm_frac v1 v2);
+    let Some (x, _) = v2 in
+    rewrite_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
+    x
 
 let ghost_write_aux (#a:Type) (#u:_) (#v:erased a) (r:ref a) (x:a)
   : SteelSelGhostT unit u

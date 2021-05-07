@@ -70,7 +70,9 @@ val higher_ref_pts_to_injective_eq
           (ensures fun _ _ _ -> v0 == v1)
 
 val alloc (#a:Type) (x:a)
-  : SteelSelT (ref a) emp (fun r -> pts_to r full_perm x)
+  : SteelSel (ref a) emp (fun r -> pts_to r full_perm x)
+             (requires fun _ -> True)
+             (ensures fun _ r _ -> not (is_null r))
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelSel a (pts_to r p v) (fun x -> pts_to r p x)
@@ -128,6 +130,9 @@ val ghost_alloc (#a:Type) (#u:_) (x:erased a)
                  emp
                  (fun r -> ghost_pts_to r full_perm x)
 
+val ghost_free (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a)
+  : SteelSelGhostT unit u (ghost_pts_to r full_perm v) (fun _ -> emp)
+
 val ghost_share (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)
@@ -154,6 +159,11 @@ val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
+
+val ghost_read (#a:Type) (#u:_) (#p:perm) (#v:erased a) (r:ghost_ref a)
+  : SteelSelGhost (erased a) u (ghost_pts_to r p v) (fun x -> ghost_pts_to r p x)
+           (requires fun _ -> True)
+           (ensures fun _ x _ -> x == v)
 
 val ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
   : SteelSelGhostT unit u

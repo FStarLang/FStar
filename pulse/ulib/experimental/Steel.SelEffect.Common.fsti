@@ -131,6 +131,7 @@ let can_be_split_post (#a #b:Type) (t1:a -> post_t b) (t2:post_t b) =
   forall (x:a). equiv_forall (t1 x) t2
 
 val equiv (p q:vprop) : prop
+val reveal_equiv (p q:vprop) : Lemma (p `equiv` q <==> hp_of p `Mem.equiv` hp_of q)
 
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
