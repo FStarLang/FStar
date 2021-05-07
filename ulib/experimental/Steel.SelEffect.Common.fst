@@ -19,6 +19,7 @@ let can_be_split_star_r p q = ()
 let can_be_split_refl p = ()
 
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
+let reveal_equiv p q = ()
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()

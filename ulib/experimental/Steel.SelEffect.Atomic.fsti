@@ -498,6 +498,18 @@ val witness_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
 val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> vprop)
   : SteelSelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
 
+module U = FStar.Universe
+
+val lift_exists (#a:_) (#u:_) (p:a -> vprop)
+  : SteelSelGhostT unit u
+                (h_exists p)
+                (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
+  : SteelSelGhostT unit u
+                (h_exists p)
+                (fun _ -> h_exists q)
+
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)
