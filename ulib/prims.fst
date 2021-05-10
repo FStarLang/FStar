@@ -26,6 +26,13 @@ module Prims
 /// define various conveniences in the language, e.g., type of
 /// attributes.
 
+
+(***** Begin trusted primitives *****)
+
+(** Primitives up to the definition of the GTot effect are trusted
+    Beyond that all definitions are fully verified *)
+
+
 (** Type of attributes *)
 assume new
 type attribute : Type0 
@@ -419,6 +426,11 @@ effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
 (** As with [Tot], the primitive effect [GTot] is definitionally equal
     to an instance of GHOST *)
 effect GTot (a: Type) = GHOST a (pure_null_wp a)
+
+
+(***** End trusted primitives *****)
+
+(** This point onwards, F* fully verifies all the definitions *)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
