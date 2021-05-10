@@ -73,13 +73,13 @@ let implies_intro () : Tac binder =
 
 let implies_intros () : Tac binders = repeat1 implies_intro
 
-let l_intro () = forall_intro `or_else` implies_intro
-let l_intros () = repeat l_intro
+let l_intro () : Tac binder = forall_intro `or_else` implies_intro
+let l_intros () : Tac (list binder) = repeat l_intro
 
 (* This should be next to mapply... bring mapply here?
  * Or make a separate module? *)
 let mintro () : Tac binder =
-    first [intro; implies_intro; forall_intro; (fun () -> fail "cannot intro")]
+    first [intro; implies_intro; forall_intro; (fun () -> (fail "cannot intro") <: Tac binder)]
 
 let mintros () : Tac (list binder) =
     repeat mintro
@@ -87,7 +87,7 @@ let mintros () : Tac (list binder) =
 let squash_intro () : Tac unit =
     apply (`FStar.Squash.return_squash)
 
-let l_exact (t:term) =
+let l_exact (t:term) : Tac unit =
     try exact t with
     | _ -> (squash_intro (); exact t)
 
@@ -120,8 +120,8 @@ let pose_lemma (t : term) : Tac binder =
 
 let explode () : Tac unit =
     ignore (
-    repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
-                                (fun () -> ignore (split ()))]))
+    repeatseq (fun () -> first [(fun () -> ignore (l_intro ()) <: Tac unit);
+                                (fun () -> ignore (split ()) <: Tac unit)]))
 
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->
@@ -131,7 +131,7 @@ let rec visit (callback:unit -> Tac unit) : Tac unit =
                     match term_as_formula g with
                     | Forall b phi ->
                         let binders = forall_intros () in
-                        seq (fun () -> visit callback) (fun () -> l_revert_all binders)
+                        seq (fun () -> visit callback ) (fun () -> l_revert_all binders)
                     | And p q ->
                         seq split (fun () -> visit callback)
                     | Implies p q ->
@@ -294,9 +294,9 @@ let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
 
 (* Skolemizes a given binder for an existential, returning the introduced new binders
  * and the skolemized formula. *)
-let sk_binder b = sk_binder' [] b
+let sk_binder b : Tac (binders * binder) = sk_binder' [] b
 
-let skolem () =
+let skolem () : Tac (list (binders * binder)) =
   let bs = binders_of_env (cur_env ()) in
   map sk_binder bs
 
@@ -306,7 +306,7 @@ private
 let lemma_from_squash #a #b f x = let _ = f x in assert (b x)
 
 private
-let easy_fill () =
+let easy_fill () : Tac unit =
     let _ = repeat intro in
     (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
     let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in

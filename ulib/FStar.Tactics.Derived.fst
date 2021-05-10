@@ -35,10 +35,10 @@ let run_tactic (t:unit -> Tac unit)
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) =
+let fail (#a:Type) (m:string) : TAC a (fun ps p -> p (Failed #a (TacticFailure m) ps))  =
   raise #a (TacticFailure m)
 
-let fail_silently (#a:Type) (m:string) =
+let fail_silently (#a:Type) (m:string) : Tac a =
   set_urgency 0;
   raise #a (TacticFailure m)
 
@@ -269,7 +269,8 @@ first ones, and the rest. It then runs [t1] on the first set, and [t2]
 on the second, returning both results (and concatenating remaining goals). *)
 let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     if n < 0 then
-      fail "divide: negative n";
+      fail "divide: negative n"
+    else
     let gs, sgs = goals (), smt_goals () in
     let gs1, gs2 = List.Tot.Base.splitAt n gs in
 
@@ -302,7 +303,7 @@ let focus (t : unit -> Tac 'a) : Tac 'a =
         x
 
 (** Similar to [dump], but only dumping the current goal. *)
-let dump1 (m : string) = focus (fun () -> dump m)
+let dump1 (m : string) : Tac unit = focus (fun () -> dump m)
 
 let rec mapAll (t : unit -> Tac 'a) : Tac (list 'a) =
     match goals () with
@@ -383,10 +384,11 @@ let guard (b : bool) : TacH unit (requires (fun _ -> True))
         fail "guard failed"
     else ()
 
-let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
-    match catch f with
-    | Inl e -> h e
-    | Inr x -> x
+let try_with #a (f : unit -> Tac a) (h : exn -> Tac a) : Tac a =
+  let r : either exn a = catch f in
+  match r with
+  | Inl e -> h e
+  | Inr x -> x
 
 let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
     try Some (t ())
@@ -406,7 +408,8 @@ let first (ts : list (unit -> Tac 'a)) : Tac 'a =
     L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
-    match catch t with
+  let r : either exn a = catch t in
+    match r with
     | Inl _ -> []
     | Inr x -> x :: repeat t
 
@@ -427,7 +430,7 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 expected to be similar, and therefore easier to prove at once by the SMT
 solver. TODO: would be nice to try to join them in a more meaningful
 way, as the order can matter. *)
-let join_all_smt_goals () =
+let join_all_smt_goals () : Tac unit =
   let gs, sgs = goals (), smt_goals () in
   set_smt_goals [];
   set_goals sgs;
@@ -443,7 +446,7 @@ let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
-let tadmit () = tadmit_t (`())
+let tadmit () : Tac unit = tadmit_t (`())
 
 let admit1 () : Tac unit =
     tadmit ()
@@ -590,8 +593,8 @@ is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
-                    (fun () -> apply_lemma_rw l)
-                    `or_else` k)
+                    (fun () -> apply_lemma_rw l <: Tac _)
+                    `or_else` k <: Tac _)
                   trefl lems () in
     pointwise first_or_trefl
 
@@ -616,13 +619,13 @@ let grewrite_eq (b:binder) : Tac unit =
   match term_as_formula (type_of_binder b) with
   | Comp (Eq _) l r ->
     grewrite l r;
-    iseq [idtac; (fun () -> exact (binder_to_term b))]
+    iseq [idtac; (fun () -> (exact (binder_to_term b) <: Tac unit))]
   | _ ->
     begin match term_as_formula' (type_of_binder b) with
     | Comp (Eq _) l r ->
       grewrite l r;
-      iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
-                              exact (binder_to_term b))]
+      iseq [idtac; (fun () -> ((apply_lemma (`__un_sq_eq);
+                              exact (binder_to_term b)) <: Tac unit))]
     | _ ->
       fail "grewrite_eq: binder type is not an equality"
     end
@@ -776,13 +779,13 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
 
-let tlabel (l:string) =
+let tlabel (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel: no goals"
     | h::t ->
         set_goals (set_label l h :: t)
 
-let tlabel' (l:string) =
+let tlabel' (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel': no goals"
     | h::t ->
@@ -900,7 +903,7 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
 
     | C_Eff us eff res args ->
         let res = visit_tm ff res in
-        let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
+        let args = map (fun ((a, q):argv) -> ((visit_tm ff a, q) <: argv)) args in
         C_Eff us eff res args
   in
   pack_comp cv'

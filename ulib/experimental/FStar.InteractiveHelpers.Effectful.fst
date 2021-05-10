@@ -127,7 +127,7 @@ let comp_view_to_effect_info dbg cv =
     let ret_type_info = get_type_info_from_type ret_ty in
     let etype = effect_name_to_type eff_name in
     let mk_res = mk_effect_info etype ret_type_info in
-    let eff_args = map (fun (x,a) -> (prettify_term dbg x, a)) eff_args in
+    let eff_args = map (fun ((x,a):argv) -> (prettify_term dbg x, a)) eff_args in
     begin match etype, eff_args with
     | E_PURE, [(pre, _)] -> Some (mk_res (Some pre) None)
     | E_Pure, [(pre, _); (post, _)]
@@ -281,8 +281,11 @@ let compare_cast_types (dbg : bool) (p:cast_info) :
     ((c = Refines \/ c = Same_raw_type) ==> (Some? p.p_ty /\ Some? p.exp_ty)) /\
     (c = Same_raw_type ==> has_refinement (Some?.v p.exp_ty))}) =
   print_dbg dbg "[> compare_cast_types";
-  match p.p_ty, p.exp_ty with
+  let x : option type_info = p.p_ty in
+  let y : option type_info = p.exp_ty in
+  match x, y with
   | Some info1, Some info2 ->
+    admit ();
     compare_types dbg info1 info2
   | _ -> Unknown
 
@@ -525,7 +528,7 @@ let is_st_get dbg t : Tac bool =
     print_dbg dbg "-> Is not Tv_App";
     false
 
-let is_let_st_get dbg (t : term_view) =
+let is_let_st_get dbg (t : term_view) : Tac _ =
   print_dbg dbg ("[> is_let_st_get:\n" ^ term_to_string t);
   match t with
   | Tv_Let recf attrs bv def body ->
@@ -564,7 +567,7 @@ let term_has_effectful_comp dbg e tm =
 /// effectful. There are also situations in which we may not be sure which term to
 /// consider.
 let related_term_is_effectul dbg ge tv : Tac bool =
-  let is_effectful tm =
+  let is_effectful tm : Tac _ =
     term_has_effectful_comp dbg ge.env tm <> Some false
   in
   match tv with
@@ -686,7 +689,7 @@ let pre_post_to_propositions dbg ge0 etype v ret_abs_binder ret_type opt_pre opt
       print_dbg dbg "Looking for the final state in the context";
       let b2_opt = find_mem_in_related dbg ge0 children in
       (* Introduce state variables if necessary *)
-      let opt_push_fresh_state opt_bv basename ge : Tac (term & binder & genv) =
+      let opt_push_fresh_state (opt_bv:option bv) (basename:string) (ge:genv) : Tac (term & binder & genv) =
         match opt_bv with
         | Some bv -> pack (Tv_Var bv), mk_binder bv, ge
         | None -> genv_push_fresh_var ge basename (`HS.mem)
@@ -696,11 +699,11 @@ let pre_post_to_propositions dbg ge0 etype v ret_abs_binder ret_type opt_pre opt
       ge2, ([h1], [b1]), ([h1; v; h2], List.Tot.flatten ([b1]::brs::[[b2]]))
     | E_Unknown ->
       (* We don't know what the effect is and the current pre and post-conditions
-       * are currently guesses. Introduce any necessary variable abstracted by
-       * those parameters *)
+        * are currently guesses. Introduce any necessary variable abstracted by
+        * those parameters *)
        (* The pre and post-conditions are likely to have the same shape as
-        * one of Pure or Stack (depending on whether we use or not an internal
-        * state). We try to check that and to instantiate them accordingly *)
+         * one of Pure or Stack (depending on whether we use or not an internal
+         * state). We try to check that and to instantiate them accordingly *)
       let pp_type = check_opt_pre_post_type dbg ge0.env opt_pre ret_type.ty opt_post in
       begin match pp_type with
       | Some PP_Pure ->
@@ -728,9 +731,9 @@ let pre_post_to_propositions dbg ge0 etype v ret_abs_binder ret_type opt_pre opt
   (* - from the precondition *)
   let pre_prop = opt_mk_app_norm ge3.env opt_pre pre_values in
   (* - from the postcondition - note that in the case of a global post-condition
-   *   we might try to instantiate the return variable with a variable whose
-   *   type is not correct, leading to an error. We thus catch errors below and
-   *   drop the post if there is a problem *)
+  //  *   we might try to instantiate the return variable with a variable whose
+  //  *   type is not correct, leading to an error. We thus catch errors below and
+  //  *   drop the post if there is a problem *)
   let post_prop =
     try opt_mk_app_norm ge3.env opt_post post_values
     with
@@ -811,7 +814,8 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
        * computing the global postcondition makes sense only if the focused
        * term is the return value and thus not a let-binding *)
       let with_goal : bool = with_gpre || ((not is_let) && with_gpost) in
-      begin match opt_c, with_goal with
+      let r : option typ_or_comp & bool = opt_c, with_goal in
+      begin match r with
       | Some c, true ->
         let ei = typ_or_comp_to_effect_info dbg ge1 c in
         print_dbg dbg ("- target effect: " ^ effect_info_to_string ei);
@@ -830,7 +834,7 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
              * added first in the list and is thus last) *)
             let params =
               rev (List.Tot.map (fun x -> (x, type_of_binder x)) (params_of_typ_or_comp c)) in
-            iteri (fun i (b, _) -> print_dbg dbg ("Global parameter " ^ string_of_int i ^
+            iteri (fun i ((b, _):(binder & typ)) -> print_dbg dbg ("Global parameter " ^ string_of_int i ^
                                         ": " ^ binder_to_string b)) params;
             (* Filter the shadowed parameters *)
             let params = filter (fun (b, _)-> not (binder_is_shadowed ge1 b)) params in
@@ -961,6 +965,3 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
     if dbg then iter (fun x -> print (term_to_string x)) posts;
     ge2, { pres = pres; posts = posts }
     end
-
-
-

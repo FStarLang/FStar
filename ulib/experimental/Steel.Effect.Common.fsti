@@ -920,7 +920,7 @@ let close_equality_typ' (t:term) : Tac unit =
   | _ -> ()
 
 let close_equality_typ (t:term) : Tac unit =
-  let ff = fun t' -> close_equality_typ' t'; t' in
+  let ff : term -> Tac term = fun t' -> close_equality_typ' t'; t' in
   ignore (visit_tm ff t)
 
 let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
@@ -1030,7 +1030,8 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
     if term_eq hd (`star) then
 
       // Only count the number of unresolved slprops, not program implicits
-      fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+      let ff : int -> argv -> Tac int = fun n (x, _) -> n + slterm_nbr_uvars x in
+      fold_left ff 0 args
     else if is_uvar hd then 1
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t

@@ -29,7 +29,7 @@ open FStar.Tactics.CanonCommSwaps
 *)
 
 (* Only dump when debugging is on *)
-private let dump m = if debugging () then dump m
+private let dump m : Tac _ = if debugging () then dump m
 
 (***** Expression syntax *)
 
@@ -283,7 +283,7 @@ let rec term_mem x = function
   | [] -> false
   | hd::tl -> if term_eq hd x then true else term_mem x tl
 
-let unfold_topdown (ts: list term) =
+let unfold_topdown (ts: list term) : Tac _ =
   let should_rewrite (s:term) : Tac (bool * int) =
     (term_mem s ts, 0)
   in
@@ -338,7 +338,8 @@ let canon_monoid_aux
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
       if term_eq t ta then
-        match reification b f def unquotea quotea tmult tunit munit [t1;t2] with
+        let r : list exp & vmap a b = reification b f def unquotea quotea tmult tunit munit [t1;t2] in
+        match r with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
@@ -442,7 +443,7 @@ let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.Base.sortWith #nat (const_compare vm) xs
 
-let canon_monoid_const #a cm = canon_monoid_with bool is_const false
+let canon_monoid_const #a cm : Tac _ = canon_monoid_with bool is_const false
   (fun a -> const_last a)
   (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
 

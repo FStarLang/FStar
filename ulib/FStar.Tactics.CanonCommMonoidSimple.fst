@@ -31,7 +31,7 @@ open FStar.Tactics.CanonCommSwaps
 *)
 
 (* Only dump when debugging is on *)
-let dump m = if debugging () then dump m
+let dump m : Tac _ = if debugging () then dump m
 
 (***** Expression syntax *)
 

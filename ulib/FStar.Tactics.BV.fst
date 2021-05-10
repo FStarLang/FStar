@@ -178,7 +178,7 @@ let arith_to_bv_tac () : Tac unit = focus (fun () ->
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
-let bv_tac () = focus (fun () ->
+let bv_tac () : Tac _ = focus (fun () ->
   mapply (`eq_to_bv);
   mapply (`trans);
   arith_to_bv_tac ();
@@ -188,7 +188,7 @@ let bv_tac () = focus (fun () ->
   smt ()
 )
 
-let bv_tac_lt n = focus (fun () ->
+let bv_tac_lt n : Tac _ = focus (fun () ->
   let nn = pack_ln (Tv_Const (C_Int n)) in
   let t = mk_app (`trans_lt2) [(nn, Q_Implicit)] in
   apply_lemma t;
@@ -198,7 +198,7 @@ let bv_tac_lt n = focus (fun () ->
   smt ()
 )
 
-let to_bv_tac ()  = focus (fun () ->
+let to_bv_tac () : Tac _  = focus (fun () ->
   apply_lemma (`eq_to_bv);
   apply_lemma (`trans);
   arith_to_bv_tac ();

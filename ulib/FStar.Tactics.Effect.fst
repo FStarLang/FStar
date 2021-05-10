@@ -19,6 +19,10 @@ open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
+#push-options "--admit_smt_queries true"
+
+let ugh = ()
+
 let with_tactic _ p = p
 
 let synth_by_tactic #_ _ = admit ()

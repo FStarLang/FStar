@@ -129,7 +129,8 @@ let fetch_eq_side () : Tac (term * term) =
 
 (** Ensure that tactic `t` fails. **)
 let mustfail #a (t: unit -> Tac a) (message: string) : Tac unit =
-    match trytac t with
+    let r : option a = trytac t in
+    match r with
     | Some _ -> fail message
     | None -> ()
 
@@ -222,7 +223,7 @@ let term_head t : Tac string =
   | Tv_AscribedC _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
 
-let string_of_match_exception = function
+let string_of_match_exception : match_exception -> Tac string = function
   | NameMismatch (qn1, qn2) ->
     "Match failure (name mismatch): expecting " ^
     qn1 ^ ", found " ^ qn2
@@ -284,7 +285,7 @@ let lift_exn_tactic #a #b (f: a -> match_res b) (aa: a) : Tac b =
 /// the same pattern is done later.
 
 type bindings = list (varname * term)
-let string_of_bindings (bindings: bindings) =
+let string_of_bindings (bindings: bindings) : Tac string =
   String.concat "\n"
     (map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
                   bindings)
@@ -302,17 +303,17 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | Some tm' -> if term_eq tm tm' then return cur_bindings
                  else raise (NonLinearMismatch (v, tm, tm'))
     | None -> return ((v, tm) :: cur_bindings) in
-  let interp_qn (qn: qn) cur_bindings tm =
+  let interp_qn (qn: qn) cur_bindings tm : Tac _ =
     match inspect tm with
     | Tv_FVar fv ->
       if fv_to_string fv = qn then return cur_bindings
       else raise (NameMismatch (qn, (fv_to_string fv)))
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  let interp_type cur_bindings tm =
+  let interp_type cur_bindings tm : Tac _ =
     match inspect tm with
     | Tv_Type () -> return cur_bindings
     | _ -> raise (SimpleMismatch (pat, tm)) in
-  let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
+  let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm : Tac _ =
     match inspect tm with
     | Tv_App hd (arg, _) ->
       with_hd <-- interp_pattern_aux p_hd cur_bindings hd;
@@ -387,7 +388,7 @@ noeq type matching_solution =
   { ms_vars: list (varname * term);
     ms_hyps: list (varname * hypothesis) }
 
-let string_of_matching_solution ms =
+let string_of_matching_solution ms : Tac _=
   let vars =
     String.concat "\n            "
       (map (fun (varname, tm) ->
@@ -716,7 +717,7 @@ quoted solution to be passed in. **)
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
     : Tac term =
-  let mk_arg argspec =
+  let mk_arg argspec : Tac _ =
     (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
   let argspecs, body = continuation in
   mk_app body (map mk_arg argspecs)
@@ -789,9 +790,9 @@ let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
 /// called ‘gpm’ below: greedy pattern-matching.
 
 (** Solve a greedy pattern-matching problem and run its continuation.
-This if for pattern-matching problems in the ``Tac`` effect. **)
+qThis if for pattern-matching problems in the ``Tac`` effect. **)
 let gpm #b #a (abspat: a) () : Tac b =
-  let continuation, solution = match_abspat abspat tpair in
+  let (continuation, solution):abspat_continuation & matching_solution = match_abspat abspat tpair in
   interp_abspat_continuation b continuation solution
 
 /// And here's the non-greedy version of the same.  It's informative to compare
@@ -815,7 +816,7 @@ let pm #b #a (abspat: a) : Tac b =
 
 let fetch_eq_side' #a : Tac (term * term) =
   gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
-         (quote left, quote right)) ()
+         (quote left, quote right) <: Tac _) ()
 
 // TODO: GM: The following definition breaks extraction with
 (*
@@ -860,6 +861,7 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// long as at least one tactic succeeds.
 
 let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
+  admit ();
   assert_by_tactic (a /\ b ==> c == b ==> c)
     (fun () -> repeat' (fun () ->
                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->

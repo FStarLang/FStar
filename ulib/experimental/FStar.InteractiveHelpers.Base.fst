@@ -126,7 +126,7 @@ let acomp_to_string (c:comp) : Tot string =
     "C_Eff (" ^ flatten_name eff_name ^ ") (" ^ term_to_string result ^ ")" ^ args_str
 
 exception MetaAnalysis of string
-let mfail str =
+let mfail str : Tac _ =
   raise (MetaAnalysis str)
 
 (*** Debugging *)
@@ -390,7 +390,7 @@ let norm_apply_subst e t subst =
   norm_term_env e [] t2
 
 let norm_apply_subst_in_comp e c subst =
-  let subst = (fun x -> norm_apply_subst e x subst) in
+  let subst = (fun x -> norm_apply_subst e x subst <: Tac _) in
   let subst_in_aqualv a : Tac aqualv =
     match a with
     | Q_Implicit
@@ -481,7 +481,7 @@ let rec deep_apply_subst e t subst =
         Inr (deep_apply_subst_in_comp e c subst),
         map_opt (fun tac -> deep_apply_subst e tac subst) tacopt) ret_opt in
     (* For the branches: we don't need to explore the patterns *)
-    let deep_apply_subst_in_branch branch =
+    let deep_apply_subst_in_branch (branch:pattern & term) : Tac _ =
       let pat, tm = branch in
       let pat, subst = deep_apply_subst_in_pattern e pat subst in
       let tm = deep_apply_subst e tm subst in
@@ -518,7 +518,7 @@ and deep_apply_subst_in_binder e br subst =
   pack_binder bv qual attrs, subst 
 
 and deep_apply_subst_in_comp e c subst =
-  let subst = (fun x -> deep_apply_subst e x subst) in
+  let subst = (fun x -> deep_apply_subst e x subst <: Tac _) in
   let subst_in_aqualv a : Tac aqualv =
     match a with
     | Q_Implicit
@@ -549,9 +549,9 @@ and deep_apply_subst_in_pattern e pat subst =
   | Pat_Constant _ -> pat, subst
   | Pat_Cons fv patterns ->
     (* The types of the variables in the patterns should be independent of each
-     * other: we use fold_left only to incrementally update the substitution *)
+  //    * other: we use fold_left only to incrementally update the substitution *)
     let patterns, subst =
-      fold_right (fun (pat, b) (pats, subst) ->
+      fold_right (fun ((pat, b):(pattern & bool)) (pats, subst) ->
                       let pat, subst = deep_apply_subst_in_pattern e pat subst in
                       ((pat, b) :: pats, subst)) patterns ([], subst)
     in

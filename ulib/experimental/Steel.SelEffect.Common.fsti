@@ -429,7 +429,7 @@ and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
 
   | C_Eff us eff res args ->
       visit_tm ff res;
-      iter (fun (a, q) -> visit_tm ff a) args
+      iter (fun ((a, q):argv) -> visit_tm ff a) args
 
 
 (** Decides whether a top-level name [nm] syntactically
@@ -1347,7 +1347,7 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
     if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
 
       // Only count the number of unresolved slprops, not program implicits
-      fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+      fold_left (fun n ((x, _):argv) -> n + slterm_nbr_uvars x) 0 args
     else if is_uvar hd then 1
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t

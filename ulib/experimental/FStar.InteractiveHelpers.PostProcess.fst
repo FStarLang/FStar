@@ -24,7 +24,7 @@ open FStar.InteractiveHelpers.Output
 assume type meta_info
 assume val focus_on_term : meta_info
 
-let end_proof () =
+let end_proof () : Tac _ =
   tadmit_t (`())
 
 let unsquash_equality (t:term) : Tac (option (term & term)) =
@@ -615,7 +615,7 @@ let unfold_in_assert_or_assume dbg ares =
   print_dbg dbg ("[> unfold_in_assert_or_assume:\n" ^ term_to_string ares.res);
   (* Find the focused term inside the assert, and on which side of the
    * equality if the assert is an equality *)
-  let find_focused_in_term t =
+  let find_focused_in_term t : Tac _ =
     find_focused_term dbg false ares.ge ares.parents ares.tgt_comp t
   in
   let find_in_whole_term () : Tac _ =

@@ -1493,7 +1493,7 @@ let polynomial_simplify_ok #a r vm p =
 ///
 
 (* Only dump when debugging is on *)
-let ddump m = if debugging () then dump m
+let ddump m : Tac unit = if debugging () then dump m
 
 (**
  * Finds the position of first occurrence of x in xs.
@@ -1700,6 +1700,8 @@ let int_semiring () : Tac unit =
 
 #set-options "--tactic_trace_d 0 --no_smt"
 
+open FStar.Mul
+
 let test (a:int) =
-  let open FStar.Mul in
+  //let open FStar.Mul in
   assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())

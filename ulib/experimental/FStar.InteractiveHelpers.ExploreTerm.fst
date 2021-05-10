@@ -339,7 +339,7 @@ val flush_typ_or_comp : bool -> env -> typ_or_comp ->
 ///   which will be applied all at once
 let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst : list (bv & term))
                                 (c:comp) : Tac comp =
-  let flush c inst =
+  let flush c inst : Tac _ =
     let inst = List.rev inst in
     apply_subst_in_comp e c inst
   in
@@ -477,14 +477,14 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
     | Tv_Var _ | Tv_BVar _ | Tv_FVar _ -> x0, Continue
     | Tv_App hd (a,qual) ->
       (* Explore the argument - we update the target typ_or_comp when doing so.
-       * Note that the only way to get the correct target type is to deconstruct
-       * the type of the head *)
+  //      * Note that the only way to get the correct target type is to deconstruct
+  //      * the type of the head *)
       let a_c = safe_arg_typ_or_comp dbg ge0.env hd in
       print_dbg dbg ("Tv_App: updated target typ_or_comp to:\n" ^
                      option_to_string typ_or_comp_to_string a_c);
       let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 a_c a in
       (* Explore the head - no type information here: we can compute it,
-       * but it seems useless (or maybe use it only if it is not Total) *)
+  //      * but it seems useless (or maybe use it only if it is not Total) *)
       if flag1 = Continue then
         explore_term dbg dfs f x1 ge0 pl1 None hd
       else x1, convert_ctrl_flag flag1
@@ -505,13 +505,13 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
     | Tv_Uvar _ _ -> x0, Continue
     | Tv_Let recf attrs bv def body ->
       (* Binding definition exploration - for the target computation: initially we
-       * used the type of the definition, however it is often unnecessarily complex.
-       * Now, we use the type of the binder used for the binding. *)
+  //      * used the type of the definition, however it is often unnecessarily complex.
+  //      * Now, we use the type of the binder used for the binding. *)
       let def_c = Some (TC_Typ (type_of_bv bv) [] 0) in
-      let explore_def x = explore_term dbg dfs f x ge0 pl1 def_c def in
+      let explore_def x : Tac _ = explore_term dbg dfs f x ge0 pl1 def_c def in
       (* Exploration of the following instructions *)
       let ge1 = genv_push_bv ge0 bv false (Some def) in
-      let explore_next x = explore_term dbg dfs f x ge1 pl1 c0 body in
+      let explore_next x : Tac _ = explore_term dbg dfs f x ge1 pl1 c0 body in
       (* Perform the exploration in the proper order *)
       let expl1, expl2 = if dfs then explore_next, explore_def else explore_def, explore_next in
       bind_expl x0 expl1 expl2
@@ -555,7 +555,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   match pat with
   | Pat_Constant _ -> ge0, x, Continue
   | Pat_Cons fv patterns ->
-    let explore_pat ge_x_flag pat =
+    let explore_pat (ge_x_flag:genv & a & ctrl_flag) (pat:pattern & bool) : Tac _ =
       let ge0, x, flag = ge_x_flag in
       let pat1, _ = pat in
       if flag = Continue then

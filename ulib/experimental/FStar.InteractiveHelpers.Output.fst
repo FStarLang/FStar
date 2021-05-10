@@ -44,7 +44,7 @@ let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv as =
   print_dbg dbg ("subst_shadowed_with_abs_in_assertions:\n" ^ genv_to_string ge);
   (* Generate the substitution *)
   let ge1, subst = generate_shadowed_subst ge in
-  let post_subst = map (fun (src, tgt) -> src, pack (Tv_Var tgt)) subst in
+  let post_subst = map (fun ((src, tgt):(bv & bv)) -> src, pack (Tv_Var tgt)) subst in
   (* The current substitution is valid for the post-assertions: derive from it
    * a substitution valid for the pre-assertions (just cut it where the bv
    * shadowed by the return value appears). Note that because we might introduce
@@ -100,12 +100,12 @@ let proposition_to_printout (ge:genv) (prefix:string) (p:proposition) : Tac stri
   term_to_printout ge prefix p
 
 let propositions_to_printout (ge:genv) (prefix:string) (pl:list proposition) : Tac string =
-  let prop_to_printout i p =
+  let prop_to_printout i p : Tac _ =
     let prefix' = prefix ^ ":prop" ^ string_of_int i in
     proposition_to_printout ge prefix' p
   in
   let str = string_to_printout (prefix ^ ":num") (string_of_int (List.Tot.length pl)) in
-  let concat_prop s_i p : Tac (string & int) =
+  let concat_prop (s_i:(string & int)) p : Tac (string & int) =
     let s, i = s_i in
     s ^ prop_to_printout i p, i+1
   in

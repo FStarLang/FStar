@@ -37,10 +37,6 @@ let rec term_to_ast_string (t:term) : Tac string =
                               term_to_ast_string e1 ^ ", " ^
                               term_to_ast_string e2)
   | Tv_Match e ret_opt brs ->
-    let tacopt_to_string tacopt : Tac string =
-      match tacopt with
-      | None -> ""
-      | Some tac -> " by " ^ (term_to_ast_string tac) in
     "Tv_Match " ^
       paren (
         term_to_ast_string e ^
@@ -79,3 +75,8 @@ and const_to_ast_string (c:vconst) : Tac string =
   | C_Range _ -> "C_Range _"
   | C_Reify -> "C_Reify"
   | C_Reflect name -> "C_Reflect " ^ implode_qn name
+
+and tacopt_to_string tacopt : Tac string =
+  match tacopt with
+  | None -> ""
+  | Some tac -> " by " ^ (term_to_ast_string tac)
