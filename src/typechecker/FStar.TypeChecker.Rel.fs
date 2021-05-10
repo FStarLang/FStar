@@ -2231,7 +2231,21 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     in
 
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
-        let (Flex (_, ctx_u, _)) = lhs in
+        let (Flex (_, ctx_u, args)) = lhs in
+        let bs, rhs =
+          let rec aux lhs_args rhs_args =
+            match lhs_args, rhs_args with
+            | [], _
+            | _, [] -> lhs_args, rhs_args
+            | (t1, _)::lhs_tl, (t2, _)::rhs_tl ->
+              if U.eq_tm t1 t2 = U.Equal then aux lhs_tl rhs_tl
+              else lhs_args, rhs_args in
+          let rhs_hd, rhs_args = U.head_and_args rhs in
+          let args, rhs_args =
+            aux (List.rev args) (List.rev rhs_args)
+            |> (fun (l1, l2) -> List.rev l1, List.rev l2) in
+          fst (List.splitAt (List.length args) bs),
+          S.mk_Tm_app rhs_hd rhs_args rhs.pos in
         let sol =
           match bs with
           | [] -> rhs
@@ -3009,54 +3023,19 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_abs _, _
       | _, Tm_abs _ ->
         let is_abs t = match t.n with
-            | Tm_abs _ -> true
-            | _ -> false in
-        let maybe_eta t =
-            if is_abs t then Inl t
-            else let t = N.eta_expand wl.tcenv t in
-                 if is_abs t then Inl t else Inr t
-        in
-        let force_eta t =
-            if is_abs t then t
-            else begin
-                let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in  //AR: TODO: type_of_well_typed?
-                (* Find the WHNF ignoring refinements. Otherwise consider
-                 *
-                 * let myty1 = a -> Tot b
-                 * let myty2 = f:myty1{whatever f}
-                 *
-                 * The WHNF of myty2 is not an arrow, and we would fail to eta-expand. *)
-                let ty =
-                    let rec aux ty =
-                        let ty = N.unfold_whnf env ty in
-                        match (SS.compress ty).n with
-                        | Tm_refine _ -> aux (U.unrefine ty)
-                        | _ -> ty
-                    in aux ty
-                in
-                let r = N.eta_expand_with_type env t ty in
-                if Env.debug wl.tcenv <| Options.Other "Rel" then
-                  BU.print3 "force_eta of (%s) at type (%s) = %s\n" (Print.term_to_string t) (Print.term_to_string (N.unfold_whnf env ty)) (Print.term_to_string r);
-                r
-            end
-        in
+            | Tm_abs _ -> Inl t
+            | _ -> Inr t in
         begin
-            match maybe_eta t1, maybe_eta t2 with
-            | Inl t1, Inl t2 ->
+            match is_abs t1, is_abs t2 with
+            | Inl t1, Inl t2 ->  //AR: this case should not come up since we handle both Tm_abs just above
               solve_t env ({problem with lhs=t1; rhs=t2}) wl
             | Inl t_abs, Inr not_abs
             | Inr not_abs, Inl t_abs ->
-              //we lack the type information to eta-expand properly
-              //so, this is going to fail, except if one last shot succeeds
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
               then let flex, wl = destruct_flex_t not_abs wl in
                     solve_t_flex_rigid_eq env orig wl flex t_abs
-              else let t1 = force_eta t1 in
-                   let t2 = force_eta t2 in
-                   if is_abs t1 && is_abs t2
-                   then solve_t env ({problem with lhs=t1; rhs=t2}) wl
-                   else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
+              else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
