@@ -196,7 +196,7 @@ assume val z : int
 
 // Testing the canonizer, it should be the only thing needed for this file
 [@@plugin]
-let check_canon_deep () =
+let check_canon_deep () : Tac _ =
     canon_deep ();
     or_else qed
             (fun () -> dump "`canon deep` left the following goals";

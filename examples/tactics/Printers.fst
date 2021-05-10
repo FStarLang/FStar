@@ -28,14 +28,14 @@ let print_Prims_int : int -> Tot string = string_of_int
 let rec mk_concat (sep : term) (ts : list term) : Tac term =
     mk_e_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
 
-let mk_flatten ts = mk_concat (`"") ts
+let mk_flatten ts : Tac _ = mk_concat (`"") ts
 
 let paren (e : term) : Tac term =
     mk_flatten [mk_stringlit "("; e; mk_stringlit ")"]
 
 let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
     (* debug ("self = " ^ String.concat "." self ^ "\n>>>>>> f = : " ^ term_to_string f); *)
-    let mk n = pack (Tv_FVar (pack_fv n)) in
+    let mk n : Tac _ = pack (Tv_FVar (pack_fv n)) in
     match inspect (type_of_bv bv) with
     | Tv_FVar fv ->
         if inspect_fv fv = self
@@ -55,7 +55,6 @@ let mk_printer_type (t : term) : Tac term =
 (* This tactics generates the entire let rec at once and
  * then uses exact. We could do something better. *)
 let mk_printer_fun (dom : term) : Tac term =
-    admit ();
     set_guard_policy SMT;
     let e = top_env () in
     (* Recursive binding *)
@@ -71,11 +70,11 @@ let mk_printer_fun (dom : term) : Tac term =
              | None -> fail "Type not found..?"
              | Some se -> se
     in
-
+    
     match inspect_sigelt se with
     | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ _ bs t ctors ->
-        let br1 ctor : Tac branch =
+        let br1 (ctor:ctor) : Tac branch =
             let (name, t) = ctor in
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in

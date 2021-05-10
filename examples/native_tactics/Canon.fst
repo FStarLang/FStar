@@ -20,10 +20,10 @@ open FStar.Mul
 open FStar.Tactics.Canon
 
 [@@plugin]
-let canon () = FStar.Tactics.Canon.canon()
+let canon () : Tac _ = FStar.Tactics.Canon.canon()
 
 [@@plugin]
-let check_canon () =
+let check_canon () : Tac _ =
     canon ();
     trivial ();
     or_else qed

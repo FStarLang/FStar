@@ -31,12 +31,13 @@ let rec big_phi (n : int) =
 let for_you12 : Type0 = synth_by_tactic (fun () -> big_phi 12)
 
 let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
-     match trytac t with
+     let r : option unit = trytac t in
+     match r with
      | None -> fail "Cannot apply t any more"
      | Some x -> repeat_or_fail t
 
 [@@plugin]
-let mytac () =
+let mytac () : Tac _ =
     norm [delta_only ["Bane.for_you12"]];
     seq (fun () -> repeatseq split)
         (fun () -> or_else (fun () -> let _ = repeat split in ()) trivial)

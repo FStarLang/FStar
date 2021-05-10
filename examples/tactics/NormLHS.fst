@@ -18,7 +18,7 @@ let norm_lhs steps : Tac unit =
 
 type unit_t = unit
 
-let tau () = norm_lhs [delta; hnf; weak]; trefl ()
+let tau () : Tac _ = norm_lhs [delta; hnf; weak]; trefl ()
 
 [@@(postprocess_with tau)]
 let test = unit_t

@@ -18,7 +18,7 @@ module Unify
 open FStar.Tactics
 
 [@@plugin]
-let tau =
+let tau : unit -> Tac _ =
   fun () ->
         let l = fresh_uvar None in // None: we don't provide a type
         let r = fresh_uvar None in

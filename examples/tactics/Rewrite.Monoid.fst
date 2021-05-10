@@ -38,7 +38,7 @@ let monoid_reflect_rhs (a:Type) (m:monoid a) (rhs:exp a) (lhs:a)
     : Lemma (lhs == mldenote m (flatten rhs)) =
   flatten_correct m rhs
 
-let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
+let replace_point (#a:Type) (m:monoid a) (rhs:exp a) : Tac _ =
    focus (fun () -> 
      let t =
        mk_app (`monoid_reflect_rhs) 
@@ -76,13 +76,13 @@ let rewrite_monoid (#a:Type) (m:monoid a) () : Tac unit =
   | _ ->
     fail "Unexpected goal to rewriter"
 
-let rewrite_int (everywhere:bool) =
+let rewrite_int (everywhere:bool) : Tac _ =
         topdown_rewrite 
           (should_rewrite int_plus_monoid everywhere)
           (rewrite_monoid int_plus_monoid)
 
 let elim_implies #p #q  (_:(p ==> q)) (_:p) : squash q = ()
-let apply_imp (h:binder) =
+let apply_imp (h:binder) : Tac _ =
     mapply (mk_app (`elim_implies) [(pack (Tv_Var (bv_of_binder h)), Q_Explicit)])
 let refl (#a:Type) (x:a) : (x==x) = FStar.Squash.return_squash Refl
 let test (a b : int) (p:Type) =

@@ -26,7 +26,7 @@ assume val xi : Type
 assume val p : squash xi
 
 [@@plugin]
-let tau =
+let tau : unit -> Tac _ =
   fun () ->
     let h0 = implies_intro () in
     let h1 = implies_intro () in

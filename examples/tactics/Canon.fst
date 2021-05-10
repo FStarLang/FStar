@@ -25,7 +25,7 @@ assume val y : int
 assume val z : int
 
 // Testing the canonicalizer, it should be the only thing needed for this file
-let check_canon () =
+let check_canon () : Tac _ =
     canon ();
     trivial ();
     or_else qed

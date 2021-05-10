@@ -18,7 +18,7 @@ module Postprocess
 open FStar.Tactics
 
 let lem () : Lemma (1 == 2) = admit ()
-let tau () = apply_lemma (`lem)
+let tau () : Tac _ = apply_lemma (`lem)
 
 [@@(postprocess_with tau)]
 let x : int = 1
@@ -70,10 +70,10 @@ let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x
     assert (feq f g);
     ()
 
-let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
+let fext () : Tac _ = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
 
 let _onL a b c (_ : squash (a == b)) (_ : squash (b == c)) : Lemma (a == c) = ()
-let onL () = apply_lemma (`_onL)
+let onL () : Tac _ = apply_lemma (`_onL)
 
 // invariant: takes goals of shape squash (E == ?u) and solves them
 let rec push_lifts' (u:unit) : Tac unit =
@@ -99,7 +99,7 @@ let rec push_lifts' (u:unit) : Tac unit =
   | _ ->
     fail "not an equality"
 and case_analyze (lhs:term) : Tac unit =
-    let ap l =
+    let ap l : Tac _ =
       onL (); apply_lemma l
     in
     let lhs = norm_term [weak;hnf;primops;delta] lhs in

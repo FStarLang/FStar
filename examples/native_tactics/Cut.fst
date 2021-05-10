@@ -24,7 +24,7 @@ assume val p1 : psi
 assume val p2 : psi -> squash phi
 
 [@@plugin]
-let tau =
+let tau  : unit -> Tac _ =
         (fun () ->
              let psi' = `psi in
              let _ = tcut psi' in

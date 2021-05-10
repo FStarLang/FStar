@@ -71,7 +71,7 @@ open FStar.List
 let f (x:int) = assert (x + 1 == 1 + x)
 
 [@@plugin]
-let tau1 =
+let tau1 : unit -> Tac _ =
     (fun () -> prune "";
             addns "FStar.List";
             addns "Prims")
@@ -81,7 +81,7 @@ let tau1 =
 let _ = assert (rev [1;2] == [2;1]) by tau1 ()
 
 [@@plugin]
-let tau2 =
+let tau2 : unit -> Tac _ =
     (fun () ->
        prune "";
        FStar.Tactics.split ();

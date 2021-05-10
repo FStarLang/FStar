@@ -24,7 +24,7 @@ assume val xi : Type
 assume val p : squash xi
 
 [@@plugin]
-let tau1 = fun () ->
+let tau1 : unit -> Tac _ = fun () ->
                 let _ = implies_intro () in
                 clear_top ();
                 let _ = implies_intro () in
@@ -48,7 +48,7 @@ let clear_all_of_type (t : typ) : Tac unit =
     ()
 
 [@@plugin]
-let tau2 = fun () -> let e = cur_env () in
+let tau2 : unit -> Tac _ = fun () -> let e = cur_env () in
                        let n = List.length (binders_of_env e) in
                        let u = `int in
                        clear_all_of_type u;

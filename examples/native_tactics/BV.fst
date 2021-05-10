@@ -181,7 +181,7 @@ let arith_to_bv_tac () : Tac unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 [@@plugin]
-let bv_tac ()  =
+let bv_tac () : Tac _ =
   mapply (`eq_to_bv);
   mapply (`trans);
   arith_to_bv_tac ();
@@ -190,7 +190,7 @@ let bv_tac ()  =
   norm [delta] ;
   smt ()
 
-let bv_tac_lt n =
+let bv_tac_lt n : Tac _ =
   // apply_lemma (fun () -> `(lt_to_bv #n));
   // dump "after lt_to_bv";
   apply_lemma (quote (trans_lt2 #n));
@@ -199,7 +199,7 @@ let bv_tac_lt n =
   set_options "--smtencoding.elim_box true";
   smt ()
 
-let to_bv_tac ()  =
+let to_bv_tac () : Tac _ =
   apply_lemma (`eq_to_bv);
   apply_lemma (`trans);
   arith_to_bv_tac ();

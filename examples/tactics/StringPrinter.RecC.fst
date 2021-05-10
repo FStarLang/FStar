@@ -359,12 +359,12 @@ let rec compile
 = T.debug "BEGIN compile";
   let compile' = compile ret_sz_tm bind_sz_tm print_char_sz_tm coerce_sz_tm ifthenelse_sz_tm do_while_sz_tm in
   let res = first [
-    (fun () -> compile_ret ret_sz_tm t);
-    (fun () -> compile_bind bind_sz_tm env ty t compile');
-    (fun () -> compile_print_char print_char_sz_tm t);
-    (fun () -> compile_do_while do_while_sz_tm env t compile');
-    (fun () -> compile_fvar coerce_sz_tm env (compile' env) ty t);
-    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env));
+    (fun () -> compile_ret ret_sz_tm t <: T.Tac _);
+    (fun () -> compile_bind bind_sz_tm env ty t compile' <: T.Tac _);
+    (fun () -> compile_print_char print_char_sz_tm t <: T.Tac _);
+    (fun () -> compile_do_while do_while_sz_tm env t compile' <: T.Tac _);
+    (fun () -> compile_fvar coerce_sz_tm env (compile' env) ty t <: T.Tac _);
+    (fun () -> compile_ifthenelse ifthenelse_sz_tm ty t (compile' env) <: T.Tac _);
   ]
   in
   T.debug ("END compile, result: " ^ T.term_to_string res);

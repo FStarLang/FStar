@@ -65,7 +65,7 @@ let cons_fst (x : 'a) (p : list 'a * 'b) : list 'a * 'b =
 
 let cons_fst_qn = ["Trace"; "cons_fst"]
 
-let term_is_fv hd nm =
+let term_is_fv hd nm : Tac _ =
     match inspect hd with
     | Tv_FVar fv -> inspect_fv fv = inspect_fv nm
     | _ -> false

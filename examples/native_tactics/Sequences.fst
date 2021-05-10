@@ -96,7 +96,7 @@ let sequence_pruning () : Tac unit =
 *)
 
 [@@plugin]
-let tau = fun () -> or_else sequence_pruning idtac
+let tau : unit -> Tac _ = fun () -> or_else sequence_pruning idtac
 
 
 ////////////////////////////////////////////////////////////////////////////////
