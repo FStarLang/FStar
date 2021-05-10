@@ -16,7 +16,15 @@
 
 module FStar.Monotonic.Pure
 
+#push-options "--warn_error -271"
 let wp_monotonic_pure (_:unit)
-    : Lemma
-      (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
-        (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))) = ()
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
+       (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
+  = let aux (a:Type)
+      : Lemma (forall (wp:pure_wp a). (forall (p q:pure_post a).
+                                    (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
+        [SMTPat ()]
+      = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a) in
+    ()
+#pop-options

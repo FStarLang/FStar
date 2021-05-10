@@ -291,7 +291,7 @@ let pure_post (a: Type) = pure_post' a True
     results to pure preconditions *)
 let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
 
-unfold
+[@@ "opaque_to_smt"]
 let pure_wp_monotonic (#a:Type) (wp:pure_wp' a) =
   forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
 
