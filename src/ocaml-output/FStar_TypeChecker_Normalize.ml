@@ -1322,8 +1322,16 @@ let (reduce_primops :
                                              else [])
                                       } in
                                     let r =
+                                      let uu___7 =
+                                        FStar_List.map
+                                          (fun uu___8 ->
+                                             match uu___8 with
+                                             | (t, q) ->
+                                                 let uu___9 =
+                                                   FStar_Syntax_Util.unmeta t in
+                                                 (uu___9, q)) args_1 in
                                       prim_step.FStar_TypeChecker_Cfg.interpretation
-                                        psc norm_cb args_1 in
+                                        psc norm_cb uu___7 in
                                     match r with
                                     | FStar_Pervasives_Native.None ->
                                         (FStar_TypeChecker_Cfg.log_primops
@@ -7087,13 +7095,17 @@ and (rebuild :
                     (let t2 = FStar_Syntax_Syntax.extend_app head (t1, aq) r in
                      rebuild cfg env2 stack' t2) in
                   let is_layered_effect m =
-                    let uu___3 =
+                    let m1 =
                       FStar_All.pipe_right m
                         (FStar_TypeChecker_Env.norm_eff_name
                            cfg.FStar_TypeChecker_Cfg.tcenv) in
-                    FStar_All.pipe_right uu___3
-                      (FStar_TypeChecker_Env.is_layered_effect
-                         cfg.FStar_TypeChecker_Cfg.tcenv) in
+                    (FStar_TypeChecker_Env.is_layered_effect
+                       cfg.FStar_TypeChecker_Cfg.tcenv m1)
+                      &&
+                      (let uu___3 =
+                         FStar_Ident.lid_equals m1
+                           FStar_Parser_Const.effect_TAC_lid in
+                       Prims.op_Negation uu___3) in
                   let uu___3 =
                     let uu___4 = FStar_Syntax_Subst.compress t1 in
                     uu___4.FStar_Syntax_Syntax.n in
