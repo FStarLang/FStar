@@ -630,7 +630,7 @@ let reduce_primops norm_cb cfg env tm =
                                  primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
                                  r
                            end
-                      else prim_step.interpretation psc norm_cb args_1
+                      else prim_step.interpretation psc norm_cb (List.map (fun (t, q) -> U.unmeta t, q) args_1)
                   in
                   match r with
                   | None ->
@@ -2510,7 +2510,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            rebuild cfg env stack' t
         in
         //AR: no non-extraction reification for layered effects
-        let is_layered_effect m = m |> Env.norm_eff_name cfg.tcenv |> Env.is_layered_effect cfg.tcenv in
+        let is_layered_effect m =
+          let m = m |> Env.norm_eff_name cfg.tcenv in
+          Env.is_layered_effect cfg.tcenv m && not (Ident.lid_equals m PC.effect_TAC_lid) in
         
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
