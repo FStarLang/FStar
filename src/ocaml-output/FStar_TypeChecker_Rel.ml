@@ -7417,9 +7417,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               solve_t_flex_rigid_eq env orig wl1 flex t_abs)
                        else
                          (let uu___11 =
-                            FStar_Thunk.mkv
-                              "head tag mismatch: RHS is an abstraction" in
-                          giveup env uu___11 orig)
+                            head_matches_delta env wl not_abs t_abs in
+                          match uu___11 with
+                          | (HeadMatch uu___12, FStar_Pervasives_Native.Some
+                             (not_abs', uu___13)) ->
+                              solve_t env
+                                (let uu___14 = problem in
+                                 {
+                                   FStar_TypeChecker_Common.pid =
+                                     (uu___14.FStar_TypeChecker_Common.pid);
+                                   FStar_TypeChecker_Common.lhs = not_abs';
+                                   FStar_TypeChecker_Common.relation =
+                                     (uu___14.FStar_TypeChecker_Common.relation);
+                                   FStar_TypeChecker_Common.rhs = t_abs;
+                                   FStar_TypeChecker_Common.element =
+                                     (uu___14.FStar_TypeChecker_Common.element);
+                                   FStar_TypeChecker_Common.logical_guard =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard);
+                                   FStar_TypeChecker_Common.logical_guard_uvar
+                                     =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard_uvar);
+                                   FStar_TypeChecker_Common.reason =
+                                     (uu___14.FStar_TypeChecker_Common.reason);
+                                   FStar_TypeChecker_Common.loc =
+                                     (uu___14.FStar_TypeChecker_Common.loc);
+                                   FStar_TypeChecker_Common.rank =
+                                     (uu___14.FStar_TypeChecker_Common.rank)
+                                 }) wl
+                          | uu___12 ->
+                              let uu___13 =
+                                FStar_Thunk.mkv
+                                  "head tag mismatch: RHS is an abstraction" in
+                              giveup env uu___13 orig)
                    | (FStar_Pervasives.Inr not_abs, FStar_Pervasives.Inl
                       t_abs) ->
                        let uu___9 =
@@ -7433,9 +7462,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               solve_t_flex_rigid_eq env orig wl1 flex t_abs)
                        else
                          (let uu___11 =
-                            FStar_Thunk.mkv
-                              "head tag mismatch: RHS is an abstraction" in
-                          giveup env uu___11 orig)
+                            head_matches_delta env wl not_abs t_abs in
+                          match uu___11 with
+                          | (HeadMatch uu___12, FStar_Pervasives_Native.Some
+                             (not_abs', uu___13)) ->
+                              solve_t env
+                                (let uu___14 = problem in
+                                 {
+                                   FStar_TypeChecker_Common.pid =
+                                     (uu___14.FStar_TypeChecker_Common.pid);
+                                   FStar_TypeChecker_Common.lhs = not_abs';
+                                   FStar_TypeChecker_Common.relation =
+                                     (uu___14.FStar_TypeChecker_Common.relation);
+                                   FStar_TypeChecker_Common.rhs = t_abs;
+                                   FStar_TypeChecker_Common.element =
+                                     (uu___14.FStar_TypeChecker_Common.element);
+                                   FStar_TypeChecker_Common.logical_guard =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard);
+                                   FStar_TypeChecker_Common.logical_guard_uvar
+                                     =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard_uvar);
+                                   FStar_TypeChecker_Common.reason =
+                                     (uu___14.FStar_TypeChecker_Common.reason);
+                                   FStar_TypeChecker_Common.loc =
+                                     (uu___14.FStar_TypeChecker_Common.loc);
+                                   FStar_TypeChecker_Common.rank =
+                                     (uu___14.FStar_TypeChecker_Common.rank)
+                                 }) wl
+                          | uu___12 ->
+                              let uu___13 =
+                                FStar_Thunk.mkv
+                                  "head tag mismatch: RHS is an abstraction" in
+                              giveup env uu___13 orig)
                    | uu___9 ->
                        failwith
                          "Impossible: at least one side is an abstraction")
@@ -7482,9 +7540,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               solve_t_flex_rigid_eq env orig wl1 flex t_abs)
                        else
                          (let uu___11 =
-                            FStar_Thunk.mkv
-                              "head tag mismatch: RHS is an abstraction" in
-                          giveup env uu___11 orig)
+                            head_matches_delta env wl not_abs t_abs in
+                          match uu___11 with
+                          | (HeadMatch uu___12, FStar_Pervasives_Native.Some
+                             (not_abs', uu___13)) ->
+                              solve_t env
+                                (let uu___14 = problem in
+                                 {
+                                   FStar_TypeChecker_Common.pid =
+                                     (uu___14.FStar_TypeChecker_Common.pid);
+                                   FStar_TypeChecker_Common.lhs = not_abs';
+                                   FStar_TypeChecker_Common.relation =
+                                     (uu___14.FStar_TypeChecker_Common.relation);
+                                   FStar_TypeChecker_Common.rhs = t_abs;
+                                   FStar_TypeChecker_Common.element =
+                                     (uu___14.FStar_TypeChecker_Common.element);
+                                   FStar_TypeChecker_Common.logical_guard =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard);
+                                   FStar_TypeChecker_Common.logical_guard_uvar
+                                     =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard_uvar);
+                                   FStar_TypeChecker_Common.reason =
+                                     (uu___14.FStar_TypeChecker_Common.reason);
+                                   FStar_TypeChecker_Common.loc =
+                                     (uu___14.FStar_TypeChecker_Common.loc);
+                                   FStar_TypeChecker_Common.rank =
+                                     (uu___14.FStar_TypeChecker_Common.rank)
+                                 }) wl
+                          | uu___12 ->
+                              let uu___13 =
+                                FStar_Thunk.mkv
+                                  "head tag mismatch: RHS is an abstraction" in
+                              giveup env uu___13 orig)
                    | (FStar_Pervasives.Inr not_abs, FStar_Pervasives.Inl
                       t_abs) ->
                        let uu___9 =
@@ -7498,9 +7585,38 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               solve_t_flex_rigid_eq env orig wl1 flex t_abs)
                        else
                          (let uu___11 =
-                            FStar_Thunk.mkv
-                              "head tag mismatch: RHS is an abstraction" in
-                          giveup env uu___11 orig)
+                            head_matches_delta env wl not_abs t_abs in
+                          match uu___11 with
+                          | (HeadMatch uu___12, FStar_Pervasives_Native.Some
+                             (not_abs', uu___13)) ->
+                              solve_t env
+                                (let uu___14 = problem in
+                                 {
+                                   FStar_TypeChecker_Common.pid =
+                                     (uu___14.FStar_TypeChecker_Common.pid);
+                                   FStar_TypeChecker_Common.lhs = not_abs';
+                                   FStar_TypeChecker_Common.relation =
+                                     (uu___14.FStar_TypeChecker_Common.relation);
+                                   FStar_TypeChecker_Common.rhs = t_abs;
+                                   FStar_TypeChecker_Common.element =
+                                     (uu___14.FStar_TypeChecker_Common.element);
+                                   FStar_TypeChecker_Common.logical_guard =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard);
+                                   FStar_TypeChecker_Common.logical_guard_uvar
+                                     =
+                                     (uu___14.FStar_TypeChecker_Common.logical_guard_uvar);
+                                   FStar_TypeChecker_Common.reason =
+                                     (uu___14.FStar_TypeChecker_Common.reason);
+                                   FStar_TypeChecker_Common.loc =
+                                     (uu___14.FStar_TypeChecker_Common.loc);
+                                   FStar_TypeChecker_Common.rank =
+                                     (uu___14.FStar_TypeChecker_Common.rank)
+                                 }) wl
+                          | uu___12 ->
+                              let uu___13 =
+                                FStar_Thunk.mkv
+                                  "head tag mismatch: RHS is an abstraction" in
+                              giveup env uu___13 orig)
                    | uu___9 ->
                        failwith
                          "Impossible: at least one side is an abstraction")

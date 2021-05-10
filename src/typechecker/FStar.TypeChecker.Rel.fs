@@ -3035,7 +3035,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               && p_rel orig = EQ
               then let flex, wl = destruct_flex_t not_abs wl in
                     solve_t_flex_rigid_eq env orig wl flex t_abs
-              else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
+              else begin
+                match head_matches_delta env wl not_abs t_abs with
+                | HeadMatch _, Some (not_abs', _) ->
+                  solve_t env ({problem with lhs=not_abs'; rhs=t_abs}) wl
+                | _ -> giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
+              end
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
