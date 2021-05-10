@@ -15,7 +15,7 @@
         "projection_inverse_Steel.Memory.Mkmem_heap"
       ],
       0,
-      "1fabd4d1388af24e310127fe45845100"
+      "30cbda95520aecaf1f17c404131e606b"
     ],
     [
       "Steel.Memory.disjoint",
@@ -493,7 +493,7 @@
       1,
       [ "@query" ],
       0,
-      "2eb1c4115ff963b36f4427c47fc48751"
+      "c8da41cc6bb8bc28b8964268282785ea"
     ],
     [
       "Steel.Memory.interp_star",
@@ -508,7 +508,7 @@
         "refinement_interpretation_Tm_refine_c9e1f9f4c6e019f6f57bb66f0dee9b17"
       ],
       0,
-      "0eec99bb9ef73032b47be40ae209dacc"
+      "8d02fb7c680edb43f247a84fd8a57171"
     ],
     [
       "Steel.Memory.star_commutative",
@@ -847,7 +847,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "505364382eb2681eef6997848dfb2b7d"
+      "dbf289f6d1fa4fe048741385081c0569"
     ],
     [
       "Steel.Memory.a_mem_prop_as_a_heap_prop",
@@ -878,7 +878,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "c421b2f21b7b24e1eb2f29b1d9568be4"
+      "c9f1dc7b590e6f6e6fb1b1dd4fa758b7"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -887,7 +887,7 @@
       1,
       [ "@query" ],
       0,
-      "6a1400cecd8ea7a24a8afb5093ebcf98"
+      "1724f2f18e0a9bb647c4c44d5210314a"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -912,7 +912,7 @@
         "typing_Steel.Memory.a_mem_prop_as_a_heap_prop"
       ],
       0,
-      "4cbde459ee5d55e7ce570455ee945f47"
+      "b25b018fac0093befb6b3bc4ab0f7f9b"
     ],
     [
       "Steel.Memory.dep_hprop",
@@ -926,7 +926,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fde71f981aabb6517c439068a061f9f7"
+      "db21999a945844e6c230ae02c69c9b94"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine0",
@@ -957,7 +957,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "cbd332cf808d081e899d63235e906ff8"
+      "e3426078ca78882108e1562794d34af3"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine1",
@@ -966,7 +966,7 @@
       1,
       [ "@query" ],
       0,
-      "b454f68df346c3ed41571af4f862670d"
+      "55d6f5454f8f9f310a288c6d2b78f392"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine",
@@ -978,7 +978,7 @@
         "token_correspondence_Steel.Memory.dep_hprop"
       ],
       0,
-      "5790289d83551acab2889d01b640f740"
+      "e98aef5ee8ada2a28c594a8d95b1f0ba"
     ],
     [
       "Steel.Memory.sdep",
@@ -987,7 +987,7 @@
       1,
       [ "@query" ],
       0,
-      "264572c87fee0ca089e4497f1c6c4223"
+      "271a9fbbffe330e6fba7ad14c7ed8bc1"
     ],
     [
       "Steel.Memory.dep_slprop_is_affine",
@@ -1004,7 +1004,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "4f04cc118a600d3ddcc232cf1e51c3e0"
+      "60ed2809141d84e81c0759fec209547d"
     ],
     [
       "Steel.Memory.interp_sdep",
@@ -1045,7 +1045,7 @@
         "typing_Steel.Memory.mem_of_heap", "typing_Steel.Memory.mem_set_heap"
       ],
       0,
-      "79f9188c7446f1719626ec79cca821b3"
+      "12186c39dc8c5e3b7c94b501d5404e39"
     ],
     [
       "Steel.Memory.h_exists_cong",

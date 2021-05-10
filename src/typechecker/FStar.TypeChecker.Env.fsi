@@ -448,3 +448,12 @@ val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.
 for either not a recursive let, or one that does not need the totality
 check. *)
 val get_letrec_arity : env -> lbname -> option<int>
+
+(* Construct a Tm_fvar with the delta_depth metadata populated
+   -- Note, the delta_qual is not populated, so don't use this with
+      Data constructors, projectors, record identifiers etc.
+
+   -- Also, don't use this with lidents that refer to Prims, that
+      still requires special handling
+*)
+val fvar_of_nonqual_lid : env -> lident -> term

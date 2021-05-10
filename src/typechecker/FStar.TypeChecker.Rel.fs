@@ -2800,6 +2800,79 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Tm_meta (t, _) -> may_relate t
                 | _ -> false
             in
+            let try_reveal_hide env t1 t2 =
+                //tries to solve problems of the form
+                // 1.
+                // reveal ?u == y, where head y <> hide/reveal
+                //   by generating hide (reveal ?u) == hide y
+                //   and simplifying it to       ?u == hide y
+                //
+                // 2.
+                //  hide ?u == y, where head y <> hide/reveal
+                //  by generating reveal (hide ?u) == reveal y
+                //  and simplifying it to       ?u == reveal y
+                //
+                let payload_of_hide_reveal h args =
+                    match h.n, args with
+                    | Tm_uinst(_, [u]), [(ty, Some (Implicit _)); (t, _)]
+                      when is_flex t ->
+                      Some (u, ty, t)
+                    | _ -> None
+                in
+                let is_reveal_or_hide t =
+                  let h, args = U.head_and_args t in
+                  if U.is_fvar Const.reveal h
+                  then match payload_of_hide_reveal h args with
+                       | None -> None
+                       | Some t -> Some (Inl t)
+                  else if U.is_fvar Const.hide h
+                  then match payload_of_hide_reveal h args with
+                       | None -> None
+                       | Some t -> Some (Inr t)
+                  else None
+                in
+                let mk_fv_app lid u args r =
+                  let fv = Env.fvar_of_nonqual_lid env lid in
+                  let head = S.mk_Tm_uinst fv [u]  in
+                  S.mk_Tm_app head args r
+                in
+                match is_reveal_or_hide t1, is_reveal_or_hide t2 with
+                | None, None -> None
+
+                | Some (Inl _), Some (Inl _)
+                | Some (Inr _), Some (Inr _) ->
+                  //reveal/reveal, or hide/hide; impossilbe
+                  None
+
+                | Some (Inl _), Some (Inr _)
+                | Some (Inr _), Some (Inl _) ->
+                  //reveal/hide, or hide/reveal; inapplicable
+                  None
+
+                | Some (Inl (u, ty, lhs)), None ->
+                  // reveal / _
+                  //add hide to both sides to simplify
+                  let rhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  Some (lhs, rhs)
+
+                | None, Some (Inl (u, ty, rhs)) ->
+                  // _ / reveal
+                  //add hide to both sides to simplify
+                  let lhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  Some (lhs, rhs)
+
+                | Some (Inr (u, ty, lhs)), None ->
+                  // hide / _
+                  //add reveal to both sides to simplify
+                  let rhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  Some (lhs, rhs)
+
+                | None, Some (Inr (u, ty, rhs)) ->
+                  // hide / _
+                  //add reveal to both sides to simplify
+                  let lhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  Some (lhs, rhs)
+            in
             begin
             match try_match_heuristic env orig wl t1 t2 o with
             | Inl _defer_ok ->
@@ -2809,6 +2882,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               solve env wl
 
             | Inr None ->
+
+              match try_reveal_hide env t1 t2 with
+              | Some (t1', t2') ->
+                solve_t env ({problem with lhs=t1'; rhs=t2'}) wl
+
+              | None ->
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)

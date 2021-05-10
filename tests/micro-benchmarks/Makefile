@@ -12,6 +12,7 @@ include $(FSTAR_HOME)/examples/Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES))) \
             Erasable.ml-cmp \
+	    InlineForExtractionNormRequest.ml-cmp \
             $(CACHE_DIR)/Coercions1Phase.fst.checked
 
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
@@ -22,11 +23,12 @@ $(CACHE_DIR)/Coercions1Phase.fst.checked: Coercions1Phase.fst
 Coercions1Phase.fst: Coercions.fst
 	sed 's/module Coercions/module Coercions1Phase/' < $< > $@
 
-Erasable.ml: Erasable.fst
-	$(FSTAR) --codegen OCaml --extract Erasable $^
+%.ml: %.fst
+	$(FSTAR) --codegen OCaml --extract $(subst .ml,, $@) $^
 
-Erasable.ml-cmp: Erasable.ml Erasable.ml.expected
+%.ml-cmp: %.ml %.ml.expected
 	diff -u --strip-trailing-cr $< $<.expected
+
 
 clean:
 	rm -f .depend
