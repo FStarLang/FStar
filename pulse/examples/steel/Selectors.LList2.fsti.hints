@@ -1,8 +1,8 @@
 [
-  "Å…˙kΩ\u001ckˆÈé∫Éœ·ˇe",
+  "Múñ‡Úß\u0000-ı\u0010ƒ~x(^\u0004",
   [
     [
-      "Selectors.PtrLList.v_ptrlist",
+      "Selectors.LList2.v_llist",
       1,
       2,
       1,
@@ -12,29 +12,20 @@
         "equation_Prims.squash",
         "function_token_typing_Steel.SelEffect.Common.selector_tactic",
         "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_4d6111bd31a4d49d36a6b6c2b9097fd9",
+        "refinement_interpretation_Tm_refine_50a99e96724af4a52ca18ccf2347fe99",
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a2f5ab0cdd6655693e397154e75589cb"
+      "7cdff17dc1d2b91f93a2eafceca570ea"
     ],
     [
-      "Selectors.PtrLList.intro_llist_cons",
+      "Selectors.LList2.tail",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "386f3a7496f69b85f9262cbdefb1dfc5"
-    ],
-    [
-      "Selectors.PtrLList.elim_llist_cons",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "951b944677ae13f6d82d9393bbda34ac"
+      "55b427d4b36f8122b3ab47ec7f482fcd"
     ]
   ]
 ]
