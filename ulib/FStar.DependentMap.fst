@@ -118,7 +118,7 @@ let rename
       (#key2: eqtype)
       (ren: (key2 -> Tot key1))
     : Tot (t key2 (rename_value value1 ren)) =
-  { mappings = F.on_domain key2 (fun k2 -> m.mappings (ren k2)) }
+  { mappings = F.on_domain key2 #(rename_value value1 ren) (fun k2 -> m.mappings (ren k2)) }
 
 let sel_rename
       (#key1: eqtype)
