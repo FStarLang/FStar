@@ -331,6 +331,8 @@ let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
 let ite_soundness_forall_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_forall"]
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
+let layered_effects_ite_soundness_attr = psconst "ite_soundness_by"
+
 
 let gen_reset =
     let x = U.mk_ref 0 in
