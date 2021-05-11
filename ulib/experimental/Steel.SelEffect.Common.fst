@@ -2,10 +2,8 @@ module Steel.SelEffect.Common
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
-module C = Steel.Effect.Common
 open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
-module Eff = Steel.Effect
 
 let h_exists #a f = VUnit ({hp = Mem.h_exists (fun x -> hp_of (f x)); t = unit; sel = fun _ -> ()})
 
