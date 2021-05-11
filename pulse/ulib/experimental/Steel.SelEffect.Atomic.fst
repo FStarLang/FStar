@@ -533,6 +533,32 @@ let exists_cong p q =
     (fun m -> Classical.forall_intro_2 reveal_equiv;
             h_exists_cong (fun x -> hp_of (p x)) (fun x -> hp_of (q x)))
 
+let new_invariant #uses p =
+  rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
+  let i = as_atomic_action_ghost (new_invariant uses (hp_of p)) in
+  rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ());
+  i
+
+(*
+ * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
+ *     However to implement the with_inv combinators we need to reify their thunks to reprs
+ *     We could implement it better by having support for reification only in the .fst file
+ *     But for now assuming a function
+ *)
+assume val reify_steel_atomic_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames) (#g:observability)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelSelAtomicBase a already_framed opened_invariants g pre post req ens)
+  : action_except_full a opened_invariants
+                       (hp_of pre) (fun x -> hp_of (post x))
+                       (req_to_act_req req) (ens_to_act_ens ens)
+
+let with_invariant #a #fp #fp' #opened #p i f =
+  rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
+  let x = as_atomic_action (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_atomic_comp f)) in
+  rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
+  return x
+
 let intro_vrefine v p =
   let m = get () in
   let x : Ghost.erased (t_of v) = gget v in
