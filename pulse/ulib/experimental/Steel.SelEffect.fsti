@@ -221,6 +221,34 @@ polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
 effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
   SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
+(* Exposing actions as Steel functions *)
+
+(* AF: Ideally, we would like to provide par with requires/ensures.
+   But this currently interacts badly with normalization when trying
+   to implement the combinator. Restricting this to SteelT for now,
+   a user can always pass necessary req/ens as pure + vrefine vprops *)
+
+val par (#aL:Type u#a)
+        (#aR:Type u#a)
+        (#preL:vprop)
+        (#postL:aL -> vprop)
+        // (#lpreL:req_t preL)
+        // (#lpostL:ens_t preL aL postL)
+        ($f:unit -> SteelSelT aL preL postL) // lpreL lpostL)
+        (#preR:vprop)
+        (#postR:aR -> vprop)
+        // (#lpreR:req_t preR)
+        // (#lpostR:ens_t preR aR postR)
+        ($g:unit -> SteelSelT aR preR postR) // lpreR lpostR)
+  : SteelSelT (aL & aR)
+    (preL `star` preR)
+    (fun y -> postL (fst y) `star` postR (snd y))
+    // (fun h -> lpreL (focus_rmem h preL) /\ lpreR (focus_rmem h preR))
+    // (fun h0 y h1 -> lpreL (focus_rmem h0 preL) /\ lpreR (focus_rmem h0 preR) /\
+    //   lpostL (focus_rmem h0 preL) (fst y) (focus_rmem h1 (postL (fst y))) /\
+    //   lpostR (focus_rmem h0 preR) (snd y) (focus_rmem h1 (postR (snd y))))
+
+
 [@@warn_on_use "as_action is a trusted primitive"]
 val as_action  (#a:Type)
                (#p:slprop)
