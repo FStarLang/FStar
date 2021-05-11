@@ -2278,10 +2278,11 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
             | [], _
             | _, [] -> lhs_binders, rhs_args
 
-            | b::lhs_tl, (t, _)::rhs_tl ->
+            | b::lhs_tl, (t, aq)::rhs_tl ->
               match (SS.compress t).n with
               | Tm_name x
                 when bv_eq b.binder_bv x
+                  && b.binder_qual = aq
                   && bv_not_free_in_args b.binder_bv rhs_tl ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
