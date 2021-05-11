@@ -541,6 +541,17 @@ val with_invariant (#a:Type)
                                          (fun x -> p `star` fp' x))
   : SteelSelAtomicT a opened_invariants fp fp'
 
+val with_invariant_g (#a:Type)
+                     (#fp:vprop)
+                     (#fp':a -> vprop)
+                     (#opened_invariants:inames)
+                     (#p:vprop)
+                     (i:inv p{not (mem_inv opened_invariants i)})
+                     ($f:unit -> SteelSelGhostT a (add_inv opened_invariants i)
+                                         (p `star` fp)
+                                         (fun x -> p `star` fp' x))
+  : SteelSelGhostT a opened_invariants fp fp'
+
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)
