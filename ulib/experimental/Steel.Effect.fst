@@ -1,4 +1,4 @@
-module Steel.SelEffect
+module Steel.Effect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
@@ -448,17 +448,17 @@ let bind_div_steel (a:Type) (b:Type)
   g x frame
 #pop-options
 
-polymonadic_bind (DIV, SteelSelBase) |> SteelSelBase = bind_div_steel
+polymonadic_bind (DIV, SteelBase) |> SteelBase = bind_div_steel
 #pop-options
 
 let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
          (f:repr aL false preL postL (fun _ -> True) (fun _ _ _ -> True))
          (#aR:Type u#a) (#preR:vprop) (#postR:aR -> vprop)
          (g:repr aR false preR postR (fun _ -> True) (fun _ _ _ -> True))
-  : SteelSelT (aL & aR)
+  : SteelT (aL & aR)
     (preL `star` preR)
     (fun y -> postL (fst y) `star` postR (snd y))
-  = SteelSel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
+  = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 (*
  * AR: Steel is not marked reifiable since we intend to run Steel programs natively
@@ -468,7 +468,7 @@ let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
  *)
 assume val reify_steel_comp
   (#a:Type) (#framed:bool) (#pre:vprop) (#post:a -> vprop) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelSelBase a framed pre post req ens)
+  ($f:unit -> SteelBase a framed pre post req ens)
   : Dv (repr a framed pre post req ens)
 
 let par f g =
@@ -478,4 +478,4 @@ let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set
   : repr a false (to_vprop p) (fun x -> to_vprop (q x)) (fun _ -> True) (fun _ _ _ -> True)
   = Steel.Semantics.Instantiate.state_correspondence Set.empty; f
 
-let as_action #a #p #q f = SteelSel?.reflect (action_as_repr f)
+let as_action #a #p #q f = Steel?.reflect (action_as_repr f)

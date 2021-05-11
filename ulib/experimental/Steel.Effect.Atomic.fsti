@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 
-module Steel.SelEffect.Atomic
+module Steel.Effect.Atomic
 
 open Steel.Memory
-include Steel.SelEffect.Common
+include Steel.Effect.Common
 
 #set-options "--warn_error -330 --ide_id_info_off"  //turn off the experimental feature warning
 
@@ -35,7 +35,7 @@ let join_obs (o1:observability) (o2:observability) =
   then Observable
   else Unobservable
 
-(*** SteelSelAGCommon effect ***)
+(*** SteelAGCommon effect ***)
 
 val repr (a:Type u#a)
    (already_framed:bool)
@@ -212,7 +212,7 @@ let if_then_else (a:Type)
 total
 reflectable
 effect {
-  SteelSelAGCommon (a:Type)
+  SteelAGCommon (a:Type)
                    (framed:bool)
                    (opened_invariants:inames)
                    (o:observability)
@@ -229,23 +229,23 @@ effect {
 
 total
 reflectable
-new_effect SteelSelAtomicBase = SteelSelAGCommon
+new_effect SteelAtomicBase = SteelAGCommon
 
-effect SteelSelAtomic (a:Type)
+effect SteelAtomic (a:Type)
   (opened:inames)
   (pre:pre_t)
   (post:post_t a)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelSelAtomicBase a false opened Observable pre post req ens
+  = SteelAtomicBase a false opened Observable pre post req ens
 
-effect SteelSelAtomicF (a:Type)
+effect SteelAtomicF (a:Type)
   (opened:inames)
   (pre:pre_t)
   (post:post_t a)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelSelAtomicBase a true opened Observable pre post req ens
+  = SteelAtomicBase a true opened Observable pre post req ens
 
 unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
@@ -275,38 +275,38 @@ val bind_pure_steela_ (a:Type) (b:Type)
     (bind_pure_steel__req wp req)
     (bind_pure_steel__ens wp ens)
 
-polymonadic_bind (PURE, SteelSelAtomicBase) |> SteelSelAtomicBase = bind_pure_steela_
+polymonadic_bind (PURE, SteelAtomicBase) |> SteelAtomicBase = bind_pure_steela_
 
-effect SteelSelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
-  SteelSelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
+effect SteelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
+  SteelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*** SteelGhost effect ***)
 
 [@@ erasable]
 total
 reflectable
-new_effect SteelSelGhostBase = SteelSelAGCommon
+new_effect SteelGhostBase = SteelAGCommon
 
-effect SteelSelGhost (a:Type)
+effect SteelGhost (a:Type)
   (opened:inames)
   (pre:pre_t)
   (post:post_t a)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelSelGhostBase a false opened Unobservable pre post req ens
+  = SteelGhostBase a false opened Unobservable pre post req ens
 
-effect SteelSelGhostF (a:Type)
+effect SteelGhostF (a:Type)
   (opened:inames)
   (pre:pre_t)
   (post:post_t a)
   (req:req_t pre)
   (ens:ens_t pre a post)
-  = SteelSelGhostBase a true opened Unobservable pre post req ens
+  = SteelGhostBase a true opened Unobservable pre post req ens
 
-polymonadic_bind (PURE, SteelSelGhostBase) |> SteelSelGhostBase = bind_pure_steela_
+polymonadic_bind (PURE, SteelGhostBase) |> SteelGhostBase = bind_pure_steela_
 
-effect SteelSelGhostT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
-  SteelSelGhost a opened pre post (fun _ -> True) (fun _ _ _ -> True)
+effect SteelGhostT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
+  SteelGhost a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (***** Lift relations *****)
 
@@ -319,7 +319,7 @@ val lift_ghost_atomic
   (f:repr a framed opened Unobservable pre post req ens)
   : repr a framed opened Unobservable pre post req ens
 
-sub_effect SteelSelGhostBase ~> SteelSelAtomicBase = lift_ghost_atomic
+sub_effect SteelGhostBase ~> SteelAtomicBase = lift_ghost_atomic
 
 val lift_atomic_steel
   (a:Type)
@@ -328,9 +328,9 @@ val lift_atomic_steel
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t a)
   (#[@@@ framing_implicit] req:req_t pre) (#[@@@ framing_implicit] ens:ens_t pre a post)
   (f:repr a framed Set.empty o pre post req ens)
-  : Steel.SelEffect.repr a framed pre post req ens
+  : Steel.Effect.repr a framed pre post req ens
 
-sub_effect SteelSelAtomicBase ~> Steel.SelEffect.SteelSelBase = lift_atomic_steel
+sub_effect SteelAtomicBase ~> Steel.Effect.SteelBase = lift_atomic_steel
 
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)
@@ -338,7 +338,7 @@ val as_atomic_action (#a:Type u#a)
                      (#fp:slprop)
                      (#fp': a -> slprop)
                      (f:action_except a opened_invariants fp fp')
-  : SteelSelAtomicT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+  : SteelAtomicT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
 
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action_ghost (#a:Type u#a)
@@ -346,19 +346,19 @@ val as_atomic_action_ghost (#a:Type u#a)
                            (#fp:slprop)
                            (#fp': a -> slprop)
                            (f:action_except a opened_invariants fp fp')
-  : SteelSelGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+  : SteelGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
 
 (* Some helper functions *)
 
 open FStar.Ghost
 
-val get (#p:vprop) (#opened:inames) (_:unit) : SteelSelGhostF (erased (rmem p))
+val get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
   opened
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
 
-let gget (#opened:inames) (p: vprop) : SteelSelGhost (erased (t_of p))
+let gget (#opened:inames) (p: vprop) : SteelGhost (erased (t_of p))
   opened
   p (fun _ -> p)
   (requires (fun _ -> True))
@@ -377,7 +377,7 @@ val rewrite_slprop
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures interp (hp_of q) m)
-  ) : SteelSelGhostT unit opened p (fun _ -> q)
+  ) : SteelGhostT unit opened p (fun _ -> q)
 
 val change_slprop
   (#opened:inames)
@@ -385,17 +385,17 @@ val change_slprop
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  ) : SteelSelGhost unit opened p (fun _ -> q)
+  ) : SteelGhost unit opened p (fun _ -> q)
                     (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
 
 val change_equal_slprop (#opened:inames) (p q: vprop)
-  : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> p == q) (fun h0 _ h1 -> p == q /\ h1 q == h0 p)
+  : SteelGhost unit opened p (fun _ -> q) (fun _ -> p == q) (fun h0 _ h1 -> p == q /\ h1 q == h0 p)
 
 val change_slprop_2 (#opened:inames) (p q:vprop) (vq:erased (t_of q))
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  ) : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+  ) : SteelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
 
 val change_slprop_rel (#opened:inames) (p q:vprop)
   (rel : normal (t_of p) -> normal (t_of q) -> prop)
@@ -403,7 +403,7 @@ val change_slprop_rel (#opened:inames) (p q:vprop)
     (requires interp (hp_of p) m)
     (ensures interp (hp_of q) m /\
       rel (sel_of p m) (sel_of q m))
-  ) : SteelSelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  ) : SteelGhost unit opened p (fun _ -> q) (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
 
 val change_slprop_rel_with_cond (#opened:inames)
   (p q:vprop)
@@ -413,13 +413,13 @@ val change_slprop_rel_with_cond (#opened:inames)
     (requires interp (hp_of p) m /\ cond (sel_of p m))
     (ensures interp (hp_of q) m /\
       rel (sel_of p m) (sel_of q m))
-  ) : SteelSelGhost unit opened p (fun _ -> q) (fun h0 -> cond (h0 p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  ) : SteelGhost unit opened p (fun _ -> q) (fun h0 -> cond (h0 p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
 
 val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures fact)
-  ) : SteelSelGhost unit opened p (fun _ -> p)
+  ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
@@ -427,30 +427,30 @@ val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures fact)
-  ) : SteelSelGhost unit opened p (fun _ -> p)
+  ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> True)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
 
 val noop (#opened:inames) (_:unit)
-  : SteelSelGhost unit opened emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
+  : SteelGhost unit opened emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
 
 val sladmit (#a:Type)
             (#opened:inames)
             (#p:pre_t)
             (#q:post_t a)
             (_:unit)
-  : SteelSelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
+  : SteelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 val slassert (#opened_invariants:_) (p:vprop)
-  : SteelSelGhost unit opened_invariants p (fun _ -> p)
+  : SteelGhost unit opened_invariants p (fun _ -> p)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
 
-val drop (#opened:inames) (p:vprop) : SteelSelGhostT unit opened p (fun _ -> emp)
+val drop (#opened:inames) (p:vprop) : SteelGhostT unit opened p (fun _ -> emp)
 
 val reveal_star (#opened:inames) (p1 p2:vprop)
- : SteelSelGhost unit opened (p1 `star` p2) (fun _ -> p1 `star` p2)
+ : SteelGhost unit opened (p1 `star` p2) (fun _ -> p1 `star` p2)
    (requires fun _ -> True)
    (ensures fun h0 _ h1 ->
      h0 p1 == h1 p1 /\
@@ -460,7 +460,7 @@ val reveal_star (#opened:inames) (p1 p2:vprop)
    )
 
 val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
- : SteelSelGhost unit opened (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
+ : SteelGhost unit opened (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
    (requires fun _ -> True)
    (ensures fun h0 _ h1 ->
      can_be_split (p1 `star` p2 `star` p3) p1 /\
@@ -471,21 +471,21 @@ val reveal_star_3 (#opened:inames) (p1 p2 p3:vprop)
    )
 
 val intro_pure (#opened_invariants:_) (p:prop)
-  : SteelSelGhost unit opened_invariants emp (fun _ -> pure p)
+  : SteelGhost unit opened_invariants emp (fun _ -> pure p)
                 (requires fun _ -> p) (ensures fun _ _ _ -> True)
 
 val elim_pure (#uses:_) (p:prop)
-  : SteelSelGhost unit uses (pure p) (fun _ -> emp)
+  : SteelGhost unit uses (pure p) (fun _ -> emp)
                (requires fun _ -> True) (ensures fun _ _ _ -> p)
 
 let return (#a:Type u#a)
   (#opened_invariants:inames)
   (#p:a -> vprop)
   (x:a)
-  : SteelSelAtomicBase a true opened_invariants Unobservable
+  : SteelAtomicBase a true opened_invariants Unobservable
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
-  = SteelSelAtomicBase?.reflect (return_ a x opened_invariants #p)
+  = SteelAtomicBase?.reflect (return_ a x opened_invariants #p)
 
 (* h_exists combinator *)
 
@@ -494,24 +494,24 @@ let h_exists_sl (#a:Type u#b) (p: (a -> vprop)) : slprop = h_exists (fun x -> hp
 unfold let h_exists #a (p:a -> vprop) : vprop = to_vprop (h_exists_sl p)
 
 val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> vprop)
-  : SteelSelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+  : SteelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
 
 val witness_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
-  : SteelSelGhostT (erased a) opened_invariants
+  : SteelGhostT (erased a) opened_invariants
                 (h_exists p) (fun x -> p x)
 
 val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> vprop)
-  : SteelSelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+  : SteelGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
 
 module U = FStar.Universe
 
 val lift_exists (#a:_) (#u:_) (p:a -> vprop)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
                 (h_exists p)
                 (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
 
 val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
                 (h_exists p)
                 (fun _ -> h_exists q)
 
@@ -532,7 +532,7 @@ let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
   Set.union (Set.singleton (reveal i)) (reveal e)
 
 val new_invariant (#opened_invariants:inames) (p:vprop)
-  : SteelSelGhostT (inv p) opened_invariants p (fun _ -> emp)
+  : SteelGhostT (inv p) opened_invariants p (fun _ -> emp)
 
 let set_add i o : inames = Set.union (Set.singleton i) o
 val with_invariant (#a:Type)
@@ -541,10 +541,10 @@ val with_invariant (#a:Type)
                    (#opened_invariants:inames)
                    (#p:vprop)
                    (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> SteelSelAtomicT a (add_inv opened_invariants i)
+                   ($f:unit -> SteelAtomicT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  : SteelSelAtomicT a opened_invariants fp fp'
+  : SteelAtomicT a opened_invariants fp fp'
 
 val with_invariant_g (#a:Type)
                      (#fp:vprop)
@@ -552,22 +552,22 @@ val with_invariant_g (#a:Type)
                      (#opened_invariants:inames)
                      (#p:vprop)
                      (i:inv p{not (mem_inv opened_invariants i)})
-                     ($f:unit -> SteelSelGhostT a (add_inv opened_invariants i)
+                     ($f:unit -> SteelGhostT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  : SteelSelGhostT a opened_invariants fp fp'
+  : SteelGhostT a opened_invariants fp fp'
 
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
-: SteelSelGhost unit opened v (fun _ -> vrefine v p)
+: SteelGhost unit opened v (fun _ -> vrefine v p)
   (requires (fun h -> p (h v)))
   (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
 
 val elim_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
-: SteelSelGhost unit opened (vrefine v p) (fun _ -> v)
+: SteelGhost unit opened (vrefine v p) (fun _ -> v)
   (requires (fun _ -> True))
   (ensures (fun h _ h' -> normal (h' v == h (vrefine v p)) /\ p (h' v)))
 
@@ -575,7 +575,7 @@ val intro_vdep (#opened:inames)
   (v: vprop)
   (q: vprop)
   (p: (t_of v -> Tot vprop))
-: SteelSelGhost unit opened
+: SteelGhost unit opened
     (v `star` q)
     (fun _ -> vdep v p)
     (requires (fun h -> q == p (h v)))
@@ -589,7 +589,7 @@ val intro_vdep (#opened:inames)
 val elim_vdep (#opened:inames)
   (v: vprop)
   (p: (t_of v -> Tot vprop))
-: SteelSelGhost (Ghost.erased (t_of v)) opened
+: SteelGhost (Ghost.erased (t_of v)) opened
   (vdep v p)
   (fun res -> v `star` p (Ghost.reveal res))
   (requires (fun _ -> True))
@@ -604,13 +604,13 @@ val elim_vdep (#opened:inames)
 
 val intro_vrewrite (#opened:inames)
   (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t))
-: SteelSelGhost unit opened v (fun _ -> vrewrite v f)
+: SteelGhost unit opened v (fun _ -> vrewrite v f)
                 (fun _ -> True) (fun h _ h' -> h' (vrewrite v f) == f (h v))
 
 val elim_vrewrite (#opened:inames)
   (v: vprop)
   (#t: Type)
   (f: (normal (t_of v) -> GTot t))
-: SteelSelGhost unit opened (vrewrite v f) (fun _ -> v)
+: SteelGhost unit opened (vrewrite v f) (fun _ -> v)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))

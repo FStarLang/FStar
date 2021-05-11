@@ -1,10 +1,10 @@
-module Steel.SelEffect
+module Steel.Effect
 
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
-include Steel.SelEffect.Common
+include Steel.Effect.Common
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
@@ -167,7 +167,7 @@ let if_then_else (a:Type)
 
 reflectable
 effect {
-  SteelSelBase
+  SteelBase
     (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
   with { repr = repr;
          return = return_;
@@ -177,10 +177,10 @@ effect {
 }
 
 
-effect SteelSel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
-  SteelSelBase a false pre post req ens
-effect SteelSelF (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
-  SteelSelBase a true pre post req ens
+effect Steel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+  SteelBase a false pre post req ens
+effect SteelF (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+  SteelBase a true pre post req ens
 
 (*
 //  * PURE, Steel(F) bind
@@ -212,14 +212,14 @@ val bind_pure_steel_ (a:Type) (b:Type)
     (bind_pure_steel__req wp req)
     (bind_pure_steel__ens wp ens)
 
-polymonadic_bind (PURE, SteelSelBase) |> SteelSelBase = bind_pure_steel_
+polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 
 (*
 //  * Annotations without the req and ens
 //  *)
 
-effect SteelSelT (a:Type) (pre:pre_t) (post:post_t a) =
-  SteelSel a pre post (fun _ -> True) (fun _ _ _ -> True)
+effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (* Exposing actions as Steel functions *)
 
@@ -234,13 +234,13 @@ val par (#aL:Type u#a)
         (#postL:aL -> vprop)
         // (#lpreL:req_t preL)
         // (#lpostL:ens_t preL aL postL)
-        ($f:unit -> SteelSelT aL preL postL) // lpreL lpostL)
+        ($f:unit -> SteelT aL preL postL) // lpreL lpostL)
         (#preR:vprop)
         (#postR:aR -> vprop)
         // (#lpreR:req_t preR)
         // (#lpostR:ens_t preR aR postR)
-        ($g:unit -> SteelSelT aR preR postR) // lpreR lpostR)
-  : SteelSelT (aL & aR)
+        ($g:unit -> SteelT aR preR postR) // lpreR lpostR)
+  : SteelT (aL & aR)
     (preL `star` preR)
     (fun y -> postL (fst y) `star` postR (snd y))
     // (fun h -> lpreL (focus_rmem h preL) /\ lpreR (focus_rmem h preR))
@@ -254,4 +254,4 @@ val as_action  (#a:Type)
                (#p:slprop)
                (#q:a -> slprop)
                (f:action_except a Set.empty p q)
-  : SteelSelT a (to_vprop p) (fun x -> to_vprop (q x))
+  : SteelT a (to_vprop p) (fun x -> to_vprop (q x))
