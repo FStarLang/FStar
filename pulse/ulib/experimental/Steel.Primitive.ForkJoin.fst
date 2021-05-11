@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 
-module Steel.SelPrimitive.ForkJoin
+module Steel.Primitive.ForkJoin
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-module L = Steel.SelSpinLock
+open Steel.Effect.Atomic
+open Steel.Effect
+module L = Steel.SpinLock
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,15 +42,15 @@ type thread (p:vprop) = {
 }
 
 let intro_maybe_p_false (p:vprop)
-  : SteelSelT unit emp (fun _ -> maybe_p p false)
+  : SteelT unit emp (fun _ -> maybe_p p false)
   = rewrite_slprop emp (maybe_p p false) (fun _ -> ())
 
 let intro_maybe_p_true (p:vprop)
-  : SteelSelT unit p (fun _ -> maybe_p p true)
+  : SteelT unit p (fun _ -> maybe_p p true)
   = rewrite_slprop p (maybe_p p true) (fun _ -> ())
 
 let new_thread (p:vprop)
-  : SteelSelT (thread p) emp (fun _ -> emp)
+  : SteelT (thread p) emp (fun _ -> emp)
   = let r = alloc_pt false in
     intro_maybe_p_false p;
     intro_exists false (lock_inv_pred r p);
@@ -59,7 +59,7 @@ let new_thread (p:vprop)
     t
 
 let finish (#p:vprop) (t:thread p) (v:bool)
-  : SteelSelT unit (pts_to t.r full_perm v `star` p) (fun _ -> emp)
+  : SteelT unit (pts_to t.r full_perm v `star` p) (fun _ -> emp)
   = write_pt t.r true;
     intro_maybe_p_true p;
     intro_exists true (lock_inv_pred t.r p);
@@ -67,31 +67,31 @@ let finish (#p:vprop) (t:thread p) (v:bool)
 
 
 let acquire (#p:vprop) (t:thread p)
-  : SteelSelT bool emp (fun b -> pts_to t.r full_perm b)
+  : SteelT bool emp (fun b -> pts_to t.r full_perm b)
   = L.acquire t.l;
     let b = read_refine_pt #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
     return b
 
 let spawn (#p #q:vprop)
-          ($f: (unit -> SteelSelT unit p (fun _ -> q)))
+          ($f: (unit -> SteelT unit p (fun _ -> q)))
           (t:thread q)
           (_:unit)
-  : SteelSelT unit p (fun _ -> emp)
+  : SteelT unit p (fun _ -> emp)
   = let b = acquire t in
     f ();
     finish t b
 
 let fork (#p #q #r #s:vprop)
-      (f: (unit -> SteelSelT unit p (fun _ -> q)))
-      (g: (thread q -> unit -> SteelSelT unit r (fun _ -> s)))
-  : SteelSelT unit (p `star` r) (fun _ -> s)
+      (f: (unit -> SteelT unit p (fun _ -> q)))
+      (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
+  : SteelT unit (p `star` r) (fun _ -> s)
   = let t : thread q = new_thread q in
     let _ = par (spawn f t) (g t) in
     ()
 
 let rec join (#p:vprop) (t:thread p)
-  : SteelSelT unit emp (fun _ -> p)
+  : SteelT unit emp (fun _ -> p)
   = let _ = L.acquire t.l in
     let b = read_refine_pt (maybe_p p) t.r in
     if b then

@@ -14,9 +14,9 @@
    limitations under the License.o
 *)
 
-module Steel.SelArray
+module Steel.Array
 open Steel.Memory
-open Steel.SelEffect
+open Steel.Effect
 open FStar.Ghost
 module U32 = FStar.UInt32
 
@@ -44,14 +44,14 @@ let asel (#a:Type) (#p:vprop) (r:array a)
   = h (varray r)
 
 val alloc (#t:Type) (x:t) (n:U32.t)
-  : SteelSel (array t)
+  : Steel (array t)
              emp
              (fun r -> varray r)
              (requires fun _ -> True)
              (ensures fun _ r h1 -> asel r h1 == Seq.create (U32.v n) x)
 
 val index (#t:Type) (r:array t) (i:U32.t)
-  : SteelSel t
+  : Steel t
              (varray r)
              (fun _ -> varray r)
              (requires fun h -> U32.v i < length (asel r h))
@@ -61,7 +61,7 @@ val index (#t:Type) (r:array t) (i:U32.t)
                x == Seq.index (asel r h1) (U32.v i))
 
 val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
-  : SteelSel unit
+  : Steel unit
              (varray r)
              (fun _ -> varray r)
              (requires fun h -> U32.v i < length (asel r h))
@@ -70,7 +70,7 @@ val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
                asel r h1 == Seq.upd (asel r h0) (U32.v i) x)
 
 val free (#t:Type) (r:array t)
-  : SteelSel unit
+  : Steel unit
              (varray r)
              (fun _ -> emp)
              (requires fun _ -> True)

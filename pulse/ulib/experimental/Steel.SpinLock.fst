@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 
-module Steel.SelSpinLock
+module Steel.SpinLock
 
 open FStar.Ghost
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 open Steel.FractionalPermission
 
 #set-options "--ide_id_info_off --fuel 0 --ifuel 0"
@@ -35,10 +35,10 @@ let lock_t = ref bool & erased iname
 let protects (l:lock_t) (p:vprop) : prop = snd l >--> lockinv p (fst l)
 
 val intro_lockinv_available (#uses:inames) (p:vprop) (r:ref bool)
-  : SteelSelGhostT unit uses (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
+  : SteelGhostT unit uses (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
 
 val intro_lockinv_locked (#uses:inames) (p:vprop) (r:ref bool)
-  : SteelSelGhostT unit uses (pts_to r full_perm locked) (fun _ -> lockinv p r)
+  : SteelGhostT unit uses (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
   intro_exists false
@@ -53,14 +53,14 @@ let intro_lockinv_locked #uses p r =
           (if b then emp else p))
 
 let new_lock (p:vprop)
-  : SteelSelT (lock p) p (fun _ -> emp) =
+  : SteelT (lock p) p (fun _ -> emp) =
   let r = alloc_pt available in
   intro_lockinv_available p r;
   let i:inv (lockinv p r) = new_invariant (lockinv p r) in
   return (r, i)
 
 val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
-  : SteelSelAtomicT bool u
+  : SteelAtomicT bool u
     (lockinv p r `star` emp)
     (fun b -> lockinv p r  `star` (if b then p else emp))
 
@@ -90,7 +90,7 @@ let rec acquire #p l =
   )
 
 val release_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
-  : SteelSelAtomicT bool u
+  : SteelAtomicT bool u
     (lockinv p r `star` p)
     (fun b -> lockinv p r `star` (if b then emp else p))
 

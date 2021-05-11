@@ -1,7 +1,7 @@
-module Steel.SelArray
+module Steel.Array
 
-open Steel.SelEffect.Atomic
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Reference
 
 let array t = ref (Seq.seq t)
 
