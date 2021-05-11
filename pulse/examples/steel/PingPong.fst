@@ -16,10 +16,10 @@
 
 module PingPong
 open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 open Steel.Channel.Protocol
-module Duplex = Steel.Channel.Duplex
+module Duplex = Steel.SelChannel.Duplex
 module Protocol = Steel.Channel.Protocol
 
 (** Specification and implementation of a pingpong protocol *)
@@ -42,7 +42,7 @@ let pingpong : Duplex.prot =
 /// After execution, the postcondition specifies ownership of an endpoint for channel c,
 /// but no action in the protocol remains.
 let client (c:Duplex.chan pingpong)
-  : SteelT unit
+  : SteelSelT unit
            (Duplex.endpoint c pingpong)
            (fun _ -> Duplex.endpoint c Protocol.done)
   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17
@@ -61,7 +61,7 @@ let client (c:Duplex.chan pingpong)
 /// After execution, the postcondition `endpoint c P.done` again specifies that the protocol
 /// is done on channel c
 let server (c:Duplex.chan pingpong)
-  : SteelT unit
+  : SteelSelT unit
            (Duplex.endpoint c (Protocol.dual pingpong))
            (fun _ -> Duplex.endpoint c Protocol.done)
   = let y = Duplex.recv c in
@@ -74,7 +74,7 @@ let server (c:Duplex.chan pingpong)
 /// If the `expect_failure` attribute is commented out, this function does not typecheck
 [@expect_failure]
 let failed_server (c:Duplex.chan pingpong)
-  : SteelT unit
+  : SteelSelT unit
            (Duplex.endpoint c (Protocol.dual pingpong))
            (fun _ -> Duplex.endpoint c Protocol.done)
   = let y = Duplex.recv c in
@@ -87,7 +87,7 @@ let failed_server (c:Duplex.chan pingpong)
 /// Initialization of both the client and the server side of the pingpong protocol.
 /// Both sides are executed in parallel using the `par` combinator
 let client_server (_:unit)
-  : SteelT unit emp (fun _ -> emp)
+  : SteelSelT unit emp (fun _ -> emp)
   = // Creates a new channel `c` for the pingpong protocol.
     // After creation, an endpoint for the pingpong protocol and
     // for the dual protocol are available
@@ -100,12 +100,12 @@ let client_server (_:unit)
     // to make them unavailable from outside client_server
     drop (Duplex.endpoint c Protocol.done `star` Duplex.endpoint c Protocol.done)
 
-module T = Steel.Primitive.ForkJoin
+module T = Steel.SelPrimitive.ForkJoin
 
 (** Execution of a multitude of client_server instances in parallel *)
 
 let rec join_all (threads:list (T.thread emp))
-  : SteelT unit emp (fun _ -> emp)
+  : SteelSelT unit emp (fun _ -> emp)
   = let open FStar.List.Tot.Base in
     if isEmpty threads then (noop (); ()) else
       (let Cons hd tl = threads in T.join hd; join_all tl)
@@ -117,6 +117,6 @@ let rec join_all (threads:list (T.thread emp))
 /// If it still needs to spawn instances (n > 0), it executes a new instance of client_server
 /// in a fork and adds the created thread to the list passed as argument in the continuation
 let rec many (n:nat) (threads:list (T.thread emp))
-  : SteelT unit emp (fun _ -> emp)
+  : SteelSelT unit emp (fun _ -> emp)
   = if n = 0 then join_all threads
     else T.fork client_server (fun t _ -> many (n-1) (t::threads))
