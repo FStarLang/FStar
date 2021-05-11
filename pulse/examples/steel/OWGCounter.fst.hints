@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "45633bf85571a989cf179b7c7986e3b4"
+      "878dc4ec4991ea37680accd1b4a747ac"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "11c7afbff0ba876d99e28a20ba13d20a"
+      "21b0da45bc3ec62438e881c331a45f32"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a751b433ae41fa3f922cb39512335ce9"
+      "3651cad71b78af31c4cb4a7ace706c00"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "7ddf8966158fa29e3c9467abda4b3a5a"
+      "af773b849ebff6036b18fbf82a720389"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "58f4a842685dff726521c31c281316ea"
+      "784c25fefdf062e79647982adbedc9c3"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "b9ee71d1315bb60593b58354d86355c1"
+      "86a369a039462cb0eed03f5293cd20b7"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "ac2fc703c6e3e4a8ecbc0423ca1bba83"
+      "e934bca203fff1d50b7f682472c02f2d"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "c02a8dc6eabf8f055b6e86a40b5fa48c"
+      "3ef06c3d14949cee6642b51fc9048a27"
     ],
     [
       "OWGCounter.incr_main",
@@ -210,7 +210,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "d342d389932c3fe1ca7710a352c8fd88"
+      "d8623d81bb89a6084511335bb8fe5211"
     ]
   ]
 ]
