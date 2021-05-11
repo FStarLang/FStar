@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 
-module Steel.SelPCMReference
+module Steel.PCMReference
 
 open FStar.PCM
 open FStar.Ghost
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 
 #set-options "--ide_id_info_off"
 
@@ -33,7 +33,7 @@ val read (#a:Type)
          (#pcm:pcm a)
          (r:ref a pcm)
          (v0:erased a)
-  : SteelSel a
+  : Steel a
           (pts_to r v0)
           (fun _ -> pts_to r v0)
           (requires fun _ -> True)
@@ -44,7 +44,7 @@ val write (#a:Type)
           (r:ref a pcm)
           (v0:erased a)
           (v1:a)
-  : SteelSel unit
+  : Steel unit
           (pts_to r v0)
           (fun _ -> pts_to r v1)
           (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
@@ -53,7 +53,7 @@ val write (#a:Type)
 val alloc (#a:Type)
           (#pcm:pcm a)
           (x:a)
-  : SteelSel (ref a pcm)
+  : Steel (ref a pcm)
           emp
           (fun r -> pts_to r x)
           (requires fun _ -> compatible pcm x x /\ pcm.refine x)
@@ -63,7 +63,7 @@ val free (#a:Type)
          (#p:pcm a)
          (r:ref a p)
          (x:erased a)
-  : SteelSel unit (pts_to r x) (fun _ -> pts_to r p.p.one)
+  : Steel unit (pts_to r x) (fun _ -> pts_to r p.p.one)
           (requires fun _ -> exclusive p x /\ p.refine p.p.one)
           (ensures fun _ _ _ -> True)
 
@@ -73,7 +73,7 @@ val split (#a:Type)
           (v:erased a)
           (v0:erased a)
           (v1:erased a)
-  : SteelSel unit (pts_to r v)
+  : Steel unit (pts_to r v)
                (fun _ -> pts_to r v0 `star` pts_to r v1)
                (requires fun _ ->
                  composable p v0 v1 /\
@@ -85,7 +85,7 @@ val gather (#a:Type)
            (r:ref a p)
            (v0:erased a)
            (v1:erased a)
-  : SteelSelT (_:unit{composable p v0 v1})
+  : SteelT (_:unit{composable p v0 v1})
            (pts_to r v0 `star` pts_to r v1)
            (fun _ -> pts_to r (op p v0 v1))
 
@@ -99,7 +99,7 @@ val witness (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelSel unit (pts_to r v)
+  : Steel unit (pts_to r v)
                (fun _ -> pts_to r v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> witnessed r fact)
@@ -108,7 +108,7 @@ val recall (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelSel (erased a)
+  : Steel (erased a)
           (pts_to r v)
           (fun v1 -> pts_to r v)
           (requires fun _ -> witnessed r fact)
@@ -120,12 +120,12 @@ val select_refine (#a:Type u#1) (#p:pcm a)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   frame_compatible p x v y})))
-   : SteelSelT (v:a{compatible p x v /\ p.refine v})
+   : SteelT (v:a{compatible p x v /\ p.refine v})
             (pts_to r x)
             (fun v -> pts_to r (f v))
 
 val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:erased a)
             (f:frame_preserving_upd p x y)
-  : SteelSelT unit
+  : SteelT unit
            (pts_to r x)
            (fun _ -> pts_to r y)

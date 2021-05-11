@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 
-module Steel.SelReference
+module Steel.Reference
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 module Mem = Steel.Memory
-module H = Steel.SelHigherReference
+module H = Steel.HigherReference
 module U = FStar.Universe
 
 #set-options "--ide_id_info_off"
@@ -262,13 +262,13 @@ let elim_vptr_lemma (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
     pts_to_witinv r full_perm
 
 let intro_vptr (#a:Type) (#opened:inames) (r:ref a) (v:erased a)
-  : SteelSelGhost unit opened (pts_to r full_perm v) (fun _ -> vptr r)
+  : SteelGhost unit opened (pts_to r full_perm v) (fun _ -> vptr r)
                        (requires fun _ -> True)
                        (ensures fun _ _ h1 -> sel r h1 == reveal v)
   = change_slprop_2 (pts_to r full_perm v) (vptr r) v (intro_vptr_lemma r v)
 
 let elim_vptr (#a:Type) (#opened:inames) (r:ref a)
-  : SteelSelGhost (erased a) opened (vptr r) (fun v -> pts_to r full_perm v)
+  : SteelGhost (erased a) opened (vptr r) (fun v -> pts_to r full_perm v)
                        (requires fun _ -> True)
                        (ensures fun h0 v _ -> reveal v == sel r h0)
   = let v = gget (vptr r) in
@@ -327,7 +327,7 @@ let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_i
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
 let ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
-  : SteelSelGhostT (ghost_ref a) u
+  : SteelGhostT (ghost_ref a) u
     emp
     (fun r -> ghost_pts_to r full_perm x)
   = H.ghost_alloc (raise_erased x)
@@ -344,7 +344,7 @@ let ghost_gather_pt (#a:Type) (#u:_)
                  (#p0 #p1:perm)
                  (#x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelSelGhost unit u
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
@@ -353,7 +353,7 @@ let ghost_gather_pt (#a:Type) (#u:_)
   = H.ghost_gather r
 
 let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
-  : SteelSelGhost unit u
+  : SteelGhost unit u
     (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
@@ -367,7 +367,7 @@ let ghost_read_pt #a #u #p #v r =
   x'
 
 let ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
     (ghost_pts_to r full_perm v)
     (fun _ -> ghost_pts_to r full_perm x)
   = H.ghost_write r (raise_erased x)
@@ -418,13 +418,13 @@ let elim_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (v:erased a) (m:mem) : Lemma
     ghost_pts_to_witinv r full_perm
 
 let intro_ghost_vptr (#a:Type) (#opened:inames) (r:ghost_ref a) (v:erased a)
-  : SteelSelGhost unit opened (ghost_pts_to r full_perm v) (fun _ -> ghost_vptr r)
+  : SteelGhost unit opened (ghost_pts_to r full_perm v) (fun _ -> ghost_vptr r)
                        (requires fun _ -> True)
                        (ensures fun _ _ h1 -> ghost_sel r h1 == reveal v)
   = change_slprop_2 (ghost_pts_to r full_perm v) (ghost_vptr r) v (intro_ghost_vptr_lemma r v)
 
 let elim_ghost_vptr (#a:Type) (#opened:inames) (r:ghost_ref a)
-  : SteelSelGhost (erased a) opened (ghost_vptr r) (fun v -> ghost_pts_to r full_perm v)
+  : SteelGhost (erased a) opened (ghost_vptr r) (fun v -> ghost_pts_to r full_perm v)
                        (requires fun _ -> True)
                        (ensures fun h0 v _ -> reveal v == ghost_sel r h0)
   = let v = gget (ghost_vptr r) in
