@@ -242,6 +242,7 @@ let destruct_and (t : term) : Tac (binder * binder) =
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
 private let __witness #a x #p _ =
   let x : squash (exists x. p x) = () in
+  assert_norm ((exists x. p x) == l_Exists p);
   x
 
 let witness (t : term) : Tac unit =
@@ -251,7 +252,7 @@ let witness (t : term) : Tac unit =
 private
 let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
                           (k : (x:t -> pred x -> squash goal)) : squash goal =
-  FStar.Squash.bind_squash h (fun (|x, pf|) -> k x pf)
+  FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
 
 (* returns witness and proof as binders *)
 let elim_exists (t : term) : Tac (binder & binder) =

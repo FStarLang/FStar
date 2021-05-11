@@ -165,6 +165,7 @@ let if_then_else (a:Type)
     (if_then_else_req s_pre req_then req_else p)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
+#push-options "--admit_smt_queries true" //if_then_else
 reflectable
 effect {
   SteelSelBase
@@ -175,7 +176,7 @@ effect {
          subcomp = subcomp;
          if_then_else = if_then_else }
 }
-
+#pop-options
 
 effect SteelSel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   SteelSelBase a false pre post req ens
