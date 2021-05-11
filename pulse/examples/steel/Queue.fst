@@ -122,9 +122,11 @@ let queue_lc
 = fragment hd lc `star` pure (queue_lc_prop tl l lc)
 
 let queue_l
-  #a hd tl l
+  (#a:_) (hd tl:Ghost.erased (t a)) (l:Ghost.erased (list a))
 =
   h_exists (queue_lc hd tl l)
+
+let queue #a hd tl = h_exists (queue_l hd tl)
 
 let new_queue
   #a v
