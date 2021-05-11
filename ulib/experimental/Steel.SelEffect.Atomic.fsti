@@ -510,6 +510,37 @@ val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x
                 (h_exists p)
                 (fun _ -> h_exists q)
 
+(* Lifting invariants to vprops *)
+
+(**
+  This operator asserts that the logical content of invariant [i] is the separation logic
+  predicate [p]
+*)
+let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
+
+(**[i : inv p] is an invariant whose content is [p] *)
+let inv (p:vprop) = i:(erased iname){reveal i >--> p}
+
+let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
+
+let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
+  Set.union (Set.singleton (reveal i)) (reveal e)
+
+val new_invariant (#opened_invariants:inames) (p:vprop)
+  : SteelSelGhostT (inv p) opened_invariants p (fun _ -> emp)
+
+let set_add i o : inames = Set.union (Set.singleton i) o
+val with_invariant (#a:Type)
+                   (#fp:vprop)
+                   (#fp':a -> vprop)
+                   (#opened_invariants:inames)
+                   (#p:vprop)
+                   (i:inv p{not (mem_inv opened_invariants i)})
+                   ($f:unit -> SteelSelAtomicT a (add_inv opened_invariants i)
+                                         (p `star` fp)
+                                         (fun x -> p `star` fp' x))
+  : SteelSelAtomicT a opened_invariants fp fp'
+
 (* Introduction and elimination principles for vprop combinators *)
 
 val intro_vrefine (#opened:inames)
