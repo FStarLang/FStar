@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 
-module Steel.SelReference
+module Steel.Reference
 
 open FStar.Ghost
 open Steel.FractionalPermission
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 
 module Mem = Steel.Memory
 
@@ -65,39 +65,39 @@ val pts_to_injective_eq
       (#p0 #p1:perm)
       (#v0 #v1: erased a)
       (r: ref a)
-  : SteelSelGhost unit opened
+  : SteelGhost unit opened
           (pts_to r p0 v0 `star` pts_to r p1 v1)
           (fun _ -> pts_to r p0 v0 `star` pts_to r p1 v0)
           (requires fun _ -> True)
           (ensures fun _ _ _ -> v0 == v1)
 
 val alloc_pt (#a:Type) (x:a)
-  : SteelSel (ref a) emp (fun r -> pts_to r full_perm x)
+  : Steel (ref a) emp (fun r -> pts_to r full_perm x)
              (requires fun _ -> True)
              (ensures fun _ r _ -> not (is_null r))
 
 val read_pt (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelSel a (pts_to r p v) (fun x -> pts_to r p x)
+  : Steel a (pts_to r p v) (fun x -> pts_to r p x)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 
 val read_refine_pt (#a:Type0) (#p:perm) (q:a -> vprop) (r:ref a)
-  : SteelSelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+  : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
 
 val write_pt (#a:Type0) (#v:erased a) (r:ref a) (x:a)
-  : SteelSelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
 
 val free_pt (#a:Type0) (#v:erased a) (r:ref a)
-  : SteelSelT unit (pts_to r full_perm v) (fun _ -> emp)
+  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
 
 val share_pt (#a:Type0) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelSelGhostT unit uses
+  : SteelGhostT unit uses
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
 val gather_pt (#a:Type0) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelSelGhostT (_:unit{v0 == v1}) uses
+  : SteelGhostT (_:unit{v0 == v1}) uses
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
@@ -107,7 +107,7 @@ val cas_pt (#t:eqtype)
         (v:Ghost.erased t)
         (v_old:t)
         (v_new:t)
-  : SteelSelAtomicT
+  : SteelAtomicT
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
         (pts_to r full_perm v)
@@ -145,22 +145,22 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
 
-val alloc (#a:Type0) (x:a) : SteelSel (ref a)
+val alloc (#a:Type0) (x:a) : Steel (ref a)
   emp (fun r -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> sel r h1 == x /\ not (is_null r))
 
-val free (#a:Type0) (r:ref a) : SteelSel unit
+val free (#a:Type0) (r:ref a) : Steel unit
   (vptr r) (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
 
-val read (#a:Type0) (r:ref a) : SteelSel a
+val read (#a:Type0) (r:ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h1)
 
-val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
+val write (#a:Type0) (r:ref a) (x:a) : Steel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> x == sel r h1)
@@ -168,7 +168,7 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
 val vptr_not_null (#opened: _)
   (#a: Type)
   (r: ref a)
-: SteelSelGhost unit opened
+: SteelGhost unit opened
     (vptr r)
     (fun _ -> vptr r)
     (fun _ -> True)
@@ -198,18 +198,18 @@ val ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm)
   : Lemma (is_witness_invariant (ghost_pts_to_sl r p))
 
 val ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
-  : SteelSelGhostT (ghost_ref a) u
+  : SteelGhostT (ghost_ref a) u
     emp
     (fun r -> ghost_pts_to r full_perm x)
 
 val ghost_free_pt (#a:Type0) (#u:_) (#v:erased a) (r:ghost_ref a)
-  : SteelSelGhostT unit u (ghost_pts_to r full_perm v) (fun _ -> emp)
+  : SteelGhostT unit u (ghost_pts_to r full_perm v) (fun _ -> emp)
 
 val ghost_share_pt (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)
                 (r:ghost_ref a)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
     (ghost_pts_to r p x)
     (fun _ -> ghost_pts_to r (half_perm p) x `star`
            ghost_pts_to r (half_perm p) x)
@@ -218,7 +218,7 @@ val ghost_gather_pt (#a:Type) (#u:_)
                  (#p0 #p1:perm)
                  (#x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelSelGhost unit u
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
@@ -226,19 +226,19 @@ val ghost_gather_pt (#a:Type) (#u:_)
     (ensures fun _ _ _ -> x0 == x1)
 
 val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
-  : SteelSelGhost unit u
+  : SteelGhost unit u
     (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
 
 val ghost_read_pt (#a:Type) (#u:_) (#p:perm) (#v:erased a) (r:ghost_ref a)
-  : SteelSelGhost (erased a) u (ghost_pts_to r p v) (fun x -> ghost_pts_to r p x)
+  : SteelGhost (erased a) u (ghost_pts_to r p v) (fun x -> ghost_pts_to r p x)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == v)
 
 val ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
     (ghost_pts_to r full_perm v)
     (fun _ -> ghost_pts_to r full_perm x)
 
@@ -268,24 +268,24 @@ let ghost_sel (#a:Type) (#p:vprop) (r:ghost_ref a)
   = h (ghost_vptr r)
 
 val ghost_alloc (#a:Type0) (#opened:inames) (x:Ghost.erased a)
-  : SteelSelGhost (ghost_ref a) opened
+  : SteelGhost (ghost_ref a) opened
   emp (fun r -> ghost_vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> ghost_sel r h1 == Ghost.reveal x)
 
-val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelSelGhost unit opened
+val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelGhost unit opened
   (ghost_vptr r) (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
 
 val ghost_read (#a:Type0) (#opened:inames) (r:ghost_ref a)
-  : SteelSelGhost (Ghost.erased a) opened
+  : SteelGhost (Ghost.erased a) opened
     (ghost_vptr r) (fun _ -> ghost_vptr r)
     (requires fun _ -> True)
     (ensures fun h0 x h1 -> h0 (ghost_vptr r) == h1 (ghost_vptr r) /\ Ghost.reveal x == h1 (ghost_vptr r))
 
 val ghost_write (#a:Type0) (#opened:inames) (r:ghost_ref a) (x:Ghost.erased a)
-  : SteelSelGhost unit opened
+  : SteelGhost unit opened
       (ghost_vptr r) (fun _ -> ghost_vptr r)
       (requires fun _ -> True)
       (ensures fun _ _ h1 -> Ghost.reveal x == h1 (ghost_vptr r))

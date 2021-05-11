@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 
-module Steel.SelHigherReference
+module Steel.HigherReference
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open FStar.Real
 open FStar.PCM
 open Steel.FractionalPermission
-module RP = Steel.SelPCMReference
+module RP = Steel.PCMReference
 
 #set-options "--ide_id_info_off"
 
@@ -140,7 +140,7 @@ let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_
   pts_to_witinv r p
 
 let intro_pts_to (p:perm) #a #uses (#v:erased a) (r:ref a)
-  : SteelSelGhost unit uses
+  : SteelGhost unit uses
                 (pts_to_raw r p v)
                 (fun _ -> pts_to r p v)
                 (requires fun _ -> perm_ok p)
@@ -177,7 +177,7 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
     return x
 
 let read_refine (#a:Type) (#p:perm) (q:a -> vprop) (r:ref a)
-  : SteelSelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+  : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
                 (fun v -> pts_to r p v `star` q v)
   = let vs:erased a = witness_exists () in
 
@@ -189,7 +189,7 @@ let read_refine (#a:Type) (#p:perm) (q:a -> vprop) (r:ref a)
     return v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
-  : SteelSelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
     let v_new : fractional a = Some (x, full_perm) in
     rewrite_slprop (pts_to r full_perm v) (RP.pts_to r v_old `star` pure (perm_ok full_perm)) (fun _ -> ());
@@ -202,7 +202,7 @@ let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
           pure_star_interp (hp_of (pts_to_raw r full_perm x)) (perm_ok full_perm) m)
 
 let free (#a:Type) (#v:erased a) (r:ref a)
-  : SteelSelT unit (pts_to r full_perm v) (fun _ -> emp)
+  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
     rewrite_slprop
       (pts_to r full_perm v)
@@ -223,7 +223,7 @@ let mem_share_atomic_raw (#a:Type) (#uses:_) (#p:perm{perm_ok p}) (r:ref a)
 #pop-options
 
 let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
-  : SteelSelGhostT unit uses
+  : SteelGhostT unit uses
                 (pts_to_raw r p v0)
                 (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
   = as_atomic_action_ghost (mem_share_atomic_raw r v0);
@@ -232,7 +232,7 @@ let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
                    (fun _ -> ())
 
 let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
-  : SteelSelGhostT unit uses
+  : SteelGhostT unit uses
                (pts_to r p v)
                (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
@@ -254,7 +254,7 @@ let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erase
     Mem.gather_action uses r v0 v1
 
 let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
-  : SteelSelGhostT (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
+  : SteelGhostT (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
                  (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
                  (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
   = rewrite_slprop (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
@@ -375,7 +375,7 @@ let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_i
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
 let ghost_alloc_aux (#a:Type) (#u:_) (x:a)
-  : SteelSelGhostT (ref a) u
+  : SteelGhostT (ref a) u
                  emp
                  (fun r -> pts_to r full_perm (Ghost.hide x))
   = let v : fractional a = Some (x, full_perm) in
@@ -423,7 +423,7 @@ let ghost_read #a #u #p #v r
     x
 
 let ghost_write_aux (#a:Type) (#u:_) (#v:erased a) (r:ref a) (x:a)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (Ghost.hide x))
   = let v_old : erased (fractional a) = Ghost.hide (Some (reveal v, full_perm)) in

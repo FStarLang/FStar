@@ -15,7 +15,7 @@
 *)
 
 
-module Steel.SelPCMReference
+module Steel.PCMReference
 
 module Mem = Steel.Memory
 
@@ -25,7 +25,7 @@ let write r v0 v1 = as_action (upd_action FStar.Set.empty r v0 v1)
 val alloc' (#a:Type)
            (#pcm:pcm a)
            (x:a)
-  : SteelSel (ref a pcm)
+  : Steel (ref a pcm)
           (to_vprop Mem.emp)
           (fun r -> pts_to r x)
           (requires fun _ -> compatible pcm x x /\ pcm.refine x)
@@ -43,7 +43,7 @@ val split' (#a:Type)
           (r:ref a p)
           (v0:erased a)
           (v1:erased a{composable p v0 v1})
-  : SteelSelT unit (pts_to r (op p v0 v1))
+  : SteelT unit (pts_to r (op p v0 v1))
                 (fun _ -> to_vprop Mem.(pts_to r v0 `star` pts_to r v1))
 
 let split' #a #p r v0 v1 = as_action (split_action FStar.Set.empty r v0 v1)
@@ -61,7 +61,7 @@ val gather' (#a:Type)
            (r:ref a p)
            (v0:erased a)
            (v1:erased a)
-  : SteelSelT (_:unit{composable p v0 v1})
+  : SteelT (_:unit{composable p v0 v1})
            (to_vprop Mem.(pts_to r v0 `star` pts_to r v1))
            (fun _ -> pts_to r (op p v0 v1))
 
@@ -78,7 +78,7 @@ val witness' (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelSelT unit (pts_to r v)
+  : SteelT unit (pts_to r v)
                 (fun _ -> to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
 
 let witness' r fact v _ = as_action (Steel.Memory.witness FStar.Set.empty r fact v ())
@@ -93,7 +93,7 @@ let witness r fact v s =
 val recall' (#a:Type u#1) (#pcm:pcm a) (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelSelT (v1:erased a{compatible pcm v v1})
+  : SteelT (v1:erased a{compatible pcm v v1})
            (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
            (fun v1 -> to_vprop Mem.(pts_to r v `star` pure (fact v1)))
 

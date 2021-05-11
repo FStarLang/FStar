@@ -1,16 +1,17 @@
-module Steel.SelMonotonicHigherReference
+module Steel.MonotonicHigherReference
+
 open FStar.Ghost
 open FStar.PCM
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelPCMReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.PCMReference
 open Steel.FractionalPermission
 
 module Preorder = FStar.Preorder
 module Q = Steel.Preorder
 module M = Steel.Memory
-module PR = Steel.SelPCMReference
+module PR = Steel.PCMReference
 open FStar.Real
 
 #set-options "--ide_id_info_off"
@@ -227,7 +228,7 @@ let intro_pure #a #p #f
                  (r:ref a p)
                  (v:a)
                  (h:history a p { history_val h v f })
-  : SteelSelT unit
+  : SteelT unit
            (PR.pts_to r h)
            (fun _ -> pts_to_body r f v h)
   = rewrite_slprop _ _ (fun m ->
@@ -238,7 +239,7 @@ let intro_pure_full #a #p #f
                  (r:ref a p)
                  (v:a)
                  (h:history a p { history_val h v f })
-  : SteelSelT unit
+  : SteelT unit
            (PR.pts_to r h)
            (fun _ -> pts_to r f v)
   = intro_pure #a #p #f r v h;
@@ -256,7 +257,7 @@ let extract_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelSelGhostT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
@@ -274,7 +275,7 @@ let elim_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelSelGhostT (_:unit{history_val h v f})
+  : SteelGhostT (_:unit{history_val h v f})
            uses
            (pts_to_body r f v h)
            (fun _ ->  PR.pts_to r h)
@@ -282,18 +283,18 @@ let elim_pure #a #uses #p #f
     drop (pure (history_val h v f))
 
 let rewrite_erased #a (p:erased a -> vprop) (x:erased a) (y:a)
-  : SteelSel unit (p x) (fun _ -> p (Ghost.hide y))
+  : Steel unit (p x) (fun _ -> p (Ghost.hide y))
           (requires fun _ -> reveal x == y)
           (ensures fun _ _ _ -> True)
   = rewrite_slprop (p x) (p (Ghost.hide y)) (fun _ -> ())
 
 let rewrite_reveal_hide #a (x:a) (p:a -> vprop) ()
-  : SteelSelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
+  : SteelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
   = rewrite_slprop (p (Ghost.reveal (Ghost.hide x))) (p x) (fun _ -> ())
 
 let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> vprop)
                 (r:ref a p)
-  : SteelSelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
+  : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
              (fun v -> pts_to r q v `star` f v)
   = let v = witness_exists () in
     rewrite_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
@@ -321,7 +322,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> vprop)
 
 let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a)
-  : SteelSel unit (pts_to r full_perm v)
+  : Steel unit (pts_to r full_perm v)
                (fun v -> pts_to r full_perm x)
                (requires fun _ -> p v x /\ True)
                (ensures fun _ _ _ -> True)
@@ -360,7 +361,7 @@ let witness_thunk (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (v:Ghost.erased a)
                   (_:fact_valid_compat fact v)
                   (_:unit)
-  : SteelSel unit (PR.pts_to r v)
+  : Steel unit (PR.pts_to r v)
                (fun _ -> PR.pts_to r v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> M.witnessed r fact)
@@ -371,7 +372,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
             (fact:stable_property p)
             (v:erased a)
             (_:squash (fact v))
-  : SteelSel unit (pts_to r q v)
+  : Steel unit (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> witnessed r fact)
@@ -391,7 +392,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
 
 let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:property a)
            (r:ref a p) (v:erased a)
-  : SteelSel unit (pts_to r q v)
+  : Steel unit (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> witnessed r fact)
                (ensures fun _ _ _ -> fact v)
