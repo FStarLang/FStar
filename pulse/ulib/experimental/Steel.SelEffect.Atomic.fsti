@@ -209,6 +209,7 @@ let if_then_else (a:Type)
        (if_then_else_req s_pre req_then req_else p)
        (if_then_else_ens s_pre s_post ens_then ens_else p)
 
+#push-options "--admit_smt_queries true" //if_then_else
 total
 reflectable
 effect {
@@ -227,9 +228,11 @@ effect {
          if_then_else = if_then_else }
 }
 
+
 total
 reflectable
 new_effect SteelSelAtomicBase = SteelSelAGCommon
+#pop-options
 
 effect SteelSelAtomic (a:Type)
   (opened:inames)
@@ -281,11 +284,12 @@ effect SteelSelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
   SteelSelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*** SteelGhost effect ***)
-
+#push-options "--admit_smt_queries true" //if_then_else
 [@@ erasable]
 total
 reflectable
 new_effect SteelSelGhostBase = SteelSelAGCommon
+#pop-options
 
 effect SteelSelGhost (a:Type)
   (opened:inames)
