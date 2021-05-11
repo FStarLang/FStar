@@ -1,4 +1,4 @@
-module Steel.SelEffect.Common
+module Steel.Effect.Common
 
 open Steel.Memory
 module Mem = Steel.Memory

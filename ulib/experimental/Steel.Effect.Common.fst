@@ -1,4 +1,4 @@
-module Steel.SelEffect.Common
+module Steel.Effect.Common
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
