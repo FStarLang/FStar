@@ -1,14 +1,14 @@
 module CQueue.LList
 include CQueue.Cell
 open Steel.Memory
-open Steel.Effect
-open Steel.Effect.Atomic
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 open Steel.FractionalPermission
-open Steel.Reference
+open Steel.SelReference
 
 (* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content)
 
-   See CQueue.c: cllist_* 
+   See CQueue.c: cllist_*
 *)
 
 val cllist_ptrvalue (a: Type0) : Tot Type0 (* "cllist *" seen as a rvalue *)
@@ -41,15 +41,15 @@ type vllist (a: Type0) = {
   vllist_tail : ref (ccell_ptrvalue a);
 }
 
-[@__reduce__] // to avoid manual unfoldings through change_slprop 
-let cllist (#a: Type0) (c: cllist_lvalue a) (p: perm) (v: Ghost.erased (vllist a)) : Tot slprop =
+[@__reduce__] // to avoid manual unfoldings through change_slprop
+let cllist (#a: Type0) (c: cllist_lvalue a) (p: perm) (v: Ghost.erased (vllist a)) : Tot vprop =
   pts_to (cllist_head c) p v.vllist_head `star` pts_to (cllist_tail c) p v.vllist_tail
 
 val alloc_cllist
   (#a: Type0)
   (head: ccell_ptrvalue a)
   (tail: ref (ccell_ptrvalue a))
-: Steel (cllist_lvalue a & Ghost.erased (vllist a))
+: SteelSel (cllist_lvalue a & Ghost.erased (vllist a))
     emp
     (fun res -> cllist (fst res) full_perm (snd res))
     (requires (fun _ -> True))

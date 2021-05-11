@@ -22,19 +22,9 @@ let cllist_tail #a c =
 let alloc_cllist
   #a head tail
 =
-  let rhead = alloc head in
-  change_slprop (pts_to rhead full_perm head `star` emp) (pts_to rhead full_perm head `star` pure (rhead =!= null)) (fun m ->
-    pts_to_not_null rhead full_perm head m;
-    pure_star_interp (pts_to rhead full_perm head) (rhead =!= null) m
-  );
-  elim_pure (rhead =!= null);
-  let rtail = alloc tail in
-  change_slprop (pts_to rtail full_perm tail `star` emp) (pts_to rtail full_perm tail `star` pure (rtail =!= null)) (fun m ->
-    pts_to_not_null rtail full_perm tail m;
-    pure_star_interp (pts_to rtail full_perm tail) (rtail =!= null) m
-  );
-  elim_pure (rtail =!= null);  
+  let rhead = alloc_pt head in
+  let rtail = alloc_pt tail in
   let gres = Ghost.hide ({ vllist_head = head; vllist_tail = tail }) in
   let res = ({ head = rhead; tail = rtail; all_or_none_null = (); }, gres) in
-  change_slprop (pts_to rhead full_perm head `star` pts_to rtail full_perm tail) (cllist (fst res) full_perm (snd res)) (fun _ -> ());
+  rewrite_slprop (pts_to rhead full_perm head `star` pts_to rtail full_perm tail) (cllist (fst res) full_perm (snd res)) (fun _ -> ());
   return res

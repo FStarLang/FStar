@@ -442,6 +442,11 @@ val sladmit (#a:Type)
             (_:unit)
   : SteelSelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
+val slassert (#opened_invariants:_) (p:vprop)
+  : SteelSelGhost unit opened_invariants p (fun _ -> p)
+                  (requires fun _ -> True)
+                  (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
+
 val drop (#opened:inames) (p:vprop) : SteelSelGhostT unit opened p (fun _ -> emp)
 
 val reveal_star (#opened:inames) (p1 p2:vprop)

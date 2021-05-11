@@ -464,6 +464,17 @@ let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
 let sladmit _ = SteelSelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
+let slassert0 (#opened:inames) (p:vprop) : repr unit
+  false opened Unobservable p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1))
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0
+
+let slassert p = SteelSelGhost?.reflect (slassert0 p)
+
 let drop p = rewrite_slprop p emp
   (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
 
