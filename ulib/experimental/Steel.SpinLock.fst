@@ -53,15 +53,12 @@ let intro_lockinv_locked #uses p r =
     (fun b -> pts_to r full_perm (Ghost.hide b) `star`
           (if b then emp else p))
 
-val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
-let new_inv p = new_invariant Set.empty p
-
 let new_lock (p:slprop)
   : SteelT (lock p) p (fun _ -> emp) =
   let r = alloc available in
   intro_lockinv_available p r;
-  let i:inv (lockinv p r) = new_inv (lockinv p r) in
-  (r, i)
+  let i:inv (lockinv p r) = new_invariant (lockinv p r) in
+  return (r, i)
 
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomicT bool u

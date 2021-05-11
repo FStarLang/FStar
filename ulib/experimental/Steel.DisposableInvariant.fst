@@ -32,7 +32,7 @@ let new_inv #u p =
   let r = ghost_alloc (Ghost.hide true) in
   ghost_share r;
   A.intro_exists true (conditional_inv r p);
-  let i = A.new_invariant u (ex_conditional_inv r p) in
+  let i = A.new_invariant (ex_conditional_inv r p) in
   rewrite_context ();  //TODO: this is rewriting gref (hide (| r, x |)) to r, revisit
   (| r, i |)
 
