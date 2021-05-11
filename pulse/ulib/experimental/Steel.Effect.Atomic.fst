@@ -167,7 +167,7 @@ let lift_atomic_steel a o #framed #pre #post #req #ens f = f
 let as_atomic_action f = SteelAtomic?.reflect f
 let as_atomic_action_ghost f = SteelGhost?.reflect f
 
-let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
+let new_invariant #i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
 
 (*
  * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
