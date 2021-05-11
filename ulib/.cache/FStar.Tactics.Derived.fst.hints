@@ -1,5 +1,5 @@
 [
-  "\n»¢üß÷¨PÔÛ˛V2\u000fÄË",
+  "£\u007fÇV∂∑˝ \u0014òçx\u0011Ù‰¢",
   [
     [
       "FStar.Tactics.Derived.run_tactic",
@@ -400,7 +400,7 @@
         "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "b81ed78765657cd901e88b82ce485a84"
+      "cd83b08db12af90fefba75631922916d"
     ],
     [
       "FStar.Tactics.Derived.tlabel'",
@@ -415,7 +415,7 @@
         "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "d98536bc78a7bfc067ffb47557036df6"
+      "61b995fb192ae372125e20288b0a2775"
     ],
     [
       "FStar.Tactics.Derived.extract_nth",
@@ -448,7 +448,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a323f6e9d363d50666536a9c4576b3f4"
+      "8e4942599164027d7175164dbb13cffc"
     ],
     [
       "FStar.Tactics.Derived.bump_nth",
@@ -477,7 +477,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "7d473f27491a86c4de2cd4a62a14cea3"
+      "8d7571532202a37a50d9b33ef01c908b"
     ],
     [
       "FStar.Tactics.Derived.visit_tm",
@@ -517,7 +517,7 @@
         "typing_FStar.Reflection.Builtins.inspect_ln"
       ],
       0,
-      "85c6619945d04105325fdc538d82a633"
+      "b755387c2e173ad123ba10975bd3c333"
     ],
     [
       "FStar.Tactics.Derived.visit_tm",
@@ -525,24 +525,36 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Pat_Cons",
+        "disc_equation_FStar.Reflection.Data.Pat_Constant",
+        "disc_equation_FStar.Reflection.Data.Pat_Dot_Term",
+        "disc_equation_FStar.Reflection.Data.Pat_Var",
+        "disc_equation_FStar.Reflection.Data.Pat_Wild",
+        "fuel_guarded_inversion_FStar.Reflection.Data.pattern",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "31e52d4a494919cc7e203bf373d3c3f1"
+    ],
+    [
+      "FStar.Tactics.Derived.visit_tm",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Reflection.Data.C_Eff",
         "disc_equation_FStar.Reflection.Data.C_GTotal",
         "disc_equation_FStar.Reflection.Data.C_Lemma",
         "disc_equation_FStar.Reflection.Data.C_Total",
         "fuel_guarded_inversion_FStar.Reflection.Data.comp_view",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_4d98abe58d43816620c85301ff7af89d",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "2e2d6d0ad7c9df7769b4d3aa85464180"
+      "f0f3a39c4ca29e8212ff9b5997160793"
     ],
     [
       "FStar.Tactics.Derived.destruct_list",
@@ -556,7 +568,7 @@
         "typing_FStar.Reflection.Types.name"
       ],
       0,
-      "e78a6beed4457f5d5408d1547a325b25"
+      "7aacc957888c613ddcc3174068dda472"
     ],
     [
       "FStar.Tactics.Derived.get_match_body",
@@ -582,7 +594,7 @@
         "typing_FStar.Reflection.Formula.unsquash"
       ],
       0,
-      "a9b995438522ab94159fecb8966b5a55"
+      "a1034d34edffcb2ff1eb822a6545c68c"
     ],
     [
       "FStar.Tactics.Derived.last",
@@ -594,7 +606,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "7ddb74643e0ce8eb51a02daa90deba96"
+      "f905835c1fc676dc5df2f3d6dff1c132"
     ],
     [
       "FStar.Tactics.Derived.nth_binder",
@@ -626,7 +638,7 @@
         "typing_FStar.List.Tot.Base.nth", "unit_typing"
       ],
       0,
-      "9431fb84c8afb546ea26067d28266790"
+      "c981aa53cae05a820f94083ac1a69a02"
     ],
     [
       "FStar.Tactics.Derived.mk_abs",
@@ -639,7 +651,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "9b4804e54262b422ea9911c460079ac7"
+      "90e76652da3b96abcfebdb66a79cbdb7"
     ]
   ]
 ]
