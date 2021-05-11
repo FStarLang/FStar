@@ -5294,20 +5294,23 @@ and (solve_t_flex_rigid_eq :
                            match (lhs_binders, rhs_args) with
                            | ([], uu___7) -> (lhs_binders, rhs_args)
                            | (uu___7, []) -> (lhs_binders, rhs_args)
-                           | (b::lhs_tl, (t, uu___7)::rhs_tl) ->
-                               let uu___8 =
-                                 let uu___9 = FStar_Syntax_Subst.compress t in
-                                 uu___9.FStar_Syntax_Syntax.n in
-                               (match uu___8 with
+                           | (b::lhs_tl, (t, aq)::rhs_tl) ->
+                               let uu___7 =
+                                 let uu___8 = FStar_Syntax_Subst.compress t in
+                                 uu___8.FStar_Syntax_Syntax.n in
+                               (match uu___7 with
                                 | FStar_Syntax_Syntax.Tm_name x when
-                                    (FStar_Syntax_Syntax.bv_eq
-                                       b.FStar_Syntax_Syntax.binder_bv x)
+                                    ((FStar_Syntax_Syntax.bv_eq
+                                        b.FStar_Syntax_Syntax.binder_bv x)
+                                       &&
+                                       (b.FStar_Syntax_Syntax.binder_qual =
+                                          aq))
                                       &&
                                       (bv_not_free_in_args
                                          b.FStar_Syntax_Syntax.binder_bv
                                          rhs_tl)
                                     -> remove_matching_prefix lhs_tl rhs_tl
-                                | uu___9 -> (lhs_binders, rhs_args)) in
+                                | uu___8 -> (lhs_binders, rhs_args)) in
                          let uu___7 = FStar_Syntax_Util.head_and_args rhs1 in
                          match uu___7 with
                          | (rhs_hd, rhs_args) ->
