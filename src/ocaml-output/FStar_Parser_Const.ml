@@ -292,6 +292,8 @@ let (ite_soundness_forall_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "ite_soundness_forall"]
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
+let (layered_effects_ite_soundness_attr : FStar_Ident.lident) =
+  psconst "ite_soundness_by"
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero in
   let gen uu___ = FStar_Util.incr x; FStar_Util.read x in

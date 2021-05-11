@@ -2147,68 +2147,152 @@ let (tc_layered_eff_decl :
                                                         "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
                                                         uu___19 uu___20
                                                     else ());
-                                                   (let env2 =
-                                                      let uu___18 =
-                                                        let uu___19 =
-                                                          let uu___20 =
-                                                            FStar_All.pipe_right
-                                                              p_t
-                                                              FStar_Syntax_Util.b2t in
-                                                          FStar_Syntax_Util.mk_squash
-                                                            FStar_Syntax_Syntax.U_zero
-                                                            uu___20 in
-                                                        FStar_Syntax_Syntax.new_bv
-                                                          FStar_Pervasives_Native.None
-                                                          uu___19 in
-                                                      FStar_TypeChecker_Env.push_bv
-                                                        env1 uu___18 in
-                                                    let uu___18 =
-                                                      FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
-                                                        env2
-                                                        tm_subcomp_ascribed_f in
-                                                    match uu___18 with
-                                                    | (uu___19, uu___20, g_f)
-                                                        ->
-                                                        FStar_TypeChecker_Rel.force_trivial_guard
-                                                          env2 g_f);
-                                                   (let not_p =
-                                                      let uu___18 =
-                                                        let uu___19 =
-                                                          FStar_Syntax_Syntax.lid_as_fv
-                                                            FStar_Parser_Const.not_lid
-                                                            FStar_Syntax_Syntax.delta_constant
-                                                            FStar_Pervasives_Native.None in
-                                                        FStar_All.pipe_right
-                                                          uu___19
-                                                          FStar_Syntax_Syntax.fv_to_tm in
-                                                      let uu___19 =
-                                                        let uu___20 =
-                                                          let uu___21 =
-                                                            FStar_All.pipe_right
-                                                              p_t
-                                                              FStar_Syntax_Util.b2t in
-                                                          FStar_All.pipe_right
-                                                            uu___21
-                                                            FStar_Syntax_Syntax.as_arg in
-                                                        [uu___20] in
-                                                      FStar_Syntax_Syntax.mk_Tm_app
-                                                        uu___18 uu___19 r in
-                                                    let env2 =
-                                                      let uu___18 =
-                                                        FStar_Syntax_Syntax.new_bv
-                                                          FStar_Pervasives_Native.None
-                                                          not_p in
-                                                      FStar_TypeChecker_Env.push_bv
-                                                        env1 uu___18 in
-                                                    let uu___18 =
-                                                      FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
-                                                        env2
-                                                        tm_subcomp_ascribed_g in
-                                                    match uu___18 with
-                                                    | (uu___19, uu___20, g_g)
-                                                        ->
-                                                        FStar_TypeChecker_Rel.force_trivial_guard
-                                                          env2 g_g)))))));
+                                                   (let discharge_fml env2
+                                                      fml =
+                                                      let tac_opt =
+                                                        let uu___18 =
+                                                          FStar_Syntax_Util.get_attribute
+                                                            FStar_Parser_Const.layered_effects_ite_soundness_attr
+                                                            attrs in
+                                                        match uu___18 with
+                                                        | FStar_Pervasives_Native.None
+                                                            ->
+                                                            FStar_Pervasives_Native.None
+                                                        | FStar_Pervasives_Native.Some
+                                                            ((t, uu___19)::[])
+                                                            ->
+                                                            FStar_Pervasives_Native.Some
+                                                              t in
+                                                      match tac_opt with
+                                                      | FStar_Pervasives_Native.None
+                                                          ->
+                                                          let uu___18 =
+                                                            FStar_TypeChecker_Env.guard_of_guard_formula
+                                                              (FStar_TypeChecker_Common.NonTrivial
+                                                                 fml) in
+                                                          FStar_TypeChecker_Rel.force_trivial_guard
+                                                            env2 uu___18
+                                                      | FStar_Pervasives_Native.Some
+                                                          t ->
+                                                          let uu___18 =
+                                                            FStar_TypeChecker_TcTerm.tc_tactic
+                                                              FStar_Syntax_Syntax.t_unit
+                                                              FStar_Syntax_Syntax.t_unit
+                                                              env2 t in
+                                                          (match uu___18 with
+                                                           | (t1, uu___19,
+                                                              g_tac) ->
+                                                               let fml1 =
+                                                                 let uu___20
+                                                                   =
+                                                                   FStar_Syntax_Util.mk_squash
+                                                                    FStar_Syntax_Syntax.U_zero
+                                                                    fml in
+                                                                 FStar_TypeChecker_Common.mk_by_tactic
+                                                                   t1 uu___20 in
+                                                               (FStar_TypeChecker_Rel.force_trivial_guard
+                                                                  env2 g_tac;
+                                                                (let uu___21
+                                                                   =
+                                                                   FStar_TypeChecker_Env.guard_of_guard_formula
+                                                                    (FStar_TypeChecker_Common.NonTrivial
+                                                                    fml1) in
+                                                                 FStar_TypeChecker_Rel.force_trivial_guard
+                                                                   env2
+                                                                   uu___21))) in
+                                                    (let env2 =
+                                                       let uu___18 =
+                                                         let uu___19 =
+                                                           let uu___20 =
+                                                             FStar_All.pipe_right
+                                                               p_t
+                                                               FStar_Syntax_Util.b2t in
+                                                           FStar_Syntax_Util.mk_squash
+                                                             FStar_Syntax_Syntax.U_zero
+                                                             uu___20 in
+                                                         FStar_Syntax_Syntax.new_bv
+                                                           FStar_Pervasives_Native.None
+                                                           uu___19 in
+                                                       FStar_TypeChecker_Env.push_bv
+                                                         env1 uu___18 in
+                                                     let uu___18 =
+                                                       FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
+                                                         env2
+                                                         tm_subcomp_ascribed_f in
+                                                     match uu___18 with
+                                                     | (uu___19, uu___20,
+                                                        g_f) ->
+                                                         let uu___21 =
+                                                           ((let uu___22 =
+                                                               g_f in
+                                                             {
+                                                               FStar_TypeChecker_Common.guard_f
+                                                                 =
+                                                                 FStar_TypeChecker_Common.Trivial;
+                                                               FStar_TypeChecker_Common.deferred_to_tac
+                                                                 =
+                                                                 (uu___22.FStar_TypeChecker_Common.deferred_to_tac);
+                                                               FStar_TypeChecker_Common.deferred
+                                                                 =
+                                                                 (uu___22.FStar_TypeChecker_Common.deferred);
+                                                               FStar_TypeChecker_Common.univ_ineqs
+                                                                 =
+                                                                 (uu___22.FStar_TypeChecker_Common.univ_ineqs);
+                                                               FStar_TypeChecker_Common.implicits
+                                                                 =
+                                                                 (uu___22.FStar_TypeChecker_Common.implicits)
+                                                             }),
+                                                             (match g_f.FStar_TypeChecker_Common.guard_f
+                                                              with
+                                                              | FStar_TypeChecker_Common.NonTrivial
+                                                                  f -> f
+                                                              | FStar_TypeChecker_Common.Trivial
+                                                                  ->
+                                                                  FStar_Syntax_Util.t_true)) in
+                                                         (match uu___21 with
+                                                          | (g_f1, fml) ->
+                                                              (FStar_TypeChecker_Rel.force_trivial_guard
+                                                                 env2 g_f1;
+                                                               discharge_fml
+                                                                 env2 fml)));
+                                                    (let not_p =
+                                                       let uu___18 =
+                                                         let uu___19 =
+                                                           FStar_Syntax_Syntax.lid_as_fv
+                                                             FStar_Parser_Const.not_lid
+                                                             FStar_Syntax_Syntax.delta_constant
+                                                             FStar_Pervasives_Native.None in
+                                                         FStar_All.pipe_right
+                                                           uu___19
+                                                           FStar_Syntax_Syntax.fv_to_tm in
+                                                       let uu___19 =
+                                                         let uu___20 =
+                                                           let uu___21 =
+                                                             FStar_All.pipe_right
+                                                               p_t
+                                                               FStar_Syntax_Util.b2t in
+                                                           FStar_All.pipe_right
+                                                             uu___21
+                                                             FStar_Syntax_Syntax.as_arg in
+                                                         [uu___20] in
+                                                       FStar_Syntax_Syntax.mk_Tm_app
+                                                         uu___18 uu___19 r in
+                                                     let env2 =
+                                                       let uu___18 =
+                                                         FStar_Syntax_Syntax.new_bv
+                                                           FStar_Pervasives_Native.None
+                                                           not_p in
+                                                       FStar_TypeChecker_Env.push_bv
+                                                         env1 uu___18 in
+                                                     let uu___18 =
+                                                       FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
+                                                         env2
+                                                         tm_subcomp_ascribed_g in
+                                                     match uu___18 with
+                                                     | (uu___19, uu___20,
+                                                        g_g) ->
+                                                         FStar_TypeChecker_Rel.force_trivial_guard
+                                                           env2 g_g))))))));
                      (let tc_action env act =
                         let env01 = env in
                         let r =
