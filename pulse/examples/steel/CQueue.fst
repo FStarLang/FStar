@@ -74,12 +74,12 @@ let rec next_last_correct
 
 // AF: This is not true in general, but true in this module since all vprops are direct slprop lifts.
 // TODO: Fix proofs, and remove this axiom
-let slprop_extensionality (p q:vprop)
-  : Lemma
-    (requires p `equiv` q)
-    (ensures p == q)
-    [SMTPat (p `equiv` q)]
-= admit()
+// let slprop_extensionality (p q:vprop)
+//   : Lemma
+//     (requires p `equiv` q)
+//     (ensures p == q)
+//     [SMTPat (p `equiv` q)]
+// = admit()
 //  slprop_extensionality p q
 
 let rec llist_fragment_append
@@ -115,9 +115,55 @@ let rec llist_fragment_append
         ) `star`
         pure (chd == ptr)
     )) by canon ();
-    llist_fragment_append (ccell_next chd) vhd.vcell_next tl l2
-
-(* I <3 equiv extensionality *)
+    llist_fragment_append (ccell_next chd) vhd.vcell_next tl l2;
+    assert ((
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        (
+          llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+          llist_fragment (fst (next_last (ccell_next chd) vhd.vcell_next tl)) (snd (next_last (ccell_next chd) vhd.vcell_next tl)) l2
+        ) `star`
+        pure (chd == ptr)
+    ) `equiv` (
+        (
+          llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+          llist_fragment (fst (next_last (ccell_next chd) vhd.vcell_next tl)) (snd (next_last (ccell_next chd) vhd.vcell_next tl)) l2
+        ) `star`
+        (
+          pts_to rptr full_perm ptr `star`
+          pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+          pure (chd == ptr)
+        )
+    )) by canon ();
+    star_congruence
+     (
+        llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+        llist_fragment (fst (next_last (ccell_next chd) vhd.vcell_next tl)) (snd (next_last (ccell_next chd) vhd.vcell_next tl)) l2
+      )
+      (
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        pure (chd == ptr)
+      )
+      (llist_fragment (ccell_next chd) vhd.vcell_next (tl `L.append` l2))
+      (
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        pure (chd == ptr)
+      );
+     assert ((
+        llist_fragment (ccell_next chd) vhd.vcell_next (tl `L.append` l2) `star`
+        (
+          pts_to rptr full_perm ptr `star`
+          pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+          pure (chd == ptr)
+        )
+    ) `equiv` (
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        llist_fragment (ccell_next chd) vhd.vcell_next (tl `L.append` l2) `star`
+        pure (chd == ptr)
+    )) by canon ()
 
 (* I need to account for changing the next pointer of the last cell *)
 
@@ -326,6 +372,11 @@ let create_queue
   pack_queue1 (fst res) (snd res) (cllist_tail cl) (cllist_head cl) (cllist_head cl) (snd ll).vllist_head;
   res
 
+private
+let abcd_abc_d (a b c d : vprop)
+  : Lemma (((a `star` b `star` c) `star` d) `equiv` (a `star` b `star` c `star` d))
+  = assert (((a `star` b `star` c) `star` d) `equiv` (a `star` b `star` c `star` d)) by canon ()
+
 let emp_equiv_pure
   (p: prop)
 : Lemma
@@ -338,7 +389,7 @@ let emp_equiv_pure
 
 #restart-solver
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 40"
 
 let enqueue
   #a x l w
@@ -372,7 +423,7 @@ let enqueue
   get_data_update_next_last l.cells c;
   L.lemma_append_last (update_next_last l.cells c) [(c, Ghost.reveal vc)];
   next_last_correct l.vllist.vllist_tail l.vllist.vllist_head res.cells;
-  change_equal_slprop
+  rewrite_slprop
     (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to tail full_perm c `star`
       pts_to (ccell_data c) full_perm w)
@@ -383,9 +434,22 @@ let enqueue
       | [] ->
         assert (
           (emp `star` pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w) `equiv`
-          (pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp `star` emp)
+          ((pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp) `star` emp)
         ) by canon ();
-        emp_equiv_pure (c == res.vllist.vllist_head)
+        emp_equiv_pure (c == res.vllist.vllist_head);
+        star_congruence
+          (pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp)
+          emp
+          (pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp)
+          (pure (c == res.vllist.vllist_head));
+       abcd_abc_d (pts_to tail full_perm c) (pts_to (ccell_data c) full_perm w) emp
+         (pure (c == res.vllist.vllist_head));
+       assert (
+         (pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp) `star` pure (c == res.vllist.vllist_head)
+         `equiv`
+         (pts_to tail full_perm c `star` pts_to (ccell_data c) full_perm w `star` emp `star` pure (c == res.vllist.vllist_head))
+       )
+
       | _ ->
         next_last_update_next_last (cllist_head x) l.vllist.vllist_head l.cells c;
         emp_equiv_pure (c == (c <: ccell_ptrvalue a));
@@ -401,7 +465,48 @@ let enqueue
               emp `star`
               emp
             )
-        )) by canon ()
+        )) by canon ();
+        admit()
+        (* AF: TODO: I added the following, but it is not yet sufficient *)
+
+       //  assert (
+       //    (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       //      (pts_to tail full_perm c `star`
+       //        pts_to (ccell_data c) full_perm w `star`
+       //        emp `star`
+       //        emp
+       //      ))
+       //     `equiv`
+       //    ((llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       //      pts_to tail full_perm c `star`
+       //        pts_to (ccell_data c) full_perm w `star`
+       //        emp
+       //    ) `star` emp)
+       //  ) by canon ();
+       // star_congruence
+       //   (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       //    pts_to tail full_perm c `star`
+       //    pts_to (ccell_data c) full_perm w `star`
+       //    emp)
+       //   emp
+       //   (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       //    pts_to tail full_perm c `star`
+       //    pts_to (ccell_data c) full_perm w `star`
+       //    emp)
+       //   (pure (c == (c <: ccell_ptrvalue a)));
+       //  assert ((llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       //      pts_to tail full_perm c `star`
+       //        pts_to (ccell_data c) full_perm w `star`
+       //        emp
+       //    ) `star` pure (c == (c <: ccell_ptrvalue a))
+       //    `equiv`
+       //  (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star` (
+       //        pts_to tail full_perm c `star`
+       //        pts_to (ccell_data c) full_perm w `star`
+       //        emp `star`
+       //        pure (c == (c <: ccell_ptrvalue a))))
+       //  ) by canon ()
+
     );
   pack_queue1 x res (cllist_tail x) (ccell_next c) (ccell_next c) (ccell_ptrvalue_null a);
   res
@@ -529,8 +634,16 @@ let queue_equiv_1
 =
   match l.cells with
   | [] ->
-    reveal_equiv (pure (queue_prop x l)) (pure (queue_prop0 x l));
-    pure_equiv (queue_prop x l) (queue_prop0 x l)
+    pure_equiv (queue_prop x l) (queue_prop0 x l);
+    star_congruence
+      (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
+      (pure (queue_prop0 x l))
+      (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
+      (pure (queue_prop x l))
 
   | (chd, vhd) :: tl ->
     pure_equiv (chd == l.vllist.vllist_head) (chd == l.vllist.vllist_head /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false);
@@ -568,7 +681,11 @@ let queue_equiv_1
       )
     )) by canon ();
     pure_and_equiv (queue_prop x l) (ccell_ptrvalue_is_null l.vllist.vllist_head == false);
-    pure_equiv (queue_prop0 x l) (queue_prop x l /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false)
+    pure_equiv (queue_prop0 x l) (queue_prop x l /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false);
+    admit()
+    (* AF: TODO: Fix *)
+
+
 
 let rec llist_fragment_equiv
   (#a: Type)
@@ -618,7 +735,9 @@ let rec llist_fragment_equiv
         pts_to (ccell_next chd) full_perm vhd.vcell_next `star`
         llist_fragment' vhd.vcell_next tl `star`
         pure (chd == hd))
-    )) by canon ()
+    )) by canon ();
+    admit()
+    (* AF: TODO: Fix *)
 
 let queue_equiv_2
   (#a: Type)
@@ -655,7 +774,9 @@ let queue_equiv_2
       pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
       pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment' l.vllist.vllist_head l.cells
-    )) by canon ()
+    )) by canon ();
+    admit()
+    (* TODO: Fix *)
 
 let queue_equiv
   (#a: Type)
@@ -678,7 +799,9 @@ let queue_equiv
   queue_equiv_1 x l;
   queue_prop0_equiv x l;
   reveal_equiv (pure (queue_prop0 x l)) (pure (queue_prop' x l));
-  pure_equiv (queue_prop0 x l) (queue_prop' x l)
+  pure_equiv (queue_prop0 x l) (queue_prop' x l);
+  admit()
+  (* TODO: Fix *)
 
 let peek_pure
   (#uses:_) (p:prop)
@@ -765,6 +888,7 @@ let dequeue
       (llist_fragment' vhd.vcell_next tl)
       (llist_fragment' vhd.vcell_next tl `star` pure (Nil? tl == true))
       (fun _ ->
+        admit();
         match Ghost.reveal tl with
         | [] ->
           assert (llist_fragment' vhd.vcell_next tl `equiv` (llist_fragment' vhd.vcell_next tl `star` emp)) by canon ();

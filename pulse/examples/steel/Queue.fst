@@ -1,5 +1,7 @@
 module Queue
 
+#set-options "--ide_id_info_off"
+
 let pure_upd_next
   (#a: Type0)
   (c: cell a)
@@ -25,15 +27,6 @@ let rec fragment
   match Ghost.reveal l with
   | [] -> emp
   | (pa, a) :: q -> pts_to pa a `star` fragment a.next q `star` pure (Ghost.reveal pstart == pa)
-
-(* AF: Does not hold for generic vprops, but holds for those in this module.
-   TODO: Fix proofs and remove axiom *)
-let slprop_extensionality (p q:vprop)
-  : Lemma
-    (requires p `equiv` q)
-    (ensures p == q)
-    [SMTPat (p `equiv` q)]
-= admit()
 
 inline_for_extraction noextract let canon () : FStar.Tactics.Tac unit =
   (FStar.Tactics.norm [delta_attr [`%__reduce__]]; canon' false (`true_p) (`true_p))
@@ -93,7 +86,24 @@ let rec fragment_append
     ) `equiv` (
       pts_to pa a `star` (fragment a.next q `star` fragment (next_last pstart l1) l2) `star` pure (Ghost.reveal pstart == pa)
     )) by canon ();
-    fragment_append a.next q l2
+    fragment_append a.next q l2;
+    assert ((
+      pts_to pa a `star` (fragment a.next q `star` fragment (next_last pstart l1) l2) `star` pure (Ghost.reveal pstart == pa)
+    ) `equiv` (
+      (fragment a.next q `star` fragment (next_last pstart l1) l2) `star` (pts_to pa a `star` pure (Ghost.reveal pstart == pa))
+
+    )) by canon ();
+    star_congruence
+      (fragment a.next q `star` fragment (next_last pstart l1) l2)
+      (pts_to pa a `star` pure (Ghost.reveal pstart == pa))
+      (fragment a.next (q `L.append` l2))
+      (pts_to pa a `star` pure (Ghost.reveal pstart == pa));
+
+    assert ((
+      (fragment a.next (q `L.append` l2)) `star` (pts_to pa a `star` pure (Ghost.reveal pstart == pa))
+    ) `equiv` (
+      pts_to pa a `star` fragment a.next (q `L.append` l2) `star` pure (Ghost.reveal pstart == pa)
+    )) by canon ()
 
 let get_data
   (#a: Type)
@@ -166,6 +176,8 @@ let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
 
 let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun _ -> True)) = fst (unsnoc l)
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
+
+#push-options "--z3rlimit 20"
 
 let enqueue
   #a #u #hd tl #v last
