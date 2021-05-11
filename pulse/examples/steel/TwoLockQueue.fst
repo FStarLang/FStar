@@ -116,10 +116,9 @@ let new_queue (#a:_) (x:a)
     let head = new_qptr hd in
     let tail = new_qptr hd in
     pack_queue_invariant _ _ head tail;
-    let inv = new_invariant _ _ in
+    let inv = new_invariant _ in
     return ({ head; tail; inv })
 
-#push-options "--ide_id_info_off"
 #restart-solver
 
 //#push-options "--debug TwoLockQueue --debug_level Rel --print_implicits"
@@ -154,8 +153,6 @@ let enqueue (#a:_) (hdl:t a) (x:a)
       (fun (n:erased (Q.t a)) -> pts_to hdl.tail.ptr full_perm n `star`
              ghost_pts_to hdl.tail.ghost half n) in
     Steel.SpinLock.release hdl.tail.lock
-
-#pop-options
 
 let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) ([@@@ smt_fallback] hd:Q.t a) (o:option (Q.t a)) =
   match o with
