@@ -10,12 +10,8 @@ module U = Steel.SelUtils
 
 let pts_to (#a:_) (x:t a) ([@@@smt_fallback]v: Ghost.erased (cell a)) = pts_to x full_perm v
 
-val queue_l (#a:_) (hd tl:Ghost.erased (t a)) (l:Ghost.erased (list a))
-  : vprop
-
 val queue (#a:_) ([@@@smt_fallback] hd:Ghost.erased (t a))
                  ([@@@smt_fallback] tl:Ghost.erased (t a)) : vprop
-                //= h_exists (queue_l hd tl)
 
 val new_queue (#a:_) (v:a) :
   SteelSelT (t a) emp (fun x -> queue x x)
