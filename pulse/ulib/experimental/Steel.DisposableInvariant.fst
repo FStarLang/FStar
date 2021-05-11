@@ -1,11 +1,11 @@
-module Steel.SelDisposableInvariant
+module Steel.DisposableInvariant
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 
 #push-options "--ide_id_info_off"
 
@@ -49,11 +49,11 @@ let gather #p #f0 #f1 #u i =
     (fun _ -> assert (FStar.Real.two == 2.0R); assert (sum_perm (half_perm f0) (half_perm f1) == (half_perm (sum_perm f0 f1))))
 
 let dispose #p #u i
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
     (active full_perm i)
     (fun _ -> p)
   = let dispose_aux (r:ghost_ref bool) (_:unit)
-    : SteelSelGhostT unit (add_inv u i)
+    : SteelGhostT unit (add_inv u i)
        (ex_conditional_inv r p `star`
         ghost_pts_to r (half_perm full_perm) true)
        (fun _ ->
@@ -76,7 +76,7 @@ let dispose #p #u i
 let with_invariant #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelSelAtomicT a (add_inv u i)
+      : SteelAtomicT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))
@@ -97,7 +97,7 @@ let with_invariant #a #fp #fp' #u #p #perm i f
 let with_invariant_g #a #fp #fp' #u #p #perm i f
   = let with_invariant_aux (r:ghost_ref bool)
                            (_:unit)
-      : SteelSelGhostT a (add_inv u i)
+      : SteelGhostT a (add_inv u i)
           (ex_conditional_inv r p `star`
             (ghost_pts_to r (half_perm perm) true `star`
           fp))

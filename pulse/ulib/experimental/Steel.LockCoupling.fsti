@@ -1,9 +1,9 @@
-module Steel.SelLockCoupling
+module Steel.LockCoupling
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelSpinLock
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.SpinLock
+open Steel.Reference
 open Steel.FractionalPermission
 
 #push-options "--__no_positivity"
