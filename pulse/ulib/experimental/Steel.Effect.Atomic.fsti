@@ -328,7 +328,7 @@ val as_atomic_action_ghost (#a:Type u#a)
                            (f:action_except a opened_invariants fp fp')
   : SteelGhostT a opened_invariants fp fp'
 
-val new_invariant (opened_invariants:inames) (p:slprop)
+val new_invariant (#opened_invariants:inames) (p:slprop)
   : SteelGhostT (inv p) opened_invariants p (fun _ -> emp)
 
 let set_add i o : inames = Set.union (Set.singleton i) o
