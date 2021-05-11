@@ -13,21 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module Steel.Primitive.ForkJoin
 
-module Steel.SelSpinLock
 open Steel.Memory
-open Steel.SelEffect
+open Steel.Effect
 
-val lock_t : Type u#0
-val protects (l:lock_t) (p:vprop) : prop
+val thread (p:vprop) : Type u#0
 
-let lock (p:vprop) = l:lock_t{l `protects` p}
+val fork (#p #q #r #s:vprop)
+         (f: (unit -> SteelT unit p (fun _ -> q)))
+         (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
+  : SteelT unit (p `star` r) (fun _ -> s)
 
-val new_lock (p:vprop)
-  : SteelSelT (lock p) p (fun _ -> emp)
-
-val acquire (#p:vprop) (l:lock p)
-  : SteelSelT unit emp (fun _ -> p)
-
-val release (#p:vprop) (l:lock p)
-  : SteelSelT unit p (fun _ -> emp)
+val join (#p:vprop) (t:thread p)
+  : SteelT unit emp (fun _ -> p)
