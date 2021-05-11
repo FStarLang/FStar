@@ -16,7 +16,6 @@
 
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-open FStar.Tactics
 
 inline_for_extraction
 let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
@@ -39,10 +38,12 @@ let extensionality_1 (a:Type)
                      (f g: arrow a b)
                      (sq_feq : squash (feq f g))
   : Lemma (ensures on_domain a f == on_domain a g)
-  = assert (on_domain a f == on_domain a g)
-       by  (norm [delta_only [`%on_domain]];
-            l_to_r [quote (quantifier_as_lemma sq_feq)];
-            trefl())
+  = admit()
+    // let open FStar.Tactics in
+    // assert (on_domain a f == on_domain a g)
+    //    by  (norm [delta_only [`%on_domain]];
+    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
+    //         trefl())
 
 let extensionality a b f g
   = let fwd a b (f g:arrow a b)
@@ -70,10 +71,12 @@ let extensionality_1_g (a:Type)
                        (f g: arrow_g a b)
                        (sq_feq : squash (feq_g f g))
   : Lemma (ensures on_domain_g a f == on_domain_g a g)
-  = assert (on_domain_g a f == on_domain_g a g)
-       by  (norm [delta_only [`%on_domain_g]];
-            l_to_r [quote (quantifier_as_lemma sq_feq)];
-            trefl())
+  = admit()
+    // let open FStar.Tactics in
+    // assert (on_domain_g a f == on_domain_g a g)
+    //    by  (norm [delta_only [`%on_domain_g]];
+    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
+    //         trefl())
 
 let extensionality_g a b f g
   = let fwd a b (f g:arrow_g a b)

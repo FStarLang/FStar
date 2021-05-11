@@ -5303,8 +5303,11 @@ and (solve_t_flex_rigid_eq :
                                     ((FStar_Syntax_Syntax.bv_eq
                                         b.FStar_Syntax_Syntax.binder_bv x)
                                        &&
-                                       (b.FStar_Syntax_Syntax.binder_qual =
-                                          aq))
+                                       (let uu___8 =
+                                          FStar_Syntax_Util.eq_aqual
+                                            b.FStar_Syntax_Syntax.binder_qual
+                                            aq in
+                                        uu___8 = FStar_Syntax_Util.Equal))
                                       &&
                                       (bv_not_free_in_args
                                          b.FStar_Syntax_Syntax.binder_bv
