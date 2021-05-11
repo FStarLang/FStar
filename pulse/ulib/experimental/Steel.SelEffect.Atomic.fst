@@ -245,7 +245,6 @@ let subcomp_pre_unnormal (#a:Type)
 
 let unnormal (p:prop) : Lemma (requires normal p) (ensures p) = ()
 
-#push-options "--admit_smt_queries true" //ugly, working around interface re-verification failure
 let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in

@@ -388,7 +388,6 @@ let subcomp_pre_unnormal (#a:Type)
 
 let unnormal (p:prop) : Lemma (requires normal p) (ensures p) = ()
 
-#push-options "--debug Steel.SelEffect --debug_level Low --admit_smt_queries true" //ugly, just to go past re-verifying interface
 let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
   fun frame ->
     let m0 = nmst_get () in
@@ -412,7 +411,7 @@ let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #r
 
     x
 
-#pop-options
+
 let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun frame ->
