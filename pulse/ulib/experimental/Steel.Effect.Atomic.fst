@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 
-module Steel.SelEffect.Atomic
+module Steel.Effect.Atomic
 
-open Steel.SelEffect
-friend Steel.SelEffect
+open Steel.Effect
+friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
@@ -277,8 +277,8 @@ let lift_ghost_atomic a o f = f
 
 let lift_atomic_steel a o f = f
 
-let as_atomic_action f = SteelSelAtomic?.reflect f
-let as_atomic_action_ghost f = SteelSelGhost?.reflect f
+let as_atomic_action f = SteelAtomic?.reflect f
+let as_atomic_action_ghost f = SteelGhost?.reflect f
 
 (* Some helpers *)
 
@@ -292,7 +292,7 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       lemma_frame_equalities_refl p h0;
       h0
 
-let get _ = SteelSelGhostF?.reflect (get0 ())
+let get _ = SteelGhostF?.reflect (get0 ())
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -329,7 +329,7 @@ let rewrite_slprop0 (#opened:inames) (p q:vprop)
       Mem.star_associative (hp_of q) frame (locks_invariant opened m)
 #pop-options
 
-let rewrite_slprop p q l = SteelSelGhost?.reflect (rewrite_slprop0 p q l)
+let rewrite_slprop p q l = SteelGhost?.reflect (rewrite_slprop0 p q l)
 
 #push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
 let change_slprop0 (#opened:inames) (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
@@ -346,7 +346,7 @@ let change_slprop0 (#opened:inames) (p q:vprop) (vp:erased (t_of p)) (vq:erased 
       Mem.star_associative (hp_of q) frame (locks_invariant opened m)
 #pop-options
 
-let change_slprop p q vp vq l  = SteelSelGhost?.reflect (change_slprop0 p q vp vq l)
+let change_slprop p q vp vq l  = SteelGhost?.reflect (change_slprop0 p q vp vq l)
 
 let change_equal_slprop
   p q
@@ -376,7 +376,7 @@ let change_slprop_20 (#opened:inames) (p q:vprop) (vq:erased (t_of q))
       Mem.star_associative (hp_of q) frame (locks_invariant opened m)
 #pop-options
 
-let change_slprop_2 p q vq l = SteelSelGhost?.reflect (change_slprop_20 p q vq l)
+let change_slprop_2 p q vq l = SteelGhost?.reflect (change_slprop_20 p q vq l)
 
 let change_slprop_rel0 (#opened:inames) (p q:vprop)
   (rel : normal (t_of p) -> normal (t_of q) -> prop)
@@ -401,7 +401,7 @@ let change_slprop_rel0 (#opened:inames) (p q:vprop)
       intro_star p q (frame `Mem.star` locks_invariant opened m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof;
       Mem.star_associative (hp_of q) frame (locks_invariant opened m)
 
-let change_slprop_rel p q rel proof = SteelSelGhost?.reflect (change_slprop_rel0 p q rel proof)
+let change_slprop_rel p q rel proof = SteelGhost?.reflect (change_slprop_rel0 p q rel proof)
 
 let change_slprop_rel_with_cond0 (#opened:inames) (p q:vprop)
   (cond: t_of p -> prop)
@@ -428,7 +428,7 @@ let change_slprop_rel_with_cond0 (#opened:inames) (p q:vprop)
       Mem.star_associative (hp_of q) frame (locks_invariant opened m)
 
 let change_slprop_rel_with_cond p q cond rel proof
-  = SteelSelGhost?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
+  = SteelGhost?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
 
 let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -443,7 +443,7 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
+let extract_info p vp fact l = SteelGhost?.reflect (extract_info0 p vp fact l)
 
 let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -458,11 +458,11 @@ let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info_raw p fact l = SteelSelGhost?.reflect (extract_info_raw0 p fact l)
+let extract_info_raw p fact l = SteelGhost?.reflect (extract_info_raw0 p fact l)
 
 let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
-let sladmit _ = SteelSelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+let sladmit _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let slassert0 (#opened:inames) (p:vprop) : repr unit
   false opened Unobservable p (fun _ -> p)
@@ -473,7 +473,7 @@ let slassert0 (#opened:inames) (p:vprop) : repr unit
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0
 
-let slassert p = SteelSelGhost?.reflect (slassert0 p)
+let slassert p = SteelGhost?.reflect (slassert0 p)
 
 let drop p = rewrite_slprop p emp
   (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
@@ -493,7 +493,7 @@ let reveal_star0 (#opened:inames) (p1 p2:vprop)
      reveal_mk_rmem (p1 `star` p2) m p1;
      reveal_mk_rmem (p1 `star` p2) m p2
 
-let reveal_star p1 p2 = SteelSelGhost?.reflect (reveal_star0 p1 p2)
+let reveal_star p1 p2 = SteelGhost?.reflect (reveal_star0 p1 p2)
 
 let reveal_star_30 (#opened:inames) (p1 p2 p3:vprop)
  : repr unit false opened Unobservable (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
@@ -514,12 +514,12 @@ let reveal_star_30 (#opened:inames) (p1 p2 p3:vprop)
      reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2);
      reveal_mk_rmem (p1 `star` p2 `star` p3) m p3
 
-let reveal_star_3 p1 p2 p3 = SteelSelGhost?.reflect (reveal_star_30 p1 p2 p3)
+let reveal_star_3 p1 p2 p3 = SteelGhost?.reflect (reveal_star_30 p1 p2 p3)
 
 let intro_pure p = rewrite_slprop emp (pure p) (fun m -> pure_interp p m)
 
 let elim_pure_aux #uses (p:prop)
-  : SteelSelGhostT (_:unit{p}) uses (pure p) (fun _ -> to_vprop Mem.emp)
+  : SteelGhostT (_:unit{p}) uses (pure p) (fun _ -> to_vprop Mem.emp)
   = as_atomic_action_ghost (Steel.Memory.elim_pure #uses p)
 
 let elim_pure #uses p =
@@ -530,7 +530,7 @@ let intro_exists #a #opened x p =
   rewrite_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x (fun x -> hp_of (p x)) m)
 
 let witness_exists #a #u #p _ =
-  SteelSelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
+  SteelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
 
 let intro_exists_erased #a #opened x p =
   rewrite_slprop (p x) (h_exists p)
@@ -559,7 +559,7 @@ let new_invariant #uses p =
 assume val reify_steel_atomic_comp
   (#a:Type) (#framed:bool) (#opened_invariants:inames) (#g:observability)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelSelAtomicBase a framed opened_invariants g pre post req ens)
+  ($f:unit -> SteelAtomicBase a framed opened_invariants g pre post req ens)
   : repr a framed opened_invariants g pre post req ens
 
 let with_invariant #a #fp #fp' #opened #p i f =
@@ -571,7 +571,7 @@ let with_invariant #a #fp #fp' #opened #p i f =
 assume val reify_steel_ghost_comp
   (#a:Type) (#framed:bool) (#opened_invariants:inames)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelSelGhostBase a framed opened_invariants Unobservable pre post req ens)
+  ($f:unit -> SteelGhostBase a framed opened_invariants Unobservable pre post req ens)
   : repr a framed opened_invariants Unobservable pre post req ens
 
 let with_invariant_g #a #fp #fp' #opened #p i f =
@@ -702,7 +702,7 @@ let elim_vdep0
   (v: vprop)
   (p: (t_of v -> Tot vprop))
   (q: vprop)
-: SteelSelGhost unit opened
+: SteelGhost unit opened
   (vdep v p)
   (fun _ -> v `star` q)
   (requires (fun h -> q == p (dfst (h (vdep v p)))))
