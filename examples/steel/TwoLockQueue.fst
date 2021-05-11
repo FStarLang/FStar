@@ -142,17 +142,15 @@ let enqueue (#a:_) (hdl:t a) (x:a)
       = let open FStar.Ghost in
         let h = open_exists () in
         let t = open_exists () in
-        (* AF: TODO: Fix this *)
-        sladmit()
 
-        // ghost_gather tl hdl.tail.ghost;
-        // Q.enqueue tl node;
+        ghost_gather tl hdl.tail.ghost;
+        Q.enqueue tl node;
 
-        // ghost_write_pt hdl.tail.ghost node;
+        ghost_write_pt hdl.tail.ghost node;
 
-        // ghost_share_pt #_ #_ hdl.tail.ghost;
-        // pack_queue_invariant _ _ hdl.head hdl.tail;
-        // return ()
+        ghost_share_pt #_ #_ hdl.tail.ghost;
+        pack_queue_invariant _ _ hdl.head hdl.tail;
+        return ()
     in
     let r1 = with_invariant hdl.inv enqueue_core in
     let r2 = write_pt hdl.tail.ptr node in
@@ -167,42 +165,41 @@ let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) ([@@@ smt_fallback] hd:Q.t a) (o
   | None -> ghost_pts_to x half hd
   | Some next -> ghost_pts_to x half next `star` (h_exists (pts_to hd full_perm))
 
-(* AF: TODO: Same as above, typechecking issue on dequeue *)
-assume
-val dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
+let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
   : SteelSelAtomicT (option (Q.t a)) u
     (queue_invariant hdl.head hdl.tail `star`
      ghost_pts_to hdl.head.ghost half hd)
     (fun o ->
       queue_invariant hdl.head hdl.tail `star`
       maybe_ghost_pts_to hdl.head.ghost hd o)
-  // = let h = open_exists () in
-  //   let t = open_exists () in
-    // ghost_gather hd hdl.head.ghost;
+  = let h = open_exists () in
+    let t = open_exists () in
+    ghost_gather hd hdl.head.ghost;
 
-    // let o = Queue.dequeue hd in
-    // match o with
-    // | None ->
-    //   rewrite (Q.dequeue_post _ _ _) (Q.queue hd t);
-    //   ghost_share_pt hdl.head.ghost;
-    //   pack_queue_invariant hd t hdl.head hdl.tail;
-    //   rewrite
-    //     (ghost_pts_to hdl.head.ghost _ _)
-    //     (maybe_ghost_pts_to _ _ _);
-    //   return o
+    let o = Queue.dequeue hd in
+    match o with
+    | None ->
+      rewrite (Q.dequeue_post _ _ _) (Q.queue hd t);
+      ghost_share_pt hdl.head.ghost;
+      pack_queue_invariant hd t hdl.head hdl.tail;
+      rewrite
+        (ghost_pts_to hdl.head.ghost _ _)
+        (maybe_ghost_pts_to _ _ _);
+      return o
 
-    // | Some p ->
-    //   rewrite (Q.dequeue_post _ _ _) (Q.dequeue_post_success _ _ _);
-    //   let c = open_exists () in
-    //   elim_pure ();
-    //   intro_exists c (pts_to hd full_perm);
-    //   ghost_write hdl.head.ghost p;
-    //   ghost_share_pt hdl.head.ghost;
-    //   pack_queue_invariant _ _ hdl.head hdl.tail;
-    //   rewrite
-    //     (ghost_pts_to hdl.head.ghost _ _ `star` h_exists (pts_to hd full_perm))
-    //     (maybe_ghost_pts_to _ _ _);
-    //   return o
+    | Some p ->
+      rewrite (Q.dequeue_post _ _ _) (Q.dequeue_post_success _ _ _);
+      let c = open_exists () in
+      elim_pure ();
+      intro_exists c (pts_to hd full_perm);
+      ghost_write_pt hdl.head.ghost p;
+      ghost_share_pt hdl.head.ghost;
+      pack_queue_invariant _ _ hdl.head hdl.tail;
+      assert (maybe_ghost_pts_to hdl.head.ghost hd (Some p) == ghost_pts_to hdl.head.ghost half p `star` h_exists (pts_to hd full_perm)) by (FStar.Tactics.norm [delta; iota; zeta]);
+      rewrite
+        (ghost_pts_to hdl.head.ghost half p `star` h_exists (pts_to hd full_perm))
+        (maybe_ghost_pts_to hdl.head.ghost hd o);
+      return o
 
 let dequeue (#a:_) (hdl:t a)
   : SteelSelT (option a) emp (fun _ -> emp)

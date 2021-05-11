@@ -515,8 +515,6 @@ let pure_dup
   pure_equiv p (p /\ p);
   pure_and_equiv p p
 
-
-
 let queue_equiv_1
   (#a: Type)
   (x: cllist_lvalue a)
@@ -531,8 +529,9 @@ let queue_equiv_1
 =
   match l.cells with
   | [] ->
-    admit();
+    reveal_equiv (pure (queue_prop x l)) (pure (queue_prop0 x l));
     pure_equiv (queue_prop x l) (queue_prop0 x l)
+
   | (chd, vhd) :: tl ->
     pure_equiv (chd == l.vllist.vllist_head) (chd == l.vllist.vllist_head /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false);
     pure_and_equiv (chd == l.vllist.vllist_head) (ccell_ptrvalue_is_null l.vllist.vllist_head == false);
@@ -664,8 +663,7 @@ let queue_equiv
   (l: Ghost.erased (v a))
 : Lemma
   (queue x l `equiv` queue' x l)
-= admit();
-  pure_rewrite_intro
+= pure_rewrite_intro
     (
       pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
@@ -679,6 +677,7 @@ let queue_equiv
     (fun _ -> queue_equiv_2 x l);
   queue_equiv_1 x l;
   queue_prop0_equiv x l;
+  reveal_equiv (pure (queue_prop0 x l)) (pure (queue_prop' x l));
   pure_equiv (queue_prop0 x l) (queue_prop' x l)
 
 let peek_pure
