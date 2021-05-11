@@ -297,7 +297,7 @@ assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
 
 /// Here's a sample action for dereference
 let (!) (x:ref 'a)
-  : eff 'a (ptr_live x) (fun v -> pts_to x v)
+  : eff 'a (ptr_live x) (pts_to x)
   = let act : action hm 'a =
     {
       pre = ptr_live x;
