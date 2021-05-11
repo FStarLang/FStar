@@ -289,9 +289,8 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0;
       h0
-#push-options "--admit_smt_queries true"
-let get _ = SteelSelGhostF?.reflect (get0 ())
-#pop-options
+
+let get _ = Classical.forall_intro_2 focus_rmem_refl; SteelSelGhostF?.reflect (get0 ())
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -424,9 +423,9 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-#push-options "--admit_smt_queries true"
-let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
-#pop-options
+let extract_info p vp fact l =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelSelGhost?.reflect (extract_info0 p vp fact l)
 
 let noop _ = change_slprop_rel vemp vemp (fun _ _ -> True) (fun _ -> ())
 
