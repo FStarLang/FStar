@@ -1,9 +1,9 @@
 module CQueue.Cell
 open Steel.Memory
-open Steel.Effect
-open Steel.Effect.Atomic
+open Steel.SelEffect
+open Steel.SelEffect.Atomic
 open Steel.FractionalPermission
-open Steel.Reference
+open Steel.SelReference
 
 (* A C lvalue view of a cell struct, as a pair of two references for its data and next fields *)
 
@@ -42,11 +42,11 @@ type vcell (a: Type0) = {
       but without assuming that such references are "non-freeable forever."
    2/ add a "cell-level freeable" permission to free the whole cell *)
 
-[@__reduce__] // to avoid manual unfoldings through change_slprop 
-let ccell (#a: Type0) (c: ccell_lvalue a) (p: perm) (v: Ghost.erased (vcell a)) : Tot slprop =
+[@__reduce__] // to avoid manual unfoldings through change_slprop
+let ccell (#a: Type0) (c: ccell_lvalue a) (p: perm) (v: Ghost.erased (vcell a)) : Tot vprop =
   pts_to (ccell_data c) p v.vcell_data `star` pts_to (ccell_next c) p v.vcell_next
 
-let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a))) : Tot slprop =
+let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a))) : Tot vprop =
   match ccell_ptrvalue_is_null c, Ghost.reveal v with
   | false, Some v ->
     let c : ccell_lvalue a = c in
@@ -54,28 +54,28 @@ let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option 
   | true, None -> emp
   | _ -> pure False
 
-let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : Steel unit
+let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : SteelSel unit
   emp
   (fun _ -> ccellp c p None)
   (requires (fun _ -> ccell_ptrvalue_is_null c == true))
   (ensures (fun _ _ _ -> True))
-= 
-  change_slprop emp (ccellp c p None) (fun _ -> ())
+=
+  rewrite_slprop emp (ccellp c p None) (fun _ -> ())
 
 let ccellp_is_null
   (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a)))
-: Steel unit
+: SteelSel unit
     (ccellp c p v)
     (fun _ -> ccellp c p v)
     (requires (fun _ -> True))
     (ensures (fun _ _ _ -> ccell_ptrvalue_is_null c == None? (Ghost.reveal v)))
 =
-  change_slprop
+  rewrite_slprop
     (ccellp c p v)
     (ccellp c p v `star` pure (ccell_ptrvalue_is_null c == None? (Ghost.reveal v)))
     (fun m ->
-      pure_star_interp (ccellp c p v) (ccell_ptrvalue_is_null c == None? (Ghost.reveal v)) m;
-      emp_unit (ccellp c p v);
+      pure_star_interp (hp_of (ccellp c p v)) (ccell_ptrvalue_is_null c == None? (Ghost.reveal v)) m;
+      emp_unit (hp_of (ccellp c p v));
       match ccell_ptrvalue_is_null c, Ghost.reveal v with
       | false, Some _
       | true, None
@@ -88,7 +88,7 @@ val alloc_cell
   (#a: Type0)
   (data: a)
   (next: ccell_ptrvalue a)
-: Steel (ccell_lvalue a & Ghost.erased (vcell a))
+: SteelSel (ccell_lvalue a & Ghost.erased (vcell a))
     emp
     (fun res -> ccell (fst res) full_perm (snd res))
     (requires (fun _ -> True))
@@ -98,6 +98,6 @@ val free_cell
   (#a: Type0)
   (c: ccell_lvalue a)
   (v: Ghost.erased (vcell a))
-: SteelT unit
+: SteelSelT unit
     (ccell c full_perm v)
     (fun _ -> emp)

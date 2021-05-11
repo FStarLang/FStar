@@ -1,9 +1,9 @@
 module CQueue
 open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
+open Steel.SelEffect.Atomic
+open Steel.SelEffect
 open Steel.FractionalPermission
-open Steel.Reference
+open Steel.SelReference
 module L = FStar.List.Tot
 
 (* This file is a Steel model for queues implemented using singly
@@ -26,9 +26,9 @@ val v (a: Type0) : Tot Type0
 noextract
 val datas (#a: Type0) (l: v a) : Tot (list a)
 
-val queue (#a: Type) (x: t a) (l: Ghost.erased (v a)) : Tot (slprop u#1)
+val queue (#a: Type) (x: t a) (l: Ghost.erased (v a)) : Tot vprop
 
-val create_queue (a: Type) : Steel (t a & Ghost.erased (v a)) emp (fun x -> queue (fst x) (snd x))
+val create_queue (a: Type) : SteelSel (t a & Ghost.erased (v a)) emp (fun x -> queue (fst x) (snd x))
   (requires (fun _ -> True))
   (ensures (fun _ res _ -> datas (snd res) == []))
 
@@ -37,7 +37,7 @@ val enqueue
   (x: t a)
   (l: Ghost.erased (v a))
   (w: a)
-: Steel (Ghost.erased (v a))
+: SteelSel (Ghost.erased (v a))
     (queue x l)
     (fun res -> queue x res)
     (requires (fun _ -> True))
@@ -47,7 +47,7 @@ val queue_is_empty
   (#a: Type)
   (x: t a)
   (l: Ghost.erased (v a))
-: Steel bool
+: SteelSel bool
     (queue x l)
     (fun _ -> queue x l)
     (requires (fun _ -> True))
@@ -59,7 +59,7 @@ val dequeue
   (#a: Type)
   (x: t a)
   (l: Ghost.erased (v a))
-: Steel (a & Ghost.erased (v a))
+: SteelSel (a & Ghost.erased (v a))
     (queue x l)
     (fun res -> queue x (snd res))
     (requires (fun _ -> Cons? (datas l) == true))

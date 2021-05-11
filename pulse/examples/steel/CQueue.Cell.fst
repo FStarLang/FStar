@@ -28,25 +28,15 @@ let ccell_next #a c =
 let alloc_cell
   #a data next
 =
-  let rdata = alloc data in
-  change_slprop (pts_to rdata full_perm data `star` emp) (pts_to rdata full_perm data `star` pure (rdata =!= null)) (fun m ->
-    pts_to_not_null rdata full_perm data m;
-    pure_star_interp (pts_to rdata full_perm data) (rdata =!= null) m
-  );
-  elim_pure (rdata =!= null);
-  let rnext = alloc next in
-  change_slprop (pts_to rnext full_perm next `star` emp) (pts_to rnext full_perm next `star` pure (rnext =!= null)) (fun m ->
-    pts_to_not_null rnext full_perm next m;
-    pure_star_interp (pts_to rnext full_perm next) (rnext =!= null) m
-  );
-  elim_pure (rnext =!= null);
+  let rdata = alloc_pt data in
+  let rnext = alloc_pt next in
   let gres = Ghost.hide ({ vcell_data = data; vcell_next = next }) in
   let res = ({ data = rdata; next = rnext; all_or_none_null = () }, gres) in
-  change_slprop (pts_to rdata full_perm data `star` pts_to rnext full_perm next) (ccell (fst res) full_perm (snd res)) (fun _ -> ());
+  rewrite_slprop (pts_to rdata full_perm data `star` pts_to rnext full_perm next) (ccell (fst res) full_perm (snd res)) (fun _ -> ());
   return res
 
 let free_cell
   #a c v
 =
-  free (ccell_data c);
-  free (ccell_next c)
+  free_pt (ccell_data c);
+  free_pt (ccell_next c)

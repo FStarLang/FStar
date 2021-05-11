@@ -17,12 +17,12 @@
 *)
 module DList.Invariant
 open Steel.Memory
-open Steel.Effect
+open Steel.SelEffect
 open Steel.FractionalPermission
-open Steel.Reference
+open Steel.SelReference
 module L = FStar.List.Tot
 
-let (=.=) #a (x y: a) : slprop = pure (x == y)
+let (=.=) #a (x y: a) : vprop = pure (x == y)
 
 val cell (a:Type0) : Type0
 let t a = ref (cell a)
@@ -48,7 +48,7 @@ val mk_cell (p n: t 'a) (d:'a)
 /// Assuming a null pointer
 let null_dlist (#a:Type)
   : t a
-  = Steel.Reference.null
+  = Steel.SelReference.null
 
 
 /// Equality on same-length pointers: an assumed primitive
@@ -60,22 +60,22 @@ val ptr_eq (#a:Type) (x y:t a)
 
 /// Main abstract invariant
 ///    A doubly linked list segment at ptr from from left to right
-val dlist (#a:Type) (left ptr right:t a) (l:list (cell a)) : slprop u#1
+val dlist (#a:Type) (left ptr right:t a) (l:list (cell a)) : vprop
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // dlist nil
 ////////////////////////////////////////////////////////////////////////////////
 val intro_dlist_nil (#a:Type) (left right:t a)
-   : SteelT unit emp (fun _ -> dlist left right right [])
+   : SteelSelT unit emp (fun _ -> dlist left right right [])
 
 val elim_dlist_nil (#a:Type) (left ptr right:t a)
-   : SteelT unit
+   : SteelSelT unit
      (dlist left ptr right [])
      (fun _ -> right =.= ptr)
 
 val invert_dlist_nil_eq (#a:Type) (left ptr right:t a) (l:list (cell a))
-    : Steel unit
+    : SteelSel unit
             (dlist left ptr right l)
             (fun _ -> dlist left right right [] `star` (l =.= []))
             (requires fun _ -> ptr == right)
@@ -86,7 +86,7 @@ val intro_dlist_cons (#a:Type) (left:t a)
                                (right:t a)
                                (hd: cell a)
                                (tl: list (cell a))
-   : Steel unit
+   : SteelSel unit
      (pts_to ptr full_perm hd `star` dlist ptr (next hd) right tl)
      (fun _ -> dlist left ptr right (hd::tl))
      (requires fun _ ->
@@ -100,7 +100,7 @@ val elim_dlist_cons (#a:Type) (left:t a)
                               (right:t a)
                               (hd:cell a)
                               (tl:list (cell a))
-   : Steel unit
+   : SteelSel unit
      (requires
        dlist left ptr right (hd::tl))
      (ensures fun _ ->
@@ -112,7 +112,7 @@ val elim_dlist_cons (#a:Type) (left:t a)
        right =!= ptr)
 
 val invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a))
-    : Steel unit
+    : SteelSel unit
      (requires
        dlist left ptr right l)
      (ensures fun _ ->
@@ -132,7 +132,7 @@ val dlist_not_null (#a:Type)
                    (#right:t a)
                    (#rep:list (cell a))
                    (p:t a)
-  : Steel unit
+  : SteelSel unit
     (dlist left p right rep)
     (fun _ -> dlist left p right rep)
     (requires fun _ -> p =!= right \/ Cons? rep)

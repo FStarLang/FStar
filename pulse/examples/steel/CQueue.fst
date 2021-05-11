@@ -26,7 +26,7 @@ let (==) (#a:_) (x y: a) : prop = x == y
 let rec llist_fragment (#a:Type) (rptr: ref (ccell_ptrvalue a))
                                  (ptr: ccell_ptrvalue a)
                                  (l:Ghost.erased (list (ccell_lvalue a & vcell a)))
-    : Tot slprop (decreases (Ghost.reveal l))
+    : Tot vprop (decreases (Ghost.reveal l))
     =
     match Ghost.reveal l with
     | [] -> emp
@@ -37,7 +37,10 @@ let rec llist_fragment (#a:Type) (rptr: ref (ccell_ptrvalue a))
       pure (chd == ptr)
 
 inline_for_extraction noextract let canon () : FStar.Tactics.Tac unit =
-  (Steel.Memory.Tactics.canon ())
+  (FStar.Tactics.norm [delta_attr [`%__reduce__]]; canon' false (`true_p) (`true_p))
+
+let _: squash (forall p q. p `equiv` q <==> hp_of p `Steel.Memory.equiv` hp_of q) =
+  Classical.forall_intro_2 reveal_equiv
 
 let rec next_last
   (#a: Type)
@@ -69,13 +72,15 @@ let rec next_last_correct
   | [_] -> ()
   | (ca, va) :: q -> next_last_correct (ccell_next ca) va.vcell_next (Ghost.hide q)
 
-let slprop_extensionality (p q:slprop)
+// AF: This is not true in general, but true in this module since all vprops are direct slprop lifts.
+// TODO: Fix proofs, and remove this axiom
+let slprop_extensionality (p q:vprop)
   : Lemma
     (requires p `equiv` q)
     (ensures p == q)
     [SMTPat (p `equiv` q)]
-=
-  slprop_extensionality p q
+= admit()
+//  slprop_extensionality p q
 
 let rec llist_fragment_append
   (#a: Type)
@@ -199,7 +204,7 @@ let queue
 let unpack_queue
   (#a: Type)
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
-: Steel unit
+: SteelSel unit
     (queue x l)
     (fun _ -> pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
@@ -209,7 +214,7 @@ let unpack_queue
       fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail /\
       ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
     ))
-= change_slprop
+= rewrite_slprop
     (queue x l)
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
@@ -221,7 +226,7 @@ let unpack_queue
 let pack_queue
   (#a: Type)
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
-: Steel unit
+: SteelSel unit
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
@@ -232,7 +237,7 @@ let pack_queue
     ))
     (ensures (fun _ _ _ -> True))
 = intro_pure (queue_prop x l);
-  change_slprop
+  rewrite_slprop
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
@@ -245,7 +250,7 @@ let pack_queue1
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
   (tail1: _) (vtail1: Ghost.erased _)
   (tail2: _) (vtail2: Ghost.erased _)
-: Steel unit
+: SteelSel unit
     (pts_to tail1 full_perm vtail1 `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to tail2 full_perm vtail2)
@@ -260,32 +265,32 @@ let pack_queue1
     ))
     (ensures (fun _ _ _ -> True))
 =
-  change_slprop
+  rewrite_slprop
     (pts_to (tail1) full_perm vtail1)
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail)
     (fun _ -> ());
-  change_slprop
+  rewrite_slprop
     (pts_to (tail2) full_perm vtail2)
     (pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
     (fun _ -> ());
   pack_queue x l
 
 let change_equiv_slprop
-  (p q: slprop)
+  (p q: vprop)
   (sq: (unit -> Lemma (p `equiv` q)))
-: SteelT unit
+: SteelSelT unit
     p
     (fun _ -> q)
 =
-  change_slprop p q (fun _ -> sq ())
+  rewrite_slprop p q (fun _ -> sq ())
 
 let change_equal_slprop
-  (p q: slprop)
+  (p q: vprop)
   (sq: (unit -> Lemma (p == q)))
-: SteelT unit
+: SteelSelT unit
     p
     (fun _ -> q)
-= change_equiv_slprop p q (fun _ -> sq ())
+= change_equiv_slprop p q (fun _ -> reveal_equiv p q; sq ())
 
 let get_data_update_next_last
   (#a: Type)
@@ -306,15 +311,15 @@ let create_queue
 =
   let ll = alloc_cllist (ccell_ptrvalue_null _) null in
   let cl = fst ll in
-  change_slprop (cllist (fst ll) full_perm (snd ll)) (pts_to (cllist_head cl) full_perm (snd ll).vllist_head `star` pts_to (cllist_tail cl) full_perm (snd ll).vllist_tail) (fun _ -> ());
-  write (cllist_tail cl) (cllist_head cl);
+  rewrite_slprop (cllist (fst ll) full_perm (snd ll)) (pts_to (cllist_head cl) full_perm (snd ll).vllist_head `star` pts_to (cllist_tail cl) full_perm (snd ll).vllist_tail) (fun _ -> ());
+  write_pt (cllist_tail cl) (cllist_head cl);
   let wl = { vllist_head = ccell_ptrvalue_null _; vllist_tail = cllist_head cl } in
   let w = Ghost.hide ({
     vllist = wl;
     cells = [];
   }) in
   let res = (cl, w) in
-  change_slprop
+  rewrite_slprop
     emp
     (llist_fragment (cllist_head (fst res)) (Ghost.reveal (snd res)).vllist.vllist_head (Ghost.reveal (snd res)).cells)
     (fun _ -> ());
@@ -326,11 +331,14 @@ let emp_equiv_pure
 : Lemma
   (requires p)
   (ensures (emp `equiv` pure p))
-=
+= reveal_emp ();
+  reveal_equiv emp (pure p);
   Classical.forall_intro intro_emp;
   Classical.forall_intro (pure_interp p)
 
 #restart-solver
+
+#push-options "--z3rlimit 20"
 
 let enqueue
   #a x l w
@@ -338,17 +346,17 @@ let enqueue
   let cc = alloc_cell w (ccell_ptrvalue_null a) in
   let c = fst cc in
   let vc = snd cc in
-  change_slprop (ccell (fst cc) full_perm (snd cc))
+  rewrite_slprop (ccell (fst cc) full_perm (snd cc))
     (pts_to (ccell_data c) full_perm w `star` pts_to (ccell_next c) full_perm (ccell_ptrvalue_null a))
     (fun _ -> ());
   unpack_queue x l;
-  let tail = read (cllist_tail x) in
-  change_slprop
+  let tail = read_pt (cllist_tail x) in
+  rewrite_slprop
     (pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
     (pts_to tail full_perm (ccell_ptrvalue_null _))
     (fun _ -> ());
-  write tail c;
-  write (cllist_tail x) (ccell_next c);
+  write_pt tail c;
+  write_pt (cllist_tail x) (ccell_next c);
   let res = Ghost.hide ({
     vllist = {
       vllist_head =
@@ -399,36 +407,38 @@ let enqueue
   res
 
 let pure_star_equiv
-  (p: slprop)
+  (p: vprop)
   (q: prop)
 : Lemma
-  (forall m . interp (p `star` pure q) m <==> interp p m /\ q)
+  (forall m . interp (hp_of (p `star` pure q)) m <==> interp (hp_of p) m /\ q)
 =
-  emp_unit p;
+  emp_unit (hp_of p);
   Classical.forall_intro (fun m ->
-    pure_star_interp p q m
+    pure_star_interp (hp_of p) q m
   )
 
 let pure_star_accumulate_r
-  (p: slprop)
+  (p: vprop)
   (q1 q2: prop)
 : Lemma
   (((p `star` pure q1) `star` pure q2) `equiv` (p `star` pure (q1 /\ q2)))
-= pure_star_equiv (p `star` pure q1) q2;
+= Classical.forall_intro_2 reveal_equiv;
+  pure_star_equiv (p `star` pure q1) q2;
   pure_star_equiv p q1;
   pure_star_equiv p (q1 /\ q2)
 
 let pure_rewrite
-  (p1 p2: slprop)
+  (p1 p2: vprop)
   (q: prop)
 : Lemma
   (requires (q ==> (p1 `equiv` p2)))
   (ensures ((p1 `star` pure q) `equiv` (p2 `star` pure q)))
-= pure_star_equiv p1 q;
+= Classical.forall_intro_2 reveal_equiv;
+  pure_star_equiv p1 q;
   pure_star_equiv p2 q
 
 let pure_rewrite_intro
-  (p1 p2: slprop)
+  (p1 p2: vprop)
   (q: prop)
   (lem: unit -> Lemma (requires q) (ensures (p1 `equiv` p2)))
 : Lemma
@@ -441,7 +451,7 @@ let rec llist_fragment'
   (#a: Type)
   (p: ccell_ptrvalue a)
   (l: Ghost.erased (list (ccell_lvalue a & vcell a)))
-: Tot slprop
+: Tot vprop
   (decreases (Ghost.reveal l))
 = match Ghost.reveal l with
   | [] -> emp
@@ -463,7 +473,7 @@ let queue'
   (#a: Type)
   (x: cllist_lvalue a)
   (l: Ghost.erased (v a))
-: Tot slprop
+: Tot vprop
 =
   cllist x full_perm l.vllist `star`
   llist_fragment' l.vllist.vllist_head l.cells `star`
@@ -505,6 +515,8 @@ let pure_dup
   pure_equiv p (p /\ p);
   pure_and_equiv p p
 
+
+
 let queue_equiv_1
   (#a: Type)
   (x: cllist_lvalue a)
@@ -519,6 +531,7 @@ let queue_equiv_1
 =
   match l.cells with
   | [] ->
+    admit();
     pure_equiv (queue_prop x l) (queue_prop0 x l)
   | (chd, vhd) :: tl ->
     pure_equiv (chd == l.vllist.vllist_head) (chd == l.vllist.vllist_head /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false);
@@ -651,7 +664,7 @@ let queue_equiv
   (l: Ghost.erased (v a))
 : Lemma
   (queue x l `equiv` queue' x l)
-=
+= admit();
   pure_rewrite_intro
     (
       pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
@@ -670,7 +683,7 @@ let queue_equiv
 
 let peek_pure
   (#uses:_) (p:prop)
-  : SteelGhostT (_:unit{p}) uses
+  : SteelSelGhostT (_:unit{p}) uses
                 (pure p)
                 (fun _ -> pure p)
 =
@@ -679,13 +692,13 @@ let peek_pure
   q
 
 let read_no_change (#a:Type) (#p:perm) (#v:Ghost.erased a) (r:ref a)
-  : Steel a (pts_to r p v) (fun _ -> pts_to r p v)
+  : SteelSel a (pts_to r p v) (fun _ -> pts_to r p v)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 =
-  let v' = read r in
-  change_equal_slprop _ (pts_to r p v) (fun _ -> ());
-  v'
+  let v' = read_pt r in
+  rewrite_slprop (pts_to r p v') (pts_to r p v) (fun _ -> ());
+  return v'
 
 let queue_is_empty
   #a x l
@@ -699,7 +712,7 @@ let queue_is_empty
     )
     (fun _ -> queue_equiv x l);
   peek_pure (queue_prop' x l);
-  let hd = read (cllist_head x) in
+  let hd = read_pt (cllist_head x) in
   change_equiv_slprop
     (
         pts_to (cllist_head x) full_perm hd `star` pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
@@ -709,6 +722,7 @@ let queue_is_empty
     (queue x l)
     (fun _ -> queue_equiv x l);
   ccell_ptrvalue_is_null hd
+
 
 let dequeue
   #a x l
@@ -731,24 +745,24 @@ let dequeue
     (fun _ -> queue_equiv x l);
   elim_pure (queue_prop' x l);
   elim_pure (Ghost.reveal chd == l.vllist.vllist_head);
-  let chd' = read (cllist_head x) in
+  let chd' = read_pt (cllist_head x) in
   assert (chd' == Ghost.reveal chd);
   let (chd' : ccell_lvalue a) = chd' in
-  change_equal_slprop
+  rewrite_slprop
     (ccell chd full_perm vhd)
     (pts_to (ccell_data chd') full_perm vhd.vcell_data `star` pts_to (ccell_next chd') full_perm vhd.vcell_next)
     (fun _ -> ());
-  let chd_data = read (ccell_data chd') in
-  let chd_next = read (ccell_next chd') in
-  change_equal_slprop
+  let chd_data = read_pt (ccell_data chd') in
+  let chd_next = read_pt (ccell_next chd') in
+  rewrite_slprop
     (pts_to (ccell_data chd') full_perm chd_data `star` pts_to (ccell_next chd') full_perm chd_next)
     (ccell chd' full_perm vhd)
     (fun _ -> ());
   free_cell chd' _;
-  write (cllist_head x) chd_next;
+  write_pt (cllist_head x) chd_next;
   if ccell_ptrvalue_is_null chd_next
   then begin
-    change_equiv_slprop
+    rewrite_slprop
       (llist_fragment' vhd.vcell_next tl)
       (llist_fragment' vhd.vcell_next tl `star` pure (Nil? tl == true))
       (fun _ ->
@@ -766,7 +780,7 @@ let dequeue
           )) by canon ()
       );
     elim_pure (Nil? tl == true);
-    write (cllist_tail x) (cllist_head x);
+    write_pt (cllist_tail x) (cllist_head x);
     let l' : Ghost.erased (v a) = Ghost.hide ({
       vllist = ({ vllist_head = chd_next; vllist_tail = cllist_head x });
       cells = []
@@ -774,7 +788,7 @@ let dequeue
     in
     let res = (chd_data, l') in
     intro_pure (queue_prop' x l');
-    change_equiv_slprop
+    rewrite_slprop
       (
         pts_to (cllist_head x) full_perm chd_next `star`
         pts_to (cllist_tail x) full_perm (cllist_head x) `star`
@@ -785,7 +799,7 @@ let dequeue
       (fun _ ->
         queue_equiv x (snd res)
       );
-    res
+    return res
   end else begin
     let l' : Ghost.erased (v a) = Ghost.hide ({
       vllist = ({ vllist_head = chd_next; vllist_tail = l.vllist.vllist_tail });
@@ -794,7 +808,7 @@ let dequeue
     in
     let res = (chd_data, l') in
     intro_pure (queue_prop' x l');
-    change_equiv_slprop
+    rewrite_slprop
       (
         pts_to (cllist_head x) full_perm chd_next `star`
         pts_to (cllist_tail x) full_perm _ `star`
@@ -803,5 +817,5 @@ let dequeue
       )
       (queue x (snd res))
       (fun _ -> queue_equiv x (snd res));
-    res
+    return res
   end
