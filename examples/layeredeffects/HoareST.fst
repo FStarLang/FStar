@@ -76,6 +76,11 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
+open FStar.Tactics
+
+let mtac () : Tac unit = smt ()
+
+[@@ ite_soundness_by mtac]
 reifiable reflectable
 layered_effect {
   HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
