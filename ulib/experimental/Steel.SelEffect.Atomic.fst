@@ -546,12 +546,10 @@ let new_invariant #uses p =
  *     But for now assuming a function
  *)
 assume val reify_steel_atomic_comp
-  (#a:Type) (#already_framed:bool) (#opened_invariants:inames) (#g:observability)
+  (#a:Type) (#framed:bool) (#opened_invariants:inames) (#g:observability)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelSelAtomicBase a already_framed opened_invariants g pre post req ens)
-  : action_except_full a opened_invariants
-                       (hp_of pre) (fun x -> hp_of (post x))
-                       (req_to_act_req req) (ens_to_act_ens ens)
+  ($f:unit -> SteelSelAtomicBase a framed opened_invariants g pre post req ens)
+  : repr a framed opened_invariants g pre post req ens
 
 let with_invariant #a #fp #fp' #opened #p i f =
   rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
@@ -560,12 +558,10 @@ let with_invariant #a #fp #fp' #opened #p i f =
   return x
 
 assume val reify_steel_ghost_comp
-  (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
+  (#a:Type) (#framed:bool) (#opened_invariants:inames)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelSelGhostBase a already_framed opened_invariants Unobservable pre post req ens)
-  : action_except_full a opened_invariants
-                       (hp_of pre) (fun x -> hp_of (post x))
-                       (req_to_act_req req) (ens_to_act_ens ens)
+  ($f:unit -> SteelSelGhostBase a framed opened_invariants Unobservable pre post req ens)
+  : repr a framed opened_invariants Unobservable pre post req ens
 
 let with_invariant_g #a #fp #fp' #opened #p i f =
   rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());

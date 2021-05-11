@@ -2,10 +2,10 @@ module Steel.SelEffect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
-module C = Steel.Effect.Common
 open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
-module Eff = Steel.Effect
+
+#set-options "--ide_id_info_off"
 
 let _:squash (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q)) = reveal_can_be_split ()
 
@@ -450,6 +450,29 @@ let bind_div_steel (a:Type) (b:Type)
 
 polymonadic_bind (DIV, SteelSelBase) |> SteelSelBase = bind_div_steel
 #pop-options
+
+let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
+         (f:repr aL false preL postL (fun _ -> True) (fun _ _ _ -> True))
+         (#aR:Type u#a) (#preR:vprop) (#postR:aR -> vprop)
+         (g:repr aR false preR postR (fun _ -> True) (fun _ _ _ -> True))
+  : SteelSelT (aL & aR)
+    (preL `star` preR)
+    (fun y -> postL (fst y) `star` postR (snd y))
+  = SteelSel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
+
+(*
+ * AR: Steel is not marked reifiable since we intend to run Steel programs natively
+ *     However to implement the par combinator we need to reify a Steel thunk to its repr
+ *     We could implement it better by having support for reification only in the .fst file
+ *     But for now assuming a (Dv) function
+ *)
+assume val reify_steel_comp
+  (#a:Type) (#framed:bool) (#pre:vprop) (#post:a -> vprop) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelSelBase a framed pre post req ens)
+  : Dv (repr a framed pre post req ens)
+
+let par f g =
+  par0 (reify_steel_comp f) (reify_steel_comp g)
 
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
   : repr a false (to_vprop p) (fun x -> to_vprop (q x)) (fun _ -> True) (fun _ _ _ -> True)
