@@ -2282,7 +2282,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               match (SS.compress t).n with
               | Tm_name x
                 when bv_eq b.binder_bv x
-                  && b.binder_qual = aq
+                  && U.eq_aqual b.binder_qual aq = U.Equal
                   && bv_not_free_in_args b.binder_bv rhs_tl ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
