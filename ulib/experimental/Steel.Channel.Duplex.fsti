@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 
-module Steel.SelChannel.Duplex
+module Steel.Channel.Duplex
 open Steel.Channel.Protocol
 open Steel.Memory
-open Steel.SelEffect
+open Steel.Effect
 
 /// Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret unit))
 ///
@@ -29,32 +29,32 @@ val chan (p:prot) : Type0
 val endpoint (#p:prot) (c:chan p) (next_action:prot) : vprop
 
 val new_chan (p:prot)
-  : SteelSelT (chan p) emp (fun c -> endpoint c p `star` endpoint c (dual p))
+  : SteelT (chan p) emp (fun c -> endpoint c p `star` endpoint c (dual p))
 
 val send (#p:prot)
          (c:chan p)
          (#next:prot{more next /\ tag_of next = Send})
          (x:msg_t next)
-  : SteelSelT unit
+  : SteelT unit
            (endpoint c next)
            (fun _ -> endpoint c (step next x))
 
 val recv (#p:prot)
          (#next:prot{more next /\ tag_of next = Recv})
          (c:chan p)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
            (endpoint c next)
            (fun x -> endpoint c (step next x))
 
 val history (#p:prot) (c:chan p) (t:partial_trace_of p) : vprop
 
 val history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
-  : SteelSelT unit (history c t) (fun _ -> history c t `star` history c t)
+  : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
 
 val trace (#q:prot) (cc:chan q)
-  : SteelSelT (partial_trace_of q) emp (fun tr -> history cc tr)
+  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
 
 val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
-  : SteelSelT (extension_of previous)
+  : SteelT (extension_of previous)
            (endpoint c next `star` history c previous)
            (fun t -> endpoint c next `star` history c t `star` pure (until t == next))

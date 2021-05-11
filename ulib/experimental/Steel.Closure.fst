@@ -1,24 +1,24 @@
-module Steel.SelClosure
+module Steel.Closure
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 open Steel.FractionalPermission
 
 let repr (r:ref int) (x:int) = pts_to r full_perm x
 
-let ctr (r:ref int) = prev:erased int  -> SteelSelT (y:int{y == prev + 1}) (repr r prev) (repr r)
+let ctr (r:ref int) = prev:erased int  -> SteelT (y:int{y == prev + 1}) (repr r prev) (repr r)
 
 let next (r:ref int) (prev:erased int)
-  : SteelSelT (y:int{y == prev + 1}) (repr r prev) (repr r)
+  : SteelT (y:int{y == prev + 1}) (repr r prev) (repr r)
   = let v = read_pt r in
     let (x:int { x == prev + 1 }) = v + 1 in
     write_pt r x;
     x
 
 val new_counter' (u:unit) :
-  SteelSelT ctr_t emp (fun r -> dfst r 0)
+  SteelT ctr_t emp (fun r -> dfst r 0)
 
 let new_counter' () =
   let x = alloc_pt 0 in

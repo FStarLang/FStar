@@ -1,4 +1,4 @@
-module Steel.SelStepper
+module Steel.Stepper
 
 open FStar.PCM
 
@@ -70,10 +70,10 @@ let p : pcm stepper =
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelPCMReference
-module PR = Steel.SelPCMReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.PCMReference
+module PR = Steel.PCMReference
 
 // Use erased values here to avoid some rewritings
 val pts_to (r:ref stepper p) (v:erased stepper) : vprop
@@ -95,7 +95,7 @@ let select_refine' (r:ref stepper p)
                   (f:(v:stepper{compatible p x v}
                       -> GTot (y:stepper{compatible p y v /\
                                   frame_compatible x v y})))
-   : SteelSelT  (v:stepper{compatible p x v /\ refine v})
+   : SteelT  (v:stepper{compatible p x v /\ refine v})
              (PR.pts_to r x)
              (fun v -> PR.pts_to r (f v))
    = select_refine r x f
@@ -105,7 +105,7 @@ let select_refine (r:ref stepper p)
                   (f:(v:stepper{compatible p x v}
                       -> GTot (y:stepper{compatible p y v /\
                                   frame_compatible x v y})))
-   : SteelSelT  (v:stepper{compatible p x v /\ refine v})
+   : SteelT  (v:stepper{compatible p x v /\ refine v})
              (pts_to r x)
              (fun v -> pts_to r (f v))
    = let v = select_refine' r x f in
@@ -117,7 +117,7 @@ let select_refine (r:ref stepper p)
 val upd_gen_action (r:ref stepper p)
                    (x y:Ghost.erased stepper)
                    (f:FStar.PCM.frame_preserving_upd p x y)
-  : SteelSelT unit (pts_to r x) (fun _ -> pts_to r y)
+  : SteelT unit (pts_to r x) (fun _ -> pts_to r y)
 
 let upd_gen_action r x y f = upd_gen r x y f
 
@@ -140,7 +140,7 @@ let f_odd (n0:odd) (v:stepper{compatible p (Odd n0) v})
 // get_even/get_odd/upd_even/upd_odd should be done in
 // conjunction with "fictional" SL
 let get_even (r:ref stepper p) (n0:even)
-  : SteelSel nat
+  : Steel nat
           (pts_to r (Even n0))
           (fun n -> pts_to r (if n = n0 then Even n0 else EvenWriteable n0))
           (requires fun _ -> True)
@@ -151,7 +151,7 @@ let get_even (r:ref stepper p) (n0:even)
     return n
 
 let get_odd (r:ref stepper p) (n0:odd)
-  : SteelSel nat
+  : Steel nat
           (pts_to r (Odd n0))
           (fun n -> pts_to r (if n = n0 then Odd n0 else OddWriteable n0))
           (requires fun _ -> True)
@@ -182,19 +182,19 @@ let upd_odd_f (n:odd) : FStar.PCM.frame_preserving_upd p (OddWriteable n) (Odd (
     f
 
 let upd_even (r:ref stepper p) (n:even)
-  : SteelSelT unit (pts_to r (EvenWriteable n)) (fun _ -> pts_to r (Even (n+2)))
+  : SteelT unit (pts_to r (EvenWriteable n)) (fun _ -> pts_to r (Even (n+2)))
   = upd_gen_action r (Ghost.hide (EvenWriteable n))
                      (Ghost.hide (Even (n + 2)))
                      (upd_even_f n)
 
 let upd_odd (r:ref stepper p) (n:odd)
-  : SteelSelT unit (pts_to r (OddWriteable n)) (fun _ -> pts_to r (Odd (n+2)))
+  : SteelT unit (pts_to r (OddWriteable n)) (fun _ -> pts_to r (Odd (n+2)))
   = upd_gen_action r (Ghost.hide (OddWriteable n))
                      (Ghost.hide (Odd (n + 2)))
                      (upd_odd_f n)
 
 val alloc (x:stepper{compatible p x x /\ refine x})
-  : SteelSelT (ref stepper p) emp (fun r -> pts_to r x)
+  : SteelT (ref stepper p) emp (fun r -> pts_to r x)
 
 let alloc x =
   let r = alloc x in
@@ -202,7 +202,7 @@ let alloc x =
   return r
 
 val split (r:ref stepper p) (v_full v0 v1:stepper)
-  : SteelSel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
       (fun _ -> composable v0 v1 /\ v_full == compose v0 v1)
       (fun _ _ _ -> True)
 
@@ -210,14 +210,14 @@ let split r v_full v0 v1 = split r v_full v0 v1
 
 // Core functions of stepper
 
-val new_stepper (u:unit) : SteelSelT (ref stepper p) emp (fun r -> s_odd r 1 `star` s_even r 0)
+val new_stepper (u:unit) : SteelT (ref stepper p) emp (fun r -> s_odd r 1 `star` s_even r 0)
 
 let new_stepper _ =
   let r = alloc (V 1) in
   split r (V 1) (Odd 1) (Even 0);
   r
 
-val incr_even (r:ref stepper p) (n:even) : SteelSelT unit (s_even r n) (fun _ -> s_even r (n + 2))
+val incr_even (r:ref stepper p) (n:even) : SteelT unit (s_even r n) (fun _ -> s_even r (n + 2))
 
 let rec incr_even r n =
   let x = get_even r n in
@@ -231,7 +231,7 @@ let rec incr_even r n =
       (pts_to r (EvenWriteable n)) (fun _ -> ());
     upd_even r n)
 
-val incr_odd (r:ref stepper p) (n:odd) : SteelSelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
+val incr_odd (r:ref stepper p) (n:odd) : SteelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
 
 let rec incr_odd r n =
   let x = get_odd r n in
@@ -248,20 +248,20 @@ let rec incr_odd r n =
 // Main driver incrementing the stepper forever in parallel
 
 val rec_incr_even (r:ref stepper p) (n:even)
-  : SteelSelT unit (s_even r n) (fun _ -> emp)
+  : SteelT unit (s_even r n) (fun _ -> emp)
 
 let rec rec_incr_even r n =
   incr_even r n;
   rec_incr_even r (n+2)
 
 val rec_incr_odd (r:ref stepper p) (n:odd)
-  : SteelSelT unit (s_odd r n) (fun _ -> emp)
+  : SteelT unit (s_odd r n) (fun _ -> emp)
 
 let rec rec_incr_odd r n =
   incr_odd r n;
   rec_incr_odd r (n+2)
 
-val main (_:unit) : SteelSelT unit emp (fun _ -> emp)
+val main (_:unit) : SteelT unit emp (fun _ -> emp)
 
 let main () =
   let r = new_stepper () in

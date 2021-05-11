@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 
-module Steel.SelChannel.Simplex
+module Steel.Channel.Simplex
 module P = Steel.Channel.Protocol
-open Steel.SelSpinLock
+open Steel.SpinLock
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelHigherReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.HigherReference
 open Steel.FractionalPermission
-module MRef = Steel.SelMonotonicHigherReference
-module H = Steel.SelHigherReference
+module MRef = Steel.MonotonicHigherReference
+module H = Steel.HigherReference
 
 let sprot = p:prot { more p }
 
@@ -78,7 +78,7 @@ let chan_inv #p (c:chan_t p) : vprop =
     pts_to c.send half vsend `star` chan_inv_recv c vsend)
 
 let intro_chan_inv_cond_eqT (vs vr:chan_val)
-  : SteelSel unit emp
+  : Steel unit emp
                (fun _ -> chan_inv_cond vs vr)
                (requires fun _ -> vs == vr)
                (ensures fun _ _ _ -> True)
@@ -86,15 +86,15 @@ let intro_chan_inv_cond_eqT (vs vr:chan_val)
     rewrite_slprop (chan_inv_cond vs vs) (chan_inv_cond vs vr) (fun _ -> ())
 
 let intro_chan_inv_cond_stepT (vs vr:chan_val)
-  : SteelSelT unit (chan_inv_step vr vs)
+  : SteelT unit (chan_inv_step vr vs)
                 (fun _ -> chan_inv_cond vs vr)
-  = Steel.SelUtils.extract_pure (chan_inv_step_p vr vs);
+  = Steel.Utils.extract_pure (chan_inv_step_p vr vs);
     rewrite_slprop (chan_inv_step vr vs) (chan_inv_cond vs vr) (fun _ -> ())
 
 let intro_chan_inv_auxT #p  (#vs : chan_val)
                             (#vr : chan_val)
                             (c:chan_t p)
-  : SteelSelT unit (pts_to c.send half vs `star`
+  : SteelT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  chan_inv_cond vs vr)
@@ -103,7 +103,7 @@ let intro_chan_inv_auxT #p  (#vs : chan_val)
     intro_exists _ (fun (vs:chan_val) -> pts_to c.send half vs `star` chan_inv_recv c vs)
 
 let intro_chan_inv_stepT #p (c:chan_t p) (vs vr:chan_val)
-  : SteelSelT unit (pts_to c.send half vs `star`
+  : SteelT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  chan_inv_step vr vs)
@@ -112,7 +112,7 @@ let intro_chan_inv_stepT #p (c:chan_t p) (vs vr:chan_val)
     intro_chan_inv_auxT c
 
 let intro_chan_inv_eqT #p (c:chan_t p) (vs vr:chan_val)
-  : SteelSel unit (pts_to c.send half vs `star`
+  : Steel unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr)
                  (fun _ -> chan_inv c)
@@ -150,7 +150,7 @@ let sender #q (c:chan q) (p:prot) = in_state c.chan_chan.send p
 let receiver #q (c:chan q) (p:prot) = in_state c.chan_chan.recv p
 
 let intro_chan_inv #p (c:chan_t p) (v:chan_val)
-  : SteelSelT unit (pts_to c.send half v `star`
+  : SteelT unit (pts_to c.send half v `star`
                  pts_to c.recv half v `star`
                  trace_until c.trace v)
                 (fun _ -> chan_inv c)
@@ -158,7 +158,7 @@ let intro_chan_inv #p (c:chan_t p) (v:chan_val)
 
 let chan_val_p (p:prot) = (vs0:chan_val { in_state_prop p vs0 })
 let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
-  : SteelSelT unit (pts_to r half v) (fun _ -> in_state r p)
+  : SteelT unit (pts_to r half v) (fun _ -> in_state r p)
   = intro_pure (in_state_prop p v);
     intro_exists v (fun (v:chan_val) -> pts_to r half v `star` in_state_slprop p v)
 
@@ -169,7 +169,7 @@ let initial_trace (p:prot) : (q:partial_trace_of p {until q == p})
   = { to = p; tr=Waiting p}
 
 let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
-  : SteelSel unit (MRef.pts_to r full_perm tr)
+  : Steel unit (MRef.pts_to r full_perm tr)
                (fun _ -> trace_until r v)
                (requires fun _ -> until tr == step v.chan_prot v.chan_msg)
                (ensures fun _ _ _ -> True)
@@ -183,7 +183,7 @@ let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
 let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ c.recv == recv})
 
 let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
-  : SteelSelT unit (MRef.pts_to c.trace full_perm (initial_trace p))
+  : SteelT unit (MRef.pts_to c.trace full_perm (initial_trace p))
                 (fun _ -> trace_until c.trace v)
   = intro_pure (until (initial_trace p) == step v.chan_prot v.chan_msg);
     //TODO: Not sure why I need this rewrite
@@ -195,7 +195,7 @@ let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
     intro_exists (initial_trace p) (trace_until_prop c.trace v)
 
 let mk_chan (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
-  : SteelSelT (chan_t_sr p send recv)
+  : SteelT (chan_t_sr p send recv)
            (pts_to send half v `star` pts_to recv half v)
            (fun c -> chan_inv c)
   = let tr: trace_ref p = MRef.alloc (extended_to #p) (initial_trace p) in
@@ -213,7 +213,7 @@ let mk_chan (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     rewrite_slprop (chan_inv c) (chan_inv c') (fun _ -> ());
     return c'
 
-let new_chan (p:prot) : SteelSelT (chan p) emp (fun c -> sender c p `star` receiver c p)
+let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
   = let q = msg unit p in
     let v : chan_val = { chan_prot = q; chan_msg = (); chan_ctr = 0 } in
     let vp : init_chan_val p = v in
@@ -234,7 +234,7 @@ let new_chan (p:prot) : SteelSelT (chan p) emp (fun c -> sender c p `star` recei
     let c = mk_chan send recv vp in
     intro_in_state send p vp;
     intro_in_state recv p vp;
-    let l  = Steel.SelSpinLock.new_lock (chan_inv c) in
+    let l  = Steel.SpinLock.new_lock (chan_inv c) in
     let ch = { chan_chan = c; chan_lock = l } in
     rewrite_slprop (in_state send p) (sender ch p) (fun _ -> ());
     rewrite_slprop (in_state recv p) (receiver ch p) (fun _ -> ());
@@ -257,7 +257,7 @@ let sender_ahead (r:ref chan_val) (p:prot{more p}) #q (c:chan_t q) (vs vr:chan_v
      in_state r p)
 
 let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref chan_val)
-  : SteelSelT chan_val
+  : SteelT chan_val
            (pts_to r full_perm vs `star` in_state_slprop p vs)
            (fun vs' -> pts_to r full_perm vs' `star` (in_state_slprop (step p x) vs' `star` chan_inv_step vs vs'))
   = elim_pure (in_state_prop p vs);
@@ -271,7 +271,7 @@ let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref c
 let send_pre_available (p:sprot) #q (c:chan_t q) (vs vr:chan_val)  = send_recv_in_sync c.send p c vs vr
 
 let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
-  : SteelSelT unit
+  : SteelT unit
     (pts_to r half v `star` in_state r p)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = let v' = witness_exists () in
@@ -281,16 +281,16 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     rewrite_slprop (in_state_slprop p v') (in_state_slprop p v) (fun _ -> ())
 
 let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit)
-  : SteelSelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
-  = Steel.SelUtils.extract_pure (vs == vr);
-    Steel.SelUtils.rewrite #_ #(send_recv_in_sync cc.chan_chan.send p cc.chan_chan vs) vr vs;
+  : SteelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
+  = Steel.Utils.extract_pure (vs == vr);
+    Steel.Utils.rewrite #_ #(send_recv_in_sync cc.chan_chan.send p cc.chan_chan vs) vr vs;
     elim_pure (vs == vs);
     gather_r cc.chan_chan.send vs;
     let next_vs = update_channel cc.chan_chan x vs cc.chan_chan.send in
     H.share cc.chan_chan.send;
     intro_exists next_vs (fun (next_vs:chan_val) -> pts_to cc.chan_chan.send half next_vs `star` in_state_slprop (step p x) next_vs);
     intro_chan_inv_stepT cc.chan_chan next_vs vs;
-    Steel.SelSpinLock.release cc.chan_lock
+    Steel.SpinLock.release cc.chan_lock
 
 let extensible (#p:prot) (x:partial_trace_of p) = P.more x.to
 let next_msg_t (#p:prot) (x:partial_trace_of p) = P.next_msg_t x.to
@@ -305,7 +305,7 @@ let next_trace #p (vr:chan_val) (vs:chan_val)
      extend_partial_trace tr msg
 
 let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
-  : SteelSel (extension_of tr)
+  : Steel (extension_of tr)
           (chan_inv_step vr vs)
           (fun _ -> emp)
           (requires fun _ -> until tr == step vr.chan_prot vr.chan_msg)
@@ -315,7 +315,7 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
     return ts
 
 let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val)
-  : SteelSel unit
+  : Steel unit
           (trace_until r vr)
           (fun _ -> trace_until r vs)
           (requires fun _ -> chan_inv_step_p vr vs)
@@ -332,7 +332,7 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val)
          pure (until ts == step vs.chan_prot vs.chan_msg))
 
 let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
-  : SteelSelT (msg_t p)
+  : SteelT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)
     (fun x -> receiver cc (step p x))
   = elim_pure (chan_inv_step_p vr vs);
@@ -346,12 +346,12 @@ let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
     intro_exists vs (fun (vs:chan_val) -> pts_to cc.chan_chan.recv half vs `star` in_state_slprop (step p vs_msg) vs);
     update_trace cc.chan_chan.trace vr vs;
     intro_chan_inv cc.chan_chan vs;
-    Steel.SelSpinLock.release cc.chan_lock;
+    Steel.SpinLock.release cc.chan_lock;
     vs_msg
 
 #push-options "--ide_id_info_off"
 let send_receive_prelude (#p:prot) (cc:chan p)
-  : SteelSelT (chan_val & chan_val)
+  : SteelT (chan_val & chan_val)
            emp
            (fun v ->
              pts_to cc.chan_chan.send half (fst v) `star`
@@ -359,7 +359,7 @@ let send_receive_prelude (#p:prot) (cc:chan p)
              trace_until cc.chan_chan.trace (snd v) `star`
              chan_inv_cond (fst v) (snd v))
   = let c = cc.chan_chan in
-    Steel.SelSpinLock.acquire cc.chan_lock;
+    Steel.SpinLock.acquire cc.chan_lock;
     let vs = read_refine (chan_inv_recv cc.chan_chan) cc.chan_chan.send in
     let _ = witness_exists () in
     let vr = H.read cc.chan_chan.recv in
@@ -369,7 +369,7 @@ let send_receive_prelude (#p:prot) (cc:chan p)
     return (vs, vr)
 
 let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
-  : SteelSelT unit (sender c next) (fun _ -> sender c (step next x))
+  : SteelT unit (sender c next) (fun _ -> sender c (step next x))
   = let v = send_receive_prelude c in //matching v as vs,vr fails
     if (fst v).chan_ctr = (snd v).chan_ctr
     then (
@@ -383,12 +383,12 @@ let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
                                  (chan_inv_step (snd v) (fst v))
                                  (fun _ -> ());
       intro_chan_inv_stepT c.chan_chan (fst v) (snd v);
-      Steel.SelSpinLock.release c.chan_lock;
+      Steel.SpinLock.release c.chan_lock;
       send c x
     )
 
 let rec recv (#p:prot) (#next:prot{more next}) (c:chan p)
-  : SteelSelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
+  : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
   = let v = send_receive_prelude c in
     if (fst v).chan_ctr = (snd v).chan_ctr
     then (
@@ -397,7 +397,7 @@ let rec recv (#p:prot) (#next:prot{more next}) (c:chan p)
                                  (fun _ -> ());
       elim_pure (fst v == snd v);
       intro_chan_inv_eqT c.chan_chan (fst v) (snd v);
-      Steel.SelSpinLock.release c.chan_lock;
+      Steel.SpinLock.release c.chan_lock;
       recv c
     )
     else (
@@ -418,7 +418,7 @@ let history (#p:prot) (c:chan p) (t:partial_trace_of p) : prop =
   MRef.witnessed c.chan_chan.trace (history_p t)
 
 let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
-  : SteelSel unit
+  : Steel unit
           (MRef.pts_to r full_perm tr')
           (fun _ -> MRef.pts_to r full_perm tr')
           (requires fun _ -> MRef.witnessed r (history_p tr))
@@ -426,7 +426,7 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
   = MRef.recall (history_p tr) r tr'
 
 let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
-  : SteelSel unit
+  : Steel unit
           (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (fun _ -> pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (requires fun _ -> True)
@@ -438,7 +438,7 @@ let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
     intro_in_state _ _ vr
 
 let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
-  : SteelSel (partial_trace_of q)
+  : Steel (partial_trace_of q)
           (trace_until r vr)
           (fun tr -> trace_until r vr)
           (requires fun _ -> True)
@@ -450,19 +450,19 @@ let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
     tr
 
 let trace #q (cc:chan q)
-  : SteelSel (partial_trace_of q) emp (fun _ -> emp)
+  : Steel (partial_trace_of q) emp (fun _ -> emp)
           (requires fun _ -> True)
           (ensures fun _ tr _ -> history cc tr)
   = let _ = send_receive_prelude cc in
     let tr = witness_trace_until cc.chan_chan.trace in
     intro_chan_inv_auxT cc.chan_chan;
-    Steel.SelSpinLock.release cc.chan_lock;
+    Steel.SpinLock.release cc.chan_lock;
     tr
 
 let extend_history #q (#tr:partial_trace_of q)
                        (#v:chan_val)
                        (c:chan q)
-  : SteelSel (extension_of tr)
+  : Steel (extension_of tr)
           (pts_to c.chan_chan.recv half v `star`
             trace_until c.chan_chan.trace v)
            (fun tr' -> pts_to c.chan_chan.recv half v `star`
@@ -478,7 +478,7 @@ let extend_history #q (#tr:partial_trace_of q)
     tr''
 
 let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
-  : SteelSel (extension_of tr)
+  : Steel (extension_of tr)
           (receiver cc p)
           (fun t -> receiver cc p)
           (requires fun _ -> history cc tr)
@@ -487,5 +487,5 @@ let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
     let tr' = extend_history cc in
     let _ = prot_equals cc in
     intro_chan_inv_auxT cc.chan_chan;
-    Steel.SelSpinLock.release cc.chan_lock;
+    Steel.SpinLock.release cc.chan_lock;
     tr'
