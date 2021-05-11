@@ -756,10 +756,27 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
            (Print.term_to_string tm_subcomp_ascribed_g);
 
 
+    let discharge_fml env fml =
+      let tac_opt =
+        match U.get_attribute PC.layered_effects_ite_soundness_attr attrs with
+        | None -> None
+        | Some [(t, _)] -> Some t in
+      match tac_opt with
+      | None -> Rel.force_trivial_guard env (guard_of_guard_formula (NonTrivial fml))
+      | Some t ->
+        let t, _, g_tac = tc_tactic t_unit t_unit env t in
+        let fml = Common.mk_by_tactic t (U.mk_squash U_zero fml) in
+        Rel.force_trivial_guard env g_tac;
+        Rel.force_trivial_guard env (guard_of_guard_formula (NonTrivial fml)) in
+
     let _check_then =
       let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
       let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
-      Rel.force_trivial_guard env g_f in
+      let g_f, fml = {g_f with guard_f = Trivial}, (match g_f.guard_f with
+                                                    | NonTrivial f -> f
+                                                    | Trivial -> U.t_true) in
+      Rel.force_trivial_guard env g_f;
+      discharge_fml env fml in
 
     let _check_else =
       let not_p = S.mk_Tm_app
