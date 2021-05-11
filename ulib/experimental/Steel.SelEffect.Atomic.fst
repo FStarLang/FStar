@@ -559,6 +559,20 @@ let with_invariant #a #fp #fp' #opened #p i f =
   rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
   return x
 
+assume val reify_steel_ghost_comp
+  (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelSelGhostBase a already_framed opened_invariants Unobservable pre post req ens)
+  : action_except_full a opened_invariants
+                       (hp_of pre) (fun x -> hp_of (post x))
+                       (req_to_act_req req) (ens_to_act_ens ens)
+
+let with_invariant_g #a #fp #fp' #opened #p i f =
+  rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
+  let x = as_atomic_action_ghost (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
+  rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
+  x
+
 let intro_vrefine v p =
   let m = get () in
   let x : Ghost.erased (t_of v) = gget v in
