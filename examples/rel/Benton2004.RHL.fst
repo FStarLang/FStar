@@ -305,9 +305,9 @@ let rec r_while_terminates'
       assert (fst (fc' fuel0 s0'));      
       assert (terminates_equiv_reified (interp phi_c) fc fc');
       assert (holds (interp phi_c) s0 s0');
-      assert (terminates_on fc s0);//gives (exists f. fst (fc f s0));
-      assume (fst (fc fuel0 s0)); //but how to conclude for fuel0?
+      assert (terminates_on fc s0);
       elim_fuel_monotonic fc s0 fuel fuel1;
+      elim_fuel_monotonic fc' s0' fuel0 fuel1;
       assert (fc fuel1 s0 == fc fuel s0);
       assert (fc' fuel1 s0' == fc' fuel0 s0');
       r_while_terminates' b b' c c' phi phi_c phi_c' s1 s1' (fuel - 1);

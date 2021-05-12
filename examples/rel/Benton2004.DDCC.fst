@@ -475,7 +475,8 @@ let rec d_whl_terminates
       elim_fuel_monotonic fc' s0' fuel0 fuel1;
       assert (fc' fuel1 s0' == fc' fuel0 s0');
       assert (terminates_on fc s0);
-      assume (fc fuel1 s0 == fc fuel s0);
+      elim_fuel_monotonic fc s0 fuel fuel1;
+      assert (fc fuel1 s0 == fc fuel s0);
       let s1 = snd (fc fuel1 s0) in
       let s1' = snd (fc' fuel1 s0') in
       assert (holds phi s1 s1');
