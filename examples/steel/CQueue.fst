@@ -3,26 +3,68 @@ open CQueue.LList
 
 let t a = cllist_lvalue a
 
-noeq
-type v (a: Type0) = {
-  vllist: vllist a;
-  cells: list (ccell_lvalue a & vcell a);
-}
-
-let get_data
-  (#a: Type0)
-  (x: (ccell_lvalue a & vcell a))
-: Tot a
-= (snd x).vcell_data
+let v (a: Type0) = list a
 
 let datas
   (#a: Type0)
   (l: v a)
 : Tot (list a)
-= L.map get_data l.cells
+= l
 
 let (==) (#a:_) (x y: a) : prop = x == y
 
+let snoc_inj (#a: Type) (hd1 hd2: list a) (tl1 tl2: a) : Lemma
+  (requires (hd1 `L.append` [tl1] == hd2 `L.append` [tl2]))
+  (ensures (hd1 == hd2 /\ tl1 == tl2))
+  [SMTPat (hd1 `L.append` [tl1]); SMTPat (hd2 `L.append` [tl2])]
+= L.lemma_snoc_unsnoc (hd1, tl1);
+  L.lemma_snoc_unsnoc (hd2, tl2)
+
+[@"opaque_to_smt"]
+let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
+  (requires (Cons? l))
+  (ensures (fun (hd, tl) -> l == hd `L.append` [tl] /\ L.length hd < L.length l))
+=
+  L.lemma_unsnoc_snoc l;
+  L.append_length (fst (L.unsnoc l)) [snd (L.unsnoc l)];
+  L.unsnoc l
+
+let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun l' -> L.length l' < L.length l)) = fst (unsnoc l)
+let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
+
+let rec llist_fragment_tail (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) : Pure vprop
+  (requires True)
+  (ensures (fun v -> t_of v == ref (ccell_ptrvalue a)))
+  (decreases (Ghost.reveal (L.length l)))
+= if Nil? l
+  then emp `vrewrite` (fun _ -> phead)
+  else llist_fragment_tail (Ghost.hide (unsnoc_hd (Ghost.reveal l))) phead `vdep` (fun (ptail: ref (ccell_ptrvalue a)) -> vptr ptail `vrefine` (fun c -> ccell_ptrvalue_is_null c == false) `vdep` (fun (c: ccell_lvalue a) -> vptr (ccell_data c) `vrefine` (fun d -> d == unsnoc_tl (Ghost.reveal l)))) `vrewrite` (fun (| _, (| c, _ |) |) -> ccell_next c)
+
+let queue_tail
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+: Tot vprop
+=
+  (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x)) `vdep` (fun (tails: (ref (ccell_ptrvalue a) & ref (ccell_ptrvalue a))) -> vptr (fst tails) `vrefine` (fun (tl: ccell_ptrvalue a) -> ccell_ptrvalue_is_null tl == true /\ snd tails == fst tails))
+
+let rec llist_fragment_head (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a) : Pure vprop
+  (requires True)
+  (ensures (fun v -> t_of v == ref (ccell_ptrvalue a) & ccell_ptrvalue a))
+  (decreases (Ghost.reveal l))
+=
+  if Nil? l
+  then emp `vrewrite` (fun _ -> (phead, head))
+  else ((emp `vrefine` (fun _ -> ccell_ptrvalue_is_null head == false) `vrewrite` (fun _ -> (head <: ccell_lvalue a))) `vdep` (fun (head: ccell_lvalue a) -> (vptr (ccell_data head) `vrefine` (fun (d: a) -> d == L.hd (Ghost.reveal l))) `star` (vptr (ccell_next head) `vdep` (fun (tl: ccell_ptrvalue a) -> llist_fragment_head (L.tl (Ghost.reveal l)) (ccell_next head) tl)))) `vrewrite` (fun (| _, (_, (| _, ptl |) ) |) -> ptl <: (ref (ccell_ptrvalue a) & ccell_ptrvalue a))
+
+let queue_head
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+: Tot vprop
+= vptr (cllist_head x) `vdep` (fun hd -> llist_fragment_head l (cllist_head x) hd `vdep` (fun (ptl: (ref (ccell_ptrvalue a) & ccell_ptrvalue a)) -> vptr (cllist_tail x) `vrefine` (fun tl -> tl == fst ptl /\ ccell_ptrvalue_is_null (snd ptl) == true)))
+
+(*
 let rec llist_fragment (#a:Type) (rptr: ref (ccell_ptrvalue a))
                                  (ptr: ccell_ptrvalue a)
                                  (l:Ghost.erased (list (ccell_lvalue a & vcell a)))
@@ -166,24 +208,6 @@ let rec llist_fragment_append
     )) by canon ()
 
 (* I need to account for changing the next pointer of the last cell *)
-
-let snoc_inj (#a: Type) (hd1 hd2: list a) (tl1 tl2: a) : Lemma
-  (requires (hd1 `L.append` [tl1] == hd2 `L.append` [tl2]))
-  (ensures (hd1 == hd2 /\ tl1 == tl2))
-  [SMTPat (hd1 `L.append` [tl1]); SMTPat (hd2 `L.append` [tl2])]
-= L.lemma_snoc_unsnoc (hd1, tl1);
-  L.lemma_snoc_unsnoc (hd2, tl2)
-
-[@"opaque_to_smt"]
-let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
-  (requires (Cons? l))
-  (ensures (fun (hd, tl) -> l == hd `L.append` [tl]))
-=
-  L.lemma_unsnoc_snoc l;
-  L.unsnoc l
-
-let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun _ -> True)) = fst (unsnoc l)
-let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
 let update_next_last
   (#a: Type)
