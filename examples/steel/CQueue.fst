@@ -250,7 +250,7 @@ let queue
 let unpack_queue
   (#a: Type)
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
-: SteelSel unit
+: Steel unit
     (queue x l)
     (fun _ -> pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
@@ -272,7 +272,7 @@ let unpack_queue
 let pack_queue
   (#a: Type)
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
-: SteelSel unit
+: Steel unit
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
@@ -296,7 +296,7 @@ let pack_queue1
   (x: cllist_lvalue a) (l: Ghost.erased (v a))
   (tail1: _) (vtail1: Ghost.erased _)
   (tail2: _) (vtail2: Ghost.erased _)
-: SteelSel unit
+: Steel unit
     (pts_to tail1 full_perm vtail1 `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to tail2 full_perm vtail2)
@@ -324,7 +324,7 @@ let pack_queue1
 let change_equiv_slprop
   (p q: vprop)
   (sq: (unit -> Lemma (p `equiv` q)))
-: SteelSelT unit
+: SteelT unit
     p
     (fun _ -> q)
 =
@@ -333,7 +333,7 @@ let change_equiv_slprop
 let change_equal_slprop
   (p q: vprop)
   (sq: (unit -> Lemma (p == q)))
-: SteelSelT unit
+: SteelT unit
     p
     (fun _ -> q)
 = change_equiv_slprop p q (fun _ -> reveal_equiv p q; sq ())
@@ -805,7 +805,7 @@ let queue_equiv
 
 let peek_pure
   (#uses:_) (p:prop)
-  : SteelSelGhostT (_:unit{p}) uses
+  : SteelGhostT (_:unit{p}) uses
                 (pure p)
                 (fun _ -> pure p)
 =
@@ -814,7 +814,7 @@ let peek_pure
   q
 
 let read_no_change (#a:Type) (#p:perm) (#v:Ghost.erased a) (r:ref a)
-  : SteelSel a (pts_to r p v) (fun _ -> pts_to r p v)
+  : Steel a (pts_to r p v) (fun _ -> pts_to r p v)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 =

@@ -2,8 +2,8 @@ module Selectors.Tree
 
 open Selectors.Tree.Core
 open Steel.Memory
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect
+open Steel.Reference
 
 module Spec = Trees
 

@@ -1,8 +1,8 @@
 module Duplex.PCM
 open FStar.PCM
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.Channel.Protocol
 
 let dprot' = protocol unit
@@ -49,19 +49,19 @@ val ch : Type u#1
 val ep (name:party) (c:ch) (next:dprot) : vprop
 
 val new_channel (p:dprot)
-  : SteelSelT (ch & ch) emp
+  : SteelT (ch & ch) emp
            (fun cc -> ep A (fst cc) p `star` ep B (snd cc) p)
 
 val channel_send (#name:party)
                  (#next:send_next_dprot_t name)
                  (c:ch) (x:msg_t next)
-  : SteelSelT unit
+  : SteelT unit
            (ep name c next)
            (fun _ -> ep name c (step next x))
 
 val channel_recv (#name:party)
                  (#next:recv_next_dprot_t name)
                  (c:ch)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
            (ep name c next)
            (fun x -> ep name c (step next x))

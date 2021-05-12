@@ -136,11 +136,11 @@ let pcm (prot:dprot) : pcm (t prot) =
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelPCMReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.PCMReference
 module Mem = Steel.Memory
-module PR = Steel.SelPCMReference
+module PR = Steel.PCMReference
 
 let chan (p:dprot) = ref (t p) (pcm p)
 
@@ -179,7 +179,7 @@ let select_refine' (#p:dprot)
                    (f:(v:t p{compatible (pcm p) x v}
                      -> GTot (y:t p{compatible (pcm p) y v /\
                                  frame_compatible x v y})))
-    : SteelSelT  (v:t p{compatible (pcm p) x v /\ refine v})
+    : SteelT  (v:t p{compatible (pcm p) x v /\ refine v})
               (PR.pts_to r x)
               (fun v -> PR.pts_to r (f v))
     = select_refine r x f
@@ -190,7 +190,7 @@ val select_refine (#p:dprot)
                   (f:(v:t p{compatible (pcm p) x v}
                           -> GTot (y:t p{compatible (pcm p) y v /\
                                  frame_compatible x v y})))
-    : SteelSelT  (v:t p{compatible (pcm p) x v /\ refine v})
+    : SteelT  (v:t p{compatible (pcm p) x v /\ refine v})
               (pts_to r x)
               (fun v -> pts_to r (f v))
 
@@ -603,7 +603,7 @@ let f_b_r (#p:dprot) (q:dprot{is_send q /\ more q}) (tr:trace p q)
 
 
 val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
-  : SteelSelT (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')})
+  : SteelT (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')})
            (pts_to c (A_R q tr))
            (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
 
@@ -618,7 +618,7 @@ let get_a_r #p c q tr =
   return tr'
 
 val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
-  : SteelSelT (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')})
+  : SteelT (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')})
            (pts_to c (B_R q tr))
            (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
 
@@ -636,7 +636,7 @@ val upd_gen_action (#p:dprot)
                    (r:chan p)
                    (x y:t p)
                    (f:FStar.PCM.frame_preserving_upd (pcm p) x y)
-    : SteelSelT unit (pts_to r x) (fun _ -> pts_to r y)
+    : SteelT unit (pts_to r x) (fun _ -> pts_to r y)
 
 let upd_gen_action #p r x y f =
   rewrite_slprop (pts_to r x) (pts_to r (reveal (hide x))) (fun _ -> ());
@@ -869,7 +869,7 @@ let write_a
   (#next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
   (x:msg_t next)
-  :SteelSelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
+  :SteelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
   = let v : t p =
       if is_send (step next x)
       then A_W (step next x) (extend tr x)
@@ -885,7 +885,7 @@ let write_b
   (#next:dprot{more next /\ tag_of next = Recv})
   (tr:trace p next)
   (x:msg_t next)
-  :SteelSelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
+  :SteelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
   = let v : t p =
       if is_send (step next x)
       then B_R (step next x) (extend tr x)
@@ -896,7 +896,7 @@ let write_b
     upd_gen_action r _ v (write_b_f tr x)
 
 val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
-  : SteelSel (chan p) emp (fun r -> pts_to r x) (fun _ -> squash (compatible (pcm p) x x)) (fun _ _ _ -> True)
+  : Steel (chan p) emp (fun r -> pts_to r x) (fun _ -> squash (compatible (pcm p) x x)) (fun _ _ _ -> True)
 
 let alloc x =
   let r = alloc x in
@@ -904,7 +904,7 @@ let alloc x =
   return r
 
 val split (#p:dprot) (r:chan p) (v_full v0 v1:t p) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
-  : SteelSelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+  : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
 
 let split r v v0 v1 u1 u2 =
   rewrite_slprop (pts_to r v) (pts_to r (reveal (hide v))) (fun _ -> ());
@@ -913,7 +913,7 @@ let split r v v0 v1 u1 u2 =
   rewrite_slprop (pts_to r (reveal (hide v1))) (pts_to r v1) (fun _ -> ())
 
 val new_chan (p:dprot)
-  : SteelSelT (chan p) emp
+  : SteelT (chan p) emp
            (fun c -> endpoint_a c p (empty_trace p) `star` endpoint_b c p (empty_trace p))
 
 let lem #p (x:t p) : Lemma (requires V? x) (ensures compatible (pcm p) x x)
@@ -944,7 +944,7 @@ val send_a
   (#next:dprot{more next /\ tag_of next = Send})
   (x:msg_t next)
   (tr:trace p next)
-  : SteelSelT unit
+  : SteelT unit
            (endpoint_a c next tr)
            (fun _ -> endpoint_a c (step next x) (extend tr x))
 
@@ -958,7 +958,7 @@ val send_b
   (#next:dprot{more next /\ tag_of next = Recv})
   (x:msg_t next)
   (tr:trace p next)
-  : SteelSelT unit
+  : SteelT unit
            (endpoint_b c next tr)
            (fun _ -> endpoint_b c (step next x) (extend tr x))
 
@@ -970,7 +970,7 @@ let rec recv_a (#p:dprot)
                (c:chan p)
                (next:dprot{more next /\ tag_of next = Recv})
                (tr:trace p next)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
            (endpoint_a c next tr)
            (fun x -> endpoint_a c (step next x) (extend tr x))
   =
@@ -995,7 +995,7 @@ let rec recv_b
   (c:chan p)
   (next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
            (endpoint_b c next tr)
            (fun x -> endpoint_b c (step next x) (extend tr x))
   =
@@ -1034,7 +1034,7 @@ let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
  *)
 let send_aux (#p:dprot) (name:party) (c:chan p)
   (#next:send_next_dprot_t name) (x:msg_t next) (t:trace p next)
-  : SteelSelT unit
+  : SteelT unit
       (endpoint name c next t)
       (fun _ -> endpoint name c (step next x) (extend t x))
   = if name = A then begin
@@ -1054,7 +1054,7 @@ let send_aux (#p:dprot) (name:party) (c:chan p)
 
 let recv_aux (#p:dprot) (name:party) (c:chan p)
   (#next:recv_next_dprot_t name) (t:trace p next)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
       (endpoint name c next t)
       (fun x -> endpoint name c (step next x) (extend t x))
   = if name = A then begin
@@ -1074,7 +1074,7 @@ let recv_aux (#p:dprot) (name:party) (c:chan p)
       return x
     end
 
-module HR = Steel.SelHigherReference
+module HR = Steel.HigherReference
 module Perm = Steel.FractionalPermission
 
 type trace_t (p:dprot) = next:dprot & trace p next
@@ -1102,7 +1102,7 @@ let read_trace_ref (#p:dprot)
   (#w:erased (next:dprot & trace p next))
   (r:HR.ref (next:dprot & trace p next))
   (next:dprot)
-  : SteelSel (trace p next)
+  : Steel (trace p next)
       (HR.pts_to r Perm.full_perm w)
       (fun _ -> HR.pts_to r Perm.full_perm w)
       (fun _ -> dfst w == next)
@@ -1115,7 +1115,7 @@ let read_trace_ref (#p:dprot)
 
 let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
   (next:(if is_send then send_next_dprot_t name else recv_next_dprot_t name))
-  : SteelSelT (trace p next)
+  : SteelT (trace p next)
       (endpt name c next)
       (fun tr -> endpoint name (fst c) next tr `star`
               HR.pts_to (snd c) Perm.full_perm (| next, tr |))
@@ -1136,7 +1136,7 @@ let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
   (#next:(if is_send then send_next_dprot_t name else recv_next_dprot_t name))
   (#tr:trace p next)
   (x:msg_t next)
-  : SteelSelT unit
+  : SteelT unit
       (endpoint name (fst c) (step next x) (extend tr x) `star`
        HR.pts_to (snd c) Perm.full_perm w)
       (fun _ -> endpt name c (step next x))
@@ -1162,7 +1162,7 @@ let ep (name:party) (c:ch) (next:dprot) = endpt name (dsnd c) next
 #push-options "--fuel 2 --ifuel 2"
 
 let new_channel' (p:dprot)
-  : SteelSelT (channel p & channel p) emp
+  : SteelT (channel p & channel p) emp
            (fun cc -> endpt A (fst cc) p `star` endpt B (snd cc) p)
   =
   let v : (next:dprot & trace p next) = (| p, empty_trace p |) in
@@ -1204,14 +1204,14 @@ let new_channel' (p:dprot)
 #pop-options
 
 let channel_as_ch (#p:dprot) party (c:channel p) prot
-  : SteelSelT unit (endpt party c prot)
+  : SteelT unit (endpt party c prot)
                 (fun _ -> ep party (| p, c |) prot)
   = rewrite_slprop (endpt party c prot)
                   (ep party (|p, c|) prot)
                   (fun _ -> ()); ()
 
 let new_channel  (p:dprot)
-  : SteelSelT (ch & ch) emp
+  : SteelT (ch & ch) emp
            (fun cc -> ep A (fst cc) p `star` ep B (snd cc) p)
   = let cc = new_channel' p in
     channel_as_ch #p A (fst cc) p;
@@ -1224,7 +1224,7 @@ let channel_send' (#name:party)
                  (#next:send_next_dprot_t name)
                  (c:channel p)
                  (x:msg_t next)
-  : SteelSelT unit
+  : SteelT unit
       (endpt name c next)
       (fun _ -> endpt name c (step next x))
   = let tr = unpack_trace_ref name c true next in
@@ -1232,7 +1232,7 @@ let channel_send' (#name:party)
     pack_trace_ref name c true x
 
 let ch_as_channel party (c:ch) prot
-  : SteelSelT unit
+  : SteelT unit
            (ep party c prot)
            (fun _ -> endpt party (dsnd c) prot)
   = rewrite_slprop (ep party c prot)
@@ -1243,7 +1243,7 @@ let channel_send (#name:party)
                  (#next:send_next_dprot_t name)
                  (c:ch)
                  (x:msg_t next)
-  : SteelSelT unit
+  : SteelT unit
       (ep name c next)
       (fun _ -> ep name c (step next x))
   = ch_as_channel _ _ _;
@@ -1257,7 +1257,7 @@ let channel_recv' (#name:party)
                  (#p:dprot)
                  (#next:recv_next_dprot_t name)
                  (c:channel p)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
       (endpt name c next)
       (fun x -> endpt name c (step next x))
   = let tr = unpack_trace_ref name c false next in
@@ -1268,7 +1268,7 @@ let channel_recv' (#name:party)
 let channel_recv (#name:party)
                  (#next:recv_next_dprot_t name)
                  (c:ch)
-  : SteelSelT (msg_t next)
+  : SteelT (msg_t next)
            (ep name c next)
            (fun x -> ep name c (step next x))
   = ch_as_channel _ _ _;

@@ -1,8 +1,8 @@
 module Selectors.Tree.Core
 
 open Steel.Memory
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect
+open Steel.Reference
 
 module Spec = Trees
 
@@ -71,13 +71,13 @@ let v_linked_tree
 (**** Low-level operations on trees *)
 
 val intro_linked_tree_leaf (#a: Type0) (_: unit)
-    : SteelSel unit
+    : Steel unit
       emp (fun _ -> linked_tree (null_t #a))
       (requires (fun _ -> True))
       (ensures (fun _ _ h1 -> v_linked_tree #a null_t h1 == Spec.Leaf))
 
 val elim_linked_tree_leaf (#a: Type0) (ptr: t a)
-    : SteelSel unit
+    : Steel unit
        (linked_tree ptr) (fun _ -> linked_tree ptr)
        (requires (fun _ -> is_null_t ptr))
        (ensures (fun h0 _ h1 ->
@@ -85,13 +85,13 @@ val elim_linked_tree_leaf (#a: Type0) (ptr: t a)
          v_linked_tree ptr h1 == Spec.Leaf))
 
 val node_is_not_null (#a: Type0) (ptr: t a)
-    : SteelSel unit
+    : Steel unit
        (linked_tree ptr) (fun _ -> linked_tree ptr)
        (requires (fun h0 -> Spec.Node? (v_linked_tree ptr h0)))
        (ensures (fun h0 _ h1 -> not (is_null_t ptr) /\ v_linked_tree ptr h0 == v_linked_tree ptr h1))
 
 val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
-    : SteelSel unit
+    : Steel unit
       (vptr ptr `star` linked_tree left `star` linked_tree right)
       (fun _ -> linked_tree ptr)
       (requires (fun h0 ->
@@ -103,7 +103,7 @@ val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
       ))
 
 val unpack_tree (#a: Type0) (ptr: t a)
-    : SteelSel (node a)
+    : Steel (node a)
       (linked_tree ptr)
       (fun node ->
         linked_tree (get_left node) `star` linked_tree (get_right node) `star` vptr ptr)

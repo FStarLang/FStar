@@ -19,12 +19,12 @@ module DList1
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 module L = FStar.List.Tot
-module U = Steel.SelUtils
+module U = Steel.Utils
 
 module T = FStar.Tactics
 
@@ -85,7 +85,7 @@ let intro_pure_l (p:prop) (q:vprop)
   = admit()
 
 let elim_pure (#p:prop) #u ()
-  : SteelSelGhost unit u
+  : SteelGhost unit u
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
@@ -532,7 +532,7 @@ let dlist_cons_nil (#a:_) (left right:t a)
     }
 
 let intro_dlist_nil' (#a:Type) #u (left right:t a)
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
       emp
       (fun _ -> dlist_cons left right left right [])
   = rewrite_slprop _ _ (fun _ -> dlist_cons_nil left right)
@@ -581,7 +581,7 @@ let dlist_snoc_cons (#a:_) (left tail head:t a) (hd: cell a) (xs:_)
 let econs #a (x:erased a) (xs:erased (list a)) = hide (reveal x :: reveal xs)
 
 let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: erased (cell a)) (xs:erased (list (cell a)))
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_cons head (next hd) tail right xs)
        (fun _ ->
@@ -589,7 +589,7 @@ let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: erased (cell a)) (xs:
   = rewrite_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
 
 let intro_dlist_snoc_cons #a #u (left tail head:t a) (hd: erased (cell a)) (xs:erased (list (cell a)))
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
        (pts_to head hd `star`
         dlist_snoc left tail (prev hd) head xs)
        (fun _ ->
@@ -600,7 +600,7 @@ let intro_dlist_snoc_cons #a #u (left tail head:t a) (hd: erased (cell a)) (xs:e
 let enil #a (x:erased a) : erased (list a) = hide [reveal x]
 
 let new_dlist' (#a:Type) (init:a)
-  : SteelSel (t a & Ghost.erased (cell a))
+  : Steel (t a & Ghost.erased (cell a))
     emp
     (fun pc -> dlist_cons null (fst pc) (fst pc) null (enil (snd pc)))
     (requires fun _ -> True)
@@ -620,7 +620,7 @@ let esnoc #a (xs:erased (list a)) (x:erased a) = hide (List.snoc (reveal xs, rev
 
 assume
 val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelSelGhost (erased (ecell a & elist (cell a))) u
+    : SteelGhost (erased (ecell a & elist (cell a))) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to tail (fst x) `star`
@@ -630,7 +630,7 @@ val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
 
 assume
 val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelSelGhost (erased (ecell a & elist (cell a))) u
+    : SteelGhost (erased (ecell a & elist (cell a))) u
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to head (fst x) `star`
@@ -653,7 +653,7 @@ let datas_rev_snoc_cons #a (xs ys:elist (cell a))
 let concat (#a:_) (left head tail right: t a)
                   (left' head' tail' right': t a)
                   (xs xs':Ghost.erased (list (cell a)))
-  : SteelSel (elist (cell a))
+  : Steel (elist (cell a))
           (dlist_cons left head tail right xs `star`
            dlist_cons left' head' tail' right' xs')
           (fun r -> dlist_cons left head tail' right' (reveal r))
@@ -724,7 +724,7 @@ let dl (#a:_) (left head tail right: t a) (x:elist a) =
     dlist_cons left head tail right xs)
 
 let witness_dl #u (#a:_) (left head tail right:t a) (x:elist a)
-  : SteelSelGhostT (elist (cell a)) u
+  : SteelGhostT (elist (cell a)) u
     (dl left head tail right x)
     (fun (xs:elist (cell a)) ->
       pure (datas xs == x) `star`
@@ -733,7 +733,7 @@ let witness_dl #u (#a:_) (left head tail right:t a) (x:elist a)
     reveal x
 
 let intro_dl #u (#a:_) (left head tail right:t a) (x:elist a) (xs:elist (cell a))
-  : SteelSelGhost unit u
+  : SteelGhost unit u
                (dlist_cons left head tail right xs)
                (fun _ -> dl left head tail right x)
                (requires fun _ -> datas xs == x)
@@ -746,7 +746,7 @@ let intro_dl #u (#a:_) (left head tail right:t a) (x:elist a) (xs:elist (cell a)
 let append (#a:_) (left head tail right: t a)
                   (left' head' tail' right': t a)
                   (xs xs':elist a)
-  : SteelSel unit
+  : Steel unit
           (dl left head tail right xs `star` dl left' head' tail' right' xs')
           (fun _ -> dl left head tail' right' (eappend xs xs'))
           (requires fun _ -> Cons? xs /\ Cons? xs')

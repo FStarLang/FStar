@@ -4,9 +4,9 @@ open FStar.Ghost
 open Steel.FractionalPermission
 module Mem = Steel.Memory
 
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 #push-options "--__no_positivity"
 noeq
@@ -222,7 +222,7 @@ let unpack_ind_lemma (#a:Type0) (r:ref (ref a)) (p:ref a) (v:a) (m:mem) : Lemma
   = intro_ptr_frame_lemma r p (ptr p) m
 
 val unpack_ind_full (#a:Type0) (r:ref (ref a))
-  : SteelSel (ref a)
+  : Steel (ref a)
              (ind_ptr_full r)
              (fun p -> vptr r `star` vptr p)
              (requires fun _ -> True)
@@ -248,7 +248,7 @@ let unpack_ind_full r =
     return p
 
 val unpack_ind (#a:Type0) (r:ref (ref a))
-  : SteelSel (ref a)
+  : Steel (ref a)
              (ind_ptr r)
              (fun p -> vptr r `star` vptr p)
              (requires fun _ -> True)
@@ -262,7 +262,7 @@ let unpack_ind r =
   p
 
 val pack_ind (#a:Type0) (r:ref (ref a)) (p:ref a)
-  : SteelSel unit
+  : Steel unit
              (vptr r `star` vptr p)
              (fun _ -> ind_ptr r)
              (requires fun h -> sel r h == p)
@@ -301,7 +301,7 @@ let reveal_non_empty_lemma (#a:Type) (ptr:t a) (l:list (cell a * a)) (m:mem) : L
   pure_interp (ptr == null_llist) m
 
 val reveal_non_empty_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
+  : Steel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
              (requires fun _ -> ptr =!= null_llist)
              (ensures fun h0 _ h1 -> v_cell ptr h0 == v_cell ptr h1 /\ Cons? (v_cell ptr h0))
 
@@ -445,7 +445,7 @@ let intro_llist_cons ptr1 ptr2 r =
 
 
 val elim_cons_cell (#a:Type0) (ptr:t a)
-  : SteelSel (cell a) (llist_cell ptr)
+  : Steel (cell a) (llist_cell ptr)
                    (fun c -> vptr ptr `star` vptr (data c) `star` llist_cell (next c))
                    (requires fun _ -> ptr =!= null_llist)
                    (ensures fun h0 c h1 ->

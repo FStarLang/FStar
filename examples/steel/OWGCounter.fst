@@ -33,15 +33,15 @@ module G = FStar.Ghost
 
 open Steel.Memory
 open Steel.FractionalPermission
-open Steel.SelReference
-open Steel.SelSpinLock
+open Steel.Reference
+open Steel.SpinLock
 
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 
-module R = Steel.SelReference
+module R = Steel.Reference
 module P = Steel.FractionalPermission
-module A = Steel.SelEffect.Atomic
+module A = Steel.Effect.Atomic
 
 #set-options "--ide_id_info_off --using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0"
 
@@ -114,7 +114,7 @@ inline_for_extraction noextract
 let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
-  : SteelSelT unit
+  : SteelT unit
       emp
       (fun _ -> lock_inv r r_mine r_other)
   = acquire l;
@@ -138,7 +138,7 @@ inline_for_extraction noextract
 let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
-  : SteelSelT unit
+  : SteelT unit
       (lock_inv r r_mine r_other)
       (fun _ -> emp)
   = if b then begin
@@ -165,7 +165,7 @@ let g_incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
 
 inline_for_extraction noextract
 let incr_ctr (#v:G.erased int) (r:ref int)
-  : SteelSelT unit
+  : SteelT unit
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (g_incr v))
   = let n = R.read_pt r in
@@ -176,7 +176,7 @@ let incr_ctr (#v:G.erased int) (r:ref int)
 
 inline_for_extraction noextract
 let rewrite_perm(#a:Type) (#v:G.erased a) (r:ghost_ref a) (p1 p2:P.perm)
-  : SteelSel unit
+  : Steel unit
       (ghost_pts_to r p1 v)
       (fun _ -> ghost_pts_to r p2 v)
       (fun _ -> p1 == p2)
@@ -187,7 +187,7 @@ let rewrite_perm(#a:Type) (#v:G.erased a) (r:ghost_ref a) (p1 p2:P.perm)
 
 inline_for_extraction noextract
 let incr_ghost_contrib (#v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelSel unit
+  : Steel unit
       (ghost_pts_to r half_perm v1 `star`
        ghost_pts_to r half_perm v2)
       (fun _ -> ghost_pts_to r half_perm (g_incr v1) `star`
@@ -209,7 +209,7 @@ let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
                       (if b then r_other else r_mine)))
   (n_ghost:G.erased int)
   ()
-  : SteelSelT unit
+  : SteelT unit
       (ghost_pts_to r_mine half_perm n_ghost)
       (fun _ -> ghost_pts_to r_mine half_perm (g_incr n_ghost))
   = og_acquire r r_mine r_other b l;
@@ -223,7 +223,7 @@ let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
     og_release r r_mine r_other b l
 
 let incr_main (#v:G.erased int) (r:ref int)
-  : SteelSelT unit
+  : SteelT unit
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (G.hide (G.reveal v + 2)))
   = //allocate the two contribution references

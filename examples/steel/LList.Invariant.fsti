@@ -17,9 +17,9 @@
 *)
 module LList.Invariant
 open Steel.Memory
-open Steel.SelEffect
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 module L = FStar.List.Tot
 
 val cell (a:Type0) : Type0
@@ -52,12 +52,12 @@ val llist (#a:Type) (ptr:t a) (l:list (cell a)) : vprop
 (* Helper lemmas/rewritings *)
 
 val intro_llist_nil (a:Type)
-   : SteelSelT unit emp (fun _ -> llist (null_llist #a) [])
+   : SteelT unit emp (fun _ -> llist (null_llist #a) [])
 
 val intro_llist_cons (#a:Type) (ptr:t a)
                                (hd: cell a)
                                (tl: list (cell a))
-   : SteelSel unit
+   : Steel unit
      (pts_to ptr full_perm hd `star` llist (next hd) tl)
      (fun _ -> llist ptr (hd::tl))
      (requires fun _ -> ~ (is_null ptr))
@@ -66,6 +66,6 @@ val intro_llist_cons (#a:Type) (ptr:t a)
 val elim_llist_cons (#a:Type) (ptr:t a)
                               (hd:cell a)
                               (tl:list (cell a))
-   : SteelSelT unit
+   : SteelT unit
      (llist ptr (hd::tl))
      (fun _ -> pts_to ptr full_perm hd `star` llist (next hd) tl)

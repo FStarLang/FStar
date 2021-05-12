@@ -37,12 +37,12 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   refine = (fun x -> Both? x \/ Neither? x)
 })
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelPCMReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.PCMReference
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
-  : SteelSelT unit
+  : SteelT unit
            (pts_to r (First #a #b x))
            (fun _ -> pts_to r (First #a #b y))
   = let f
@@ -60,7 +60,7 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
     rewrite_slprop (pts_to r (Ghost.reveal (Ghost.hide (First y)))) (pts_to r (First y)) (fun _ -> ())
 
 let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
-  : SteelSelT unit
+  : SteelT unit
            (pts_to r (Second #a #b x))
            (fun _ -> pts_to r (Second #a #b y))
   = let f

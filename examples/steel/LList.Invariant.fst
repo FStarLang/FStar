@@ -17,10 +17,10 @@
 *)
 module LList.Invariant
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 module L = FStar.List.Tot
 
 #push-options "--__no_positivity"
