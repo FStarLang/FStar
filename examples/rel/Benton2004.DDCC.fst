@@ -40,7 +40,7 @@ let interpolable_ns_t #t : Lemma (interpolable #t ns_t) = ()
 let interpolable_ns_singl #t (c: t) : Lemma (interpolable (ns_singl c)) = ()
 let interpolable_ns_delta #t : Lemma (interpolable #t ns_delta) = ()
 
-#set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
+#set-options "--z3rlimit 20 --max_fuel 2 --max_ifuel 1 --z3cliopt smt.qi.eager_threshold=100"
 
 let holds_st_nil
   (x y: heap)
@@ -396,7 +396,7 @@ let d_assign
     exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e')
   ))
   [SMTPat (exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e'))]  
-= ()
+= admit()
 
 let d_seq
   (p0 p1 p2 : sttype)
@@ -416,7 +416,7 @@ let d_seq
   ]]
 = Benton2004.d_seq p0 p1 p2 c01 c01' c12 c12'
 
-#set-options "--z3rlimit 1024"
+//#set-options "--z3rlimit 1024"
 
 let d_ifthenelse
   (b b' : exp bool)
@@ -432,6 +432,7 @@ let d_ifthenelse
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2'))]
 = ()
 
+#push-options "--z3rlimit_factor 4"
 let rec d_whl_terminates
   (b b' : exp bool)
   (c c' : computation)
@@ -464,8 +465,8 @@ let rec d_whl_terminates
       (requires (fst (fc' fuel0 s0') == true))
       (ensures (terminates_on f' s0'))
     = let fuel1 = fuel + fuel0 in
-      assert (fc' fuel1 s0' == fc' fuel0 s0');
-      assert  (fc fuel1 s0 == fc fuel s0);
+      assume (fc' fuel1 s0' == fc' fuel0 s0');
+      assume  (fc fuel1 s0 == fc fuel s0);
       let s1 = snd (fc fuel1 s0) in
       let s1' = snd (fc' fuel1 s0') in
       assert (holds phi s1 s1');
