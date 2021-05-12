@@ -381,6 +381,7 @@ let d_skip
   [SMTPat (exec_equiv p p skip skip)]
 = Benton2004.d_skip p
 
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let d_assign
   (p: sttype)
   (x: var)
@@ -396,7 +397,8 @@ let d_assign
     exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e')
   ))
   [SMTPat (exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e'))]  
-= admit()
+= ()
+#pop-options
 
 let d_seq
   (p0 p1 p2 : sttype)
@@ -432,7 +434,12 @@ let d_ifthenelse
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2'))]
 = ()
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 0"
+let elim_fuel_monotonic (fc:reified_computation) (s0:heap) (f0 f1:nat)
+  : Lemma (requires f0 <= f1 /\ fst (fc f0 s0))
+          (ensures fc f0 s0 == fc f1 s0)
+  = ()
+
 let rec d_whl_terminates
   (b b' : exp bool)
   (c c' : computation)
@@ -465,8 +472,10 @@ let rec d_whl_terminates
       (requires (fst (fc' fuel0 s0') == true))
       (ensures (terminates_on f' s0'))
     = let fuel1 = fuel + fuel0 in
-      assume (fc' fuel1 s0' == fc' fuel0 s0');
-      assume  (fc fuel1 s0 == fc fuel s0);
+      elim_fuel_monotonic fc' s0' fuel0 fuel1;
+      assert (fc' fuel1 s0' == fc' fuel0 s0');
+      assert (terminates_on fc s0);
+      assume (fc fuel1 s0 == fc fuel s0);
       let s1 = snd (fc fuel1 s0) in
       let s1' = snd (fc' fuel1 s0') in
       assert (holds phi s1 s1');
@@ -555,7 +564,7 @@ let d_whl
     end else ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
-
+#pop-options
 (* 3.1 Basic equations *)
 
 let d_su1
