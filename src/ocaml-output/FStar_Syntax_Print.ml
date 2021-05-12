@@ -1047,11 +1047,31 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                             FStar_Util.format1 "ALL %s" uu___10
                           else
                             (let uu___11 =
-                               sli c1.FStar_Syntax_Syntax.effect_name in
-                             let uu___12 =
-                               term_to_string
-                                 c1.FStar_Syntax_Syntax.result_typ in
-                             FStar_Util.format2 "%s (%s)" uu___11 uu___12)))) in
+                               let uu___12 = FStar_Options.print_universes () in
+                               Prims.op_Negation uu___12 in
+                             if uu___11
+                             then
+                               let uu___12 =
+                                 sli c1.FStar_Syntax_Syntax.effect_name in
+                               let uu___13 =
+                                 term_to_string
+                                   c1.FStar_Syntax_Syntax.result_typ in
+                               FStar_Util.format2 "%s (%s)" uu___12 uu___13
+                             else
+                               (let uu___13 =
+                                  sli c1.FStar_Syntax_Syntax.effect_name in
+                                let uu___14 =
+                                  let uu___15 =
+                                    FStar_All.pipe_right
+                                      c1.FStar_Syntax_Syntax.comp_univs
+                                      (FStar_List.map univ_to_string) in
+                                  FStar_All.pipe_right uu___15
+                                    (FStar_String.concat ", ") in
+                                let uu___15 =
+                                  term_to_string
+                                    c1.FStar_Syntax_Syntax.result_typ in
+                                FStar_Util.format3 "%s<%s> (%s)" uu___13
+                                  uu___14 uu___15))))) in
                let dec =
                  let uu___3 =
                    FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
