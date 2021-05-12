@@ -41,9 +41,43 @@ type vllist (a: Type0) = {
   vllist_tail : ref (ccell_ptrvalue a);
 }
 
+let cllist_rewrite
+  (#a: Type0)
+  (c: cllist_lvalue a)
+  (x: (ccell_ptrvalue a & ref (ccell_ptrvalue a)))
+: GTot (vllist a)
+= {
+  vllist_head = fst x;
+  vllist_tail = snd x;
+}
+
+[@@ __steel_reduce__ ; __reduce__] // to avoid manual unfoldings through change_slprop
+let cllist_full (#a: Type0) (c: cllist_lvalue a) : Tot vprop =
+  (vptr (cllist_head c) `star` vptr (cllist_tail c)) `vrewrite` cllist_rewrite c
+
 [@__reduce__] // to avoid manual unfoldings through change_slprop
 let cllist (#a: Type0) (c: cllist_lvalue a) (p: perm) (v: Ghost.erased (vllist a)) : Tot vprop =
   pts_to (cllist_head c) p v.vllist_head `star` pts_to (cllist_tail c) p v.vllist_tail
+
+val cllist_full_cllist
+  (#opened: _)
+  (#a: Type0)
+  (c: cllist_lvalue a)
+: SteelGhost (Ghost.erased (vllist a)) opened
+    (cllist_full c)
+    (fun v -> cllist c full_perm v)
+    (fun _ -> True)
+    (fun h v _ -> Ghost.reveal v == h (cllist_full c))
+
+val alloc_cllist_full
+  (#a: Type0)
+  (head: ccell_ptrvalue a)
+  (tail: ref (ccell_ptrvalue a))
+: Steel (cllist_lvalue a)
+    emp
+    (fun res -> cllist_full res)
+    (requires (fun _ -> True))
+    (ensures (fun _ res h' -> h' (cllist_full res) == ({ vllist_head = head; vllist_tail = tail; })))
 
 val alloc_cllist
   (#a: Type0)

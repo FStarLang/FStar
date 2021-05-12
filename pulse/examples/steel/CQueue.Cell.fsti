@@ -42,9 +42,33 @@ type vcell (a: Type0) = {
       but without assuming that such references are "non-freeable forever."
    2/ add a "cell-level freeable" permission to free the whole cell *)
 
+let ccell_rewrite
+  (#a: Type0)
+  (c: ccell_lvalue a)
+  (x: (a & ccell_ptrvalue a))
+: GTot (vcell a)
+= {
+  vcell_data = fst x;
+  vcell_next = snd x;
+}
+
+[@@ __steel_reduce__ ; __reduce__] // to avoid manual unfoldings through change_slprop
+let ccell_full (#a: Type0) (c: ccell_lvalue a) : Tot vprop =
+  (vptr (ccell_data c) `star` vptr (ccell_next c)) `vrewrite` ccell_rewrite c
+
 [@__reduce__] // to avoid manual unfoldings through change_slprop
 let ccell (#a: Type0) (c: ccell_lvalue a) (p: perm) (v: Ghost.erased (vcell a)) : Tot vprop =
   pts_to (ccell_data c) p v.vcell_data `star` pts_to (ccell_next c) p v.vcell_next
+
+val ccell_full_ccell
+  (#opened: _)
+  (#a: Type0)
+  (c: ccell_lvalue a)
+: SteelGhost (Ghost.erased (vcell a)) opened
+    (ccell_full c)
+    (fun v -> ccell c full_perm v)
+    (fun _ -> True)
+    (fun h v _ -> Ghost.reveal v == h (ccell_full c))
 
 let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a))) : Tot vprop =
   match ccell_ptrvalue_is_null c, Ghost.reveal v with
@@ -83,6 +107,16 @@ let ccellp_is_null
       | _ -> pure_interp False m
     );
   elim_pure (ccell_ptrvalue_is_null c == None? (Ghost.reveal v))
+
+val alloc_cell_full
+  (#a: Type0)
+  (data: a)
+  (next: ccell_ptrvalue a)
+: Steel (ccell_lvalue a)
+    emp
+    (fun res -> ccell_full res)
+    (requires (fun _ -> True))
+    (ensures (fun _ res h' -> h' (ccell_full res) == ({ vcell_data = data; vcell_next = next; })))
 
 val alloc_cell
   (#a: Type0)

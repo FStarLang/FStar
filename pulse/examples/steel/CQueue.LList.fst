@@ -19,6 +19,10 @@ let cllist_tail #a c =
 
 #push-options "--ide_id_info_off"
 
+// TODO: follow CQueue.Cell
+let cllist_full_cllist #_ #a c = sladmit ()
+let alloc_cllist_full = admit ()
+
 let alloc_cllist
   #a head tail
 =
