@@ -239,11 +239,8 @@ let destruct_and (t : term) : Tac (binder * binder) =
     and_elim t;
     (implies_intro (), implies_intro ())
 
-private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ =
-  let x : squash (exists x. p x) = () in
-  assert_norm ((exists x. p x) == l_Exists p);
-  x
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (exists (x:a). p x)
+private let __witness #a x #p _ = ()
 
 let witness (t : term) : Tac unit =
     apply_raw (`__witness);
