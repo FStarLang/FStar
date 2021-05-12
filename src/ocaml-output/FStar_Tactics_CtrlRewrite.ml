@@ -487,12 +487,12 @@ and (on_subterms :
                            env bs phi1
                            (fun bs1 ->
                               fun phi2 ->
-                                let uu___2 =
-                                  let uu___3 =
-                                    let uu___4 = FStar_List.hd bs1 in
-                                    uu___4.FStar_Syntax_Syntax.binder_bv in
-                                  (uu___3, phi2) in
-                                FStar_Syntax_Syntax.Tm_refine uu___2))
+                                let x1 =
+                                  match bs1 with
+                                  | x2::[] ->
+                                      x2.FStar_Syntax_Syntax.binder_bv
+                                  | uu___2 -> failwith "Impossible" in
+                                FStar_Syntax_Syntax.Tm_refine (x1, phi2)))
                 | FStar_Syntax_Syntax.Tm_arrow (bs, k) ->
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),

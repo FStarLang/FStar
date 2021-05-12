@@ -255,7 +255,13 @@ and on_subterms
       | Tm_refine (x, phi) -> 
         let bs, phi = SS.open_term [S.mk_binder x] phi in
         descend_binders tm [] Continue env bs phi
-                        (fun bs phi -> Tm_refine ((List.hd bs).binder_bv, phi))
+                        (fun bs phi -> 
+                          let x = 
+                            match bs with
+                            | [x] -> x.binder_bv
+                            | _ -> failwith "Impossible"
+                          in
+                          Tm_refine (x, phi))
       
       (* Do nothing (FIXME) *)
       | Tm_arrow (bs, k) ->
