@@ -3986,14 +3986,11 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
       match bs with
       | [] ->
         bind_opt
-          (if c  //AR: if computation is non-total, make its universe Zero
-              |> U.comp_effect_name
-              |> Env.norm_eff_name env
-              |> Env.lookup_effect_quals env
-              |> List.existsb (fun q -> q = S.TotalEffect)
-           then universeof_fastpath env (U.comp_result c)  //AR: Why not get comp univ here if available?
-           else Some S.U_zero)
-          (fun uc -> Some (mk_tm_type (S.U_max (uc::us))))
+          (universeof_fastpath env (U.comp_result c))
+          (fun u_res ->
+           bind_opt
+             (Some (TcUtil.universe_of_comp env u_res c))
+             (fun uc -> Some (mk_tm_type (S.U_max (uc::us)))))
 
       | ({binder_bv=x;binder_qual=imp})::bs ->
         bind_opt (universeof_fastpath env x.sort) (fun u_x ->
