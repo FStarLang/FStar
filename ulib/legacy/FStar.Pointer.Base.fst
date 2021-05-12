@@ -2853,7 +2853,7 @@ let buffer_length_buffer_as_seq
   (b: buffer t)
 = ()
 
-#push-options "--ifuel 2 --z3rlimit_factor 2"
+#push-options "--ifuel 2 --z3rlimit_factor 4 --retry 4"
 let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
   let Pointer from contents pth = p in
   match pth with
