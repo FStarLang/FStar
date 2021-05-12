@@ -388,6 +388,69 @@ and (on_subterms :
               let recurse env1 tm1 =
                 ctrl_fold_env g0 d controller rewriter env1 tm1 in
               let rr = recurse env in
+              let rec descend_binders orig accum_binders accum_flag env1 bs t
+                rebuild =
+                match bs with
+                | [] ->
+                    let uu___ = recurse env1 t in
+                    FStar_Tactics_Monad.bind uu___
+                      (fun uu___1 ->
+                         match uu___1 with
+                         | (t1, flag) ->
+                             (match flag with
+                              | FStar_Tactics_Types.Abort ->
+                                  FStar_Tactics_Monad.ret
+                                    ((orig.FStar_Syntax_Syntax.n), flag)
+                              | uu___2 ->
+                                  let bs1 = FStar_List.rev accum_binders in
+                                  let uu___3 =
+                                    let uu___4 =
+                                      let uu___5 =
+                                        FStar_Syntax_Subst.close_binders bs1 in
+                                      let uu___6 =
+                                        FStar_Syntax_Subst.close bs1 t1 in
+                                      rebuild uu___5 uu___6 in
+                                    (uu___4,
+                                      (par_combine (accum_flag, flag))) in
+                                  FStar_Tactics_Monad.ret uu___3))
+                | b::bs1 ->
+                    let uu___ =
+                      recurse env1
+                        (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                    FStar_Tactics_Monad.bind uu___
+                      (fun uu___1 ->
+                         match uu___1 with
+                         | (s, flag) ->
+                             (match flag with
+                              | FStar_Tactics_Types.Abort ->
+                                  FStar_Tactics_Monad.ret
+                                    ((orig.FStar_Syntax_Syntax.n), flag)
+                              | uu___2 ->
+                                  let bv =
+                                    let uu___3 =
+                                      b.FStar_Syntax_Syntax.binder_bv in
+                                    {
+                                      FStar_Syntax_Syntax.ppname =
+                                        (uu___3.FStar_Syntax_Syntax.ppname);
+                                      FStar_Syntax_Syntax.index =
+                                        (uu___3.FStar_Syntax_Syntax.index);
+                                      FStar_Syntax_Syntax.sort = s
+                                    } in
+                                  let b1 =
+                                    let uu___3 = b in
+                                    {
+                                      FStar_Syntax_Syntax.binder_bv = bv;
+                                      FStar_Syntax_Syntax.binder_qual =
+                                        (uu___3.FStar_Syntax_Syntax.binder_qual);
+                                      FStar_Syntax_Syntax.binder_attrs =
+                                        (uu___3.FStar_Syntax_Syntax.binder_attrs)
+                                    } in
+                                  let env2 =
+                                    FStar_TypeChecker_Env.push_binders env1
+                                      [b1] in
+                                  descend_binders orig (b1 :: accum_binders)
+                                    (par_combine (accum_flag, flag)) env2 bs1
+                                    t rebuild)) in
               let go uu___ =
                 let tm1 = FStar_Syntax_Subst.compress tm in
                 match tm1.FStar_Syntax_Syntax.n with
@@ -406,27 +469,30 @@ and (on_subterms :
                 | FStar_Syntax_Syntax.Tm_abs (bs, t, k) ->
                     let uu___1 = FStar_Syntax_Subst.open_term bs t in
                     (match uu___1 with
-                     | (bs1, t1) ->
-                         let uu___2 =
-                           let uu___3 =
-                             FStar_TypeChecker_Env.push_binders env bs1 in
-                           recurse uu___3 t1 in
-                         FStar_Tactics_Monad.bind uu___2
-                           (fun uu___3 ->
-                              match uu___3 with
-                              | (t2, flag) ->
-                                  let uu___4 =
-                                    let uu___5 =
-                                      let uu___6 =
-                                        let uu___7 =
-                                          FStar_Syntax_Subst.close_binders
-                                            bs1 in
-                                        let uu___8 =
-                                          FStar_Syntax_Subst.close bs1 t2 in
-                                        (uu___7, uu___8, k) in
-                                      FStar_Syntax_Syntax.Tm_abs uu___6 in
-                                    (uu___5, flag) in
-                                  FStar_Tactics_Monad.ret uu___4))
+                     | (bs_orig, t1) ->
+                         descend_binders tm1 [] FStar_Tactics_Types.Continue
+                           env bs_orig t1
+                           (fun bs1 ->
+                              fun t2 ->
+                                FStar_Syntax_Syntax.Tm_abs (bs1, t2, k)))
+                | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Syntax_Syntax.mk_binder x in
+                        [uu___3] in
+                      FStar_Syntax_Subst.open_term uu___2 phi in
+                    (match uu___1 with
+                     | (bs, phi1) ->
+                         descend_binders tm1 [] FStar_Tactics_Types.Continue
+                           env bs phi1
+                           (fun bs1 ->
+                              fun phi2 ->
+                                let uu___2 =
+                                  let uu___3 =
+                                    let uu___4 = FStar_List.hd bs1 in
+                                    uu___4.FStar_Syntax_Syntax.binder_bv in
+                                  (uu___3, phi2) in
+                                FStar_Syntax_Syntax.Tm_refine uu___2))
                 | FStar_Syntax_Syntax.Tm_arrow (bs, k) ->
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),

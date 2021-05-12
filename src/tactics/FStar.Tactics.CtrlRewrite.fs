@@ -218,6 +218,26 @@ and on_subterms
   : tac<(term * ctrl_flag)>
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
+    let rec descend_binders orig accum_binders accum_flag env bs t rebuild =
+        match bs with
+        | [] -> 
+            bind (recurse env t) (fun (t, flag) ->
+            match flag with
+            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+            | _ -> 
+              let bs = List.rev accum_binders in
+              ret (rebuild (SS.close_binders bs) (SS.close bs t),
+                  par_combine (accum_flag, flag)))
+        | b::bs ->
+            bind (recurse env b.binder_bv.sort) (fun (s, flag) -> 
+            match flag with
+            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+            | _ -> 
+              let bv = {b.binder_bv with sort = s} in
+              let b = {b with binder_bv = bv} in
+              let env = Env.push_binders env [b] in
+              descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t rebuild)
+    in
     let go () : tac<(term' * ctrl_flag)> =
       let tm = SS.compress tm in
       match tm.n with
@@ -227,12 +247,16 @@ and on_subterms
         ret (Tm_app (hd, args), flag))
 
       (* Open, descend, rebuild *)
-      (* NOTE: we do not go into the binders' types *)
       | Tm_abs (bs, t, k) ->
-        let bs, t = SS.open_term bs t in
-        bind (recurse (Env.push_binders env bs) t) (fun (t, flag) ->
-        ret (Tm_abs (SS.close_binders bs, SS.close bs t, k), flag))
+        let bs_orig, t = SS.open_term bs t in
+        descend_binders tm [] Continue env bs_orig t
+                        (fun bs t -> Tm_abs(bs, t, k))
 
+      | Tm_refine (x, phi) -> 
+        let bs, phi = SS.open_term [S.mk_binder x] phi in
+        descend_binders tm [] Continue env bs phi
+                        (fun bs phi -> Tm_refine ((List.hd bs).binder_bv, phi))
+      
       (* Do nothing (FIXME) *)
       | Tm_arrow (bs, k) ->
         ret (tm.n, Continue)
