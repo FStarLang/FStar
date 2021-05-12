@@ -1,9 +1,9 @@
 module Selectors.PtrLList
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 module L = FStar.List.Tot
 
@@ -39,32 +39,32 @@ let v_ptrlist (#a:Type0) (#p:vprop) (r:t a)
   = h (llist_ptr r)
 
 val intro_llist_nil (a:Type0)
-  : SteelSel unit emp (fun _ -> llist_ptr (null_llist #a))
+  : Steel unit emp (fun _ -> llist_ptr (null_llist #a))
           (requires fun _ -> True)
           (ensures fun _ _ h1 -> v_ptrlist #a null_llist h1 == [])
 
 val elim_llist_nil (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_ptr ptr) (fun _ -> llist_ptr ptr)
+  : Steel unit (llist_ptr ptr) (fun _ -> llist_ptr ptr)
           (requires fun _ -> ptr == null_llist)
           (ensures fun h0 _ h1 ->
             v_ptrlist ptr h0 == v_ptrlist ptr h1 /\
             v_ptrlist ptr h1 == [])
 
 val cons_is_not_null (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_ptr ptr) (fun _ -> llist_ptr ptr)
+  : Steel unit (llist_ptr ptr) (fun _ -> llist_ptr ptr)
              (requires fun h -> Cons? (v_ptrlist ptr h))
              (ensures fun h0 _ h1 ->
                v_ptrlist ptr h0 == v_ptrlist ptr h1 /\
                ptr =!= null_llist)
 
 val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a) (r:ref a)
-  : SteelSel unit (vptr ptr1 `star` vptr r `star` llist_ptr ptr2)
+  : Steel unit (vptr ptr1 `star` vptr r `star` llist_ptr ptr2)
                   (fun _ -> llist_ptr ptr1)
                   (requires fun h -> data (sel ptr1 h) == r /\ next (sel ptr1 h) == ptr2)
                   (ensures fun h0 _ h1 -> v_ptrlist ptr1 h1 == (sel r h0) :: v_ptrlist ptr2 h0)
 
 val elim_llist_cons (#a:Type0) (ptr:t a)
-  : SteelSel (cell a)
+  : Steel (cell a)
              (llist_ptr ptr)
              (fun c -> vptr ptr `star` vptr (data c) `star` llist_ptr (next c))
              (requires fun h -> ptr =!= null_llist)

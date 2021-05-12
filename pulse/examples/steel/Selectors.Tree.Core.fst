@@ -6,9 +6,9 @@ open Steel.FractionalPermission
 module Mem = Steel.Memory
 module Spec = Trees
 
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 15"
 
@@ -265,7 +265,7 @@ let v_node
   = h (tree_node r)
 
 val reveal_non_empty_tree (#a:Type0) (ptr:t a)
-  : SteelSel unit (tree_node ptr) (fun _ -> tree_node ptr)
+  : Steel unit (tree_node ptr) (fun _ -> tree_node ptr)
              (requires fun _ -> ptr =!= null_t)
              (ensures fun h0 _ h1 -> v_node ptr h0 == v_node ptr h1 /\
                Spec.Node? (v_node ptr h0))
@@ -287,7 +287,7 @@ let reveal_non_empty_tree #a ptr =
   extract_info (tree_node ptr) t (is_node t) (reveal_non_empty_lemma ptr t)
 
 val unpack_tree_node (#a:Type0) (ptr:t a)
-  : SteelSel (node a)
+  : Steel (node a)
              (tree_node ptr)
              (fun n -> tree_node (get_left n) `star` tree_node (get_right n) `star` vptr ptr)
              (fun _ -> not (is_null_t ptr))

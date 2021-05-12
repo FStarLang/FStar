@@ -1,9 +1,9 @@
 module CQueue.Cell
 open Steel.Memory
-open Steel.SelEffect
-open Steel.SelEffect.Atomic
+open Steel.Effect
+open Steel.Effect.Atomic
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 
 (* A C lvalue view of a cell struct, as a pair of two references for its data and next fields *)
 
@@ -54,7 +54,7 @@ let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option 
   | true, None -> emp
   | _ -> pure False
 
-let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : SteelSel unit
+let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : Steel unit
   emp
   (fun _ -> ccellp c p None)
   (requires (fun _ -> ccell_ptrvalue_is_null c == true))
@@ -64,7 +64,7 @@ let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : SteelSel uni
 
 let ccellp_is_null
   (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a)))
-: SteelSel unit
+: Steel unit
     (ccellp c p v)
     (fun _ -> ccellp c p v)
     (requires (fun _ -> True))
@@ -88,7 +88,7 @@ val alloc_cell
   (#a: Type0)
   (data: a)
   (next: ccell_ptrvalue a)
-: SteelSel (ccell_lvalue a & Ghost.erased (vcell a))
+: Steel (ccell_lvalue a & Ghost.erased (vcell a))
     emp
     (fun res -> ccell (fst res) full_perm (snd res))
     (requires (fun _ -> True))
@@ -98,6 +98,6 @@ val free_cell
   (#a: Type0)
   (c: ccell_lvalue a)
   (v: Ghost.erased (vcell a))
-: SteelSelT unit
+: SteelT unit
     (ccell c full_perm v)
     (fun _ -> emp)

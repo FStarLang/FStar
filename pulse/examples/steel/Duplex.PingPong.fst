@@ -1,8 +1,8 @@
 module Duplex.PingPong
 open FStar.PCM
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.Channel.Protocol
 open Duplex.PCM
 
@@ -16,7 +16,7 @@ let pingpong : dprot =
   done
 
 let client (c:ch)
-  : SteelSelT unit
+  : SteelT unit
            (ep A c pingpong)
            (fun _ -> ep A c done)
   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17

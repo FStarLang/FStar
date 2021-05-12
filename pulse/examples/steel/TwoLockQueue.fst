@@ -2,13 +2,13 @@ module TwoLockQueue
 
 open FStar.Ghost
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
-open  Steel.SelSpinLock
+open Steel.Reference
+open  Steel.SpinLock
 module L = FStar.List.Tot
-module U = Steel.SelUtils
+module U = Steel.Utils
 module Q = Queue
 
 #push-options "--ide_id_info_off"
@@ -29,7 +29,7 @@ let ghost_gather (#a:Type) (#u:_)
                  (#p0 #p1:perm) (#p:perm{p == sum_perm p0 p1})
                  (x0 #x1:erased a)
                  (r:ghost_ref a)
-  : SteelSelGhost unit u
+  : SteelGhost unit u
     (ghost_pts_to r p0 x0 `star`
      ghost_pts_to r p1 x1)
     (fun _ -> ghost_pts_to r p x0)
@@ -38,20 +38,20 @@ let ghost_gather (#a:Type) (#u:_)
   = let _ = ghost_gather_pt #a #u #p0 #p1 r in ()
 
 let rewrite #u (p q:vprop)
-  : SteelSelGhost unit u p (fun _ -> q)
+  : SteelGhost unit u p (fun _ -> q)
     (requires fun _ -> p `equiv` q)
     (ensures fun _ _ _ -> True)
   = rewrite_slprop p q (fun _ -> reveal_equiv p q)
 
 let elim_pure (#p:prop) #u ()
-  : SteelSelGhost unit u
+  : SteelGhost unit u
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
-  = let _ = Steel.SelEffect.Atomic.elim_pure p in ()
+  = let _ = Steel.Effect.Atomic.elim_pure p in ()
 
 let open_exists (#a:Type) (#opened_invariants:_) (#p:Ghost.erased a -> vprop) (_:unit)
-  : SteelSelGhostT (Ghost.erased a) opened_invariants
+  : SteelGhostT (Ghost.erased a) opened_invariants
                  (h_exists p) p
   = let v : erased (erased a)  = witness_exists () in
     reveal v
@@ -64,7 +64,7 @@ let lock_inv #a (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a)) =
 
 let intro_lock_inv #a #u (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t
 a))
-  : SteelSelGhostT unit u
+  : SteelGhostT unit u
     (h_exists (fun v ->
       pts_to ptr full v `star`
       ghost_pts_to ghost half v))
@@ -86,7 +86,7 @@ let queue_invariant (#a:_) ([@@@smt_fallback]head:q_ptr a) ([@@@smt_fallback] ta
     Q.queue h t))
 
 let pack_queue_invariant (#a:_) (#u:_) (x:erased (Q.t a)) (y:erased (Q.t a)) (head tail:q_ptr a)
- : SteelSelGhostT unit u
+ : SteelGhostT unit u
    (ghost_pts_to head.ghost half x `star`
     ghost_pts_to tail.ghost half y `star`
     Q.queue x y)
@@ -107,14 +107,14 @@ type t (a:Type0) = {
 
 
 let new_queue (#a:_) (x:a)
-  : SteelSelT (t a) emp (fun _ -> emp)
+  : SteelT (t a) emp (fun _ -> emp)
   = let new_qptr (#a:_) (q:Q.t a)
-      : SteelSelT (q_ptr a) emp (fun qp -> ghost_pts_to qp.ghost half q)
+      : SteelT (q_ptr a) emp (fun qp -> ghost_pts_to qp.ghost half q)
       = let ptr = alloc_pt q in
         let ghost = ghost_alloc_pt q in
         ghost_share_pt ghost;
         intro_exists _ (fun q -> pts_to ptr full q `star` ghost_pts_to ghost half q);
-        let lock = Steel.SelSpinLock.new_lock _ in
+        let lock = Steel.SpinLock.new_lock _ in
         { ptr; ghost; lock}
     in
     let hd = Q.new_queue x in
@@ -127,14 +127,14 @@ let new_queue (#a:_) (x:a)
 #restart-solver
 
 let enqueue (#a:_) (hdl:t a) (x:a)
-  : SteelSelT unit emp (fun _ -> emp)
-  = Steel.SelSpinLock.acquire hdl.tail.lock;
+  : SteelT unit emp (fun _ -> emp)
+  = Steel.SpinLock.acquire hdl.tail.lock;
     let cell = Q.({ data = x; next = null} ) in
     let v:erased (Q.t a) = open_exists () in
     let tl = read_pt hdl.tail.ptr in
     let node = alloc_pt cell in
     let enqueue_core #u ()
-      : SteelSelAtomicT unit u
+      : SteelAtomicT unit u
         (queue_invariant hdl.head hdl.tail `star`
           (ghost_pts_to hdl.tail.ghost half tl `star` pts_to node full cell))
         (fun _ -> queue_invariant hdl.head hdl.tail `star`
@@ -158,7 +158,7 @@ let enqueue (#a:_) (hdl:t a) (x:a)
       _
       (fun (n:erased (Q.t a)) -> pts_to hdl.tail.ptr full_perm n `star`
              ghost_pts_to hdl.tail.ghost half n) in
-    Steel.SelSpinLock.release hdl.tail.lock
+    Steel.SpinLock.release hdl.tail.lock
 
 let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) ([@@@ smt_fallback] hd:Q.t a) (o:option (Q.t a)) =
   match o with
@@ -166,7 +166,7 @@ let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) ([@@@ smt_fallback] hd:Q.t a) (o
   | Some next -> ghost_pts_to x half next `star` (h_exists (pts_to hd full_perm))
 
 let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
-  : SteelSelAtomicT (option (Q.t a)) u
+  : SteelAtomicT (option (Q.t a)) u
     (queue_invariant hdl.head hdl.tail `star`
      ghost_pts_to hdl.head.ghost half hd)
     (fun o ->
@@ -202,8 +202,8 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       return o
 
 let dequeue (#a:_) (hdl:t a)
-  : SteelSelT (option a) emp (fun _ -> emp)
-  = Steel.SelSpinLock.acquire hdl.head.lock;
+  : SteelT (option a) emp (fun _ -> emp)
+  = Steel.SpinLock.acquire hdl.head.lock;
     let v = open_exists () in
     let hd = read_pt hdl.head.ptr in
     let o = with_invariant hdl.inv (dequeue_core hdl hd) in
@@ -214,7 +214,7 @@ let dequeue (#a:_) (hdl:t a)
         (ghost_pts_to hdl.head.ghost half hd)
         (fun _ -> ());
       intro_exists _ (fun v -> pts_to hdl.head.ptr full v `star` ghost_pts_to hdl.head.ghost half v);
-      Steel.SelSpinLock.release hdl.head.lock;
+      Steel.SpinLock.release hdl.head.lock;
       None
 
     | Some next ->
@@ -227,7 +227,7 @@ let dequeue (#a:_) (hdl:t a)
       let c = open_exists () in
       write_pt hdl.head.ptr next;
       intro_exists _ (fun v -> pts_to hdl.head.ptr full v `star` ghost_pts_to hdl.head.ghost half v);
-      Steel.SelSpinLock.release hdl.head.lock;
+      Steel.SpinLock.release hdl.head.lock;
       let c = read_pt hd in
       let v = c.Q.data in
       free_pt hd;

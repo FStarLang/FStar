@@ -3,9 +3,9 @@ module Selectors.LList
 open FStar.Ghost
 open Steel.FractionalPermission
 module Mem = Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 #push-options "--__no_positivity"
 noeq
@@ -234,7 +234,7 @@ let v_cell (#a:Type0) (#p:vprop) (r:t a)
   = h (llist_cell r)
 
 val reveal_non_empty_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
+  : Steel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
              (requires fun _ -> ptr =!= null_llist)
              (ensures fun h0 _ h1 -> v_cell ptr h0 == v_cell ptr h1 /\ Cons? (v_cell ptr h0))
 
@@ -275,7 +275,7 @@ let tail_cell_lemma (#a:Type0) (r:t a) (l:list (cell a)) (m:mem) : Lemma
 
 
 val tail_cell (#a:Type0) (ptr:t a)
-  : SteelSel (t a) (llist_cell ptr)
+  : Steel (t a) (llist_cell ptr)
                    (fun n -> vptr ptr `star` llist_cell n)
                    (requires fun _ -> ptr =!= null_llist)
                    (ensures fun h0 n h1 ->
@@ -297,7 +297,7 @@ let tail_cell #a ptr =
   return (next v)
 
 val to_list_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist ptr) (fun _ -> llist_cell ptr)
+  : Steel unit (llist ptr) (fun _ -> llist_cell ptr)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> v_llist ptr h0 == datas (v_cell ptr h1))
 
@@ -305,7 +305,7 @@ let to_list_cell ptr =
   change_slprop_rel (llist ptr) (llist_cell ptr) (fun x y -> x == datas y) (fun _ -> ())
 
 val from_list_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_cell ptr) (fun _ -> llist ptr)
+  : Steel unit (llist_cell ptr) (fun _ -> llist ptr)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> v_llist ptr h1 == datas (v_cell ptr h0))
 
@@ -409,7 +409,7 @@ let unpack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem) : Lemma
   = intro_ptr_frame_lemma r p (llist_sl p) m
 
 val unpack_ind_full (#a:Type0) (r:ref (t a))
-  : SteelSel (t a)
+  : Steel (t a)
              (ind_llist_full r)
              (fun p -> vptr r `star` llist p)
              (requires fun _ -> True)

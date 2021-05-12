@@ -111,7 +111,7 @@ let llist0
 let nllist_of_llist0
   (#a: Type0)
   (r: t a)
-: SteelSel (Ghost.erased nat)
+: Steel (Ghost.erased nat)
     (llist0 r)
     (fun res -> nllist a res r)
     (fun _ -> True)
@@ -150,7 +150,7 @@ let llist0_of_nllist
   (#a: Type0)
   (n: Ghost.erased nat)
   (r: t a)
-: SteelSel unit
+: Steel unit
     (nllist a n r)
     (fun _ -> llist0 r)
     (fun _ -> True)
@@ -193,7 +193,7 @@ let llist_sel
 let llist_of_llist0
   (#a: Type)
   (r: t a)
-: SteelSel unit
+: Steel unit
     (llist0 r)
     (fun _ -> llist r)
     (fun _ -> True)
@@ -208,7 +208,7 @@ let llist_of_llist0
 let llist0_of_llist
   (#a: Type)
   (r: t a)
-: SteelSel unit
+: Steel unit
     (llist r)
     (fun _ -> llist0 r)
     (fun _ -> True)

@@ -1,10 +1,10 @@
 module CQueue.LList
 include CQueue.Cell
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 
 (* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content)
 
@@ -49,7 +49,7 @@ val alloc_cllist
   (#a: Type0)
   (head: ccell_ptrvalue a)
   (tail: ref (ccell_ptrvalue a))
-: SteelSel (cllist_lvalue a & Ghost.erased (vllist a))
+: Steel (cllist_lvalue a & Ghost.erased (vllist a))
     emp
     (fun res -> cllist (fst res) full_perm (snd res))
     (requires (fun _ -> True))

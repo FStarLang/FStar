@@ -1,10 +1,10 @@
 module Queue.Def
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 
 #push-options "--__no_positivity"
 noeq

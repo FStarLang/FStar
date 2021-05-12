@@ -1,9 +1,9 @@
 module Selectors.LList2
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 module L = FStar.List.Tot
 
@@ -42,12 +42,12 @@ let v_llist (#a:Type0) (#p:vprop) (r:t a)
   = h (llist r)
 
 val intro_llist_nil (a:Type0)
-  : SteelSel unit emp (fun _ -> llist (null_llist #a))
+  : Steel unit emp (fun _ -> llist (null_llist #a))
           (requires fun _ -> True)
           (ensures fun _ _ h1 -> v_llist #a null_llist h1 == [])
 
 val is_nil (#a:Type0) (ptr:t a)
-  : SteelSel bool (llist ptr) (fun _ -> llist ptr)
+  : Steel bool (llist ptr) (fun _ -> llist ptr)
           (requires fun _ -> True)
           (ensures fun h0 res h1 ->
             (res == true <==> ptr == null_llist #a) /\
@@ -55,13 +55,13 @@ val is_nil (#a:Type0) (ptr:t a)
             res == Nil? (v_llist ptr h1))
 
 val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a)
-  : SteelSel unit (vptr ptr1 `star` llist ptr2)
+  : Steel unit (vptr ptr1 `star` llist ptr2)
                   (fun _ -> llist ptr1)
                   (requires fun h -> next (sel ptr1 h) == ptr2)
                   (ensures fun h0 _ h1 -> v_llist ptr1 h1 == (data (sel ptr1 h0)) :: v_llist ptr2 h0)
 
 val tail (#a:Type0) (ptr:t a)
-  : SteelSel (t a) (llist ptr)
+  : Steel (t a) (llist ptr)
                    (fun n -> vptr ptr `star` llist n)
                    (requires fun _ -> ptr =!= null_llist)
                    (ensures fun h0 n h1 ->

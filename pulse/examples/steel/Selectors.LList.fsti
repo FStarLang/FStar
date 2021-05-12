@@ -1,9 +1,9 @@
 module Selectors.LList
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
-open Steel.SelReference
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 module L = FStar.List.Tot
 
@@ -42,32 +42,32 @@ let v_llist (#a:Type0) (#p:vprop) (r:t a)
   = h (llist r)
 
 val intro_llist_nil (a:Type0)
-  : SteelSel unit emp (fun _ -> llist (null_llist #a))
+  : Steel unit emp (fun _ -> llist (null_llist #a))
           (requires fun _ -> True)
           (ensures fun _ _ h1 -> v_llist #a null_llist h1 == [])
 
 val elim_llist_nil (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist ptr) (fun _ -> llist ptr)
+  : Steel unit (llist ptr) (fun _ -> llist ptr)
           (requires fun _ -> ptr == null_llist)
           (ensures fun h0 _ h1 ->
             v_llist ptr h0 == v_llist ptr h1 /\
             v_llist ptr h1 == [])
 
 val cons_is_not_null (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist ptr) (fun _ -> llist ptr)
+  : Steel unit (llist ptr) (fun _ -> llist ptr)
              (requires fun h -> Cons? (v_llist ptr h))
              (ensures fun h0 _ h1 ->
                v_llist ptr h0 == v_llist ptr h1 /\
                ptr =!= null_llist)
 
 val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a)
-  : SteelSel unit (vptr ptr1 `star` llist ptr2)
+  : Steel unit (vptr ptr1 `star` llist ptr2)
                   (fun _ -> llist ptr1)
                   (requires fun h -> next (sel ptr1 h) == ptr2)
                   (ensures fun h0 _ h1 -> v_llist ptr1 h1 == (data (sel ptr1 h0)) :: v_llist ptr2 h0)
 
 val tail (#a:Type0) (ptr:t a)
-  : SteelSel (t a) (llist ptr)
+  : Steel (t a) (llist ptr)
                    (fun n -> vptr ptr `star` llist n)
                    (requires fun _ -> ptr =!= null_llist)
                    (ensures fun h0 n h1 ->
@@ -93,7 +93,7 @@ let v_ind_llist (#a:Type0) (#p:vprop) (r:ref (t a))
   = h (ind_llist r)
 
 val unpack_ind (#a:Type0) (r:ref (t a))
-  : SteelSel (t a)
+  : Steel (t a)
              (ind_llist r)
              (fun p -> vptr r `star` llist p)
              (requires fun _ -> True)
@@ -102,7 +102,7 @@ val unpack_ind (#a:Type0) (r:ref (t a))
                v_llist p h1 == v_ind_llist r h0)
 
 val pack_ind (#a:Type0) (r:ref (t a)) (p:t a)
-  : SteelSel unit
+  : Steel unit
              (vptr r `star` llist p)
              (fun _ -> ind_llist r)
              (requires fun h -> sel r h == p)

@@ -1,9 +1,9 @@
 module LList
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 include LList.Invariant
 module L = FStar.List.Tot.Base
 
@@ -15,7 +15,7 @@ let rec datas (#a:Type) (l:list (cell a)) : list a =
   | hd::tl -> data hd :: datas tl
 
 val new_llist (#a:Type) (init:a)
-  : SteelSel (t a & list (cell a))
+  : Steel (t a & list (cell a))
           emp
           (fun pc -> llist (fst pc) (snd pc))
           (requires fun _ -> True)
@@ -31,7 +31,7 @@ let new_llist #a init =
   pc
 
 val push (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
-  : SteelSel (t a & list (cell a))
+  : Steel (t a & list (cell a))
           (llist ptr l)
           (fun pc -> llist (fst pc) (snd pc))
           (requires fun _ -> True)
@@ -46,7 +46,7 @@ let push #a ptr l v =
   pc
 
 val pop (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
-  : SteelSel a
+  : Steel a
           (llist ptr l)
           (fun _ -> llist (next (L.hd l)) (L.tl l))
           (requires fun _ -> True)

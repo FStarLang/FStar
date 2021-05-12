@@ -29,17 +29,17 @@ module G = FStar.Ghost
 
 open Steel.Memory
 open Steel.FractionalPermission
-open Steel.SelReference
-open Steel.SelSpinLock
+open Steel.Reference
+open Steel.SpinLock
 
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 
-module R = Steel.SelReference
+module R = Steel.Reference
 module P = Steel.FractionalPermission
-module A = Steel.SelEffect.Atomic
+module A = Steel.Effect.Atomic
 
-open Steel.SelDisposableInvariant
+open Steel.DisposableInvariant
 
 #set-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0 --ide_id_info_off"
 
@@ -48,7 +48,7 @@ open Steel.SelDisposableInvariant
 (**** A few wrappers over library functions ****)
 
 let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelSelGhost unit uses
+  : SteelGhost unit uses
       (ghost_pts_to r (P.half_perm full_perm) v1 `star`
        ghost_pts_to r (P.half_perm full_perm) v2)
       (fun _ -> ghost_pts_to r full_perm v1)
@@ -58,7 +58,7 @@ let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
     ()
 
 let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelSelGhost unit uses
+  : SteelGhost unit uses
       (ghost_pts_to r full_perm v1)
       (fun _ -> ghost_pts_to r (P.half_perm full_perm) v1 `star`
              ghost_pts_to r (P.half_perm full_perm) v2)
@@ -67,7 +67,7 @@ let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
   = ghost_share_pt #_ #_ #_ #v1 r; ()
 
 let gather_invariant (#p:vprop) (#uses:inames) (i:inv p)
-  : SteelSelGhostT unit uses
+  : SteelGhostT unit uses
       (active (P.half_perm full_perm) i `star` active (P.half_perm full_perm) i)
       (fun _ -> active full_perm i)
   = gather #_ #(P.half_perm full_perm) #(P.half_perm full_perm) #_ i; ()
@@ -84,10 +84,10 @@ let with_invariant (#a:Type)
                    (#p:vprop)
                    (#perm:_)
                    (i:inv p)
-                   ($f:unit -> SteelSelAtomicT a (Set.singleton (Ghost.reveal (name i)))
+                   ($f:unit -> SteelAtomicT a (Set.singleton (Ghost.reveal (name i)))
                                              (p `star` fp)
                                              (fun x -> p `star` fp' x))
-  : SteelSelT a (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
+  : SteelT a (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
   = assert (Set.equal (Set.singleton (Ghost.reveal (name i))) (set_add (name i) Set.empty));
     with_invariant i f
 
@@ -170,7 +170,7 @@ let incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
  * We assume an atomic increment operation for int refs
  *)
 assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
-  : SteelSelAtomicT unit uses
+  : SteelAtomicT unit uses
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (incr v))
 
@@ -181,7 +181,7 @@ assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
  *   and we return the same permissions with the incremented contents
  *)
 let incr_ghost_contrib (#uses:inames) (#v1 #v2:G.erased int) (r:ghost_ref int)
-  : SteelSelGhost unit uses
+  : SteelGhost unit uses
       (ghost_pts_to r (P.half_perm full_perm) v1 `star`
        ghost_pts_to r (P.half_perm full_perm) v2)
       (fun _ -> ghost_pts_to r (P.half_perm full_perm) (incr v1) `star`
@@ -211,7 +211,7 @@ inline_for_extraction
 let incr_with_inv_slprop
   (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:Ghost.erased iname)
   ()
-  : SteelSelAtomicT unit (Set.singleton (Ghost.reveal name))
+  : SteelAtomicT unit (Set.singleton (Ghost.reveal name))
       (inv_slprop_conditional r r_mine r_other b
        `star`
        ghost_pts_to r_mine (P.half_perm full_perm) n_ghost)
@@ -240,7 +240,7 @@ let incr_with_invariant
   (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool)
   (i:inv (inv_slprop_conditional r r_mine r_other b))
   ()
-  : SteelSelT unit
+  : SteelT unit
       (active (P.half_perm full_perm) i `star` ghost_pts_to r_mine (P.half_perm full_perm) n_ghost)
       (fun _ -> active (P.half_perm full_perm) i `star` ghost_pts_to r_mine (P.half_perm full_perm) (incr n_ghost))
   = with_invariant i
@@ -250,7 +250,7 @@ let incr_with_invariant
  * The main thread
  *)
 let incr_main (#v:G.erased int) (r:ref int)
-  : SteelSelT unit
+  : SteelT unit
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm (v + 2))
   = //allocate the two ghost refs

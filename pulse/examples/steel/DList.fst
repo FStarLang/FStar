@@ -1,17 +1,17 @@
 module DList
 
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 open DList.Invariant
-module U = Steel.SelUtils
+module U = Steel.Utils
 
 #push-options "--ide_id_info_off"
 
 let new_dlist (#a:Type) (init:a)
-  : SteelSel (t a & cell a)
+  : Steel (t a & cell a)
     emp
     (fun pc -> dlist null_dlist (fst pc) null_dlist [snd pc])
     (requires fun _ -> True)
@@ -31,7 +31,7 @@ let read_norefine (#a:Type)
                   (#[@@@ framing_implicit] p:perm)
                   (#[@@@ framing_implicit] v:Ghost.erased a)
                   (r:ref a)
-  : SteelSel a (pts_to r p v) (fun x -> pts_to r p v)
+  : Steel a (pts_to r p v) (fun x -> pts_to r p v)
             (requires fun _ -> True)
             (ensures fun _ x _ -> x == Ghost.reveal v)
   = let x = read_pt r in
@@ -43,7 +43,7 @@ let read_norefine (#a:Type)
 let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a)
               (hd:cell a)
               (tl:list (cell a))
-  : SteelSel (cell a)
+  : Steel (cell a)
     (dlist from0 ptr0 to0 (hd::tl))
     (fun v -> dlist from0 ptr0 to0 (hd::tl))
     (requires fun _ ->
@@ -79,7 +79,7 @@ let intro_dlist_cons (#a:Type) (left:t a)
                                (hd: cell a)
                                (ptr1 : t a)
                                (tl: list (cell a))
-   : SteelSel unit
+   : Steel unit
      (pts_to ptr full_perm hd `star` dlist ptr ptr1 right tl)
      (fun _ -> dlist left ptr right (hd::tl))
      (requires fun _ ->
@@ -96,7 +96,7 @@ let write_prev (#a:_) (#from0:t a) (ptr0:t a) (#to0: t a)
                (#hd:cell a)
                (#tl:list (cell a))
                (prev:t a)
-    : SteelSelT unit
+    : SteelT unit
       (dlist from0 ptr0 to0 (hd::tl))
       (fun _ -> dlist prev ptr0 to0  (set_prev hd prev :: tl))
     = elim_dlist_cons _ ptr0 _ _ _;
@@ -106,7 +106,7 @@ let write_prev (#a:_) (#from0:t a) (ptr0:t a) (#to0: t a)
 let concat_nil_l (#a:Type)
                  (from0:t a) (ptr0:t a) (to0: t a) (hd:cell a) (tl0:list (cell a))
                  (from1:t a) (ptr1:t a) (hd1:cell a) (tl1:list (cell a))
-   : SteelSel (list (cell a))
+   : Steel (list (cell a))
      (pts_to ptr0 full_perm hd `star`
       dlist ptr0 to0 to0 tl0 `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
@@ -146,7 +146,7 @@ let concat_t a =
   (#[@@@ framing_implicit] tl1:list (cell a)) ->
   (ptr0:t a) ->
   (ptr1:t a) ->
-  SteelSelT (list (cell a))
+  SteelT (list (cell a))
      (dlist from0 ptr0 to0 (hd0::tl0) `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
      (fun l ->
@@ -155,7 +155,7 @@ let concat_t a =
 let concat_cons (#a:Type) (aux:concat_t a)
                 (from0:t a) (ptr0:t a) (to0: t a) (c0:cell a) (tl0:list (cell a))
                 (from1:t a) (ptr1:t a) (hd1:cell a) (tl1:list (cell a))
-   : SteelSel (list (cell a))
+   : Steel (list (cell a))
      (pts_to ptr0 full_perm c0 `star`
       dlist ptr0 (next c0) to0 tl0 `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
@@ -184,7 +184,7 @@ let rec concat (#a:Type)
                (#[@@@ framing_implicit] tl1:list (cell a))
                (ptr0:t a)
                (ptr1:t a)
-   : SteelSelT (list (cell a))
+   : SteelT (list (cell a))
      (dlist from0 ptr0 to0 (hd0::tl0) `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
      (fun l -> dlist from0 ptr0 null_dlist l)
@@ -244,7 +244,7 @@ let snoc (#a:Type)
          (#[@@@ framing_implicit] l0:list (cell a))
          (ptr0:t a)
          (v:a)
-   : SteelSelT (list (cell a))
+   : SteelT (list (cell a))
      (requires
        dlist from0 ptr0 to0 (hd0::l0))
      (ensures
@@ -259,7 +259,7 @@ let snoc (#a:Type)
 let cons (#a:Type)
          (from0:t a) (ptr0:t a) (hd0:cell a) (l0:list (cell a))
          (v:a)
-   : SteelSelT (t a & list (cell a))
+   : SteelT (t a & list (cell a))
      (requires
        dlist from0 ptr0 null_dlist (hd0::l0))
      (ensures fun pc ->
@@ -277,7 +277,7 @@ let rec length (#a:Type)
                (#[@@@ framing_implicit] to: t a)
                (#[@@@ framing_implicit] rep:list (cell a))
                (p:t a)
-   : SteelSel nat
+   : Steel nat
       (dlist from p to rep)
       (fun _ -> dlist from p to rep)
       (requires fun _ -> True)

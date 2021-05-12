@@ -1,12 +1,12 @@
 module Queue
 include Queue.Def
 open Steel.Memory
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
-open Steel.SelReference
+open Steel.Reference
 module L = FStar.List.Tot
-module U = Steel.SelUtils
+module U = Steel.Utils
 
 let pts_to (#a:_) (x:t a) ([@@@smt_fallback]v: Ghost.erased (cell a)) = pts_to x full_perm v
 
@@ -14,7 +14,7 @@ val queue (#a:_) ([@@@smt_fallback] hd:Ghost.erased (t a))
                  ([@@@smt_fallback] tl:Ghost.erased (t a)) : vprop
 
 val new_queue (#a:_) (v:a) :
-  SteelSelT (t a) emp (fun x -> queue x x)
+  SteelT (t a) emp (fun x -> queue x x)
 
 (*
    tl -> { data; next=Null }
@@ -35,7 +35,7 @@ assume atomic field update primitive:
  wriet (c.next) = last
 *)
 val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:Ghost.erased (cell a)) (last:t a)
-  : SteelSelAtomic unit u
+  : SteelAtomic unit u
                 (queue hd tl `star` pts_to last v)
                 (fun _ -> queue hd last)
                 (requires fun _ -> v.next == null)
@@ -68,6 +68,6 @@ let dequeue_post (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
       dequeue_post_success tl hd p
 
 val dequeue (#a:_) (#u:_) (#tl:Ghost.erased (t a)) (hd:t a)
-  : SteelSelAtomicT (option (t a)) u
+  : SteelAtomicT (option (t a)) u
                  (queue hd tl)
                  (dequeue_post tl hd)
