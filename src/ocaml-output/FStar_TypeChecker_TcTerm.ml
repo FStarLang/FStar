@@ -11543,33 +11543,21 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                    match bs2 with
                    | [] ->
                        let uu___1 =
-                         let uu___2 =
-                           let uu___3 =
-                             let uu___4 =
-                               let uu___5 =
-                                 FStar_All.pipe_right c1
-                                   FStar_Syntax_Util.comp_effect_name in
-                               FStar_All.pipe_right uu___5
-                                 (FStar_TypeChecker_Env.norm_eff_name env1) in
-                             FStar_All.pipe_right uu___4
-                               (FStar_TypeChecker_Env.lookup_effect_quals
-                                  env1) in
-                           FStar_All.pipe_right uu___3
-                             (FStar_List.existsb
-                                (fun q -> q = FStar_Syntax_Syntax.TotalEffect)) in
-                         if uu___2
-                         then
-                           universeof_fastpath env1
-                             (FStar_Syntax_Util.comp_result c1)
-                         else
-                           FStar_Pervasives_Native.Some
-                             FStar_Syntax_Syntax.U_zero in
+                         universeof_fastpath env1
+                           (FStar_Syntax_Util.comp_result c1) in
                        FStar_Util.bind_opt uu___1
-                         (fun uc ->
+                         (fun u_res ->
                             let uu___2 =
-                              mk_tm_type
-                                (FStar_Syntax_Syntax.U_max (uc :: us)) in
-                            FStar_Pervasives_Native.Some uu___2)
+                              let uu___3 =
+                                FStar_TypeChecker_Util.universe_of_comp env1
+                                  u_res c1 in
+                              FStar_Pervasives_Native.Some uu___3 in
+                            FStar_Util.bind_opt uu___2
+                              (fun uc ->
+                                 let uu___3 =
+                                   mk_tm_type
+                                     (FStar_Syntax_Syntax.U_max (uc :: us)) in
+                                 FStar_Pervasives_Native.Some uu___3))
                    | { FStar_Syntax_Syntax.binder_bv = x;
                        FStar_Syntax_Syntax.binder_qual = imp;
                        FStar_Syntax_Syntax.binder_attrs = uu___1;_}::bs3 ->
