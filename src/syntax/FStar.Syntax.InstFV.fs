@@ -22,6 +22,8 @@ open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Compiler.Util
+open FStar.Compiler
+
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Compiler.Util
