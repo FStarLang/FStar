@@ -4455,7 +4455,7 @@ let resolve_implicits' env is_tac g =
       else if unresolved ctx_u
       then begin match ctx_u.ctx_uvar_meta with
            | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-             let env : Env.env = FStar.Dyn.undyn env_dyn in
+             let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
              if Env.debug env (Options.Other "Tac") then
                BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
 

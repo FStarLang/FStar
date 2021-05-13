@@ -28,7 +28,7 @@ open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 module U = FStar.Compiler.Util
 module List = FStar.Compiler.List
 module PC = FStar.Parser.Const
@@ -463,7 +463,7 @@ let unlazy_as_t k t =
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v})
         when eq_lazy_kind k k' ->
-      FStar.Dyn.undyn v
+      FStar.Compiler.Dyn.undyn v
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
 

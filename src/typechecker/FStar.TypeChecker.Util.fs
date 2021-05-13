@@ -34,7 +34,7 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 type lcomp_with_binder = option<bv> * lcomp
 

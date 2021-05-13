@@ -414,7 +414,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
-         let li = FStar.Dyn.mkdyn x, et in
+         let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
 let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
@@ -432,7 +432,7 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
                                 (P.emb_typ_to_string et')
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print1 "Unembed cancelled for %s\n"
                                      (P.emb_typ_to_string et)

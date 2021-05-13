@@ -1965,7 +1965,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     let ctx_uvar_meta_t, strict =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Dyn.mkdyn env, t)), false
+        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)), false
       | _, t::_ ->
         Some (Ctx_uvar_meta_attr t), true
       | _ -> None, false in

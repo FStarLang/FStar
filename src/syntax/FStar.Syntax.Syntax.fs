@@ -27,7 +27,7 @@ open FStar.Compiler.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig

@@ -115,7 +115,7 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (Print.emb_typ_to_string et)

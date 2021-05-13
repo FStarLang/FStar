@@ -26,7 +26,7 @@ module PC = FStar.Parser.Const
 module O = FStar.Options
 module RD = FStar.Reflection.Data
 
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 (*
  * embed   : from compiler to user
