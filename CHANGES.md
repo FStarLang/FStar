@@ -45,9 +45,12 @@ Guidelines for the changelog:
     abstraction and subtyping.
 
     With the removal of eta, functional extensionality is now a
-    theorem in F\*, no longer an axiom, which is an improvement. The
-    removal of eta equivalence introduced regressions in some proofs
-    that were implicitly relying on it. See, for example,
+    theorem in F\* at least for eta-expanded functions, no longer an
+    axiom, which is an improvement. The removal of eta equivalence
+    introduced regressions in some proofs that were implicitly relying
+    on it. See, for example,
+    https://github.com/FStarLang/FStar/pull/2294
+    and
     https://github.com/project-everest/hacl-star/pull/442
 
   * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
