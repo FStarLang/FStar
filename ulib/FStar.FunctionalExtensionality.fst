@@ -19,28 +19,70 @@ module FStar.FunctionalExtensionality
 
 inline_for_extraction
 let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
-  = f
+  = fun (x:a) -> f x
 
 let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
   = ()
 
 let idempotence_on_domain #a #b f
-  = ()
+  = assert_norm (on_domain a f == (on_domain a (on_domain a f)))
+
+let quantifier_as_lemma (#a:Type) (#b: a -> Type)
+                        (f:squash (forall (x:a). b x))
+                        (x:a)
+    : Lemma (b x)
+    = ()
+
+let extensionality_1 (a:Type)
+                     (b: a -> Type)
+                     (f g: arrow a b)
+                     (sq_feq : squash (feq f g))
+  : Lemma (ensures on_domain a f == on_domain a g)
+  = admit()
+    // let open FStar.Tactics in
+    // assert (on_domain a f == on_domain a g)
+    //    by  (norm [delta_only [`%on_domain]];
+    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
+    //         trefl())
 
 let extensionality a b f g
-  = admit() //the main axiom of this module
+  = let fwd a b (f g:arrow a b)
+     : Lemma (requires feq #a #b f g)
+             (ensures on_domain a f == on_domain a g)
+             [SMTPat (feq #a #b f g)]
+     = extensionality_1 a b f g ()
+    in
+    ()
 
 
 (****** GTot version ******)
 
 let on_domain_g (a:Type) (#b:a -> Type) (f:arrow_g a b)
-  = f
+  = fun (x:a) -> f x
 
 let feq_on_domain_g (#a:Type) (#b:a -> Type) (f:arrow_g a b)
   = ()
 
 let idempotence_on_domain_g #a #b f
-  = ()
+  = assert_norm (on_domain_g a f == (on_domain_g a (on_domain_g a f)))
+
+let extensionality_1_g (a:Type)
+                       (b: a -> Type)
+                       (f g: arrow_g a b)
+                       (sq_feq : squash (feq_g f g))
+  : Lemma (ensures on_domain_g a f == on_domain_g a g)
+  = admit()
+    // let open FStar.Tactics in
+    // assert (on_domain_g a f == on_domain_g a g)
+    //    by  (norm [delta_only [`%on_domain_g]];
+    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
+    //         trefl())
 
 let extensionality_g a b f g
-  = admit () //variant of the main axiom
+  = let fwd a b (f g:arrow_g a b)
+     : Lemma (requires feq_g #a #b f g)
+             (ensures on_domain_g a f == on_domain_g a g)
+             [SMTPat (feq_g #a #b f g)]
+     = extensionality_1_g a b f g ()
+    in
+    ()

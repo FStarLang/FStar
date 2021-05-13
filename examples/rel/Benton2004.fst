@@ -28,7 +28,7 @@ type reified_raw_computation =
 let fuel_monotonic
   (f: reified_raw_computation)
 : GTot Type0
-= forall (fuel fuel' : nat) h . (
+= forall (fuel fuel' : nat) h .{:pattern has_type fuel nat; has_type fuel' nat; has_type h heap}  (
     fuel <= fuel' /\
     fst (f fuel h) == true
   ) ==> (
@@ -534,6 +534,8 @@ let d_seq_terminates
     let s1 = snd k01 in
     let s1' = snd k01' in
     assert (holds p1 s1 s1');
+    assert (reify_computation (seq c01' c12') fuel s0' ==
+           (reify_computation c12') fuel s1');
     assert (terminates_on f12' s1');
     let g'
       (fuel' : nat)
@@ -761,6 +763,9 @@ let d_lu2
         let s2 = snd (fc fuel s1) in
         assert (fr fuel s0 == fr (fuel - 1) s2);
         prf2 s2 (fuel - 1);
+        assert (fl ((fuel - 1) + (fuel - 1)) s2 == fr (fuel - 1) s2);
+        assert (fl (fuel + fuel) s0 ==
+                fl ((fuel + fuel) - 1) s1);
         assert (fl (fuel + fuel) s0 == fl (fuel - 1 + fuel - 1) s2)
       end else ()
     end else ()
