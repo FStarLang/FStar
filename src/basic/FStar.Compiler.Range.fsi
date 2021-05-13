@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Range
-open FStar.ST
-open FStar.All
+module FStar.Compiler.Range
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 
 type rng
 type range

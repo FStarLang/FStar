@@ -14,9 +14,9 @@
    limitations under the License.
  *)
 #light "off"
-module FStar.List
-open FStar.ST
-open FStar.All
+module FStar.Compiler.List
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
 
 val isEmpty : (list<'a>) -> Tot<bool>
@@ -43,9 +43,9 @@ val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list<'a>) -> (list<'b>) -> (list<'b>)
 val init : (list<'a>) -> list<'a>
 val last : (list<'a>) -> option<'a>
-val existsb : f:('a -> bool) -> (list<'a>) -> Tot<bool>
+val existsb : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<bool>
 val existsML : f:('a -> bool) -> (list<'a>) -> bool
-val find : f:('a -> bool) -> (list<'a>) -> Tot<(option<'a>)>
+val find : f:('a -> bool) -> (list<'a>) -> (option<'a>)
 val filter : ('a -> bool) -> (list<'a>) -> (list<'a>)
 val for_all : ('a -> bool) -> (list<'a>) -> bool
 val forall2 : ('a -> 'b -> bool) -> (list<'a>) -> (list<'b>) -> bool

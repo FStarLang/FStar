@@ -1,2 +1,2 @@
-﻿module FStar.All
+﻿module FStar.Compiler.Effect
 type ML<'a> = 'a

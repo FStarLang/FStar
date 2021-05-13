@@ -18,9 +18,9 @@
 
 module FStar.Profiling
 open FStar
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.Options
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (*
    A counter id is the name of a profiling phase;

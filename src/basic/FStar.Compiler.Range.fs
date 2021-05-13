@@ -15,11 +15,11 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module FStar.Range
-open FStar.ST
-open FStar.All
+module FStar.Compiler.Range
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string
@@ -107,7 +107,7 @@ let string_of_file_name f =
     if Options.ide()
     then begin
         try
-            match FStar.Options.find_file (FStar.Util.basename f) with
+            match FStar.Options.find_file (FStar.Compiler.Util.basename f) with
             | None -> f //couldn't find file; just return the relative path
             | Some absolute_path ->
                 absolute_path
