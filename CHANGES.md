@@ -24,6 +24,20 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+
+  * F* no longer supports eta equivalence. Dominique Unruh observed
+    that the primitive `pointwise` tactic (which treats provable
+    equality as a congruence) allows proving functional
+    extensionality, which is unsound in conjunction with subtyping in
+    F*. It turns out that a crucial step in that unsoundness proof is
+    the use of eta equivalence (See Bug1966a.fst for a proof of that,
+    with thanks due there also to Catalin Hritcu). As a fix, we
+    removed eta equivalence. As a result, functional extensionality is
+    now a theorem in F\*, no longer an axiom, which is an
+    improvement. The removal of eta equivalence introduced regressions
+    in some proofs that were implicitly relying on it. See, for
+    example, https://github.com/project-everest/hacl-star/pull/442
+
   * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
     dependent pattern matching. F* now supports `match e returns C with |...`
     syntax for typechecking the branches with `C` appropriately substituted.

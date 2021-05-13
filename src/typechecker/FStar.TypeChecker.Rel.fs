@@ -2253,18 +2253,24 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                           Syntax.order_bv
     in
 
+    (*
+       mk_solution takes care to not introduce needless eta expansions
+
+       lhs is of the form `?u bs`
+       Abstractly, the goal is to set `?u := fun bs -> rhs`
+
+       But, this is optimized so that in case `rhs` is say `e bs`,
+       where `bs` does not appear free in `e`,
+       then we set `?u := e`.
+
+       This is important since eta equivalence is not validated by F*.
+
+       So, introduce needless eta expansions here would lead to unification
+       failures elsewhere
+    *)
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
-        let debug f =
-          if Env.debug env <| Options.Other "ETA"
-          then f()
-        in
         let bs_orig = bs in
         let rhs_orig = rhs in
-        debug (fun () ->
-                 BU.print3 "mk_solution::\n\tlhs=%s\n\trhs=%s\n\tbinders=%s\n"
-                       (flex_t_to_string lhs)
-                       (Print.term_to_string rhs)
-                       (Print.binders_to_string ", " bs));
         let (Flex (_, ctx_u, args)) = lhs in
         let bs, rhs =
           let bv_not_free_in_arg x arg =
@@ -2289,10 +2295,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                 lhs_binders, rhs_args
           in
           let rhs_hd, rhs_args = U.head_and_args rhs in
-          debug (fun () ->
-                   BU.print2 "remove_matching_prefix::\n\tlhs=%s\n\trhs=%s\n"
-                              (Print.args_to_string  (List.rev args))
-                              (Print.args_to_string  (List.rev rhs_args)));
           let bs, rhs_args =
             remove_matching_prefix
               (List.rev bs_orig)
@@ -2308,12 +2310,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           | _ ->
             u_abs ctx_u.ctx_uvar_typ (sn_binders env bs) rhs
         in
-        debug (fun () ->
-                 BU.print2 "mk_solution:: Optimized solution\n\tfrom %s\n\tto %s\n"
-                                  (let default_sol = u_abs ctx_u.ctx_uvar_typ (sn_binders env bs_orig) rhs_orig in
-                                   Print.term_to_string default_sol)
-                                  (Print.term_to_string sol));
-
         [TERM(ctx_u, sol)]
     in
 

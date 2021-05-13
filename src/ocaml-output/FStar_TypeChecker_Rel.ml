@@ -5260,117 +5260,75 @@ and (solve_t_flex_rigid_eq :
                       bs in
                   FStar_Util.as_set uu___3 FStar_Syntax_Syntax.order_bv in
                 let mk_solution env1 lhs1 bs rhs1 =
-                  let debug f =
-                    let uu___3 =
-                      FStar_All.pipe_left (FStar_TypeChecker_Env.debug env1)
-                        (FStar_Options.Other "ETA") in
-                    if uu___3 then f () else () in
                   let bs_orig = bs in
                   let rhs_orig = rhs1 in
-                  debug
-                    (fun uu___4 ->
-                       let uu___5 = flex_t_to_string lhs1 in
-                       let uu___6 = FStar_Syntax_Print.term_to_string rhs1 in
-                       let uu___7 =
-                         FStar_Syntax_Print.binders_to_string ", " bs in
-                       FStar_Util.print3
-                         "mk_solution::\n\tlhs=%s\n\trhs=%s\n\tbinders=%s\n"
-                         uu___5 uu___6 uu___7);
-                  (let uu___4 = lhs1 in
-                   match uu___4 with
-                   | Flex (uu___5, ctx_u, args) ->
-                       let uu___6 =
-                         let bv_not_free_in_arg x arg =
-                           let uu___7 =
-                             let uu___8 =
-                               FStar_Syntax_Free.names
-                                 (FStar_Pervasives_Native.fst arg) in
-                             FStar_Util.set_mem x uu___8 in
-                           Prims.op_Negation uu___7 in
-                         let bv_not_free_in_args x args1 =
-                           FStar_Util.for_all (bv_not_free_in_arg x) args1 in
-                         let rec remove_matching_prefix lhs_binders rhs_args
-                           =
-                           match (lhs_binders, rhs_args) with
-                           | ([], uu___7) -> (lhs_binders, rhs_args)
-                           | (uu___7, []) -> (lhs_binders, rhs_args)
-                           | (b::lhs_tl, (t, aq)::rhs_tl) ->
-                               let uu___7 =
-                                 let uu___8 = FStar_Syntax_Subst.compress t in
-                                 uu___8.FStar_Syntax_Syntax.n in
-                               (match uu___7 with
-                                | FStar_Syntax_Syntax.Tm_name x when
-                                    ((FStar_Syntax_Syntax.bv_eq
-                                        b.FStar_Syntax_Syntax.binder_bv x)
-                                       &&
-                                       (let uu___8 =
-                                          FStar_Syntax_Util.eq_aqual
-                                            b.FStar_Syntax_Syntax.binder_qual
-                                            aq in
-                                        uu___8 = FStar_Syntax_Util.Equal))
+                  let uu___3 = lhs1 in
+                  match uu___3 with
+                  | Flex (uu___4, ctx_u, args) ->
+                      let uu___5 =
+                        let bv_not_free_in_arg x arg =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Syntax_Free.names
+                                (FStar_Pervasives_Native.fst arg) in
+                            FStar_Util.set_mem x uu___7 in
+                          Prims.op_Negation uu___6 in
+                        let bv_not_free_in_args x args1 =
+                          FStar_Util.for_all (bv_not_free_in_arg x) args1 in
+                        let rec remove_matching_prefix lhs_binders rhs_args =
+                          match (lhs_binders, rhs_args) with
+                          | ([], uu___6) -> (lhs_binders, rhs_args)
+                          | (uu___6, []) -> (lhs_binders, rhs_args)
+                          | (b::lhs_tl, (t, aq)::rhs_tl) ->
+                              let uu___6 =
+                                let uu___7 = FStar_Syntax_Subst.compress t in
+                                uu___7.FStar_Syntax_Syntax.n in
+                              (match uu___6 with
+                               | FStar_Syntax_Syntax.Tm_name x when
+                                   ((FStar_Syntax_Syntax.bv_eq
+                                       b.FStar_Syntax_Syntax.binder_bv x)
                                       &&
-                                      (bv_not_free_in_args
-                                         b.FStar_Syntax_Syntax.binder_bv
-                                         rhs_tl)
-                                    -> remove_matching_prefix lhs_tl rhs_tl
-                                | uu___8 -> (lhs_binders, rhs_args)) in
-                         let uu___7 = FStar_Syntax_Util.head_and_args rhs1 in
-                         match uu___7 with
-                         | (rhs_hd, rhs_args) ->
-                             (debug
+                                      (let uu___7 =
+                                         FStar_Syntax_Util.eq_aqual
+                                           b.FStar_Syntax_Syntax.binder_qual
+                                           aq in
+                                       uu___7 = FStar_Syntax_Util.Equal))
+                                     &&
+                                     (bv_not_free_in_args
+                                        b.FStar_Syntax_Syntax.binder_bv
+                                        rhs_tl)
+                                   -> remove_matching_prefix lhs_tl rhs_tl
+                               | uu___7 -> (lhs_binders, rhs_args)) in
+                        let uu___6 = FStar_Syntax_Util.head_and_args rhs1 in
+                        match uu___6 with
+                        | (rhs_hd, rhs_args) ->
+                            let uu___7 =
+                              let uu___8 =
+                                remove_matching_prefix
+                                  (FStar_List.rev bs_orig)
+                                  (FStar_List.rev rhs_args) in
+                              FStar_All.pipe_right uu___8
                                 (fun uu___9 ->
-                                   let uu___10 =
-                                     FStar_Syntax_Print.args_to_string
-                                       (FStar_List.rev args) in
-                                   let uu___11 =
-                                     FStar_Syntax_Print.args_to_string
-                                       (FStar_List.rev rhs_args) in
-                                   FStar_Util.print2
-                                     "remove_matching_prefix::\n\tlhs=%s\n\trhs=%s\n"
-                                     uu___10 uu___11);
-                              (let uu___9 =
-                                 let uu___10 =
-                                   remove_matching_prefix
-                                     (FStar_List.rev bs_orig)
-                                     (FStar_List.rev rhs_args) in
-                                 FStar_All.pipe_right uu___10
-                                   (fun uu___11 ->
-                                      match uu___11 with
-                                      | (bs_rev, args_rev) ->
-                                          ((FStar_List.rev bs_rev),
-                                            (FStar_List.rev args_rev))) in
-                               match uu___9 with
-                               | (bs1, rhs_args1) ->
-                                   let uu___10 =
-                                     FStar_Syntax_Syntax.mk_Tm_app rhs_hd
-                                       rhs_args1 rhs1.FStar_Syntax_Syntax.pos in
-                                   (bs1, uu___10))) in
-                       (match uu___6 with
-                        | (bs1, rhs2) ->
-                            let sol =
-                              match bs1 with
-                              | [] -> rhs2
-                              | uu___7 ->
-                                  let uu___8 = sn_binders env1 bs1 in
-                                  u_abs
-                                    ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ
-                                    uu___8 rhs2 in
-                            (debug
-                               (fun uu___8 ->
-                                  let uu___9 =
-                                    let default_sol =
-                                      let uu___10 = sn_binders env1 bs_orig in
-                                      u_abs
-                                        ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ
-                                        uu___10 rhs_orig in
-                                    FStar_Syntax_Print.term_to_string
-                                      default_sol in
-                                  let uu___10 =
-                                    FStar_Syntax_Print.term_to_string sol in
-                                  FStar_Util.print2
-                                    "mk_solution:: Optimized solution\n\tfrom %s\n\tto %s\n"
-                                    uu___9 uu___10);
-                             [TERM (ctx_u, sol)]))) in
+                                   match uu___9 with
+                                   | (bs_rev, args_rev) ->
+                                       ((FStar_List.rev bs_rev),
+                                         (FStar_List.rev args_rev))) in
+                            (match uu___7 with
+                             | (bs1, rhs_args1) ->
+                                 let uu___8 =
+                                   FStar_Syntax_Syntax.mk_Tm_app rhs_hd
+                                     rhs_args1 rhs1.FStar_Syntax_Syntax.pos in
+                                 (bs1, uu___8)) in
+                      (match uu___5 with
+                       | (bs1, rhs2) ->
+                           let sol =
+                             match bs1 with
+                             | [] -> rhs2
+                             | uu___6 ->
+                                 let uu___7 = sn_binders env1 bs1 in
+                                 u_abs ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ
+                                   uu___7 rhs2 in
+                           [TERM (ctx_u, sol)]) in
                 let try_quasi_pattern orig1 env1 wl1 lhs1 rhs1 =
                   (let uu___4 =
                      FStar_All.pipe_left (FStar_TypeChecker_Env.debug env1)
