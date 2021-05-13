@@ -183,6 +183,10 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
    (r':vprop{can_be_split r0 r'})
    (unrestricted_focus_rmem h r0)
 
+let focus_rmem_refl (r:vprop) (h:rmem r)
+  : Lemma (focus_rmem #r h r == h)
+  = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
+
 (* State that all "atomic" subresources have the same selectors on both views *)
 
 (* AF 04/27/2021: The linear equality generation, where equalities are only
@@ -205,6 +209,7 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
    We should instead have a better way to define atomic vprops, which encapsulates
    atomic, abstract vprops
 *)
+
 [@@ __steel_reduce__]
 let rec frame_equalities
   (frame:vprop)

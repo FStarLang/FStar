@@ -132,7 +132,7 @@ let if_then_else_req
   (p:Type0)
 : req_t pre_f
 = fun h -> normal (
-    (p ==> req_then h) /\
+    (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
   )
 
@@ -175,7 +175,6 @@ effect {
          subcomp = subcomp;
          if_then_else = if_then_else }
 }
-
 
 effect SteelSel (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   SteelSelBase a false pre post req ens
