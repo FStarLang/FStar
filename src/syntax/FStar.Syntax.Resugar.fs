@@ -17,16 +17,16 @@
 *)
 #light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
-open FStar.List
+open FStar.Compiler.List
 open FStar.Parser.AST
 
 module I = FStar.Ident
@@ -35,7 +35,7 @@ module SS = FStar.Syntax.Subst
 module A  = FStar.Parser.AST
 module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module D = FStar.Parser.ToDocument
 module UF = FStar.Syntax.Unionfind
 module E = FStar.Errors

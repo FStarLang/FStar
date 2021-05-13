@@ -19,16 +19,16 @@
 #light "off"
 
 module FStar.Interactive.QueryHelper
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
 open FStar.Range
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Interactive.JsonHelper
 open FStar.Interactive.CompletionTable
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module PI = FStar.Parser.ParseIt
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err

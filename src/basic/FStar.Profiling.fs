@@ -17,7 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Profiling
-open FStar
+open FStar open FStar.Compiler
 open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.Options
 module BU = FStar.Compiler.Util

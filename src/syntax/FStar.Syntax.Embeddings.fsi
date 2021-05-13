@@ -1,16 +1,16 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Char
 open FStar.VConfig
 
 module Range = FStar.Range
 module Z = FStar.BigInt
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (* TODO: Find a better home for these *)
 type norm_step =

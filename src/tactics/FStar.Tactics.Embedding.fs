@@ -1,19 +1,19 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
-open FStar.Util
+open FStar.Compiler.Util
 
 open FStar.Tactics.Common
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module C = FStar.Const
 module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel

@@ -1,9 +1,9 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Range
 open FStar.VConfig
@@ -13,7 +13,7 @@ module S = FStar.Syntax.Syntax
 module C = FStar.Const
 module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident

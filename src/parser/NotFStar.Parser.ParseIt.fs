@@ -16,9 +16,9 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Errors
 
 type filename = string

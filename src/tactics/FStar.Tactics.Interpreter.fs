@@ -1,10 +1,10 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Range
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Common
@@ -19,7 +19,7 @@ open FStar.Tactics.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
 module E       = FStar.Tactics.Embedding
 module Env     = FStar.TypeChecker.Env

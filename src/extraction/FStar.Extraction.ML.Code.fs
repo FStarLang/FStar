@@ -17,17 +17,17 @@
 #light "off"
 
 module FStar.Extraction.ML.Code
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Pprint
 open FStar.Const
 open FStar.BaseTypes
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (* This is the old printer used exclusively for the F# build of F*. It will not
  * evolve in the future. *)
@@ -418,7 +418,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         | MLE_Name p, [
             ({ expr = MLE_Fun ([ _ ], scrutinee) });
             ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
-          ] when (string_of_mlpath p = "FStar.All.try_with") ->
+          ] when (string_of_mlpath p = "FStar.Compiler.Effect.try_with") ->
             let branches =
               match possible_match with
               | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (arg = arg') ->

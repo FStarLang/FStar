@@ -1,12 +1,12 @@
 ﻿#light "off"
 module FStar.Tests.Test
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax
 open FStar.Errors
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 [<EntryPoint>] // JUST FSHARP
 let main argv =

@@ -24,20 +24,20 @@
 module FStar.Parser.Dep
 
 open FStar.Pervasives
-open FStar.ST   //for ref
-open FStar.All  //for failwith
+open FStar.Compiler.Effect   //for ref
+open FStar.Compiler.Effect  //for failwith
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
 
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let profile f c = Profiling.profile f None c
 
@@ -886,8 +886,8 @@ let collect_one
             collect_constant c
         | Op (s, ts) ->
             if Ident.string_of_id s = "@" then
-              (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
-              collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
+              (* We use FStar.Compiler.List.Tot.Base instead of FStar.Compiler.List.Tot to prevent FStar.Compiler.List.Tot.Properties from depending on FStar.Compiler.List.Tot *)
+              collect_term' (Name (lid_of_path (path_of_text "FStar.Compiler.List.Tot.Base.append") Range.dummyRange));
             List.iter collect_term ts
         | Tvar _
         | AST.Uvar _ ->

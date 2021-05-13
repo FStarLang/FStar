@@ -15,9 +15,9 @@
 *)
 #light "off"
 module FStar.Main
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.CheckedFiles
@@ -236,7 +236,7 @@ let main () =
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStar.Util.string_of_int time)
+              (FStar.Compiler.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0

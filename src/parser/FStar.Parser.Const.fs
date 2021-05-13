@@ -16,14 +16,14 @@
 #light "off"
 module FStar.Parser.Const
 open FStar.String
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Const
-open FStar.List
-module U = FStar.Util
+open FStar.Compiler.List
+module U = FStar.Compiler.Util
 
 let p2l l = lid_of_path l dummyRange
 

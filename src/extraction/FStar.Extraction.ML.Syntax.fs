@@ -18,11 +18,11 @@
 #light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Ident
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 

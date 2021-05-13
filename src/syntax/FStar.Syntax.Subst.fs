@@ -17,18 +17,18 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 
 module Err = FStar.Errors
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 
 
@@ -322,7 +322,7 @@ let subst_pat' s p : (pat * int) =
 
 let push_subst_lcomp s lopt = match lopt with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
+    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (subst' s)})
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =

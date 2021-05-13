@@ -9,11 +9,11 @@ module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
 module Range = FStar.Range
-open FStar.List
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module E = FStar.Reflection.Embeddings
 module NRE = FStar.Reflection.NBEEmbeddings
 module Ident = FStar.Ident

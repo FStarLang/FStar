@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.Embeddings
 
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -12,7 +12,7 @@ module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Range = FStar.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print

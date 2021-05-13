@@ -16,16 +16,16 @@
 #light "off"
 module FStar.TypeChecker.TcTerm
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -42,7 +42,7 @@ module TcComm = FStar.TypeChecker.Common
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind

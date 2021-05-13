@@ -17,16 +17,16 @@
 
 module FStar.TypeChecker.Env
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Errors
@@ -34,7 +34,7 @@ open FStar.TypeChecker.Common
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
@@ -1734,7 +1734,7 @@ let should_enc_path env path =
         | x::xs, y::ys -> String.lowercase x = String.lowercase y && str_i_prefix xs ys
         | _, _ -> false
     in
-    match FStar.List.tryFind (fun (p, _) -> str_i_prefix p path) env.proof_ns with
+    match FStar.Compiler.List.tryFind (fun (p, _) -> str_i_prefix p path) env.proof_ns with
     | None -> false
     | Some (_, b) -> b
 

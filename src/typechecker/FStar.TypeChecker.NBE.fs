@@ -18,9 +18,9 @@
 #light "off"
 module FStar.TypeChecker.NBE
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker.Cfg
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
@@ -35,7 +35,7 @@ module SS = FStar.Syntax.Subst
 module Range = FStar.Range
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
@@ -74,7 +74,7 @@ open FStar.TypeChecker.Cfg
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Utilities: Many of these should just move to FStar.List, if it's
+// Utilities: Many of these should just move to FStar.Compiler.List, if it's
 // not already there
 ////////////////////////////////////////////////////////////////////////////////
 

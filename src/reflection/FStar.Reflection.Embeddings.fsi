@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Order

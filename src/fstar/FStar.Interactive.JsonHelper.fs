@@ -19,14 +19,14 @@
 #light "off"
 
 module FStar.Interactive.JsonHelper
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.Exn
 open FStar.Range
 open FStar.TypeChecker.Env
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 

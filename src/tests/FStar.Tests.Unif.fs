@@ -2,10 +2,10 @@
 module FStar.Tests.Unif
 //Unification tests
 //open FSharp.Compatibility.OCaml
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars
 module S = FStar.Syntax.Syntax
@@ -16,7 +16,7 @@ module P  = FStar.Syntax.Print
 module N = FStar.TypeChecker.Normalize
 module Rel = FStar.TypeChecker.Rel
 module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Ident

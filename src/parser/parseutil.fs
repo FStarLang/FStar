@@ -1,7 +1,7 @@
 ﻿module FStar.Parser.Util
 open FStar.Parser
 open FStar.Parser.AST
-open FStar
+open FStar open FStar.Compiler
 open FStar.Range
 
 type bytes = byte[]

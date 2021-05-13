@@ -18,11 +18,11 @@
 
 module FStar.TypeChecker.Util
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -40,7 +40,7 @@ type lcomp_with_binder = option<bv> * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common

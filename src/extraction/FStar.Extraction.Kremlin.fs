@@ -17,18 +17,18 @@
 #light "off"
 
 module FStar.Extraction.Kremlin
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.BaseTypes
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 
 (** CHANGELOG

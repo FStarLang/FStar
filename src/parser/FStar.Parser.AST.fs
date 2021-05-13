@@ -16,15 +16,15 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Errors
 module C = FStar.Parser.Const
 open FStar.Range
 open FStar.Ident
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Const
 
 (* AST produced by the parser, before desugaring

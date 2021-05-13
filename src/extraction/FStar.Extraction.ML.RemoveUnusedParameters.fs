@@ -17,11 +17,11 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Ident
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 open FStar.Extraction.ML.Syntax
@@ -35,7 +35,7 @@ open FStar.Extraction.ML.Syntax
   parameters. However, this transformation may also be useful for use
   with OCaml, since it may lead to nicer code.
 *)
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (**
   The transformation maintains an environment recording which

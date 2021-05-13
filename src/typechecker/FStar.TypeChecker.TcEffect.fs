@@ -16,15 +16,15 @@
 #light "off"
 module FStar.TypeChecker.TcEffect
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
 open FStar.TypeChecker
 
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax
@@ -41,7 +41,7 @@ module N = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let dmff_cps_and_elaborate env ed =
   (* This is only an elaboration rule not a typechecking one *)

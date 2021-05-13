@@ -17,8 +17,8 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
 val term_to_document : FStar.Parser.AST.term -> FStar.Pprint.document
 val decl_to_document   : FStar.Parser.AST.decl -> FStar.Pprint.document

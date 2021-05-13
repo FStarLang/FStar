@@ -16,11 +16,11 @@
 #light "off"
 module FStar.TypeChecker.TcEffect
 
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Ident
 
 module S = FStar.Syntax.Syntax

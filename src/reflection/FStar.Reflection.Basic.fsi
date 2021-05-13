@@ -7,7 +7,7 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
-open FStar.ST
+open FStar.Compiler.Effect
 module O   = FStar.Options
 module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings

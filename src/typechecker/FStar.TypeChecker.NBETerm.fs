@@ -1,9 +1,9 @@
 #light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
@@ -36,7 +36,7 @@ module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const

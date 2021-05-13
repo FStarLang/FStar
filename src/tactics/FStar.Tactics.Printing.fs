@@ -1,16 +1,16 @@
 #light "off"
 module FStar.Tactics.Printing
 
-open FStar
-open FStar.Util
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Effect
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Tactics.Types
 
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Range   = FStar.Range
 module Options = FStar.Options
 module Print   = FStar.Syntax.Print

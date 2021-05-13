@@ -17,12 +17,12 @@
 
 module FStar.Interactive.Ide
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Range
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
@@ -1089,7 +1089,7 @@ let interactive_printer printer =
                          forward_message printer label (get_json ())) }
 
 let install_ide_mode_hooks printer =
-  FStar.Util.set_printer (interactive_printer printer);
+  FStar.Compiler.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =

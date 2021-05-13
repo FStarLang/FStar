@@ -21,12 +21,12 @@
 #light "off"
 module FStar.TypeChecker.Rel
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -38,7 +38,7 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 
 open FStar.Common
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -2249,7 +2249,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     else
 
     let binders_as_bv_set (bs:binders) =
-        FStar.Util.as_set (List.map (fun b -> b.binder_bv) bs)
+        FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
                           Syntax.order_bv
     in
 

@@ -29,12 +29,12 @@
 #light "off"
 
 module FStar.Parser.Lexhelp
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Mul
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Range
 open FStar.Errors
 open FStar.Parser

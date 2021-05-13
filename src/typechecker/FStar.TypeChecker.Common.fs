@@ -17,11 +17,11 @@
 module FStar.TypeChecker.Common
 open Prims
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -29,7 +29,7 @@ module S = FStar.Syntax.Syntax
 module Print = FStar.Syntax.Print
 module U = FStar.Syntax.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module PC = FStar.Parser.Const
 
 (* relations on types, kinds, etc. *)
@@ -347,7 +347,7 @@ let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
       cflags = cflags;
-      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+      comp_thunk = FStar.Compiler.Util.mk_ref (Inl comp_thunk) }
 
 let lcomp_comp lc =
     match !(lc.comp_thunk) with

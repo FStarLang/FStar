@@ -16,14 +16,14 @@
 #light "off"
 
 module FStar.CheckedFiles
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.UEnv
@@ -34,7 +34,7 @@ open FStar.Syntax.DsEnv
 module Syntax  = FStar.Syntax.Syntax
 module TcEnv   = FStar.TypeChecker.Env
 module SMT     = FStar.SMTEncoding.Solver
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Dep     = FStar.Parser.Dep
 
 
@@ -149,7 +149,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
   let binary_deps =
-    FStar.List.sortWith
+    FStar.Compiler.List.sortWith
       (fun fn1 fn2 ->
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))

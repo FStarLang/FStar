@@ -18,12 +18,12 @@
 
 #light "off"
 module FStar.TypeChecker.DeferredImplicits
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -33,7 +33,7 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst

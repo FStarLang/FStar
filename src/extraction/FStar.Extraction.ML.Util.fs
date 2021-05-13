@@ -17,10 +17,10 @@
 module FStar.Extraction.ML.Util
 open Prims
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -29,7 +29,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.Ident
 open FStar.Errors
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const

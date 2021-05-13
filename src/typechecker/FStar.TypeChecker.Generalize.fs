@@ -16,15 +16,15 @@
 #light "off"
 module FStar.TypeChecker.Generalize
 
-open FStar
-open FStar.All
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
-module BU    = FStar.Util
+module BU    = FStar.Compiler.Util
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
 module Free  = FStar.Syntax.Free

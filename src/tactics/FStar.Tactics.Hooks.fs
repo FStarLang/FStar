@@ -1,9 +1,9 @@
 #light "off"
 module FStar.Tactics.Hooks
 
-open FStar
-open FStar.All
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -13,7 +13,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Tactics.Interpreter
 
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Range   = FStar.Range
 module Err     = FStar.Errors
 module O       = FStar.Options

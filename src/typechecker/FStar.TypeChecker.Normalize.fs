@@ -18,10 +18,10 @@
 
 module FStar.TypeChecker.Normalize
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.String
 open FStar.Const
 open FStar.Char
@@ -38,7 +38,7 @@ open FStar.TypeChecker.Cfg
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 //basic util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util

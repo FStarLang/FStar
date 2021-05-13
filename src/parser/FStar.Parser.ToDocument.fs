@@ -19,11 +19,11 @@
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
@@ -31,7 +31,7 @@ open FStar.Pprint
 open FStar.Range
 
 module C = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 
 
@@ -48,7 +48,7 @@ let maybe_unthunk t =
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
-// VD: copied over from NBE, should both probably go in FStar.List
+// VD: copied over from NBE, should both probably go in FStar.Compiler.List
 let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
   let rec aux (l:list<'a>) (acc:list<'b>) =
     match l with

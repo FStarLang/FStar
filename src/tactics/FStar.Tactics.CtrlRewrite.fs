@@ -2,8 +2,8 @@
 module FStar.Tactics.CtrlRewrite
 
 open FStar.Pervasives
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
@@ -16,7 +16,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Common
 
 module Print  = FStar.Syntax.Print
-module BU     = FStar.Util
+module BU     = FStar.Compiler.Util
 module S      = FStar.Syntax.Syntax
 module U      = FStar.Syntax.Util
 module SS     = FStar.Syntax.Subst

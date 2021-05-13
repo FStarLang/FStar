@@ -17,20 +17,20 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
 open Prims
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Dyn
-module U = FStar.Util
-module List = FStar.List
+module U = FStar.Compiler.Util
+module List = FStar.Compiler.List
 module PC = FStar.Parser.Const
 
 (********************************************************************************)
@@ -877,7 +877,7 @@ let qualifier_equal q1 q2 = match q1, q2 with
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
-      | Some rc -> Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (close bs)})
+      | Some rc -> Some ({rc with residual_typ=FStar.Compiler.Util.map_opt rc.residual_typ (close bs)})
   in
   match bs with
   | [] -> t
@@ -1011,7 +1011,7 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
-          Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
+          Some ({rc with residual_typ=FStar.Compiler.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -1849,7 +1849,7 @@ let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
 
 let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
-     FStar.Util.for_some (is_fvar attr) attrs
+     FStar.Compiler.Util.for_some (is_fvar attr) attrs
 
 (* Checks whether the list of attrs contains an application of `attr`, and
  * returns the arguments if so. If there's more than one, the first one

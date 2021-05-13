@@ -1,11 +1,11 @@
 ﻿#light "off"
 module FStar.Tests.Util
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax
@@ -14,7 +14,7 @@ module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 open FStar.Ident
 open FStar.Range

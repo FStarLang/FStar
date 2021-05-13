@@ -19,10 +19,10 @@
 #light "off"
 
 module FStar.Interactive.PushHelper
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.ST
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper

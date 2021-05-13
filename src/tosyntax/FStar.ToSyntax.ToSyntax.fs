@@ -16,12 +16,12 @@
 #light "off"
 module FStar.ToSyntax.ToSyntax
 open FStar.Pervasives
-open FStar.ST
+open FStar.Compiler.Effect
 open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
@@ -36,7 +36,7 @@ open FStar.Syntax
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
@@ -2755,7 +2755,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                 let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
-                    // a name of the form FStar.ST.uu___proj__STATE__item__get
+                    // a name of the form FStar.Compiler.Effect.uu___proj__STATE__item__get
                     action_name = Env.qualify env (action.action_unqualified_name);
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;

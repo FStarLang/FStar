@@ -16,11 +16,11 @@
 #light "off"
 module FStar.TypeChecker.Rel
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env

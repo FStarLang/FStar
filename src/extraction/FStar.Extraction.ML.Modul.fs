@@ -16,10 +16,10 @@
 #light "off"
 module FStar.Extraction.ML.Modul
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
@@ -32,7 +32,7 @@ open FStar.Syntax
 module Term = FStar.Extraction.ML.Term
 module Print = FStar.Syntax.Print
 module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module UF = FStar.Syntax.Unionfind
@@ -769,7 +769,7 @@ let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
       if Options.debug_any()
-      then FStar.Util.measure_execution_time
+      then FStar.Compiler.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
@@ -1112,7 +1112,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
             if Options.debug_module (string_of_lid m.name)
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 FStar.Util.measure_execution_time
+                 FStar.Compiler.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
             else extract_sig g se)
