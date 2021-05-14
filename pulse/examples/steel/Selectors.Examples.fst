@@ -4,7 +4,7 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
 
-(* Some tests *)
+/// A few small tests for the selector effect.
 
 #push-options "--fuel 0 --ifuel 0 --ide_id_info_off"
 
