@@ -174,7 +174,7 @@ let if_then_else_req
   (p:Type0)
 : req_t pre_f
 = fun h -> normal (
-    (p ==> req_then h) /\
+    (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
   )
 
