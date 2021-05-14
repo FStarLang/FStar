@@ -21,7 +21,7 @@ open FStar.Exn
 open FStar.Compiler.Effect
 open FStar.Errors
 module C = FStar.Parser.Const
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar open FStar.Compiler
 open FStar.Compiler.Util

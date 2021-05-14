@@ -43,7 +43,7 @@ let disentangle_abbrevs_from_bundle
     (sigelts: list<sigelt>)
     (quals:   list<qualifier>)
     (members: list<lident>)
-    (rng:   FStar.Range.range)
+    (rng:   FStar.Compiler.Range.range)
     : sigelt * list<sigelt> =
 
    (* JP: not the best strategy... TODO think about how we want to merge

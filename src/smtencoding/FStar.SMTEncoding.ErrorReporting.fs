@@ -26,7 +26,7 @@ open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding
-open FStar.Range
+open FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 
 exception Not_a_wp_implication of string

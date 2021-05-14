@@ -35,7 +35,7 @@ open FStar.Compiler.Effect
 open FStar.Mul
 open FStar open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse

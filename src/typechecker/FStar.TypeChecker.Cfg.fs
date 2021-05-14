@@ -189,7 +189,7 @@ let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
 type psc = {
-     psc_range:FStar.Range.range;
+     psc_range:FStar.Compiler.Range.range;
      psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
 
@@ -512,9 +512,9 @@ let built_in_primitive_steps : prim_step_set =
               arg_as_int to_line,
               arg_as_int to_col with
         | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
-          let r = FStar.Range.mk_range fn
-                              (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                              (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+          let r = FStar.Compiler.Range.mk_range fn
+                              (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                              (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
           Some (embed_simple EMB.e_range psc.psc_range r)
         | _ -> None
         end

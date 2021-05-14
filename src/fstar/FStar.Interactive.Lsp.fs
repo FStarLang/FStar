@@ -20,7 +20,7 @@ open FStar open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Universal
 open FStar.Interactive.JsonHelper

@@ -28,7 +28,7 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Compiler.Util
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.TypeChecker.Common
 

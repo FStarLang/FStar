@@ -473,8 +473,8 @@ let store_module_to_cache env fn parsing_data tc_result =
       store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
       FStar.Errors.log_issue
-        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
-                                 (FStar.Range.mk_pos 0 0))
+        (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
+                                 (FStar.Compiler.Range.mk_pos 0 0))
         (Errors.Warning_FileNotWritten,
          BU.format2 "%s was not written since %s"
                     cache_file msg)

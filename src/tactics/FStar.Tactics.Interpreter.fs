@@ -3,7 +3,7 @@ module FStar.Tactics.Interpreter
 
 open FStar open FStar.Compiler
 open FStar.Compiler.Effect
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -140,7 +140,7 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded_tac
 
 let unembed_tactic_1 (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : 'a -> tac<'r> =
     fun x ->
-      let rng = FStar.Range.dummyRange  in
+      let rng = FStar.Compiler.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
@@ -474,7 +474,7 @@ let () =
 
 let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> =
     Some (fun x ->
-      let rng = FStar.Range.dummyRange  in
+      let rng = FStar.Compiler.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)

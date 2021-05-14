@@ -32,7 +32,7 @@ open FStar.TypeChecker.NBETerm
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module BU = FStar.Compiler.Util

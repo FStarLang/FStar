@@ -141,8 +141,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
-  | RemoveUnusedTypeParameters of list<int> * FStar.Range.range //positional
-  | HasValDecl of FStar.Range.range //this symbol appears in the interface of a module
+  | RemoveUnusedTypeParameters of list<int> * FStar.Compiler.Range.range //positional
+  | HasValDecl of FStar.Compiler.Range.range //this symbol appears in the interface of a module
 
 // rename
 type metadata = list<meta>

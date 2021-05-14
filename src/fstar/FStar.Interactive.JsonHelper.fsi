@@ -23,7 +23,7 @@ open FStar open FStar.Compiler
 open FStar.Errors
 open FStar.Compiler.Util
 open FStar.Exn
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.TypeChecker.Env
 
 module U = FStar.Compiler.Util

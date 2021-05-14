@@ -151,7 +151,7 @@ let parse fn =
               | _ -> failwith "Impossible"
               else Inl modul
            | _ -> fileOrFragment in
-           let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+           let non_polymorphic_nil : list<string * FStar.Compiler.Range.range> = [] in
            ASTFragment (frags, non_polymorphic_nil)
            end
       | Fragment _ ->

@@ -26,7 +26,7 @@ open FStar.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
-open FStar.Range
+open FStar.Compiler.Range
 
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool

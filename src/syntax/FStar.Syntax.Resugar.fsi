@@ -22,7 +22,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Compiler.Util
 open FStar.Const
-open FStar.Range
+open FStar.Compiler.Range
 
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
@@ -31,7 +31,7 @@ module A  = FStar.Parser.AST
 module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module DsEnv = FStar.Syntax.DsEnv
 
 val resugar_term: S.term -> A.term

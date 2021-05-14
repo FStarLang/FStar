@@ -11,7 +11,7 @@ open FStar.TypeChecker.Env
 open FStar.Tactics.Types
 
 module BU      = FStar.Compiler.Util
-module Range   = FStar.Range
+module Range   = FStar.Compiler.Range
 module Options = FStar.Options
 module Print   = FStar.Syntax.Print
 module SS      = FStar.Syntax.Subst

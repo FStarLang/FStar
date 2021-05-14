@@ -2,7 +2,7 @@
 module FStar.Tactics.Interpreter
 
 open FStar.Compiler.Effect
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Tactics.Types

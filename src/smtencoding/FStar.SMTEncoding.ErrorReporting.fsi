@@ -24,7 +24,7 @@ open FStar.Compiler.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding
-open FStar.Range
+open FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 
 type label = error_label

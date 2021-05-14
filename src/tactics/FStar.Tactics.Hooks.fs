@@ -4,7 +4,7 @@ module FStar.Tactics.Hooks
 open FStar open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
@@ -14,7 +14,7 @@ open FStar.Tactics.Basic
 open FStar.Tactics.Interpreter
 
 module BU      = FStar.Compiler.Util
-module Range   = FStar.Range
+module Range   = FStar.Compiler.Range
 module Err     = FStar.Errors
 module O       = FStar.Options
 module PC      = FStar.Parser.Const

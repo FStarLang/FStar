@@ -18,7 +18,7 @@ let main argv =
         if Unif.run_all () then () else exit 1;
         exit 0
     with Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
-         if r = FStar.Range.dummyRange
+         if r = FStar.Compiler.Range.dummyRange
          then BU.print_string msg
-         else BU.print2 "%s: %s\n" (FStar.Range.string_of_range r) msg;
+         else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
          exit 1

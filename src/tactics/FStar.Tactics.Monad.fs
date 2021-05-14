@@ -15,7 +15,7 @@ open FStar.Tactics.Common
 module O       = FStar.Options
 module BU      = FStar.Compiler.Util
 module Err     = FStar.Errors
-module Range   = FStar.Range
+module Range   = FStar.Compiler.Range
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
 module UF      = FStar.Syntax.Unionfind

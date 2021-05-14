@@ -4,7 +4,7 @@ module FStar.Tests.Pars
 open FStar open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Parser
 open FStar.Compiler.Util
 open FStar.Syntax
@@ -33,7 +33,7 @@ let parse_mod mod_name dsenv =
     match parse (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
-        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
+        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Compiler.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
@@ -73,7 +73,7 @@ let init_once () : unit =
   //                            "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
 
   // only needed to test tatic normalization
-  // let dsenv, env = add_mods ["FStar.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Reflection.Types.fsti"; "FStar.Order.fst";
+  // let dsenv, env = add_mods ["FStar.Compiler.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Reflection.Types.fsti"; "FStar.Order.fst";
   //                            "FStar.Reflection.Data.fst"; "FStar.Reflection.Basic.fst"; "FStar.Squash.fsti"; "FStar.Classical.fst";
   //                            "FStar.Compiler.List.Tot.Base.fst"; "FStar.Compiler.List.Tot.Properties.fst"; "FStar.Compiler.List.Tot.fst"; "FStar.Char.fsti";
   //                            "FStar.String.fsti"; "FStar.Reflection.Syntax.fst"; "FStar.Reflection.Syntax.Lemmas.fst";

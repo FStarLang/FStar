@@ -21,7 +21,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 
 open FStar open FStar.Compiler
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util

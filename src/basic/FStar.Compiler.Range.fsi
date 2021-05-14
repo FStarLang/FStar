@@ -15,10 +15,10 @@
 *)
 #light "off"
 module FStar.Compiler.Range
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
 open FStar.BaseTypes
 open FStar.Compiler.Util
+module List = FStar.Compiler.List
 
 type rng
 type range

@@ -24,7 +24,7 @@ open Prims
 open FStar open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const

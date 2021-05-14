@@ -6,7 +6,7 @@ module FStar.Tactics.InterpFuns
 open FStar open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result

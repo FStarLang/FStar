@@ -28,7 +28,7 @@ open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
 open FStar.Pprint
-open FStar.Range
+open FStar.Compiler.Range
 
 module C = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -2019,7 +2019,7 @@ let modul_to_document (m:modul) =
   in  should_print_fs_typ_app := false ;
   res
 
-let comments_to_document (comments : list<(string * FStar.Range.range)>) =
+let comments_to_document (comments : list<(string * FStar.Compiler.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

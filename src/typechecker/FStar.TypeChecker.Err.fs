@@ -26,7 +26,7 @@ open FStar.Syntax.Syntax
 open FStar.Compiler.Util
 open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.Env
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize

@@ -8,7 +8,7 @@ open FStar.Reflection.Basic
 module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings

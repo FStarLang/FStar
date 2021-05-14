@@ -24,7 +24,7 @@ open System.Text
 
 open FStar open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Compiler.Util

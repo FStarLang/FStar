@@ -17,11 +17,12 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
+open FStar.Compiler
+module List = FStar.Compiler.List
 
 //let __test_norm_all = Util.mk_ref false
 

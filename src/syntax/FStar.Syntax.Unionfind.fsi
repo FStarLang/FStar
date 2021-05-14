@@ -5,7 +5,7 @@ module FStar.Syntax.Unionfind
  * universes on top of the existing union-find implementation. *)
 
 open FStar.Compiler.Effect
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module S = FStar.Syntax.Syntax
 
 type uf

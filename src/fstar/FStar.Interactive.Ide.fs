@@ -21,7 +21,7 @@ open FStar.Compiler.Effect
 open FStar.Exn
 open FStar.Compiler.Effect
 open FStar open FStar.Compiler
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident

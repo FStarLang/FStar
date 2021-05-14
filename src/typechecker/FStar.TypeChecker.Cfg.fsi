@@ -62,12 +62,12 @@ val fstep_add_one : step -> fsteps -> fsteps
 val to_fsteps : list<step> -> fsteps
 
 type psc = {
-     psc_range:FStar.Range.range;
+     psc_range:FStar.Compiler.Range.range;
      psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
 
 val null_psc : psc
-val psc_range : psc -> FStar.Range.range
+val psc_range : psc -> FStar.Compiler.Range.range
 val psc_subst : psc -> subst_t
 
 type primitive_step = {

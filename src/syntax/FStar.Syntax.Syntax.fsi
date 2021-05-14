@@ -24,7 +24,7 @@ open FStar.Compiler.Effect
 open Prims
 open FStar open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Compiler.Dyn
 module O = FStar.Options

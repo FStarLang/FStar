@@ -22,6 +22,7 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
+open FStar.Compiler
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
 

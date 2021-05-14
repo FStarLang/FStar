@@ -17,7 +17,7 @@ module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 
 let always id b =
     if b

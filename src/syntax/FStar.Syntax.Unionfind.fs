@@ -4,7 +4,7 @@ open FStar.Compiler.Effect
 open FStar.Errors
 open FStar.Syntax.Syntax
 
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module S     = FStar.Syntax.Syntax
 module PU    = FStar.Unionfind
 module BU    = FStar.Compiler.Util

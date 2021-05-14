@@ -16,7 +16,7 @@ module BU = FStar.Compiler.Util
 module N = FStar.TypeChecker.Normalize
 module Env = FStar.TypeChecker.Env
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Tests.Util
 
 

@@ -5,7 +5,7 @@ open FStar open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.VConfig
 
 module Print = FStar.Syntax.Print
@@ -33,7 +33,7 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
     BU.map_opt s (Thunk.map f)
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
-type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
 
 type raw_embedder<'a>   = 'a -> embed_t

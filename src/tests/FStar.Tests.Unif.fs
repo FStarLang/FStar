@@ -20,7 +20,7 @@ module BU = FStar.Compiler.Util
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Tests.Util
 
 let tcenv () = Pars.init()

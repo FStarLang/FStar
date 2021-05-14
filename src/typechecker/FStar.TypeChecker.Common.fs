@@ -167,7 +167,7 @@ let id_info_table_empty =
       id_info_db = BU.psmap_empty ();
       id_info_buffer = [] }
 
-open FStar.Range
+open FStar.Compiler.Range
 
 let print_identifier_info info =
   BU.format3 "id info { %s, %s : %s}"

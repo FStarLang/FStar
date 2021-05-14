@@ -8,7 +8,7 @@ open FStar.Syntax.Syntax
 open FStar.Char
 open FStar.VConfig
 
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z = FStar.BigInt
 module BU = FStar.Compiler.Util
 
@@ -57,7 +57,7 @@ exception Embedding_failure
 exception Unembedding_failure
 type shadow_term = option<Thunk.t<term>>
 
-type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we should warn on a failure
 
 type raw_embedder<'a>   = 'a -> embed_t
