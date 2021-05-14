@@ -777,6 +777,29 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
                            (Print.tag_of_term head)
                            (Print.tag_of_term (SS.compress head)))
 
+let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t)
+
+(* Deciding when it's okay to issue an SMT query for
+   equating a term whose head symbol is `head` with another term *)
+let rec may_relate env prel head =
+    match (SS.compress head).n with
+    | Tm_name _
+    | Tm_match _ -> true
+    | Tm_fvar fv ->
+      (match Env.delta_depth_of_fv env fv with
+       | Delta_equational_at_level _ ->
+         true
+       | Delta_abstract _ ->
+         //these may be relatable via a logical theory
+         //which may provide **equations** among abstract symbols
+         //Note, this is specifically not applicable for subtyping queries: see issue #1359
+         prel = EQ
+       | _ -> false)
+    | Tm_ascribed (t, _, _)
+    | Tm_uinst (t, _)
+    | Tm_meta (t, _) -> may_relate env prel t
+    | _ -> false
+
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
     let head, args = U.head_and_args t in
@@ -2230,8 +2253,57 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                           Syntax.order_bv
     in
 
+    (*
+       mk_solution takes care to not introduce needless eta expansions
+
+       lhs is of the form `?u bs`
+       Abstractly, the goal is to set `?u := fun bs -> rhs`
+
+       But, this is optimized so that in case `rhs` is say `e bs`,
+       where `bs` does not appear free in `e`,
+       then we set `?u := e`.
+
+       This is important since eta equivalence is not validated by F*.
+
+       So, introduce needless eta expansions here would lead to unification
+       failures elsewhere
+    *)
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
-        let (Flex (_, ctx_u, _)) = lhs in
+        let bs_orig = bs in
+        let rhs_orig = rhs in
+        let (Flex (_, ctx_u, args)) = lhs in
+        let bs, rhs =
+          let bv_not_free_in_arg x arg =
+              not (BU.set_mem x (Free.names (fst arg)))
+          in
+          let bv_not_free_in_args x args =
+              BU.for_all (bv_not_free_in_arg x) args
+          in
+          let rec remove_matching_prefix lhs_binders rhs_args =
+            match lhs_binders, rhs_args with
+            | [], _
+            | _, [] -> lhs_binders, rhs_args
+
+            | b::lhs_tl, (t, aq)::rhs_tl ->
+              match (SS.compress t).n with
+              | Tm_name x
+                when bv_eq b.binder_bv x
+                  && U.eq_aqual b.binder_qual aq = U.Equal
+                  && bv_not_free_in_args b.binder_bv rhs_tl ->
+                remove_matching_prefix lhs_tl rhs_tl
+              | _ ->
+                lhs_binders, rhs_args
+          in
+          let rhs_hd, rhs_args = U.head_and_args rhs in
+          let bs, rhs_args =
+            remove_matching_prefix
+              (List.rev bs_orig)
+              (List.rev rhs_args)
+            |> (fun (bs_rev, args_rev) -> List.rev bs_rev, List.rev args_rev)
+          in
+          bs,
+          S.mk_Tm_app rhs_hd rhs_args rhs.pos
+        in
         let sol =
           match bs with
           | [] -> rhs
@@ -2781,25 +2853,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
-            let rec may_relate head =
-                match (SS.compress head).n with
-                | Tm_name _
-                | Tm_match _ -> true
-                | Tm_fvar fv ->
-                    (match Env.delta_depth_of_fv env fv with
-                     | Delta_equational_at_level _ ->
-                       true
-                     | Delta_abstract _ ->
-                        //these may be relatable via a logical theory
-                        //which may provide **equations** among abstract symbols
-                        //Note, this is specifically not applicable for subtyping queries: see issue #1359
-                       problem.relation = EQ
-                    | _ -> false)
-                | Tm_ascribed (t, _, _)
-                | Tm_uinst (t, _)
-                | Tm_meta (t, _) -> may_relate t
-                | _ -> false
-            in
             let try_reveal_hide env t1 t2 =
                 //tries to solve problems of the form
                 // 1.
@@ -2888,7 +2941,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 solve_t env ({problem with lhs=t1'; rhs=t2'}) wl
 
               | None ->
-                if (may_relate head1 || may_relate head2) && wl.smt_ok
+                if (may_relate env problem.relation head1
+                    || may_relate env problem.relation head2)
+                && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
                 else giveup env (mklstr (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
@@ -3005,60 +3060,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
            mk_t_problem wl scope orig (Subst.subst subst tbody1)
                                        problem.relation
                                        (Subst.subst subst tbody2) None "lambda co-domain")
-
-      | Tm_abs _, _
-      | _, Tm_abs _ ->
-        let is_abs t = match t.n with
-            | Tm_abs _ -> true
-            | _ -> false in
-        let maybe_eta t =
-            if is_abs t then Inl t
-            else let t = N.eta_expand wl.tcenv t in
-                 if is_abs t then Inl t else Inr t
-        in
-        let force_eta t =
-            if is_abs t then t
-            else begin
-                let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in  //AR: TODO: type_of_well_typed?
-                (* Find the WHNF ignoring refinements. Otherwise consider
-                 *
-                 * let myty1 = a -> Tot b
-                 * let myty2 = f:myty1{whatever f}
-                 *
-                 * The WHNF of myty2 is not an arrow, and we would fail to eta-expand. *)
-                let ty =
-                    let rec aux ty =
-                        let ty = N.unfold_whnf env ty in
-                        match (SS.compress ty).n with
-                        | Tm_refine _ -> aux (U.unrefine ty)
-                        | _ -> ty
-                    in aux ty
-                in
-                let r = N.eta_expand_with_type env t ty in
-                if Env.debug wl.tcenv <| Options.Other "Rel" then
-                  BU.print3 "force_eta of (%s) at type (%s) = %s\n" (Print.term_to_string t) (Print.term_to_string (N.unfold_whnf env ty)) (Print.term_to_string r);
-                r
-            end
-        in
-        begin
-            match maybe_eta t1, maybe_eta t2 with
-            | Inl t1, Inl t2 ->
-              solve_t env ({problem with lhs=t1; rhs=t2}) wl
-            | Inl t_abs, Inr not_abs
-            | Inr not_abs, Inl t_abs ->
-              //we lack the type information to eta-expand properly
-              //so, this is going to fail, except if one last shot succeeds
-              if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
-              && p_rel orig = EQ
-              then let flex, wl = destruct_flex_t not_abs wl in
-                    solve_t_flex_rigid_eq env orig wl flex t_abs
-              else let t1 = force_eta t1 in
-                   let t2 = force_eta t2 in
-                   if is_abs t1 && is_abs t2
-                   then solve_t env ({problem with lhs=t1; rhs=t2}) wl
-                   else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
-            | _ -> failwith "Impossible: at least one side is an abstraction"
-        end
 
       | Tm_refine(x1, phi1), Tm_refine(x2, phi2) ->
         (* If the heads of their bases can match, make it so, and continue *)
@@ -3201,6 +3202,36 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         //flex-rigid subtyping is handled in the top-loop
         solve env (attempt [TProb problem] wl)
 
+      | Tm_abs _, _
+      | _, Tm_abs _ ->
+        let is_abs t = match t.n with
+            | Tm_abs _ -> Inl t
+            | _ -> Inr t in
+        begin
+            match is_abs t1, is_abs t2 with
+            | Inl t_abs, Inr not_abs
+            | Inr not_abs, Inl t_abs ->
+              if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
+              && p_rel orig = EQ
+              then let flex, wl = destruct_flex_t not_abs wl in
+                    solve_t_flex_rigid_eq env orig wl flex t_abs
+              else begin
+                match head_matches_delta env wl not_abs t_abs with
+                | HeadMatch _, Some (not_abs', _) ->
+                  solve_t env ({problem with lhs=not_abs'; rhs=t_abs}) wl
+
+                | _ ->
+                  let head, _ = U.head_and_args not_abs in
+                  if wl.smt_ok
+                  && may_relate env (p_rel orig) head
+                  then let g, wl = mk_eq2 wl env orig t_abs not_abs in
+                       solve env (solve_prob orig (Some g) [] wl)
+                  else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
+              end
+
+            | _ -> failwith "Impossible: at least one side is an abstraction"
+        end
+
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
         solve_t env ({problem with rhs=t2}) wl
@@ -3298,7 +3329,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                  (Print.term_to_string head1)
                                  (Print.term_to_string head2)
          in
-         let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
          let equal t1 t2 =
             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
             let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
