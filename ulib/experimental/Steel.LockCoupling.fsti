@@ -22,6 +22,8 @@ open Steel.SpinLock
 open Steel.Reference
 open Steel.FractionalPermission
 
+/// An invariant for lists, where each list node stores a lock to the rest of the list.
+
 #push-options "--__no_positivity"
 noeq
 type llist (a:Type0) : Type0 = {

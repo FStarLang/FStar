@@ -18,13 +18,19 @@ module Steel.Stepper
 
 open FStar.PCM
 
+/// A simplified version of the Duplex library, specialized to a simple concrete
+/// protocol, where the two parties take turns incrementing a counter.
+/// This is modeled using the [stepper] PCM below
+
+(* Some abbreviations and helpers to operate on natural numbers *)
+
 let even = n:nat{n % 2 == 0}
 let odd = n:nat{n % 2 <> 0}
 
 let abs (n:int) : nat = if n >= 0 then n else -n
 let max (n m:nat) : nat = if n >= m then n else m
 
-
+/// The elements of the PCM regulating this protocol.
 noeq
 type stepper : Type u#1 =
   | V : n:nat{n > 0} -> stepper // the real value " whole value "
@@ -36,6 +42,9 @@ type stepper : Type u#1 =
 
 let refine (s:stepper) : Tot prop = V? s \/ None? s
 
+/// Specifying which elements of the PCM can be composed.
+/// This PCM models a counter that the two parties increment one after the other.
+/// As such, the two sides are always at most one apart
 let composable' (s0 s1:stepper) : prop =
     match s0, s1 with
     | _, None
@@ -48,6 +57,7 @@ let composable' (s0 s1:stepper) : prop =
 
 let composable : symrel stepper = composable'
 
+/// The PCM composition function, defined on elements that are composable
 let compose (s0:stepper) (s1:stepper{composable s0 s1}) =
     match s0, s1 with
     | a, None
@@ -57,7 +67,10 @@ let compose (s0:stepper) (s1:stepper{composable s0 s1}) =
     | Odd m, EvenWriteable n | EvenWriteable n, Odd m -> V m
     | Even m, OddWriteable n | OddWriteable n, Even m -> V m
 
+/// Combining them into the structure of the PCM
 let p' : pcm' stepper = { composable = composable; op = compose; one = None }
+
+(* Defining the different lemmas for the commutative monoid structure *)
 
 let lemma_comm (x:stepper) (y:stepper{composable x y}) :
   Lemma (compose x y == compose y x)
@@ -76,6 +89,7 @@ let lemma_assoc_r (x y:stepper) (z:stepper{composable x y /\ composable (compose
 let lemma_is_unit (x:stepper) : Lemma (composable x None /\ compose x None == x)
   = ()
 
+/// Full definition of the stepper PCM
 let p : pcm stepper =
   { p = p';
     comm = lemma_comm;
@@ -90,6 +104,8 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.PCMReference
 module PR = Steel.PCMReference
+
+(*** Specializing the reference function for this specific PCM ***)
 
 // Use erased values here to avoid some rewritings
 val pts_to (r:ref stepper p) (v:erased stepper) : vprop
@@ -150,7 +166,6 @@ let f_odd (n0:odd) (v:stepper{compatible p (Odd n0) v})
     | Odd n0 -> Odd n0
     | OddWriteable n0 -> OddWriteable n0
     | V n -> if n = n0 then Odd n0 else OddWriteable n0
-
 
 // Stateful version of actions
 // get_even/get_odd/upd_even/upd_odd should be done in
@@ -224,8 +239,9 @@ val split (r:ref stepper p) (v_full v0 v1:stepper)
 
 let split r v_full v0 v1 = split r v_full v0 v1
 
-// Core functions of stepper
+(*** Core functions of stepper ***)
 
+/// Creates a new stepper protocol, with permissions for both parties
 val new_stepper (u:unit) : SteelT (ref stepper p) emp (fun r -> s_odd r 1 `star` s_even r 0)
 
 let new_stepper _ =
@@ -233,6 +249,8 @@ let new_stepper _ =
   split r (V 1) (Odd 1) (Even 0);
   r
 
+/// Increments the counter for the even party.
+/// Loops until the protocol is in a state where it's this party's turn to increment the counter
 val incr_even (r:ref stepper p) (n:even) : SteelT unit (s_even r n) (fun _ -> s_even r (n + 2))
 
 let rec incr_even r n =
@@ -247,6 +265,7 @@ let rec incr_even r n =
       (pts_to r (EvenWriteable n)) (fun _ -> ());
     upd_even r n)
 
+/// Dual version of the above function, for the odd party
 val incr_odd (r:ref stepper p) (n:odd) : SteelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
 
 let rec incr_odd r n =
@@ -261,8 +280,9 @@ let rec incr_odd r n =
       (pts_to r (OddWriteable n)) (fun _ -> ());
     upd_odd r n)
 
-// Main driver incrementing the stepper forever in parallel
+(*** Main driver incrementing the stepper forever in parallel ***)
 
+/// The even party's driver
 val rec_incr_even (r:ref stepper p) (n:even)
   : SteelT unit (s_even r n) (fun _ -> emp)
 
@@ -270,6 +290,7 @@ let rec rec_incr_even r n =
   incr_even r n;
   rec_incr_even r (n+2)
 
+/// The odd's party driver
 val rec_incr_odd (r:ref stepper p) (n:odd)
   : SteelT unit (s_odd r n) (fun _ -> emp)
 
@@ -277,6 +298,7 @@ let rec rec_incr_odd r n =
   incr_odd r n;
   rec_incr_odd r (n+2)
 
+/// The main driver, which creates a new stepper protocol, and executes the two parties in parallel
 val main (_:unit) : SteelT unit emp (fun _ -> emp)
 
 let main () =

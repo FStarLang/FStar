@@ -20,6 +20,8 @@ open Steel.Memory
 open Steel.Effect
 open FStar.Ghost
 
+/// A small proof-of-concept library showing that vprops can be used inside closures
+
 let ctr_t = (p:(int -> vprop) & (x:erased int -> SteelT (y:int{y == x + 1}) (p x) p))
 
 val new_counter (u:unit) :
