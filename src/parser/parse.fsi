@@ -160,6 +160,7 @@ type token =
   | ATTRIBUTES
   | ASSUME
   | ASSERT
+  | AS
   | AND
   | AMP
 type tokenId = 

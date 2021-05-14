@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Tactics.Typeclasses
-
+open FStar.List.Tot
 (* TODO: This must be in the FStar.Tactics.* namespace or we fail to build
  * fstarlib. That seems silly, but I forget the details of the library split. *)
 

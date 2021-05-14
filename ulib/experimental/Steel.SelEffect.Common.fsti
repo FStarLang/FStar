@@ -1,5 +1,5 @@
 module Steel.SelEffect.Common
-
+open FStar.List.Tot
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
