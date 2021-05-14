@@ -41,7 +41,7 @@ let rec (elaborate_pat :
                             (FStar_Errors.Fatal_TooManyPatternArguments,
                               "Too many pattern arguments") uu___6
                       | (uu___4::uu___5, []) ->
-                          FStar_All.pipe_right formals
+                          FStar_All.op_Bar_Greater formals
                             (FStar_List.map
                                (fun fml ->
                                   let uu___6 =
@@ -278,7 +278,7 @@ let (pat_as_exp :
                      ([x1], [x1], [], env2, e, g, p1))
             | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
                 let uu___ =
-                  FStar_All.pipe_right pats
+                  FStar_All.op_Bar_Greater pats
                     (FStar_List.fold_left
                        (fun uu___1 ->
                           fun uu___2 ->
@@ -316,17 +316,18 @@ let (pat_as_exp :
                               then hd1
                               else FStar_Syntax_Syntax.mk_Tm_uinst hd1 us) in
                      let e =
-                       let uu___1 = FStar_All.pipe_right args FStar_List.rev in
+                       let uu___1 =
+                         FStar_All.op_Bar_Greater args FStar_List.rev in
                        FStar_Syntax_Syntax.mk_Tm_app hd uu___1
                          p1.FStar_Syntax_Syntax.p in
                      let uu___1 =
-                       FStar_All.pipe_right (FStar_List.rev b)
+                       FStar_All.op_Bar_Greater (FStar_List.rev b)
                          FStar_List.flatten in
                      let uu___2 =
-                       FStar_All.pipe_right (FStar_List.rev a)
+                       FStar_All.op_Bar_Greater (FStar_List.rev a)
                          FStar_List.flatten in
                      let uu___3 =
-                       FStar_All.pipe_right (FStar_List.rev w)
+                       FStar_All.op_Bar_Greater (FStar_List.rev w)
                          FStar_List.flatten in
                      (uu___1, uu___2, uu___3, env2, e, guard,
                        (let uu___4 = p1 in
@@ -343,7 +344,7 @@ let (pat_as_exp :
             match uu___ with
             | (b, a, w, env2, arg, guard, p3) ->
                 let uu___1 =
-                  FStar_All.pipe_right b
+                  FStar_All.op_Bar_Greater b
                     (FStar_Util.find_dup FStar_Syntax_Syntax.bv_eq) in
                 (match uu___1 with
                  | FStar_Pervasives_Native.Some x ->

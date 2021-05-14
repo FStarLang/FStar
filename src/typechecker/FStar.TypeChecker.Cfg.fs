@@ -3,6 +3,7 @@ module FStar.TypeChecker.Cfg
 open FStar.ST
 open FStar.All
 open FStar
+open FStar.List
 open FStar.String
 open FStar.Const
 open FStar.Char

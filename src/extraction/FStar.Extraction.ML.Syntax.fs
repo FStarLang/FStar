@@ -21,6 +21,7 @@ module FStar.Extraction.ML.Syntax
 open FStar.ST
 open FStar.All
 open FStar
+open FStar.List
 open FStar.Ident
 open FStar.Util
 open FStar.Const

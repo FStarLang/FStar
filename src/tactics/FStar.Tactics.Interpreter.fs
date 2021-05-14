@@ -2,6 +2,7 @@
 module FStar.Tactics.Interpreter
 
 open FStar
+open FStar.List
 open FStar.All
 open FStar.Range
 open FStar.Util

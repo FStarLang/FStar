@@ -87,7 +87,7 @@ let (report_and_clear : Prims.string -> unit) =
               let uu___1 = FStar_ST.op_Bang c2.total_time in
               let uu___2 = FStar_ST.op_Bang c1.total_time in uu___1 - uu___2)
          ctrs in
-     FStar_All.pipe_right ctrs1
+     FStar_All.op_Bar_Greater ctrs1
        (FStar_List.iter
           (fun c ->
              let warn =

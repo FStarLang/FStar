@@ -23,6 +23,7 @@ open FStar.All
 (* Prims is used for bootstrapping *)
 open Prims
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.Range
 open FStar.Ident

@@ -99,7 +99,7 @@ let (label_goals :
               -> true
           | uu___ -> false in
         let is_a_named_continuation lhs =
-          FStar_All.pipe_right (conjuncts lhs)
+          FStar_All.op_Bar_Greater (conjuncts lhs)
             (FStar_Util.for_some is_guard_free) in
         let uu___ =
           match use_env_msg with
@@ -159,7 +159,7 @@ let (label_goals :
                                  let post_name =
                                    let uu___4 =
                                      let uu___5 = FStar_Ident.next_id () in
-                                     FStar_All.pipe_left
+                                     FStar_All.op_Less_Bar
                                        FStar_Util.string_of_int uu___5 in
                                    Prims.op_Hat "^^post_condition_" uu___4 in
                                  let names =
@@ -174,7 +174,7 @@ let (label_goals :
                                               let uu___8 =
                                                 let uu___9 =
                                                   FStar_Ident.next_id () in
-                                                FStar_All.pipe_left
+                                                FStar_All.op_Less_Bar
                                                   FStar_Util.string_of_int
                                                   uu___9 in
                                               Prims.op_Hat "^^" uu___8 in
@@ -273,12 +273,20 @@ let (label_goals :
                                                                  uu___10
                                                                  ens.FStar_SMTEncoding_Term.rng in
                                                              let lhs2 =
-                                                               FStar_SMTEncoding_Term.mk
-                                                                 (FStar_SMTEncoding_Term.App
-                                                                    (FStar_SMTEncoding_Term.And,
-                                                                    (FStar_List.append
+                                                               let uu___10 =
+                                                                 let uu___11
+                                                                   =
+                                                                   let uu___12
+                                                                    =
+                                                                    FStar_List.op_At
                                                                     req
-                                                                    [ens1])))
+                                                                    [ens1] in
+                                                                   (FStar_SMTEncoding_Term.And,
+                                                                    uu___12) in
+                                                                 FStar_SMTEncoding_Term.App
+                                                                   uu___11 in
+                                                               FStar_SMTEncoding_Term.mk
+                                                                 uu___10
                                                                  lhs1.FStar_SMTEncoding_Term.rng in
                                                              let uu___10 =
                                                                FStar_SMTEncoding_Term.abstr
@@ -391,7 +399,7 @@ let (label_goals :
                        let new_post_name =
                          let uu___3 =
                            let uu___4 = FStar_Ident.next_id () in
-                           FStar_All.pipe_left FStar_Util.string_of_int
+                           FStar_All.op_Less_Bar FStar_Util.string_of_int
                              uu___4 in
                          Prims.op_Hat "^^post_condition_" uu___3 in
                        let names =
@@ -402,7 +410,7 @@ let (label_goals :
                                   let uu___5 =
                                     let uu___6 =
                                       let uu___7 = FStar_Ident.next_id () in
-                                      FStar_All.pipe_left
+                                      FStar_All.op_Less_Bar
                                         FStar_Util.string_of_int uu___7 in
                                     Prims.op_Hat "^^" uu___6 in
                                   (uu___5, s) in
@@ -412,7 +420,7 @@ let (label_goals :
                              FStar_SMTEncoding_Term.mk_fv
                                (new_post_name, post) in
                            [uu___5] in
-                         FStar_List.append uu___3 uu___4 in
+                         FStar_List.op_At uu___3 uu___4 in
                        let instantiation =
                          FStar_List.map FStar_SMTEncoding_Util.mkFreeV names in
                        let uu___3 =
@@ -504,7 +512,7 @@ let (label_goals :
                                             (uu___8, rhs2) in
                                           FStar_SMTEncoding_Term.mkImp uu___7
                                             rng in
-                                        FStar_All.pipe_right uu___6
+                                        FStar_All.op_Bar_Greater uu___6
                                           (FStar_SMTEncoding_Term.abstr names) in
                                       let q2 =
                                         FStar_SMTEncoding_Term.mk
@@ -774,7 +782,7 @@ let (detail_errors :
                        (FStar_Errors.Error_ProofObligationFailed, uu___5) in
                      FStar_Errors.log_issue r uu___4) in
           let elim labs =
-            FStar_All.pipe_right labs
+            FStar_All.op_Bar_Greater labs
               (FStar_List.map
                  (fun uu___ ->
                     match uu___ with
@@ -804,16 +812,17 @@ let (detail_errors :
                    let uu___1 =
                      FStar_List.map (fun x -> (x, true)) eliminated in
                    let uu___2 = FStar_List.map (fun x -> (x, false)) errors in
-                   FStar_List.append uu___1 uu___2 in
+                   FStar_List.op_At uu___1 uu___2 in
                  sort_labels results
              | hd::tl ->
                  ((let uu___2 =
                      FStar_Util.string_of_int (FStar_List.length active) in
                    FStar_Util.print1 "%s, " uu___2);
                   (let decls =
-                     FStar_All.pipe_left elim
-                       (FStar_List.append eliminated
-                          (FStar_List.append errors tl)) in
+                     let uu___2 =
+                       let uu___3 = FStar_List.op_At errors tl in
+                       FStar_List.op_At eliminated uu___3 in
+                     FStar_All.op_Less_Bar elim uu___2 in
                    let result = askZ3 decls in
                    match result.FStar_SMTEncoding_Z3.z3result_status with
                    | FStar_SMTEncoding_Z3.UNSAT uu___2 ->
@@ -824,7 +833,7 @@ let (detail_errors :
             (FStar_Options.Int (Prims.of_int (5)));
           (let res = linear_check [] [] all_labels in
            FStar_Util.print_string "\n";
-           FStar_All.pipe_right res (FStar_List.iter print_result);
+           FStar_All.op_Bar_Greater res (FStar_List.iter print_result);
            (let uu___4 = FStar_Util.for_all FStar_Pervasives_Native.snd res in
             if uu___4
             then

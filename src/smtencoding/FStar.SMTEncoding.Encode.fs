@@ -22,6 +22,7 @@ open FStar.Exn
 open FStar.All
 open Prims
 open FStar
+open FStar.List
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax

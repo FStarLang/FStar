@@ -305,7 +305,7 @@ let (tc_one :
           let uu___ =
             let uu___1 = FStar_TypeChecker_Env.dep_graph env in
             FStar_Parser_Dep.parsing_data_of uu___1 in
-          FStar_All.pipe_right modf uu___ in
+          FStar_All.op_Bar_Greater modf uu___ in
         let uu___ =
           FStar_Universal.tc_one_file_for_ide env intf_opt modf parse_data in
         match uu___ with | (uu___1, env1) -> env1
@@ -381,7 +381,7 @@ let (query_of_lid :
     let uu___ =
       let uu___1 = FStar_Ident.ns_of_lid lid in
       let uu___2 = let uu___3 = FStar_Ident.ident_of_lid lid in [uu___3] in
-      FStar_List.append uu___1 uu___2 in
+      FStar_List.op_At uu___1 uu___2 in
     query_of_ids uu___
 let (update_names_from_event :
   Prims.string ->

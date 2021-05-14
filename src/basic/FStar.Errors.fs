@@ -8,6 +8,7 @@ open FStar.All
 open FStar.Util
 open FStar.Range
 open FStar.Options
+open FStar.List
 
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;

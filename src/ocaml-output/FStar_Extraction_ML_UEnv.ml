@@ -432,7 +432,7 @@ let (mlpath_of_lident :
 let (is_type_name : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g ->
     fun fv ->
-      FStar_All.pipe_right g.type_names
+      FStar_All.op_Bar_Greater g.type_names
         (FStar_Util.for_some
            (fun uu___ ->
               match uu___ with
@@ -441,7 +441,7 @@ let (is_fv_type : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g ->
     fun fv ->
       (is_type_name g fv) ||
-        (FStar_All.pipe_right g.tydefs
+        (FStar_All.op_Bar_Greater g.tydefs
            (FStar_Util.for_some
               (fun tydef1 -> FStar_Syntax_Syntax.fv_eq fv tydef1.tydef_fv)))
 let (lookup_record_field_name :
@@ -456,7 +456,7 @@ let (lookup_record_field_name :
           let key =
             let uu___1 =
               let uu___2 = FStar_Ident.ids_of_lid type_name in
-              FStar_List.append uu___2 [fn] in
+              FStar_List.op_At uu___2 [fn] in
             FStar_Ident.lid_of_ids uu___1 in
           let uu___1 =
             let uu___2 = FStar_Ident.string_of_lid key in
@@ -518,7 +518,7 @@ let (rename_conventional : Prims.string -> Prims.bool -> Prims.string) =
                fun cs1 ->
                  let uu___1 =
                    let uu___2 = valid c in if uu___2 then [c] else [95; 95] in
-                 FStar_List.append uu___1 cs1) cs [] in
+                 FStar_List.op_At uu___1 cs1) cs [] in
         match cs' with
         | c::cs1 when (FStar_Util.is_digit c) || (c = 39) -> 95 :: c :: cs1
         | uu___1 -> cs in
@@ -693,7 +693,7 @@ let (extend_bv :
                   else
                     if add_unit
                     then
-                      FStar_All.pipe_left
+                      FStar_All.op_Less_Bar
                         (FStar_Extraction_ML_Syntax.with_ty
                            FStar_Extraction_ML_Syntax.MLTY_Top)
                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -804,7 +804,7 @@ let (extend_fv :
                 let mly1 =
                   if add_unit
                   then
-                    FStar_All.pipe_left
+                    FStar_All.op_Less_Bar
                       (FStar_Extraction_ML_Syntax.with_ty
                          FStar_Extraction_ML_Syntax.MLTY_Top)
                       (FStar_Extraction_ML_Syntax.MLE_App
@@ -1005,7 +1005,7 @@ let (extend_with_action_name :
           let lid =
             let uu___ =
               let uu___1 = let uu___2 = FStar_Ident.id_of_text nm in [uu___2] in
-              FStar_List.append module_name uu___1 in
+              FStar_List.op_At module_name uu___1 in
             FStar_Ident.lid_of_ids uu___ in
           let uu___ =
             let uu___1 =
@@ -1029,7 +1029,7 @@ let (extend_record_field_name :
           let key =
             let uu___1 =
               let uu___2 = FStar_Ident.ids_of_lid type_name in
-              FStar_List.append uu___2 [fn] in
+              FStar_List.op_At uu___2 [fn] in
             FStar_Ident.lid_of_ids uu___1 in
           let uu___1 =
             let uu___2 = FStar_Ident.string_of_id fn in

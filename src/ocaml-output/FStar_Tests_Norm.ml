@@ -114,7 +114,7 @@ let (mk_match :
   fun h ->
     fun branches ->
       let branches1 =
-        FStar_All.pipe_right branches
+        FStar_All.op_Bar_Greater branches
           (FStar_List.map FStar_Syntax_Util.branch) in
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_match
@@ -1229,7 +1229,7 @@ let run_either :
            FStar_Util.print1 "%s: ... \n\n" uu___1);
           (let tcenv = FStar_Tests_Pars.init () in
            (let uu___2 = FStar_Main.process_args () in
-            FStar_All.pipe_right uu___2 (fun uu___3 -> ()));
+            FStar_All.op_Bar_Greater uu___2 (fun uu___3 -> ()));
            (let x = normalizer tcenv r in
             FStar_Options.init ();
             FStar_Options.set_option "print_universes"

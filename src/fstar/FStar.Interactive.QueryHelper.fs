@@ -19,8 +19,10 @@
 #light "off"
 
 module FStar.Interactive.QueryHelper
+open FStar.All
 open FStar
 open FStar.Pervasives
+open FStar.List
 open FStar.Range
 open FStar.Util
 open FStar.TypeChecker.Env

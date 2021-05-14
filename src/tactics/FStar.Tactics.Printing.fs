@@ -2,6 +2,7 @@
 module FStar.Tactics.Printing
 
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.All
 open FStar.Ident

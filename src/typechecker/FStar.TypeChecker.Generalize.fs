@@ -17,6 +17,7 @@
 module FStar.TypeChecker.Generalize
 
 open FStar
+open FStar.List
 open FStar.All
 open FStar.Util
 open FStar.Errors

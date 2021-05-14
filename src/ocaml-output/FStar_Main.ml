@@ -16,7 +16,7 @@ let (finished_message :
         let uu___1 = FStar_Options.silent () in Prims.op_Negation uu___1 in
       if uu___
       then
-        (FStar_All.pipe_right fmods
+        (FStar_All.op_Bar_Greater fmods
            (FStar_List.iter
               (fun uu___2 ->
                  match uu___2 with
@@ -50,7 +50,7 @@ let (finished_message :
 let (report_errors : (Prims.bool * FStar_Ident.lident) Prims.list -> unit) =
   fun fmods ->
     (let uu___1 = FStar_Errors.report_all () in
-     FStar_All.pipe_right uu___1 (fun uu___2 -> ()));
+     FStar_All.op_Bar_Greater uu___1 (fun uu___2 -> ()));
     (let nerrs = FStar_Errors.get_err_count () in
      if nerrs > Prims.int_zero
      then (finished_message fmods nerrs; FStar_All.exit Prims.int_one)
@@ -59,10 +59,10 @@ let (load_native_tactics : unit -> unit) =
   fun uu___ ->
     let modules_to_load =
       let uu___1 = FStar_Options.load () in
-      FStar_All.pipe_right uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
+      FStar_All.op_Bar_Greater uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
     let cmxs_to_load =
       let uu___1 = FStar_Options.load_cmxs () in
-      FStar_All.pipe_right uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
+      FStar_All.op_Bar_Greater uu___1 (FStar_List.map FStar_Ident.lid_of_str) in
     let ml_module_name m = FStar_Extraction_ML_Util.ml_module_name_of_lid m in
     let ml_file m =
       let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
@@ -109,8 +109,8 @@ let (load_native_tactics : unit -> unit) =
                        FStar_Errors.raise_err uu___6
                    | FStar_Pervasives_Native.Some f -> f))) in
     let cmxs_files =
-      FStar_All.pipe_right (FStar_List.append modules_to_load cmxs_to_load)
-        (FStar_List.map cmxs_file) in
+      let uu___1 = FStar_List.op_At modules_to_load cmxs_to_load in
+      FStar_All.op_Bar_Greater uu___1 (FStar_List.map cmxs_file) in
     (let uu___2 = FStar_Options.debug_any () in
      if uu___2
      then
@@ -224,7 +224,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                    | (tcrs, env, cleanup1) ->
                                        ((let uu___16 = cleanup1 env in ());
                                         (let module_names =
-                                           FStar_All.pipe_right tcrs
+                                           FStar_All.op_Bar_Greater tcrs
                                              (FStar_List.map
                                                 (fun tcr ->
                                                    FStar_Universal.module_or_interface_name

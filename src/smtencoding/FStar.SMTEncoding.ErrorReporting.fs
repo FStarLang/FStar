@@ -20,6 +20,7 @@ open FStar.ST
 open FStar.Exn
 open FStar.All
 open FStar
+open FStar.List
 open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term

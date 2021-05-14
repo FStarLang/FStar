@@ -22,6 +22,7 @@ open FStar.ST
 open FStar.Exn
 open FStar.All
 open FStar
+open FStar.List
 open FStar.Errors
 open FStar.Util
 open FStar.Getopt

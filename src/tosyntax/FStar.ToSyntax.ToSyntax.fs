@@ -21,6 +21,7 @@ open FStar.Exn
 open FStar.All
 
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -149,8 +150,6 @@ let op_as_term env arity op : option<S.term> =
     match Ident.string_of_id op with
     | "=" ->
       r C.op_Eq delta_equational
-    | ":=" ->
-      r C.write_lid delta_equational
     | "<" ->
       r C.op_LT delta_equational
     | "<=" ->
@@ -173,16 +172,6 @@ let op_as_term env arity op : option<S.term> =
       r C.op_Division delta_equational
     | "%" ->
       r C.op_Modulus delta_equational
-    | "!" ->
-      r C.read_lid delta_equational
-    | "@" ->
-      if Options.ml_ish ()
-      then r C.list_append_lid     (Delta_equational_at_level 2)
-      else r C.list_tot_append_lid (Delta_equational_at_level 2)
-    | "|>" ->
-      r C.pipe_right_lid delta_equational
-    | "<|" ->
-      r C.pipe_left_lid delta_equational
     | "<>" ->
       r C.op_notEq delta_equational
     | "~"   ->

@@ -420,8 +420,8 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
     FStar_Util.is_upper c
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s ->
-    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] s)
-      FStar_Range.dummyRange
+    let uu___ = FStar_List.op_At ["FStar"; "Tactics"] s in
+    FStar_Ident.lid_of_path uu___ FStar_Range.dummyRange
 let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]

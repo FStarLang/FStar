@@ -69,9 +69,9 @@ let (symlookup :
               let uu___ =
                 FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStar_TypeChecker_Env.dsenv lid in
-              FStar_All.pipe_left (FStar_Util.dflt lid) uu___ in
+              FStar_All.op_Less_Bar (FStar_Util.dflt lid) uu___ in
             let uu___ = FStar_TypeChecker_Env.try_lookup_lid tcenv lid1 in
-            FStar_All.pipe_right uu___
+            FStar_All.op_Bar_Greater uu___
               (FStar_Util.map_option
                  (fun uu___1 ->
                     match uu___1 with
@@ -184,7 +184,7 @@ let (ck_completion :
       let lids =
         FStar_Interactive_CompletionTable.autocomplete_lid
           st.FStar_Interactive_JsonHelper.repl_names needle in
-      FStar_List.append lids mods_and_nss
+      FStar_List.op_At lids mods_and_nss
 let (deflookup :
   FStar_TypeChecker_Env.env ->
     FStar_Interactive_JsonHelper.txdoc_pos ->

@@ -169,7 +169,7 @@ let (run_repl_transaction :
                          FStar_Interactive_PushHelper.run_repl_task
                            st1.FStar_Interactive_JsonHelper.repl_curmod env1
                            task in
-                       FStar_All.pipe_left
+                       FStar_All.op_Less_Bar
                          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                          uu___3) in
                 match uu___2 with
@@ -270,7 +270,7 @@ let (run_repl_ld_transactions :
               (debug "Loading" task;
                progress_callback task;
                (let uu___3 = FStar_Options.restore_cmd_line_options false in
-                FStar_All.pipe_right uu___3 (fun uu___4 -> ()));
+                FStar_All.op_Bar_Greater uu___3 (fun uu___4 -> ()));
                (let timestamped_task =
                   FStar_Interactive_PushHelper.update_task_timestamps task in
                 let push_kind =
@@ -571,21 +571,21 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
             FStar_Interactive_JsonHelper.InvalidQuery uu___2 in
           FStar_Exn.raise uu___1 in
     let request =
-      FStar_All.pipe_right json FStar_Interactive_JsonHelper.js_assoc in
+      FStar_All.op_Bar_Greater json FStar_Interactive_JsonHelper.js_assoc in
     let qid =
       let uu___ = assoc "query" "query-id" request in
-      FStar_All.pipe_right uu___ FStar_Interactive_JsonHelper.js_str in
+      FStar_All.op_Bar_Greater uu___ FStar_Interactive_JsonHelper.js_str in
     try
       (fun uu___ ->
          match () with
          | () ->
              let query1 =
                let uu___1 = assoc "query" "query" request in
-               FStar_All.pipe_right uu___1
+               FStar_All.op_Bar_Greater uu___1
                  FStar_Interactive_JsonHelper.js_str in
              let args =
                let uu___1 = assoc "query" "args" request in
-               FStar_All.pipe_right uu___1
+               FStar_All.op_Bar_Greater uu___1
                  FStar_Interactive_JsonHelper.js_assoc in
              let arg k = assoc "[args]" k args in
              let try_arg k =
@@ -603,25 +603,25 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "segment" ->
                    let uu___2 =
                      let uu___3 = arg "code" in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str in
                    Segment uu___2
                | "peek" ->
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = arg "kind" in
-                       FStar_All.pipe_right uu___4 js_pushkind in
+                       FStar_All.op_Bar_Greater uu___4 js_pushkind in
                      let uu___4 =
                        let uu___5 = arg "code" in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_str in
                      let uu___5 =
                        let uu___6 = arg "line" in
-                       FStar_All.pipe_right uu___6
+                       FStar_All.op_Bar_Greater uu___6
                          FStar_Interactive_JsonHelper.js_int in
                      let uu___6 =
                        let uu___7 = arg "column" in
-                       FStar_All.pipe_right uu___7
+                       FStar_All.op_Bar_Greater uu___7
                          FStar_Interactive_JsonHelper.js_int in
                      {
                        push_kind = uu___3;
@@ -635,18 +635,18 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = arg "kind" in
-                       FStar_All.pipe_right uu___4 js_pushkind in
+                       FStar_All.op_Bar_Greater uu___4 js_pushkind in
                      let uu___4 =
                        let uu___5 = arg "code" in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_str in
                      let uu___5 =
                        let uu___6 = arg "line" in
-                       FStar_All.pipe_right uu___6
+                       FStar_All.op_Bar_Greater uu___6
                          FStar_Interactive_JsonHelper.js_int in
                      let uu___6 =
                        let uu___7 = arg "column" in
-                       FStar_All.pipe_right uu___7
+                       FStar_All.op_Bar_Greater uu___7
                          FStar_Interactive_JsonHelper.js_int in
                      {
                        push_kind = uu___3;
@@ -660,11 +660,11 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = arg "partial-symbol" in
-                       FStar_All.pipe_right uu___4
+                       FStar_All.op_Bar_Greater uu___4
                          FStar_Interactive_JsonHelper.js_str in
                      let uu___4 =
                        let uu___5 = try_arg "context" in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          js_optional_completion_context in
                      (uu___3, uu___4) in
                    AutoComplete uu___2
@@ -672,38 +672,39 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = arg "symbol" in
-                       FStar_All.pipe_right uu___4
+                       FStar_All.op_Bar_Greater uu___4
                          FStar_Interactive_JsonHelper.js_str in
                      let uu___4 =
                        let uu___5 = try_arg "context" in
-                       FStar_All.pipe_right uu___5 js_optional_lookup_context in
+                       FStar_All.op_Bar_Greater uu___5
+                         js_optional_lookup_context in
                      let uu___5 =
                        let uu___6 =
                          let uu___7 = try_arg "location" in
-                         FStar_All.pipe_right uu___7
+                         FStar_All.op_Bar_Greater uu___7
                            (FStar_Util.map_option
                               FStar_Interactive_JsonHelper.js_assoc) in
-                       FStar_All.pipe_right uu___6
+                       FStar_All.op_Bar_Greater uu___6
                          (FStar_Util.map_option
                             (fun loc ->
                                let uu___7 =
                                  let uu___8 =
                                    assoc "[location]" "filename" loc in
-                                 FStar_All.pipe_right uu___8
+                                 FStar_All.op_Bar_Greater uu___8
                                    FStar_Interactive_JsonHelper.js_str in
                                let uu___8 =
                                  let uu___9 = assoc "[location]" "line" loc in
-                                 FStar_All.pipe_right uu___9
+                                 FStar_All.op_Bar_Greater uu___9
                                    FStar_Interactive_JsonHelper.js_int in
                                let uu___9 =
                                  let uu___10 =
                                    assoc "[location]" "column" loc in
-                                 FStar_All.pipe_right uu___10
+                                 FStar_All.op_Bar_Greater uu___10
                                    FStar_Interactive_JsonHelper.js_int in
                                (uu___7, uu___8, uu___9))) in
                      let uu___6 =
                        let uu___7 = arg "requested-info" in
-                       FStar_All.pipe_right uu___7
+                       FStar_All.op_Bar_Greater uu___7
                          (FStar_Interactive_JsonHelper.js_list
                             FStar_Interactive_JsonHelper.js_str) in
                      (uu___3, uu___4, uu___5, uu___6) in
@@ -712,11 +713,11 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = arg "term" in
-                       FStar_All.pipe_right uu___4
+                       FStar_All.op_Bar_Greater uu___4
                          FStar_Interactive_JsonHelper.js_str in
                      let uu___4 =
                        let uu___5 = try_arg "rules" in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          (FStar_Util.map_option
                             (FStar_Interactive_JsonHelper.js_list
                                js_reductionrule)) in
@@ -725,19 +726,19 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
                | "search" ->
                    let uu___2 =
                      let uu___3 = arg "terms" in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str in
                    Search uu___2
                | "vfs-add" ->
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = try_arg "filename" in
-                       FStar_All.pipe_right uu___4
+                       FStar_All.op_Bar_Greater uu___4
                          (FStar_Util.map_option
                             FStar_Interactive_JsonHelper.js_str) in
                      let uu___4 =
                        let uu___5 = arg "contents" in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_str in
                      (uu___3, uu___4) in
                    VfsAdd uu___2
@@ -821,20 +822,20 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Util.json) =
                         let uu___10 = FStar_Range.json_of_def_range r in
                         [uu___10]
                     | uu___10 -> [] in
-                  FStar_List.append uu___8 uu___9 in
+                  FStar_List.op_At uu___8 uu___9 in
                 FStar_Util.JsonList uu___7 in
               ("ranges", uu___6) in
             [uu___5] in
           uu___3 :: uu___4 in
-        FStar_List.append
+        FStar_List.op_At
           (match issue.FStar_Errors.issue_number with
            | FStar_Pervasives_Native.None -> []
            | FStar_Pervasives_Native.Some n ->
                [("number", (FStar_Util.JsonInt n))]) uu___2 in
-      FStar_List.append
+      FStar_List.op_At
         [("level", (json_of_issue_level issue.FStar_Errors.issue_level))]
         uu___1 in
-    FStar_All.pipe_left (fun uu___1 -> FStar_Util.JsonAssoc uu___1) uu___
+    FStar_All.op_Less_Bar (fun uu___1 -> FStar_Util.JsonAssoc uu___1) uu___
 let (alist_of_symbol_lookup_result :
   FStar_Interactive_QueryHelper.sl_reponse ->
     (Prims.string * FStar_Util.json) Prims.list)
@@ -877,7 +878,7 @@ let (alist_of_protocol_info : (Prims.string * FStar_Util.json) Prims.list) =
     let uu___ =
       FStar_List.map (fun uu___1 -> FStar_Util.JsonStr uu___1)
         interactive_protocol_features in
-    FStar_All.pipe_left (fun uu___1 -> FStar_Util.JsonList uu___1) uu___ in
+    FStar_All.op_Less_Bar (fun uu___1 -> FStar_Util.JsonList uu___1) uu___ in
   [("version", js_version); ("features", js_features)]
 type fstar_option_permission_level =
   | OptSet 
@@ -982,7 +983,7 @@ let (snippets_of_fstar_option :
         | FStar_Options.SimpleStr desc -> [mk_field desc]
         | FStar_Options.EnumStr strs -> strs
         | FStar_Options.OpenEnumStr (strs, desc) ->
-            FStar_List.append strs [mk_field desc]
+            FStar_List.op_At strs [mk_field desc]
         | FStar_Options.PostProcessed (uu___, elem_spec) ->
             arg_snippets_of_type elem_spec
         | FStar_Options.Accumulated elem_spec ->
@@ -1112,13 +1113,13 @@ let (sig_of_fstar_option :
 let (fstar_options_list_cache : fstar_option Prims.list) =
   let defaults = FStar_Util.smap_of_list FStar_Options.defaults in
   let uu___ =
-    FStar_All.pipe_right FStar_Options.all_specs_with_types
+    FStar_All.op_Bar_Greater FStar_Options.all_specs_with_types
       (FStar_List.filter_map
          (fun uu___1 ->
             match uu___1 with
             | (_shortname, name, typ, doc) ->
                 let uu___2 = FStar_Util.smap_try_find defaults name in
-                FStar_All.pipe_right uu___2
+                FStar_All.op_Bar_Greater uu___2
                   (FStar_Util.map_option
                      (fun default_value ->
                         let uu___3 = sig_of_fstar_option name typ in
@@ -1139,7 +1140,7 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
                              else FStar_Pervasives_Native.Some doc);
                           opt_permission_level = uu___5
                         })))) in
-  FStar_All.pipe_right uu___
+  FStar_All.op_Bar_Greater uu___
     (FStar_List.sortWith
        (fun o1 ->
           fun o2 ->
@@ -1296,13 +1297,13 @@ let run_segment :
           FStar_Util.sigint_ignore
           (fun uu___1 ->
              let uu___2 = collect_decls () in
-             FStar_All.pipe_left
+             FStar_All.op_Less_Bar
                (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) uu___2) in
       match uu___ with
       | FStar_Pervasives_Native.None ->
           let errors =
             let uu___1 = collect_errors () in
-            FStar_All.pipe_right uu___1 (FStar_List.map json_of_issue) in
+            FStar_All.op_Bar_Greater uu___1 (FStar_List.map json_of_issue) in
           ((QueryNOK, (FStar_Util.JsonList errors)),
             (FStar_Pervasives.Inl st))
       | FStar_Pervasives_Native.Some decls ->
@@ -1317,7 +1318,7 @@ let run_segment :
             FStar_Util.JsonAssoc uu___1 in
           let js_decls =
             let uu___1 = FStar_List.map json_of_decl decls in
-            FStar_All.pipe_left (fun uu___2 -> FStar_Util.JsonList uu___2)
+            FStar_All.op_Less_Bar (fun uu___2 -> FStar_Util.JsonList uu___2)
               uu___1 in
           ((QueryOK, (FStar_Util.JsonAssoc [("decls", js_decls)])),
             (FStar_Pervasives.Inl st))
@@ -1404,7 +1405,7 @@ let (load_deps :
            let uu___1 =
              FStar_Interactive_PushHelper.deps_and_repl_ld_tasks_of_our_file
                st.FStar_Interactive_JsonHelper.repl_fname in
-           FStar_All.pipe_left
+           FStar_All.op_Less_Bar
              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) uu___1) in
     match uu___ with
     | FStar_Pervasives_Native.None -> FStar_Pervasives.Inr st
@@ -1609,7 +1610,7 @@ let run_push_without_deps :
                 let json_errors =
                   let uu___3 =
                     let uu___4 = collect_errors () in
-                    FStar_All.pipe_right uu___4
+                    FStar_All.op_Bar_Greater uu___4
                       (FStar_List.map json_of_issue) in
                   FStar_Util.JsonList uu___3 in
                 let st4 =
@@ -1657,12 +1658,12 @@ let run_push_with_deps :
              let uu___3 = collect_errors () in
              FStar_List.map rephrase_dependency_error uu___3 in
            let js_errors =
-             FStar_All.pipe_right errors (FStar_List.map json_of_issue) in
+             FStar_All.op_Bar_Greater errors (FStar_List.map json_of_issue) in
            ((QueryNOK, (FStar_Util.JsonList js_errors)),
              (FStar_Pervasives.Inl st1))
        | FStar_Pervasives.Inl (st1, deps) ->
            ((let uu___4 = FStar_Options.restore_cmd_line_options false in
-             FStar_All.pipe_right uu___4 (fun uu___5 -> ()));
+             FStar_All.op_Bar_Greater uu___4 (fun uu___5 -> ()));
             (let names =
                FStar_Interactive_PushHelper.add_module_completions
                  st1.FStar_Interactive_JsonHelper.repl_fname deps
@@ -1913,7 +1914,7 @@ let candidates_of_fstar_option :
                 Prims.op_Hat "("
                   (Prims.op_Hat explanation
                      (Prims.op_Hat " " (Prims.op_Hat opt_type ")"))) in
-            FStar_All.pipe_right opt.opt_snippets
+            FStar_All.op_Bar_Greater opt.opt_snippets
               (FStar_List.map
                  (fun snippet ->
                     {
@@ -1996,7 +1997,7 @@ let run_and_rewind :
                    FStar_Util.with_sigint_handler FStar_Util.sigint_raise
                      (fun uu___1 ->
                         let uu___2 = task st1 in
-                        FStar_All.pipe_left
+                        FStar_All.op_Less_Bar
                           (fun uu___3 -> FStar_Pervasives.Inl uu___3) uu___2))
               ()
           with | FStar_Util.SigInt -> FStar_Pervasives.Inl sigint_default
@@ -2129,7 +2130,7 @@ let run_compute :
     fun term ->
       fun rules ->
         let rules1 =
-          FStar_List.append
+          FStar_List.op_At
             (match rules with
              | FStar_Pervasives_Native.Some rules2 -> rules2
              | FStar_Pervasives_Native.None ->

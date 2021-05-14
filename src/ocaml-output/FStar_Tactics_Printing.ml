@@ -73,7 +73,7 @@ let (unshadow :
                          (bv0, uu___5) in
                        FStar_Syntax_Syntax.NT uu___4 in
                      [uu___3] in
-                   FStar_List.append subst uu___2 in
+                   FStar_List.op_At subst uu___2 in
                  go (nbs :: seen) uu___1 bs2 (b2 :: bs') t1) in
       go [] [] bs [] t
 let (goal_to_string :
@@ -191,8 +191,8 @@ let (ps_to_string :
                        (FStar_Pervasives_Native.Some
                           (((Prims.int_one + n_active) + i), n)) ps g)
                 ps.FStar_Tactics_Types.smt_goals in
-            FStar_List.append uu___4 uu___5 in
-          FStar_List.append uu___2 uu___3 in
+            FStar_List.op_At uu___4 uu___5 in
+          FStar_List.op_At uu___2 uu___3 in
         FStar_String.concat "" uu___1
 let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Util.json) =
   fun g ->
@@ -280,7 +280,7 @@ let (ps_to_json :
                 ("location", uu___5) in
               [uu___4]
             else [] in
-          FStar_List.append uu___2 uu___3 in
+          FStar_List.op_At uu___2 uu___3 in
         FStar_Util.JsonAssoc uu___1
 let (do_dump_proofstate :
   FStar_Tactics_Types.proofstate -> Prims.string -> unit) =

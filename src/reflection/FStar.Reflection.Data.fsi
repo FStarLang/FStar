@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Reflection.Data
+open FStar.List
 
 (* NOTE: This file is exactly the same as its .fs/.fsi counterpart.
 It is only here so the equally-named interface file in ulib/ is not

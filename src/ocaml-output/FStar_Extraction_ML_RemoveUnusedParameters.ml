@@ -553,7 +553,7 @@ let (set_current_module :
   fun e ->
     fun n ->
       let curmod =
-        FStar_List.append (FStar_Pervasives_Native.fst n)
+        FStar_List.op_At (FStar_Pervasives_Native.fst n)
           [FStar_Pervasives_Native.snd n] in
       let uu___ = e in
       { current_module = curmod; tydef_map = (uu___.tydef_map) }

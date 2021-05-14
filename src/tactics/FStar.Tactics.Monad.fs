@@ -2,6 +2,7 @@
 module FStar.Tactics.Monad
 
 open FStar
+open FStar.List
 open FStar.Pervasives
 open FStar.All
 open FStar.Syntax.Syntax

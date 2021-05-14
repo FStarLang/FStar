@@ -91,7 +91,8 @@ let (arg : Prims.string -> assoct -> FStar_Util.json) =
   fun k ->
     fun r ->
       let uu___ =
-        let uu___1 = assoc "params" r in FStar_All.pipe_right uu___1 js_assoc in
+        let uu___1 = assoc "params" r in
+        FStar_All.op_Bar_Greater uu___1 js_assoc in
       assoc k uu___
 let (uri_to_path : Prims.string -> Prims.string) =
   fun u ->
@@ -135,10 +136,10 @@ let (js_compl_context : FStar_Util.json -> completion_context) =
     | FStar_Util.JsonAssoc a ->
         let uu___1 =
           let uu___2 = assoc "triggerKind" a in
-          FStar_All.pipe_right uu___2 js_int in
+          FStar_All.op_Bar_Greater uu___2 js_int in
         let uu___2 =
           let uu___3 = try_assoc "triggerChar" a in
-          FStar_All.pipe_right uu___3 (FStar_Util.map_option js_str) in
+          FStar_All.op_Bar_Greater uu___3 (FStar_Util.map_option js_str) in
         { trigger_kind = uu___1; trigger_char = uu___2 }
     | other -> js_fail "dictionary" other
 type txdoc_item =
@@ -166,15 +167,16 @@ let (js_txdoc_item : FStar_Util.json -> txdoc_item) =
         let arg1 k = assoc k a in
         let uu___1 =
           let uu___2 =
-            let uu___3 = arg1 "uri" in FStar_All.pipe_right uu___3 js_str in
+            let uu___3 = arg1 "uri" in FStar_All.op_Bar_Greater uu___3 js_str in
           uri_to_path uu___2 in
         let uu___2 =
           let uu___3 = arg1 "languageId" in
-          FStar_All.pipe_right uu___3 js_str in
+          FStar_All.op_Bar_Greater uu___3 js_str in
         let uu___3 =
-          let uu___4 = arg1 "version" in FStar_All.pipe_right uu___4 js_int in
+          let uu___4 = arg1 "version" in
+          FStar_All.op_Bar_Greater uu___4 js_int in
         let uu___4 =
-          let uu___5 = arg1 "text" in FStar_All.pipe_right uu___5 js_str in
+          let uu___5 = arg1 "text" in FStar_All.op_Bar_Greater uu___5 js_str in
         { fname = uu___1; langId = uu___2; version = uu___3; text = uu___4 }
     | other -> js_fail "dictionary" other
 type txdoc_pos = {
@@ -193,20 +195,20 @@ let (js_txdoc_id : assoct -> Prims.string) =
       let uu___1 =
         let uu___2 =
           let uu___3 = arg "textDocument" r in
-          FStar_All.pipe_right uu___3 js_assoc in
+          FStar_All.op_Bar_Greater uu___3 js_assoc in
         assoc "uri" uu___2 in
-      FStar_All.pipe_right uu___1 js_str in
+      FStar_All.op_Bar_Greater uu___1 js_str in
     uri_to_path uu___
 let (js_txdoc_pos : assoct -> txdoc_pos) =
   fun r ->
     let pos =
-      let uu___ = arg "position" r in FStar_All.pipe_right uu___ js_assoc in
+      let uu___ = arg "position" r in FStar_All.op_Bar_Greater uu___ js_assoc in
     let uu___ = js_txdoc_id r in
     let uu___1 =
-      let uu___2 = assoc "line" pos in FStar_All.pipe_right uu___2 js_int in
+      let uu___2 = assoc "line" pos in FStar_All.op_Bar_Greater uu___2 js_int in
     let uu___2 =
       let uu___3 = assoc "character" pos in
-      FStar_All.pipe_right uu___3 js_int in
+      FStar_All.op_Bar_Greater uu___3 js_int in
     { path = uu___; line = uu___1; col = uu___2 }
 type workspace_folder = {
   wk_uri: Prims.string ;
@@ -230,25 +232,25 @@ let (js_wsch_event : FStar_Util.json -> wsch_event) =
     | FStar_Util.JsonAssoc a ->
         let added' =
           let uu___1 = assoc "added" a in
-          FStar_All.pipe_right uu___1 js_assoc in
+          FStar_All.op_Bar_Greater uu___1 js_assoc in
         let removed' =
           let uu___1 = assoc "removed" a in
-          FStar_All.pipe_right uu___1 js_assoc in
+          FStar_All.op_Bar_Greater uu___1 js_assoc in
         let uu___1 =
           let uu___2 =
             let uu___3 = assoc "uri" added' in
-            FStar_All.pipe_right uu___3 js_str in
+            FStar_All.op_Bar_Greater uu___3 js_str in
           let uu___3 =
             let uu___4 = assoc "name" added' in
-            FStar_All.pipe_right uu___4 js_str in
+            FStar_All.op_Bar_Greater uu___4 js_str in
           { wk_uri = uu___2; wk_name = uu___3 } in
         let uu___2 =
           let uu___3 =
             let uu___4 = assoc "uri" removed' in
-            FStar_All.pipe_right uu___4 js_str in
+            FStar_All.op_Bar_Greater uu___4 js_str in
           let uu___4 =
             let uu___5 = assoc "name" removed' in
-            FStar_All.pipe_right uu___5 js_str in
+            FStar_All.op_Bar_Greater uu___5 js_str in
           { wk_uri = uu___3; wk_name = uu___4 } in
         { added = uu___1; removed = uu___2 }
     | other -> js_fail "dictionary" other
@@ -262,7 +264,7 @@ let (js_contentch : FStar_Util.json -> Prims.string) =
                match uu___2 with
                | FStar_Util.JsonAssoc a ->
                    let uu___3 = assoc "text" a in
-                   FStar_All.pipe_right uu___3 js_str) l in
+                   FStar_All.op_Bar_Greater uu___3 js_str) l in
         FStar_List.hd uu___1
     | other -> js_fail "dictionary" other
 type rng =
@@ -285,22 +287,22 @@ let (js_rng : FStar_Util.json -> rng) =
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              let uu___4 = FStar_All.pipe_right st js_assoc in l uu___4 in
-            FStar_All.pipe_right uu___3 js_int in
+              let uu___4 = FStar_All.op_Bar_Greater st js_assoc in l uu___4 in
+            FStar_All.op_Bar_Greater uu___3 js_int in
           let uu___3 =
             let uu___4 =
-              let uu___5 = FStar_All.pipe_right st js_assoc in c uu___5 in
-            FStar_All.pipe_right uu___4 js_int in
+              let uu___5 = FStar_All.op_Bar_Greater st js_assoc in c uu___5 in
+            FStar_All.op_Bar_Greater uu___4 js_int in
           (uu___2, uu___3) in
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              let uu___5 = FStar_All.pipe_right fin js_assoc in l uu___5 in
-            FStar_All.pipe_right uu___4 js_int in
+              let uu___5 = FStar_All.op_Bar_Greater fin js_assoc in l uu___5 in
+            FStar_All.op_Bar_Greater uu___4 js_int in
           let uu___4 =
             let uu___5 =
-              let uu___6 = FStar_All.pipe_right st js_assoc in c uu___6 in
-            FStar_All.pipe_right uu___5 js_int in
+              let uu___6 = FStar_All.op_Bar_Greater st js_assoc in c uu___6 in
+            FStar_All.op_Bar_Greater uu___5 js_int in
           (uu___3, uu___4) in
         { rng_start = uu___1; rng_end = uu___2 }
     | other -> js_fail "dictionary" other
@@ -718,14 +720,16 @@ let (json_of_response :
     fun response ->
       match qid with
       | FStar_Pervasives_Native.Some i ->
-          FStar_Util.JsonAssoc
-            (FStar_List.append
-               [("jsonrpc", (FStar_Util.JsonStr "2.0"));
-               ("id", (FStar_Util.JsonInt i))] response)
+          let uu___ =
+            FStar_List.op_At
+              [("jsonrpc", (FStar_Util.JsonStr "2.0"));
+              ("id", (FStar_Util.JsonInt i))] response in
+          FStar_Util.JsonAssoc uu___
       | FStar_Pervasives_Native.None ->
-          FStar_Util.JsonAssoc
-            (FStar_List.append [("jsonrpc", (FStar_Util.JsonStr "2.0"))]
-               response)
+          let uu___ =
+            FStar_List.op_At [("jsonrpc", (FStar_Util.JsonStr "2.0"))]
+              response in
+          FStar_Util.JsonAssoc uu___
 let (js_resperr : error_code -> Prims.string -> FStar_Util.json) =
   fun err ->
     fun msg ->

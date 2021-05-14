@@ -21,6 +21,7 @@ open FStar.Exn
 open FStar.All
 
 open FStar
+open FStar.List
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env

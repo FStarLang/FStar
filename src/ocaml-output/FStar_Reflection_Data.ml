@@ -402,8 +402,8 @@ let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =
   fun rc -> rc.t
 let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
   fun s ->
-    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
-      FStar_Range.dummyRange
+    let uu___ = FStar_List.op_At ["FStar"; "Reflection"] s in
+    FStar_Ident.lid_of_path uu___ FStar_Range.dummyRange
 let (fstar_refl_builtins_lid : Prims.string -> FStar_Ident.lident) =
   fun s -> fstar_refl_lid ["Builtins"; s]
 let (fstar_refl_syntax_lid : Prims.string -> FStar_Ident.lident) =

@@ -1,8 +1,11 @@
 ﻿#light "off"
 module FStar.Ident
+open FStar.ST
+open FStar.All
 
 open Prims
 open FStar.Range
+open FStar.List
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;

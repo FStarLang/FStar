@@ -730,5 +730,5 @@ let (ctrl_rewrite :
                                           gt' in
                                       [uu___9] in
                                     FStar_Tactics_Monad.add_goals uu___8)))))) in
-        FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "ctrl_rewrite")
+        FStar_All.op_Less_Bar (FStar_Tactics_Monad.wrap_err "ctrl_rewrite")
           uu___

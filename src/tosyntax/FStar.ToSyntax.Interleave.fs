@@ -22,6 +22,7 @@ open FStar.All
 //in a proper order for consistent type-checking
 
 open FStar
+open FStar.List
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax

@@ -2328,7 +2328,7 @@ let (update_flags :
           (match uu___1 with | (l1, h) -> (flag1, (l1, h))) in
     let error_range_settings = FStar_List.map compute_range l in
     let uu___ = FStar_List.collect set_flag_for_range error_range_settings in
-    FStar_List.append uu___ default_settings
+    FStar_List.op_At uu___ default_settings
 type error =
   (raw_error * Prims.string * FStar_Range.range * Prims.string Prims.list)
 exception Err of (raw_error * Prims.string * Prims.string Prims.list) 
@@ -2436,9 +2436,9 @@ let (ctx_string : Prims.string Prims.list -> Prims.string) =
     if uu___
     then
       let uu___1 =
-        FStar_All.pipe_right ctx
+        FStar_All.op_Bar_Greater ctx
           (FStar_List.map (fun s -> FStar_String.op_Hat "\n> " s)) in
-      FStar_All.pipe_right uu___1 (FStar_String.concat "")
+      FStar_All.op_Bar_Greater uu___1 (FStar_String.concat "")
     else ""
 let (issue_message : issue -> Prims.string) =
   fun i ->

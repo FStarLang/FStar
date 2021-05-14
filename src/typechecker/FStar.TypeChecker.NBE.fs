@@ -18,6 +18,7 @@
 #light "off"
 module FStar.TypeChecker.NBE
 open FStar.Pervasives
+open FStar.List
 open FStar.All
 open FStar.Exn
 open FStar

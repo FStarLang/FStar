@@ -108,16 +108,16 @@ let (print_uvar_set :
   fun s ->
     let uu___ =
       let uu___1 = FStar_Util.set_elements s in
-      FStar_All.pipe_right uu___1
+      FStar_All.op_Bar_Greater uu___1
         (FStar_List.map
            (fun u ->
               let uu___2 =
                 let uu___3 =
                   FStar_Syntax_Unionfind.uvar_id
                     u.FStar_Syntax_Syntax.ctx_uvar_head in
-                FStar_All.pipe_left FStar_Util.string_of_int uu___3 in
+                FStar_All.op_Less_Bar FStar_Util.string_of_int uu___3 in
               Prims.op_Hat "?" uu___2)) in
-    FStar_All.pipe_right uu___ (FStar_String.concat "; ")
+    FStar_All.op_Bar_Greater uu___ (FStar_String.concat "; ")
 let (print_goal_dep : goal_dep -> Prims.string) =
   fun gd ->
     let uu___ = FStar_Util.string_of_int gd.goal_dep_id in
@@ -127,7 +127,7 @@ let (print_goal_dep : goal_dep -> Prims.string) =
         let uu___4 = FStar_ST.op_Bang gd.dependences in
         FStar_List.map (fun gd1 -> FStar_Util.string_of_int gd1.goal_dep_id)
           uu___4 in
-      FStar_All.pipe_right uu___3 (FStar_String.concat "; ") in
+      FStar_All.op_Bar_Greater uu___3 (FStar_String.concat "; ") in
     let uu___3 =
       FStar_Syntax_Print.ctx_uvar_to_string
         (gd.goal_imp).FStar_TypeChecker_Common.imp_uvar in
@@ -146,10 +146,10 @@ let (find_user_tac_for_uvar :
           let hooks =
             FStar_TypeChecker_Env.lookup_attr env
               FStar_Parser_Const.resolve_implicits_attr_string in
-          FStar_All.pipe_right hooks
+          FStar_All.op_Bar_Greater hooks
             (FStar_Util.try_find
                (fun hook ->
-                  FStar_All.pipe_right hook.FStar_Syntax_Syntax.sigattrs
+                  FStar_All.op_Bar_Greater hook.FStar_Syntax_Syntax.sigattrs
                     (FStar_Util.for_some (FStar_Syntax_Util.attr_eq a))))
       | uu___ -> FStar_Pervasives_Native.None
 let (should_defer_uvar_to_user_tac :
@@ -645,7 +645,8 @@ let (solve_deferred_to_tactic_goals :
                                      ((i :: is1), s1))))) is;
                FStar_Util.smap_fold map
                  (fun uu___3 -> fun is1 -> fun out -> is1 :: out) [] in
-             let buckets = bucketize (FStar_List.append eqs more) in
+             let buckets =
+               let uu___2 = FStar_List.op_At eqs more in bucketize uu___2 in
              (FStar_List.iter
                 (fun uu___3 ->
                    match uu___3 with

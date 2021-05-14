@@ -218,9 +218,9 @@ let (is_smt_reifiable_effect :
       (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
         (let uu___ =
            let uu___1 =
-             FStar_All.pipe_right l1
+             FStar_All.op_Bar_Greater l1
                (FStar_TypeChecker_Env.get_effect_decl en) in
-           FStar_All.pipe_right uu___1 FStar_Syntax_Util.is_layered in
+           FStar_All.op_Bar_Greater uu___1 FStar_Syntax_Util.is_layered in
          Prims.op_Negation uu___)
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =

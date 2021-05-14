@@ -67,7 +67,7 @@ val rev_append : (list<'_5110>) -> (list<'_5110>) -> Tot<(list<'_5110>)>
 val concat : (list<(list<'_6116>)>) -> Tot<(list<'_6116>)>
 val unzip : (list<('_36948 * '_36947)>) -> Tot<((list<'_36948>) * (list<'_36947>))>
 val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
-
+val op_At : list<'a> -> list<'a> -> list<'a>
 
 (* Functions with eqtypes, they require the annotation for F#, we delete it for F* *)
 (* It would be nice to just put the type annotation in a "JUST FSHARP" line,

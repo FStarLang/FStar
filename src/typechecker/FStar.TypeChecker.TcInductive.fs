@@ -23,6 +23,7 @@ open FStar.Exn
 open FStar.All
 
 open FStar
+open FStar.List
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Env

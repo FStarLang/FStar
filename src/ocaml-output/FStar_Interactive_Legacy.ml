@@ -150,7 +150,7 @@ let (push_with_kind :
           if restore_cmd_line_options
           then
             (let uu___2 = FStar_Options.restore_cmd_line_options false in
-             FStar_All.pipe_right uu___2 (fun uu___3 -> ()))
+             FStar_All.op_Bar_Greater uu___2 (fun uu___3 -> ()))
           else ();
           res
 let (check_frag :
@@ -194,7 +194,7 @@ let (check_frag :
 let (report_fail : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Errors.report_all () in
-     FStar_All.pipe_right uu___2 (fun uu___3 -> ()));
+     FStar_All.op_Bar_Greater uu___2 (fun uu___3 -> ()));
     FStar_Errors.clear ()
 type input_chunks =
   | Push of (Prims.bool * Prims.int * Prims.int) 
@@ -389,7 +389,7 @@ let (fill_buffer : unit -> unit) =
     let uu___1 =
       let uu___2 = FStar_ST.op_Bang s.buffer in
       let uu___3 = let uu___4 = read_chunk () in [uu___4] in
-      FStar_List.append uu___2 uu___3 in
+      FStar_List.op_At uu___2 uu___3 in
     FStar_ST.op_Colon_Equals s.buffer uu___1
 let (deps_of_our_file :
   Prims.string ->
@@ -636,7 +636,7 @@ let rec (go :
                                 | FStar_Pervasives_Native.Some lid2 -> lid2) in
                            let uu___2 =
                              FStar_TypeChecker_Env.try_lookup_lid env lid1 in
-                           FStar_All.pipe_right uu___2
+                           FStar_All.op_Bar_Greater uu___2
                              (FStar_Util.map_option
                                 (fun uu___3 ->
                                    match uu___3 with
@@ -674,7 +674,7 @@ let rec (go :
                                  (candidate, (FStar_String.length hs))
                            | uu___1 ->
                                let uu___2 = measure_anchored_match ts1 tc in
-                               FStar_All.pipe_right uu___2
+                               FStar_All.op_Bar_Greater uu___2
                                  (FStar_Util.map_option
                                     (fun uu___3 ->
                                        match uu___3 with
@@ -694,7 +694,7 @@ let rec (go :
                          | [] -> FStar_Pervasives_Native.None
                          | hc::tc ->
                              let uu___2 = locate_match needle tc in
-                             FStar_All.pipe_right uu___2
+                             FStar_All.op_Bar_Greater uu___2
                                (FStar_Util.map_option
                                   (fun uu___3 ->
                                      match uu___3 with
@@ -709,7 +709,7 @@ let rec (go :
                       let uu___3 =
                         let uu___4 = FStar_Ident.ident_of_lid lident in
                         [uu___4] in
-                      FStar_List.append uu___2 uu___3 in
+                      FStar_List.op_At uu___2 uu___3 in
                     locate_match needle uu___1 in
                   let shorten_namespace uu___1 =
                     match uu___1 with
@@ -752,7 +752,7 @@ let rec (go :
                                ((FStar_String.length s) + out) +
                                  Prims.int_one) (FStar_String.length id)
                           orig_ns in
-                      FStar_All.pipe_right exported_names
+                      FStar_All.op_Bar_Greater exported_names
                         (FStar_List.filter_map
                            (fun n ->
                               if FStar_Util.starts_with n id
@@ -774,14 +774,14 @@ let rec (go :
                                          let uu___5 =
                                            FStar_Ident.ident_of_lid fqn in
                                          [uu___5] in
-                                       FStar_List.append uu___3 uu___4 in
+                                       FStar_List.op_At uu___3 uu___4 in
                                      ([], uu___2, matched_length)) uu___1
                               else FStar_Pervasives_Native.None)) in
                     let case_b_find_matches_in_env uu___1 =
                       let matches1 =
                         FStar_List.filter_map (match_lident_against needle)
                           all_lidents_in_env in
-                      FStar_All.pipe_right matches1
+                      FStar_All.op_Bar_Greater matches1
                         (FStar_List.filter
                            (fun uu___2 ->
                               match uu___2 with
@@ -794,8 +794,8 @@ let rec (go :
                                    | FStar_Pervasives_Native.None -> false
                                    | FStar_Pervasives_Native.Some l ->
                                        let uu___5 =
-                                         FStar_Ident.lid_of_ids
-                                           (FStar_List.append ns id) in
+                                         let uu___6 = FStar_List.op_At ns id in
+                                         FStar_Ident.lid_of_ids uu___6 in
                                        FStar_Ident.lid_equals l uu___5))) in
                     let uu___1 = FStar_Util.prefix needle in
                     match uu___1 with
@@ -815,7 +815,7 @@ let rec (go :
                                    case_b_find_matches_in_env ()
                                | FStar_Pervasives_Native.Some m ->
                                    case_a_find_transitive_includes ns m id) in
-                        FStar_All.pipe_right matched_ids
+                        FStar_All.op_Bar_Greater matched_ids
                           (FStar_List.map
                              (fun x ->
                                 let uu___2 = shorten_namespace x in

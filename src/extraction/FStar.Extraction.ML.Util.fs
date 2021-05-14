@@ -20,6 +20,7 @@ open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax

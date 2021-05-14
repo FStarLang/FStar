@@ -38,6 +38,8 @@ effect ML (a:Type) = ALL a (fun (p:all_post a) (_:heap) -> forall (a:result a) (
 
 let pipe_right (x : 'a) (f : ('a -> ML 'b)) : ML 'b = f x
 let pipe_left  (f : ('a -> ML 'b)) (x : 'a) : ML 'b = f x
+let ( |> ) x f = pipe_right x f
+let ( <| ) f x = pipe_left f x
 
 assume val exit : int -> ML 'a
 assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a

@@ -22,6 +22,7 @@ open FStar.All
 
 open Prims
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax

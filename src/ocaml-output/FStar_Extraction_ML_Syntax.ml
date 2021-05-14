@@ -167,7 +167,8 @@ let (fsharpkeywords : Prims.string Prims.list) =
 let (string_of_mlpath : mlpath -> mlsymbol) =
   fun uu___ ->
     match uu___ with
-    | (p, s) -> FStar_String.concat "." (FStar_List.append p [s])
+    | (p, s) ->
+        let uu___1 = FStar_List.op_At p [s] in FStar_String.concat "." uu___1
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =

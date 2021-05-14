@@ -38,6 +38,7 @@ module FStar.Extraction.ML.UEnv
  *)
 
 open FStar.Pervasives
+open FStar.List
 open FStar.ST
 open FStar.All
 open FStar

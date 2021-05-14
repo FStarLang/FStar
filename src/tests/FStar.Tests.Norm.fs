@@ -1,7 +1,7 @@
 ﻿#light "off"
 module FStar.Tests.Norm
 //Normalization tests
-
+open FStar.All
 open FStar
 open FStar.Pervasives
 open FStar.Syntax.Syntax

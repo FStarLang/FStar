@@ -100,7 +100,7 @@ let (filter_using_facts_from :
         match a.FStar_SMTEncoding_Term.assumption_fact_ids with
         | [] -> true
         | uu___ ->
-            (FStar_All.pipe_right
+            (FStar_All.op_Bar_Greater
                a.FStar_SMTEncoding_Term.assumption_fact_ids
                (FStar_Util.for_some
                   (fun uu___1 ->
@@ -137,8 +137,9 @@ let (filter_using_facts_from :
                match d with
                | FStar_SMTEncoding_Term.Module (name, decls) ->
                    let uu___ =
-                     FStar_All.pipe_right decls (FStar_List.filter keep_decl) in
-                   FStar_All.pipe_right uu___
+                     FStar_All.op_Bar_Greater decls
+                       (FStar_List.filter keep_decl) in
+                   FStar_All.op_Bar_Greater uu___
                      (fun decls1 ->
                         (FStar_SMTEncoding_Term.Module (name, decls1)) :: out)
                | uu___ ->
@@ -167,7 +168,8 @@ let rec (filter_assertions_with_stats :
                   let uu___3 =
                     let uu___4 =
                       let uu___5 =
-                        FStar_All.pipe_right core1 (FStar_String.concat ", ") in
+                        FStar_All.op_Bar_Greater core1
+                          (FStar_String.concat ", ") in
                       Prims.op_Hat "UNSAT CORE: " uu___5 in
                     FStar_SMTEncoding_Term.Caption uu___4 in
                   [uu___3] in
@@ -197,10 +199,10 @@ let rec (filter_assertions_with_stats :
                                     (n_pruned + Prims.int_one))
                           | FStar_SMTEncoding_Term.Module (name, decls) ->
                               let uu___3 =
-                                FStar_All.pipe_right decls
+                                FStar_All.op_Bar_Greater decls
                                   (filter_assertions_with_stats e
                                      (FStar_Pervasives_Native.Some core1)) in
-                              FStar_All.pipe_right uu___3
+                              FStar_All.op_Bar_Greater uu___3
                                 (fun uu___4 ->
                                    match uu___4 with
                                    | (decls1, uu___5, r, p) ->
@@ -451,10 +453,10 @@ let (with_fuel_and_diagnostics :
                 (FStar_Options.print_z3_statistics ()) ||
                   (FStar_Options.query_stats ()) in
               if uu___6 then [FStar_SMTEncoding_Term.GetStatistics] else [] in
-            FStar_List.append uu___5 settings.query_suffix in
-          FStar_List.append uu___3 uu___4 in
-        FStar_List.append label_assumptions uu___2 in
-      FStar_List.append uu___ uu___1
+            FStar_List.op_At uu___5 settings.query_suffix in
+          FStar_List.op_At uu___3 uu___4 in
+        FStar_List.op_At label_assumptions uu___2 in
+      FStar_List.op_At uu___ uu___1
 let (used_hint : query_settings -> Prims.bool) =
   fun s -> FStar_Option.isSome s.query_hint
 let (get_hint_for :
@@ -529,7 +531,7 @@ let (detail_hint_replay :
 let (find_localized_errors :
   errors Prims.list -> errors FStar_Pervasives_Native.option) =
   fun errs ->
-    FStar_All.pipe_right errs
+    FStar_All.op_Bar_Greater errs
       (FStar_List.tryFind
          (fun err ->
             match err.error_messages with | [] -> false | uu___ -> true))
@@ -547,11 +549,11 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                FStar_All.pipe_right settings.query_errors
+                FStar_All.op_Bar_Greater settings.query_errors
                   (FStar_List.map error_to_short_string) in
-              FStar_All.pipe_right uu___3 (FStar_String.concat ";\n\t") in
-            FStar_All.pipe_right uu___2 format_smt_error in
-          FStar_All.pipe_right uu___1
+              FStar_All.op_Bar_Greater uu___3 (FStar_String.concat ";\n\t") in
+            FStar_All.op_Bar_Greater uu___2 format_smt_error in
+          FStar_All.op_Bar_Greater uu___1
             (fun uu___2 -> FStar_Pervasives.Inr uu___2)
         else
           (let uu___2 =
@@ -576,7 +578,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                settings.query_errors in
            match uu___2 with
            | (incomplete_count, canceled_count, unknown_count) ->
-               FStar_All.pipe_right
+               FStar_All.op_Bar_Greater
                  (match (incomplete_count, canceled_count, unknown_count)
                   with
                   | (uu___3, uu___4, uu___5) when
@@ -658,7 +660,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                 else FStar_ST.op_Colon_Equals module_names (m :: ms)),
               (fun uu___2 ->
                  let uu___3 = FStar_ST.op_Bang module_names in
-                 FStar_All.pipe_right uu___3
+                 FStar_All.op_Bar_Greater uu___3
                    (FStar_Util.sort_with FStar_String.compare))) in
           match uu___1 with | (add, get) -> (add, get) in
         let uu___ = accumulator () in
@@ -713,7 +715,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                               | (module_name, last) ->
                                   let components2 =
                                     let uu___4 = exclude_suffix last in
-                                    FStar_List.append module_name uu___4 in
+                                    FStar_List.op_At module_name uu___4 in
                                   ((match components2 with
                                     | [] -> ()
                                     | uu___5::[] -> ()
@@ -726,7 +728,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                        then (add_discarded_name s; [])
                        else
                          (let uu___3 =
-                            FStar_All.pipe_right components1
+                            FStar_All.op_Bar_Greater components1
                               (FStar_String.concat ".") in
                           [uu___3]) in
                  (match core with
@@ -736,7 +738,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                       let core2 = FStar_List.collect parse_axiom_name core1 in
                       ((let uu___3 =
                           let uu___4 = get_module_names () in
-                          FStar_All.pipe_right uu___4
+                          FStar_All.op_Bar_Greater uu___4
                             (FStar_String.concat "\nZ3 Proof Stats:\t") in
                         FStar_Util.print1
                           "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
@@ -747,7 +749,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                             "\nZ3 Proof Stats (Detail 1):\t" core2);
                        (let uu___4 =
                           let uu___5 = get_discarded_names () in
-                          FStar_All.pipe_right uu___5
+                          FStar_All.op_Bar_Greater uu___5
                             (FStar_String.concat ", ") in
                         FStar_Util.print1
                           "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
@@ -836,7 +838,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                      uu___4);
                   (let uu___5 = FStar_Options.print_z3_statistics () in
                    if uu___5 then process_unsat_core core else ());
-                  FStar_All.pipe_right errs
+                  FStar_All.op_Bar_Greater errs
                     (FStar_List.iter
                        (fun uu___5 ->
                           match uu___5 with
@@ -854,9 +856,10 @@ let (store_hint : FStar_Util.hint -> unit) =
     let uu___ = FStar_ST.op_Bang recorded_hints in
     match uu___ with
     | FStar_Pervasives_Native.Some l ->
-        FStar_ST.op_Colon_Equals recorded_hints
-          (FStar_Pervasives_Native.Some
-             (FStar_List.append l [FStar_Pervasives_Native.Some hint]))
+        let uu___1 =
+          let uu___2 = FStar_List.op_At l [FStar_Pervasives_Native.Some hint] in
+          FStar_Pervasives_Native.Some uu___2 in
+        FStar_ST.op_Colon_Equals recorded_hints uu___1
     | uu___1 -> ()
 let (record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
@@ -1012,11 +1015,11 @@ let (ask_and_report_errors :
                  let use_hints_setting =
                    let uu___2 =
                      (FStar_Options.use_hints ()) &&
-                       (FStar_All.pipe_right next_hint FStar_Util.is_some) in
+                       (FStar_All.op_Bar_Greater next_hint FStar_Util.is_some) in
                    if uu___2
                    then
                      let uu___3 =
-                       FStar_All.pipe_right next_hint FStar_Util.must in
+                       FStar_All.op_Bar_Greater next_hint FStar_Util.must in
                      match uu___3 with
                      | { FStar_Util.hint_name = uu___4;
                          FStar_Util.hint_index = uu___5; FStar_Util.fuel = i;
@@ -1133,11 +1136,14 @@ let (ask_and_report_errors :
                      [uu___3]
                    else [] in
                  let all_configs =
-                   FStar_List.append use_hints_setting
-                     (FStar_List.append [default_settings]
-                        (FStar_List.append initial_fuel_max_ifuel
-                           (FStar_List.append half_max_fuel_max_ifuel
-                              max_fuel_max_ifuel))) in
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_List.op_At half_max_fuel_max_ifuel
+                           max_fuel_max_ifuel in
+                       FStar_List.op_At initial_fuel_max_ifuel uu___4 in
+                     FStar_List.op_At [default_settings] uu___3 in
+                   FStar_List.op_At use_hints_setting uu___2 in
                  let check_one_config config =
                    (let uu___3 = FStar_Options.z3_refresh () in
                     if uu___3 then FStar_SMTEncoding_Z3.refresh () else ());
@@ -1321,10 +1327,11 @@ let (ask_and_report_errors :
                                FStar_List.map errors_to_report1 all_errs in
                              let errs1 =
                                let uu___5 =
-                                 FStar_All.pipe_right errs FStar_List.flatten in
-                               FStar_All.pipe_right uu___5 collect in
+                                 FStar_All.op_Bar_Greater errs
+                                   FStar_List.flatten in
+                               FStar_All.op_Bar_Greater uu___5 collect in
                              let errs2 =
-                               FStar_All.pipe_right errs1
+                               FStar_All.op_Bar_Greater errs1
                                  (FStar_List.map
                                     (fun uu___5 ->
                                        match uu___5 with
@@ -1407,12 +1414,12 @@ let (ask_and_report_errors :
                  then
                    let uu___2 =
                      (FStar_Options.record_hints ()) &&
-                       (FStar_All.pipe_right next_hint FStar_Util.is_some) in
+                       (FStar_All.op_Bar_Greater next_hint FStar_Util.is_some) in
                    (if uu___2
                     then
                       let uu___3 =
-                        FStar_All.pipe_right next_hint FStar_Util.must in
-                      FStar_All.pipe_right uu___3 store_hint
+                        FStar_All.op_Bar_Greater next_hint FStar_Util.must in
+                      FStar_All.op_Bar_Greater uu___3 store_hint
                     else ())
                  else quake_and_check_all_configs all_configs)
 type solver_cfg =
@@ -1486,14 +1493,14 @@ let (do_solve :
         (let uu___2 =
            let uu___3 =
              let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
-             FStar_All.pipe_left FStar_Range.string_of_range uu___4 in
+             FStar_All.op_Less_Bar FStar_Range.string_of_range uu___4 in
            FStar_Util.format1 "Starting query at %s" uu___3 in
          FStar_SMTEncoding_Encode.push uu___2);
         (let pop uu___2 =
            let uu___3 =
              let uu___4 =
                let uu___5 = FStar_TypeChecker_Env.get_range tcenv in
-               FStar_All.pipe_left FStar_Range.string_of_range uu___5 in
+               FStar_All.op_Less_Bar FStar_Range.string_of_range uu___5 in
              FStar_Util.format1 "Ending query at %s" uu___4 in
            FStar_SMTEncoding_Encode.pop uu___3 in
          try

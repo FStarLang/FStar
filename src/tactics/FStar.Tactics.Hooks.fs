@@ -2,6 +2,7 @@
 module FStar.Tactics.Hooks
 
 open FStar
+open FStar.List
 open FStar.All
 open FStar.Util
 open FStar.Range

@@ -1551,7 +1551,7 @@ let (bv_to_name : bv -> term) =
   fun bv1 -> let uu___ = range_of_bv bv1 in mk (Tm_name bv1) uu___
 let (binders_to_names : binders -> term Prims.list) =
   fun bs ->
-    FStar_All.pipe_right bs
+    FStar_All.op_Bar_Greater bs
       (FStar_List.map (fun b -> bv_to_name b.binder_bv))
 let (mk_Tm_app : term -> args -> FStar_Range.range -> term) =
   fun t1 ->
@@ -1571,7 +1571,8 @@ let (extend_app_n : term -> args -> FStar_Range.range -> term) =
       fun r ->
         match t.n with
         | Tm_app (head, args1) ->
-            mk_Tm_app head (FStar_List.append args1 args') r
+            let uu___ = FStar_List.op_At args1 args' in
+            mk_Tm_app head uu___ r
         | uu___ -> mk_Tm_app t args' r
 let (extend_app : term -> arg -> FStar_Range.range -> term) =
   fun t -> fun arg1 -> fun r -> extend_app_n t [arg1] r
@@ -1673,11 +1674,12 @@ let (freenames_of_binders : binders -> freenames) =
     FStar_List.fold_right
       (fun b -> fun out -> FStar_Util.set_add b.binder_bv out) bs no_names
 let (binders_of_list : bv Prims.list -> binders) =
-  fun fvs -> FStar_All.pipe_right fvs (FStar_List.map (fun t -> mk_binder t))
+  fun fvs ->
+    FStar_All.op_Bar_Greater fvs (FStar_List.map (fun t -> mk_binder t))
 let (binders_of_freenames : freenames -> binders) =
   fun fvs ->
     let uu___ = FStar_Util.set_elements fvs in
-    FStar_All.pipe_right uu___ binders_of_list
+    FStar_All.op_Bar_Greater uu___ binders_of_list
 let (is_implicit : aqual -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -1707,7 +1709,7 @@ let (pat_bvs : pat -> bv Prims.list) =
             (fun b1 ->
                fun uu___1 -> match uu___1 with | (p2, uu___2) -> aux b1 p2) b
             pats in
-    let uu___ = aux [] p in FStar_All.pipe_left FStar_List.rev uu___
+    let uu___ = aux [] p in FStar_All.op_Less_Bar FStar_List.rev uu___
 let (range_of_ropt :
   FStar_Range.range FStar_Pervasives_Native.option -> FStar_Range.range) =
   fun uu___ ->
@@ -1835,7 +1837,7 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
           if uu___
           then
             let uu___2 = FStar_List.zip as1 as2 in
-            FStar_All.pipe_right uu___2
+            FStar_All.op_Bar_Greater uu___2
               (FStar_List.for_all
                  (fun uu___3 ->
                     match uu___3 with

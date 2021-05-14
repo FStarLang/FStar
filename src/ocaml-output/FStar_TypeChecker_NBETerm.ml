@@ -353,7 +353,7 @@ let (mkConstruct :
     FStar_Syntax_Syntax.universe Prims.list -> args -> t)
   =
   fun i ->
-    fun us -> fun ts -> FStar_All.pipe_left mk_t (Construct (i, us, ts))
+    fun us -> fun ts -> FStar_All.op_Less_Bar mk_t (Construct (i, us, ts))
 let (mkFV :
   FStar_Syntax_Syntax.fv ->
     FStar_Syntax_Syntax.universe Prims.list -> args -> t)
@@ -374,7 +374,7 @@ let (mkAccuMatch :
   =
   fun s ->
     fun ret ->
-      fun bs -> FStar_All.pipe_left mk_t (Accu ((Match (s, ret, bs)), []))
+      fun bs -> FStar_All.op_Less_Bar mk_t (Accu ((Match (s, ret, bs)), []))
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
   fun uu___ ->
     if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.Unknown
@@ -430,7 +430,7 @@ let rec (eq_t : t -> t -> FStar_Syntax_Util.eq_result) =
              then failwith "eq_t, different number of args on Construct"
              else ();
              (let uu___2 = FStar_List.zip args1 args2 in
-              FStar_All.pipe_left
+              FStar_All.op_Less_Bar
                 (FStar_List.fold_left
                    (fun acc ->
                       fun uu___3 ->
@@ -656,12 +656,12 @@ and (atom_to_string : atom -> Prims.string) =
     | UVar uu___ -> "UVar"
 let (arg_to_string : arg -> Prims.string) =
   fun a ->
-    let uu___ = FStar_All.pipe_right a FStar_Pervasives_Native.fst in
-    FStar_All.pipe_right uu___ t_to_string
+    let uu___ = FStar_All.op_Bar_Greater a FStar_Pervasives_Native.fst in
+    FStar_All.op_Bar_Greater uu___ t_to_string
 let (args_to_string : args -> Prims.string) =
   fun args1 ->
-    let uu___ = FStar_All.pipe_right args1 (FStar_List.map arg_to_string) in
-    FStar_All.pipe_right uu___ (FStar_String.concat " ")
+    let uu___ = FStar_All.op_Bar_Greater args1 (FStar_List.map arg_to_string) in
+    FStar_All.op_Bar_Greater uu___ (FStar_String.concat " ")
 type nbe_cbs =
   {
   iapp: t -> args -> t ;
@@ -714,7 +714,8 @@ let mk_emb' :
     fun un ->
       mk_emb
         (fun cbs ->
-           fun t1 -> let uu___ = em cbs t1 in FStar_All.pipe_left mk_t uu___)
+           fun t1 ->
+             let uu___ = em cbs t1 in FStar_All.op_Less_Bar mk_t uu___)
         (fun cbs -> fun t1 -> un cbs t1.nbe_t)
 let embed_as :
   'a 'b .
@@ -759,7 +760,7 @@ let (as_arg : t -> arg) = fun a -> (a, FStar_Pervasives_Native.None)
 let (make_arrow1 : t -> arg -> t) =
   fun t1 ->
     fun a ->
-      FStar_All.pipe_left mk_t
+      FStar_All.op_Less_Bar mk_t
         (Arrow
            (FStar_Pervasives.Inr
               ([a], (Tot (t1, FStar_Pervasives_Native.None)))))
@@ -779,7 +780,7 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
          else
            (let thunk = FStar_Thunk.mk f in
             let li = let uu___3 = FStar_Dyn.mkdyn x in (uu___3, et) in
-            FStar_All.pipe_left mk_t
+            FStar_All.op_Less_Bar mk_t
               (Lazy ((FStar_Pervasives.Inr li), thunk))))
 let lazy_unembed :
   'uuuuu 'a .
@@ -894,7 +895,7 @@ let e_option :
     let etyp =
       let uu___ =
         let uu___1 =
-          FStar_All.pipe_right FStar_Parser_Const.option_lid
+          FStar_All.op_Bar_Greater FStar_Parser_Const.option_lid
             FStar_Ident.string_of_lid in
         (uu___1, [ea.emb_typ]) in
       FStar_Syntax_Syntax.ET_app uu___ in
@@ -945,7 +946,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
       let etyp =
         let uu___ =
           let uu___1 =
-            FStar_All.pipe_right FStar_Parser_Const.lid_tuple2
+            FStar_All.op_Bar_Greater FStar_Parser_Const.lid_tuple2
               FStar_Ident.string_of_lid in
           (uu___1, [ea.emb_typ; eb.emb_typ]) in
         FStar_Syntax_Syntax.ET_app uu___ in
@@ -1007,7 +1008,7 @@ let e_either :
       let etyp =
         let uu___ =
           let uu___1 =
-            FStar_All.pipe_right FStar_Parser_Const.either_lid
+            FStar_All.op_Bar_Greater FStar_Parser_Const.either_lid
               FStar_Ident.string_of_lid in
           (uu___1, [ea.emb_typ; eb.emb_typ]) in
         FStar_Syntax_Syntax.ET_app uu___ in
@@ -1093,7 +1094,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
     let etyp =
       let uu___ =
         let uu___1 =
-          FStar_All.pipe_right FStar_Parser_Const.list_lid
+          FStar_All.op_Bar_Greater FStar_Parser_Const.list_lid
             FStar_Ident.string_of_lid in
         (uu___1, [ea.emb_typ]) in
       FStar_Syntax_Syntax.ET_app uu___ in
@@ -1181,7 +1182,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                          failwith "cannot unembed function argument"),
                    uu___3, Prims.int_one) in
                Lam uu___2 in
-             FStar_All.pipe_left mk_t uu___1) in
+             FStar_All.op_Less_Bar mk_t uu___1) in
       let un cb lam =
         let k lam1 =
           FStar_Pervasives_Native.Some
@@ -1321,7 +1322,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         let uu___2 = let uu___3 = e_list e_string in unembed uu___3 cb l in
         FStar_Util.bind_opt uu___2
           (fun ss ->
-             FStar_All.pipe_left
+             FStar_All.op_Less_Bar
                (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
                (FStar_Syntax_Embeddings.UnfoldOnly ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
@@ -1330,7 +1331,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         let uu___2 = let uu___3 = e_list e_string in unembed uu___3 cb l in
         FStar_Util.bind_opt uu___2
           (fun ss ->
-             FStar_All.pipe_left
+             FStar_All.op_Less_Bar
                (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
                (FStar_Syntax_Embeddings.UnfoldFully ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
@@ -1339,7 +1340,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         let uu___2 = let uu___3 = e_list e_string in unembed uu___3 cb l in
         FStar_Util.bind_opt uu___2
           (fun ss ->
-             FStar_All.pipe_left
+             FStar_All.op_Less_Bar
                (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)
                (FStar_Syntax_Embeddings.UnfoldAttr ss))
     | uu___ ->
@@ -1365,26 +1366,26 @@ let (bogus_cbs : nbe_cbs) =
   }
 let (arg_as_int : arg -> FStar_BigInt.t FStar_Pervasives_Native.option) =
   fun a ->
-    FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_All.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (unembed e_int bogus_cbs)
 let (arg_as_bool : arg -> Prims.bool FStar_Pervasives_Native.option) =
   fun a ->
-    FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_All.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (unembed e_bool bogus_cbs)
 let (arg_as_char : arg -> FStar_Char.char FStar_Pervasives_Native.option) =
   fun a ->
-    FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_All.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (unembed e_char bogus_cbs)
 let (arg_as_string : arg -> Prims.string FStar_Pervasives_Native.option) =
   fun a ->
-    FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_All.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (unembed e_string bogus_cbs)
 let arg_as_list :
   'a . 'a embedding -> arg -> 'a Prims.list FStar_Pervasives_Native.option =
   fun e ->
     fun a1 ->
       let uu___ = let uu___1 = e_list e in unembed uu___1 bogus_cbs in
-      FStar_All.pipe_right (FStar_Pervasives_Native.fst a1) uu___
+      FStar_All.op_Bar_Greater (FStar_Pervasives_Native.fst a1) uu___
 let (arg_as_bounded_int :
   arg ->
     (FStar_Syntax_Syntax.fv * FStar_BigInt.t) FStar_Pervasives_Native.option)
@@ -1408,7 +1409,7 @@ let (int_as_bounded : FStar_Syntax_Syntax.fv -> FStar_BigInt.t -> t) =
     fun n ->
       let c = embed e_int bogus_cbs n in
       let int_to_t1 args1 =
-        FStar_All.pipe_left mk_t (FV (int_to_t, [], args1)) in
+        FStar_All.op_Less_Bar mk_t (FV (int_to_t, [], args1)) in
       let uu___ = let uu___1 = as_arg c in [uu___1] in int_to_t1 uu___
 let lift_unary :
   'a 'b .
@@ -1518,7 +1519,8 @@ let (list_of_string' : Prims.string -> t) =
 let (string_of_list' : FStar_Char.char Prims.list -> t) =
   fun l ->
     let s = FStar_String.string_of_list l in
-    FStar_All.pipe_left mk_t (Constant (String (s, FStar_Range.dummyRange)))
+    FStar_All.op_Less_Bar mk_t
+      (Constant (String (s, FStar_Range.dummyRange)))
 let (string_compare' : Prims.string -> Prims.string -> t) =
   fun s1 ->
     fun s2 ->

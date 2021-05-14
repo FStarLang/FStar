@@ -6,7 +6,7 @@ let (unpack_lsp_query :
   fun r ->
     let qid =
       let uu___ = FStar_Interactive_JsonHelper.try_assoc "id" r in
-      FStar_All.pipe_right uu___
+      FStar_All.op_Bar_Greater uu___
         (FStar_Util.map_option FStar_Interactive_JsonHelper.js_str_int) in
     try
       (fun uu___ ->
@@ -14,7 +14,7 @@ let (unpack_lsp_query :
          | () ->
              let method1 =
                let uu___1 = FStar_Interactive_JsonHelper.assoc "method" r in
-               FStar_All.pipe_right uu___1
+               FStar_All.op_Bar_Greater uu___1
                  FStar_Interactive_JsonHelper.js_str in
              let uu___1 =
                match method1 with
@@ -23,12 +23,12 @@ let (unpack_lsp_query :
                      let uu___3 =
                        let uu___4 =
                          FStar_Interactive_JsonHelper.arg "processId" r in
-                       FStar_All.pipe_right uu___4
+                       FStar_All.op_Bar_Greater uu___4
                          FStar_Interactive_JsonHelper.js_int in
                      let uu___4 =
                        let uu___5 =
                          FStar_Interactive_JsonHelper.arg "rootUri" r in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_str in
                      (uu___3, uu___4) in
                    FStar_Interactive_JsonHelper.Initialize uu___2
@@ -38,13 +38,13 @@ let (unpack_lsp_query :
                | "$/cancelRequest" ->
                    let uu___2 =
                      let uu___3 = FStar_Interactive_JsonHelper.arg "id" r in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str_int in
                    FStar_Interactive_JsonHelper.Cancel uu___2
                | "workspace/didChangeWorkspaceFolders" ->
                    let uu___2 =
                      let uu___3 = FStar_Interactive_JsonHelper.arg "event" r in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_wsch_event in
                    FStar_Interactive_JsonHelper.FolderChange uu___2
                | "workspace/didChangeConfiguration" ->
@@ -54,21 +54,21 @@ let (unpack_lsp_query :
                | "workspace/symbol" ->
                    let uu___2 =
                      let uu___3 = FStar_Interactive_JsonHelper.arg "query" r in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str in
                    FStar_Interactive_JsonHelper.Symbol uu___2
                | "workspace/executeCommand" ->
                    let uu___2 =
                      let uu___3 =
                        FStar_Interactive_JsonHelper.arg "command" r in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_str in
                    FStar_Interactive_JsonHelper.ExecCommand uu___2
                | "textDocument/didOpen" ->
                    let uu___2 =
                      let uu___3 =
                        FStar_Interactive_JsonHelper.arg "textDocument" r in
-                     FStar_All.pipe_right uu___3
+                     FStar_All.op_Bar_Greater uu___3
                        FStar_Interactive_JsonHelper.js_txdoc_item in
                    FStar_Interactive_JsonHelper.DidOpen uu___2
                | "textDocument/didChange" ->
@@ -77,7 +77,7 @@ let (unpack_lsp_query :
                      let uu___4 =
                        let uu___5 =
                          FStar_Interactive_JsonHelper.arg "contentChanges" r in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_contentch in
                      (uu___3, uu___4) in
                    FStar_Interactive_JsonHelper.DidChange uu___2
@@ -92,7 +92,7 @@ let (unpack_lsp_query :
                      let uu___3 = FStar_Interactive_JsonHelper.js_txdoc_id r in
                      let uu___4 =
                        let uu___5 = FStar_Interactive_JsonHelper.arg "text" r in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_str in
                      (uu___3, uu___4) in
                    FStar_Interactive_JsonHelper.DidSave uu___2
@@ -105,7 +105,7 @@ let (unpack_lsp_query :
                      let uu___4 =
                        let uu___5 =
                          FStar_Interactive_JsonHelper.arg "context" r in
-                       FStar_All.pipe_right uu___5
+                       FStar_All.op_Bar_Greater uu___5
                          FStar_Interactive_JsonHelper.js_compl_context in
                      (uu___3, uu___4) in
                    FStar_Interactive_JsonHelper.Completion uu___2
@@ -186,7 +186,7 @@ let (deserialize_lsp_query :
          match () with
          | () ->
              let uu___1 =
-               FStar_All.pipe_right js_query
+               FStar_All.op_Bar_Greater js_query
                  FStar_Interactive_JsonHelper.js_assoc in
              unpack_lsp_query uu___1) ()
     with

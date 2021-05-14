@@ -18,6 +18,7 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
 open FStar.Pervasives
+open FStar.List
 open FStar.String
 open FStar.ST
 open FStar.Exn

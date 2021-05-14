@@ -281,7 +281,7 @@ let (new_z3proc_with_id :
         let uu___1 =
           FStar_Util.incr ctr;
           (let uu___3 = FStar_ST.op_Bang ctr in
-           FStar_All.pipe_right uu___3 FStar_Util.string_of_int) in
+           FStar_All.op_Bar_Greater uu___3 FStar_Util.string_of_int) in
         FStar_Util.format1 "bg-%s" uu___1 in
       new_z3proc uu___ cmd_and_args in
     let reply =
@@ -464,8 +464,8 @@ let (smt_output_sections :
                      (Prims.op_Hat "Parse error: "
                         (Prims.op_Hat (end_tag tag) " not found"))
                | FStar_Pervasives_Native.Some (section, suffix1) ->
-                   ((FStar_Pervasives_Native.Some section),
-                     (FStar_List.append prefix suffix1))) in
+                   let uu___2 = FStar_List.op_At prefix suffix1 in
+                   ((FStar_Pervasives_Native.Some section), uu___2)) in
         let uu___ = find_section "result" lines in
         match uu___ with
         | (result_opt, lines1) ->
@@ -488,7 +488,7 @@ let (smt_output_sections :
                                   | FStar_Pervasives_Native.None -> lines5
                                   | FStar_Pervasives_Native.Some
                                       (prefix, suffix) ->
-                                      FStar_List.append prefix suffix in
+                                      FStar_List.op_At prefix suffix in
                                 ((match remaining with
                                   | [] -> ()
                                   | uu___6 ->
@@ -526,7 +526,7 @@ let (doZ3Exe :
           fun label_messages ->
             let parse z3out =
               let lines =
-                FStar_All.pipe_right (FStar_String.split [10] z3out)
+                FStar_All.op_Bar_Greater (FStar_String.split [10] z3out)
                   (FStar_List.map FStar_Util.trim_string) in
               let smt_output1 = smt_output_sections log_file r lines in
               let unsat_core1 =
@@ -543,7 +543,7 @@ let (doZ3Exe :
                     then FStar_Pervasives_Native.None
                     else
                       (let uu___1 =
-                         FStar_All.pipe_right (FStar_Util.split s2 " ")
+                         FStar_All.op_Bar_Greater (FStar_Util.split s2 " ")
                            (FStar_Util.sort_with FStar_String.compare) in
                        FStar_Pervasives_Native.Some uu___1) in
               let labels =
@@ -560,11 +560,11 @@ let (doZ3Exe :
                           lblnegs rest
                       | uu___ -> [] in
                     let lblnegs1 = lblnegs lines1 in
-                    FStar_All.pipe_right lblnegs1
+                    FStar_All.op_Bar_Greater lblnegs1
                       (FStar_List.collect
                          (fun l ->
                             let uu___ =
-                              FStar_All.pipe_right label_messages
+                              FStar_All.op_Bar_Greater label_messages
                                 (FStar_List.tryFind
                                    (fun uu___1 ->
                                       match uu___1 with
@@ -634,7 +634,7 @@ let (doZ3Exe :
                    let uu___2 =
                      FStar_Util.format1 "Z3 says: %s\n"
                        (FStar_String.concat "\n" smt_output1.smt_result) in
-                   FStar_All.pipe_left FStar_Util.print_string uu___2
+                   FStar_All.op_Less_Bar FStar_Util.print_string uu___2
                  else ());
                 (match smt_output1.smt_result with
                  | "unsat"::[] -> UNSAT unsat_core1
@@ -727,7 +727,7 @@ let (push : Prims.string -> unit) =
           FStar_ST.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
             let uu___3 = FStar_ST.op_Bang bg_scope in
-            FStar_List.append uu___3
+            FStar_List.op_At uu___3
               [FStar_SMTEncoding_Term.Push;
               FStar_SMTEncoding_Term.Caption msg] in
           FStar_ST.op_Colon_Equals bg_scope uu___2))
@@ -740,7 +740,7 @@ let (pop : Prims.string -> unit) =
           FStar_ST.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
             let uu___3 = FStar_ST.op_Bang bg_scope in
-            FStar_List.append uu___3
+            FStar_List.op_At uu___3
               [FStar_SMTEncoding_Term.Caption msg;
               FStar_SMTEncoding_Term.Pop] in
           FStar_ST.op_Colon_Equals bg_scope uu___2))
@@ -753,7 +753,7 @@ let (rollback :
       FStar_Common.rollback (fun uu___ -> pop msg) fresh_scope depth
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls ->
-    FStar_All.pipe_right decls
+    FStar_All.op_Bar_Greater decls
       (FStar_List.iter
          (fun uu___1 ->
             match uu___1 with
@@ -763,12 +763,12 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
     (let uu___2 = FStar_ST.op_Bang fresh_scope in
      match uu___2 with
      | hd::tl ->
-         FStar_ST.op_Colon_Equals fresh_scope ((FStar_List.append hd decls)
-           :: tl)
+         let uu___3 = let uu___4 = FStar_List.op_At hd decls in uu___4 :: tl in
+         FStar_ST.op_Colon_Equals fresh_scope uu___3
      | uu___3 -> failwith "Impossible");
     (let uu___2 =
        let uu___3 = FStar_ST.op_Bang bg_scope in
-       FStar_List.append uu___3 decls in
+       FStar_List.op_At uu___3 decls in
      FStar_ST.op_Colon_Equals bg_scope uu___2)
 let (refresh : unit -> unit) =
   fun uu___ ->
@@ -838,13 +838,13 @@ let (mk_input :
          then
            let uu___3 =
              let uu___4 =
-               FStar_All.pipe_right theory
+               FStar_All.op_Bar_Greater theory
                  (FStar_Util.prefix_until
                     (fun uu___5 ->
                        match uu___5 with
                        | FStar_SMTEncoding_Term.CheckSat -> true
                        | uu___6 -> false)) in
-             FStar_All.pipe_right uu___4 FStar_Option.get in
+             FStar_All.op_Bar_Greater uu___4 FStar_Option.get in
            match uu___3 with
            | (prefix, check_sat, suffix) ->
                let pp =
@@ -859,10 +859,10 @@ let (mk_input :
                  if uu___4
                  then
                    let uu___5 =
-                     FStar_All.pipe_right prefix
+                     FStar_All.op_Bar_Greater prefix
                        (FStar_List.map
                           (FStar_SMTEncoding_Term.declToSmt_no_caps options)) in
-                   FStar_All.pipe_right uu___5 (FStar_String.concat "\n")
+                   FStar_All.op_Bar_Greater uu___5 (FStar_String.concat "\n")
                  else ps in
                let uu___4 =
                  let uu___5 = FStar_Util.digest_of_string hs in
@@ -873,7 +873,7 @@ let (mk_input :
               let uu___5 =
                 FStar_List.map (FStar_SMTEncoding_Term.declToSmt options)
                   theory in
-              FStar_All.pipe_right uu___5 (FStar_String.concat "\n") in
+              FStar_All.op_Bar_Greater uu___5 (FStar_String.concat "\n") in
             (uu___4, FStar_Pervasives_Native.None)) in
        match uu___1 with
        | (r, hash) ->
@@ -977,9 +977,11 @@ let (ask :
                     (let theory1 = FStar_ST.op_Bang bg_scope in
                      FStar_ST.op_Colon_Equals bg_scope []; theory1) in
                 let theory1 =
-                  FStar_List.append theory
-                    (FStar_List.append [FStar_SMTEncoding_Term.Push]
-                       (FStar_List.append qry [FStar_SMTEncoding_Term.Pop])) in
+                  let uu___ =
+                    let uu___1 =
+                      FStar_List.op_At qry [FStar_SMTEncoding_Term.Pop] in
+                    FStar_List.op_At [FStar_SMTEncoding_Term.Push] uu___1 in
+                  FStar_List.op_At theory uu___ in
                 let uu___ = filter_theory theory1 in
                 match uu___ with
                 | (theory2, _used_unsat_core) ->

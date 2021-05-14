@@ -17,6 +17,7 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
+open FStar.List
 open FStar.ST
 open FStar.All
 open FStar

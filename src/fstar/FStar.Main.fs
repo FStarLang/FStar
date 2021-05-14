@@ -17,6 +17,7 @@
 module FStar.Main
 open FStar.ST
 open FStar.All
+open FStar.List
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident

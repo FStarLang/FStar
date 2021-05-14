@@ -382,7 +382,7 @@ let (transitive_exported_ids :
           let uu___1 =
             let uu___2 = exported_id_set1 Exported_id_term_type in
             FStar_ST.op_Bang uu___2 in
-          FStar_All.pipe_right uu___1 FStar_Util.set_elements
+          FStar_All.op_Bar_Greater uu___1 FStar_Util.set_elements
 let (open_modules :
   env -> (FStar_Ident.lident * FStar_Syntax_Syntax.modul) Prims.list) =
   fun e -> e.modules
@@ -429,7 +429,7 @@ let (iface_decls :
   fun env1 ->
     fun l ->
       let uu___ =
-        FStar_All.pipe_right env1.remaining_iface_decls
+        FStar_All.op_Bar_Greater env1.remaining_iface_decls
           (FStar_List.tryFind
              (fun uu___1 ->
                 match uu___1 with | (m, uu___2) -> FStar_Ident.lid_equals l m)) in
@@ -667,7 +667,7 @@ let find_in_record :
               let uu___1 =
                 let uu___2 = FStar_Ident.ident_of_lid record.typename in
                 [uu___2] in
-              FStar_List.append ns uu___1 in
+              FStar_List.op_At ns uu___1 in
             FStar_Ident.lid_of_ids uu___ in
           let uu___ = FStar_Ident.lid_equals typename' record.typename in
           if uu___
@@ -675,7 +675,7 @@ let find_in_record :
             let fname =
               let uu___1 =
                 let uu___2 = FStar_Ident.ns_of_lid record.typename in
-                FStar_List.append uu___2 [id] in
+                FStar_List.op_At uu___2 [id] in
               FStar_Ident.lid_of_ids uu___1 in
             let find =
               FStar_Util.find_map record.fields
@@ -756,7 +756,9 @@ let find_in_module_with_includes :
                         let uu___1 = qual modul id in find_in_module uu___1
                       else Cont_ignore in
                     (match look_into with
-                     | Cont_ignore -> aux (FStar_List.append mincludes q)
+                     | Cont_ignore ->
+                         let uu___1 = FStar_List.op_At mincludes q in
+                         aux uu___1
                      | uu___1 -> look_into) in
               aux [ns]
 let try_lookup_id'' :
@@ -952,7 +954,7 @@ let (resolve_module_name :
                 let uu___1 =
                   let uu___2 = FStar_Ident.path_of_lid ns in
                   let uu___3 = FStar_Ident.path_of_lid lid in
-                  FStar_List.append uu___2 uu___3 in
+                  FStar_List.op_At uu___2 uu___3 in
                 let uu___2 = FStar_Ident.range_of_lid lid in
                 FStar_Ident.lid_of_path uu___1 uu___2 in
               let uu___1 = module_is_defined env1 new_lid in
@@ -1001,7 +1003,7 @@ let (shorten_module_path :
              | [] -> FStar_Pervasives_Native.None
              | ns_last_id::rev_ns_prefix ->
                  let uu___1 = aux rev_ns_prefix ns_last_id in
-                 FStar_All.pipe_right uu___1
+                 FStar_All.op_Bar_Greater uu___1
                    (FStar_Util.map_option
                       (fun uu___2 ->
                          match uu___2 with
@@ -1146,7 +1148,7 @@ let (lb_fv :
              if uu___1
              then FStar_Pervasives_Native.Some fv
              else FStar_Pervasives_Native.None) in
-      FStar_All.pipe_right uu___ FStar_Util.must
+      FStar_All.op_Bar_Greater uu___ FStar_Util.must
 let (ns_of_lid_equals :
   FStar_Ident.lident -> FStar_Ident.lident -> Prims.bool) =
   fun lid ->
@@ -1170,7 +1172,7 @@ let (delta_depth_of_declaration :
       let dd =
         let uu___ =
           (FStar_Syntax_Util.is_primop_lid lid) ||
-            (FStar_All.pipe_right quals
+            (FStar_All.op_Bar_Greater quals
                (FStar_Util.for_some
                   (fun uu___1 ->
                      match uu___1 with
@@ -1181,7 +1183,7 @@ let (delta_depth_of_declaration :
         then FStar_Syntax_Syntax.delta_equational
         else FStar_Syntax_Syntax.delta_constant in
       let uu___ =
-        (FStar_All.pipe_right quals
+        (FStar_All.op_Bar_Greater quals
            (FStar_Util.for_some
               (fun uu___1 ->
                  match uu___1 with
@@ -1189,7 +1191,7 @@ let (delta_depth_of_declaration :
                  | uu___2 -> false)))
           &&
           (let uu___1 =
-             FStar_All.pipe_right quals
+             FStar_All.op_Bar_Greater quals
                (FStar_Util.for_some
                   (fun uu___2 ->
                      match uu___2 with
@@ -1249,7 +1251,7 @@ let (try_lookup_name :
                      let quals = se.FStar_Syntax_Syntax.sigquals in
                      let uu___4 =
                        any_val ||
-                         (FStar_All.pipe_right quals
+                         (FStar_All.op_Bar_Greater quals
                             (FStar_Util.for_some
                                (fun uu___5 ->
                                   match uu___5 with
@@ -1633,7 +1635,7 @@ let (try_lookup_lid :
   fun env1 ->
     fun l ->
       let uu___ = try_lookup_lid_with_attributes env1 l in
-      FStar_All.pipe_right uu___ drop_attributes
+      FStar_All.op_Bar_Greater uu___ drop_attributes
 let (resolve_to_fully_qualified_name :
   env ->
     FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
@@ -1715,7 +1717,7 @@ let (try_lookup_lid_no_resolve :
   fun env1 ->
     fun l ->
       let uu___ = try_lookup_lid_with_attributes_no_resolve env1 l in
-      FStar_All.pipe_right uu___ drop_attributes
+      FStar_All.op_Bar_Greater uu___ drop_attributes
 let (try_lookup_datacon :
   env ->
     FStar_Ident.lident ->
@@ -1735,7 +1737,7 @@ let (try_lookup_datacon :
              FStar_Syntax_Syntax.sigopts = uu___6;_},
            uu___7) ->
             let uu___8 =
-              FStar_All.pipe_right quals
+              FStar_All.op_Bar_Greater quals
                 (FStar_Util.for_some
                    (fun uu___9 ->
                       match uu___9 with
@@ -1887,7 +1889,7 @@ let (extract_record :
                    | FStar_Syntax_Syntax.RecordConstructor uu___2 -> true
                    | uu___2 -> false) in
             let find_dc dc =
-              FStar_All.pipe_right sigs
+              FStar_All.op_Bar_Greater sigs
                 (FStar_Util.find_opt
                    (fun uu___1 ->
                       match uu___1 with
@@ -1902,7 +1904,7 @@ let (extract_record :
                           FStar_Syntax_Syntax.sigopts = uu___11;_} ->
                           FStar_Ident.lid_equals dc lid
                       | uu___2 -> false)) in
-            FStar_All.pipe_right sigs
+            FStar_All.op_Bar_Greater sigs
               (FStar_List.iter
                  (fun uu___1 ->
                     match uu___1 with
@@ -1917,7 +1919,7 @@ let (extract_record :
                         FStar_Syntax_Syntax.sigopts = uu___7;_} ->
                         let uu___8 =
                           let uu___9 = find_dc dc in
-                          FStar_All.pipe_left FStar_Util.must uu___9 in
+                          FStar_All.op_Less_Bar FStar_Util.must uu___9 in
                         (match uu___8 with
                          | {
                              FStar_Syntax_Syntax.sigel =
@@ -1937,7 +1939,7 @@ let (extract_record :
                                    | (_params, formals) ->
                                        let is_rec = is_record typename_quals in
                                        let formals' =
-                                         FStar_All.pipe_right formals
+                                         FStar_All.op_Bar_Greater formals
                                            (FStar_List.collect
                                               (fun f ->
                                                  let uu___20 =
@@ -1949,7 +1951,7 @@ let (extract_record :
                                                            f.FStar_Syntax_Syntax.binder_qual)) in
                                                  if uu___20 then [] else [f])) in
                                        let fields' =
-                                         FStar_All.pipe_right formals'
+                                         FStar_All.op_Bar_Greater formals'
                                            (FStar_List.map
                                               (fun f ->
                                                  (((f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname),
@@ -2024,10 +2026,10 @@ let (extract_record :
                                                                     FStar_Syntax_Util.mk_field_projector_name_from_ident
                                                                     constrname
                                                                     id in
-                                                                    FStar_All.pipe_right
+                                                                    FStar_All.op_Bar_Greater
                                                                     uu___27
                                                                     FStar_Ident.ident_of_lid in
-                                                                  FStar_All.pipe_right
+                                                                  FStar_All.op_Bar_Greater
                                                                     uu___26
                                                                     FStar_Ident.string_of_id in
                                                                 let uu___27 =
@@ -2141,7 +2143,7 @@ let (try_lookup_dc_by_field_name :
               let uu___3 =
                 let uu___4 =
                   let uu___5 = FStar_Ident.ns_of_lid r.typename in
-                  FStar_List.append uu___5 [r.constrname] in
+                  FStar_List.op_At uu___5 [r.constrname] in
                 FStar_Ident.lid_of_ids uu___4 in
               let uu___4 = FStar_Ident.range_of_lid fieldname in
               FStar_Ident.set_lid_range uu___3 uu___4 in
@@ -2279,7 +2281,7 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                 (match uu___1 with
                  | FStar_Pervasives_Native.Some l1 ->
                      let uu___2 = FStar_Ident.range_of_lid l1 in
-                     FStar_All.pipe_left FStar_Range.string_of_range uu___2
+                     FStar_All.op_Less_Bar FStar_Range.string_of_range uu___2
                  | FStar_Pervasives_Native.None -> "<unknown>")
             | FStar_Pervasives_Native.None -> "<unknown>" in
           let uu___ =
@@ -2364,12 +2366,12 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
           | uu___1 -> (env3, [((FStar_Syntax_Util.lids_of_sigelt s), s)]) in
         match uu___ with
         | (env4, lss) ->
-            (FStar_All.pipe_right lss
+            (FStar_All.op_Bar_Greater lss
                (FStar_List.iter
                   (fun uu___2 ->
                      match uu___2 with
                      | (lids, se) ->
-                         FStar_All.pipe_right lids
+                         FStar_All.op_Bar_Greater lids
                            (FStar_List.iter
                               (fun lid ->
                                  (let uu___4 =
@@ -2458,7 +2460,7 @@ let (push_namespace : env -> FStar_Ident.lident -> env) =
         | FStar_Pervasives_Native.None ->
             let modules = env1.modules in
             let uu___2 =
-              FStar_All.pipe_right modules
+              FStar_All.op_Bar_Greater modules
                 (FStar_Util.for_some
                    (fun uu___3 ->
                       match uu___3 with
@@ -2580,14 +2582,15 @@ let (check_admits :
   fun env1 ->
     fun m ->
       let admitted_sig_lids =
-        FStar_All.pipe_right env1.sigaccum
+        FStar_All.op_Bar_Greater env1.sigaccum
           (FStar_List.fold_left
              (fun lids ->
                 fun se ->
                   match se.FStar_Syntax_Syntax.sigel with
                   | FStar_Syntax_Syntax.Sig_declare_typ (l, u, t) when
                       let uu___ =
-                        FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+                        FStar_All.op_Bar_Greater
+                          se.FStar_Syntax_Syntax.sigquals
                           (FStar_List.contains FStar_Syntax_Syntax.Assumption) in
                       Prims.op_Negation uu___ ->
                       let uu___ =
@@ -2657,7 +2660,7 @@ let (check_admits :
                   | uu___ -> lids) []) in
       let uu___ = m in
       let uu___1 =
-        FStar_All.pipe_right m.FStar_Syntax_Syntax.declarations
+        FStar_All.op_Bar_Greater m.FStar_Syntax_Syntax.declarations
           (FStar_List.map
              (fun s ->
                 match s.FStar_Syntax_Syntax.sigel with
@@ -2693,7 +2696,7 @@ let (check_admits :
 let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
   fun env1 ->
     fun modul ->
-      FStar_All.pipe_right modul.FStar_Syntax_Syntax.declarations
+      FStar_All.op_Bar_Greater modul.FStar_Syntax_Syntax.declarations
         (FStar_List.iter
            (fun se ->
               let quals = se.FStar_Syntax_Syntax.sigquals in
@@ -2701,7 +2704,7 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
               | FStar_Syntax_Syntax.Sig_bundle (ses, uu___1) ->
                   if FStar_List.contains FStar_Syntax_Syntax.Private quals
                   then
-                    FStar_All.pipe_right ses
+                    FStar_All.op_Bar_Greater ses
                       (FStar_List.iter
                          (fun se1 ->
                             match se1.FStar_Syntax_Syntax.sigel with
@@ -2771,7 +2774,7 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
               | FStar_Syntax_Syntax.Sig_let ((uu___1, lbs), uu___2) ->
                   if FStar_List.contains FStar_Syntax_Syntax.Private quals
                   then
-                    FStar_All.pipe_right lbs
+                    FStar_All.op_Bar_Greater lbs
                       (FStar_List.iter
                          (fun lb ->
                             let uu___3 =
@@ -2887,7 +2890,7 @@ let (export_interface : FStar_Ident.lident -> env -> env) =
       let env2 = pop () in
       let keys = FStar_Util.smap_keys sm in
       let sm' = sigmap env2 in
-      FStar_All.pipe_right keys
+      FStar_All.op_Bar_Greater keys
         (FStar_List.iter
            (fun k ->
               let uu___1 = FStar_Util.smap_try_find sm' k in
@@ -3070,7 +3073,7 @@ let (prepare_module_or_interface :
                   [uu___1]
                 else [] in
               let auto_open2 =
-                FStar_List.append namespace_of_module
+                FStar_List.op_At namespace_of_module
                   (FStar_List.rev auto_open1) in
               (let uu___1 = FStar_Ident.string_of_lid mname in
                let uu___2 = as_exported_id_set mii.mii_exported_ids in
@@ -3122,7 +3125,7 @@ let (prepare_module_or_interface :
                                        op) (FStar_List.rev auto_open2);
                                 env')))))) in
             let uu___ =
-              FStar_All.pipe_right env1.modules
+              FStar_All.op_Bar_Greater env1.modules
                 (FStar_Util.find_opt
                    (fun uu___1 ->
                       match uu___1 with

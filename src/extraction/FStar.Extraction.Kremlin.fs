@@ -21,6 +21,7 @@ open FStar.ST
 open FStar.All
 
 open FStar
+open FStar.List
 open FStar.Util
 open FStar.Extraction
 open FStar.Extraction.ML

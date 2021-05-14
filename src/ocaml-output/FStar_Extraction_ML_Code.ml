@@ -142,7 +142,7 @@ let (path_of_ns :
                              let uu___4 =
                                FStar_Extraction_ML_Util.flatten_ns sfx in
                              [uu___4] in
-                           FStar_List.append pfx uu___3 in
+                           FStar_List.op_At pfx uu___3 in
                          FStar_Pervasives_Native.Some uu___2
                        else FStar_Pervasives_Native.None)
                 else FStar_Pervasives_Native.None) in
@@ -188,7 +188,7 @@ let (ptsym :
          | (p, s) ->
              let uu___2 =
                let uu___3 = let uu___4 = ptsym_of_symbol s in [uu___4] in
-               FStar_List.append p uu___3 in
+               FStar_List.op_At p uu___3 in
              FStar_String.concat "." uu___2)
 let (ptctor :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -207,7 +207,8 @@ let (ptctor :
               let uu___3 = FStar_String.get s Prims.int_zero in
               uu___2 <> uu___3 in
             if uu___1 then Prims.op_Hat "U__" s else s in
-          FStar_String.concat "." (FStar_List.append p [s1])
+          let uu___1 = FStar_List.op_At p [s1] in
+          FStar_String.concat "." uu___1
 let (infix_prim_ops :
   (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list) =
   [("op_Addition", e_bin_prio_op1, "+");
@@ -1016,14 +1017,14 @@ and (doc_of_lets :
                                   (min_op_prec, NonAssoc) ty in
                               let vars =
                                 let uu___7 =
-                                  FStar_All.pipe_right vs
+                                  FStar_All.op_Bar_Greater vs
                                     (FStar_List.map
                                        (fun x ->
                                           doc_of_mltype currentModule
                                             (min_op_prec, NonAssoc)
                                             (FStar_Extraction_ML_Syntax.MLTY_Var
                                                x))) in
-                                FStar_All.pipe_right uu___7 reduce1 in
+                                FStar_All.op_Bar_Greater uu___7 reduce1 in
                               reduce1 [text ":"; vars; text "."; ty1])
                        else text "") in
                 let uu___4 =
@@ -1325,11 +1326,10 @@ let (doc_of_mllib_r :
                          | FStar_Pervasives_Native.Some s -> cat s hardline)
                           :: uu___7 in
                       hardline :: uu___6 in
-                    FStar_List.append maybe_open_pervasives uu___5 in
-                  FStar_List.append [head; hardline; text "open Prims"]
-                    uu___4 in
-                FStar_List.append prefix uu___3 in
-              FStar_All.pipe_left reduce uu___2 in
+                    FStar_List.op_At maybe_open_pervasives uu___5 in
+                  FStar_List.op_At [head; hardline; text "open Prims"] uu___4 in
+                FStar_List.op_At prefix uu___3 in
+              FStar_All.op_Less_Bar reduce uu___2 in
         let docs =
           FStar_List.map
             (fun uu___1 ->

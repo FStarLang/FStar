@@ -190,7 +190,7 @@ let (primitive_steps :
     let uu___1 =
       let uu___2 = FStar_ST.op_Bang __primitive_steps_ref in
       FStar_Util.must uu___2 in
-    let uu___2 = native_tactics_steps () in FStar_List.append uu___1 uu___2
+    let uu___2 = native_tactics_steps () in FStar_List.op_At uu___1 uu___2
 let unembed_tactic_0 :
   'b .
     'b FStar_Syntax_Embeddings.embedding ->
@@ -1597,7 +1597,7 @@ let (uu___143 : unit) =
           uu___6 :: uu___7 in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
-    FStar_All.pipe_left (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+    FStar_All.op_Less_Bar (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
       uu___1 in
   FStar_ST.op_Colon_Equals __primitive_steps_ref uu___
 
@@ -1648,7 +1648,7 @@ let (report_implicits :
   FStar_Range.range -> FStar_TypeChecker_Env.implicits -> unit) =
   fun rng ->
     fun is ->
-      FStar_All.pipe_right is
+      FStar_All.op_Bar_Greater is
         (FStar_List.iter
            (fun imp ->
               let uu___1 =
@@ -1735,41 +1735,42 @@ let run_tactic_on_ps' :
                                else ());
                               (match res with
                                | FStar_Tactics_Result.Success (ret, ps1) ->
-                                   (FStar_List.iter
-                                      (fun g1 ->
-                                         let uu___11 =
-                                           FStar_Tactics_Types.is_irrelevant
-                                             g1 in
-                                         if uu___11
-                                         then
-                                           let uu___12 =
-                                             let uu___13 =
-                                               FStar_Tactics_Types.goal_env
-                                                 g1 in
-                                             let uu___14 =
-                                               FStar_Tactics_Types.goal_witness
-                                                 g1 in
-                                             FStar_TypeChecker_Rel.teq_nosmt_force
-                                               uu___13 uu___14
-                                               FStar_Syntax_Util.exp_unit in
-                                           (if uu___12
-                                            then ()
-                                            else
-                                              (let uu___14 =
-                                                 let uu___15 =
-                                                   let uu___16 =
-                                                     FStar_Tactics_Types.goal_witness
-                                                       g1 in
-                                                   FStar_Syntax_Print.term_to_string
-                                                     uu___16 in
-                                                 FStar_Util.format1
-                                                   "Irrelevant tactic witness does not unify with (): %s"
-                                                   uu___15 in
-                                               failwith uu___14))
-                                         else ())
-                                      (FStar_List.append
+                                   ((let uu___11 =
+                                       FStar_List.op_At
                                          ps1.FStar_Tactics_Types.goals
-                                         ps1.FStar_Tactics_Types.smt_goals);
+                                         ps1.FStar_Tactics_Types.smt_goals in
+                                     FStar_List.iter
+                                       (fun g1 ->
+                                          let uu___12 =
+                                            FStar_Tactics_Types.is_irrelevant
+                                              g1 in
+                                          if uu___12
+                                          then
+                                            let uu___13 =
+                                              let uu___14 =
+                                                FStar_Tactics_Types.goal_env
+                                                  g1 in
+                                              let uu___15 =
+                                                FStar_Tactics_Types.goal_witness
+                                                  g1 in
+                                              FStar_TypeChecker_Rel.teq_nosmt_force
+                                                uu___14 uu___15
+                                                FStar_Syntax_Util.exp_unit in
+                                            (if uu___13
+                                             then ()
+                                             else
+                                               (let uu___15 =
+                                                  let uu___16 =
+                                                    let uu___17 =
+                                                      FStar_Tactics_Types.goal_witness
+                                                        g1 in
+                                                    FStar_Syntax_Print.term_to_string
+                                                      uu___17 in
+                                                  FStar_Util.format1
+                                                    "Irrelevant tactic witness does not unify with (): %s"
+                                                    uu___16 in
+                                                failwith uu___15))
+                                          else ()) uu___11);
                                     (let uu___12 = FStar_ST.op_Bang tacdbg in
                                      if uu___12
                                      then
@@ -1854,10 +1855,11 @@ let run_tactic_on_ps' :
                                          FStar_Tactics_Printing.do_dump_proofstate
                                            uu___17 "at the finish line"
                                        else ());
-                                      ((FStar_List.append
-                                          ps1.FStar_Tactics_Types.goals
-                                          ps1.FStar_Tactics_Types.smt_goals),
-                                        ret))))
+                                      (let uu___16 =
+                                         FStar_List.op_At
+                                           ps1.FStar_Tactics_Types.goals
+                                           ps1.FStar_Tactics_Types.smt_goals in
+                                       (uu___16, ret)))))
                                | FStar_Tactics_Result.Failed (e, ps1) ->
                                    ((let uu___11 =
                                        let uu___12 =

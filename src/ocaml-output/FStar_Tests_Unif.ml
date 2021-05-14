@@ -50,7 +50,7 @@ let (guard_eq :
                   FStar_Util.format3
                     "Test %s failed:\n\tExpected guard %s;\n\tGot guard      %s\n"
                     uu___3 uu___4 uu___5 in
-                FStar_All.pipe_left fail uu___2)
+                FStar_All.op_Less_Bar fail uu___2)
              else ();
              (let uu___2 = (FStar_ST.op_Bang success) && b in
               FStar_ST.op_Colon_Equals success uu___2))
@@ -68,7 +68,7 @@ let (unify :
             (let uu___1 = FStar_Util.string_of_int i in
              FStar_Util.print1 "%s ..." uu___1);
             (let uu___2 = FStar_Main.process_args () in
-             FStar_All.pipe_right uu___2 (fun uu___3 -> ()));
+             FStar_All.op_Bar_Greater uu___2 (fun uu___3 -> ()));
             (let uu___3 = FStar_Syntax_Print.term_to_string x in
              let uu___4 = FStar_Syntax_Print.term_to_string y in
              FStar_Util.print2 "Unify %s\nand %s\n" uu___3 uu___4);
@@ -80,11 +80,11 @@ let (unify :
                  let uu___5 =
                    let uu___6 = tcenv () in
                    FStar_TypeChecker_Rel.solve_deferred_constraints uu___6 in
-                 FStar_All.pipe_right uu___4 uu___5 in
+                 FStar_All.op_Bar_Greater uu___4 uu___5 in
                let uu___4 =
                  let uu___5 = tcenv () in
                  FStar_TypeChecker_Rel.simplify_guard uu___5 in
-               FStar_All.pipe_right uu___3 uu___4 in
+               FStar_All.op_Bar_Greater uu___3 uu___4 in
              guard_eq i g.FStar_TypeChecker_Common.guard_f g';
              check ();
              FStar_Options.init ())
@@ -105,7 +105,7 @@ let (should_fail :
                  let uu___2 =
                    let uu___3 = tcenv () in
                    FStar_TypeChecker_Rel.solve_deferred_constraints uu___3 in
-                 FStar_All.pipe_right uu___1 uu___2 in
+                 FStar_All.op_Bar_Greater uu___1 uu___2 in
                (match g.FStar_TypeChecker_Common.guard_f with
                 | FStar_TypeChecker_Common.Trivial ->
                     let uu___1 =
@@ -133,7 +133,7 @@ let (unify' : Prims.string -> Prims.string -> unit) =
         let uu___1 =
           let uu___2 = tcenv () in
           FStar_TypeChecker_Rel.solve_deferred_constraints uu___2 in
-        FStar_All.pipe_right uu___ uu___1 in
+        FStar_All.op_Bar_Greater uu___ uu___1 in
       let uu___ = FStar_Syntax_Print.term_to_string x1 in
       let uu___1 = FStar_Syntax_Print.term_to_string y1 in
       let uu___2 = guard_to_string g.FStar_TypeChecker_Common.guard_f in
@@ -178,11 +178,11 @@ let (run_all : unit -> Prims.bool) =
      let x =
        let uu___3 =
          FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None int_t in
-       FStar_All.pipe_right uu___3 FStar_Syntax_Syntax.bv_to_name in
+       FStar_All.op_Bar_Greater uu___3 FStar_Syntax_Syntax.bv_to_name in
      let y =
        let uu___3 =
          FStar_Syntax_Syntax.gen_bv "y" FStar_Pervasives_Native.None int_t in
-       FStar_All.pipe_right uu___3 FStar_Syntax_Syntax.bv_to_name in
+       FStar_All.op_Bar_Greater uu___3 FStar_Syntax_Syntax.bv_to_name in
      unify1 Prims.int_zero x x FStar_TypeChecker_Common.Trivial;
      (let uu___5 =
         let uu___6 =
@@ -222,7 +222,7 @@ let (run_all : unit -> Prims.bool) =
            FStar_TypeChecker_Common.NonTrivial uu___15 in
          unify1 (Prims.of_int (8)) uu___12 uu___13 uu___14);
         (let uu___13 = FStar_Main.process_args () in
-         FStar_All.pipe_right uu___13 (fun uu___14 -> ()));
+         FStar_All.op_Bar_Greater uu___13 (fun uu___14 -> ()));
         (let uu___13 =
            let uu___14 = FStar_Tests_Pars.tc "fun u x -> u x" in
            inst Prims.int_one uu___14 in

@@ -772,7 +772,7 @@ let rec (translate_module :
     match uu___ with
     | (module_name, modul, uu___1) ->
         let module_name1 =
-          FStar_List.append (FStar_Pervasives_Native.fst module_name)
+          FStar_List.op_At (FStar_Pervasives_Native.fst module_name)
             [FStar_Pervasives_Native.snd module_name] in
         let program1 =
           match modul with
@@ -2728,7 +2728,7 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
     | FStar_Extraction_ML_Syntax.MLC_String s ->
         ((let uu___1 =
             let uu___2 = FStar_String.list_of_string s in
-            FStar_All.pipe_right uu___2
+            FStar_All.op_Bar_Greater uu___2
               (FStar_Util.for_some
                  (fun c1 -> c1 = (FStar_Char.char_of_int Prims.int_zero))) in
           if uu___1
