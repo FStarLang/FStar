@@ -11,13 +11,15 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.o
+   limitations under the License.
 *)
 
 module Steel.FramingTestSuite
 
 open Steel.Memory
 open Steel.Effect
+
+/// A collection of small unit tests for the framing tactic
 
 assume val ref : Type0
 assume val ptr (_:ref) : vprop
