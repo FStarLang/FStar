@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "708622848b87c292a83f2eee2298a93b"
+      "471a57ef61a0fb197ffdcff264010795"
     ],
     [
       "GenericPartialDM4A.return",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_GenericPartialDM4A.equiv" ],
       0,
-      "dfccd0f2d49a50c7b09d25be6fed2398"
+      "0d02c9c9bc531fc0c640310e2c1ca20b"
     ],
     [
       "GenericPartialDM4A.and_elim_2",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a666a0f632fc0e2752d445984895a331"
+      "527a101c65a0c2abe61887b4339a7195"
     ],
     [
       "GenericPartialDM4A.iw_bind",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c11de73ff809a7f2a2ba82cc580ce052"
+      "111eedef5b6f68feee98327903c997c6"
     ],
     [
       "GenericPartialDM4A.bind",
@@ -67,8 +67,8 @@
         "equation_GenericPartialDM4A.repr", "equation_Prims.l_and",
         "equation_Prims.squash",
         "function_token_typing_GenericPartialDM4A.op_Less_Less_Equals",
-        "interpretation_Tm_abs_0aa6ad9312ecca152b75d5e74c14d42c",
-        "l_and-interp",
+        "interpretation_Tm_abs_8f24b79611474204e733ee095e5c454b",
+        "l_and-interp", "l_quant_interp_b318409532d0e00e9125f72f3b997468",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_741bf4048d874502c2e1a313e5db9687",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
@@ -78,7 +78,7 @@
         "unit_typing"
       ],
       0,
-      "7955c0399ac80aa2145a8baa506f604c"
+      "661bc14811faa9346255447296c8832f"
     ],
     [
       "GenericPartialDM4A.weaken",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ad8d8cf0b8ff3be65c88ea278d9d510f"
+      "2f558d3815cf4eefdfd5885f262ee584"
     ],
     [
       "GenericPartialDM4A.subcomp",
@@ -115,7 +115,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "bb8e71aa6441270425707bf66205e920"
+      "55367bb67ea54482efa1b384a27b078b"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -124,7 +124,7 @@
       1,
       [ "@query" ],
       0,
-      "415abfe8e2f9eb4592232846bb79f771"
+      "feb3f2254af00eda5da9b5e61a837c0c"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -146,7 +146,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "6ecfd80536646e0a25f35ea69fd04f8e"
+      "8ec6d3af98aa85ee66e4ec2071219c9d"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -170,7 +170,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "3e38ab773acfb86ff36b534a908fc36c"
+      "52ac5e643da558bfe4175328de0a14a4"
     ],
     [
       "GenericPartialDM4A.lift_pure_dm4a",
@@ -194,10 +194,10 @@
         "typing_Tm_abs_dbf003a9879e111684205aae0ef8682e"
       ],
       0,
-      "34f2d535b9c818b12d8d64e8e1e5a731"
+      "a2bff06d4bcad4fad6d3c0a00caeccd9"
     ],
     [
-      "GenericPartialDM4A.19324",
+      "GenericPartialDM4A.19305",
       1,
       2,
       1,
@@ -206,7 +206,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "70576926da418b1003ade2e8c3784062"
+      "6d9fc1a13091f711e2939d0aa602822d"
     ]
   ]
 ]
