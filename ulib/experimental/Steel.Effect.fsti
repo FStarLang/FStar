@@ -24,6 +24,9 @@ include Steel.Effect.Common
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
+/// This module defines the main Steel effect, with requires and ensures predicates operating on
+/// selectors, which will be discharged by SMT
+
 (* Defining the Steel effect with selectors *)
 
 val repr (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
