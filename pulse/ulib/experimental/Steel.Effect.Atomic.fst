@@ -529,12 +529,12 @@ let elim_pure #uses p =
 let intro_exists #a #opened x p =
   rewrite_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x (fun x -> hp_of (p x)) m)
 
-let witness_exists #a #u #p _ =
-  SteelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
-
 let intro_exists_erased #a #opened x p =
   rewrite_slprop (p x) (h_exists p)
     (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) (fun x -> hp_of (p x)) m)
+
+let witness_exists #a #u #p _ =
+  SteelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
 
 let lift_exists #a #u p =
   as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)))
