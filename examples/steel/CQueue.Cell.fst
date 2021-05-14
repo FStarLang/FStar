@@ -7,7 +7,7 @@ noeq
 type mcell (a: Type0) = {
   data: ref a;
   next: ref (mcell a);
-  all_or_none_null: squash (is_null data == is_null next);
+  all_or_none_null: squash (is_null data == is_null next); // TODO: /\ freeable data /\ freeable next, if freeable is implemented as a pure space proposition rather than as stateful permissions (i.e. "freeable if you have the whole permission")
 }
 #pop-options
 
@@ -23,91 +23,145 @@ let ccell_data #a c =
 let ccell_next #a c =
   c.next
 
-let vptr_pts_to
-  (#opened: _)
-  (#a: Type)
-  (r: ref a)
-: SteelGhost (Ghost.erased a) opened
-    (vptr r)
-    (fun v -> pts_to r full_perm v)
-    (fun _ -> True)
-    (fun h v _ -> Ghost.reveal v == h (vptr r))
-=
-  let v = gget (vptr r) in
-  change_slprop
-    (vptr r)
-    (pts_to r full_perm v)
-    v
-    (Ghost.hide ())
-    (fun m -> ptr_sel_interp r m);
-  v
+let ccell0_refine
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+  (_: t_of emp)
+: Tot prop
+= ccell_ptrvalue_is_null c == false
 
-#push-options "--ide_id_info_off"
+// unfold
+let ccell0_rewrite
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+  (_: t_of (emp `vrefine` ccell0_refine c))
+: Tot (ccell_lvalue a)
+= c
 
-// FIXME: WHY WHY WHY are the following two SO slow, even with the assumes? (and WHY WHY WHY do they fail without them?)
+[@@ __steel_reduce__]
+let ccell0 (a: Type0) (c: ccell_lvalue a) : Tot vprop =
+  (vptr (ccell_data c) `star` vptr (ccell_next c))
 
-let ccell_full_ccell
+// unfold
+let ccell_rewrite
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+  (x: dtuple2 (ccell_lvalue a) (vdep_payload (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c) (ccell0 a)))
+: GTot (vcell a)
+= let p =
+    dsnd #(ccell_lvalue a) #(vdep_payload (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c) (ccell0 a)) x
+  in
+  {
+    vcell_data = fst p;
+    vcell_next = snd p;
+  }
+
+[@@ __steel_reduce__ ; __reduce__] // to avoid manual unfoldings through change_slprop
+let ccell1
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: Tot vprop
+= emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a `vrewrite` ccell_rewrite c
+
+let ccell_hp
+  #a c
+= hp_of (ccell1 c)
+
+let ccell_sel
+  #a c
+= sel_of (ccell1 c)
+
+let intro_ccell
   #opened #a c
 =
-  let res : Ghost.erased (vcell a) = gget (ccell_full c) in
-  elim_vrewrite
-    (vptr (ccell_data c) `star` vptr (ccell_next c))
-    (ccell_rewrite c);
+  intro_vrefine emp (ccell0_refine c);
+  intro_vrewrite (emp `vrefine` ccell0_refine c) (ccell0_rewrite c);
   reveal_star (vptr (ccell_data c)) (vptr (ccell_next c));
-  let vdata : Ghost.erased a = vptr_pts_to (ccell_data c) in
-  assert (Ghost.reveal vdata == (Ghost.reveal res).vcell_data);
-  assert (vdata == Ghost.hide (Ghost.reveal res).vcell_data);
-  let vnext : Ghost.erased (ccell_ptrvalue a) = vptr_pts_to (ccell_next c) in
-  assert (Ghost.reveal vnext == (Ghost.reveal res).vcell_next);
-  assert (vnext == Ghost.hide (Ghost.reveal res).vcell_next);
-(* // wtf congruence?
-  assert (
-    pts_to (ccell_data c) full_perm vdata ==
-    pts_to (ccell_data c) full_perm (Ghost.hide  (Ghost.reveal res).vcell_data)
-  );
-  assert (
-    pts_to (ccell_next c) full_perm vnext ==
-    pts_to (ccell_next c) full_perm (Ghost.hide (Ghost.reveal res).vcell_next)
-  );
-*)
-  assume (
-    (pts_to (ccell_data c) full_perm vdata `star` pts_to (ccell_next c) full_perm vnext) ==
-    (ccell c full_perm res)
-  );
-  change_equal_slprop
-    (pts_to (ccell_data c) full_perm vdata `star` pts_to (ccell_next c) full_perm vnext)
-    (ccell c full_perm res);
-  res
+  intro_vdep
+    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c)
+    (vptr (ccell_data c) `star` vptr (ccell_next c))
+    (ccell0 a);
+  intro_vrewrite
+    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a)
+    (ccell_rewrite c);
+  change_slprop_rel
+    (ccell1 c)
+    (ccell c)
+    (fun x y -> x == y)
+    (fun m ->
+      assert_norm (hp_of (ccell1 c) == ccell_hp c);
+      assert_norm (sel_of (ccell1 c) m === sel_of (ccell c) m)
+    )
 
-let alloc_cell_full
-  #a data next
+let elim_ccell_ghost
+  #opened #a c
 =
-  let rdata = alloc data in
-  let vdata = gget (vptr rdata) in
-  assume (Ghost.reveal vdata == data);
-  let rnext = alloc next in
-  let vnext = gget (vptr rnext) in
-  assume (Ghost.reveal vnext == next);
-  let res : ccell_lvalue a = ({ data = rdata; next = rnext; all_or_none_null = () }) in
-  change_equal_slprop (vptr rdata) (vptr (ccell_data res));
-  change_equal_slprop (vptr rnext) (vptr (ccell_next res));
-  reveal_star (vptr (ccell_data res)) (vptr (ccell_next res));
-  intro_vrewrite (vptr (ccell_data res) `star` vptr (ccell_next res)) (ccell_rewrite res);
-  return res
+  change_slprop_rel
+    (ccell c)
+    (ccell1 c)
+    (fun x y -> x == y)
+    (fun m ->
+      assert_norm (hp_of (ccell1 c) == ccell_hp c);
+      assert_norm (sel_of (ccell1 c) m === sel_of (ccell c) m)
+    );
+  elim_vrewrite
+    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a)
+    (ccell_rewrite c);
+  let c' : Ghost.erased (ccell_lvalue a) = elim_vdep
+    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c)
+    (ccell0 a)
+  in
+  elim_vrewrite (emp `vrefine` ccell0_refine c) (ccell0_rewrite c);
+  elim_vrefine emp (ccell0_refine c);
+  change_equal_slprop
+    (ccell0 a c')
+    (vptr (ccell_data (Ghost.reveal c')) `star` vptr (ccell_next (Ghost.reveal c')));
+  reveal_star (vptr (ccell_data (Ghost.reveal c'))) (vptr (ccell_next (Ghost.reveal c')));
+  c'
+
+let elim_ccell
+  #opened #a c
+=
+  let c2 = elim_ccell_ghost c in
+  let c : ccell_lvalue a = c in
+  change_equal_slprop (vptr (ccell_data c2)) (vptr (ccell_data c));
+  change_equal_slprop (vptr (ccell_next c2)) (vptr (ccell_next c));
+  return c
+
+let ccell_not_null
+  #opened #a c
+=
+  let c1 = elim_ccell_ghost c in
+  let c2 : ccell_lvalue a = c in
+  change_equal_slprop (vptr (ccell_data c1)) (vptr (ccell_data c2));
+  change_equal_slprop (vptr (ccell_next c1)) (vptr (ccell_next c2));
+  intro_ccell c2;
+  change_equal_slprop (ccell c2) (ccell c);
+  ()
+
+let freeable _ = True
+
+let ralloc (#a:Type0) (x:a) : Steel (ref a)
+  emp (fun r -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> h1 (vptr r) == x /\ not (is_null r))
+=
+  alloc x
 
 let alloc_cell
   #a data next
 =
-  let pc = alloc_cell_full data next in
-  let vc = ccell_full_ccell pc in
-  let res = (pc, vc) in
-  change_equal_slprop
-    (ccell pc full_perm vc)
-    (ccell (fst res) full_perm (snd res));
+  let rdata = ralloc data in
+  let rnext = ralloc next in
+  let res : ccell_lvalue a = ({ data = rdata; next = rnext; all_or_none_null = () }) in
+  change_equal_slprop (vptr rdata) (vptr (ccell_data res));
+  change_equal_slprop (vptr rnext) (vptr (ccell_next res));
+  intro_ccell res;
   return res
 
 let free_cell
-  #a c v
+  #a c
 =
-  free_pt (ccell_data c);
-  free_pt (ccell_next c)
+  let c = elim_ccell c in
+  free (ccell_data c);
+  free (ccell_next c)
