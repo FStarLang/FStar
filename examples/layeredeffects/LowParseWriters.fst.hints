@@ -312,7 +312,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "1657804cc2d1a8a867d1790cd82458ea"
+      "8a85b7749b2a51f3de5d60c47e59bfc3"
     ],
     [
       "LowParseWriters.read_subcomp",
@@ -1808,7 +1808,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer"
       ],
       0,
-      "66717a2dd87a114d4f828a8064155918"
+      "836770da19dfbbe7bb6ed7f229ffa5e5"
     ],
     [
       "LowParseWriters.subcomp",
@@ -2199,6 +2199,7 @@
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.nat",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
+        "fuel_guarded_inversion_LowParseWriters.iresult",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_LowParseWriters.LowParse.u8",

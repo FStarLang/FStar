@@ -492,7 +492,7 @@
         "unit_inversion"
       ],
       0,
-      "7ec38e7ca50dedfaf348cd5fef320844"
+      "78c1b80744cb16758d7b8d90411573ac"
     ],
     [
       "UnionFind.lemma_merge_opt_helper",
@@ -574,7 +574,7 @@
         "typing_UnionFind.Functions.merge_opt"
       ],
       0,
-      "6ff6dc22b606b41db17f4eee1acaeb61"
+      "c46841702162de05e8066e658caa69ff"
     ],
     [
       "UnionFind.lemma_merge_height_independence",
@@ -627,7 +627,7 @@
         "typing_UnionFind.Forest.id", "typing_UnionFind.Functions.merge"
       ],
       0,
-      "85899a81d33c1ccd22f6f5a27b410578"
+      "6bf169bef067a8268fe4dfb04a823a50"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence_helper_diff",
@@ -850,7 +850,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "cc7ffc2c96961d225e071b8eda464096"
+      "0eb83f7e9d880d2d3ca239b5d8b26c0d"
     ]
   ]
 ]

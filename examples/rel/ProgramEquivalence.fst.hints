@@ -463,7 +463,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "66d39d7b784783cd93924582524ff8bb"
+      "a1cc80a22f9b76acccf8e2d2f2544a4e"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",
@@ -551,7 +551,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3c58f18f832f4f327a55f748e6b2981e"
+      "b20fae945a9d8602d75888340fabbf2b"
     ]
   ]
 ]
