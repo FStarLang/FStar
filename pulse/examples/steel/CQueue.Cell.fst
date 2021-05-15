@@ -23,20 +23,66 @@ let ccell_data #a c =
 let ccell_next #a c =
   c.next
 
-let ccell0_refine
-  (#a: Type0)
+let ccell_is_lvalue_refine
+  (#a: Type)
   (c: ccell_ptrvalue a)
   (_: t_of emp)
 : Tot prop
 = ccell_ptrvalue_is_null c == false
 
-// unfold
-let ccell0_rewrite
-  (#a: Type0)
+let ccell_is_lvalue_rewrite
+  (#a: Type)
   (c: ccell_ptrvalue a)
-  (_: t_of (emp `vrefine` ccell0_refine c))
-: Tot (ccell_lvalue a)
+  (_: normal (t_of (emp `vrefine` ccell_is_lvalue_refine c)))
+: GTot (ccell_lvalue a)
 = c
+
+[@@ __steel_reduce__; __reduce__ ]
+let ccell_is_lvalue0
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: Tot vprop
+= emp `vrefine` ccell_is_lvalue_refine c `vrewrite` ccell_is_lvalue_rewrite c
+
+let ccell_is_lvalue_hp
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: Tot (slprop u#1)
+= hp_of (ccell_is_lvalue0 c)
+
+let ccell_is_lvalue_sel
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: GTot (selector (ccell_lvalue a) (ccell_is_lvalue_hp c))
+= sel_of (ccell_is_lvalue0 c)
+
+let intro_ccell_is_lvalue
+ #_ #a c
+=
+  intro_vrefine emp (ccell_is_lvalue_refine c);
+  intro_vrewrite (emp `vrefine` ccell_is_lvalue_refine c) (ccell_is_lvalue_rewrite c);
+  change_slprop_rel
+    (ccell_is_lvalue0 c)
+    (ccell_is_lvalue c)
+    (fun x y -> x == y)
+    (fun m ->
+      assert_norm (hp_of (ccell_is_lvalue c) == hp_of (ccell_is_lvalue0 c));
+      assert_norm (sel_of (ccell_is_lvalue c) m === sel_of (ccell_is_lvalue0 c) m)
+    )
+
+let elim_ccell_is_lvalue
+  #_ #a c
+=
+  change_slprop_rel
+    (ccell_is_lvalue c)
+    (ccell_is_lvalue0 c)
+    (fun x y -> x == y)
+    (fun m ->
+      assert_norm (hp_of (ccell_is_lvalue c) == hp_of (ccell_is_lvalue0 c));
+      assert_norm (sel_of (ccell_is_lvalue c) m === sel_of (ccell_is_lvalue0 c) m)
+    );
+  elim_vrewrite (emp `vrefine` ccell_is_lvalue_refine c) (ccell_is_lvalue_rewrite c);
+  elim_vrefine emp (ccell_is_lvalue_refine c)
 
 [@@ __steel_reduce__]
 let ccell0 (a: Type0) (c: ccell_lvalue a) : Tot vprop =
@@ -46,10 +92,10 @@ let ccell0 (a: Type0) (c: ccell_lvalue a) : Tot vprop =
 let ccell_rewrite
   (#a: Type0)
   (c: ccell_ptrvalue a)
-  (x: dtuple2 (ccell_lvalue a) (vdep_payload (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c) (ccell0 a)))
+  (x: dtuple2 (ccell_lvalue a) (vdep_payload (ccell_is_lvalue c) (ccell0 a)))
 : GTot (vcell a)
 = let p =
-    dsnd #(ccell_lvalue a) #(vdep_payload (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c) (ccell0 a)) x
+    dsnd #(ccell_lvalue a) #(vdep_payload (ccell_is_lvalue c) (ccell0 a)) x
   in
   {
     vcell_data = fst p;
@@ -61,7 +107,7 @@ let ccell1
   (#a: Type0)
   (c: ccell_ptrvalue a)
 : Tot vprop
-= emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a `vrewrite` ccell_rewrite c
+= ccell_is_lvalue c `vdep` ccell0 a `vrewrite` ccell_rewrite c
 
 let ccell_hp
   #a c
@@ -74,15 +120,14 @@ let ccell_sel
 let intro_ccell
   #opened #a c
 =
-  intro_vrefine emp (ccell0_refine c);
-  intro_vrewrite (emp `vrefine` ccell0_refine c) (ccell0_rewrite c);
+  intro_ccell_is_lvalue c;
   reveal_star (vptr (ccell_data c)) (vptr (ccell_next c));
   intro_vdep
-    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c)
+    (ccell_is_lvalue c)
     (vptr (ccell_data c) `star` vptr (ccell_next c))
     (ccell0 a);
   intro_vrewrite
-    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a)
+    (ccell_is_lvalue c `vdep` ccell0 a)
     (ccell_rewrite c);
   change_slprop_rel
     (ccell1 c)
@@ -105,14 +150,13 @@ let elim_ccell_ghost
       assert_norm (sel_of (ccell1 c) m === sel_of (ccell c) m)
     );
   elim_vrewrite
-    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c `vdep` ccell0 a)
+    (ccell_is_lvalue c `vdep` ccell0 a)
     (ccell_rewrite c);
   let c' : Ghost.erased (ccell_lvalue a) = elim_vdep
-    (emp `vrefine` ccell0_refine c `vrewrite` ccell0_rewrite c)
+    (ccell_is_lvalue c)
     (ccell0 a)
   in
-  elim_vrewrite (emp `vrefine` ccell0_refine c) (ccell0_rewrite c);
-  elim_vrefine emp (ccell0_refine c);
+  elim_ccell_is_lvalue c;
   change_equal_slprop
     (ccell0 a c')
     (vptr (ccell_data (Ghost.reveal c')) `star` vptr (ccell_next (Ghost.reveal c')));

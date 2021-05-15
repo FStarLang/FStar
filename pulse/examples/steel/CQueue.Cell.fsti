@@ -37,6 +37,58 @@ type vcell (a: Type0) = {
   vcell_next : ccell_ptrvalue a;
 }
 
+val ccell_is_lvalue_hp
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: Tot (slprop u#1)
+
+val ccell_is_lvalue_sel
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: GTot (selector (ccell_lvalue a) (ccell_is_lvalue_hp c))
+
+
+[@@ __steel_reduce__]
+let ccell_is_lvalue'
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: GTot vprop'
+= {
+  hp = ccell_is_lvalue_hp c;
+  t = ccell_lvalue a;
+  sel = ccell_is_lvalue_sel c;
+}
+
+[@@ __steel_reduce__ ]
+let ccell_is_lvalue (#a: Type0) (c: ccell_ptrvalue a) : Tot vprop =
+  VUnit (ccell_is_lvalue' c)
+
+val intro_ccell_is_lvalue
+  (#opened: _)
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: SteelGhost unit opened
+    emp
+    (fun _ -> ccell_is_lvalue c)
+    (fun _ -> ccell_ptrvalue_is_null c == false)
+    (fun _ res h' ->
+      ccell_ptrvalue_is_null c == false /\
+      (h' (ccell_is_lvalue c) <: ccell_ptrvalue a) == c
+    )
+
+val elim_ccell_is_lvalue
+  (#opened: _)
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: SteelGhost unit opened
+    (ccell_is_lvalue c)
+    (fun _ -> emp)
+    (fun _ -> True)
+    (fun h _ _ ->
+      (h (ccell_is_lvalue c) <: ccell_ptrvalue a) == c /\
+      ccell_ptrvalue_is_null c == false
+    )
+
 val ccell_hp
   (#a: Type0)
   (c: ccell_ptrvalue a)
