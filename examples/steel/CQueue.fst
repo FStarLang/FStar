@@ -1060,6 +1060,35 @@ let llist_fragment_head_is_nil
       (llist_fragment_head l phead head)
   end
 
+val llist_fragment_head_cons_change_phead
+  (#opened: _)
+  (#a: Type)
+  (l: Ghost.erased (list a))
+  (phead: ref (ccell_ptrvalue a))
+  (head: ccell_ptrvalue a)
+  (phead' : ref (ccell_ptrvalue a))
+: SteelGhost unit opened
+    (llist_fragment_head l phead head)
+    (fun _ -> llist_fragment_head l phead' head)
+    (fun _ -> Cons? l)
+    (fun h _ h' -> h' (llist_fragment_head l phead' head) == h (llist_fragment_head l phead head))
+
+let llist_fragment_head_cons_change_phead
+  l phead head phead'
+=
+  let u = elim_llist_fragment_head_cons l phead head in
+  let head2 : ccell_lvalue _ = head in
+  change_equal_slprop
+    (ccell head)
+    (ccell head2);
+  change_equal_slprop
+    (llist_fragment_head u.ll_uncons_tl u.ll_uncons_pnext u.ll_uncons_next)
+    (llist_fragment_head u.ll_uncons_tl (ccell_next head2) u.ll_uncons_next);
+  let l' = intro_llist_fragment_head_cons phead' head2 u.ll_uncons_next u.ll_uncons_tl in
+  change_equal_slprop
+    (llist_fragment_head l' phead' head2)
+    (llist_fragment_head l phead' head)
+
 let queue_head_refine
   (#a: Type)
   (x: t a)
@@ -1273,22 +1302,11 @@ let dequeue #a x l =
       (queue x (snd res));
     return res
   end else begin
-    let u2 = elim_llist_fragment_head_cons u.ll_uncons_tl u.ll_uncons_pnext u.ll_uncons_next in
-    let next2 : Ghost.erased (ccell_lvalue a) = next in
+    llist_fragment_head_cons_change_phead u.ll_uncons_tl u.ll_uncons_pnext u.ll_uncons_next (cllist_head x);
+    intro_queue_head x u.ll_uncons_tl u.ll_uncons_next;
+    let res = (data, u.ll_uncons_tl) in
     change_equal_slprop
-      (ccell u.ll_uncons_next)
-      (ccell next2);
-    change_equal_slprop
-      (llist_fragment_head u2.ll_uncons_tl u2.ll_uncons_pnext u2.ll_uncons_next)
-      (llist_fragment_head u2.ll_uncons_tl (ccell_next next2) u2.ll_uncons_next);
-    let l' = intro_llist_fragment_head_cons (cllist_head x) next2 u2.ll_uncons_next u2.ll_uncons_tl in
-    change_equal_slprop
-      (llist_fragment_head l' (cllist_head x) next2)
-      (llist_fragment_head l' (cllist_head x) u.ll_uncons_next);
-    intro_queue_head x l' u.ll_uncons_next;
-    let res = (data, l') in
-    change_equal_slprop
-      (queue_head x l')
+      (queue_head x u.ll_uncons_tl)
       (queue x (snd res));
     return res
   end
