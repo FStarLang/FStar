@@ -183,8 +183,6 @@ let ccell_not_null
   change_equal_slprop (ccell c2) (ccell c);
   ()
 
-let freeable _ = True
-
 let ralloc (#a:Type0) (x:a) : Steel (ref a)
   emp (fun r -> vptr r)
   (requires fun _ -> True)

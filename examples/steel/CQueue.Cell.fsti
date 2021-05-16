@@ -167,8 +167,6 @@ val ccell_not_null
       h' (ccell c) == h (ccell c)
     )
 
-val freeable (#a: Type0) (c: ccell_ptrvalue a) : Tot prop
-
 val alloc_cell
   (#a: Type0)
   (data: a)
@@ -178,15 +176,12 @@ val alloc_cell
     (fun res -> ccell res)
     (requires (fun _ -> True))
     (ensures (fun _ res h' ->
-      h' (ccell res) == ({ vcell_data = data; vcell_next = next; }) /\
-      freeable res
+      h' (ccell res) == ({ vcell_data = data; vcell_next = next; })
     ))
 
 val free_cell
   (#a: Type0)
   (c: ccell_ptrvalue a) // could be ccell_lvalue, but ccell gives the right refinement
-: Steel unit
+: SteelT unit
     (ccell c)
     (fun _ -> emp)
-    (fun _ -> freeable c)
-    (fun _ _ _ -> True)
