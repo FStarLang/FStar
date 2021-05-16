@@ -37,30 +37,6 @@ let vconst'
   sel = vconst_sel x;
 }
 
-val intro_vdep2 (#opened:inames)
-  (v: vprop)
-  (q: vprop)
-  (x: t_of v)
-  (p: (t_of v -> Tot vprop))
-: SteelGhost unit opened
-    (v `star` q)
-    (fun _ -> vdep v p)
-    (requires (fun h ->
-      q == p x /\
-      x == h v
-    ))
-    (ensures (fun h _ h' ->
-      let x2 = h' (vdep v p) in
-      q == p (h v) /\
-      dfst x2 == (h v) /\
-      dsnd x2 == (h q)
-    ))
-
-let intro_vdep2
-  v q x p
-=
-  intro_vdep v q p
-
 [@@ __steel_reduce__]
 let vconst (#a: Type) (x: a) : Tot vprop = VUnit (vconst' x)
 
@@ -95,6 +71,185 @@ let elim_vconst
     emp
     (fun y _ -> y == x)
     (fun _ -> ())
+
+let vpure_sel'
+  (p: prop)
+: Tot (selector' (squash p) (Steel.Memory.pure p))
+= fun (m: hmem (Steel.Memory.pure p)) -> pure_interp p m
+
+let vpure_sel
+  (p: prop)
+: Tot (selector (squash p) (Steel.Memory.pure p))
+= vpure_sel' p
+
+[@@ __steel_reduce__]
+let vpure'
+  (p: prop)
+: GTot vprop'
+= {
+  hp = Steel.Memory.pure p;
+  t = squash p;
+  sel = vpure_sel p;
+}
+
+[@@ __steel_reduce__]
+let vpure (p: prop) : Tot vprop = VUnit (vpure' p)
+
+let intro_vpure
+  (#opened: _)
+  (p: prop)
+: SteelGhost unit opened
+    emp
+    (fun _ -> vpure p)
+    (fun _ -> p)
+    (fun _ _ h' -> p)
+=
+  change_slprop_rel
+    emp
+    (vpure p)
+    (fun _ _ -> p)
+    (fun m -> pure_interp p m)
+
+let elim_vpure
+  (#opened: _)
+  (p: prop)
+: SteelGhost unit opened
+    (vpure p)
+    (fun _ -> emp)
+    (fun _ -> True)
+    (fun _ _ _ -> p)
+=
+  change_slprop_rel
+    (vpure p)
+    emp
+    (fun _ _ -> p)
+    (fun m -> pure_interp p m; reveal_emp (); intro_emp m)
+
+val intro_vdep2 (#opened:inames)
+  (v: vprop)
+  (q: vprop)
+  (x: t_of v)
+  (p: (t_of v -> Tot vprop))
+: SteelGhost unit opened
+    (v `star` q)
+    (fun _ -> vdep v p)
+    (requires (fun h ->
+      q == p x /\
+      x == h v
+    ))
+    (ensures (fun h _ h' ->
+      let x2 = h' (vdep v p) in
+      q == p (h v) /\
+      dfst x2 == (h v) /\
+      dsnd x2 == (h q)
+    ))
+
+let intro_vdep2
+  v q x p
+=
+  intro_vdep v q p
+
+let vbind0_rewrite
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+  (x: normal (t_of (vdep a b)))
+: Tot t
+= dsnd x
+
+[@@__steel_reduce__; __reduce__]
+let vbind0
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: Tot vprop
+= a `vdep` b `vrewrite` vbind0_rewrite a t b
+
+let vbind_hp // necessary to hide the attribute on hp_of
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: Tot (slprop u#1)
+= hp_of (vbind0 a t b)
+
+let vbind_sel // same for hp_sel
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: GTot (selector t (vbind_hp a t b))
+= sel_of (vbind0 a t b)
+
+[@@__steel_reduce__]
+let vbind'
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: GTot vprop'
+= {
+  hp = vbind_hp a t b;
+  t = t;
+  sel = vbind_sel a t b;
+}
+
+[@@__steel_reduce__]
+let vbind
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: Tot vprop
+= VUnit (vbind' a t b)
+
+let intro_vbind
+  (#opened: _)
+  (a: vprop)
+  (b' : vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: SteelGhost unit opened
+    (a `star` b')
+    (fun _ -> vbind a t b)
+    (fun h -> b' == b (h a))
+    (fun h _ h' ->
+      b' == b (h a) /\
+      h' (vbind a t b) == h b'
+    )
+=
+  intro_vdep
+    a
+    b'
+    b;
+  intro_vrewrite
+    (a `vdep` b)
+    (vbind0_rewrite a t b);
+  change_slprop_rel
+    (vbind0 a t b)
+    (vbind a t b)
+    (fun x y -> x == y)
+    (fun _ -> ())
+
+let elim_vbind
+  (#opened: _)
+  (a: vprop)
+  (t: Type0)
+  (b: (t_of a -> Pure vprop (requires True) (ensures (fun y -> t_of y == t))))
+: SteelGhost (Ghost.erased (t_of a)) opened
+    (vbind a t b)
+    (fun res -> a `star` b (Ghost.reveal res))
+    (fun h -> True)
+    (fun h res h' ->
+      h' a == Ghost.reveal res /\
+      h' (b (Ghost.reveal res)) == h (vbind a t b)
+    )
+=
+  change_slprop_rel
+    (vbind a t b)
+    (vbind0 a t b)
+    (fun x y -> x == y)
+    (fun _ -> ());
+  elim_vrewrite
+    (a `vdep` b)
+    (vbind0_rewrite a t b);
+  elim_vdep a b
 
 let (==) (#a:_) (x y: a) : prop = x == y
 
