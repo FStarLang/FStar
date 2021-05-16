@@ -1169,9 +1169,67 @@ let elim_queue_head
   reveal_star_3 (vptr (cllist_head x)) (llist_fragment_head l (cllist_head x) hd) (vptr (cllist_tail x));
   hd
 
-let queue = admit ()
-let create_queue = admit ()
-let enqueue #a = admit ()
+let queue_head_to_tail
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+: SteelGhostT unit opened
+    (queue_head x l)
+    (fun _ -> queue_tail x l)
+=
+  let hd = elim_queue_head x l in
+  let tl = llist_fragment_head_to_tail l (cllist_head x) hd in
+  intro_queue_tail x l tl
+
+let queue_tail_to_head
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+: SteelGhostT unit opened
+    (queue_tail x l)
+    (fun _ -> queue_head x l)
+=
+  let tl = elim_queue_tail x l in
+  let hd = llist_fragment_tail_to_head l (cllist_head x) tl in
+  intro_queue_head x l hd
+
+(* We choose the head representation, since queue_is_empty and dequeue
+need the head representation, but only enqueue needs the tail
+representation. *)
+
+[@@__reduce__]
+let queue x l = queue_head x l
+
+#push-options "--ide_id_info_off" // necessary because of fst, snd in the post-resource (likely caught by normal(). This does not happen with other projectors)
+
+let create_queue a =
+  let head = ccell_ptrvalue_null a in
+  let tail : ref (ccell_ptrvalue a) = null in
+  let l0 = alloc_llist head tail in
+  let l = elim_cllist l0 in
+  write (cllist_tail l) (cllist_head l);
+  intro_llist_fragment_head_nil [] (cllist_head l) (Ghost.reveal (Ghost.hide head));
+  reveal_star_3 (vptr (cllist_head l)) (llist_fragment_head [] (cllist_head l) (Ghost.reveal (Ghost.hide head))) (vptr (cllist_tail l));
+  intro_queue_head l [] head;
+  let res : (t a & Ghost.erased (v a)) = (l0, Ghost.hide []) in
+  change_equal_slprop
+    (queue_head l [])
+    (queue (fst res) (snd res));
+  return res
+
+let enqueue #a x l w =
+  queue_head_to_tail x l;
+  let ptail0 = elim_queue_tail x l in
+  let ptail = read (cllist_tail x) in
+  let next : ccell_ptrvalue a = ccell_ptrvalue_null a in
+  let c0 = alloc_cell w next in
+  let c = elim_ccell c0 in
+//  let l' = intro_llist_fragment_tail_snoc l (cllist_head x) ptail 
+  sladmit ();
+  return l
+
 let queue_is_empty #a = admit ()
 let dequeue #a = admit ()
 
