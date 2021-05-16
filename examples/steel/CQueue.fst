@@ -714,14 +714,251 @@ let elim_queue_tail
 
 (* view from the head *)
 
-let rec llist_fragment_head (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a) : Pure vprop
-  (requires True)
-  (ensures (fun v -> t_of v == ref (ccell_ptrvalue a) & ccell_ptrvalue a))
+let llist_fragment_head_data_refine
+  (#a: Type)
+  (d: a)
+  (c: vcell a)
+: Tot prop
+= c.vcell_data == d
+
+let llist_fragment_head_payload
+  (#a: Type)
+  (head: ccell_ptrvalue a)
+  (d: a)
+  (llist_fragment_head: (ref (ccell_ptrvalue a) -> ccell_ptrvalue a -> Tot vprop))
+  (x: t_of (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine d)))
+: Tot vprop
+=
+  llist_fragment_head (ccell_next (fst x)) (snd x).vcell_next
+
+let rec llist_fragment_head (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a) : Tot vprop
   (decreases (Ghost.reveal l))
 =
   if Nil? l
-  then emp `vrewrite` (fun _ -> (phead, head))
-  else ((emp `vrefine` (fun _ -> ccell_ptrvalue_is_null head == false) `vrewrite` (fun _ -> (head <: ccell_lvalue a))) `vdep` (fun (head: ccell_lvalue a) -> (vptr (ccell_data head) `vrefine` (fun (d: a) -> d == L.hd (Ghost.reveal l))) `star` (vptr (ccell_next head) `vdep` (fun (tl: ccell_ptrvalue a) -> llist_fragment_head (L.tl (Ghost.reveal l)) (ccell_next head) tl)))) `vrewrite` (fun (| _, (_, (| _, ptl |) ) |) -> ptl <: (ref (ccell_ptrvalue a) & ccell_ptrvalue a))
+  then vconst (phead, head)
+  else
+    vbind
+      (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd (Ghost.reveal l))))
+      (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+      (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))
+
+let t_of_llist_fragment_head
+  (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a)
+: Lemma
+  (t_of (llist_fragment_head l phead head) == ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+= ()
+
+let llist_fragment_head_eq_cons
+  (#a: Type) (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a)
+: Lemma
+  (requires (Cons? (Ghost.reveal l)))
+  (ensures (
+    llist_fragment_head l phead head ==
+    vbind
+      (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd (Ghost.reveal l))))
+      (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+      (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))    
+  ))
+= assert_norm
+    (llist_fragment_head l phead head == (
+      if Nil? l
+      then vconst (phead, head)
+      else
+        vbind
+          (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd (Ghost.reveal l))))
+          (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+          (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))
+    ))
+
+assume
+val llist_fragment_head_cons
+  (#opened: _)
+  (#a: Type) (phead: ref (ccell_ptrvalue a)) (head: ccell_lvalue a) (next: (ccell_ptrvalue a)) (tl: Ghost.erased (list a))
+: SteelGhost (Ghost.erased (list a)) opened
+    (ccell head `star` llist_fragment_head tl (ccell_next head) next)
+    (fun res -> llist_fragment_head res phead head)
+    (fun h -> (h (ccell head)).vcell_next == next)
+    (fun h res h' ->
+      Ghost.reveal res == (h (ccell head)).vcell_data :: Ghost.reveal tl /\
+      h' (llist_fragment_head res phead head) == h (llist_fragment_head tl (ccell_next head) next)
+    )
+
+[@@erasable]
+noeq
+type ll_uncons_t
+  (a: Type)
+= {
+  ll_uncons_pnext: Ghost.erased (ref (ccell_ptrvalue a));
+  ll_uncons_next: Ghost.erased (ccell_ptrvalue a);
+  ll_uncons_tl: Ghost.erased (list a);
+}
+
+assume
+val llist_fragment_head_uncons
+  (#opened: _)
+  (#a: Type)
+  (l: Ghost.erased (list a))
+  (phead: ref (ccell_ptrvalue a))
+  (head: ccell_ptrvalue a)
+: SteelGhost (ll_uncons_t a) opened
+    (llist_fragment_head l phead head)
+    (fun res -> ccell head `star` llist_fragment_head res.ll_uncons_tl res.ll_uncons_pnext res.ll_uncons_next)
+    (fun _ -> Cons? (Ghost.reveal l))
+    (fun h res h' ->
+      ccell_ptrvalue_is_null head == false /\
+      Ghost.reveal l == (h' (ccell head)).vcell_data :: Ghost.reveal res.ll_uncons_tl /\
+      Ghost.reveal res.ll_uncons_pnext == ccell_next head /\
+      Ghost.reveal res.ll_uncons_next == (h' (ccell head)).vcell_next /\
+      h' (llist_fragment_head res.ll_uncons_tl res.ll_uncons_pnext res.ll_uncons_next) == h (llist_fragment_head l phead head)
+    )
+
+unfold
+let sel_llist_fragment_head
+  (#a:Type) (#p:vprop)
+  (l: Ghost.erased (list a)) (phead: ref (ccell_ptrvalue a)) (head: ccell_ptrvalue a)
+  (h: rmem p { (* FStar.Tactics.with_tactic selector_tactic *) (can_be_split p (llist_fragment_head l phead head)) })
+: GTot (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+=
+  coerce (h (llist_fragment_head l phead head)) (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+
+assume
+val llist_fragment_head_append
+  (#opened: _)
+  (#a: Type)
+  (l1: Ghost.erased (list a))
+  (phead1: ref (ccell_ptrvalue a))
+  (head1: ccell_ptrvalue a)
+  (l2: Ghost.erased (list a))
+  (phead2: ref (ccell_ptrvalue a))
+  (head2: ccell_ptrvalue a)
+: SteelGhost (Ghost.erased (list a)) opened
+    (llist_fragment_head l1 phead1 head1 `star` llist_fragment_head l2 phead2 head2)
+    (fun l -> llist_fragment_head l phead1 head1)
+    (fun h -> sel_llist_fragment_head l1 phead1 head1 h == (Ghost.reveal phead2, Ghost.reveal head2))
+    (fun h l h' ->
+      Ghost.reveal l == Ghost.reveal l1 `L.append` Ghost.reveal l2 /\
+      h' (llist_fragment_head l phead1 head1) == h (llist_fragment_head l2 phead2 head2)
+    )
+
+let rec llist_fragment_head_to_tail
+  (#opened: _)
+  (#a: Type)
+  (l: Ghost.erased (list a))
+  (phead: ref (ccell_ptrvalue a))
+  (head: ccell_ptrvalue a)
+: SteelGhost (Ghost.erased (ref (ccell_ptrvalue a))) opened
+    (vptr phead `star` llist_fragment_head l phead head)
+    (fun res -> llist_fragment_tail l phead `star` vptr res) 
+    (fun h -> h (vptr phead) == head)
+    (fun h res h' ->
+      let v = sel_llist_fragment_head l phead head h in
+      fst v == Ghost.reveal res /\
+      fst v == sel_llist_fragment_tail l phead h' /\
+      snd v == h' (vptr res)
+    )
+    (decreases (L.length (Ghost.reveal l)))
+=
+  if Nil? l
+  then begin
+    let ptail = Ghost.hide phead in
+    let gh = gget (vptr phead) in
+    assert (Ghost.reveal gh == head);
+    change_equal_slprop
+      (llist_fragment_head l phead head)
+      (vconst (phead, head));
+    elim_vconst (phead, head);
+    intro_vconst phead;
+    change_equal_slprop
+      (vconst phead)
+      (llist_fragment_tail l phead);
+    change_equal_slprop
+      (vptr phead)
+      (vptr ptail);
+    ptail
+  end else begin
+    intro_vconst phead;
+    change_equal_slprop
+      (vconst phead)
+      (llist_fragment_tail [] phead);
+    change_equal_slprop
+      (vptr phead)
+      (vptr (Ghost.reveal (Ghost.hide phead)));
+    let uc = llist_fragment_head_uncons l phead head in
+    let head' = elim_ccell_ghost head in
+    change_equal_slprop
+      (vptr (ccell_next head'))
+      (vptr uc.ll_uncons_pnext);
+    let lc = llist_fragment_tail_snoc [] phead phead head' in
+    let ptail = llist_fragment_head_to_tail
+      uc.ll_uncons_tl
+      uc.ll_uncons_pnext
+      uc.ll_uncons_next
+    in
+    let l' = llist_fragment_tail_append phead lc uc.ll_uncons_pnext uc.ll_uncons_tl in
+    change_equal_slprop
+      (llist_fragment_tail l' phead)
+      (llist_fragment_tail l phead);
+    ptail
+  end
+
+let rec llist_fragment_tail_to_head
+  (#opened: _)
+  (#a: Type)
+  (l: Ghost.erased (list a))
+  (phead: ref (ccell_ptrvalue a))
+  (ptail: ref (ccell_ptrvalue a))
+: SteelGhost (Ghost.erased (ccell_ptrvalue a)) opened
+    (llist_fragment_tail l phead `star` vptr ptail) 
+    (fun head -> vptr phead `star` llist_fragment_head l phead (Ghost.reveal head))
+    (fun h -> Ghost.reveal ptail == sel_llist_fragment_tail l phead h)
+    (fun h head h' ->
+      let v = sel_llist_fragment_head l phead head h' in
+      fst v == ptail /\
+      snd v == h (vptr ptail) /\
+      h' (vptr phead) == Ghost.reveal head
+    )
+    (decreases (L.length (Ghost.reveal l)))
+=
+  if Nil? l
+  then begin
+    let g = gget (llist_fragment_tail l phead) in
+    assert (Ghost.reveal g == ptail);
+    change_equal_slprop
+      (llist_fragment_tail l phead)
+      (vconst phead);
+    elim_vconst phead;
+    change_equal_slprop
+      (vptr ptail)
+      (vptr phead);
+    let head = gget (vptr phead) in
+    intro_vconst (phead, Ghost.reveal head);
+    change_equal_slprop
+      (vconst (phead, Ghost.reveal head))
+      (llist_fragment_head l phead head);
+    head
+  end else begin
+    let us = llist_fragment_tail_unsnoc l phead in
+    let tail = gget (vptr ptail) in
+    intro_vconst (ptail, Ghost.reveal tail);
+    change_equal_slprop
+      (vconst (ptail, Ghost.reveal tail))
+      (llist_fragment_head [] (ccell_next us.ll_unsnoc_tail) tail);
+    change_equal_slprop
+      (vptr ptail)
+      (vptr (ccell_next us.ll_unsnoc_tail));
+    intro_ccell us.ll_unsnoc_tail;
+    let lc = llist_fragment_head_cons us.ll_unsnoc_ptail us.ll_unsnoc_tail tail [] in
+    let head = llist_fragment_tail_to_head us.ll_unsnoc_l phead us.ll_unsnoc_ptail in
+    let g = gget (llist_fragment_head us.ll_unsnoc_l phead head) in
+    let g : Ghost.erased (ref (ccell_ptrvalue a) & ccell_ptrvalue a) = Ghost.hide (Ghost.reveal g) in
+    assert (Ghost.reveal g == (Ghost.reveal us.ll_unsnoc_ptail, Ghost.reveal us.ll_unsnoc_tail));
+    let l' = llist_fragment_head_append us.ll_unsnoc_l phead head lc us.ll_unsnoc_ptail us.ll_unsnoc_tail in
+    change_equal_slprop
+      (llist_fragment_head l' phead head)
+      (llist_fragment_head l phead head);
+    head
+  end
+
 
 let queue_head
   (#a: Type)
