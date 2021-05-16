@@ -1060,13 +1060,114 @@ let llist_fragment_head_is_nil
       (llist_fragment_head l phead head)
   end
 
+let queue_head_refine
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+  (hd: ccell_ptrvalue a)
+  (ptl: t_of (llist_fragment_head l (cllist_head x) hd))
+  (tl: ref (ccell_ptrvalue a))
+: Tot prop
+= let ptl : (ref (ccell_ptrvalue a) & ccell_ptrvalue a) = ptl in
+  tl == fst ptl /\ ccell_ptrvalue_is_null (snd ptl) == true
+
+let queue_head_dep1
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+  (hd: ccell_ptrvalue a)
+  (ptl: t_of (llist_fragment_head l (cllist_head x) hd))
+: Tot vprop
+= vptr (cllist_tail x) `vrefine` queue_head_refine x l hd ptl
+
+let queue_head_dep2
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+  (hd: ccell_ptrvalue a)
+: Tot vprop
+= llist_fragment_head l (cllist_head x) hd `vdep` queue_head_dep1 x l hd
+
+[@@__reduce__]
 let queue_head
   (#a: Type)
   (x: t a)
   (l: Ghost.erased (list a))
 : Tot vprop
-= vptr (cllist_head x) `vdep` (fun hd -> llist_fragment_head l (cllist_head x) hd `vdep` (fun (ptl: (ref (ccell_ptrvalue a) & ccell_ptrvalue a)) -> vptr (cllist_tail x) `vrefine` (fun tl -> tl == fst ptl /\ ccell_ptrvalue_is_null (snd ptl) == true)))
+= vptr (cllist_head x) `vdep` queue_head_dep2 x l
 
+val intro_queue_head
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+  (hd: Ghost.erased (ccell_ptrvalue a))
+: SteelGhost unit opened
+    (vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x))
+    (fun _ -> queue_head x l)
+    (fun h -> (
+        can_be_split (vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x)) (llist_fragment_head l (cllist_head x) hd) /\
+        can_be_split (vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x)) (vptr (cllist_head x))
+      ) ==> (
+        let frag = (sel_llist_fragment_head l (cllist_head x) hd) h in
+        h (vptr (cllist_head x)) == Ghost.reveal hd /\
+        h (vptr (cllist_tail x)) == fst frag /\
+        ccell_ptrvalue_is_null (snd frag) == true
+    ))
+    (fun _ _ _ -> True)
+
+let intro_queue_head
+  #_ #a x l hd
+=
+  reveal_star_3 (vptr (cllist_head x)) (llist_fragment_head l (cllist_head x) hd) (vptr (cllist_tail x));
+  let ptl = gget (llist_fragment_head l (cllist_head x) hd) in
+  intro_vrefine
+    (vptr (cllist_tail x))
+    (queue_head_refine x l hd ptl);
+  assert_norm (vptr (cllist_tail x) `vrefine` queue_head_refine x l hd ptl == queue_head_dep1 x l hd ptl);
+  intro_vdep
+    (llist_fragment_head l (cllist_head x) hd)
+    (vptr (cllist_tail x) `vrefine` queue_head_refine x l hd ptl)
+    (queue_head_dep1 x l hd);
+  intro_vdep
+    (vptr (cllist_head x))
+    (llist_fragment_head l (cllist_head x) hd `vdep` queue_head_dep1 x l hd)
+    (queue_head_dep2 x l)
+
+val elim_queue_head
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list a))
+: SteelGhost (Ghost.erased (ccell_ptrvalue a)) opened
+    (queue_head x l)
+    (fun hd -> vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x))
+    (fun _ -> True)
+    (fun _ hd h -> (
+        can_be_split (vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x)) (llist_fragment_head l (cllist_head x) hd) /\
+        can_be_split (vptr (cllist_head x) `star` llist_fragment_head l (cllist_head x) hd `star` vptr (cllist_tail x)) (vptr (cllist_head x)) /\ (
+        let frag = (sel_llist_fragment_head l (cllist_head x) hd) h in
+        h (vptr (cllist_head x)) == Ghost.reveal hd /\
+        h (vptr (cllist_tail x)) == fst frag /\
+        ccell_ptrvalue_is_null (snd frag) == true
+    )))
+
+let elim_queue_head
+  #_ #a x l
+=
+  let hd = elim_vdep
+    (vptr (cllist_head x))
+    (queue_head_dep2 x l)
+  in
+  let ptl = elim_vdep
+    (llist_fragment_head l (cllist_head x) hd)
+    (queue_head_dep1 x l hd)
+  in
+  elim_vrefine
+    (vptr (cllist_tail x))
+    (queue_head_refine x l hd ptl);
+  reveal_star_3 (vptr (cllist_head x)) (llist_fragment_head l (cllist_head x) hd) (vptr (cllist_tail x));
+  hd
 
 let queue = admit ()
 let create_queue = admit ()
