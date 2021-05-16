@@ -1022,6 +1022,44 @@ let rec llist_fragment_tail_to_head
 
 #pop-options
 
+val llist_fragment_head_is_nil
+  (#opened: _)
+  (#a: Type)
+  (l: Ghost.erased (list a))
+  (phead: ref (ccell_ptrvalue a))
+  (head: ccell_ptrvalue a)
+: SteelGhost unit opened
+    (llist_fragment_head l phead head)
+    (fun _ -> llist_fragment_head l phead head)
+    (fun h -> ccell_ptrvalue_is_null (snd (sel_llist_fragment_head l phead head h)) == true)
+    (fun h _ h' ->
+      Nil? l == ccell_ptrvalue_is_null head /\
+      h' (llist_fragment_head l phead head) == h (llist_fragment_head l phead head)
+    )
+
+let llist_fragment_head_is_nil
+  l phead head
+=
+  if Nil? l
+  then begin
+    elim_llist_fragment_head_nil l phead head;
+    assert (ccell_ptrvalue_is_null head == true);
+    intro_llist_fragment_head_nil l phead head
+  end else begin
+    let r = elim_llist_fragment_head_cons l phead head in
+    let head2 : ccell_lvalue _ = head in
+    change_equal_slprop
+      (llist_fragment_head r.ll_uncons_tl r.ll_uncons_pnext r.ll_uncons_next)
+      (llist_fragment_head r.ll_uncons_tl (ccell_next head2) r.ll_uncons_next);
+    change_equal_slprop
+      (ccell head)
+      (ccell head2);
+    let l' = intro_llist_fragment_head_cons phead head2 r.ll_uncons_next r.ll_uncons_tl in
+    change_equal_slprop
+      (llist_fragment_head l' phead head2)
+      (llist_fragment_head l phead head)
+  end
+
 let queue_head
   (#a: Type)
   (x: t a)
