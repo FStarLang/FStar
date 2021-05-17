@@ -854,7 +854,6 @@ let llist_fragment_head_eq_cons
           (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))
     ))
 
-assume
 val intro_llist_fragment_head_cons
   (#opened: _)
   (#a: Type) (phead: ref (ccell_ptrvalue a)) (head: ccell_lvalue a) (next: (ccell_ptrvalue a)) (tl: Ghost.erased (list a))
@@ -867,6 +866,28 @@ val intro_llist_fragment_head_cons
       h' (llist_fragment_head res phead head) == h (llist_fragment_head tl (ccell_next head) next)
     )
 
+let intro_llist_fragment_head_cons
+  #_ #a phead head next tl
+=
+  let vc = gget (ccell head) in
+  let l' : (l' : Ghost.erased (list a) { Cons? l' }) = Ghost.hide (vc.vcell_data :: tl) in
+  intro_ccell_is_lvalue head;
+  intro_vrefine (ccell head) (llist_fragment_head_data_refine (L.hd l'));
+  reveal_star (ccell_is_lvalue head) (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l'));
+  intro_vbind
+    (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l')))
+    (llist_fragment_head tl (ccell_next head) next)
+    (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+    (llist_fragment_head_payload head (L.hd l') (llist_fragment_head (L.tl l')));
+  llist_fragment_head_eq_cons l' phead head;
+  change_equal_slprop
+    (vbind
+      (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l')))
+      (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+      (llist_fragment_head_payload head (L.hd l') (llist_fragment_head (L.tl l'))))
+    (llist_fragment_head l' phead head);
+  l'
+
 [@@erasable]
 noeq
 type ll_uncons_t
@@ -877,7 +898,6 @@ type ll_uncons_t
   ll_uncons_tl: Ghost.erased (list a);
 }
 
-assume
 val elim_llist_fragment_head_cons
   (#opened: _)
   (#a: Type)
@@ -896,8 +916,41 @@ val elim_llist_fragment_head_cons
       h' (llist_fragment_head res.ll_uncons_tl res.ll_uncons_pnext res.ll_uncons_next) == h (llist_fragment_head l phead head)
     )
 
-assume
-val llist_fragment_head_append
+let elim_llist_fragment_head_cons
+  #_ #a l0 phead head
+=
+  let l : (l : Ghost.erased (list a) { Cons? l }) = l0 in
+  change_equal_slprop
+    (llist_fragment_head l0 phead head)
+    (llist_fragment_head l phead head);
+  llist_fragment_head_eq_cons l phead head;
+  change_equal_slprop
+    (llist_fragment_head l phead head)
+    (vbind
+      (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l)))
+      (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+      (llist_fragment_head_payload head (L.hd l) (llist_fragment_head (L.tl l))));
+  let x = elim_vbind
+      (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l)))
+      (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
+      (llist_fragment_head_payload head (L.hd l) (llist_fragment_head (L.tl l)))
+  in
+  reveal_star (ccell_is_lvalue head) (ccell head `vrefine` llist_fragment_head_data_refine (L.hd l));
+  let head2 = gget (ccell_is_lvalue head) in
+  elim_ccell_is_lvalue head;
+  elim_vrefine (ccell head) (llist_fragment_head_data_refine (L.hd l));
+  let vhead2 = gget (ccell head) in
+  let res = {
+    ll_uncons_pnext = ccell_next head2;
+    ll_uncons_next = vhead2.vcell_next;
+    ll_uncons_tl = L.tl l;
+  } in
+  change_equal_slprop
+    (llist_fragment_head_payload head (L.hd l) (llist_fragment_head (L.tl l)) (Ghost.reveal x))
+    (llist_fragment_head res.ll_uncons_tl res.ll_uncons_pnext res.ll_uncons_next);
+  res
+
+let rec llist_fragment_head_append
   (#opened: _)
   (#a: Type)
   (l1: Ghost.erased (list a))
@@ -914,6 +967,31 @@ val llist_fragment_head_append
       Ghost.reveal l == Ghost.reveal l1 `L.append` Ghost.reveal l2 /\
       h' (llist_fragment_head l phead1 head1) == h (llist_fragment_head l2 phead2 head2)
     )
+    (decreases (Ghost.reveal l1))
+=
+  if Nil? l1
+  then begin
+    elim_llist_fragment_head_nil l1 phead1 head1;
+    change_equal_slprop
+      (llist_fragment_head l2 phead2 head2)
+      (llist_fragment_head l2 phead1 head1);
+    l2
+  end else begin
+    let u = elim_llist_fragment_head_cons l1 phead1 head1 in
+    let head1' : Ghost.erased (ccell_lvalue a) = head1 in
+    let l3 = llist_fragment_head_append u.ll_uncons_tl u.ll_uncons_pnext u.ll_uncons_next l2 phead2 head2 in
+    change_equal_slprop
+      (llist_fragment_head l3 u.ll_uncons_pnext u.ll_uncons_next)
+      (llist_fragment_head l3 (ccell_next head1') u.ll_uncons_next);
+    change_equal_slprop
+      (ccell head1)
+      (ccell head1');
+    let l4 = intro_llist_fragment_head_cons phead1 head1' u.ll_uncons_next l3 in
+    change_equal_slprop
+      (llist_fragment_head l4 phead1 head1')
+      (llist_fragment_head l4 phead1 head1);
+    l4
+  end
 
 let rec llist_fragment_head_to_tail
   (#opened: _)
