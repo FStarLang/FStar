@@ -659,6 +659,6 @@ Part 10: An End-to-end System with Formal Proofs
    :maxdepth: 1
    :caption: Contents:
 
-   tutorial-overview
+   part1/part1
    sec2/Design-of-fstar-Intro
    PL-pl-foundations
