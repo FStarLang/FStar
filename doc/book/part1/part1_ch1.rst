@@ -595,6 +595,18 @@ Provide an implementation of ``max`` coupled with a type that is
 precise enough to rule out definitions that do not correctly return
 the maximum of ``x`` and ``y``.
 
+.. container:: toggle
+
+    .. container:: header
+
+       **Some answers**
+
+    .. literalinclude:: exercises/Sample.fst
+       :language: fstar
+       :start-after: SNIPPET_START: max
+       :end-before: SNIPPET_END: max
+
+
 More types for factorial
 ........................
 
@@ -607,5 +619,36 @@ Recall the definition of ``factorial`` from earlier.
 
 Can you write down some more types for factorial?
 
+.. container:: toggle
+
+    .. container:: header
+
+       **Some answers**
+
+    .. literalinclude:: exercises/Sample.fst
+       :language: fstar
+       :start-after: SNIPPET_START: factorial_answers
+       :end-before: SNIPPET_END: factorial_answers
+
 Fibonacci
 .........
+
+Here's a doubly recursive function::
+
+  .. literalinclude:: exercises/Sample.fst
+   :language: fstar
+   :start-after: SNIPPET_START: fibonacci
+   :end-before: SNIPPET_END: fibonacci
+
+What other types can you give to it?
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Some answers**
+
+    .. literalinclude:: exercises/Sample.fst
+       :language: fstar
+       :start-after: SNIPPET_START: fibonacci_answers
+       :end-before: SNIPPET_END: fibonacci_answers
