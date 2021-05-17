@@ -16,39 +16,39 @@
 
 module IteSoundness
 
-let unit : Type0 = unit
-irreducible let an_attr : unit = ()
+// let unit : Type0 = unit
+// irreducible let an_attr : unit = ()
 
-type repr (a:Type) (_:unit) = a
+// type repr (a:Type) (_:unit) = a
 
-let return (a:Type) (x:a) : repr a () = x
-let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
+// let return (a:Type) (x:a) : repr a () = x
+// let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
 
-let if_then_else (a:Type)
-  ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi) 
-  (f:repr a ())
-  (g:repr a ())
-  (b:bool)
-  : Type
-  = repr a ()
+// let if_then_else (a:Type)
+//   ([@@@ an_attr] phi:Type0)
+//   ([@@@ an_attr] bb:squash phi) 
+//   (f:repr a ())
+//   (g:repr a ())
+//   (b:bool)
+//   : Type
+//   = repr a ()
 
 
-(*
- * Explanation for the ite_soundness_forall attribute:
- *
- * When checking the soundness of the if_then_else combinator,
- *   the scheme fails to instantiate phi, since it is unconstrained
- *
- * The ite_soundness_forall attribute says that use a fresh name
- *   when checking soundness of ite
- *)
-let subcomp (a:Type)
-  ([@@@ an_attr; ite_soundness_forall] phi:Type0)
-  ([@@@ an_attr] bb:squash phi)  (f:repr a ())
-  : repr a () = f
+// (*
+//  * Explanation for the ite_soundness_forall attribute:
+//  *
+//  * When checking the soundness of the if_then_else combinator,
+//  *   the scheme fails to instantiate phi, since it is unconstrained
+//  *
+//  * The ite_soundness_forall attribute says that use a fresh name
+//  *   when checking soundness of ite
+//  *)
+// let subcomp (a:Type)
+//   ([@@@ an_attr; ite_soundness_forall] phi:Type0)
+//   ([@@@ an_attr] bb:squash phi)  (f:repr a ())
+//   : repr a () = f
 
-effect {
-  M (a:Type) (_:unit)
-  with {repr; return; bind; if_then_else; subcomp}
-}
+// effect {
+//   M (a:Type) (_:unit)
+//   with {repr; return; bind; if_then_else; subcomp}
+// }
