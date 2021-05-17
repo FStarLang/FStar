@@ -103,10 +103,10 @@ precedence.
 * ``+``: Addition (infix)
 * ``/``: Euclidean division (infix)
 * ``%``: Euclidean modulus (infix)
-* ``op_Multiply``: Unfortunately, the traditional multiplication symbol
-  ``*`` is reserved by default for the :ref:`tuple<tuples>` type
+* ``op_Multiply``: Unfortunately, the traditional multiplication
+  symbol ``*`` is reserved by default for the tuple type
   constructor. Use the module ``FStar.Mul`` to treat ``*`` as integer
-  multiplication---see :ref:`this note<tuples>`.
+  multiplication.
 * ``<`` : Less than (infix)
 * ``<=``: Less than or equal (infix)
 * ``>`` : Greater than (infix)
@@ -211,14 +211,12 @@ is simple---with our intuition of types as sets, the refinement type
 ``p``, i.e., the ``x:t{ p }`` denotes a subset of ``t``, so, of course
 ``x:t{ p }`` is a subtype of ``t``.
 
-The other direction is a bit more subtle: ``x:t{ p }`` is only a subtype
-of ``p``, for those terms ``e`` that validate ``p``. You're probably also
-wondering about how to prove that ``p[e/x]`` evaluates to ``true``---this
-:ref:`part of the tutorial<tutorial:refinements>` should provide some
-answers. But, the short version is that F*, by default, uses an SMT
-solver to prove such fact, though you can also use tactics and other
-techniques to do so. More information can be found
-:ref:`here<mental-model:refinements>`.
+The other direction is a bit more subtle: ``x:t{ p }`` is only a
+subtype of ``p``, for those terms ``e`` that validate ``p``. You're
+probably also wondering about how to prove that ``p[e/x]`` evaluates
+to ``true``---we will look at this in detail later. But, the short
+version is that F*, by default, uses an SMT solver to prove such fact,
+though you can also use tactics and other techniques to do so.
 
 An example
 ..........
@@ -302,9 +300,6 @@ result type of a named function definition.
    term ``e`` has the type ``t``. For example, we could have written::
 
      let incr = fun (x:int) -> (x + 1 <: int)
-
-   We'll cover more about type ascriptions in this later
-   :ref:`section<ascriptions>`.
 
 
 Recursive functions

@@ -565,6 +565,8 @@ Part 2: Purely Functional Programs and Proofs in F*
 
   * Typeclasses
 
+.. _effects:
+
 Part 3: Effects
 ^^^^^^^^^^^^^^^
 
@@ -591,6 +593,7 @@ Part 4: Tactics and Metaprogramming
 Part 5: F* Libraries
 ^^^^^^^^^^^^^^^^^^^^
 
+.. _modules:
 
 Part 6: A User's Guide to Structuring and Maintaining F* Developments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -660,5 +663,3 @@ Part 10: An End-to-end System with Formal Proofs
    :caption: Contents:
 
    part1/part1
-   sec2/Design-of-fstar-Intro
-   PL-pl-foundations
