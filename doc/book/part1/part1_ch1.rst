@@ -45,28 +45,50 @@ with ``//``. ::
   //This is a line comment
 
 
-Primitive constants
-^^^^^^^^^^^^^^^^^^^
+Primitives
+^^^^^^^^^^
 
 Every F* program is checked in the context of some ambient primitive
 definitions taken from the core F* module :ref:`Prims<corelib_Prims>`.
 
+False
+.....
+
+The type ``False`` has no elements. Since there are no terms that
+satisfy ``e : False``, the type ``False`` is the type of unprovable
+propositions.
+
 Unit
 ....
 
-The primitive type ``unit`` has a single element denoted ``()``.
-
+The type ``unit`` has a single element denoted ``()``, i.e., ``() :
+unit``.
 
 Booleans
 ........
 
-The primitive type ``bool`` has two elements, ``true`` and
-``false``. ``Prims`` also provides the following primitive boolean
-operators, in decreasing order of precedence.
+The type ``bool`` has two elements, ``true`` and ``false``. Note, the
+lowercase ``false`` is a boolean constant, distinct from the uppercase
+``False`` type.
+
+The following primitive boolean operators are available, in decreasing
+order of precedence.
 
 * ``not``: Boolean negation (unary, prefix)
 * ``&&``: Boolean conjunction (binary, infix)
 * ``||``: Boolean disjunction (binary, infix)
+
+Conditionals
+############
+
+You can, of course, branch on a boolean with ``if/then/else``::
+
+  if b then 1 else 0
+
+  if b1 && b2 || b3
+  then 17
+  else 42
+
 
 Integers
 ........
@@ -222,8 +244,8 @@ refinement types, applying it multiple times even to check a simple
 term like ``x + 1 : odd``.
 
 
-Functions: Anonymous and Named
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Functions
+^^^^^^^^^
 
 To start writing interesting programs, we need a way to define
 functions. In the core of F*, functions behave like functions in
@@ -284,6 +306,32 @@ result type of a named function definition.
    We'll cover more about type ascriptions in this later
    :ref:`section<ascriptions>`.
 
+
+Recursive functions
+...................
+
+Recursive functions in F* are always named. To define them, one uses
+the ``let rec`` syntax, as shown below.
+
+.. literalinclude:: exercises/Sample.fst
+   :language: fstar
+   :start-after: SNIPPET_START: factorial
+   :end-before: SNIPPET_END: factorial
+
+This syntax defines a function names ``factorial`` with a single
+parameter ``n:nat``, returning a ``nat``. The definiton of factorial
+is allowed to use the ``factorial`` recursively—as we'll see in a
+later chapter, ensuring that the recursion is well-founded (i.e., all
+recursive calls terminate) is key to F*'s soundness. However, in this
+case, the proof of termination is automatic.
+
+.. note::
+
+   Notice the use of `open FStar.Mul` in the example above. This
+   brings the module `FStar.Mul` into scope and resolves the symbol
+   ``*`` to integer multiplication.
+
+F* also supports mutual recursion. We'll see that later.
 
 Arrow types
 ^^^^^^^^^^^
@@ -434,15 +482,15 @@ editor often use `fstar-mode.el
 allows interactively checking an F* program. If you plan to use F* in
 any serious way, this is strongly recommended.
 
-More types for ``incr``
+Many types for ``incr``
 .......................
 
 Here are some types for ``incr``, including some types that are valid
 and some others that are not.
 
-This type claims that ``incr`` result is greater than its argument and
-F* agrees—remember, the ``int`` type is unbounded, so there's no
-danger of the addition overflowing.
+This type claims that ``incr`` result is
+greater than its argument and F* agrees—remember, the ``int`` type is
+unbounded, so there's no danger of the addition overflowing.
 
 .. literalinclude:: exercises/Sample.fst
    :language: fstar
@@ -507,4 +555,57 @@ F* is happy.
    :start-after: SNIPPET_START: ex1.3
    :end-before: SNIPPET_END: ex1.3
 
+Sometimes, it is convenient to provide a type signature independently
+of a definition. Below, the ``val incr4`` provides only the signature
+and the subsequent ``let incr4`` provides the definition—F* checks
+that the definitions is compatible with the signature.
+
+.. literalinclude:: exercises/Sample.fst
+   :language: fstar
+   :start-after: SNIPPET_START: ex1.4
+   :end-before: SNIPPET_END: ex1.4
+
 Try writing some more types for ``incr``.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Some answers**
+
+    .. literalinclude:: exercises/Sample.fst
+       :language: fstar
+       :start-after: SNIPPET_START: incr_types
+       :end-before: SNIPPET_END: incr_types
+
+
+Computing the maximum of two integers
+.....................................
+
+Provide an implementation of the following signature::
+
+  val max (x:int) (y:int) : int
+
+There are many possible implemenations that satisfy this signature,
+including trivial ones like::
+
+  let max x y = 0
+
+Provide an implementation of ``max`` coupled with a type that is
+precise enough to rule out definitions that do not correctly return
+the maximum of ``x`` and ``y``.
+
+More types for factorial
+........................
+
+Recall the definition of ``factorial`` from earlier.
+
+.. literalinclude:: exercises/Sample.fst
+   :language: fstar
+   :start-after: SNIPPET_START: factorial
+   :end-before: SNIPPET_END: factorial
+
+Can you write down some more types for factorial?
+
+Fibonacci
+.........

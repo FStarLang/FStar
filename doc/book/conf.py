@@ -21,6 +21,9 @@ from sphinx.highlighting import lexers
 
 lexers['fstar'] = fstar_pygments.CustomLexer()
 
+def setup(app):
+    app.add_css_file('custom.css')
+
 # -- Project information -----------------------------------------------------
 
 project = u'Proof-Oriented Programming in F*'
