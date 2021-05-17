@@ -100,6 +100,12 @@ The decision procedure presented in Section 4 can be found in `Steel.Effect.Comm
 of the ulib/experimental folder. The entry point of this decision procedure is the function
 `init_resolve_tac`, which can be found almost at the very bottom of the file.
 
+Module `Steel.PCMReference` provides a user-facing interface to the core Steel
+PCM-based memory model. Modules `Steel.HigherReference` and `Steel.Reference` specialize
+this library to use a standard fractional permission PCM. `Steel.MonotonicHigherReference`
+is a variant of `Steel.HigherReference` exploring the relation between PCMs and preorders.
+`Steel.Array` provides a small library for Steel arrays.
+
 The `swap` example presented in the introduction can be found in the `Selectors.Examples` module,
 inside of the examples/steel folder.
 
@@ -134,6 +140,8 @@ the paper, which is available in the `Queue` module inside the same folder.
 Finally, our library for 2-party session types modeled using a PCM can be found in the `Duplex.PCM`
 module, inside of the `examples/steel` folder. A simple protocol using this library can be found
 in the same folder, in the `Duplex.PingPong` module.
+A simpler version of this library, specialized to a simple Stepper protocol, can be found
+in the `Steel.Stepper` module, inside ulib/examples.
 
 # Known IDE issues
 
