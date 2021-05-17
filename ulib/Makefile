@@ -63,7 +63,7 @@ FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 # relative to ulib
-DIRS_WITH_FSTARLIB_ML_FILES = ml experimental/ml ml/extracted
+DIRS_WITH_FSTARLIB_ML_FILES = ml ml/extracted
 DIRS_WITH_TACLIB_ML_FILES = tactics_ml tactics_ml/extracted tactics_ml/fstarlib_leftovers
 
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
