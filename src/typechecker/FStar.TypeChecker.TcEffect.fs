@@ -680,86 +680,66 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
-    let env, ite_t_applied, a_b, f_t, g_t, p_t =
+    let env, ite_t_applied, a_b, f_b, g_b, p_t =
       match (SS.compress ite_t).n with
       | Tm_abs (bs, _, _) ->
         let bs = SS.open_binders bs in
-        let f, g, p =
+        let f_b, g_b, p_b =
           bs
           |> List.splitAt (List.length bs - 3)
           |> snd
-          |> List.map (fun b -> b.binder_bv)
-          |> List.map S.bv_to_name
           |> (fun l -> let [f; g; p] = l in f, g, p) in
-        Env.push_binders (Env.push_univ_vars env0 us) bs,
+        let env =  Env.push_binders (Env.push_univ_vars env0 us) bs in
+        env,
         S.mk_Tm_app ite_t
           (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
-          r,
-        bs |> List.hd, f, g, p
+          r |> N.normalize [Env.Beta] env,  //beta-reduce
+        bs |> List.hd, f_b, g_b, (S.bv_to_name p_b.binder_bv)
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
 
-    let env, subcomp_f, subcomp_g =
-      let _, subcomp_t, subcomp_ty = stronger_repr in
-      let _, subcomp_t = SS.open_univ_vars us subcomp_t in
+    let subcomp_a_b, subcomp_bs, subcomp_f_b, subcomp_c =
+      let _, _, subcomp_ty = stronger_repr in
+      let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
+      match (SS.compress subcomp_ty).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let a_b, rest_bs = List.hd bs, List.tl bs in
+        let rest_bs, f_b =
+          rest_bs |> List.splitAt (List.length rest_bs - 1)
+                  |> (fun (l1, l2) -> l1, List.hd l2) in
+        a_b, rest_bs, f_b, c
+      | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-      let bs_except_last, aqs_except_last, last_aq =
-        let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
-        match (SS.compress subcomp_ty).n with
-        | Tm_arrow (bs, _) ->
-          let bs = SS.open_binders bs in
-          let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
-          bs_except_last,
-          bs_except_last |> List.map (fun b -> b.binder_qual, b.binder_attrs),
-          last_b |> List.hd |> (fun b -> b.binder_qual, b.binder_attrs)
-        | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
+    let check_branch env ite_f_or_g_sort : unit =
+      let subst = [NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)] in
+      let subst, uvars, g_uvars = subcomp_bs |> List.fold_left (fun (substs, uvars, g) b ->
+        let sort = SS.subst substs b.binder_bv.sort in
+        let t, _, g_t =
+          let uv_qual =
+            match b.binder_attrs with
+            | [] -> Allow_untyped
+            | _ -> Strict in
+          new_implicit_var_aux "" r env sort uv_qual None in
+        substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t) (subst, [], Env.trivial_guard) in
 
-      //use the a:Type binder as in the if_then_else combinator
-      let bs_except_last =
-        let s = [NT (bs_except_last |> List.hd |> (fun b -> b.binder_bv),
-                     a_b |> (fun b -> S.bv_to_name b.binder_bv))] in
-        a_b::(bs_except_last |> List.tl |> SS.subst_binders s) in
+      let subcomp_f_sort = SS.subst subst subcomp_f_b.binder_bv.sort in
+      let c = SS.subst_comp subst subcomp_c |> Env.unfold_effect_abbrev env in
 
-      //add all these fresh names to env
-      //note that due to dependencies, if we have a binder with
-      //the ite_soundness_forall attribute, we may need other binders before it
-      //for well-formedness of gamma
-      let env = Env.push_binders env (List.tl bs_except_last) in
+      let g_f_or_g = Rel.layered_effect_teq env subcomp_f_sort ite_f_or_g_sort None in
+      let g_c = Rel.layered_effect_teq env c.result_typ ite_t_applied None in
 
-      let aqs_except_last, last_aq =
-        aqs_except_last |> List.map binder_aq_to_arg_aq,
-        last_aq |> binder_aq_to_arg_aq in
+      let g_precondition = Env.pure_precondition_for_trivial_post
+        env
+        (List.hd c.comp_univs)
+        c.result_typ
+        (c.effect_args |> List.hd |> fst)
+        r |> NonTrivial |> Env.guard_of_guard_formula in
 
-      let aux t =
-        let args = List.fold_left2 (fun args b aq ->
-          if U.has_attribute b.binder_attrs PC.ite_soundness_forall_attr
-          then args@[S.bv_to_name b.binder_bv, aq]  //use name
-          else args@[S.tun, aq]) [] bs_except_last aqs_except_last in
-
-        S.mk_Tm_app
-          subcomp_t
-          (args@[t, last_aq])
-          r in
-
-      env, aux f_t, aux g_t in
-
-    let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
-      let aux t =
-        S.mk
-          (Tm_ascribed (t, (Inr (S.mk_Total ite_t_applied), None), None))
-          r in
-
-      aux subcomp_f, aux subcomp_g in
-
-    if Env.debug env <| Options.Other "LayeredEffectsTc"
-    then BU.print2 "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
-           (Print.term_to_string tm_subcomp_ascribed_f)
-           (Print.term_to_string tm_subcomp_ascribed_g);
-
+      Rel.force_trivial_guard env (Env.conj_guards [g_uvars; g_f_or_g; g_c; g_precondition]) in
 
     let _check_then =
       let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
-      let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
-      Rel.force_trivial_guard env g_f in
+      check_branch env f_b.binder_bv.sort in
 
     let _check_else =
       let not_p = S.mk_Tm_app
@@ -767,9 +747,83 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         [p_t |> U.b2t |> S.as_arg]
         r in
       let env = Env.push_bv env (S.new_bv None not_p) in
-      let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
-      Rel.force_trivial_guard env g_g in
+      check_branch env g_b.binder_bv.sort in
+
     ()
+        
+
+    // let env, subcomp_f, subcomp_g =
+    //   let _, subcomp_t, subcomp_ty = stronger_repr in
+    //   let _, subcomp_t = SS.open_univ_vars us subcomp_t in
+
+    //   let bs_except_last, aqs_except_last, last_aq =
+    //     let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
+    //     match (SS.compress subcomp_ty).n with
+    //     | Tm_arrow (bs, _) ->
+    //       let bs = SS.open_binders bs in
+    //       let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
+    //       bs_except_last,
+    //       bs_except_last |> List.map (fun b -> b.binder_qual, b.binder_attrs),
+    //       last_b |> List.hd |> (fun b -> b.binder_qual, b.binder_attrs)
+    //     | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
+
+    //   //use the a:Type binder as in the if_then_else combinator
+    //   let bs_except_last =
+    //     let s = [NT (bs_except_last |> List.hd |> (fun b -> b.binder_bv),
+    //                  a_b |> (fun b -> S.bv_to_name b.binder_bv))] in
+    //     a_b::(bs_except_last |> List.tl |> SS.subst_binders s) in
+
+    //   //add all these fresh names to env
+    //   //note that due to dependencies, if we have a binder with
+    //   //the ite_soundness_forall attribute, we may need other binders before it
+    //   //for well-formedness of gamma
+    //   let env = Env.push_binders env (List.tl bs_except_last) in
+
+    //   let aqs_except_last, last_aq =
+    //     aqs_except_last |> List.map binder_aq_to_arg_aq,
+    //     last_aq |> binder_aq_to_arg_aq in
+
+    //   let aux t =
+    //     let args = List.fold_left2 (fun args b aq ->
+    //       if U.has_attribute b.binder_attrs PC.ite_soundness_forall_attr
+    //       then args@[S.bv_to_name b.binder_bv, aq]  //use name
+    //       else args@[S.tun, aq]) [] bs_except_last aqs_except_last in
+
+    //     S.mk_Tm_app
+    //       subcomp_t
+    //       (args@[t, last_aq])
+    //       r in
+
+    //   env, aux f_t, aux g_t in
+
+    // let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
+    //   let aux t =
+    //     S.mk
+    //       (Tm_ascribed (t, (Inr (S.mk_Total ite_t_applied), None), None))
+    //       r in
+
+    //   aux subcomp_f, aux subcomp_g in
+
+    // if Env.debug env <| Options.Other "LayeredEffectsTc"
+    // then BU.print2 "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
+    //        (Print.term_to_string tm_subcomp_ascribed_f)
+    //        (Print.term_to_string tm_subcomp_ascribed_g);
+
+
+    // let _check_then =
+    //   let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
+    //   let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
+    //   Rel.force_trivial_guard env g_f in
+
+    // let _check_else =
+    //   let not_p = S.mk_Tm_app
+    //     (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
+    //     [p_t |> U.b2t |> S.as_arg]
+    //     r in
+    //   let env = Env.push_bv env (S.new_bv None not_p) in
+    //   let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
+    //   Rel.force_trivial_guard env g_g in
+    // ()
   )
   in
 
