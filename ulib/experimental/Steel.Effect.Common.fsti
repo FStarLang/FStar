@@ -1958,7 +1958,7 @@ let rec norm_return_pre (l:list goal) : Tac unit =
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
 /// The `plugin` attribute ensures that this tactic is compiled, and executed natively for performance reasons
 [@@ resolve_implicits; framing_implicit; plugin]
-let init_sel_resolve_tac () : Tac unit =
+let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
