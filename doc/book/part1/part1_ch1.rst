@@ -477,6 +477,16 @@ editor often use `fstar-mode.el
 allows interactively checking an F* program. If you plan to use F* in
 any serious way, this is strongly recommended.
 
+**F\* online**
+
+For casual experiments, the easiest way to get a working F* instance
+is from your browser at `http://fstar-lang.org/run.php
+<http://fstar-lang.org/run.php>`_. This provides a bare-bones editor
+communicating with F* running in the cloud. The online version is
+probably fine for trying out small examples, such as the exercises
+here.
+
+
 Many types for ``incr``
 .......................
 

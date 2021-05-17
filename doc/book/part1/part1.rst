@@ -42,3 +42,4 @@ functions and prove then correct.
    :caption: Contents:
 
    part1_ch1
+   part1_ch2
