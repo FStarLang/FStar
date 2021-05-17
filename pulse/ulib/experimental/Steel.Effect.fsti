@@ -20,6 +20,7 @@ open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
+
 include Steel.Effect.Common
 
 /// This module defines the main Steel effect, with requires and ensures predicates operating on
