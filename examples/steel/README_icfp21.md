@@ -110,9 +110,9 @@ The `swap` example presented in the introduction can be found in the `Selectors.
 inside of the examples/steel folder.
 
 The reimplementations of SteelCore libraries presented in Section 5.1 correspond to the modules
-`Steel.SpinLock`, `Steel.ForkJoin`, and `Steel.Channel.Simplex` inside the ulib/experimental
-folder. We also include the original SteelCore implementations we compared against in
-examples/steel/steelcore, with the same module names but the `fst(i)_old` extensions.
+`Steel.SpinLock`, `Steel.Primitive.ForkJoin`, and `Steel.Channel.Simplex` inside the
+ulib/experimental folder. We also include the original SteelCore implementations we compared
+against in examples/steel/steelcore, with the same module names but the `fst(i)_old` extensions.
 Note that these implementations do not verify anymore, as they correspond to an earlier
 version of the Steel framework. We only include them for historical purposes.
 
