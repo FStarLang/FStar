@@ -11,7 +11,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.o
+   limitations under the License.
 *)
 
 module Steel.LockCoupling
@@ -21,6 +21,8 @@ open Steel.Effect
 open Steel.SpinLock
 open Steel.Reference
 open Steel.FractionalPermission
+
+/// An invariant for lists, where each list node stores a lock to the rest of the list.
 
 #push-options "--__no_positivity"
 noeq
