@@ -47,27 +47,39 @@ module A = Steel.Effect.Atomic
 
 let half_perm = half_perm full_perm
 
+(* Some basic wrappers to avoid issues with normalization.
+   TODO: The frame inference tactic should not normalize fst and snd*)
+
 noextract
 let fst = fst
 
 noextract
 let snd = snd
 
+
+/// The core invariant of the Owicki-Gries counter, shared by the two parties.
+/// The concrete counter [r] is shared, and the full permission is stored in the invariant.
+/// Each party also has half permission to their own ghost counter [r1] or [r2], ensuring that
+/// only them can modify it by retrieving the other half of the permission when accessing the invariant.
+/// The `__reduce__` attribute indicates the frame inference tactic to unfold this predicate for frame inference only
 [@@ __reduce__]
 let lock_inv_slprop (r:ref int) (r1 r2:ghost_ref int) (w:G.erased int & G.erased int) =
   ghost_pts_to r1 half_perm (fst w) `star`
   ghost_pts_to r2 half_perm (snd w) `star`
-  pts_to r  full_perm (G.hide (fst w + snd w))
+  pts_to r full_perm (G.hide (fst w + snd w))
 
 [@@ __reduce__]
 let lock_inv_pred (r:ref int) (r1 r2:ghost_ref int) =
   fun (x:G.erased int & G.erased int) -> lock_inv_slprop r r1 r2 x
 
+/// The actual invariant, existentially quantifying over the values currently stored in the two ghost references
 [@@ __reduce__]
 let lock_inv (r:ref int) (r1 r2:ghost_ref int) : vprop =
   h_exists (lock_inv_pred r r1 r2)
 
+
 #push-options "--warn_error -271 --fuel 1 --ifuel 1"
+/// A helper lemma to reason about the lock invariant
 let lock_inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
   : Lemma (lock_inv r r1 r2 `equiv` lock_inv r r2 r1)
   =
@@ -110,6 +122,7 @@ let lock_inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
   reveal_equiv (lock_inv r r1 r2) (lock_inv r r2 r1)
 #pop-options
 
+/// Acquiring the shared lock invariant
 inline_for_extraction noextract
 let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
@@ -134,6 +147,7 @@ let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
       rewrite_slprop (lock_inv r r_other r_mine) (lock_inv r r_mine r_other) (fun _ -> reveal_equiv (lock_inv r r_other r_mine) (lock_inv r r_mine r_other))
     end
 
+/// Releasing the shared lock invariant
 inline_for_extraction noextract
 let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)

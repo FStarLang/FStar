@@ -7,6 +7,12 @@ open Steel.Reference
 open Selectors.LList
 module L = FStar.List.Tot
 
+/// This module provides a library of operations on linked lists.
+/// The definition of the `llist` predicate is hidden behind the `Selectors.LList` interface.
+/// Operating on this predicate can thus only be done through the folding and unfolding
+/// functions exposed in `Selectors.LList`
+
+/// Appending element [x] to the head of the list
 val push (#a:Type0) (p:t a) (x: a)
   : Steel (t a) (llist p) (fun n -> llist n)
              (requires fun _ -> True)
@@ -25,6 +31,7 @@ val ind_push (#a:Type0) (r:ref (t a)) (x: a)
 noeq
 type res (a:Type0) = | Res: x:a -> n:t a -> res a
 
+/// If the list is not empty, returns the head element of the list, and removes it from the list
 val pop (#a:Type0) (p:t a)
   : Steel (res a) (llist p) (fun res -> llist (res.n))
              (requires fun _ -> p =!= null_llist)
@@ -45,6 +52,7 @@ val ind_pop (#a:Type0) (r:ref (t a))
                v_ind_llist r h1 == L.tl l)
              )
 
+/// Returns the length of the list
 val length (#a:Type0) (p:t a)
   : Steel int (llist p) (fun _ -> llist p)
              (requires fun _ -> True)

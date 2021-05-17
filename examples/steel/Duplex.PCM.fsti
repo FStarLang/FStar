@@ -5,10 +5,10 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Channel.Protocol
 
-let dprot' = protocol unit
-
 module P = FStar.Preorder
 module R = FStar.ReflexiveTransitiveClosure
+
+let dprot' = protocol unit
 
 // Simplifying protocols for now
 let rec no_loop (p:protocol 'a) =

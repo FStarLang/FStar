@@ -25,19 +25,39 @@ open Steel.Effect
 
 module Mem = Steel.Memory
 
+/// The main user-facing Steel library.
+/// This library provides functions to operate on references to values in universe 0, such as uints.
+/// This library provides two versions, which can interoperate with each other.
+/// The first one uses the standard separation logic pts_to predicate, and has a non-informative selector
+/// The second one has a selector which returns the contents of the reference in memory, enabling
+/// to better separate reasoning about memory safety and functional correctness when handling refernences.
+
+/// An abstract datatype for references
 val ref (a:Type0) : Type0
 
+/// The null pointer
 val null (#a:Type0) : ref a
+
+/// Checking whether a pointer is null can be done in a decidable way
 val is_null (#a:Type0) (r:ref a) : (b:bool{b <==> r == null})
 
-(* Standard separation logic assertion *)
+(** First version of references: Non-informative selector and standard pts_to predicate.
+    All functions names here are postfixed with _pt (for points_to)**)
 
+/// The standard points to separation logic assertion, expressing that
+/// reference [r] is valid in memory, stores value [v], and that we have
+/// permission [p] on it.
 val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
 
+/// Lifting the standard points to predicate to vprop, with a non-informative selector.
+/// The permission [p] and the value [v] are annotated with the smt_fallback attribute,
+/// enabling SMT rewriting on them during frame inference
 [@@ __steel_reduce__]
 unfold let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a)
   = to_vprop (pts_to_sl r p v)
 
+/// If two pts_to predicates on the same reference [r] are valid in the memory [m],
+/// then the two values [v0] and [v1] are identical
 val pts_to_ref_injective
       (#a: Type u#0)
       (r: ref a)
@@ -49,6 +69,7 @@ val pts_to_ref_injective
         interp (pts_to_sl r p0 v0 `Mem.star` pts_to_sl r p1 v1) m)
       (ensures v0 == v1)
 
+/// A valid pts_to predicate implies that the pointer is not the null pointer
 val pts_to_not_null (#a:Type u#0)
                     (x:ref a)
                     (p:perm)
@@ -57,8 +78,10 @@ val pts_to_not_null (#a:Type u#0)
   : Lemma (requires interp (pts_to_sl x p v) m)
           (ensures x =!= null)
 
+/// Exposing the is_witness_invariant from Steel.Memory for references with fractional permissions
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to_sl r p))
 
+/// A stateful version of the pts_to_ref_injective lemma above
 val pts_to_injective_eq
       (#a: Type)
       (#opened:inames)
@@ -71,36 +94,48 @@ val pts_to_injective_eq
           (requires fun _ -> True)
           (ensures fun _ _ _ -> v0 == v1)
 
+/// Allocates a reference with value [x]. We have full permission on the newly
+/// allocated reference.
 val alloc_pt (#a:Type) (x:a)
   : Steel (ref a) emp (fun r -> pts_to r full_perm x)
              (requires fun _ -> True)
              (ensures fun _ r _ -> not (is_null r))
 
+/// Reads the value in reference [r], as long as it initially is valid
 val read_pt (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : Steel a (pts_to r p v) (fun x -> pts_to r p x)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 
+/// A variant of read, useful when an existentially quantified predicate
+/// depends on the value stored in the reference
 val read_refine_pt (#a:Type0) (#p:perm) (q:a -> vprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
 
+/// Writes value [x] in the reference [r], as long as we have full ownership of [r]
 val write_pt (#a:Type0) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
 
+/// Frees reference [r], as long as we have full ownership of [r]
 val free_pt (#a:Type0) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
 
+/// Splits the permission on reference [r] into two.
+/// This function is computationally irrelevant (it has effect SteelGhost)
 val share_pt (#a:Type0) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
   : SteelGhostT unit uses
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
+/// Combines permissions on reference [r].
+/// This function is computationally irrelevant (it has effect SteelGhost)
 val gather_pt (#a:Type0) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelGhostT (_:unit{v0 == v1}) uses
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
+/// Atomic compare and swap on references.
 val cas_pt (#t:eqtype)
         (#uses:inames)
         (r:ref t)
@@ -113,14 +148,16 @@ val cas_pt (#t:eqtype)
         (pts_to r full_perm v)
         (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
 
-(* Ptr version with a selector *)
+(** Second version of references: The memory contents are available inside the selector, instead of as an index of the predicate **)
 
-(* AF: TODO: Should be indexed by a perm *)
-
+/// An abstract separation logic predicate stating that reference [r] is valid in memory.
+/// (AF) TODO: This should also be indexed by a permission
 val ptr (#a:Type0) (r:ref a) : slprop u#1
 
+/// A selector for references, returning the value of type [a] stored in memory
 val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
 
+/// Some lemmas to interoperate between the two versions of references
 val ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
   (requires interp (ptr r) m)
   (ensures interp (pts_to_sl r full_perm (ptr_sel r m)) m)
@@ -129,7 +166,7 @@ val intro_ptr_interp (#a:Type0) (r:ref a) (v:erased a) (m:mem) : Lemma
   (requires interp (pts_to_sl r full_perm v) m)
   (ensures interp (ptr r) m)
 
-
+/// Combining the separation logic predicate and selector into a vprop
 [@@ __steel_reduce__]
 let vptr' #a r : vprop' =
   {hp = ptr r;
@@ -140,31 +177,40 @@ let vptr' #a r : vprop' =
 unfold
 let vptr r = VUnit (vptr' r)
 
+/// A wrapper to access a reference selector more easily.
+/// Ensuring that the corresponding ptr vprop is in the context is done by
+/// calling a variant of the framing tactic, as defined in Steel.Effect.Common
 [@@ __steel_reduce__]
 let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
 
+/// Allocates a reference with value [x].
 val alloc (#a:Type0) (x:a) : Steel (ref a)
   emp (fun r -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> sel r h1 == x /\ not (is_null r))
 
+/// Frees a reference [r]
 val free (#a:Type0) (r:ref a) : Steel unit
   (vptr r) (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
 
+/// Reads the current value of reference [r]
 val read (#a:Type0) (r:ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h1)
 
+/// Writes value [x] in reference [r]
 val write (#a:Type0) (r:ref a) (x:a) : Steel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> x == sel r h1)
 
+/// A stateful lemma variant of the pts_to_not_null lemma above.
+/// This stateful function is computationally irrelevant and does not modify memory
 val vptr_not_null (#opened: _)
   (#a: Type)
   (r: ref a)
@@ -178,6 +224,12 @@ val vptr_not_null (#opened: _)
     )
 
 (*** Ghost references ***)
+
+/// We also define a ghost variant of references, useful to do proofs relying on a ghost state
+/// Ghost references are marked as erasable, ensuring that they are computationally irrelevant,
+/// and only used in computationally irrelevant contexts.
+/// The functions below are variants of the reference functions defined above,
+/// but operating on ghost references, and with the computationally irrelevant SteelGhost effect
 
 [@@ erasable]
 val ghost_ref (a:Type u#0) : Type u#0

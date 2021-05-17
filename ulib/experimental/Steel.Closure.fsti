@@ -11,7 +11,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.o
+   limitations under the License.
 *)
 
 module Steel.Closure
@@ -19,6 +19,8 @@ module Steel.Closure
 open Steel.Memory
 open Steel.Effect
 open FStar.Ghost
+
+/// A small proof-of-concept library showing that vprops can be used inside closures
 
 let ctr_t = (p:(int -> vprop) & (x:erased int -> SteelT (y:int{y == x + 1}) (p x) p))
 

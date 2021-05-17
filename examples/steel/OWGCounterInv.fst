@@ -43,8 +43,6 @@ open Steel.DisposableInvariant
 
 #set-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0 --ide_id_info_off"
 
-//let half_perm = half_perm (MkPerm FStar.Real.one)
-
 (**** A few wrappers over library functions ****)
 
 let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
@@ -167,7 +165,7 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
 let incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
 
 (*
- * We assume an atomic increment operation for int refs
+ * We assume an atomic increment operation for int refs.
  *)
 assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
   : SteelAtomicT unit uses
