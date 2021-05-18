@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "be7c2d76a0208daeb9e1256b036241f9"
+      "68c4a39a5ce22da983df91f46f727d07"
     ],
     [
       "Steel.FramingTestSuite.test1",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "319a18286de8a54acaba31c2fd8e1f9f"
+      "9f133ada2bf680e6e1f600022701a773"
     ],
     [
       "Steel.FramingTestSuite.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "c3e12a1ea12f656bc39ec02a8bd620c1"
+      "4ae25f9f3ec3762e3bfa9ca24f0be52c"
     ],
     [
       "Steel.FramingTestSuite.test3",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "2bacc17bde0eb1efcd38fa9ee98befeb"
+      "3a36bb2eaca2c5931e4edf4be9d59ecf"
     ],
     [
       "Steel.FramingTestSuite.test4",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3a2ef75805aaf7a31918b8f32c37a1af"
+      "121940be2acbb362205c3a07f39c4b9d"
     ],
     [
       "Steel.FramingTestSuite.test5",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "73a581cbd4c5eec1ab0f7604ed1ad758"
+      "31aace4baea19b314a311d8f9966d7c9"
     ],
     [
       "Steel.FramingTestSuite.test6",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "653a3297ea71add8251187ef89e3ed82"
+      "afbc033f292f34d55b8a127a391a265a"
     ],
     [
       "Steel.FramingTestSuite.test7",
@@ -71,7 +71,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "54679dfb4ef951730edd44a583f4487f"
+      "a2755cf32d2eb20fef7bc7d71336cd04"
     ],
     [
       "Steel.FramingTestSuite.test_if3",
@@ -80,7 +80,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "eb599c44993401ddee0d429437a86405"
+      "632b2d1fa3c91f8437ba0965ff174553"
     ],
     [
       "Steel.FramingTestSuite.test_if4",
@@ -89,7 +89,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "d1e297a7beeef5a11ab650399c979aa8"
+      "ace5183b6829ad58a662e7bac66f868f"
     ],
     [
       "Steel.FramingTestSuite.test_if6",
@@ -98,7 +98,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "7c4f559132d7a6338f5586890b8c2ca2"
+      "cf91b7f9f321c6456b2a4948dc4b1bb8"
     ],
     [
       "Steel.FramingTestSuite.test_if7",
@@ -107,7 +107,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "192f11badcbf90f576008d2575f51b27"
+      "8fcf284c17ac9801444f9a2c92b6091e"
     ],
     [
       "Steel.FramingTestSuite.test_if8",
@@ -116,7 +116,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a9719bbee8817b7e32bf89d60c4889a7"
+      "951c89f5383d165ca0fc1606c8a289fc"
     ],
     [
       "Steel.FramingTestSuite.test_if9",
@@ -125,7 +125,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3a21890c1fd4b1f676074cde43aaca42"
+      "dd687ff22ea240c96f78842c3e28d7ce"
     ],
     [
       "Steel.FramingTestSuite.test_if10",
@@ -134,7 +134,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "d8a39df7d10a3dfd05d23a22bbed0312"
+      "e20ed5c39453c0c0e16199c96c5d4719"
     ],
     [
       "Steel.FramingTestSuite.test_if11",
@@ -143,7 +143,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "ab0c496e1b34937626f3c565c599d73f"
+      "e5148b6f43c9f4bece8fc2c037473cb8"
     ],
     [
       "Steel.FramingTestSuite.g",
@@ -163,7 +163,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "ed18971a6d3615d28cfd5054f739455d"
+      "efb0724e4e10aeda97e7ee39a0857a84"
     ]
   ]
 ]

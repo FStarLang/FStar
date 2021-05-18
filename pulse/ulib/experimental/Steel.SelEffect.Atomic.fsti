@@ -175,7 +175,7 @@ let if_then_else_req
   (p:Type0)
 : req_t pre_f
 = fun h -> normal (
-    (p ==> req_then h) /\
+    (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
   )
 
@@ -227,9 +227,11 @@ effect {
          if_then_else = if_then_else }
 }
 
+
 total
 reflectable
 new_effect SteelSelAtomicBase = SteelSelAGCommon
+
 
 effect SteelSelAtomic (a:Type)
   (opened:inames)
@@ -281,11 +283,12 @@ effect SteelSelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
   SteelSelAtomic a opened pre post (fun _ -> True) (fun _ _ _ -> True)
 
 (*** SteelGhost effect ***)
-
+#push-options "--admit_smt_queries true" //if_then_else
 [@@ erasable]
 total
 reflectable
 new_effect SteelSelGhostBase = SteelSelAGCommon
+#pop-options
 
 effect SteelSelGhost (a:Type)
   (opened:inames)
