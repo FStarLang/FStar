@@ -648,7 +648,7 @@ let datas_rev_snoc_cons #a (xs ys:elist (cell a))
                    datas (esnoc xs x' `eappend` econs y' ys))
   = admit()
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 40"
 
 let concat (#a:_) (left head tail right: t a)
                   (left' head' tail' right': t a)
