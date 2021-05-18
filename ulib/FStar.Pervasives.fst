@@ -34,50 +34,6 @@ let ambient #_ _ = True
 
 let intro_ambient #_ _ = ()
 
-let inversion _ = True
-
-let allow_inversion _ = ()
-
-let invertOption _ = ()
-
-let rec false_elim #_ _ = false_elim ()
-
-let inline_let = ()
-
-let rename_let _ = ()
-
-let plugin _ = ()
-
-let tcnorm = ()
-
-let must_erase_for_extraction = ()
-
-let dm4f_bind_range = ()
-
-let expect_failure _ = ()
-
-let expect_lax_failure _ = ()
-
-let tcdecltime = ()
-
-let assume_strictly_positive = ()
-
-let unifier_hint_injective = ()
-
-let strict_on_arguments _ = ()
-
-let resolve_implicits = ()
-
-let erasable = ()
-
-let allow_informative_binders = ()
-
-let commute_nested_matches = ()
-
-let noextract_to _ = ()
-
-let ite_soundness_by = ()
-
 let normalize_term #_ x = x
 
 let normalize a = a
@@ -139,6 +95,50 @@ let normalize_term_spec #_ _ = ()
 let normalize_spec _ = ()
 
 let norm_spec _ #_ _ = ()
+
+let inversion _ = True
+
+let allow_inversion _ = ()
+
+let invertOption _ = ()
+
+let rec false_elim #_ _ = false_elim ()
+
+let inline_let = ()
+
+let rename_let _ = ()
+
+let plugin _ = ()
+
+let tcnorm = ()
+
+let must_erase_for_extraction = ()
+
+let dm4f_bind_range = ()
+
+let expect_failure _ = ()
+
+let expect_lax_failure _ = ()
+
+let tcdecltime = ()
+
+let assume_strictly_positive = ()
+
+let unifier_hint_injective = ()
+
+let strict_on_arguments _ = ()
+
+let resolve_implicits = ()
+
+let erasable = ()
+
+let allow_informative_binders = ()
+
+let commute_nested_matches = ()
+
+let noextract_to _ = ()
+
+let ite_soundness_by = ()
 
 let singleton #_ x = x
 
