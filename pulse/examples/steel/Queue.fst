@@ -177,7 +177,7 @@ let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
 let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun _ -> True)) = fst (unsnoc l)
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 50"
 
 let enqueue
   #a #u #hd tl #v last

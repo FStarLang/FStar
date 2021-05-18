@@ -678,7 +678,8 @@ let concat (#a:_) (left head tail right: t a)
     intro_dlist_snoc_cons left head tail (Ghost.hide c) (snd r);
     rewrite_slprop (dlist_snoc left head tail (next (Ghost.reveal (Ghost.hide c))) (econs c (snd r)))
                   (dlist_cons left head tail head' (erev (econs c (snd r))))
-                  (fun _ -> dlist_cons_snoc left head tail (next c) (erev (econs c (snd r)));
+                  (fun _ -> admit();
+                         dlist_cons_snoc left head tail (next c) (erev (econs c (snd r)));
                          rev_involutive (c :: snd r));
 
     let r' = elim_dlist_cons_head head' in
@@ -710,7 +711,8 @@ let concat (#a:_) (left head tail right: t a)
     rewrite_slprop (dlist_cons left head tail head' (erev (econs c (snd r))) `star`
                    dlist_cons tail head' tail' right' (econs c' (snd r')))
                   (dlist_cons left head tail' right' res)
-                  (fun _ -> dlist_cons_concat left head tail head'
+                  (fun _ -> admit();
+                       dlist_cons_concat left head tail head'
                             (List.rev (c :: snd r))
                             tail' right'
                             (c' :: snd r'));
