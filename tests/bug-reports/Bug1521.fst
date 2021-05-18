@@ -64,7 +64,6 @@ let sklem2 #a (#p : a -> prop) (_ : (u:unit{(exists (x:a). p x)})) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
 
-[@@expect_failure]
 let sklem3 #a (#p : a -> prop) (_ : squash (exists (x:a). p x)) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()

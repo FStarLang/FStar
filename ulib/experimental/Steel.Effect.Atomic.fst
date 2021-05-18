@@ -292,7 +292,9 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       lemma_frame_equalities_refl p h0;
       h0
 
-let get _ = SteelGhostF?.reflect (get0 ())
+let get _ =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelGhostF?.reflect (get0 ())
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -443,7 +445,9 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info p vp fact l = SteelGhost?.reflect (extract_info0 p vp fact l)
+let extract_info p vp fact l =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelGhost?.reflect (extract_info0 p vp fact l)
 
 let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -458,7 +462,9 @@ let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info_raw p fact l = SteelGhost?.reflect (extract_info_raw0 p fact l)
+let extract_info_raw p fact l =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelGhost?.reflect (extract_info_raw0 p fact l)
 
 let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
@@ -473,7 +479,9 @@ let slassert0 (#opened:inames) (p:vprop) : repr unit
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0
 
-let slassert p = SteelGhost?.reflect (slassert0 p)
+let slassert p =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelGhost?.reflect (slassert0 p)
 
 let drop p = rewrite_slprop p emp
   (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())

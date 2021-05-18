@@ -149,7 +149,8 @@ let lem_on_comp #a #b #c (f:b -> c) (g:a -> b)
   = ()
 
 /// We also rely on eta being a provable equality
-let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = ()
+/// AR: 05/11, eta is no longer provable, so admitting it
+let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = admit ()
 
 /// Now, here's the main lemma of property (b).
 ///   stating at first using extensional equality

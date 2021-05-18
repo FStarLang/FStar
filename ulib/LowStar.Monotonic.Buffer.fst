@@ -23,7 +23,7 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
+private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = pre
 
 (*
  * Counterpart of compatible_sub from the fsti but using sequences
@@ -209,11 +209,15 @@ let live_same_addresses_equal_types_and_preorders'
   (b2: mbuffer a2 rrel2 rel2)
   (h: HS.mem)
 : Lemma
-  (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))))
-  (ensures (
+  (requires 
+    frameOf b1 == frameOf b2 /\
+    as_addr b1 == as_addr b2 /\
+    live h b1 /\
+    live h b2 /\
+    (~ (g_is_null b1 /\ g_is_null b2)))
+  (ensures 
     a1 == a2 /\
-    rrel1 == rrel2
-  ))
+    rrel1 == rrel2)
 =   Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     Seq.lemma_equal_instances_implies_equal_types ()

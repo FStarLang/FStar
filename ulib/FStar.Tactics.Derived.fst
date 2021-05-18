@@ -852,9 +852,11 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let r = visit_tm ff r in
          Tv_App l (r, q)
     | Tv_Refine b r ->
+        let b = on_sort_bv (visit_tm ff) b in
         let r = visit_tm ff r in
         Tv_Refine b r
     | Tv_Let r attrs b def t ->
+        let b = on_sort_bv (visit_tm ff) b in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
         Tv_Let r attrs b def t
@@ -877,7 +879,25 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   let (p, t) = b in
-  (p, visit_tm ff t)
+  let p = visit_pat ff p in
+  let t = visit_tm ff t in
+  (p, t)
+and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
+  match p with
+  | Pat_Constant c -> p
+  | Pat_Cons fv l ->
+      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
+      Pat_Cons fv l
+  | Pat_Var bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Var bv
+  | Pat_Wild bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Wild bv
+  | Pat_Dot_Term bv term ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      let term = visit_tm ff term in
+      Pat_Dot_Term bv term
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =

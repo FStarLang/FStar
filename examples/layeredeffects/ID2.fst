@@ -128,8 +128,7 @@ val test_f : unit -> ID int (fun p -> p 5 /\ p 3)
 let test_f () = 5
 
 // somehow needs to prove that (forall p. nomon (fun p -> p 5) p) ??
-[@@expect_failure]
-let test_2 () : ID int (fun p -> p 5) = admit () // 5
+let test_2 () : ID int (fun p -> p 5) = 5
 
 let l () : int =
   reify (test_f ()) ()

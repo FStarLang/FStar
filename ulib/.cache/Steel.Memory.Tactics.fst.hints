@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_Steel.Memory.reveal_equiv" ],
       0,
-      "945ae204dec5328dce14c84e6e3cd77f"
+      "0e18c2b07ba4696a3dba15511a7061e3"
     ],
     [
       "Steel.Memory.Tactics.equiv_sym",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_Steel.Memory.reveal_equiv" ],
       0,
-      "bb36d003b74da8f882af9a319557ce1e"
+      "f91c426dacc70a79f20f6af4f80a44c2"
     ],
     [
       "Steel.Memory.Tactics.equiv_trans",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "lemma_Steel.Memory.reveal_equiv" ],
       0,
-      "b2b2ebe0cb755084ce3bd104d664ae3b"
+      "e288d5871045cea8bffe020cdbe1adb2"
     ],
     [
       "Steel.Memory.Tactics.cm_identity",
@@ -38,7 +38,7 @@
         "typing_Steel.Memory.emp", "typing_Steel.Memory.star"
       ],
       0,
-      "8f64603fbc11ae3609fd5901777c1983"
+      "3c25836e70ba52b5e5de3f79c724e603"
     ],
     [
       "Steel.Memory.Tactics.rm",
@@ -55,7 +55,7 @@
         "token_correspondence_Steel.Memory.equiv", "typing_Steel.Memory.star"
       ],
       0,
-      "81042c5bd394ccbd34c7e9cc4948d13f"
+      "64d9644b9eb049f72c94bd689605c546"
     ],
     [
       "Steel.Memory.Tactics.shuffled",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_9b4ca71818bbe4836380a343255146fc"
       ],
       0,
-      "592987f5aacb290892d68dbd0c47e1d8"
+      "028dfd9d3ec21b8c38f444f54d09e22e"
     ]
   ]
 ]

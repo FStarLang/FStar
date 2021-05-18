@@ -129,8 +129,6 @@ let rec sorted (#a:Type) (f:a -> a -> Tot bool) (s:seq a)
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
 
-module F = FStar.FunctionalExtensionality
-
 val sorted_feq (#a:Type)
                (f g : (a -> a -> Tot bool))
                (s:seq a{forall x y. f x y == g x y})

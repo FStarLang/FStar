@@ -250,6 +250,10 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
    (r':vprop{can_be_split r0 r'})
    (unrestricted_focus_rmem h r0)
 
+/// Exposing that calling focus_rmem on the current context corresponds to an equality
+let focus_rmem_refl (r:vprop) (h:rmem r)
+  : Lemma (focus_rmem #r h r == h)
+  = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
 
 (* AF 04/27/2021: The linear equality generation, where equalities are only
    generated for leaf, VUnit nodes, works well for concrete code, but does
