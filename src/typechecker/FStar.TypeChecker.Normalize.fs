@@ -1163,7 +1163,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when should_consider_norm_requests cfg &&
                  is_norm_request hd args = Norm_request_ready ->
             if cfg.debug.print_normalized
-            then BU.print_string "Potential norm request ... \n";
+            then BU.print2 "Potential norm request with hd = %s and args = %s ... \n"
+                   (Print.term_to_string hd) (Print.args_to_string args);
+
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
                                                          ; unfold_fully = None
                                                          ; do_not_unfold_pure_lets = false };
