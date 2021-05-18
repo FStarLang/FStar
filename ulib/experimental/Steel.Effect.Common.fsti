@@ -115,19 +115,19 @@ let normal (#a:Type) (x:a) =
 let star = VStar
 
 /// Extracting the underlying separation logic assertion from a vprop
-[@__steel_reduce__]
+[@@__steel_reduce__; strict_on_arguments [0]]
 let rec hp_of (p:vprop) = match p with
   | VUnit p -> p.hp
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@__steel_reduce__]
+[@@__steel_reduce__; strict_on_arguments [0]]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@__steel_reduce__]
+[@@__steel_reduce__; strict_on_arguments [0]]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
@@ -244,16 +244,21 @@ unfold
 let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
   = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
 
-[@@ __steel_reduce__]
+/// Do not reduce focus_rmem, use the SMTPat in focus_rewrite below
 let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
  = FExt.on_dom_g
    (r':vprop{can_be_split r0 r'})
    (unrestricted_focus_rmem h r0)
 
 /// Exposing that calling focus_rmem on the current context corresponds to an equality
-let focus_rmem_refl (r:vprop) (h:rmem r)
+val focus_rmem_refl (r:vprop) (h:rmem r)
   : Lemma (focus_rmem #r h r == h)
-  = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
+
+/// Rewrites an uninterpreted focus_rmem
+val focus_rewrite (#r:vprop) (h:rmem r) (r0 : vprop{r `can_be_split` r0})
+  (r':vprop{can_be_split r0 r'})
+  : Lemma (can_be_split_trans r r0 r'; focus_rmem h r0 r' == h r')
+          [SMTPat (focus_rmem h r0 r')]
 
 (* AF 04/27/2021: The linear equality generation, where equalities are only
    generated for leaf, VUnit nodes, works well for concrete code, but does
@@ -277,7 +282,9 @@ let focus_rmem_refl (r:vprop) (h:rmem r)
 *)
 
 /// State that all "atomic" subresources have the same selectors on both views
-[@@ __steel_reduce__]
+/// The strict_on_arguments[0] ensures that this function is not reduced when
+/// the first argument is symbolic, avoiding reduction to get stuck inside
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec frame_equalities
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
@@ -299,6 +306,12 @@ let rec frame_equalities
         frame_equalities p2 h02 h12
     end
 
+/// When normalization above gets stuck because of a symbolic argument, this
+/// lemma with the SMTPattern should expose the necessary fact
+val reveal_frame_equality (frame:vprop) (h0:rmem frame) (h1:rmem frame)
+  : Lemma (requires frame_equalities frame h0 h1)
+          (ensures normal (h0 frame == h1 frame))
+          [SMTPat (frame_equalities frame h0 h1)]
 
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below

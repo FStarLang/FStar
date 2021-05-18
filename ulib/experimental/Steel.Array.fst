@@ -29,7 +29,6 @@ let alloc x n =
   alloc s
 
 let index r i =
-  let h = get() in
   let s = read r in
   Seq.index s (U32.v i)
 

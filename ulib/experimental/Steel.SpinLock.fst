@@ -64,11 +64,12 @@ val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (lockinv p r `star` emp)
     (fun b -> lockinv p r  `star` (if b then p else emp))
 
+#set-options "--fuel 1 --ifuel 1"
+
 let acquire_core #p #u r i =
   let ghost = witness_exists () in
 
   let res = cas_pt r ghost available locked in
-
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   rewrite_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
     (fun _ -> ());

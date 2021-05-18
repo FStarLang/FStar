@@ -21,6 +21,7 @@ module Mem = Steel.Memory
 open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
 
+
 let h_exists #a f = VUnit ({hp = Mem.h_exists (fun x -> hp_of (f x)); t = unit; sel = fun _ -> ()})
 
 let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
@@ -41,6 +42,11 @@ let emp':vprop' =
     sel = fun _ -> ()}
 
 let reveal_emp () = ()
+
+let focus_rmem_refl r h = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
+let focus_rewrite h r0 r' = ()
+
+let reveal_frame_equality _ _ _ = ()
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()
