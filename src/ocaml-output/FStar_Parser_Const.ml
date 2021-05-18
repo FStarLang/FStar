@@ -288,8 +288,6 @@ let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
 let (allow_informative_binders_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
-let (ite_soundness_forall_attr : FStar_Ident.lident) =
-  p2l ["FStar"; "Pervasives"; "ite_soundness_forall"]
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) =

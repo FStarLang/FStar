@@ -190,7 +190,6 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 
 
-
 let normalize_term : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 type 'a normalize = 'a
 type norm_step =
