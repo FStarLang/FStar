@@ -112,6 +112,8 @@ precedence.
 * ``>`` : Greater than (infix)
 * ``>=``: Greater than or equal (infix)
 
+.. _Part1_ch1_boolean_refinements:
+
 Boolean refinement types
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

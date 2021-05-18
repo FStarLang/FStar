@@ -44,7 +44,8 @@ several roles:
   of F* programs and proof automation procedures.
 
 To achieve these goals, the design of F* revolves around a few key
-elements.
+elements, described below. Not all of this may make sense to
+you---that's okay, you'll learn about it as we go.
 
 * A core language of total functions with full dependent types,
   including an extensional form of type conversion, indexed inductive
