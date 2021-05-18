@@ -15,8 +15,7 @@ let swap (#a:Type0) (r1 r2:ref a) : Steel unit
   (ensures fun h0 _ h1 ->
     sel r1 h0 == sel r2 h1 /\
     sel r2 h0 == sel r1 h1)
-  = let _ = get() in
-    let x1 = read r1 in
+  = let x1 = read r1 in
     let x2 = read r2 in
     write r2 x1;
     write r1 x2
@@ -44,7 +43,7 @@ let test2 (r1 r2:ref int) : Steel unit
   (vptr r1 `star` vptr r2) (fun _ -> vptr r1 `star` vptr r2)
   (requires fun h -> sel r1 h == 1)
   (ensures fun h0 _ h1 -> sel r1 h1 == 0 /\ sel r2 h0 == sel r2 h1)
-  = let _ = get () in
+  = //let _ = get () in
     write r1 0;
     write r1 0
 

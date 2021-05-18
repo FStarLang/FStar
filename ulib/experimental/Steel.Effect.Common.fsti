@@ -244,7 +244,7 @@ unfold
 let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
   = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
 
-/// Do not reduce focus_rmem, use the SMTPat in focus_rewrite below
+[@@ __steel_reduce__; strict_on_arguments [0; 2]]
 let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
  = FExt.on_dom_g
    (r':vprop{can_be_split r0 r'})
@@ -310,7 +310,7 @@ let rec frame_equalities
 /// lemma with the SMTPattern should expose the necessary fact
 val reveal_frame_equality (frame:vprop) (h0:rmem frame) (h1:rmem frame)
   : Lemma (requires frame_equalities frame h0 h1)
-          (ensures normal (h0 frame == h1 frame))
+          (ensures h0 frame == h1 frame)
           [SMTPat (frame_equalities frame h0 h1)]
 
 /// More lemmas about the abstract can_be_split predicates, to be used as

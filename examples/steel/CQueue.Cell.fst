@@ -119,7 +119,7 @@ let ccell_sel
 
 let intro_ccell
   #opened #a c
-=
+= let h = get () in
   intro_ccell_is_lvalue c;
   reveal_star (vptr (ccell_data c)) (vptr (ccell_next c));
   intro_vdep
@@ -165,7 +165,7 @@ let elim_ccell_ghost
 
 let elim_ccell
   #opened #a c
-=
+= let h = get() in
   let c2 = elim_ccell_ghost c in
   let c : ccell_lvalue a = c in
   change_equal_slprop (vptr (ccell_data c2)) (vptr (ccell_data c));
