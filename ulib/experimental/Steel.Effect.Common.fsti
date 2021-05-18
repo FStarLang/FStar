@@ -209,6 +209,15 @@ let rmem (pre:vprop) =
   (r0:vprop{can_be_split pre r0})
   (fun r0 -> normal (t_of r0))
 
+noextract
+let hmem (p:vprop) = hmem (hp_of p)
+
+noextract
+val mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r)
+
+val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
+  : Lemma (ensures reveal_can_be_split(); (mk_rmem r h) r0 == sel_of r0 h)
+
 (* Logical pre and postconditions can only access the restricted view of the heap *)
 
 type req_t (pre:pre_t) = rmem pre -> Type0
@@ -391,7 +400,7 @@ let vrefine_t (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot Type
 val vrefine_sel (v: vprop) (p: (normal (t_of v) -> Tot prop)) : Tot (selector (vrefine_t v p) (vrefine_hp v p))
 
 /// Exposing the definition of the refined selector
-val vrefine_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: hmem (vrefine_hp v p)) : Lemma
+val vrefine_sel_eq (v: vprop) (p: (normal (t_of v) -> Tot prop)) (m: Mem.hmem (vrefine_hp v p)) : Lemma
   (
     interp (hp_of v) m /\
     vrefine_sel v p m == sel_of v m
@@ -434,7 +443,7 @@ let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
 val vdep_sel (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot (selector (vdep_t v p) (vdep_hp v p))
 
 /// Exposing the definition of the dependent star's selector when needed for proof purposes
-val vdep_sel_eq (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: hmem (vdep_hp v p)) : Lemma
+val vdep_sel_eq (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: Mem.hmem (vdep_hp v p)) : Lemma
   (
     interp (hp_of v) m /\
     begin let x = sel_of v m in
@@ -460,7 +469,7 @@ let vdep (v: vprop) (p: ( (t_of v) -> Tot vprop)) = VUnit (vdep' v p)
 val vrewrite_sel (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) : Tot (selector t (normal (hp_of v)))
 
 /// Exposing the definition of the above selector
-val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: hmem (normal (hp_of v))) : Lemma
+val vrewrite_sel_eq (v: vprop) (#t: Type) (f: (normal (t_of v) -> GTot t)) (h: Mem.hmem (normal (hp_of v))) : Lemma
   ((vrewrite_sel v f <: selector' _ _) h == f ((normal (sel_of v) <: selector' _ _) h))
 //  [SMTPat (vrewrite_sel v f h)] // FIXME: this pattern causes Z3 "wrong number of argument" errors
 

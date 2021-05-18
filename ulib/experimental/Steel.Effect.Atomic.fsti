@@ -94,12 +94,12 @@ let bind_req (#a:Type)
 : req_t (pre_f `star` frame_f)
 = fun m0 -> normal (
   req_f (focus_rmem m0 pre_f) /\
-  (forall (x:a) (m1:rmem (post_f x `star` frame_f)).
-    (ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
-      frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f))
+  (forall (x:a) (h1:hmem (post_f x `star` frame_f)).
+    (ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+      frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f))
     ==> pr x /\
       (can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
-      (req_g x) (focus_rmem m1 (pre_g x)))))
+      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)))))
 
 /// Logical postcondition for the composition (bind) of two Steel computations:
 /// The precondition of the first computation was satisfied in the initial state, and there
@@ -120,17 +120,17 @@ let bind_ens (#a:Type) (#b:Type)
 : ens_t (pre_f `star` frame_f) b post
 = fun m0 y m2 -> normal (
   req_f (focus_rmem m0 pre_f) /\
-  (exists (x:a) (m1:rmem (post_f x `star` frame_f)).
+  (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
     pr x /\
     (
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
     can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
     can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
-    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f) /\
-    frame_equalities (frame_g x) (focus_rmem m1 (frame_g x)) (focus_rmem m2 (frame_g x)) /\
-    ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
-    (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))))
+    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
+    frame_equalities (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
+    ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y)))))
 
 /// Steel atomic effect combinator to compose two Steel atomic computations
 /// Separation logic VCs are squashed goals passed as implicits, annotated with the framing_implicit
@@ -175,9 +175,9 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= (forall (m0:rmem pre_g). normal (req_g m0 ==> req_f (focus_rmem m0 pre_f))) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). normal (
-      ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1
+= (forall (h0:hmem pre_g). normal (req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f))) /\
+  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). normal (
+      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
     )
   )
 
@@ -450,12 +450,21 @@ val as_atomic_action_ghost (#a:Type u#a)
 
 open FStar.Ghost
 
+/// Only used to implement get below. Using reflection to define get inside the fst
+/// leads to verification issues because the repr is not abstract
+private
+val get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
+  true opened Unobservable p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
 /// Returning the current global selector in the context
-val get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
+let get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
   opened
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+  = SteelGhost?.reflect (get0 ())
 
 /// Returning the current value of the selector of vprop [p], as long as [p] is in the context
 let gget (#opened:inames) (p: vprop) : SteelGhost (erased (t_of p))
@@ -519,21 +528,43 @@ val change_slprop_rel_with_cond (#opened:inames)
 
 (* Inferring the validity of a pure proposition from the validity of a vprop in the current context *)
 
-val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+/// Same issue as for get above
+private
+val extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : repr unit false opened Unobservable p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
+
+let extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+  = SteelGhost?.reflect (extract_info0 p vp fact l)
 
-val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
+private
+val extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures fact)
+  ) : repr unit false opened Unobservable p (fun _ -> p)
+      (fun h -> True)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
+let extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> True)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+  = SteelGhost?.reflect (extract_info_raw0 p fact l)
 
 /// A noop operator, occasionally useful for forcing framing of a subsequent computation
 val noop (#opened:inames) (_:unit)
@@ -551,11 +582,19 @@ val sladmit (#a:Type)
             (_:unit)
   : SteelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
+/// Same issue as get above
+private
+val slassert0 (#opened:inames) (p:vprop) : repr unit
+  false opened Unobservable p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1))
+
 /// Asserts the validity of vprop [p] in the current context
-val slassert (#opened_invariants:_) (p:vprop)
+let slassert (#opened_invariants:_) (p:vprop)
   : SteelGhost unit opened_invariants p (fun _ -> p)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
+  = SteelGhost?.reflect (slassert0 p)
 
 /// Drops vprop [p] from the context. Although our separation logic is affine,
 /// the frame inference tactic treats it as linear.

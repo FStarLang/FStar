@@ -67,12 +67,12 @@ let bind_req (#a:Type)
 : req_t (pre_f `star` frame_f)
 = fun m0 -> normal (
   req_f (focus_rmem m0 pre_f) /\
-  (forall (x:a) (m1:rmem (post_f x `star` frame_f)).
-    (ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
-      frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f))
+  (forall (x:a) (h1:hmem (post_f x `star` frame_f)).
+    (ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+      frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f))
     ==> pr x /\
       (can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
-      (req_g x) (focus_rmem m1 (pre_g x)))))
+      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)))))
 
 /// Logical postcondition for the composition (bind) of two Steel computations:
 /// The precondition of the first computation was satisfied in the initial state, and there
@@ -93,17 +93,17 @@ let bind_ens (#a:Type) (#b:Type)
 : ens_t (pre_f `star` frame_f) b post
 = fun m0 y m2 -> normal (
   req_f (focus_rmem m0 pre_f) /\
-  (exists (x:a) (m1:rmem (post_f x `star` frame_f)).
+  (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
     pr x /\
     (
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
     can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
     can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
-    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f) /\
-    frame_equalities (frame_g x) (focus_rmem m1 (frame_g x)) (focus_rmem m2 (frame_g x)) /\
-    ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
-    (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))))
+    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
+    frame_equalities (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
+    ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y)))))
 
 /// Steel effect combinator to compose two Steel computations
 /// Separation logic VCs are squashed goals passed as implicits, annotated with the framing_implicit
@@ -142,9 +142,9 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= (forall (m0:rmem pre_g). normal (req_g m0 ==> req_f (focus_rmem m0 pre_f))) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). normal (
-      ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1
+= (forall (h0:hmem pre_g). normal (req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f))) /\
+  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). normal (
+      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
     )
   )
 

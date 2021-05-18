@@ -35,6 +35,18 @@ let can_be_split_refl p = ()
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
 let reveal_equiv p q = ()
 
+unfold
+let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
+
+let mk_rmem r h =
+   FExt.on_dom_g
+     (r0:vprop{r `can_be_split` r0})
+     (unrestricted_mk_rmem r h)
+
+let reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
+  : Lemma ((mk_rmem r h) r0 == sel_of r0 h)
+  = FExt.feq_on_domain_g (unrestricted_mk_rmem r h)
+
 let emp':vprop' =
   { hp = emp;
     t = unit;
@@ -71,7 +83,7 @@ let interp_vrefine_hp
 
 let vrefine_sel' (v: vprop) (p: (t_of v -> Tot prop)) : Tot (selector' (vrefine_t v p) (vrefine_hp v p))
 =
-  fun (h: hmem (vrefine_hp v p)) ->
+  fun (h: Mem.hmem (vrefine_hp v p)) ->
     interp_refine_slprop (hp_of v) (vrefine_am v p) h;
     sel_of v h
 
@@ -88,7 +100,7 @@ let vrefine_sel_eq
 let vdep_hp_payload
   (v: vprop)
   (p: (t_of v -> Tot vprop))
-  (h: hmem (hp_of v))
+  (h: Mem.hmem (hp_of v))
 : Tot slprop
 = hp_of (p (sel_of v h))
 
@@ -123,7 +135,7 @@ let vdep_sel'
   (p: t_of v -> Tot vprop)
 : Tot (selector' (vdep_t v p) (vdep_hp v p))
 =
-  fun (m: hmem (vdep_hp v p)) ->
+  fun (m: Mem.hmem (vdep_hp v p)) ->
     interp_vdep_hp v p m;
     let x = sel_of v m in
     let y = sel_of (p (sel_of v m)) m in
@@ -142,7 +154,7 @@ let vdep_sel_eq
 let vrewrite_sel
   v #t f
 =
-  (fun (h: hmem (normal (hp_of v))) -> f ((normal (sel_of v) <: selector' _ _) h))
+  (fun (h: Mem.hmem (normal (hp_of v))) -> f ((normal (sel_of v) <: selector' _ _) h))
 
 let vrewrite_sel_eq
   v #t f h

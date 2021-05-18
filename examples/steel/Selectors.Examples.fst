@@ -15,8 +15,7 @@ let swap (#a:Type0) (r1 r2:ref a) : Steel unit
   (ensures fun h0 _ h1 ->
     sel r1 h0 == sel r2 h1 /\
     sel r2 h0 == sel r1 h1)
-  = let _ = get() in
-    let x1 = read r1 in
+  = let x1 = read r1 in
     let x2 = read r2 in
     write r2 x1;
     write r1 x2

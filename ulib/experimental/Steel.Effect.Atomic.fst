@@ -233,18 +233,6 @@ let bind_aux a b #opened #o1 #o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_
 
 let bind a b _ _ _ f g = norm_repr (bind_aux a b f g)
 
-unfold
-let subcomp_pre_unnormal (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (_:squash (can_be_split pre_g pre_f))
-  (_:squash (equiv_forall post_f post_g))
-: pure_pre
-= ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
-
-let unnormal (p:prop) : Lemma (requires normal p) (ensures p) = ()
-
 let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in
@@ -253,15 +241,14 @@ let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre
 
     can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant opened m0) m0;
 
-    let x = f frame in
+    unnormal (subcomp_pre_unnormal req_f ens_f req_g ens_g p1 p2);
 
+    let x = f frame in
 
     let m1:full_mem = NMSTTotal.get () in
     let h1 = mk_rmem (post_g x) (core_mem m1) in
 
     focus_is_restrict_mk_rmem (post_g x) (post_f x) (core_mem m1);
-
-    unnormal (subcomp_pre_unnormal req_f ens_f req_g ens_g p1 p2);
 
     can_be_split_3_interp (hp_of (post_f x)) (hp_of (post_g x)) frame (locks_invariant opened m1) m1;
 
@@ -291,10 +278,6 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0;
       h0
-
-let get _ =
-  Classical.forall_intro_2 focus_rmem_refl;
-  SteelGhostF?.reflect (get0 ())
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -341,6 +324,7 @@ let change_slprop0 (#opened:inames) (p q:vprop) (vp:erased (t_of p)) (vq:erased 
   ) : repr unit false opened Unobservable p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
   = fun frame ->
       let m:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
       proof (core_mem m);
       Classical.forall_intro (Classical.move_requires proof);
       Mem.star_associative (hp_of p) frame (locks_invariant opened m);
@@ -371,6 +355,7 @@ let change_slprop_20 (#opened:inames) (p q:vprop) (vq:erased (t_of q))
            (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
   = fun frame ->
       let m:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
       proof (core_mem m);
       Classical.forall_intro (Classical.move_requires proof);
       Mem.star_associative (hp_of p) frame (locks_invariant opened m);
@@ -392,7 +377,7 @@ let change_slprop_rel0 (#opened:inames) (p q:vprop)
            (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
   = fun frame ->
       let m:full_mem = NMSTTotal.get () in
-
+      Classical.forall_intro_3 reveal_mk_rmem;
       proof (core_mem m);
       let h0 = mk_rmem p (core_mem m) in
       let h1 = mk_rmem q (core_mem m) in
@@ -419,6 +404,7 @@ let change_slprop_rel_with_cond0 (#opened:inames) (p q:vprop)
   = fun frame ->
       let m:full_mem = NMSTTotal.get () in
 
+      Classical.forall_intro_3 reveal_mk_rmem;
       proof (core_mem m);
       let h0 = mk_rmem p (core_mem m) in
       let h1 = mk_rmem q (core_mem m) in
@@ -441,13 +427,11 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
   = fun frame ->
       let m0:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
-
-let extract_info p vp fact l =
-  Classical.forall_intro_2 focus_rmem_refl;
-  SteelGhost?.reflect (extract_info0 p vp fact l)
 
 let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -462,10 +446,6 @@ let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info_raw p fact l =
-  Classical.forall_intro_2 focus_rmem_refl;
-  SteelGhost?.reflect (extract_info_raw0 p fact l)
-
 let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
 let sladmit _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
@@ -478,10 +458,6 @@ let slassert0 (#opened:inames) (p:vprop) : repr unit
       let m0:full_mem = NMSTTotal.get () in
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0
-
-let slassert p =
-  Classical.forall_intro_2 focus_rmem_refl;
-  SteelGhost?.reflect (slassert0 p)
 
 let drop p = rewrite_slprop p emp
   (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
@@ -496,10 +472,7 @@ let reveal_star0 (#opened:inames) (p1 p2:vprop)
    )
  = fun frame ->
      let m:full_mem = NMSTTotal.get () in
-     let h0 = mk_rmem (p1 `star` p2) (core_mem m) in
-     reveal_mk_rmem (p1 `star` p2) m (p1 `star` p2);
-     reveal_mk_rmem (p1 `star` p2) m p1;
-     reveal_mk_rmem (p1 `star` p2) m p2
+     Classical.forall_intro_3 reveal_mk_rmem
 
 let reveal_star p1 p2 = SteelGhost?.reflect (reveal_star0 p1 p2)
 
@@ -515,6 +488,7 @@ let reveal_star_30 (#opened:inames) (p1 p2 p3:vprop)
    )
  = fun frame ->
      let m:full_mem = NMSTTotal.get () in
+     Classical.forall_intro_3 reveal_mk_rmem;
      let h0 = mk_rmem (p1 `star` p2 `star` p3) (core_mem m) in
      can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p1;
      can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p2;
