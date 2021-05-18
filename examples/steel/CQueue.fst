@@ -75,7 +75,7 @@ let elim_vconst
 let vpure_sel'
   (p: prop)
 : Tot (selector' (squash p) (Steel.Memory.pure p))
-= fun (m: hmem (Steel.Memory.pure p)) -> pure_interp p m
+= fun (m: Steel.Memory.hmem (Steel.Memory.pure p)) -> pure_interp p m
 
 let vpure_sel
   (p: prop)
@@ -287,7 +287,7 @@ let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
   L.append_length (fst (L.unsnoc l)) [snd (L.unsnoc l)];
   L.unsnoc l
 
-let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun l' -> L.length l' < 
+let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun l' -> L.length l' <
 L.length l)) = fst (unsnoc l)
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
@@ -589,7 +589,7 @@ let elim_llist_fragment_tail_snoc
   res
 
 #pop-options
-  
+
 let rec llist_fragment_tail_append
   (#opened: _)
   (#a: Type)
@@ -670,10 +670,10 @@ val intro_queue_tail
     (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
     (fun _ -> queue_tail x l)
     (fun h -> (
-      can_be_split 
+      can_be_split
         (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
         (llist_fragment_tail l (cllist_head x)) /\
-      can_be_split 
+      can_be_split
         (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
         (vptr (cllist_tail x))
       ) ==> (
@@ -709,10 +709,10 @@ val elim_queue_tail
     (fun tail -> llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
     (fun h -> True)
     (fun _ tail h ->
-      can_be_split 
+      can_be_split
         (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
         (llist_fragment_tail l (cllist_head x)) /\
-      can_be_split 
+      can_be_split
         (llist_fragment_tail l (cllist_head x) `star` vptr (cllist_tail x) `star` vptr tail)
         (vptr (cllist_tail x)) /\
       sel_llist_fragment_tail l (cllist_head x) h == Ghost.reveal tail /\
@@ -743,7 +743,7 @@ let elim_queue_tail
   change_equal_slprop
     (vptr tail3)
     (vptr tail);
-  reveal_star_3 (llist_fragment_tail l (cllist_head x)) (vptr (cllist_tail x)) (vptr tail);  
+  reveal_star_3 (llist_fragment_tail l (cllist_head x)) (vptr (cllist_tail x)) (vptr tail);
   tail
 
 
@@ -841,7 +841,7 @@ let llist_fragment_head_eq_cons
     vbind
       (ccell_is_lvalue head `star` (ccell head `vrefine` llist_fragment_head_data_refine (L.hd (Ghost.reveal l))))
       (ref (ccell_ptrvalue a) & ccell_ptrvalue a)
-      (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))    
+      (llist_fragment_head_payload head (L.hd (Ghost.reveal l)) (llist_fragment_head (L.tl (Ghost.reveal l))))
   ))
 = assert_norm
     (llist_fragment_head l phead head == (
@@ -1001,7 +1001,7 @@ let rec llist_fragment_head_to_tail
   (head: ccell_ptrvalue a)
 : SteelGhost (Ghost.erased (ref (ccell_ptrvalue a))) opened
     (vptr phead `star` llist_fragment_head l phead head)
-    (fun res -> llist_fragment_tail l phead `star` vptr res) 
+    (fun res -> llist_fragment_tail l phead `star` vptr res)
     (fun h -> h (vptr phead) == head)
     (fun h res h' ->
       let v = sel_llist_fragment_head l phead head h in
@@ -1055,7 +1055,7 @@ let rec llist_fragment_tail_to_head
   (phead: ref (ccell_ptrvalue a))
   (ptail: ref (ccell_ptrvalue a))
 : SteelGhost (Ghost.erased (ccell_ptrvalue a)) opened
-    (llist_fragment_tail l phead `star` vptr ptail) 
+    (llist_fragment_tail l phead `star` vptr ptail)
     (fun head -> vptr phead `star` llist_fragment_head l phead (Ghost.reveal head))
     (fun h -> Ghost.reveal ptail == sel_llist_fragment_tail l phead h)
     (fun h head h' ->

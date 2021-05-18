@@ -79,10 +79,6 @@ let rec member ptr v =
 
 #push-options "--ifuel 1 --fuel 2"
 let rotate_left #a ptr =
-  // This get function call is currently needed because of issues
-  // with SMT quantifier instantiation in our VC encoding.
-  // TODO: Fix this
-  let h = get() in
   (**) node_is_not_null ptr;
   (**) let x_node = unpack_tree ptr in
   let x = get_data x_node in
@@ -98,7 +94,6 @@ let rotate_left #a ptr =
   (get_right x_node)
 
 let rotate_right #a ptr =
-  let h = get () in
   (**) node_is_not_null ptr;
   (**) let x_node = unpack_tree ptr in
   let x = get_data x_node in
@@ -115,7 +110,6 @@ let rotate_right #a ptr =
 
 
 let rotate_right_left #a ptr =
-  let h = get () in
   (**) node_is_not_null ptr;
   // original root node
   (**) let x_node = unpack_tree ptr in
@@ -146,8 +140,6 @@ let rotate_right_left #a ptr =
 
 
 let rotate_left_right #a ptr =
-  let h = get () in
-
   (**) node_is_not_null ptr;
   // original root node
   (**) let x_node = unpack_tree ptr in
@@ -199,8 +191,6 @@ let rec is_balanced #a ptr =
 
 #push-options "--ifuel 2"
 let rebalance_avl #a cmp ptr =
-  let h = get () in
-
   if is_balanced ptr then (
     return ptr
   ) else (
