@@ -61,3 +61,13 @@ let rec fibonacci_greater_than_arg (n:nat{n >= 2})
       fibonacci_greater_than_arg (n - 2)
     )
 //SNIPPET_END: fibonacci_answer
+
+
+//SNIPPET_START: fibonacci_answer_alt
+let rec fib_greater_than_arg (n:nat{n >= 2})
+  : Lemma (fibonacci n >= n)
+  = if n = 2 then ()
+    else (
+      fib_greater_than_arg (n - 1)
+    )
+//SNIPPET_END: fibonacci_answer_alt
