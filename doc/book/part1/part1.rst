@@ -34,7 +34,7 @@ computer-checkable claim that the term ``e`` is a proof of the theorem
 ``t``.
 
 In the next few chapters we'll learn about how to program total
-functions and prove then correct.
+functions and prove  then correct.
 
 .. toctree::
    :hidden:
@@ -43,3 +43,6 @@ functions and prove then correct.
 
    part1_ch1
    part1_ch2
+   part1_ch3
+   part1_ch4
+   part1_ch5
