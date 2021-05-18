@@ -72,8 +72,6 @@ let erasable = ()
 
 let allow_informative_binders = ()
 
-let ite_soundness_forall = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
