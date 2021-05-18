@@ -710,17 +710,22 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         a_b, rest_bs, f_b, c
       | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-    let check_branch env ite_f_or_g_sort : unit =
-      let subst = [NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)] in
-      let subst, uvars, g_uvars = subcomp_bs |> List.fold_left (fun (substs, uvars, g) b ->
-        let sort = SS.subst substs b.binder_bv.sort in
-        let t, _, g_t =
-          let uv_qual =
-            match b.binder_attrs with
-            | [] -> Allow_untyped
-            | _ -> Strict in
-          new_implicit_var_aux "" r env sort uv_qual None in
-        substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t) (subst, [], Env.trivial_guard) in
+    let check_branch env ite_f_or_g_sort attr_opt : unit =
+      let subst, uvars, g_uvars = subcomp_bs |> List.fold_left
+        (fun (subst, uvars, g) b ->
+         let sort = SS.subst subst b.binder_bv.sort in
+         let t, _, g_t =
+         let uv_qual =
+           if List.length b.binder_attrs > 0 ||
+              attr_opt |> is_some
+           then Strict
+           else Allow_untyped in
+         let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
+         new_implicit_var_aux "" r env sort uv_qual ctx_uvar_meta in
+        subst@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t)
+        ([NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)],
+         [],
+         Env.trivial_guard) in
 
       let subcomp_f_sort = SS.subst subst subcomp_f_b.binder_bv.sort in
       let c = SS.subst_comp subst subcomp_c |> Env.unfold_effect_abbrev env in
@@ -728,18 +733,32 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       let g_f_or_g = Rel.layered_effect_teq env subcomp_f_sort ite_f_or_g_sort None in
       let g_c = Rel.layered_effect_teq env c.result_typ ite_t_applied None in
 
-      let g_precondition = Env.pure_precondition_for_trivial_post
+      let fml = Env.pure_precondition_for_trivial_post
         env
         (List.hd c.comp_univs)
         c.result_typ
         (c.effect_args |> List.hd |> fst)
-        r |> NonTrivial |> Env.guard_of_guard_formula in
+        r in
+      let g_precondition =
+        match attr_opt with
+        | None -> fml  |> NonTrivial |> Env.guard_of_guard_formula
+        | Some attr ->
+          let _, _, g = new_implicit_var_aux "" r env
+            (U.mk_squash S.U_zero fml)
+            Strict
+            (Ctx_uvar_meta_attr attr |> Some) in
+          g in
 
       Rel.force_trivial_guard env (Env.conj_guards [g_uvars; g_f_or_g; g_c; g_precondition]) in
 
+    let ite_soundness_tac_attr =
+      match U.get_attribute PC.ite_soundness_by_attr attrs with
+      | Some ((t, _)::_) -> Some t
+      | _ -> None in
+
     let _check_then =
       let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
-      check_branch env f_b.binder_bv.sort in
+      ignore (check_branch env f_b.binder_bv.sort ite_soundness_tac_attr) in
 
     let _check_else =
       let not_p = S.mk_Tm_app
@@ -747,7 +766,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         [p_t |> U.b2t |> S.as_arg]
         r in
       let env = Env.push_bv env (S.new_bv None not_p) in
-      check_branch env g_b.binder_bv.sort in
+      ignore (check_branch env g_b.binder_bv.sort ite_soundness_tac_attr) in
 
     ()
         
