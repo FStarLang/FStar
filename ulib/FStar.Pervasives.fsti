@@ -205,7 +205,7 @@ let st_if_then_else
       (h0: heap)
      = wp_then post h0 /\ (~p ==> wp_else post h0)
 
-(** As with [PURE] the [ite_wp] combinator names the postcondition as
+(** As with [PURE] the [wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
 unfold
 let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
@@ -753,6 +753,8 @@ val commute_nested_matches : unit
     function, an error will be raised (code 340).
   *)
 val noextract_to (backend:string) : Tot unit
+
+val ite_soundness_by : unit
 
 ///  Controlling normalization
 
