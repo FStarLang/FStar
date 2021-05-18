@@ -2052,9 +2052,17 @@ let (tc_layered_eff_decl :
                                                                     FStar_Syntax_Syntax.Ctx_uvar_meta_attr
                                                                     uu___21)
                                                                     attr_opt in
+                                                                let uu___21 =
+                                                                  let uu___22
+                                                                    =
+                                                                    FStar_Syntax_Print.binder_to_string
+                                                                    b in
+                                                                  FStar_Util.format1
+                                                                    "uvar for subcomp %s binder when checking ite soundness"
+                                                                    uu___22 in
                                                                 FStar_TypeChecker_Env.new_implicit_var_aux
-                                                                  "" r env1
-                                                                  sort
+                                                                  uu___21 r
+                                                                  env1 sort
                                                                   uv_qual
                                                                   ctx_uvar_meta in
                                                               (match uu___20
