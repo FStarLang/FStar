@@ -72,11 +72,11 @@ let erasable = ()
 
 let allow_informative_binders = ()
 
-let ite_soundness_forall = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
+
+let ite_soundness_by = ()
 
 let normalize_term #_ x = x
 

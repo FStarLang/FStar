@@ -1,5 +1,5 @@
 [
-  "Î.ä'uB=æ\u0012\u0011²%mp",
+  "«<-i+\u0012ù×zE\u001a‚`\u0016 ¥",
   [
     [
       "ID2.satlem",
@@ -17,7 +17,7 @@
         "true_interp", "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "fdf4651efac6920bb9ec749a7c4d148d"
+      "24ae90f2f8266cfb2584f233c4d6be6e"
     ],
     [
       "ID2.run",
@@ -30,7 +30,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "33097d64653df0925b7169b449d703aa"
+      "57148fa40457de98f700f5c22b1c0491"
     ],
     [
       "ID2.test",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "4833a1a8ff8c3fc07f0e86d6367baf39"
+      "7c4c9c22ae4b57180cf79a216d885108"
     ],
     [
       "ID2.test",
@@ -56,7 +56,7 @@
         "true_interp"
       ],
       0,
-      "8535129c3497c3b655f63b51088ed9ee"
+      "4e8bf2ec8bc7a8c653abbd43299cadb4"
     ],
     [
       "ID2.return_wp",
@@ -65,7 +65,7 @@
       1,
       [ "@query" ],
       0,
-      "543ecb971b7ef72f4182fd3d68ddb1c9"
+      "84c872117eb6a320bf9730cdb4fe73c1"
     ],
     [
       "ID2.bind_wp",
@@ -83,7 +83,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "a5587c6ea95c5cff775f4f3e1a73959f"
+      "b3f32825022f1bbacbbddadd4803e9e0"
     ],
     [
       "ID2.bind",
@@ -106,7 +106,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "a848636ce262fab978da21c8e5acca47"
+      "a5702cef5eebfdd16d21271e8bf28b7f"
     ],
     [
       "ID2.subcomp",
@@ -118,7 +118,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "4e0d7b62e6cd488084f168b1afa00325"
+      "90fe224fc165190eb12b96011178636f"
     ],
     [
       "ID2.if_then_else_wp",
@@ -130,7 +130,7 @@
         "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5"
       ],
       0,
-      "e42145d0954d1bb17872aad70dfb7caa"
+      "a700060f1473685ac729153c4170ceb1"
     ],
     [
       "ID2.ID",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0f6ee474bcb0d3796da20e9c0fd9ec26"
+      "a82b6516e0315888eaf3b50f0f57e45a"
     ],
     [
       "ID2.ID",
@@ -154,7 +154,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "ff17007041d18de70bd27fad54f72fcd"
+      "6935bf9285b53063f291fe47adc8054b"
     ],
     [
       "ID2.lift_pure_nd",
@@ -168,6 +168,7 @@
         "eq2-interp", "equation_ID2.nomon", "equation_ID2.sat",
         "equation_ID2.w", "equation_Prims.l_Forall",
         "equation_Prims.logical", "equation_Prims.squash",
+        "interpretation_Tm_abs_8d742b80e8981705a8e66d47bbb1482f",
         "interpretation_Tm_abs_927a276ce23d88dbe79a87bbe56dc445",
         "l_imp-interp", "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
@@ -177,7 +178,7 @@
         "typing_Tm_abs_927a276ce23d88dbe79a87bbe56dc445"
       ],
       0,
-      "17e263a9e32f07dd6f2152cbe35d9db5"
+      "4eaf87c25e894c712ba2fb644446dbe3"
     ],
     [
       "ID2.count",
@@ -186,7 +187,7 @@
       1,
       [ "@query" ],
       0,
-      "e2d46f37b42596186106625a43e6e6ed"
+      "6f2a5ee47b72b226cf7e0507add4a012"
     ],
     [
       "ID2.count",
@@ -205,7 +206,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "48b731c335810862764d69ded36463dc"
+      "c42668842d95770acb3bb88e614d6491"
     ],
     [
       "ID2.test_f",
@@ -214,7 +215,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "6c41c01bfcf2e874aaa52c7f59bff65b"
+      "faf340b750b0367c2d06f8e6cb47ebba"
     ],
     [
       "ID2.test_f",
@@ -223,7 +224,16 @@
       1,
       [ "@query" ],
       0,
-      "7fce92bc95bc299380868608055f5748"
+      "d2f7e34f0cc317412bb492c3384fef8e"
+    ],
+    [
+      "ID2.test_2",
+      1,
+      2,
+      1,
+      [ "@query", "int_typing" ],
+      0,
+      "2b878f5966d511297119beb29dd71315"
     ],
     [
       "ID2.l",
@@ -240,7 +250,7 @@
         "l_and-interp", "true_interp"
       ],
       0,
-      "56105af47b224043ba00b5e8fdd4b975"
+      "b6ae8ba17da80b214b590a3481e5c63c"
     ],
     [
       "ID2.Id",
@@ -249,7 +259,7 @@
       1,
       [ "@query" ],
       0,
-      "d9a0e615da202c895b227b224de70e66"
+      "63d2b174190da05e18867ba934a88194"
     ]
   ]
 ]

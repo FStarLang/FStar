@@ -1,5 +1,5 @@
 [
-  "W„0™—\r\u001e1¬\u001dÐýiY¡Ð",
+  "o§|©lß\u00123i×Ýàwœ®©",
   [
     [
       "DelimCC.right_unit",
@@ -18,7 +18,7 @@
         "typing_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "22556e7d85b1df13622dfb4972207659"
+      "305df6c018204a89e9143996e6ace098"
     ],
     [
       "DelimCC.left_unit",
@@ -33,7 +33,7 @@
         "interpretation_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "b08d8e84b77e58ae194107858a04b2aa"
+      "ee548ca1a786ccfe1049203b16c3a9fe"
     ],
     [
       "DelimCC.associativity",
@@ -51,7 +51,7 @@
         "typing_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "5ee404d8cbd8c2ef2ce8e803651805e2"
+      "81b60703ec48e982254782b1b606d891"
     ],
     [
       "DelimCC.right_unit2",
@@ -70,7 +70,7 @@
         "typing_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "7a5f23014cb9160b28255c54f90c2213"
+      "35b533aa3f6c177b246b63c33854ea1e"
     ],
     [
       "DelimCC.left_unit2",
@@ -85,7 +85,7 @@
         "interpretation_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "698e9425a0187aeebe4db3b0457eebd8"
+      "a45b46ec95c55df7ea39250ee0f8d8b0"
     ],
     [
       "DelimCC.associativity2",
@@ -103,34 +103,19 @@
         "typing_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "e679c95652eece1f6e5c94e084460a1b"
-    ],
-    [
-      "DelimCC.ext",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a9c6bef9d3233c6ad9b45108993816ab"
+      "5d86c8069c2fba6bb89e178fc3e3cc87"
     ],
     [
       "DelimCC.left_unit3",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "interpretation_Tm_abs_dbdc705d0aa12bf03732867b4b6d0795"
+      ],
       0,
-      "ed088e6cc29ea41fc168b60f6c0f8c31"
-    ],
-    [
-      "DelimCC.right_unit3",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "32c1aa423e73f688fd9b0911423952d2"
+      "0e817170f7f99cfa928479a22aa61840"
     ],
     [
       "DelimCC.associativity3",
@@ -139,7 +124,7 @@
       1,
       [ "@query" ],
       0,
-      "cb1f23772fab28a87d6b22cf862e7f7d"
+      "8057f03038ceb3c25c3fa339179fe462"
     ]
   ]
 ]
