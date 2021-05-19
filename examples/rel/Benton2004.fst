@@ -48,6 +48,7 @@ type computation =
   (f: raw_computation { fuel_monotonic (reify_raw_computation f) })
 
 let reify_computation (c: computation) : GTot reified_computation =
+  admit ();
   let f n = reify (c n) in
   f
 
@@ -80,6 +81,7 @@ let ifthenelse (b: exp bool) (c1 c2: computation) : Tot computation =
   let g (fuel: nat) : ISNull bool =
     if b () then c1 fuel else c2 fuel
   in
+  admit ();
   assert (
     let f : reified_raw_computation =
       let h fuel = reify (g fuel) in h
@@ -96,6 +98,7 @@ let seq (c1 c2: computation) : Tot computation =
   let g (fuel: nat) : ISNull bool =
     if c1 fuel then c2 fuel else false
   in
+  admit ();
   assert (
     let f : reified_raw_computation =
       let h fuel = reify (g fuel) in h
@@ -127,7 +130,8 @@ let fuel_monotonic_while
   (ensures (
     fuel_monotonic f
   ))
-= let f (fuel: nat) = reify (while_raw b c fuel) in
+= admit ();
+  let f (fuel: nat) = reify (while_raw b c fuel) in
   let fb = reify_exp b in
   let fc = reify_computation c in
   let rec prf
