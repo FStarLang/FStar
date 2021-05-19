@@ -123,6 +123,7 @@ let gen_wps_for_free
   let sigelts = BU.mk_ref [] in
   let register env lident def =
     let sigelt, fv = TcUtil.mk_toplevel_definition env lident def in
+    let sigelt = { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}} in
     sigelts := sigelt :: !sigelts;
     fv
   in

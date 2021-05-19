@@ -642,6 +642,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
         | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
 
+      let effect_and_lift_ses = effect_and_lift_ses |> List.map (fun sigelt ->
+        { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}) in
+
       //only elaborate, the loop in tc_decls would send these back to us for typechecking
       [], ses @ effect_and_lift_ses, env0
     else       
