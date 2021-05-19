@@ -111,26 +111,25 @@ let normalize_spec _ = ()
 let norm_spec _ #_ _ = ()
 
 let pure_return_wp_monotonic #a _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let pure_bind_wp_monotonic #a #b _ _ _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #b)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let pure_if_then_else_wp_monotonic #a _ _ _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let pure_ite_wp_monotonic #a _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let pure_close_wp_monotonic #a #_ _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let div_hoare_to_wp_monotonic #a #_ _ =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let pure_null_wp_monotonic a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let inversion _ = True
 

@@ -288,14 +288,27 @@ let pure_post' (a pre: Type) = _: a{pre} -> GTot Type0
 let pure_post (a: Type) = pure_post' a True
 
 (** A pure weakest precondition transforms postconditions on [a]-typed
-    results to pure preconditions *)
+    results to pure preconditions
+
+    We require the weakest preconditions to satisfy the monotonicity
+    property over the postconditions
+    To enforce it, we first define a vanilla wp type,
+    and then refine it with the monotonicity condition *)
 let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
 
-[@@ "opaque_to_smt"]
-let pure_wp_monotonic (#a:Type) (wp:pure_wp' a) =
+(** The monotonicity predicate is marked opaque_to_smt,
+    meaning that its definition is hidden from the SMT solver,
+    and if required, will need to be explicitly revealed
+    This has the advantage that clients that do not need to work with it
+    directly, don't have the (quantified) definition in their solver context *)
+
+let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
   forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
 
-let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic wp}
+[@@ "opaque_to_smt"]
+let pure_wp_monotonic = pure_wp_monotonic0
+
+let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
 
 (** This predicate is an internal detail, used to optimize the
     encoding of some quantifiers to SMT by omitting their typing

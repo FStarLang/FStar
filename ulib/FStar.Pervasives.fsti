@@ -286,7 +286,7 @@ let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 /// The wp-calculus for [DIV] is same as that of [PURE]
 
 val pure_return_wp_monotonic (#a:Type) (x:a)
-  : Lemma (pure_wp_monotonic (pure_return a x))
+  : Lemma (pure_wp_monotonic a (pure_return a x))
 
 unfold
 let div_return (a:Type) (x:a) : pure_wp a =
@@ -294,7 +294,7 @@ let div_return (a:Type) (x:a) : pure_wp a =
   pure_return a x
 
 val pure_bind_wp_monotonic (#a #b:Type) (r:range) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
-  : Lemma (pure_wp_monotonic (pure_bind_wp r a b wp1 wp2))
+  : Lemma (pure_wp_monotonic b (pure_bind_wp r a b wp1 wp2))
 
 unfold
 let div_bind
@@ -307,7 +307,7 @@ let div_bind
     pure_bind_wp r1 a b wp1 wp2
 
 val pure_if_then_else_wp_monotonic (#a p:Type) (wp_then wp_else:pure_wp a)
-  : Lemma (pure_wp_monotonic (pure_if_then_else a p wp_then wp_else))
+  : Lemma (pure_wp_monotonic a (pure_if_then_else a p wp_then wp_else))
 
 unfold
 let div_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
@@ -315,7 +315,7 @@ let div_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
   pure_if_then_else a p wp_then wp_else
 
 val pure_ite_wp_monotonic (#a:Type) (wp:pure_wp a)
-  : Lemma (pure_wp_monotonic (pure_ite_wp a wp))
+  : Lemma (pure_wp_monotonic a (pure_ite_wp a wp))
 
 unfold
 let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
@@ -323,7 +323,7 @@ let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
   pure_ite_wp a wp
 
 val pure_close_wp_monotonic (#a #b:Type) (wp:b -> GTot (pure_wp a))
-  : Lemma (pure_wp_monotonic (pure_close_wp a b wp))
+  : Lemma (pure_wp_monotonic a (pure_close_wp a b wp))
 
 unfold
 let div_close_wp (a b:Type) (wp:b -> GTot (pure_wp a)) : pure_wp a =
@@ -356,7 +356,7 @@ let div_hoare_to_wp_aux (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) (p:pur
   pre /\ (forall a. post a ==> p a)
 
 val div_hoare_to_wp_monotonic (#a:Type) (#pre:pure_pre) (post:pure_post' a pre)
-  : Lemma (pure_wp_monotonic (div_hoare_to_wp_aux post))
+  : Lemma (pure_wp_monotonic a (div_hoare_to_wp_aux post))
 
 unfold
 let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
@@ -369,7 +369,7 @@ effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
 val pure_null_wp_monotonic (a:Type)
-  : Lemma (pure_wp_monotonic (pure_null_wp a))
+  : Lemma (pure_wp_monotonic a (pure_null_wp a))
 
 unfold
 let div_null_wp (a:Type) : pure_wp a =

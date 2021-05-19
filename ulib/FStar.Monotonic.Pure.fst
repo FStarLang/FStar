@@ -16,23 +16,34 @@
 
 module FStar.Monotonic.Pure
 
-#push-options "--warn_error -271"
-let wp_monotonic_pure (_:unit)
+(*
+ * This module provides utilities to intro and elim the monotonicity
+ *   property of pure wps
+ *
+ * Since pure_wp_monotonic predicate is marked opaque_to_smt in prims,
+ *   reasoning with it requires explicit coercions
+ *)
+
+let elim_pure_wp_monotonicity (#a:Type) (wp:pure_wp a)
+  : Lemma (forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+
+let elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
     (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
        (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
-  = let aux (a:Type)
-      : Lemma (forall (wp:pure_wp a). (forall (p q:pure_post a).
-                                    (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
-        [SMTPat ()]
-      = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a) in
-    ()
-#pop-options
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+
+let intro_pure_wp_monotonicity (#a:Type) (wp:pure_wp' a)
+  : Lemma
+      (requires forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+      (ensures pure_wp_monotonic a wp)
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 unfold
 let coerce_to_pure_wp (#a:Type) (wp:pure_wp' a)
   : Pure (pure_wp a)
       (requires forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
       (ensures fun r -> r == wp)
-  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  = intro_pure_wp_monotonicity wp;
     wp
