@@ -18,7 +18,7 @@ let wp (a:Type) = pure_wp a
 
 unfold
 let bind_wp #a #b (wc : wp a) (wf : a -> wp b) : wp b =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> wc (fun x -> wf x p))
 
 let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
@@ -41,15 +41,15 @@ let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   | D -> coerce (d_return x)
 
 // these two rely on monotonicity since the computed WP is not exactly bind_wp
-let t_bind #a #b #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x))) : m b T (bind_wp wc wf) = wp_monotonic_pure (); fun () -> f (c ()) ()
-let g_bind #a #b #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x))) : m b G (bind_wp wc wf) = wp_monotonic_pure (); fun () -> f (c ()) ()
+let t_bind #a #b #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x))) : m b T (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
+let g_bind #a #b #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x))) : m b G (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
 
 let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bind_wp wc wf) =
   raise_val (fun () -> let y = downgrade_val c () in // cannot inline this
                     downgrade_val (f y) ())
 
 let bind (a b : Type) wc wf (i:idx) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
@@ -68,7 +68,7 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
      | D -> coerce f
 
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> if b then w1 p else w2 p)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
@@ -95,14 +95,14 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let unmon #a (w:wp a) : pure_wp a = wp_monotonic_pure (); coerce_to_pure_wp (fun p -> w p)
+let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); coerce_to_pure_wp (fun p -> w p)
 
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
                   (f : eqtype_as_type unit -> PURE a (unmon w))
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
- = wp_monotonic_pure ();
+ = elim_pure_wp_monotonicity_forall ();
    match i with
    | T -> f
    | G -> f

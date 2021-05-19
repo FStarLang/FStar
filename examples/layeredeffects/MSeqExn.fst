@@ -125,7 +125,7 @@ layered_effect {
 
 let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
-= wp_monotonic_pure (); fun s0 -> Success (f ()), s0
+= elim_pure_wp_monotonicity_forall (); fun s0 -> Success (f ()), s0
 
 sub_effect PURE ~> MSeqEXN = lift_pure_mseqexn
 

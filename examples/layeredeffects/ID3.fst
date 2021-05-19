@@ -21,7 +21,7 @@ let return (a : Type) (x : a) : repr a (coerce_to_pure_wp (fun p -> p x)) =
 
 unfold
 let bind_wp #a #b (wp_v:w a) (wp_f:a -> w b) : w b =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
@@ -39,7 +39,7 @@ let subcomp (a:Type) (wp1 wp2: w a)
 
 unfold
 let if_then_else_wp #a (wp1 wp2:w a) (p:bool) =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -65,7 +65,7 @@ layered_effect {
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
   Pure (repr a wp) (requires (wp (fun _ -> True))) // Can only lift from `Tot`
                    (ensures (fun _ -> True))
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     f ()
   
 sub_effect PURE ~> ID = lift_pure_nd

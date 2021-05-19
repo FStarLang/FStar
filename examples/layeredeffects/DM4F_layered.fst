@@ -128,14 +128,14 @@ let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
 //sub_effect PURE ~> ST = lift_pure_st
 
 let lift_id_st_wp #a #st (w : ID2.w a) : wp st a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
 (* It's odd that I *have* to use the repr here, instead of a thunked
 ID a wp as above. *)
 let lift_id_st a st wp (f : ID2.repr a wp)
   : repr a st (lift_id_st_wp wp)
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     fun s0 -> (f (), s0)
 
 sub_effect ID ~> ST = lift_id_st

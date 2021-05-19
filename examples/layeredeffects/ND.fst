@@ -46,7 +46,7 @@ unfold
 val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
 unfold
 let w_bind wp1 k =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
@@ -125,7 +125,7 @@ let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v)
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord wp2 wp1) (ensures fun _ -> True) = f
 
 let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =

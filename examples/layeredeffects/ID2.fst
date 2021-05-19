@@ -32,7 +32,7 @@ let sat (w : w 'a) : Type0 = w (fun _ -> True)
 open FStar.Monotonic.Pure
 
 let satlem (w: w 'a) : Lemma (sat_e w <==> sat w) [SMTPat (sat w); SMTPat (sat_e w)] =
-  wp_monotonic_pure ()
+  elim_pure_wp_monotonicity_forall ()
 
 let repr (a : Type u#aa) (wp : w a) : Type u#aa =
   squash (sat wp) -> v:a{forall p. wp p ==> p v}
@@ -53,7 +53,7 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   fun () -> x
 
 unfold let bind_wp (#a:Type) (#b:Type) (wp_f:w a) (wp_g:a -> w b) : w b =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> wp_f (fun x -> wp_g x p))
   //let aux (p1 p2 : b->Type0) : Lemma (requires (r p1 /\ r p2))
   //                                 (ensures (r (fun x -> p1 x /\ p2 x))) =
@@ -77,7 +77,7 @@ let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
  // Fun fact: using () instead of _ below makes us
  // lose the refinement and then this proof fails.
  // Keep that in mind all ye who enter here.
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ -> f (v ()) () // explicit post is annoying
 
 let subcomp (a:Type) (wp1 wp2: w a)
@@ -88,7 +88,7 @@ let subcomp (a:Type) (wp1 wp2: w a)
 = f
 
 unfold let if_then_else_wp (#a:Type) (wp1 wp2:w a) (p:bool) : w a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 
@@ -113,13 +113,13 @@ layered_effect {
 }
 
 let nomon #a (w : w a) : pure_wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun p -> w p)
 
 let lift_pure_nd (a:Type) (wp:w a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
   Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     fun _ -> f ()
 
 sub_effect PURE ~> ID = lift_pure_nd

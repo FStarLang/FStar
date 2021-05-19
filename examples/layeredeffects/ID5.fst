@@ -35,7 +35,7 @@ let bind_wp #a #b
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
@@ -62,7 +62,7 @@ let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@@ refine] u:squash (forall p. w2 p =
 
 unfold
 let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   (coerce_to_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -74,7 +74,7 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 
 unfold
 let strengthen_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun post -> p /\ w post)
 
 let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
@@ -82,7 +82,7 @@ let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_w
 
 unfold
 let weaken_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun post -> p ==> w post)
 
 let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
@@ -92,7 +92,7 @@ let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
 
 unfold
 let cut_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp (fun post -> p /\ (p ==> w post))
 
 let cut #a #w (p:Type0) (f : repr a w) : repr a (cut_wp w p) =

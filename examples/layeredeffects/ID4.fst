@@ -34,7 +34,7 @@ let bind_wp #a #b
   (wp_v : wp0 a)
   (wp_f : (x:a -> wp0 b))
   : wp0 b
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp0 a) (wp_f: a -> wp0 b)
@@ -64,7 +64,7 @@ let subcomp (a:Type) (w1 w2: wp0 a)
   (m, r)
 
 let ite_wp #a (wp1 wp2 : wp0 a) (b : bool) : wp0 a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   coerce_to_pure_wp ((fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp0 a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =

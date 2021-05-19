@@ -230,7 +230,7 @@ let put (s:state) : AlgWP unit [Write] (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  FStar.Monotonic.Pure.wp_monotonic_pure ();
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun s0 p -> wp (fun x -> p (x, s0))
 
 let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
@@ -239,7 +239,7 @@ let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
          (ensures (fun _ -> True))
   =
     let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.wp_monotonic_pure (); // need this lemma
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v

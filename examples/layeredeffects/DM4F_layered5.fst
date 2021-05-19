@@ -114,7 +114,7 @@ layered_effect {
 }
 
 let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
 (* It's odd that I *have* to use the repr here, instead of a thunked

@@ -86,12 +86,12 @@ let pure_monotonic #a (w : pure_wp a) : Type0 =
 
 unfold
 let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
-  wp_monotonic_pure ();
+  elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p (x, s0))
 
 let lift_pure_st a st wp (f : eqtype_as_type unit -> PURE a wp)
   : repr a st (lift_wp wp)
-  = wp_monotonic_pure ();
+  = elim_pure_wp_monotonicity_forall ();
     fun s0 -> (f (), s0)
 
 sub_effect PURE ~> ST = lift_pure_st
