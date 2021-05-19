@@ -58,32 +58,46 @@ type norm_step =
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
   | UnfoldQual : list string -> norm_step
 
+irreducible
 let simplify = Simpl
 
+irreducible
 let weak = Weak
 
+irreducible
 let hnf = HNF
 
+irreducible
 let primops = Primops
 
+irreducible
 let delta = Delta
 
+irreducible
 let zeta = Zeta
 
+irreducible
 let zeta_full = ZetaFull
 
+irreducible
 let iota = Iota
 
+irreducible
 let nbe = NBE
 
+irreducible
 let reify_ = Reify
 
+irreducible
 let delta_only s = UnfoldOnly s
 
+irreducible
 let delta_fully s = UnfoldFully s
 
+irreducible
 let delta_attr s = UnfoldAttr s
 
+irreducible
 let delta_qualifier s = UnfoldAttr s
 
 let norm _ #_ x = x
@@ -95,6 +109,28 @@ let normalize_term_spec #_ _ = ()
 let normalize_spec _ = ()
 
 let norm_spec _ #_ _ = ()
+
+let pure_return_wp_monotonic #a _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+
+let pure_bind_wp_monotonic #a #b _ _ _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #b)
+
+let pure_if_then_else_wp_monotonic #a _ _ _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+
+let pure_ite_wp_monotonic #a _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+
+let pure_close_wp_monotonic #a #_ _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+
+let div_hoare_to_wp_monotonic #a #_ _ =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
+
+let pure_null_wp_monotonic a =
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a)
 
 let inversion _ = True
 

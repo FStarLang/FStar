@@ -282,11 +282,19 @@ let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 
 
 /// The [DIV] effect for divergent computations
+///
+/// The wp-calculus for [DIV] is same as that of [PURE]
+
+val pure_return_wp_monotonic (#a:Type) (x:a)
+  : Lemma (pure_wp_monotonic (pure_return a x))
 
 unfold
 let div_return (a:Type) (x:a) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  pure_return_wp_monotonic x;
   pure_return a x
+
+val pure_bind_wp_monotonic (#a #b:Type) (r:range) (wp1:pure_wp a) (wp2:a -> pure_wp b)
+  : Lemma (pure_wp_monotonic (pure_bind_wp r a b wp1 wp2))
 
 unfold
 let div_bind
@@ -295,23 +303,31 @@ let div_bind
   (wp1:pure_wp a)
   (wp2:a -> GTot (pure_wp b))
   : pure_wp b
-  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
-    reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #b);
+  = pure_bind_wp_monotonic r1 wp1 wp2;
     pure_bind_wp r1 a b wp1 wp2
+
+val pure_if_then_else_wp_monotonic (#a p:Type) (wp_then wp_else:pure_wp a)
+  : Lemma (pure_wp_monotonic (pure_if_then_else a p wp_then wp_else))
 
 unfold
 let div_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  pure_if_then_else_wp_monotonic p wp_then wp_else;
   pure_if_then_else a p wp_then wp_else
+
+val pure_ite_wp_monotonic (#a:Type) (wp:pure_wp a)
+  : Lemma (pure_wp_monotonic (pure_ite_wp a wp))
 
 unfold
 let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  pure_ite_wp_monotonic wp;
   pure_ite_wp a wp
+
+val pure_close_wp_monotonic (#a #b:Type) (wp:b -> pure_wp a)
+  : Lemma (pure_wp_monotonic (pure_close_wp a b wp))
 
 unfold
 let div_close_wp (a b:Type) (wp:b -> GTot (pure_wp a)) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+  pure_close_wp_monotonic wp;
   pure_close_wp a b wp
 
 (** The effect of divergence: from a specificational perspective it is
@@ -333,24 +349,35 @@ new_effect {
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
 sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
-unfold
-let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
-  fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
 
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
+unfold
+let div_hoare_to_wp_aux (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) (p:pure_post a) =
+  pre /\ (forall a. post a ==> p a)
+
+val div_hoare_to_wp_monotonic (#a:Type) (#pre:pure_pre) (post:pure_post' a pre)
+  : Lemma (pure_wp_monotonic (div_hoare_to_wp_aux post))
+
+unfold
+let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
+  div_hoare_to_wp_monotonic post;
+  div_hoare_to_wp_aux post
+
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   DIV a (div_hoare_to_wp post)
 
-#push-options "--admit_smt_queries true"
-unfold
-let div_null_wp (a:Type) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
-  pure_null_wp a
-#pop-options
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
+val pure_null_wp_monotonic (a:Type)
+  : Lemma (pure_wp_monotonic (pure_null_wp a))
+
+unfold
+let div_null_wp (a:Type) : pure_wp a =
+  pure_null_wp_monotonic a;
+  pure_null_wp a
+
 effect Dv (a: Type) = DIV a (div_null_wp a)
+
 
 (** We use the [EXT] effect to underspecify external system calls
     as being impure but having no observable effect on the state *)
