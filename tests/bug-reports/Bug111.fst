@@ -15,6 +15,8 @@
 *)
 module Bug111
 
-type post (a:Type) = a -> Type
+open FStar.Monotonic.Pure
+
+type post (a:Type) = pure_post a
 assume type recv_t: a:Type -> pure_wp a
-assume val recv: unit -> PURE 'a (fun (p:post 'a) -> recv_t 'a p)
+assume val recv: unit -> PURE 'a (elim_pure_wp_monotonicity (recv_t 'a); coerce_to_pure_wp (fun (p:post 'a) -> recv_t 'a p))

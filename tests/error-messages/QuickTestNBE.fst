@@ -89,8 +89,11 @@ assume val lem (x:int) : Lemma
   (requires f x - f x == 0)
   (ensures (forall (i:int).{:pattern f i} f i > 0))
 
+open FStar.Monotonic.Pure
+
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test : (quickCode unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
       qPURE range1 "" (fun (_:unit) -> lem 4) (
@@ -113,6 +116,7 @@ assume val lem2 (x:int) : Lemma
 
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test2 : (quickCode unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
       qPURE range1 "" (fun (_:unit) -> lem2 4) (
