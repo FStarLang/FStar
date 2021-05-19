@@ -12,7 +12,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "45b1db0509f1bd5f85d1d1f4e55568e4"
+      "f3459170fc2d2faaa910032947e2c5e2"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -29,7 +29,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "722bcd570657066d1c6109630919740f"
+      "9a77bc59df3f51ea15f39fc7b8fbef6d"
     ]
   ]
 ]
