@@ -21,6 +21,25 @@ module P = FStar.Preorder
 type pre_t (state:Type u#2) = state -> Type0
 type post_t (state:Type u#2) (a:Type u#a) = state -> a -> state -> Type0
 
+unfold
+let req_ens_to_wp0 (#a:Type) (#state:Type u#2)
+  (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) (s0:state)
+  (p:pure_post (a & state))
+  = req s0 /\
+    (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))
+
+let req_ens_to_wp0_monotonic (#a:Type) (#state:Type u#2)
+  (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) (s0:state)
+  : Lemma (pure_wp_monotonic (req_ens_to_wp0 rel req ens s0))
+  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #(a & state))
+
+unfold
+let req_ens_to_wp (#a:Type) (#state:Type u#2)
+  (rel:P.preorder state) (req:pre_t state) (ens:post_t state a) (s0:state)
+  : pure_wp (a & state)
+  = req_ens_to_wp0_monotonic rel req ens s0;
+    req_ens_to_wp0 rel req ens s0
+
 type repr
       (a:Type)
       (state:Type u#2)
@@ -29,11 +48,7 @@ type repr
       (ens:post_t state a)
     =
   s0:state ->
-  DIV (a & state)
-  (fun p ->
-    req s0 /\
-    (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))
-  )
+  DIV (a & state) (req_ens_to_wp rel req ens s0)
 
 let return
       (a:Type)
@@ -175,6 +190,7 @@ let lift_pure_mst
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
     =
+  FStar.Monotonic.Pure.wp_monotonic_pure ();
   fun s0 ->
     let x = f () in
     x, s0
@@ -205,7 +221,8 @@ let bind_div_mst (a:Type) (b:Type)
 : repr b state rel
     (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
     (fun s0 y s1 -> exists x. (ens x) s0 y s1)
-= fun s0 ->
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun s0 ->
   let x = f () in
   (g x) s0
 

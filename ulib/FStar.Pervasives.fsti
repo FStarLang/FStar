@@ -293,7 +293,7 @@ let div_return (a:Type) (x:a) : pure_wp a =
   pure_return_wp_monotonic x;
   pure_return a x
 
-val pure_bind_wp_monotonic (#a #b:Type) (r:range) (wp1:pure_wp a) (wp2:a -> pure_wp b)
+val pure_bind_wp_monotonic (#a #b:Type) (r:range) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
   : Lemma (pure_wp_monotonic (pure_bind_wp r a b wp1 wp2))
 
 unfold
@@ -322,7 +322,7 @@ let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
   pure_ite_wp_monotonic wp;
   pure_ite_wp a wp
 
-val pure_close_wp_monotonic (#a #b:Type) (wp:b -> pure_wp a)
+val pure_close_wp_monotonic (#a #b:Type) (wp:b -> GTot (pure_wp a))
   : Lemma (pure_wp_monotonic (pure_close_wp a b wp))
 
 unfold
