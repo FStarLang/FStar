@@ -28,3 +28,11 @@ let wp_monotonic_pure (_:unit)
       = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a) in
     ()
 #pop-options
+
+unfold
+let coerce_to_pure_wp (#a:Type) (wp:pure_wp' a)
+  : Pure (pure_wp a)
+      (requires forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+      (ensures fun r -> r == wp)
+  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic #a);
+    wp

@@ -19,8 +19,10 @@ module HoareDiv
 /// A hoare style DIV effect (the specs are hoare triples rather than wp-based)
 
 
+open FStar.Monotonic.Pure
+
 type repr (a:Type) (req:Type0) (ens:a -> Type0) =
-  unit -> DIV a (fun p -> req /\ (forall (x:a). ens x ==> p x))
+  unit -> DIV a (coerce_to_pure_wp (fun p -> req /\ (forall (x:a). ens x ==> p x)))
 
 let return (a:Type) (x:a)
 : repr a True (fun r -> r == x)
@@ -71,6 +73,12 @@ layered_effect {
   subcomp = subcomp;
   if_then_else = if_then_else
 }
+
+assume WP_pure_monotonic:
+  forall (a:Type) (wp:pure_wp a).
+    (forall (p q:pure_post a).
+       (forall (x:a). p x ==> q x) ==>
+       (wp p ==> wp q))
 
 let lift_pure_meff (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a

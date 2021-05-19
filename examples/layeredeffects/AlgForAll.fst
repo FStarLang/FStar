@@ -19,8 +19,7 @@ let st_monotonic #a (w : st_wp0 a) : Type0 =
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
 
-type st_wp a = w:(st_wp0 a){st_monotonic w}
-
+let st_wp (a:Type) = wp:st_wp0 a{st_monotonic wp}
 
 unfold
 let return_wp #a x : st_wp a = fun s0 p -> p (x, s0)
@@ -178,8 +177,11 @@ let get () : AlgWP state read_wp =
 let put (s:state) : AlgWP unit (write_wp s) =
   AlgWP?.reflect (Op Write s Return)
 
+open FStar.Monotonic.Pure
+
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
+  wp_monotonic_pure ();
   fun s0 p -> wp (fun x -> p (x, s0))
 
 let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
@@ -188,6 +190,7 @@ let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
          (ensures (fun _ -> True))
   =
     let v : a = elim_pure f (fun _ -> True) in
+    FStar.Monotonic.Pure.wp_monotonic_pure (); // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -220,7 +223,7 @@ let add_via_state (x y : int) : AlgWP int (fun s0 p -> p ((x+y), s0)) =
 // for the builtin Pure???
 
 let rec interp_sem #a (t : rwtree a) (s0:state)
-  : ID5.ID (a & state) (interp_as_wp t s0)
+  : ID5.ID (a & state) (coerce_to_pure_wp (interp_as_wp t s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
@@ -229,6 +232,6 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
       interp_sem (k ()) i
     
 let soundness #a #wp (t : unit -> AlgWP a wp)
-  : Tot (s0:state -> ID5.ID (a & state) (wp s0))
+  : Tot (s0:state -> ID5.ID (a & state) (coerce_to_pure_wp (wp s0)))
   = let c = reify (t ()) in
     interp_sem c
