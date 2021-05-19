@@ -323,8 +323,10 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
       | None -> Some val_q
       | Some q' ->
         //logic is now a deprecated qualifier, so discard it from the checking
-        let drop_logic = List.filter (fun x -> not (x = Logic)) in
-        if (let val_q, q' = drop_logic val_q, drop_logic q' in
+        //AR: 05/19: drop irreducible also
+        //           irreducible is not allowed on val, but one could add it on let
+        let drop_logic_and_irreducible = List.filter (fun x -> not (x = Logic || x = Irreducible)) in
+        if (let val_q, q' = drop_logic_and_irreducible val_q, drop_logic_and_irreducible q' in
             List.length val_q = List.length q'
             && List.forall2 U.qualifier_equal val_q q')
         then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
