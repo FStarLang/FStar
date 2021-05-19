@@ -1,7 +1,7 @@
 .. _Part1_ch4:
 
-Simple proofs of termination
-============================
+Proofs of termination
+=====================
 
 It's absolutely crucial to the soundness of F*'s core logic that all
 functions terminate. Otherwise, one could non-terminating write
