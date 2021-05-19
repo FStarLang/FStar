@@ -111,8 +111,31 @@ let (gen_wps_for_free :
                     def in
                 match uu___2 with
                 | (sigelt, fv) ->
+                    let sigelt1 =
+                      let uu___3 = sigelt in
+                      {
+                        FStar_Syntax_Syntax.sigel =
+                          (uu___3.FStar_Syntax_Syntax.sigel);
+                        FStar_Syntax_Syntax.sigrng =
+                          (uu___3.FStar_Syntax_Syntax.sigrng);
+                        FStar_Syntax_Syntax.sigquals =
+                          (uu___3.FStar_Syntax_Syntax.sigquals);
+                        FStar_Syntax_Syntax.sigmeta =
+                          (let uu___4 = sigelt.FStar_Syntax_Syntax.sigmeta in
+                           {
+                             FStar_Syntax_Syntax.sigmeta_active =
+                               (uu___4.FStar_Syntax_Syntax.sigmeta_active);
+                             FStar_Syntax_Syntax.sigmeta_fact_db_ids =
+                               (uu___4.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                             FStar_Syntax_Syntax.sigmeta_admit = true
+                           });
+                        FStar_Syntax_Syntax.sigattrs =
+                          (uu___3.FStar_Syntax_Syntax.sigattrs);
+                        FStar_Syntax_Syntax.sigopts =
+                          (uu___3.FStar_Syntax_Syntax.sigopts)
+                      } in
                     ((let uu___4 =
-                        let uu___5 = FStar_ST.op_Bang sigelts in sigelt ::
+                        let uu___5 = FStar_ST.op_Bang sigelts in sigelt1 ::
                           uu___5 in
                       FStar_ST.op_Colon_Equals sigelts uu___4);
                      fv) in
