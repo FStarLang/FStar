@@ -42,7 +42,9 @@ functions and prove  then correct.
    :caption: Contents:
 
    part1_ch1
+   part1_polymorphism
    part1_ch2
+   part1_lemmas
    part1_ch3
    part1_ch4
    part1_ch5

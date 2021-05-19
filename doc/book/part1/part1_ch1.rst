@@ -330,6 +330,8 @@ case, the proof of termination is automatic.
 
 F* also supports mutual recursion. We'll see that later.
 
+.. _Part1_ch1_arrows:
+
 Arrow types
 ^^^^^^^^^^^
 

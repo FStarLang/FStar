@@ -24,13 +24,13 @@ let rec factorial_is_positive (x:nat)
 //SNIPPET_END: factorial_is_positive
 
 
-//SNIPPET_START: factorial_is_pos
+//SNIPPET_START: factorial_is_positive_lemma
 let rec factorial_is_pos (x:int)
   : Lemma (requires x >= 0)
           (ensures factorial x > 0)
   = if x = 0 then ()
     else factorial_is_pos (x - 1)
-//SNIPPET_END: factorial_is_pos
+//SNIPPET_END: factorial_is_positive_lemma
 
 
 //SNIPPET_START: factorial_is_greater_than_arg

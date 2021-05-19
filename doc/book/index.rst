@@ -542,6 +542,7 @@ this part, since it some elements are quite specific to F*.
 Part 2: Purely Functional Programs and Proofs in F*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. _Universes:
 .. _TypeConversion:
 
   * Working with indexed data structures
@@ -565,6 +566,8 @@ Part 2: Purely Functional Programs and Proofs in F*
     - Integer overloading
 
   * Typeclasses
+
+  * Universes
 
 .. _effects:
 
