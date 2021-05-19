@@ -694,14 +694,17 @@ let (tc_sig_let :
               | FStar_Pervasives_Native.None ->
                   FStar_Pervasives_Native.Some val_q
               | FStar_Pervasives_Native.Some q' ->
-                  let drop_logic =
+                  let drop_logic_and_irreducible =
                     FStar_List.filter
                       (fun x ->
-                         Prims.op_Negation (x = FStar_Syntax_Syntax.Logic)) in
+                         Prims.op_Negation
+                           ((x = FStar_Syntax_Syntax.Logic) ||
+                              (x = FStar_Syntax_Syntax.Irreducible))) in
                   let uu___ =
                     let uu___1 =
-                      let uu___2 = drop_logic val_q in
-                      let uu___3 = drop_logic q' in (uu___2, uu___3) in
+                      let uu___2 = drop_logic_and_irreducible val_q in
+                      let uu___3 = drop_logic_and_irreducible q' in
+                      (uu___2, uu___3) in
                     match uu___1 with
                     | (val_q1, q'1) ->
                         ((FStar_List.length val_q1) = (FStar_List.length q'1))
