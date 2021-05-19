@@ -1,6 +1,6 @@
 .. _Part1_polymorphism_and_inference:
 
-Polymorphism and Type Inference
+Polymorphism and type inference
 ===============================
 
 In this chapter, we'll learn about defining type polymorphic

@@ -41,10 +41,10 @@ functions and prove  then correct.
    :maxdepth: 1
    :caption: Contents:
 
-   part1_ch1
+   part1_getting_off_the_ground
    part1_polymorphism
-   part1_ch2
+   part1_prop_assertions
+   part1_inductives
+   part1_termination
    part1_lemmas
-   part1_ch3
-   part1_ch4
-   part1_ch5
+   part1_quicksort

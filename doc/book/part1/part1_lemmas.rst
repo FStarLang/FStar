@@ -1,6 +1,6 @@
 .. _Part1_lemmas:
 
-Lemmas and Proofs by Induction
+Lemmas and proofs by induction
 ==============================
 
 Let's say you wrote the ``factorial`` function and gave it the type
@@ -28,8 +28,8 @@ proof by induction. F* and Z3 cannot do proofs by induction
 automatically—you will have to help F* here by writing a *lemma*.
 
 
-Lemmas
-^^^^^^^
+Introducing lemmas
+^^^^^^^^^^^^^^^^^^
 
 A lemma is a function in F* that always returns the ``():unit``
 value. However, the type of lemma carries useful information about
@@ -124,8 +124,8 @@ Let's look at this lemma in detail again—why does it convince F* that
   we're in the case where ``x > 0``, the solver can prove that the
   product of two positive numbers must be positive.
 
-Exercises
-^^^^^^^^^
+Exercises: Lemmas about integer functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Exercise 1
 ..........
@@ -276,3 +276,218 @@ Try proving the following lemmas about ``fibonacci``:
     was able to prove this lemma with just one use of the induction
     hypothesis. But, there you have it. All of which is to say that
     the SMT solver is quite powerful!
+
+Exercise: A lemma about append
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ref:`Earlier <Part1_inductives_append>`, we saw a definition of
+``append`` with the following type:
+
+.. code-block:: fstar
+
+  val append (#a:Type) (l1 l2:list a)
+    : l:list a{length l = length l1 + length l2}
+
+Now, suppose we were to define `app``, a version of ``append`` with a
+weaker type, as shown below.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: def append alt
+   :end-before: //SNIPPET_END: def append alt
+
+Can you prove the following lemma?
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: sig app_length
+   :end-before: //SNIPPET_END: sig app_length
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: def app_length
+       :end-before: SNIPPET_END: def app_length
+
+Intrinsic vs extrinsic proofs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As the previous exercise illustrates, you can prove properties either
+by enriching the type of a function or by writing a separate lemma
+about it---we call these the 'intrinsic' and 'extrinsic' styles,
+respectively. Which style to prefer is a matter of taste and
+convenience: generally useful properties are often good candidates for
+intrinsic specification (e.g, that ``length`` returns a ``nat``); more
+specific properties are better stated and proven as lemmas. However,
+in some cases, as in the following example, it may be impossible to
+prove a property of a function directly in its type---you must resort
+to a lemma.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: reverse
+   :end-before: SNIPPET_END: reverse
+
+Let's try proving that reversing a list twice is the identity
+function.  It's possible to *specify* this property in the type of
+``reverse`` using a refinement type.
+
+.. code-block:: fstar
+
+   val reverse (#a:Type) : f:(list a -> list a){forall l. l == f (f l)}
+
+.. note::
+
+   A subtle point: the refinemnt on ``reverse`` above uses a
+   :ref:`propositional equality
+   <Part1_ch2_propositional_equality>`. That's because equality on
+   lists of arbitrary types is not decidable, e.g., consider ``list
+   (int -> int)``.  All the proofs below will rely on propositional
+   equality.
+
+However, F* refuses to accept this as a valid type for ``reverse``:
+proving this property requires two separate inductions, neither of
+which F* can perform automatically.
+
+Instead, one can use two lemmas to prove the property we care
+about. Here it is:
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: reverse_involutive
+   :end-before: SNIPPET_END: reverse_involutive
+
+In the ``hd :: tl`` case of ``rev_involutive`` we are explicitly
+applying not just the induction hypothesis but also the ``snoc_cons``
+auxiliary lemma also proven there.
+
+Exercises: Reversing a list
+...........................
+
+Prove that reverse is injective, i.e., prove the following lemma.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: sig rev_injective
+   :end-before: SNIPPET_END: sig rev_injective
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: def rev_injective
+       :end-before: SNIPPET_END: def rev_injective
+
+    That's quite a tedious proof, isn't it. Here's a simpler proof.
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: rev_injective_alt
+       :end-before: SNIPPET_END: rev_injective_alt
+
+    The ``rev_injective_alt`` proof is based on the idea that every
+    invertible function is injective. We've already proven that
+    ``reverse`` is involutive, i.e., it is its own inverse. So, we
+    invoke our lemma, once for ``l1`` and once for ``l2``.  This gives
+    to the SMT solver the information that ``reverse (reverse l1) =
+    l1`` and ``reverse (reverse l2) = l2``, which suffices to complete
+    the proof. As usual, when structuring proofs, lemmas are your
+    friends!
+
+Higher-order functions
+^^^^^^^^^^^^^^^^^^^^^^
+
+Functions are first-class values—they can be passed to other functions
+and returned as results. We've already seen some examples in the
+section on :ref:`polymorphism
+<Part1_polymorphism_and_inference>`. Here are some more, starting with
+the ``map`` function on lists.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: map
+   :end-before: SNIPPET_END: map
+
+It takes a function ``f`` and a list ``l`` and it applies ``f`` to
+each element in ``l`` producing a new list. More precisely ``map f
+[v₁; ...; vₙ]`` produces the list ``[f v₁; ...; f vₙ]``. For example:
+
+.. code-block:: fstar
+
+   map (fun x -> x + 1) [0; 1; 2] = [1; 2; 3]
+
+
+Exercise: Finding a list element
+................................
+
+Here's a function called ``find`` that given a boolean function ``f``
+and a list ``l`` returns the first element in ``l`` for which ``f``
+holds. If no element is found ``find`` returns ``None``.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: find
+   :end-before: SNIPPET_END: find
+
+Prove that if ``find`` returns ``Some x`` then ``f x = true``. Is it
+better to do this intrinsically or extrinsically? Do it both ways.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: sig find
+       :end-before: SNIPPET_END: sig find
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: find_alt
+       :end-before: SNIPPET_END: find_alt
+
+Exercise: fold_left
+...................
+
+Here is a function ``fold_left``, where::
+
+   fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: def fold_left
+   :end-before: SNIPPET_END: def fold_left
+
+Prove the following lemma:
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: SNIPPET_START: sig fold_left_Cons_is_rev
+   :end-before: SNIPPET_END: sig fold_left_Cons_is_rev
+
+.. container:: toggle
+
+    .. container:: header
+
+       Hint: This proof is a level harder from what we've done so far.
+             You will need to strengthen the induction hypothesis, and
+             possibly to prove that ``append`` is associative and that
+             ``append l [] == l``.
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: fold_left_Cons_is_rev
+       :end-before: SNIPPET_END: fold_left_Cons_is_rev
