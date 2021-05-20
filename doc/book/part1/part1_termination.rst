@@ -139,9 +139,9 @@ Lexicographic orderings
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 F* also provides a convenience to enhane the well-founded ordering
-``<<`` to lexicographic combinations of ``<<``. That is, given terms
-``v₁, ..., vₙ`` and ``u₁, ..., uₙ``, F* accepts that the
-following lexicographic ordering::
+``<<`` to lexicographic combinations of ``<<``. That is, given two
+lists of terms ``v₁, ..., vₙ`` and ``u₁, ..., uₙ``, F* accepts that
+the following lexicographic ordering::
 
    v₁ << u₁ ‌‌\/ (v₁ == u₁ /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vₙ << uₙ))))
 
@@ -149,21 +149,266 @@ is also well-founded. In fact, it is possible to prove in F* that this
 ordering is well-founded, provided ``<<`` is itself well-founded.
 
 Lexicographic ordering are common enough that F* provides special
-support to make it convenient to use them. Let's have a look at the
-classic ``ackermann`` function.
+support to make it convenient to use them. In particular, the
+notation::
+
+   %[v₁; v₂; ...; vₙ] << %[u₁; u₂; ...; uₙ]
+
+is shorthand for::
+
+   v₁ << u₁ ‌‌\/ (v₁ == u₁ /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vₙ << uₙ))))
+
+Let's have a look at lexicographic orderings at work in proving that
+the classic ``ackermann`` function terminates on all inputs.
 
 .. literalinclude:: exercises/Termination.fst
    :language: fstar
    :start-after: SNIPPET_START: ackermann
    :end-before: SNIPPET_END: ackermann
 
-Why does it terminate? At each recursive call, it is *not* the case that
-all the arguments are strictly less than the arguments at the previous
-call, e.g, in the second branch, `n` increases from `0` to `1`. However,
-this function does in fact terminate, and F\* proves that it does.
+The ``decreases %[m;n]`` syntax tells F* to use the lexicographic
+ordering on the pair of arguments ``m, n`` as the measure to prove
+this function terminating.
 
-The reason is that although each argument does not decrease in every
-recursive call, when taken together, the ordered pair of arguments `(m,n)`
-does decrease according to a *lexical ordering* on pairs.
+When defining ``ackermann m n``, for each recursive call of the form
+``ackermann m' n'``, F* checks that ``%[m';n'] << %[m;n]``, i.e., F*
+checks that either
 
-In its standard prelude, F\* defines the following inductive type:
+* ``m' << m``, or
+* ``m' = m`` and ``n' << n``
+
+There are three recursive calls to consider:
+
+1. ``ackermann (m - 1) 1``: In this case, since we know that ``m >
+   0``, we have ``m - 1 << m``, due to the ordering on natural
+   numbers. Since the ordering is lexicographic, the second argument
+   is irrelevant for termination.
+
+2. ``ackermann m (n - 1)``: In this case, the first argument remained
+   the same (i.e., it's still ``m``), but we know that ``n > 0`` so
+   ``n - 1 << n`` by the natural number ordering.
+
+3. ``ackermann (m - 1) (ackermann m (n - 1))``: Again, like in the
+   first case, the first argument ``m - 1 << m``, and the second is
+   irrelevant for termination.
+
+Defaults measures
+^^^^^^^^^^^^^^^^^
+
+As we saw earlier, F* allows you to write the following code, with no
+``decreases`` clause, and it still accepts it.
+
+.. literalinclude:: exercises/Ch3.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: length
+   :end-before: //SNIPPET_END: length
+
+For that matter, you can leave out the ``decreases`` clause in
+``ackermann`` and F* is okay with it.
+
+.. code-block:: fstar
+
+   let rec ackermann (m n:nat)
+     : nat
+     = if m=0 then n + 1
+       else if n = 0 then ackermann (m - 1) 1
+       else ackermann (m - 1) (ackermann m (n - 1))
+
+This is because F* uses a simple heuristic to choose the decreases
+clause, if the user didn't provide one.
+
+The *default* decreases clause for a total, recursive function is the
+lexicographic ordering of all the non-function-typed arguments, taken
+in order from left to right.
+
+That is, the default decreases clause for ``ackermann`` is exactly
+``decreases %[m; n]``; and the default for ``length`` is just
+``decreases %[a; l]`` (which is equivalent to ``decreases l``). So, you
+needn't write it.
+
+On the other hand, it you were to flip the order of arguments to
+``ackermann``, then the default choise of the measure would not be
+correct—so, you'll have to write it explicitly, as shown below.
+
+.. literalinclude:: exercises/Termination.fst
+   :language: fstar
+   :start-after: SNIPPET_START: ackermann_flip
+   :end-before: SNIPPET_END: ackermann_flip
+
+Mutual recursion
+^^^^^^^^^^^^^^^^
+
+F* also supports mutual recursion and the same check of proving that a
+measure of the arguments decreases on each (mutually) recursive call
+applies.
+
+For example, one can write the following code to define a binary
+``tree`` that stores an integer at each internal node—the keyword
+``and`` allows defining several types that depend mutually on each
+other.
+
+To increment all the integers in the tree, we can write the mutually
+recursive functions, again using ``and`` to define ``incr_tree`` and
+``incr_node`` to depend mutually on each other. F* is able to prove
+that these functions terminate, just by using the default measure as
+usual.
+
+.. literalinclude:: exercises/Termination.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: incr_tree
+   :end-before: //SNIPPET_END: incr_tree
+
+.. note::
+
+   Sometimes, a little trick with lexicographic orderings can help
+   prove mutually recursive functions correct. We include it here as a
+   tip, you can probably skip it on a first read.
+
+   .. literalinclude:: exercises/Termination.fst
+      :language: fstar
+      :start-after: SNIPPET_START: foo_bar
+      :end-before: SNIPPET_END: foo_bar
+
+   What's happening here is that when ``foo l`` calls ``bar``, the
+   argument ``xs`` is legitimately a sub-term of ``l``. However, ``bar
+   l`` simply calls back ``foo l``, without decreasing the
+   argument. The reason this terminates, however, is that ``bar`` can
+   freely call back ``foo``, since ``foo`` will only ever call ``bar``
+   again with a smaller argument. You can convince F* of this by
+   writing the decreases clauses shown, i.e., when ``bar`` calls
+   ``foo``, ``l`` doesn't change, but the second component of the
+   lexicographic rdering does decrease, i.e., ``0 << 1``.
+
+
+The termination check, precisely
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Having seen a few examples at work, we can now describe how the
+termination check works in general.
+
+
+.. note::
+
+   We use a slightly more mathematical notation here, so that we can
+   be precise. If it feels unfamiliar, you needn't understand this
+   completely at first. Continue with the examples and refer back to
+   this section, if and when you feel like a precise description would
+   be helpful.
+
+When defining a recursive function
+
+.. math::
+
+   \mathsf{f~(\overline{x:t})~:~Tot~r~(decreases~m)~=~e}
+
+i.e., :math:`\mathsf{f}` is a function with several arguments
+:math:`\mathsf{x₁:t₁}, ..., \mathsf{xₙ:tₙ}`, returning
+:math:`\mathsf{r}` with measure :math:`\mathsf{m}`, mutually
+recursively with other functions of several arguments at type:
+
+.. math::
+
+   \mathsf{f₁~(\overline{x₁:t₁})~:~Tot~r₁~(decreases~m₁)} \\
+   \ldots \\
+   \mathsf{fₙ~(\overline{xₙ:tₙ})~:~Tot~rₙ~(decreases~mₙ)} \\
+
+we check the definition of the function body of :math:`\mathsf{f}`
+(i.e., :math:`\mathsf{e}`) with all the mutually recursive functions
+in scope, but at types that restrict their domain, in the following
+sense:
+
+.. math::
+
+   \mathsf{f~:~(\overline{y:t}\{~m[\overline{y}/\overline{x}]~≪~m~\}~→~r[\overline{y}/\overline{x}])} \\
+   \mathsf{f₁~:~(\overline{x₁:t₁}\{~m₁~≪~m~\}~→~r₁)} \\
+   \ldots \\
+   \mathsf{fₙ~:~(\overline{xₙ:tₙ}\{~mₙ~≪~m~\}~→~rₙ)} \\
+
+That is, each function in the mutually recursive group can only be
+applied to arguments that are precede the current formal parameters of
+:math:`\mathsf{f}` according to the annotated measures of each
+function.
+
+
+Exercise: Fibonacci in linear time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here's a function to compute the :math:`n`-th Fibonacci number.
+
+.. code-block:: fstar
+
+   let rec fibonacci (n:nat)
+     : nat
+     = if n <= 1
+       then 1
+       else fibonacci (n - 1) + fibonacci (n - 2)
+
+Here's a more efficient, tail-recursive, linear-time variant.
+
+.. code-block:: fstar
+
+   let rec fib a b n =
+      match n with
+      | 0 -> a
+      | _ -> fib b (a+b) (n-1)
+
+   let fibonacci n = fib 1 1 n
+
+Add annotations to the functions to get F* to accept them, in
+particular, proving that ``fib`` terminates.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Termination.fst
+       :language: fstar
+       :start-after: SNIPPET_START: fib
+       :end-before: SNIPPET_END: fib
+
+
+
+Exercise: Tail-recursive reversal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is a function to reverse a list:
+
+.. code-block:: fstar
+
+   let rec rev #a (l:list a)
+     : list a
+     = match l with
+       | [] -> []
+       | hd::tl -> append (rev tl) hd
+
+But, it is not very efficient, since it is not tail recursive and,
+worse, it is quadratic, it traverses the reversed tail of the list
+each time to add the first element to the end of it.
+
+This version is more efficient, because it is tail recursive and
+linear.
+
+.. code-block:: fstar
+
+   let rec rev_aux l1 l2 =
+     match l2 with
+     | []     -> l1
+     | hd :: tl -> rev_aux (hd :: l1) tl
+
+   let rev l = rev_aux [] l
+
+Add type annotations to ``rev_aux`` and ``rev``, proving, in
+particular, that ``rev_aux`` terminates.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Termination.fst
+       :language: fstar
+       :start-after: SNIPPET_START: rev
+       :end-before: SNIPPET_END: rev
