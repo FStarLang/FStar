@@ -183,20 +183,20 @@ concurrency, IO, etc.
 
 Here below is some code in an F* dialect called :ref:`Low* <LowStar>`
 which provides a sequential, imperative C-like programming model with
-mutable memory. The function ``alloc_copy_free`` allocates an array
+mutable memory. The function ``malloc_copy_free`` allocates an array
 ``dest``, copies the contents of an array of bytes ``src`` into a
 ``dest``, deallocates, ``src`` and returns ``dest``.
 
-.. literalinclude:: MemCpy.fst
+.. literalinclude:: code/MemCpy.fst
    :language: fstar
-   :start-after: SNIPPET_START: alloc_copy_free
-   :end-before: SNIPPET_END: alloc_copy_free
+   :start-after: SNIPPET_START: malloc_copy_free
+   :end-before: SNIPPET_END: malloc_copy_free
 
 It'll take us until :ref:`much later<LowStar>` to explain this code in
 full detail, but here are two main points to take away:
 
   * The type signature of the procedure claims that under specific
-    constraints on a caller, ``alloc_copy_free`` is *safe* to execute
+    constraints on a caller, ``malloc_copy_free`` is *safe* to execute
     (e.g., it does not read outside the bounds of allocated memory)
     and that it is *correct* (i.e., that it successfully copies
     ``src`` to ``dest`` without modifying any other memory)
@@ -210,17 +210,17 @@ used here, a notable thing about F* is that the semantics of programs
 with side effects (like reading and writing memory) is entirely
 encoded within F*'s logic using a system of user-defined effects.
 
-Whereas ``alloc_copy_free`` is programmed in Low* and specified using
+Whereas ``malloc_copy_free`` is programmed in Low* and specified using
 a particular kind of `Floyd-Hoare logic
-<https://en.wikipedia.org/wiki/Hoare_logic>`_, there's nothing
-particularly special about it in F*.
+<https://en.wikipedia.org/wiki/Hoare_logic>`_, there's nothing really
+special about it in F*.
 
 Here, for example, is a concurrent program in another user-defined F*
 dialect called :ref:`Steel <Steel>`. It increments two heap-allocated
 references in parallel and is specified for safety and correctness in
 `concurrent separation logic
 <https://en.wikipedia.org/wiki/Separation_logic>`_, a different kind
-of Floyd-Hoare logic than the one we used for ``memcpy``.
+of Floyd-Hoare logic than the one we used for ``malloc_copy_free``.
 
 .. literalinclude:: IncrPair.fst
    :language: fstar
@@ -348,8 +348,10 @@ In this case, using a tool called `KReMLin
 <https://github.com/FStarLang/kremlin>`_, a compiler used with F*, we
 can produce the following C code for ``memcpy``.
 
-.. literalinclude:: MemCpy.c
+.. literalinclude:: code/out/MemCpy.c
    :language: c
+   :start-after: SNIPPET_START: malloc_copy_free
+   :end-before: SNIPPET_END: malloc_copy_free
 
 Notice that the code we get contains no additional runtime checks: the
 detailed requires and ensures clauses are all gone and what's left is
@@ -460,13 +462,12 @@ others <https://project-everest.github.io>`_.
 Isabelle/HOL and Coq are mature tools that have been developed and
 maintained for many decades, have strong user communities in academia,
 and many sources of documentation. Lean's community is growing fast
-and also has a strong community and excellent tools and
-documentation. F* is less mature, its design has been the subject of
-several research papers, making it somewhat more experimental. The F*
-community is also smaller, its documentation is more sparse, and F*
-users are usually in relatively close proximity to the F* development
-team. However, F* developments also have a good and growing track
-record of industrial adoption.
+and also has excellent tools and documentation. F* is less mature, its
+design has been the subject of several research papers, making it
+somewhat more experimental. The F* community is also smaller, its
+documentation is more sparse, and F* users are usually in relatively
+close proximity to the F* development team. However, F* developments
+also have a good and growing track record of industrial adoption.
 
 
 A Bit of F* History
