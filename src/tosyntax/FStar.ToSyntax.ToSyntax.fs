@@ -2550,6 +2550,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
 
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
     let for_free = num_indices = 1 in
+    if for_free
+    then Errors.log_issue d.drange (Errors.Warning_DeprecatedGeneric,
+            BU.format1 "DM4Free feature is deprecated and will be removed soon, \
+              use layered effects to define %s" (Ident.string_of_id eff_name));
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
