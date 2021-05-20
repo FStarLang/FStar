@@ -1,5 +1,5 @@
 {"kind": "protocol-info", "rest": "[...]"}
-{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "DM4Free feature is deprecated and will be removed soon, use layered effects to define TAC", "number": 337, "ranges": [{"beg": [83, 0], "end": [90, 1], "fname": "FStar.Tactics.Effect.fsti"}]}], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "4", "response": [], "status": "success"}
