@@ -24,26 +24,34 @@ module FStar.Monotonic.Pure
  *   reasoning with it requires explicit coercions
  *)
 
+unfold
+let is_monotonic (#a:Type) (wp:pure_wp' a) =
+  (*
+   * Once we support using tactics in ulib/,
+   *   this would be written as: Prims.pure_wp_monotonic0,
+   *   with a postprocessing tactic to norm it
+   *)
+  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)  
+
 let elim_pure_wp_monotonicity (#a:Type) (wp:pure_wp a)
-  : Lemma (forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+  : Lemma (is_monotonic wp)
   = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
-    (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
-       (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
+    (forall (a:Type) (wp:pure_wp a). is_monotonic wp)
   = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 let intro_pure_wp_monotonicity (#a:Type) (wp:pure_wp' a)
   : Lemma
-      (requires forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+      (requires is_monotonic wp)
       (ensures pure_wp_monotonic a wp)
   = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
 
 unfold
 let as_pure_wp (#a:Type) (wp:pure_wp' a)
   : Pure (pure_wp a)
-      (requires forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+      (requires is_monotonic wp)
       (ensures fun r -> r == wp)
   = intro_pure_wp_monotonicity wp;
     wp
