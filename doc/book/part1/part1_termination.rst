@@ -329,6 +329,7 @@ applied to arguments that are precede the current formal parameters of
 :math:`\mathsf{f}` according to the annotated measures of each
 function.
 
+.. _Part1_termination_fibonacci:
 
 Exercise: Fibonacci in linear time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -369,6 +370,7 @@ particular, proving that ``fib`` terminates.
        :end-before: SNIPPET_END: fib
 
 
+.. _Part1_termination_reverse:
 
 Exercise: Tail-recursive reversal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

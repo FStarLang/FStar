@@ -350,3 +350,52 @@ let fold_left_Cons_is_rev #a (l:list a)
   = fold_left_Cons_is_rev_stronger l [];
     append_right_unit (reverse l)
 // SNIPPET_END: fold_left_Cons_is_rev
+
+
+let rec rev_aux #a (l1 l2:list a)
+  : Tot (list a) (decreases l2)
+  = match l2 with
+    | []     -> l1
+    | hd :: tl -> rev_aux (hd :: l1) tl
+
+let rev #a (l:list a) : list a = rev_aux [] l
+
+// SNIPPET_START: rev_is_ok
+let rec rev_is_ok_aux #a (l1 l2:list a)
+  : Lemma (ensures (rev_aux l1 l2 == append (reverse l2) l1))
+          (decreases l2)
+  = match l2 with
+    | [] -> ()
+    | hd :: tl  -> rev_is_ok_aux (hd :: l1) tl;
+                 append_assoc (reverse tl) [hd] l1
+
+let rev_is_ok #a (l:list a)
+  : Lemma (rev l == reverse l)
+  = rev_is_ok_aux [] l;
+    append_right_unit (reverse l)
+// SNIPPET_END: rev_is_ok
+
+let rec fib (a b n:nat)
+  : Tot nat (decreases n)
+  = match n with
+    | 0 -> a
+    | _ -> fib b (a+b) (n-1)
+
+let fibonacci (n:nat) : nat = fib 1 1 n
+
+let rec slow_fib (n:nat)
+  : nat
+  = if n <= 1
+    then 1
+    else slow_fib (n - 1) + slow_fib (n - 2)
+
+// SNIPPET_START: fib_is_ok
+let rec fib_is_ok_aux (n: nat) (k: nat)
+  : Lemma (fib (slow_fib k)
+               (slow_fib (k + 1)) n == slow_fib (k + n))
+  = if n = 0 then () else fib_is_ok_aux (n - 1) (k + 1)
+
+let fib_is_ok (n:nat)
+  : Lemma (fibonacci n == slow_fib n)
+  = fib_is_ok_aux n 0
+// SNIPPET_END: fib_is_ok

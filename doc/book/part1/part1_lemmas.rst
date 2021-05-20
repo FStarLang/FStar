@@ -366,8 +366,8 @@ In the ``hd :: tl`` case of ``rev_involutive`` we are explicitly
 applying not just the induction hypothesis but also the ``snoc_cons``
 auxiliary lemma also proven there.
 
-Exercises: Reversing a list
-...........................
+Exercises: Reverse is injective
+...............................
 
 Prove that reverse is injective, i.e., prove the following lemma.
 
@@ -403,8 +403,73 @@ Prove that reverse is injective, i.e., prove the following lemma.
     the proof. As usual, when structuring proofs, lemmas are your
     friends!
 
+Exercise: Optimizing reverse
+............................
+
+Earlier, we saw how to implement :ref:`a tail-recursive variant
+<Part1_termination_reverse>` of ``reverse``.
+
+.. literalinclude:: exercises/Termination.fst
+       :language: fstar
+       :start-after: SNIPPET_START: rev
+       :end-before: SNIPPET_END: rev
+
+Prove the following lemma to show that it is equivalent to the
+previous non-tail-recursive implementation, i.e.,
+
+.. code-block:: fstar
+
+   val rev_is_ok (#a:_) (l:list a) Lemma (rev [] l == reverse l)
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: rev_is_ok
+       :end-before: SNIPPET_END: rev_is_ok
+
+Exercise: Optimizing Fibonacci
+..............................
+
+
+Earlier, we saw how to implement :ref:`a tail-recursive variant
+<Part1_termination_fibonacci>` of ``fibonacci``.
+
+.. literalinclude:: exercises/Termination.fst
+       :language: fstar
+       :start-after: SNIPPET_START: fib
+       :end-before: SNIPPET_END: fib
+
+Prove the following lemma to show that it is equivalent to the
+previous non-tail-recursive implementation, i.e.,
+
+.. code-block:: fstar
+
+   let rec slow_fib (n:nat)
+     : nat
+     = if n <= 1
+       then 1
+       else slow_fib (n - 1) + slow_fib (n - 2)
+
+   val fib_is_ok (n:nat) : Lemma (fibonacci n = slow_fib b)
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: exercises/Ch3.fst
+       :language: fstar
+       :start-after: SNIPPET_START: fib_is_ok
+       :end-before: SNIPPET_END: fib_is_ok
+
 Higher-order functions
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Functions are first-class values—they can be passed to other functions
 and returned as results. We've already seen some examples in the
