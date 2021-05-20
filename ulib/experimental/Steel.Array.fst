@@ -743,7 +743,8 @@ val gjoin (#opened: _) (#t:Type) (al ar:array t)
             merge_into al ar a
           )
 
-#push-options "--z3rlimit 16"
+#push-options "--z3rlimit 32"
+#restart-solver
 let gjoin #t al ar =
   let al2 = elim_varray al in
   let ar2 = elim_varray ar in
