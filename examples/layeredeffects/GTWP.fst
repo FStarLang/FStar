@@ -19,7 +19,7 @@ let wp (a:Type) = pure_wp a
 unfold
 let bind_wp #a #b (wc : wp a) (wf : a -> wp b) : wp b =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wc (fun x -> wf x p))
+  as_pure_wp (fun p -> wc (fun x -> wf x p))
 
 let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
   match i with
@@ -27,12 +27,12 @@ let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
   | G -> unit -> GHOST a w
   | D -> raise_t (unit -> DIV a w)
 
-let t_return #a (x:a) : m a T (coerce_to_pure_wp (fun p -> p x)) = (fun () -> x)
-let g_return #a (x:a) : m a G (coerce_to_pure_wp (fun p -> p x)) = (fun () -> x)
-let d_return #a (x:a) : m a D (coerce_to_pure_wp (fun p -> p x)) = raise_val (fun () -> x)
+let t_return #a (x:a) : m a T (as_pure_wp (fun p -> p x)) = (fun () -> x)
+let g_return #a (x:a) : m a G (as_pure_wp (fun p -> p x)) = (fun () -> x)
+let d_return #a (x:a) : m a D (as_pure_wp (fun p -> p x)) = raise_val (fun () -> x)
 
 let return_wp #a (x:a) : wp a =
-  coerce_to_pure_wp (fun p -> p x)
+  as_pure_wp (fun p -> p x)
 
 let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   match i with
@@ -69,7 +69,7 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
 
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> if b then w1 p else w2 p)
+  as_pure_wp (fun p -> if b then w1 p else w2 p)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
                           (f : m a i w1)
@@ -95,7 +95,7 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); coerce_to_pure_wp (fun p -> w p)
+let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); as_pure_wp (fun p -> w p)
 
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
                   (f : eqtype_as_type unit -> PURE a (unmon w))
@@ -124,7 +124,7 @@ sub_effect PURE ~> GTD = lift_pure_gtd
 //  | x::xs -> (f x)::(map f xs)
 
 unfold
-let null_wp0 (a:Type) : pure_wp a = coerce_to_pure_wp (fun p -> forall x. p x)
+let null_wp0 (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. p x)
 
 unfold
 let null_wp  (a:Type) : wp a =

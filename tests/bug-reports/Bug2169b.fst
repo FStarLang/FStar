@@ -35,17 +35,17 @@ let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 unfold
 val w_return (#a : Type) : a -> w a
 unfold
-let w_return x = coerce_to_pure_wp (fun p -> p x)
+let w_return x = as_pure_wp (fun p -> p x)
 
 unfold
 val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
 unfold
 let w_bind wp1 k =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wp1 (fun x -> k x p))
+  as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
-let interp #a (l:a) = coerce_to_pure_wp (fun p -> p l)
+let interp #a (l:a) = as_pure_wp (fun p -> p l)
 
 let dm (a : Type) (wp : w a) : Type =
   p:(a -> Type0) -> squash (wp p) -> l:(m a){p l}
@@ -61,7 +61,7 @@ let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (req
 
 let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
+  as_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =
   irepr a (wp_if_then_else wp1 wp2 b)
@@ -89,7 +89,7 @@ type box a = | Box of a
 
 let g (x:int) : box int = Box x
 
-let rewrite_inside_reify (f : int -> ND unit (coerce_to_pure_wp(fun p -> True))) (x' : int) : Tot unit =
+let rewrite_inside_reify (f : int -> ND unit (as_pure_wp(fun p -> True))) (x' : int) : Tot unit =
   let _ = f in
   match g x' with
   | Box x ->

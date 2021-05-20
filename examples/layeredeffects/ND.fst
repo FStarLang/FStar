@@ -40,17 +40,17 @@ open FStar.Monotonic.Pure
 unfold
 val w_return (#a : Type) : a -> w a
 unfold
-let w_return x = coerce_to_pure_wp (fun p -> p x)
+let w_return x = as_pure_wp (fun p -> p x)
 
 unfold
 val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
 unfold
 let w_bind wp1 k =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wp1 (fun x -> k x p))
+  as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
-let interp #a (l:list a) = coerce_to_pure_wp (fun p -> forall x. memP x l ==> p x)
+let interp #a (l:list a) = as_pure_wp (fun p -> forall x. memP x l ==> p x)
 
 val concatlemma (#a:Type) (l1 l2 :list a) (x:a) : Lemma (memP x (l1@l2) <==> memP x l1 \/ memP x l2)
 let rec concatlemma #a l1 l2 x =
@@ -126,7 +126,7 @@ let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (req
 
 let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
+  as_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =
   irepr a (wp_if_then_else wp1 wp2 b)
@@ -150,7 +150,7 @@ let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) 
 
 sub_effect PURE ~> ND = lift_pure_nd
 
-val test_f : unit -> ND int (coerce_to_pure_wp (fun p -> p 5 /\ p 3))
+val test_f : unit -> ND int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () =
   ND?.reflect (fun _ _ -> [3; 5])
 
@@ -160,27 +160,27 @@ let test_f () =
 let l () : (l:(list int)) = reify (test_f ()) (fun _ -> True) ()
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ND a (coerce_to_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
+        ND a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
 
-val choose : #a:Type0 -> x:a -> y:a -> ND a (coerce_to_pure_wp (fun p -> p x /\ p y))
+val choose : #a:Type0 -> x:a -> y:a -> ND a (as_pure_wp (fun p -> p x /\ p y))
 let choose #a x y =
     ND?.reflect (fun _ _ -> [x;y])
 
-val fail : #a:Type0 -> unit -> ND a (coerce_to_pure_wp (fun p -> True))
+val fail : #a:Type0 -> unit -> ND a (as_pure_wp (fun p -> True))
 let fail #a () =
     ND?.reflect (fun _ _ -> [])
 
-let flip () : ND bool (coerce_to_pure_wp (fun p -> p true /\ p false)) =
+let flip () : ND bool (as_pure_wp (fun p -> p true /\ p false)) =
     choose true false
 
-let test () : ND int (coerce_to_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x))  by (compute ()) =
+let test () : ND int (as_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x))  by (compute ()) =
     let x = choose 0 1 in
     let y = choose 2 3 in
     let z = choose 4 5 in
     x + y + z
 
 [@expect_failure]
-let test_bad () : ND int (coerce_to_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x)) by (compute ()) =
+let test_bad () : ND int (as_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x)) by (compute ()) =
     let x = choose 0 1 in
     let y = choose 2 3 in
     let z = choose 4 5 in
@@ -191,7 +191,7 @@ let guard (b:bool) : ND unit (fun p -> b ==> p ()) by (compute ()) =
   then ()
   else fail ()
   
-let rec pick_from #a (l : list a) : ND a (coerce_to_pure_wp (fun p -> forall x. memP x l ==> p x)) by (compute ()) =
+let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. memP x l ==> p x)) by (compute ()) =
     match l with
     | [] -> fail ()
     | x::xs ->
@@ -201,7 +201,7 @@ let rec pick_from #a (l : list a) : ND a (coerce_to_pure_wp (fun p -> forall x. 
 
 let ( * ) = op_Multiply
 
-let pyths () : ND (int & int & int) (coerce_to_pure_wp (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
+let pyths () : ND (int & int & int) (as_pure_wp (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
   let l = [1;2;3;4;5;6;7;8;9;10] in
   let x = pick_from l in
   let y = pick_from l in

@@ -23,7 +23,7 @@ assume val state : Type0
 type tape = nat -> bool
 
 type repr (a:Type) (_:unit) =
-  (tape & nat & state) -> PURE (a & nat & state) (coerce_to_pure_wp (fun p -> forall x. p x))
+  (tape & nat & state) -> PURE (a & nat & state) (as_pure_wp (fun p -> forall x. p x))
 
 let return (a:Type) (x:a)
 : repr a ()

@@ -73,7 +73,7 @@ open FStar.Monotonic.Pure
 let repr (a:Type) (wp:wp_t a) =
   s0:state ->
   PURE (result a & state)
-    (coerce_to_pure_wp (fun p -> wp (fun x s1 -> grows s0 s1 ==> p (x, s1)) s0))
+    (as_pure_wp (fun p -> wp (fun x s1 -> grows s0 s1 ==> p (x, s1)) s0))
 
 let return (a:Type) (x:a)
 : repr a (fun p s0 -> p (Success x) s0)

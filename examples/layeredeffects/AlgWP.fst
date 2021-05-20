@@ -274,7 +274,7 @@ let add_via_state (x y : int) : AlgWP int [Read;Write] (fun s0 p -> p ((x+y), s0
 open FStar.Monotonic.Pure
 
 let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
-  : ID5.ID (a & state) (coerce_to_pure_wp (interp_as_wp t s0))
+  : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
@@ -294,20 +294,20 @@ let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
 let sanity_2 = assert (forall s0 p s1. p ((), s0) ==> quotient_ro (write_wp s1) s0 p)
 
 let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
-  : ID5.ID (a & state) (coerce_to_pure_wp (quotient_ro (interp_as_wp t) s0))
+  : ID5.ID (a & state) (as_pure_wp (quotient_ro (interp_as_wp t) s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
       interp_ro (k s0) s0
 
 let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (coerce_to_pure_wp (wp s0)))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
   = let c = reify (t ()) in interp_sem c
 
 (* This guarantees the final state is unchanged, but see below
 for an alternative statement. *)
 let ro_soundness #a #wp (t : unit -> AlgWP a [Read] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (coerce_to_pure_wp (quotient_ro wp s0)))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
   = let c = reify (t ()) in interp_ro c
 
 

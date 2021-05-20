@@ -449,7 +449,7 @@ let swap (l1 l2 : loc) : AlgPP unit (fun _ -> l1 <> l2)
   l1 := r
 
 let rec interp_sem #a (t : rwtree a) (s0:state)
-  : ID5.ID (a & state) (coerce_to_pure_wp (interp_as_wp t s0))
+  : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
@@ -458,7 +458,7 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
       interp_sem (k ()) i
     
 let soundness #a #wp (t : unit -> AlgWP a wp)
-  : Tot (s0:state -> ID5.ID (a & state) (coerce_to_pure_wp (wp s0)))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
   = let c = reify (t ()) in
     interp_sem c
 

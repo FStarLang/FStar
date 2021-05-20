@@ -22,7 +22,7 @@ module HoareDiv
 open FStar.Monotonic.Pure
 
 type repr (a:Type) (req:Type0) (ens:a -> Type0) =
-  unit -> DIV a (coerce_to_pure_wp (fun p -> req /\ (forall (x:a). ens x ==> p x)))
+  unit -> DIV a (as_pure_wp (fun p -> req /\ (forall (x:a). ens x ==> p x)))
 
 let return (a:Type) (x:a)
 : repr a True (fun r -> r == x)

@@ -16,13 +16,13 @@ let repr (a : Type) (wp : w a) : Type =
 
 open FStar.Monotonic.Pure
 
-let return (a : Type) (x : a) : repr a (coerce_to_pure_wp (fun p -> p x)) =
+let return (a : Type) (x : a) : repr a (as_pure_wp (fun p -> p x)) =
   x
 
 unfold
 let bind_wp #a #b (wp_v:w a) (wp_f:a -> w b) : w b =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
+  as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
     (v : repr a wp_v)
@@ -40,7 +40,7 @@ let subcomp (a:Type) (wp1 wp2: w a)
 unfold
 let if_then_else_wp #a (wp1 wp2:w a) (p:bool) =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
+  as_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (if_then_else_wp wp1 wp2 p)
@@ -72,7 +72,7 @@ sub_effect PURE ~> ID = lift_pure_nd
 
 (* Checking that it's kind of usable *)
 
-val test_f : unit -> ID int (coerce_to_pure_wp (fun p -> p 5 /\ p 3))
+val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
 module T = FStar.Tactics
@@ -81,7 +81,7 @@ let l () : int =
   reify (test_f ())
 
 effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ID a (coerce_to_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
+        ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 

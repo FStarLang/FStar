@@ -24,7 +24,7 @@ open FStar.Monotonic.Pure
 unfold
 let bind_wp (#a #b:Type) (wp1:pure_wp a) (wp2:a -> pure_wp b) : pure_wp b =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wp1 (fun x -> wp2 x p))
+  as_pure_wp (fun p -> wp1 (fun x -> wp2 x p))
 
 let bind_pure #a #b #wp1 #wp2 (c : unit -> PURE a wp1) (f : (x:a) -> PURE b (wp2 x))
   : PURE b (bind_wp wp1 wp2)
@@ -32,5 +32,5 @@ let bind_pure #a #b #wp1 #wp2 (c : unit -> PURE a wp1) (f : (x:a) -> PURE b (wp2
    f (c ())
 
 let return_pure #a (x:a)
-  : PURE a (coerce_to_pure_wp (fun p -> p x))
+  : PURE a (as_pure_wp (fun p -> p x))
   = x

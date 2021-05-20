@@ -209,7 +209,7 @@ let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
 
 open FStar.Monotonic.Pure
 
-assume val g : int -> int -> PURE int (coerce_to_pure_wp (fun p -> forall x. p x))
+assume val g : int -> int -> PURE int (as_pure_wp (fun p -> forall x. p x))
 
 let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
@@ -231,7 +231,7 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 
 assume type t_int (x:int) : Type0
 assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
-assume val pure_g (_:unit) : PURE int (coerce_to_pure_wp (fun p -> forall (x:int). x >= 2 ==> p x))
+assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). x >= 2 ==> p x))
 
 let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
   dep_f (pure_g ())

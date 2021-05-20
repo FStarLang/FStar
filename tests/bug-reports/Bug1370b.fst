@@ -25,6 +25,6 @@ effect Ouch2 (x:int) (a:Type) = Tot a
 
 effect Good3 (a:Type) (x:int) = Tot a
 
-effect Good4 (a:Type) (x:int) = PURE a (coerce_to_pure_wp (fun p -> x > 0 /\ (forall y. p y)))
+effect Good4 (a:Type) (x:int) = PURE a (as_pure_wp (fun p -> x > 0 /\ (forall y. p y)))
 
 effect Good5 (a:Type) (wp:pure_wp a) = PURE a wp

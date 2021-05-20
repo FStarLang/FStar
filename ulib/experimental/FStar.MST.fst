@@ -32,7 +32,7 @@ type repr
     =
   s0:state ->
   DIV (a & state)
-    (coerce_to_pure_wp (fun p ->
+    (as_pure_wp (fun p ->
                         req s0 /\
                         (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))))
 

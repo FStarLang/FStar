@@ -17,7 +17,7 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
 type wp st a = w:(wp0 st a){st_monotonic w}
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> PURE (a & st) (coerce_to_pure_wp (wp s0))
+  s0:st -> PURE (a & st) (as_pure_wp (wp s0))
 
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a = fun s0 p -> p (x, s0)

@@ -22,7 +22,7 @@ open FStar.Monotonic.Pure
 
 unfold
 let return_wp #a (x:a) : wp a =
-  coerce_to_pure_wp (fun p -> p x)
+  as_pure_wp (fun p -> p x)
 
 let return (a : Type) (x : a) : repr a (return_wp x) =
  // Fun fact: using () instead of _ below makes us
@@ -36,7 +36,7 @@ let bind_wp #a #b
   (wp_f : (x:a -> wp b))
   : wp b
   = elim_pure_wp_monotonicity_forall ();
-    coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
+    as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
@@ -63,7 +63,7 @@ let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@@ refine] u:squash (forall p. w2 p =
 unfold
 let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  (coerce_to_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
+  (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
@@ -75,7 +75,7 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 unfold
 let strengthen_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun post -> p /\ w post)
+  as_pure_wp (fun post -> p /\ w post)
 
 let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
   fun post _ -> f () post ()
@@ -83,7 +83,7 @@ let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_w
 unfold
 let weaken_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun post -> p ==> w post)
+  as_pure_wp (fun post -> p ==> w post)
 
 let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
                                                  (requires p)
@@ -93,7 +93,7 @@ let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
 unfold
 let cut_wp (#a:Type) (w:wp a) (p:Type0) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun post -> p /\ (p ==> w post))
+  as_pure_wp (fun post -> p /\ (p ==> w post))
 
 let cut #a #w (p:Type0) (f : repr a w) : repr a (cut_wp w p) =
   strengthen p (fun _ -> weaken p f)
@@ -117,7 +117,7 @@ layered_effect {
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
-        ID a (coerce_to_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
+        ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
@@ -139,14 +139,14 @@ let incorrect_apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun 
 [@@expect_failure]
 let another_one (n:int) (f:(x:int -> Id int (x > 0) (fun _ -> True))) : Id int True (fun _ -> True) = f n
 
-let iassert (q:Type0) : ID unit (coerce_to_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
+let iassert (q:Type0) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
 
 assume
-val iassume (q:Type0) : ID unit (coerce_to_pure_wp (fun p -> q ==> p ()))
+val iassume (q:Type0) : ID unit (as_pure_wp (fun p -> q ==> p ()))
 
 (* Checking that it's kind of usable *)
 
-val test_f : unit -> ID int (coerce_to_pure_wp (fun p -> p 5 /\ p 3))
+val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
 let l () : int = reify (test_f ()) (fun _ -> True) ()
@@ -199,7 +199,7 @@ let rec fib (i:nat) : I nat =
        x+y
   //else fib (i-1) + fib (i-2)
 
-let test_assert () : ID unit (coerce_to_pure_wp (fun p -> p ())) =
+let test_assert () : ID unit (as_pure_wp (fun p -> p ())) =
   ();
   iassume False;
   ();

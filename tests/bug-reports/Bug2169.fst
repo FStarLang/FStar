@@ -36,17 +36,17 @@ let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 unfold
 val w_return (#a : Type) : a -> w a
 unfold
-let w_return x = coerce_to_pure_wp (fun p -> p x)
+let w_return x = as_pure_wp (fun p -> p x)
 
 unfold
 val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
 unfold
 let w_bind wp1 k =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> wp1 (fun x -> k x p))
+  as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
-let interp #a (l:list a) = coerce_to_pure_wp (fun p -> forall x. memP x l ==> p x)
+let interp #a (l:list a) = as_pure_wp (fun p -> forall x. memP x l ==> p x)
 
 val concatlemma (#a:Type) (l1 l2 :list a) (x:a) : Lemma (memP x (l1@l2) <==> memP x l1 \/ memP x l2)
 let rec concatlemma #a l1 l2 x =
@@ -122,7 +122,7 @@ let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (req
 
 let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
+  as_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =
   irepr a (wp_if_then_else wp1 wp2 b)
@@ -148,7 +148,7 @@ sub_effect PURE ~> ND = lift_pure_nd
 
 let g (x:int) : option int = Some x
 
-let wrap (f:int -> ND unit (coerce_to_pure_wp (fun p -> True))) (x':int) : ND unit (coerce_to_pure_wp (fun p -> True)) =
+let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_pure_wp (fun p -> True)) =
   match g x' with
   | Some x -> f x
   | None -> f 4
@@ -158,7 +158,7 @@ let wrap (f:int -> ND unit (coerce_to_pure_wp (fun p -> True))) (x':int) : ND un
 
 [@@expect_failure [19]]
 let rewrite_inside_reify
-  (f : int -> ND unit (coerce_to_pure_wp (fun p -> True)))
+  (f : int -> ND unit (as_pure_wp (fun p -> True)))
   (g : int -> Tot (option int))
   (x' : int) : Tot unit =
 

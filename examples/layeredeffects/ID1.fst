@@ -21,7 +21,7 @@ let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
 
 unfold
 let return_wp #a (x:a) : wp a =
-  coerce_to_pure_wp (fun p -> p x)
+  as_pure_wp (fun p -> p x)
 
 let return (a : Type) (x : a) : repr a (return_wp x) =
  // Fun fact: using () instead of _ below makes us
@@ -35,7 +35,7 @@ let bind_wp #a #b
   (wp_f : (x:a -> wp b))
   : wp b
   = elim_pure_wp_monotonicity_forall ();
-    coerce_to_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
+    as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
@@ -62,7 +62,7 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 unfold
 let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
   elim_pure_wp_monotonicity_forall ();
-  (coerce_to_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
+  (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
@@ -103,7 +103,7 @@ layered_effect {
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
-        ID a (coerce_to_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
+        ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
@@ -117,7 +117,7 @@ let elim_pure #a #wp ($f : unit -> PURE a wp) p
 unfold
 let nomon #a (w:wp a) : pure_wp a =
   elim_pure_wp_monotonicity_forall ();
-  coerce_to_pure_wp (fun p -> w p)
+  as_pure_wp (fun p -> w p)
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
   Pure (repr a wp) (requires True)
@@ -126,14 +126,14 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
 
 sub_effect PURE ~> ID = lift_pure_nd
 
-let iassert (q:Type0) : ID unit (coerce_to_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
+let iassert (q:Type0) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
 
 assume
-val iassume (q:Type0) : ID unit (coerce_to_pure_wp (fun p -> q ==> p ()))
+val iassume (q:Type0) : ID unit (as_pure_wp (fun p -> q ==> p ()))
 
 (* Checking that it's kind of usable *)
 
-val test_f : unit -> ID int (coerce_to_pure_wp (fun p -> p 5 /\ p 3))
+val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
 let l () : int = reify (test_f ()) (fun _ -> True) ()
@@ -195,7 +195,7 @@ let rec fib (i:nat) : I nat =
        x+y
   //else fib (i-1) + fib (i-2)
 
-let test_assert () : ID unit (coerce_to_pure_wp (fun p -> p ())) =
+let test_assert () : ID unit (as_pure_wp (fun p -> p ())) =
   ();
   iassume False;
   ();

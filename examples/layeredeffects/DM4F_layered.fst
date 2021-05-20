@@ -23,7 +23,7 @@ type wp st a = w:(wp0 st a){st_monotonic w}
 open FStar.Monotonic.Pure
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> ID (a & st) (coerce_to_pure_wp (fun p -> wp s0 (curry p)))
+  s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
 
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =

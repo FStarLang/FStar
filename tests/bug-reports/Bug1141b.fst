@@ -17,7 +17,7 @@ module Bug1141b
 
 open FStar.Monotonic.Pure
 
-effect MyTot (a:Type) = PURE a (coerce_to_pure_wp (fun p -> forall x. p x))
+effect MyTot (a:Type) = PURE a (as_pure_wp (fun p -> forall x. p x))
 
 [@@expect_failure]
 noeq
