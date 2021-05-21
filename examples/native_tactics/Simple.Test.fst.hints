@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fb7ab0903a126b212b480440a2b05bc2"
+      "3b9fe5d3b422e93881aededabcc44bf6"
     ],
     [
       "Simple.Test.test1",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "956f9bc27035a06fd9d63e5b84161610"
+      "35883e1649348ff992ad822f39b32da7"
     ],
     [
       "Simple.Test.test2",
@@ -29,7 +29,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "911ed7eb1ad5358c954e99e7690e0be9"
+      "faa952521d1f925f95967c1cbcbdc4b9"
     ],
     [
       "Simple.Test.test3",
@@ -41,7 +41,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "551330e48dd190269b313673142a3487"
+      "4096239253be2b2b2703c6e5136ac1ec"
     ],
     [
       "Simple.Test.test4",
@@ -50,7 +50,7 @@
       1,
       [ "@query" ],
       0,
-      "235d9bc445620c7e7e660273b63a5de1"
+      "d126a43bf9ac2a1decf40a2d1e2dec07"
     ]
   ]
 ]

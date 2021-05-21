@@ -1,1 +1,60 @@
-[ "\u0006Ad÷ñt¾\u000fÊ>HHB{YÔ", [] ]
+[
+  "ÄI¬:…îì_>í¥Ä¦\u0001õ¤",
+  [
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "918ff3ed54aae6996b75ad77e28ec596"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "af078bfd86da002c8d62ef8c82ef8e2d"
+    ],
+    [
+      "FStar.Monotonic.Pure.intro_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "12b6f91b4e71828cb9c31d21e2a737df"
+    ],
+    [
+      "FStar.Monotonic.Pure.as_pure_wp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "02564e2f0dc8b9db02ba86b6b9bc46f2"
+    ]
+  ]
+]
