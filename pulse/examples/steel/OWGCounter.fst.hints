@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "b8d546b2934d8e735a4bc30e83c21a4d"
+      "912098d2a4ce94cf2de2c446848285c8"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "d8846f8ebd66b52cd99e627262c8b593"
+      "2e809b484e0e10c33439421b1c000c8a"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a02e42fc340fc2f4749bc151727c68bf"
+      "1257e0d37466bcd4c175499b44507578"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "335fd9645f7e1d6374252c91f846e425"
+      "cb5efff0b5b1839634c6ac967602a2f0"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "ecb834db5d3c0d11b272e989f37f2a9c"
+      "8878a459d066e31149b34d3110648820"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "3e36e085a614f0eca651f675cef33a07"
+      "403205072603780cd34cc27e186223ba"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "4cccd19db0983df2802331c6dd4e80c7"
+      "88ba6f0f67cc82389caad9f1f0769653"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "959bcd80d6f6c4ed51515279623f3cf2"
+      "8434ac026895503260463a21a35cac33"
     ],
     [
       "OWGCounter.incr_main",
@@ -210,7 +210,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "456bc19af450a72cf7b66b37ffc636c9"
+      "378eadade94945c221f905cd8c5b2c01"
     ]
   ]
 ]
