@@ -347,7 +347,7 @@ reached.
 .. _Part1_inductives_append:
 
 Exercises
-.........
+^^^^^^^^^
 
 Here's the definition of ``append``, a function that concatenates two
 lists. Can you give it a type that proves it always returns a list

@@ -439,9 +439,10 @@ Some examples and common notation
 Exercises
 ^^^^^^^^^
 
-To try these examples, you should have a working installation of the
-F* toolchain, downloadable from `here
-<https://github.com/FStarLang/FStar/releases>`_.
+To try the `exercises associated with this chapter
+</book/code/exercises/Part1.GettingOffTheGround.fst>`_, you should
+have a working installation of the F* toolchain, `downloadable from
+here <https://github.com/FStarLang/FStar/releases>`_.
 
 This first example is just to show you how to run the tool and
 interpret its output.
