@@ -1,5 +1,5 @@
 [
-  "«<-i+\u0012ù×zE\u001a‚`\u0016 ¥",
+  "ôÊ\u00027!\u001bäFIÒšÖB\u0003Ü\u0018",
   [
     [
       "ID2.satlem",
@@ -8,16 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "ID2_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "equation_ID2.sat", "equation_ID2.sat_e", "equation_ID2.w",
-        "equation_Prims.logical",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5",
         "true_interp", "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "b87425c34c6808132cf86f17439d1d0f"
+      "7bf701faa35dd842ec9b4439885888c9"
     ],
     [
       "ID2.run",
@@ -30,7 +31,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "2b4eb0acee6db3f1c2fae443ef9568e9"
+      "b38fcdc115846b01f842991ba3dd502c"
     ],
     [
       "ID2.test",
@@ -39,7 +40,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "28b798b1c44d1b9b145978929095fc3f"
+      "48d4fa770f78087f47b5e8b5cd55d363"
     ],
     [
       "ID2.test",
@@ -52,11 +53,11 @@
         "equation_ID2.sat",
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "interpretation_Tm_abs_ec6fa72520787e290dafd5b225be8268",
+        "interpretation_Tm_abs_f3ba3f7517c4ad22aadab94789553dba",
         "true_interp"
       ],
       0,
-      "721fa173829ef3e3091f4aa651918160"
+      "08c13b4d216bf559ed5340d3dfb428f6"
     ],
     [
       "ID2.return_wp",
@@ -65,7 +66,7 @@
       1,
       [ "@query" ],
       0,
-      "db0c33eb5259f8031b47ab0979d0c72a"
+      "8a27867b90e65bd683ade1b823e42ce8"
     ],
     [
       "ID2.bind_wp",
@@ -75,15 +76,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "ID2_interpretation_Tm_arrow_0b53fb535abf4e9b0a37568b36a288eb",
-        "ID2_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "equation_ID2.w", "equation_Prims.logical",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_ID2.w", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
-        "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "d17bef7d361498658f3bf130cf26d211"
+      "f1f033af4fb5fa65f607132673de7eff"
     ],
     [
       "ID2.bind",
@@ -92,21 +94,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "ID2_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "equation_ID2.sat", "equation_ID2.w", "equation_Prims.logical",
-        "equation_Prims.squash",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_ID2.sat", "equation_ID2.w", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "equation_Prims.squash",
+        "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_72b65b71b828688dbb0ba657715a194c",
         "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
-        "interpretation_Tm_abs_e5476ac46e95297dc051aced930fc670",
         "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "true_interp", "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "bb4577cfddb7b82eeb3a31a46c82dc71"
+      "74d4bd5568cc705b6a51f43f2eeae50f"
     ],
     [
       "ID2.subcomp",
@@ -114,11 +118,18 @@
       2,
       1,
       [
-        "@query", "equation_ID2.sat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_ID2.sat", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "516af84a5c434b2e35bd02ed278648b9"
+      "375af8673eefc2d5dd7231e4962a9a10"
     ],
     [
       "ID2.if_then_else_wp",
@@ -130,7 +141,7 @@
         "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5"
       ],
       0,
-      "26faa50fb41d5f6c93975e94fedb083a"
+      "8f1016e6dd5447f9d8edf06b0e9f02ba"
     ],
     [
       "ID2.ID",
@@ -142,7 +153,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f18c7384ec740b8e3ac0cad0460ea1ed"
+      "707423b93a6e6fc894b6ec1ab2c8defc"
     ],
     [
       "ID2.ID",
@@ -154,7 +165,16 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "e7434da216781c054b05e64e0699ce25"
+      "81fe709e9a65ec26255e11ae7f70cabd"
+    ],
+    [
+      "ID2.nomon",
+      1,
+      2,
+      1,
+      [ "@query", "equation_ID2.w" ],
+      0,
+      "ab878bd023f276f3cd8e8966741ccdef"
     ],
     [
       "ID2.lift_pure_nd",
@@ -163,22 +183,25 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "ID2_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "eq2-interp", "equation_ID2.nomon", "equation_ID2.sat",
-        "equation_ID2.w", "equation_Prims.l_Forall",
-        "equation_Prims.logical", "equation_Prims.squash",
+        "equation_ID2.w", "equation_Prims.l_Forall", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "equation_Prims.squash",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "interpretation_Tm_abs_8d742b80e8981705a8e66d47bbb1482f",
         "interpretation_Tm_abs_927a276ce23d88dbe79a87bbe56dc445",
         "l_imp-interp", "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_ID2.nomon",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "typing_Tm_abs_927a276ce23d88dbe79a87bbe56dc445"
       ],
       0,
-      "703d727cc09b5133d6ac21f249ae0714"
+      "724865ecaae1e345e32e1eb67d711b64"
     ],
     [
       "ID2.count",
@@ -187,7 +210,7 @@
       1,
       [ "@query" ],
       0,
-      "f701544d21b26d3e48b337bd74340586"
+      "18671348225f6f95fbe0f757236c7129"
     ],
     [
       "ID2.count",
@@ -206,7 +229,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3df6b1b984a55d4dd0e42a86acd0e363"
+      "f17b5a8556a067990c0cd188d6317eaf"
     ],
     [
       "ID2.test_f",
@@ -215,7 +238,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "c15c35a0d07e65d6e6749494bce48b4a"
+      "f502f62f1973f605fe6e4bb0094c1475"
     ],
     [
       "ID2.test_f",
@@ -224,7 +247,7 @@
       1,
       [ "@query" ],
       0,
-      "805992a431feb5ecfa7d0ab2c569c896"
+      "2c168208a1b9273ff03a823bb2749f7e"
     ],
     [
       "ID2.test_2",
@@ -233,7 +256,7 @@
       1,
       [ "@query", "int_typing" ],
       0,
-      "61ab66e10ebbede55ad4cf81cde9441e"
+      "33320b02f5686082cf10501066487661"
     ],
     [
       "ID2.l",
@@ -246,11 +269,11 @@
         "equation_ID2.sat",
         "function_token_typing_Prims.__cache_version_number__",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "interpretation_Tm_abs_a88034fef7a197f9a05674dace832015",
+        "interpretation_Tm_abs_5f212e780b16c0aeffcb9ef5b59e1599",
         "l_and-interp", "true_interp"
       ],
       0,
-      "e14fd04fcd9c975d023a5413e464a1f0"
+      "9daf5a16a5c3995faf15ea4ca781c261"
     ],
     [
       "ID2.Id",
@@ -259,7 +282,7 @@
       1,
       [ "@query" ],
       0,
-      "6564affd274d3b0d91cd765e6dc3b34d"
+      "8ce060dc10f52d6dc120ec466d0b6a27"
     ]
   ]
 ]
