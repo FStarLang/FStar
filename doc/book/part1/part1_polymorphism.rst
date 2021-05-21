@@ -50,14 +50,14 @@ There are a several things to note here:
 
 Just as with any function, you can write it instead like this:
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: id
    :end-before: //SNIPPET_END: id
 
 To call ``id``, one can apply it first to a type and then to a value of that type, as shown below.
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: id applications
    :end-before: //SNIPPET_END: id applications
@@ -74,7 +74,7 @@ Let's try a few simple exercises.
 
 Try defining functions with the following signatures:
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: sig apply_and_compose
    :end-before: //SNIPPET_END: sig apply_and_compose
@@ -85,14 +85,14 @@ Try defining functions with the following signatures:
 
        **Answer**
 
-    .. literalinclude:: exercises/Poly.fst
+    .. literalinclude:: ../code/Part1.Poly.fst
        :language: fstar
        :start-after: //SNIPPET_START: apply_and_compose
        :end-before: //SNIPPET_END: apply_and_compose
 
 How about writing down a signature for ``twice``:
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: def twice
    :end-before: //SNIPPET_END: def twice
@@ -103,7 +103,7 @@ How about writing down a signature for ``twice``:
 
        **Answer**
 
-    .. literalinclude:: exercises/Poly.fst
+    .. literalinclude:: ../code/Part1.Poly.fst
        :language: fstar
        :start-after: SNIPPET_START: sig twice
        :end-before: SNIPPET_END: sig twice
@@ -135,12 +135,12 @@ type annotations on variables.
 Let's consider our simple example of the definition and use of the
 identity function again
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: id
    :end-before: //SNIPPET_END: id
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: id applications
    :end-before: //SNIPPET_END: id applications
@@ -149,7 +149,7 @@ Instead of explicitly providing that first type argument when applying
 ``id``, one could write it as follows, replacing the type arguments
 with an underscore ``_``.
 
-.. literalinclude:: exercises/Poly.fst
+.. literalinclude:: ../code/Part1.Poly.fst
    :language: fstar
    :start-after: //SNIPPET_START: implicit id applications
    :end-before: //SNIPPET_END: implicit id applications
@@ -174,7 +174,7 @@ sites and left for the typechecker to infer automatically.
 
 For example, one could write
 
-.. literalinclude:: exercises/Poly2.fst
+.. literalinclude:: ../code/Part1.Poly2.fst
    :language: fstar
    :start-after: //SNIPPET_START: id
    :end-before: //SNIPPET_END: id
@@ -182,7 +182,7 @@ For example, one could write
 decorating the first argument ``a`` with a ``#``, to indicate that it is
 an implicit argument. Then at call sites, one can simply write:
 
-.. literalinclude:: exercises/Poly2.fst
+.. literalinclude:: ../code/Part1.Poly2.fst
    :language: fstar
    :start-after: //SNIPPET_START: id applications
    :end-before: //SNIPPET_END: id applications
@@ -195,7 +195,7 @@ In some cases, it may be useful to actually provide an implicit
 argument explicitly, rather than relying on the F* to pick one. For
 example, one could write the following:
 
-.. literalinclude:: exercises/Poly2.fst
+.. literalinclude:: ../code/Part1.Poly2.fst
    :language: fstar
    :start-after: //SNIPPET_START: explicit id applications
    :end-before: //SNIPPET_END: explicit id applications

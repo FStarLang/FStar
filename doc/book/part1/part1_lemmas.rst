@@ -37,7 +37,7 @@ which facts are provable.
 
 Here's our first lemma:
 
-.. literalinclude:: exercises/Ch2.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: //SNIPPET_START: factorial_is_positive
    :end-before: //SNIPPET_END: factorial_is_positive
@@ -65,7 +65,7 @@ Some syntactic shorthands for Lemmas
 Lemmas are so common in F* that it's convenient to have special syntax
 for them. Here's another take at our proof by ``factorial x > 0``
 
-.. literalinclude:: exercises/Ch2.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: //SNIPPET_START: factorial_is_positive_lemma
    :end-before: //SNIPPET_END: factorial_is_positive_lemma
@@ -86,7 +86,7 @@ A proof by induction, explained in detail
 Let's look at this lemma in detail again—why does it convince F* that
 ``factorial x > 0``?
 
-.. literalinclude:: exercises/Ch2.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: //SNIPPET_START: factorial_is_positive_lemma
    :end-before: //SNIPPET_END: factorial_is_positive_lemma
@@ -144,7 +144,7 @@ Try proving the following lemmas about ``factorial``:
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch2.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: factorial_is_greater_than_arg
        :end-before: SNIPPET_END: factorial_is_greater_than_arg
@@ -155,7 +155,7 @@ Exercise 2
 
 Try proving the following lemmas about ``fibonacci``:
 
-.. literalinclude:: exercises/Ch2.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: fibonacci_question
    :end-before: SNIPPET_END: fibonacci_question
@@ -166,7 +166,7 @@ Try proving the following lemmas about ``fibonacci``:
 
        **Answer** (Includes two proofs and detailed explanations)
 
-    .. literalinclude:: exercises/Ch2.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: fibonacci_answer
        :end-before: SNIPPET_END: fibonacci_answer
@@ -208,7 +208,7 @@ Try proving the following lemmas about ``fibonacci``:
     write yourself. Consider this alternative proof of ``fibonacci n
     >= n``.
 
-    .. literalinclude:: exercises/Ch2.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: fibonacci_answer_alt
        :end-before: SNIPPET_END: fibonacci_answer_alt
@@ -291,14 +291,14 @@ Exercise: A lemma about append
 Now, suppose we were to define `app``, a version of ``append`` with a
 weaker type, as shown below.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: //SNIPPET_START: def append alt
    :end-before: //SNIPPET_END: def append alt
 
 Can you prove the following lemma?
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: //SNIPPET_START: sig app_length
    :end-before: //SNIPPET_END: sig app_length
@@ -309,7 +309,7 @@ Can you prove the following lemma?
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: def app_length
        :end-before: SNIPPET_END: def app_length
@@ -328,7 +328,7 @@ in some cases, as in the following example, it may be impossible to
 prove a property of a function directly in its type---you must resort
 to a lemma.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: reverse
    :end-before: SNIPPET_END: reverse
@@ -357,7 +357,7 @@ which F* can perform automatically.
 Instead, one can use two lemmas to prove the property we care
 about. Here it is:
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: reverse_involutive
    :end-before: SNIPPET_END: reverse_involutive
@@ -371,7 +371,7 @@ Exercises: Reverse is injective
 
 Prove that reverse is injective, i.e., prove the following lemma.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: sig rev_injective
    :end-before: SNIPPET_END: sig rev_injective
@@ -382,14 +382,14 @@ Prove that reverse is injective, i.e., prove the following lemma.
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: def rev_injective
        :end-before: SNIPPET_END: def rev_injective
 
     That's quite a tedious proof, isn't it. Here's a simpler proof.
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: rev_injective_alt
        :end-before: SNIPPET_END: rev_injective_alt
@@ -409,7 +409,7 @@ Exercise: Optimizing reverse
 Earlier, we saw how to implement :ref:`a tail-recursive variant
 <Part1_termination_reverse>` of ``reverse``.
 
-.. literalinclude:: exercises/Termination.fst
+.. literalinclude:: ../code/Part1.Termination.fst
        :language: fstar
        :start-after: SNIPPET_START: rev
        :end-before: SNIPPET_END: rev
@@ -427,7 +427,7 @@ previous non-tail-recursive implementation, i.e.,
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: rev_is_ok
        :end-before: SNIPPET_END: rev_is_ok
@@ -439,7 +439,7 @@ Exercise: Optimizing Fibonacci
 Earlier, we saw how to implement :ref:`a tail-recursive variant
 <Part1_termination_fibonacci>` of ``fibonacci``.
 
-.. literalinclude:: exercises/Termination.fst
+.. literalinclude:: ../code/Part1.Termination.fst
        :language: fstar
        :start-after: SNIPPET_START: fib
        :end-before: SNIPPET_END: fib
@@ -463,7 +463,7 @@ previous non-tail-recursive implementation, i.e.,
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: fib_is_ok
        :end-before: SNIPPET_END: fib_is_ok
@@ -477,7 +477,7 @@ section on :ref:`polymorphism
 <Part1_polymorphism_and_inference>`. Here are some more, starting with
 the ``map`` function on lists.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: map
    :end-before: SNIPPET_END: map
@@ -498,7 +498,7 @@ Here's a function called ``find`` that given a boolean function ``f``
 and a list ``l`` returns the first element in ``l`` for which ``f``
 holds. If no element is found ``find`` returns ``None``.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: find
    :end-before: SNIPPET_END: find
@@ -512,12 +512,12 @@ better to do this intrinsically or extrinsically? Do it both ways.
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: sig find
        :end-before: SNIPPET_END: sig find
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: find_alt
        :end-before: SNIPPET_END: find_alt
@@ -529,14 +529,14 @@ Here is a function ``fold_left``, where::
 
    fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: def fold_left
    :end-before: SNIPPET_END: def fold_left
 
 Prove the following lemma:
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
    :start-after: SNIPPET_START: sig fold_left_Cons_is_rev
    :end-before: SNIPPET_END: sig fold_left_Cons_is_rev
@@ -552,7 +552,7 @@ Prove the following lemma:
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
        :start-after: SNIPPET_START: fold_left_Cons_is_rev
        :end-before: SNIPPET_END: fold_left_Cons_is_rev

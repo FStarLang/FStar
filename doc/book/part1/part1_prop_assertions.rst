@@ -338,7 +338,7 @@ Then, F* complains with the following message::
 
 You can use an assertion with any proposition, as shown below.
 
-.. literalinclude:: exercises/Ch2.fst
+.. literalinclude:: ../code/Part1.Assertions.fst
    :language: fstar
    :start-after: //SNIPPET_START: max
    :end-before: //SNIPPET_END: max                              

@@ -16,9 +16,6 @@ depend: .depend
 	$(FSTAR) $<
 	touch -c $@
 
-%.fst-in:
-	@echo $(FSTAR_FLAGS) --max_fuel 0 --max_ifuel 0
-
 wc:
 	wc -l prims.fst $(ALL)
 

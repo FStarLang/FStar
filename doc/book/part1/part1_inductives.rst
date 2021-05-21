@@ -24,7 +24,7 @@ that ``bool`` is the type with two elements, ``true`` and ``false``.
 
 You can define your own types with an enumeration of elements, like so.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: three
    :end-before: //SNIPPET_END: three
@@ -59,7 +59,7 @@ begin with an uppercase letter.
 F* can prove that they are distinct and that these are the only terms
 of type ``three``.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: assert
    :end-before: //SNIPPET_END: assert
@@ -71,7 +71,7 @@ go, we'll learn about more advanced ways to use ``match``.
 
 Here are some examples.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: disc_handrolled
    :end-before: //SNIPPET_END: disc_handrolled
@@ -85,14 +85,14 @@ to write functions that test whether a value of an inductive type
 matches one of its constructors, F* automatically generates these
 functions for you. For example, instead of writing
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: three_as_int
    :end-before: //SNIPPET_END: three_as_int
 
 One can write:
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: three_as_int'
    :end-before: //SNIPPET_END: three_as_int'
@@ -106,7 +106,7 @@ Exhaustiveness
 
 Of course, an even more direct way of writing ``three_as_int`` is
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: three_as_int''
    :end-before: //SNIPPET_END: three_as_int''
@@ -138,7 +138,7 @@ The next step from enumerations is to define composite types, e.g.,
 types that are from from pairs, triples, quadruples, etc. of other
 types. Here's how
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: tup
    :end-before: //SNIPPET_END: tup
@@ -156,7 +156,7 @@ These are inductive types with just one case---so the discriminators
 we need a way to extract, or *project*, the components of a tuple. You
 can do that with a ``match``.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: proj_handrolled
    :end-before: //SNIPPET_END: proj_handrolled
@@ -208,7 +208,7 @@ A record is just a tuple with user-chosen names for its fields and
 with special syntax for constructing then and projecting their
 fields. Here's an example.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: point
    :end-before: //SNIPPET_END: point
@@ -252,7 +252,7 @@ but it can be defined partially, by excluding the case where ``y =
 function to forbid ``y = 0``, but we're just trying to illustrate the
 ``option`` type here.)
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: option
    :end-before: //SNIPPET_END: option
@@ -280,7 +280,7 @@ to analyze the tag ``Inl`` (meaning it's "in the left case") or
 ``Inr`` ("in the right case") and compute with the underlying
 values. Here's an example:
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: either
    :end-before: //SNIPPET_END: either
@@ -333,7 +333,7 @@ Length of a list
 Let's write some simple functions on lists, starting with computing
 the length of a list.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: length
    :end-before: //SNIPPET_END: length
@@ -353,7 +353,7 @@ Here's the definition of ``append``, a function that concatenates two
 lists. Can you give it a type that proves it always returns a list
 whose length is the sum of the lengths of its arguments.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: def append
    :end-before: //SNIPPET_END: def append
@@ -364,7 +364,7 @@ whose length is the sum of the lengths of its arguments.
 
        **Answer**
 
-    .. literalinclude:: exercises/Ch3.fst
+    .. literalinclude:: ../code/Part1.Inductives.fst
        :language: fstar
        :start-after: SNIPPET_START: sig append
        :end-before: SNIPPET_END: sig append

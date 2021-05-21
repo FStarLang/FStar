@@ -310,7 +310,7 @@ Recursive functions
 Recursive functions in F* are always named. To define them, one uses
 the ``let rec`` syntax, as shown below.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: factorial
    :end-before: SNIPPET_END: factorial
@@ -446,7 +446,7 @@ F* toolchain, downloadable from `here
 This first example is just to show you how to run the tool and
 interpret its output.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: sample
    :end-before: SNIPPET_END: sample
@@ -501,7 +501,7 @@ This type claims that ``incr`` result is
 greater than its argument and F* agrees—remember, the ``int`` type is
 unbounded, so there's no danger of the addition overflowing.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: ex1.1
    :end-before: SNIPPET_END: ex1.1
@@ -510,7 +510,7 @@ This type claims that ``incr`` always returns a natural number, but it
 isn't true, since incrementing a negative number doesn't always
 produce a non-negative number.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: ex1.2
    :end-before: SNIPPET_END: ex1.2
@@ -559,7 +559,7 @@ So, let's try again. Here's another type for ``incr``, claiming that
 if its argument is a natural number then so is its result. This time
 F* is happy.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: ex1.3
    :end-before: SNIPPET_END: ex1.3
@@ -569,7 +569,7 @@ of a definition. Below, the ``val incr4`` provides only the signature
 and the subsequent ``let incr4`` provides the definition—F* checks
 that the definitions is compatible with the signature.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: ex1.4
    :end-before: SNIPPET_END: ex1.4
@@ -582,7 +582,7 @@ Try writing some more types for ``incr``.
 
        **Some answers**
 
-    .. literalinclude:: exercises/Sample.fst
+    .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
        :language: fstar
        :start-after: SNIPPET_START: incr_types
        :end-before: SNIPPET_END: incr_types
@@ -610,7 +610,7 @@ the maximum of ``x`` and ``y``.
 
        **Some answers**
 
-    .. literalinclude:: exercises/Sample.fst
+    .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
        :language: fstar
        :start-after: SNIPPET_START: max
        :end-before: SNIPPET_END: max
@@ -621,7 +621,7 @@ More types for factorial
 
 Recall the definition of ``factorial`` from earlier.
 
-.. literalinclude:: exercises/Sample.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: factorial
    :end-before: SNIPPET_END: factorial
@@ -634,7 +634,7 @@ Can you write down some more types for factorial?
 
        **Some answers**
 
-    .. literalinclude:: exercises/Sample.fst
+    .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
        :language: fstar
        :start-after: SNIPPET_START: factorial_answers
        :end-before: SNIPPET_END: factorial_answers
@@ -642,9 +642,9 @@ Can you write down some more types for factorial?
 Fibonacci
 .........
 
-Here's a doubly recursive function::
+Here's a doubly recursive function
 
-  .. literalinclude:: exercises/Sample.fst
+  .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: fibonacci
    :end-before: SNIPPET_END: fibonacci
@@ -657,7 +657,7 @@ What other types can you give to it?
 
        **Some answers**
 
-    .. literalinclude:: exercises/Sample.fst
+    .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
        :language: fstar
        :start-after: SNIPPET_START: fibonacci_answers
        :end-before: SNIPPET_END: fibonacci_answers

@@ -86,7 +86,7 @@ Why ``length`` terminates
 Let's look again at the definition of ``length`` and see how F* checks
 that it terminates, i.e.,
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: length
    :end-before: //SNIPPET_END: length
@@ -161,7 +161,7 @@ is shorthand for::
 Let's have a look at lexicographic orderings at work in proving that
 the classic ``ackermann`` function terminates on all inputs.
 
-.. literalinclude:: exercises/Termination.fst
+.. literalinclude:: ../code/Part1.Termination.fst
    :language: fstar
    :start-after: SNIPPET_START: ackermann
    :end-before: SNIPPET_END: ackermann
@@ -198,7 +198,7 @@ Defaults measures
 As we saw earlier, F* allows you to write the following code, with no
 ``decreases`` clause, and it still accepts it.
 
-.. literalinclude:: exercises/Ch3.fst
+.. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
    :start-after: //SNIPPET_START: length
    :end-before: //SNIPPET_END: length
@@ -230,7 +230,7 @@ On the other hand, it you were to flip the order of arguments to
 ``ackermann``, then the default choise of the measure would not be
 correct—so, you'll have to write it explicitly, as shown below.
 
-.. literalinclude:: exercises/Termination.fst
+.. literalinclude:: ../code/Part1.Termination.fst
    :language: fstar
    :start-after: SNIPPET_START: ackermann_flip
    :end-before: SNIPPET_END: ackermann_flip
@@ -253,7 +253,7 @@ recursive functions, again using ``and`` to define ``incr_tree`` and
 that these functions terminate, just by using the default measure as
 usual.
 
-.. literalinclude:: exercises/Termination.fst
+.. literalinclude:: ../code/Part1.Termination.fst
    :language: fstar
    :start-after: //SNIPPET_START: incr_tree
    :end-before: //SNIPPET_END: incr_tree
@@ -264,7 +264,7 @@ usual.
    prove mutually recursive functions correct. We include it here as a
    tip, you can probably skip it on a first read.
 
-   .. literalinclude:: exercises/Termination.fst
+   .. literalinclude:: ../code/Part1.Termination.fst
       :language: fstar
       :start-after: SNIPPET_START: foo_bar
       :end-before: SNIPPET_END: foo_bar
@@ -364,7 +364,7 @@ particular, proving that ``fib`` terminates.
 
        **Answer**
 
-    .. literalinclude:: exercises/Termination.fst
+    .. literalinclude:: ../code/Part1.Termination.fst
        :language: fstar
        :start-after: SNIPPET_START: fib
        :end-before: SNIPPET_END: fib
@@ -410,7 +410,7 @@ particular, that ``rev_aux`` terminates.
 
        **Answer**
 
-    .. literalinclude:: exercises/Termination.fst
+    .. literalinclude:: ../code/Part1.Termination.fst
        :language: fstar
        :start-after: SNIPPET_START: rev
        :end-before: SNIPPET_END: rev
