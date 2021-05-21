@@ -80,6 +80,20 @@ a function
 
 The type is equivalent to ``x:t{pre} -> u:unit{post}``.
 
+When the precondition ``pre`` is trivial, it can be omitted. One can
+just write:
+
+.. code-block:: fstar
+
+   Lemma (ensures post)
+
+or even
+
+.. code-block:: fstar
+
+   Lemma post
+
+
 A proof by induction, explained in detail
 .........................................
 
