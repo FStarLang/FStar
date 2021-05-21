@@ -19,7 +19,7 @@ program's behavior, including properties like functional correctness
 security properties (e.g., ensuring that a program never leaks certain
 secrets), and bounds on resource usage.
 
-Altough a functional programming language at its core, F* promotes
+Although a functional programming language at its core, F* promotes
 programming in a variety of paradigms, including programming with
 pure, total functions, low-level programming in imperative languages
 like C and assembly, concurrent programming with shared memory and
@@ -59,8 +59,8 @@ Part 1: Basic Functional Programming and Proofs
 
 The first part of this book provides a basic introduction to
 programming with pure total functions, refinement types, and SMT-based
-proofs. This part of the book revised a previous online tutorial on F*
-and is targeted at an audience familiar with programming though with
+proofs. This part of the book revises a previous online tutorial on F*
+and is targeted at an audience familiar with programming, though with
 no background in formal proofs. Even if you are familiar with program
 proofs and dependent types, it will be useful to quickly go through
 this part, since some elements are quite specific to F*.

@@ -80,7 +80,9 @@ automation, and compilaton backends. Some examples include:
 
 .. _Intro_Vec:
 
-To get a taste of F*, let's dive right in with some examples.
+To get a taste of F*, let's dive right in with some examples. At this
+stage, we don't expect you to understand these examples in detail,
+though it should give you a flavor of what is possible with F*.
 
 F* is a dependently typed language
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -145,11 +147,11 @@ F* supports user-defined effectful programming
 While functional programming is at the heart of the language, F* is
 about more than just pure functions. In fact, F* is a Turing complete
 language. That this is even worth mentioning may come as a surprise to
-readers coming from general-purpose programming languages like C# or
-Scala, but not all dependently typed languages are Turing complete,
-since nontermination can break soundness. However, F* supports general
-recursive functions and non-termination in a safe manner, without
-compromsing soundness.
+readers with a background in general-purpose programming languages
+like C# or Scala, but not all dependently typed languages are Turing
+complete, since nontermination can break soundness. However, F*
+supports general recursive functions and non-termination in a safe
+manner, without compromsing soundness.
 
 Beyond nontermination, F* supports a system of user-defined
 computational effects which can be used to model a variety of
