@@ -11398,14 +11398,14 @@ let (universe_of :
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.term_to_string e in
-         FStar_Util.print1 "Calling universe_of_aux with %s\n" uu___2
+         FStar_Util.print1 "Calling universe_of_aux with %s {\n" uu___2
        else ());
       (let r = universe_of_aux env e in
        (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
         if uu___2
         then
           let uu___3 = FStar_Syntax_Print.term_to_string r in
-          FStar_Util.print1 "Got result from universe_of_aux = %s\n" uu___3
+          FStar_Util.print1 "Got result from universe_of_aux = %s }\n" uu___3
         else ());
        level_of_type env e r)
 let (tc_tparams :
