@@ -47,7 +47,14 @@ let tbind : #a:_ -> #b:_ ->
             rwtree a labs1 -> 
             (a -> rwtree b labs2) -> rwtree b (labs1@@labs2) = fun c f -> Alg.bind _ _ c f
 
-let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+let st_wp0 (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+
+let st_monotonic #a (w : st_wp0 a) : Type0 =
+  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
+  // ^ this version seems to be less SMT-friendly
+  forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
+
+let st_wp (a:Type) = wp:st_wp0 a{st_monotonic wp}
 
 unfold
 let return_wp #a x : st_wp a = fun s0 p -> p (x, s0)
@@ -223,6 +230,7 @@ let put (s:state) : AlgWP unit [Write] (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun s0 p -> wp (fun x -> p (x, s0))
 
 let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
@@ -231,7 +239,7 @@ let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
          (ensures (fun _ -> True))
   =
     let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.wp_monotonic_pure (); // need this lemma
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -263,8 +271,10 @@ let add_via_state (x y : int) : AlgWP int [Read;Write] (fun s0 p -> p ((x+y), s0
 // literally zero difference in the VC a tactic sees. Also, seems only
 // for the builtin Pure???
 
+open FStar.Monotonic.Pure
+
 let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
-  : ID5.ID (a & state) (interp_as_wp t s0)
+  : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
@@ -284,20 +294,20 @@ let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
 let sanity_2 = assert (forall s0 p s1. p ((), s0) ==> quotient_ro (write_wp s1) s0 p)
 
 let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
-  : ID5.ID (a & state) (quotient_ro (interp_as_wp t) s0)
+  : ID5.ID (a & state) (as_pure_wp (quotient_ro (interp_as_wp t) s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
       interp_ro (k s0) s0
 
 let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (wp s0))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
   = let c = reify (t ()) in interp_sem c
 
 (* This guarantees the final state is unchanged, but see below
 for an alternative statement. *)
 let ro_soundness #a #wp (t : unit -> AlgWP a [Read] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (quotient_ro wp s0))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
   = let c = reify (t ()) in interp_ro c
 
 

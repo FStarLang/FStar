@@ -323,8 +323,10 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
       | None -> Some val_q
       | Some q' ->
         //logic is now a deprecated qualifier, so discard it from the checking
-        let drop_logic = List.filter (fun x -> not (x = Logic)) in
-        if (let val_q, q' = drop_logic val_q, drop_logic q' in
+        //AR: 05/19: drop irreducible also
+        //           irreducible is not allowed on val, but one could add it on let
+        let drop_logic_and_irreducible = List.filter (fun x -> not (x = Logic || x = Irreducible)) in
+        if (let val_q, q' = drop_logic_and_irreducible val_q, drop_logic_and_irreducible q' in
             List.length val_q = List.length q'
             && List.forall2 U.qualifier_equal val_q q')
         then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
@@ -639,6 +641,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       let effect_and_lift_ses = match lift_from_pure_opt with
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
         | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
+
+      let effect_and_lift_ses = effect_and_lift_ses |> List.map (fun sigelt ->
+        { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}) in
 
       //only elaborate, the loop in tc_decls would send these back to us for typechecking
       [], ses @ effect_and_lift_ses, env0

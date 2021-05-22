@@ -68,9 +68,12 @@ assume WP_t_monotonic:
        (forall (r:result a) (s:state). p r s ==> q r s) ==>
        (forall (s:state). wp p s ==> wp q s))
 
+open FStar.Monotonic.Pure
+
 let repr (a:Type) (wp:wp_t a) =
   s0:state ->
-  PURE (result a & state) (fun p -> wp (fun x s1 -> grows s0 s1 ==> p (x, s1)) s0)
+  PURE (result a & state)
+    (as_pure_wp (fun p -> wp (fun x s1 -> grows s0 s1 ==> p (x, s1)) s0))
 
 let return (a:Type) (x:a)
 : repr a (fun p s0 -> p (Success x) s0)
@@ -119,13 +122,10 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-assume PURE_wp_monotonic:
-  forall (a:Type) (wp:pure_wp a).
-    (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
 let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
-= fun s0 -> Success (f ()), s0
+= elim_pure_wp_monotonicity_forall (); fun s0 -> Success (f ()), s0
 
 sub_effect PURE ~> MSeqEXN = lift_pure_mseqexn
 

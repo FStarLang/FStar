@@ -2746,7 +2746,12 @@ let rec (norm :
                ->
                (if
                   (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
-                then FStar_Util.print_string "Potential norm request ... \n"
+                then
+                  (let uu___3 = FStar_Syntax_Print.term_to_string hd in
+                   let uu___4 = FStar_Syntax_Print.args_to_string args in
+                   FStar_Util.print2
+                     "Potential norm request with hd = %s and args = %s ... \n"
+                     uu___3 uu___4)
                 else ();
                 (let cfg' =
                    let uu___3 = cfg in

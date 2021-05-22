@@ -11398,14 +11398,14 @@ let (universe_of :
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.term_to_string e in
-         FStar_Util.print1 "Calling universe_of_aux with %s\n" uu___2
+         FStar_Util.print1 "Calling universe_of_aux with %s {\n" uu___2
        else ());
       (let r = universe_of_aux env e in
        (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
         if uu___2
         then
           let uu___3 = FStar_Syntax_Print.term_to_string r in
-          FStar_Util.print1 "Got result from universe_of_aux = %s\n" uu___3
+          FStar_Util.print1 "Got result from universe_of_aux = %s }\n" uu___3
         else ());
        level_of_type env e r)
 let (tc_tparams :
@@ -11447,42 +11447,37 @@ let rec (typeof_tot_or_gtot_term_fastpath :
               let uu___2 = FStar_Syntax_Print.term_to_string t1 in
               Prims.op_Hat "Impossible: " uu___2 in
             failwith uu___1
-        | FStar_Syntax_Syntax.Tm_name x ->
-            FStar_Pervasives_Native.Some (x.FStar_Syntax_Syntax.sort)
-        | FStar_Syntax_Syntax.Tm_lazy i ->
-            let uu___ = FStar_Syntax_Util.unfold_lazy i in
-            typeof_tot_or_gtot_term_fastpath env uu___ must_tot
-        | FStar_Syntax_Syntax.Tm_fvar fv ->
-            let uu___ =
-              FStar_TypeChecker_Env.try_lookup_and_inst_lid env []
-                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-            FStar_Util.bind_opt uu___
-              (fun uu___1 ->
-                 match uu___1 with
-                 | (t2, uu___2) -> FStar_Pervasives_Native.Some t2)
-        | FStar_Syntax_Syntax.Tm_uinst
-            ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-               FStar_Syntax_Syntax.pos = uu___;
-               FStar_Syntax_Syntax.vars = uu___1;_},
-             us)
-            ->
-            let uu___2 =
-              FStar_TypeChecker_Env.try_lookup_and_inst_lid env us
-                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-            FStar_Util.bind_opt uu___2
-              (fun uu___3 ->
-                 match uu___3 with
-                 | (t2, uu___4) -> FStar_Pervasives_Native.Some t2)
         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
             FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reflect uu___)
             -> FStar_Pervasives_Native.None
-        | FStar_Syntax_Syntax.Tm_constant sc ->
-            let uu___ = tc_constant env t1.FStar_Syntax_Syntax.pos sc in
-            FStar_Pervasives_Native.Some uu___
-        | FStar_Syntax_Syntax.Tm_type u ->
-            let uu___ = mk_tm_type (FStar_Syntax_Syntax.U_succ u) in
-            FStar_Pervasives_Native.Some uu___
+        | FStar_Syntax_Syntax.Tm_name uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_fvar uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_uinst uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_constant uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_type uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_arrow uu___ ->
+            let uu___1 = universe_of_aux env t1 in
+            FStar_All.pipe_right uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
+        | FStar_Syntax_Syntax.Tm_lazy i ->
+            let uu___ = FStar_Syntax_Util.unfold_lazy i in
+            typeof_tot_or_gtot_term_fastpath env uu___ must_tot
         | FStar_Syntax_Syntax.Tm_abs
             (bs, body, FStar_Pervasives_Native.Some
              { FStar_Syntax_Syntax.residual_effect = eff;
@@ -11524,69 +11519,19 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                       let uu___1 = FStar_Syntax_Subst.open_term bs tbody2 in
                       match uu___1 with
                       | (bs1, tbody3) ->
+                          let u =
+                            let uu___2 =
+                              FStar_TypeChecker_Env.push_binders env bs1 in
+                            universe_of uu___2 tbody3 in
                           let uu___2 =
                             let uu___3 =
-                              FStar_TypeChecker_Env.push_binders env bs1 in
-                            universeof_fastpath uu___3 tbody3 in
-                          FStar_Util.bind_opt uu___2
-                            (fun u ->
-                               let uu___3 =
-                                 let uu___4 =
-                                   f tbody3 (FStar_Pervasives_Native.Some u) in
-                                 FStar_Syntax_Util.arrow bs1 uu___4 in
-                               FStar_Pervasives_Native.Some uu___3)))
-        | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-            let uu___ = FStar_Syntax_Subst.open_comp bs c in
-            (match uu___ with
-             | (bs1, c1) ->
-                 let rec aux env1 us bs2 =
-                   match bs2 with
-                   | [] ->
-                       let uu___1 =
-                         let uu___2 =
-                           let uu___3 =
-                             let uu___4 =
-                               let uu___5 =
-                                 FStar_All.pipe_right c1
-                                   FStar_Syntax_Util.comp_effect_name in
-                               FStar_All.pipe_right uu___5
-                                 (FStar_TypeChecker_Env.norm_eff_name env1) in
-                             FStar_All.pipe_right uu___4
-                               (FStar_TypeChecker_Env.lookup_effect_quals
-                                  env1) in
-                           FStar_All.pipe_right uu___3
-                             (FStar_List.existsb
-                                (fun q -> q = FStar_Syntax_Syntax.TotalEffect)) in
-                         if uu___2
-                         then
-                           universeof_fastpath env1
-                             (FStar_Syntax_Util.comp_result c1)
-                         else
-                           FStar_Pervasives_Native.Some
-                             FStar_Syntax_Syntax.U_zero in
-                       FStar_Util.bind_opt uu___1
-                         (fun uc ->
-                            let uu___2 =
-                              mk_tm_type
-                                (FStar_Syntax_Syntax.U_max (uc :: us)) in
-                            FStar_Pervasives_Native.Some uu___2)
-                   | { FStar_Syntax_Syntax.binder_bv = x;
-                       FStar_Syntax_Syntax.binder_qual = imp;
-                       FStar_Syntax_Syntax.binder_attrs = uu___1;_}::bs3 ->
-                       let uu___2 =
-                         universeof_fastpath env1 x.FStar_Syntax_Syntax.sort in
-                       FStar_Util.bind_opt uu___2
-                         (fun u_x ->
-                            let env2 = FStar_TypeChecker_Env.push_bv env1 x in
-                            aux env2 (u_x :: us) bs3) in
-                 aux env [] bs1)
+                              f tbody3 (FStar_Pervasives_Native.Some u) in
+                            FStar_Syntax_Util.arrow bs1 uu___3 in
+                          FStar_Pervasives_Native.Some uu___2))
         | FStar_Syntax_Syntax.Tm_abs uu___ -> FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Tm_refine (x, uu___) ->
-            let uu___1 = universeof_fastpath env x.FStar_Syntax_Syntax.sort in
-            FStar_Util.bind_opt uu___1
-              (fun u_x ->
-                 let uu___2 = mk_tm_type u_x in
-                 FStar_Pervasives_Native.Some uu___2)
+            typeof_tot_or_gtot_term_fastpath env x.FStar_Syntax_Syntax.sort
+              must_tot
         | FStar_Syntax_Syntax.Tm_app
             ({
                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
@@ -11782,36 +11727,6 @@ let rec (typeof_tot_or_gtot_term_fastpath :
                 Prims.op_Hat uu___3 ")" in
               Prims.op_Hat "Impossible! (" uu___2 in
             failwith uu___1
-and (universeof_fastpath :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
-  =
-  fun env ->
-    fun t ->
-      let uu___ = typeof_tot_or_gtot_term_fastpath env t false in
-      FStar_Util.bind_opt uu___
-        (fun k ->
-           let rec aux maybe_norm k1 =
-             let uu___1 =
-               let uu___2 = FStar_Syntax_Subst.compress k1 in
-               uu___2.FStar_Syntax_Syntax.n in
-             match uu___1 with
-             | FStar_Syntax_Syntax.Tm_type u ->
-                 FStar_Pervasives_Native.Some u
-             | FStar_Syntax_Syntax.Tm_meta (k2, uu___2) -> aux maybe_norm k2
-             | FStar_Syntax_Syntax.Tm_refine (x, uu___2) ->
-                 aux maybe_norm x.FStar_Syntax_Syntax.sort
-             | FStar_Syntax_Syntax.Tm_ascribed (k2, uu___2, uu___3) ->
-                 aux maybe_norm k2
-             | uu___2 ->
-                 if maybe_norm
-                 then
-                   let uu___3 =
-                     FStar_TypeChecker_Normalize.unfold_whnf env k1 in
-                   aux false uu___3
-                 else FStar_Pervasives_Native.None in
-           aux true k)
 let rec (effectof_tot_or_gtot_term_fastpath :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

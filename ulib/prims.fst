@@ -26,6 +26,13 @@ module Prims
 /// define various conveniences in the language, e.g., type of
 /// attributes.
 
+
+(***** Begin trusted primitives *****)
+
+(** Primitives up to the definition of the GTot effect are trusted
+    Beyond that all definitions are fully verified *)
+
+
 (** Type of attributes *)
 assume new
 type attribute : Type0 
@@ -281,8 +288,27 @@ let pure_post' (a pre: Type) = _: a{pre} -> GTot Type0
 let pure_post (a: Type) = pure_post' a True
 
 (** A pure weakest precondition transforms postconditions on [a]-typed
-    results to pure preconditions *)
-let pure_wp (a: Type) = pure_post a -> GTot pure_pre
+    results to pure preconditions
+
+    We require the weakest preconditions to satisfy the monotonicity
+    property over the postconditions
+    To enforce it, we first define a vanilla wp type,
+    and then refine it with the monotonicity condition *)
+let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
+
+(** The monotonicity predicate is marked opaque_to_smt,
+    meaning that its definition is hidden from the SMT solver,
+    and if required, will need to be explicitly revealed
+    This has the advantage that clients that do not need to work with it
+    directly, don't have the (quantified) definition in their solver context *)
+
+let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
+  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
+
+[@@ "opaque_to_smt"]
+let pure_wp_monotonic = pure_wp_monotonic0
+
+let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
 
 (** This predicate is an internal detail, used to optimize the
     encoding of some quantifiers to SMT by omitting their typing
@@ -404,15 +430,20 @@ let purewp_id (a: Type) (wp: pure_wp a) = wp
     vice versa) using just the identity lifting on pure wps *)
 sub_effect PURE ~> GHOST { lift_wp = purewp_id }
 
-(** As with [Tot], the primitive effect [GTot] is definitionally equal
-    to an instance of GHOST *)
-effect GTot (a: Type) = GHOST a (pure_null_wp a)
-
 (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
 effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
   GHOST a
     (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
     )
+
+(** As with [Tot], the primitive effect [GTot] is definitionally equal
+    to an instance of GHOST *)
+effect GTot (a: Type) = GHOST a (pure_null_wp a)
+
+
+(***** End trusted primitives *****)
+
+(** This point onwards, F* fully verifies all the definitions *)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)

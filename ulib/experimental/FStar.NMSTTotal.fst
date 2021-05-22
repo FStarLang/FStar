@@ -20,6 +20,8 @@ module P = FStar.Preorder
 
 module M = FStar.MSTTotal
 
+open FStar.Monotonic.Pure
+
 type tape = nat -> bool
 
 type repr
@@ -153,7 +155,7 @@ let lift_pure_nmst
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
     =
   fun (_, n) ->
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
+    elim_pure_wp_monotonicity wp;
     let x = f () in
     x, n
 

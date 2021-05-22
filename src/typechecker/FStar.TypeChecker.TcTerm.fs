@@ -3901,10 +3901,10 @@ let rec universe_of_aux env e =
 
 let universe_of env e =
     if debug env Options.High then
-      BU.print1 "Calling universe_of_aux with %s\n" (Print.term_to_string e);
+      BU.print1 "Calling universe_of_aux with %s {\n" (Print.term_to_string e);
     let r = universe_of_aux env e in
     if debug env Options.High then
-      BU.print1 "Got result from universe_of_aux = %s\n" (Print.term_to_string r);
+      BU.print1 "Got result from universe_of_aux = %s }\n" (Print.term_to_string r);
     level_of_type env e r
 
 let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
@@ -3928,6 +3928,7 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
     A possible restructuring would be to treat these two (type and effect) separately
       in the return type
 *)
+
 let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option<typ> =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
   let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
@@ -3936,29 +3937,21 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_delayed _
   | Tm_bvar _ -> failwith ("Impossible: " ^ Print.term_to_string t)
 
-  | Tm_name x ->
-    Some x.sort
-
-  | Tm_lazy i ->
-    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
-
-  | Tm_fvar fv ->
-    bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->
-      Some t)
-
-  | Tm_uinst({n=Tm_fvar fv}, us) ->
-    bind_opt (Env.try_lookup_and_inst_lid env us fv.fv_name.v) (fun (t, _) ->
-      Some t)
-
   (* Can't (easily) do this one efficiently, just return None *)
   | Tm_constant Const_reify
   | Tm_constant (Const_reflect _) -> None
 
-  | Tm_constant sc ->
-    Some (tc_constant env t.pos sc)
+  //For the following nodes, use the universe_of_aux function
+  //since these are already Tot, we don't need to check the must_tot flag
+  | Tm_name _
+  | Tm_fvar _
+  | Tm_uinst _
+  | Tm_constant _
+  | Tm_type _
+  | Tm_arrow _ -> universe_of_aux env t |> Some
 
-  | Tm_type u ->
-    Some (mk_tm_type (U_succ u))
+  | Tm_lazy i ->
+    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=tbody})) ->  //AR: maybe keep residual univ too?
     let mk_comp =
@@ -3977,41 +3970,12 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
           BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
-        bind_opt (universeof_fastpath (Env.push_binders env bs) tbody) (fun u ->
-          Some (U.arrow bs (f tbody (Some u))))))
-
-  | Tm_arrow(bs, c) ->
-    let bs, c = SS.open_comp bs c in
-    let rec aux env us bs =
-      match bs with
-      | [] ->
-        bind_opt
-          (if c  //AR: if computation is non-total, make its universe Zero
-              |> U.comp_effect_name
-              |> Env.norm_eff_name env
-              |> Env.lookup_effect_quals env
-              |> List.existsb (fun q -> q = S.TotalEffect)
-           then universeof_fastpath env (U.comp_result c)  //AR: Why not get comp univ here if available?
-           else Some S.U_zero)
-          (fun uc -> Some (mk_tm_type (S.U_max (uc::us))))
-
-      | ({binder_bv=x;binder_qual=imp})::bs ->
-        bind_opt (universeof_fastpath env x.sort) (fun u_x ->
-          let env = Env.push_bv env x in
-          aux env (u_x::us) bs)
-    in
-    aux env [] bs
+        let u = universe_of (Env.push_binders env bs) tbody in
+        Some (U.arrow bs (f tbody (Some u)))))
 
   | Tm_abs _ -> None
 
-  | Tm_refine(x, _) ->
-    bind_opt (universeof_fastpath env x.sort) (fun u_x ->
-      Some (mk_tm_type u_x))
-
-  (* Not doing anything smart with these, so we don't even associate
-   * them appropriately. *)
-  (* | Tm_app({n=Tm_constant Const_reify}, a::hd::rest) *)
-  (* | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) *)
+  | Tm_refine(x, _) -> typeof_tot_or_gtot_term_fastpath env x.sort must_tot
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
@@ -4093,19 +4057,6 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_unknown
   | Tm_uinst _ -> None
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
-
-and universeof_fastpath env t =
-  bind_opt (typeof_tot_or_gtot_term_fastpath env t false) (fun k ->
-    let rec aux (maybe_norm:bool) (k:typ) =
-      match (SS.compress k).n with
-      | Tm_type u -> Some u
-      | Tm_meta (k, _) -> aux maybe_norm k
-      | Tm_refine (x, _) -> aux maybe_norm x.sort
-      | Tm_ascribed (k, _, _) -> aux maybe_norm k
-      | _ ->
-        if maybe_norm then aux false (N.unfold_whnf env k)
-        else None in
-    aux true k)
 
 (*
  * Precondition: G |- t : Tot _ or G |- t : GTot _
