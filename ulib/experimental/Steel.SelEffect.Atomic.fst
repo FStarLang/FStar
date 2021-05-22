@@ -268,15 +268,16 @@ let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre
     x
 
 let bind_pure_steela_ a b opened o f g
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
     fun frame ->
       let x = f () in
       g x frame
 
+
 let lift_ghost_atomic a o f = f
 
 let lift_atomic_steel a o f = f
-
+#pop-options
 (* Some helpers *)
 
 let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
@@ -289,7 +290,7 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       lemma_frame_equalities_refl p h0;
       h0
 
-let get _ = SteelSelGhostF?.reflect (get0 ())
+let get _ = Classical.forall_intro_2 focus_rmem_refl; SteelSelGhostF?.reflect (get0 ())
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -422,7 +423,9 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
-let extract_info p vp fact l = SteelSelGhost?.reflect (extract_info0 p vp fact l)
+let extract_info p vp fact l =
+  Classical.forall_intro_2 focus_rmem_refl;
+  SteelSelGhost?.reflect (extract_info0 p vp fact l)
 
 let noop _ = change_slprop_rel vemp vemp (fun _ _ -> True) (fun _ -> ())
 

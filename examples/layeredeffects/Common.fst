@@ -16,14 +16,21 @@ let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))
  //: PURE a (fun p' -> wp p /\ (forall r. p r ==> p' r))
  // ^ basically this, requires monotonicity
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
    f ()
 
+open FStar.Monotonic.Pure
+
+unfold
+let bind_wp (#a #b:Type) (wp1:pure_wp a) (wp2:a -> pure_wp b) : pure_wp b =
+  elim_pure_wp_monotonicity_forall ();
+  as_pure_wp (fun p -> wp1 (fun x -> wp2 x p))
+
 let bind_pure #a #b #wp1 #wp2 (c : unit -> PURE a wp1) (f : (x:a) -> PURE b (wp2 x))
-  : PURE b (fun p -> wp1 (fun x -> wp2 x p))
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  : PURE b (bind_wp wp1 wp2)
+ = elim_pure_wp_monotonicity_forall ();
    f (c ())
 
 let return_pure #a (x:a)
-  : PURE a (fun p -> p x)
+  : PURE a (as_pure_wp (fun p -> p x))
   = x

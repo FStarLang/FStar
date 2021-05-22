@@ -411,8 +411,9 @@ let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #r
 
     x
 
+
 let bind_pure_steel_ a b #wp #pre #post #req #ens f g
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun frame ->
       let x = f () in
       g x frame
@@ -423,7 +424,7 @@ unfold
 let bind_div_steel_req (#a:Type) (wp:pure_wp a)
   (#pre_g:pre_t) (req_g:a -> req_t pre_g)
 : req_t pre_g
-= FStar.Monotonic.Pure.wp_monotonic_pure ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
 
 unfold
@@ -442,7 +443,7 @@ let bind_div_steel (a:Type) (b:Type)
 : repr b framed pre_g post_g
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
-= FStar.Monotonic.Pure.wp_monotonic_pure ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun frame ->
   let x = f () in
   g x frame
@@ -508,7 +509,9 @@ let get0 (#p:vprop) (_:unit) : repr (rmem p)
       lemma_frame_equalities_refl p h0;
       h0
 
+#push-options "--admit_smt_queries true"
 let get #r _ = SteelSelF?.reflect (get0 #r ())
+#pop-options
 
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
@@ -593,8 +596,9 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
+#push-options "--admit_smt_queries true"
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
-
+#pop-options
 (* End duplication *)
 
 

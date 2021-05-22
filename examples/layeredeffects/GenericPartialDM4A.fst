@@ -137,7 +137,7 @@ layered_effect {
 let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a wp))
   : Tot (repr a (wp (fun _ -> True)) (fun _ -> w_return (f ())))
   = fun _ -> 
-      FStar.Monotonic.Pure.wp_monotonic_pure ();
+      FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
       let x = f () in
       interp_ret x;
       m_return x
