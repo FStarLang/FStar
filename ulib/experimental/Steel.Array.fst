@@ -731,6 +731,7 @@ val gsplit0 (#opened: _) (#t:Type) (a:array t) (i:U32.t)
           )
 
 #push-options "--z3rlimit 16"
+#restart-solver
 let gsplit0 #t a i =
   let a2 = elim_varray a in
   let res2 = vsplit a2 i in
