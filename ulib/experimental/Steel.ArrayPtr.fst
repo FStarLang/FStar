@@ -65,15 +65,17 @@ let array_of
 
 let varrayptr0_dep
   (#a: Type)
+  (q: perm)
   (p: t a)
   (to: normal (t_of (ghost_vptr p.to)))
 : Tot vprop
-= A.varray (array_of p to)
+= A.varrayp (array_of p to) q
 
 let varrayptr0_rewrite
   (#a: Type)
+  (q: perm)
   (p: t a)
-  (x: normal (t_of (ghost_vptr p.to `vdep` varrayptr0_dep p)))
+  (x: normal (t_of (ghost_vptr p.to `vdep` varrayptr0_dep q p)))
 : Tot (v a)
 = let (| to, contents |) = x in
   {
@@ -84,26 +86,28 @@ let varrayptr0_rewrite
 let varrayptr0
   (#a: Type)
   (r: t a)
+  (p: perm)
 : Tot vprop
-= (ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r
+= (ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r
 
-let is_arrayptr #a r = hp_of (varrayptr0 r)
+let is_arrayptr #a r p = hp_of (varrayptr0 r p)
 
-let arrayptr_sel #a r = fun h -> sel_of (varrayptr0 r) h
+let arrayptr_sel #a r p = fun h -> sel_of (varrayptr0 r p) h
 
 let intro_varrayptr
   (#opened: _)
   (#a: Type)
   (r: t a)
+  (p: perm)
 : SteelGhost unit opened
-    ((ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r)
-    (fun _ -> varrayptr r)
+    ((ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r)
+    (fun _ -> varrayptrp r p)
     (fun _ -> True)
-    (fun h0 _ h1 -> h1 (varrayptr r) == h0 ((ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r))
+    (fun h0 _ h1 -> h1 (varrayptrp r p) == h0 ((ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r))
 =
   change_slprop_rel
-    ((ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r)
-    (varrayptr r)
+    ((ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r)
+    (varrayptrp r p)
     (fun x y -> x == y)
     (fun _ -> ())
 
@@ -111,45 +115,46 @@ let elim_varrayptr
   (#opened: _)
   (#a: Type)
   (r: t a)
+  (p: perm)
 : SteelGhost unit opened
-    (varrayptr r)
-    (fun _ -> (ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r)
+    (varrayptrp r p)
+    (fun _ -> (ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r)
     (fun _ -> True)
-    (fun h0 _ h1 -> h0 (varrayptr r) == h1 ((ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r))
+    (fun h0 _ h1 -> h0 (varrayptrp r p) == h1 ((ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r))
 =
   change_slprop_rel
-    (varrayptr r)
-    ((ghost_vptr r.to `vdep` varrayptr0_dep r) `vrewrite` varrayptr0_rewrite r)
+    (varrayptrp r p)
+    ((ghost_vptr r.to `vdep` varrayptr0_dep p r) `vrewrite` varrayptr0_rewrite p r)
     (fun x y -> x == y)
     (fun _ -> ())
 
 #push-options "--z3rlimit 32"
-let join #opened #a al ar =
-  elim_varrayptr al;
-  elim_vrewrite (ghost_vptr al.to `vdep` varrayptr0_dep al) (varrayptr0_rewrite al);
-  let g_al_to = elim_vdep (ghost_vptr al.to) (varrayptr0_dep al) in
+let joinp #opened #a al ar p =
+  elim_varrayptr al p;
+  elim_vrewrite (ghost_vptr al.to `vdep` varrayptr0_dep p al) (varrayptr0_rewrite p al);
+  let g_al_to = elim_vdep (ghost_vptr al.to) (varrayptr0_dep p al) in
   let al_to = ghost_read al.to in
   let aal = array_of al al_to in
   change_equal_slprop
-    (varrayptr0_dep al (Ghost.reveal g_al_to))
-    (A.varray aal);
-  elim_varrayptr ar;
-  elim_vrewrite (ghost_vptr ar.to `vdep` varrayptr0_dep ar) (varrayptr0_rewrite ar);
-  let g_ar_to = elim_vdep (ghost_vptr ar.to) (varrayptr0_dep ar) in
+    (varrayptr0_dep p al (Ghost.reveal g_al_to))
+    (A.varrayp aal p);
+  elim_varrayptr ar p;
+  elim_vrewrite (ghost_vptr ar.to `vdep` varrayptr0_dep p ar) (varrayptr0_rewrite p ar);
+  let g_ar_to = elim_vdep (ghost_vptr ar.to) (varrayptr0_dep p ar) in
   let ar_to = ghost_read ar.to in
   ghost_free ar.to;
   let aar = array_of ar ar_to in
   change_equal_slprop
-    (varrayptr0_dep ar (Ghost.reveal g_ar_to))
-    (A.varray aar);
-  let aj = A.gjoin aal aar in
+    (varrayptr0_dep p ar (Ghost.reveal g_ar_to))
+    (A.varrayp aar p);
+  let aj = A.gjoin aal aar p in
   let ar_to : U32.t = ar_to in
   let ar_to : to_t al.base al.from = ar_to in
   ghost_write al.to ar_to;
   assert (Ghost.reveal aj == array_of al ar_to);
-  intro_vdep (ghost_vptr al.to) (A.varray aj) (varrayptr0_dep al);
-  intro_vrewrite (ghost_vptr al.to `vdep` varrayptr0_dep al) (varrayptr0_rewrite al);
-  intro_varrayptr al
+  intro_vdep (ghost_vptr al.to) (A.varrayp aj p) (varrayptr0_dep p al);
+  intro_vrewrite (ghost_vptr al.to `vdep` varrayptr0_dep p al) (varrayptr0_rewrite p al);
+  intro_varrayptr al p
 #pop-options
 
 let u32_bounded_add
@@ -162,16 +167,16 @@ let u32_bounded_add
 
 #push-options "--z3rlimit 32"
 #restart-solver
-let split #a x i =
-  elim_varrayptr x;
-  elim_vrewrite (ghost_vptr x.to `vdep` varrayptr0_dep x) (varrayptr0_rewrite x);
-  let x_to_1 : to_t x.base x.from = elim_vdep (ghost_vptr x.to) (varrayptr0_dep x) in
+let splitp #a x p i =
+  elim_varrayptr x p;
+  elim_vrewrite (ghost_vptr x.to `vdep` varrayptr0_dep p x) (varrayptr0_rewrite p x);
+  let x_to_1 : to_t x.base x.from = elim_vdep (ghost_vptr x.to) (varrayptr0_dep p x) in
   let xa = array_of x x_to_1 in
   change_equal_slprop
-    (varrayptr0_dep x (Ghost.reveal x_to_1))
-    (A.varray xa);
-  let res2 : Ghost.erased (A.array a & A.array a) = A.gsplit0 xa i in
-  reveal_star (A.varray (A.pfst res2)) (A.varray (A.psnd res2));
+    (varrayptr0_dep p x (Ghost.reveal x_to_1))
+    (A.varrayp xa p);
+  let res2 : Ghost.erased (A.array a & A.array a) = A.gsplit0 p xa i in
+  reveal_star (A.varrayp (A.pfst res2) p) (A.varrayp (A.psnd res2) p);
   let x_to_2 : Ghost.erased U32.t = Ghost.hide (Ghost.reveal x_to_1) in
   let j : to_v x.base x.from = u32_bounded_add x.from i x_to_2 in
   let x_to_3 : to_t x.base j = Ghost.hide (Ghost.reveal x_to_2) in
@@ -179,10 +184,10 @@ let split #a x i =
   assert (A.pfst res2 == array_of x j);
   intro_vdep
     (ghost_vptr x.to)
-    (A.varray (A.pfst res2))
-    (varrayptr0_dep x);
-  intro_vrewrite (ghost_vptr x.to `vdep` varrayptr0_dep x) (varrayptr0_rewrite x);
-  intro_varrayptr x;
+    (A.varrayp (A.pfst res2) p)
+    (varrayptr0_dep p x);
+  intro_vrewrite (ghost_vptr x.to `vdep` varrayptr0_dep p x) (varrayptr0_rewrite p x);
+  intro_varrayptr x p;
   let to2 : ghost_ref (to_v x.base j) = ghost_alloc x_to_3 in
   let res : t a = mk_t x.base j to2 in
   let x_to_4 : to_t res.base res.from = Ghost.hide (Ghost.reveal x_to_3 <: U32.t) in
@@ -192,10 +197,10 @@ let split #a x i =
     (ghost_vptr res.to);
   intro_vdep
     (ghost_vptr res.to)
-    (A.varray (A.psnd res2))
-    (varrayptr0_dep res);
-  intro_vrewrite (ghost_vptr res.to `vdep` varrayptr0_dep res) (varrayptr0_rewrite res);
-  intro_varrayptr res;
+    (A.varrayp (A.psnd res2) p)
+    (varrayptr0_dep p res);
+  intro_vrewrite (ghost_vptr res.to `vdep` varrayptr0_dep p res) (varrayptr0_rewrite p res);
+  intro_varrayptr res p;
   return res
 #pop-options
 
@@ -218,56 +223,56 @@ let alloc
   intro_vdep
     (ghost_vptr res.to)
     (A.varray ar)
-    (varrayptr0_dep res);
-  intro_vrewrite (ghost_vptr res.to `vdep` varrayptr0_dep res) (varrayptr0_rewrite res);
-  intro_varrayptr res;
+    (varrayptr0_dep _ res);
+  intro_vrewrite (ghost_vptr res.to `vdep` varrayptr0_dep _ res) (varrayptr0_rewrite _ res);
+  intro_varrayptr res _;
   return res
 
-let index
-  #a r i
+let indexp
+  #a r p i
 =
-  elim_varrayptr r;
-  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep r) (varrayptr0_rewrite r);
-  let g = elim_vdep (ghost_vptr r.to) (varrayptr0_dep r) in
+  elim_varrayptr r p;
+  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep p r) (varrayptr0_rewrite p r);
+  let g = elim_vdep (ghost_vptr r.to) (varrayptr0_dep p r) in
   let to = ghost_read r.to in
   let ar = array_of r to in
   change_equal_slprop
-    (varrayptr0_dep r (Ghost.reveal g))
-    (A.varray ar);
-  let res = A.index ar i in
+    (varrayptr0_dep p r (Ghost.reveal g))
+    (A.varrayp ar p);
+  let res = A.indexp ar p i in
   intro_vdep
     (ghost_vptr r.to)
-    (A.varray ar)
-    (varrayptr0_dep r);
-  intro_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep r) (varrayptr0_rewrite r);
-  intro_varrayptr r;
+    (A.varrayp ar p)
+    (varrayptr0_dep p r);
+  intro_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep p r) (varrayptr0_rewrite p r);
+  intro_varrayptr r p;
   return res
 
 let upd
   #a r i x
 =
-  elim_varrayptr r;
-  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep r) (varrayptr0_rewrite r);
-  let to = elim_vdep (ghost_vptr r.to) (varrayptr0_dep r) in
+  elim_varrayptr r _;
+  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep _ r) (varrayptr0_rewrite _ r);
+  let to = elim_vdep (ghost_vptr r.to) (varrayptr0_dep _ r) in
   let ar = array_of r to in
   change_equal_slprop
-    (varrayptr0_dep r (Ghost.reveal to))
+    (varrayptr0_dep _ r (Ghost.reveal to))
     (A.varray ar);
   A.upd ar i x;
   intro_vdep
     (ghost_vptr r.to)
     (A.varray ar)
-    (varrayptr0_dep r);
-  intro_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep r) (varrayptr0_rewrite r);
-  intro_varrayptr r
+    (varrayptr0_dep _ r);
+  intro_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep _ r) (varrayptr0_rewrite _ r);
+  intro_varrayptr r _
 
 let free #a r =
-  elim_varrayptr r;
-  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep r) (varrayptr0_rewrite r);
-  let to = elim_vdep (ghost_vptr r.to) (varrayptr0_dep r) in
+  elim_varrayptr r _;
+  elim_vrewrite (ghost_vptr r.to `vdep` varrayptr0_dep _ r) (varrayptr0_rewrite _ r);
+  let to = elim_vdep (ghost_vptr r.to) (varrayptr0_dep _ r) in
   ghost_free r.to;
   let ar = array_of r to in
   change_equal_slprop
-    (varrayptr0_dep r to)
+    (varrayptr0_dep _ r to)
     (A.varray ar);
   A.free ar

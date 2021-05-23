@@ -16,6 +16,7 @@
 
 module Steel.Array
 open Steel.Memory
+open Steel.FractionalPermission
 open Steel.Effect
 open FStar.Ghost
 module U32 = FStar.UInt32
@@ -39,7 +40,6 @@ let psnd
 = snd x
 
 /// A library for arrays in Steel
-/// TODO: Add fractional permissions to this array library
 
 /// Abstract datatype for a Steel array of type [t]
 val array (t:Type u#0) : Type u#0
@@ -50,23 +50,26 @@ val len (#t: Type) (a: array t) : GTot U32.t
 let length (#t: Type) (a: array t) : GTot nat = U32.v (len a)
 
 /// Separation logic predicate indicating the validity of the array in the current memory
-val is_array (#a:Type0) (r:array a) : slprop u#1
+val is_array (#a:Type0) (r:array a) (p: perm) : slprop u#1
 
 /// Selector for Steel arrays. It returns the contents in memory of the array.
 /// The contents of an array of type [t] is a sequence of values of type [t]
 /// whose length is the length of the array
-val array_sel (#a:Type0) (r:array a) : selector (Seq.lseq a (length r)) (is_array r)
+val array_sel (#a:Type0) (r:array a) (p: perm) : selector (Seq.lseq a (length r)) (is_array r p)
 
 /// Combining the elements above to create an array vprop
 
 [@@ __steel_reduce__]
-let varray' #a r : vprop' =
-  {hp = is_array r;
+let varray' #a r p : vprop' =
+  {hp = is_array r p;
    t = Seq.lseq a (length r);
-   sel = array_sel r}
+   sel = array_sel r p}
 
 [@@ __steel_reduce__]
-let varray r = VUnit (varray' r)
+let varrayp r p = VUnit (varray' r p)
+
+[@@ __steel_reduce__; __reduce__]
+let varray r = VUnit (varray' r full_perm)
 
 /// A wrapper to access an array selector more easily.
 /// Ensuring that the corresponding array vprop is in the context is done by
@@ -153,7 +156,23 @@ val gsplit_unique
     (rl, rr) == gsplit r (len rl)
   ))
 
-val split (#t:Type) (a:array t) (i:U32.t)
+val splitp (#t:Type) (a:array t) (p: perm) (i:U32.t)
+  : Steel (array t & array t)
+          (varrayp a p)
+          (fun res -> varrayp (pfst res) p `star` varrayp (psnd res) p)
+          (fun _ -> U32.v i <= length a)
+          (fun h res h' ->
+            let s = h (varrayp a p) in
+            let sl = h' (varrayp (pfst res) p) in
+            let sr = h' (varrayp (psnd res) p) in
+            U32.v i <= length a /\
+            res == gsplit a i /\
+            sl == Seq.slice s 0 (U32.v i) /\
+            sr == Seq.slice s (U32.v i) (length a) /\
+            s == sl `Seq.append` sr
+          )
+
+let split (#t:Type) (a:array t) (i:U32.t)
   : Steel (array t & array t)
           (varray a)
           (fun res -> varray (pfst res) `star` varray (psnd res))
@@ -168,8 +187,22 @@ val split (#t:Type) (a:array t) (i:U32.t)
             sr == Seq.slice s (U32.v i) (length a) /\
             s == sl `Seq.append` sr
           )
+=
+  splitp _ _ i
 
-val join (#t:Type) (al ar:array t)
+val joinp (#t:Type) (al ar:array t)
+  (p: perm)
+  : Steel (array t)
+          (varrayp al p `star` varrayp ar p)
+          (fun a -> varrayp a p)
+          (fun _ -> adjacent al ar)
+          (fun h a h' ->
+            let s = h' (varrayp a p) in
+            s == (h (varrayp al p) `Seq.append` h (varrayp ar p)) /\
+            merge_into al ar a
+          )
+
+let join (#t:Type) (al ar:array t)
   : Steel (array t)
           (varray al `star` varray ar)
           (fun a -> varray a)
@@ -179,6 +212,8 @@ val join (#t:Type) (al ar:array t)
             s == (h (varray al) `Seq.append` h (varray ar)) /\
             merge_into al ar a
           )
+=
+  joinp _ _ _
 
 /// A property telling that an array "is a full allocation unit"
 /// that can be freed all at once (as opposed to a strict subarray of
@@ -198,7 +233,19 @@ val alloc (#t:Type) (x:t) (n:U32.t)
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
-val index (#t:Type) (r:array t) (i:U32.t)
+
+val indexp (#t:Type) (r:array t) (p: perm) (i:U32.t)
+  : Steel t
+             (varrayp r p)
+             (fun _ -> varrayp r p)
+             (requires fun _ -> U32.v i < length r)
+             (ensures fun h0 x h1 ->
+               let s = h1 (varrayp r p) in
+               U32.v i < length r /\
+               h0 (varrayp r p) == s /\
+               x == Seq.index s (U32.v i))
+
+let index (#t:Type) (r:array t) (i:U32.t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
@@ -208,6 +255,8 @@ val index (#t:Type) (r:array t) (i:U32.t)
                U32.v i < length r /\
                asel r h0 == s /\
                x == Seq.index s (U32.v i))
+=
+  indexp _ _ i
 
 /// Updates index [i] in array [r] with value [x], as long as [i]
 /// is in bounds and the array is currently valid in memory

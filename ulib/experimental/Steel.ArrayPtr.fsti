@@ -32,6 +32,7 @@
 module Steel.ArrayPtr
 open Steel.Memory
 open Steel.Effect
+open Steel.FractionalPermission
 open Steel.Effect.Atomic
 module U32 = FStar.UInt32
 module A = Steel.Array
@@ -43,17 +44,20 @@ noeq type v (t: Type u#0) = {
   contents: Seq.lseq t (A.length array); (* actual contents *)
 }
 
-val is_arrayptr (#a:Type0) (r:t a) : slprop u#1
-val arrayptr_sel (#a:Type0) (r:t a) : selector (v a) (is_arrayptr r)
+val is_arrayptr (#a:Type0) (r:t a) (p: perm) : slprop u#1
+val arrayptr_sel (#a:Type0) (r:t a) (p: perm) : selector (v a) (is_arrayptr r p)
 
 [@@ __steel_reduce__]
-let varrayptr' #a r : vprop' =
-  {hp = is_arrayptr r;
+let varrayptr' #a r p : vprop' =
+  {hp = is_arrayptr r p;
    t = v a;
-   sel = arrayptr_sel r}
+   sel = arrayptr_sel r p}
 
 [@@ __steel_reduce__]
-let varrayptr r = VUnit (varrayptr' r)
+let varrayptrp r p = VUnit (varrayptr' r p)
+
+[@@ __steel_reduce__]
+let varrayptr r = varrayptrp r full_perm
 
 [@@ __steel_reduce__]
 let sel (#a:Type) (#p:vprop) (r:t a)
@@ -64,7 +68,20 @@ let sel (#a:Type) (#p:vprop) (r:t a)
 
 (* Splitting an array (inspired from Steel.Array) *)
 
-val join (#opened: _) (#a:Type) (al ar:t a)
+val joinp (#opened: _) (#a:Type) (al ar:t a) (p: perm)
+  : SteelGhost unit opened
+          (varrayptrp al p `star` varrayptrp ar p)
+          (fun _ -> varrayptrp al p)
+          (fun h -> A.adjacent (h (varrayptrp al p)).array (h (varrayptrp ar p)).array)
+          (fun h _ h' ->
+            let cl = h (varrayptrp al p) in
+            let cr = h (varrayptrp ar p) in
+            let c' = h' (varrayptrp al p) in
+            A.merge_into cl.array cr.array c'.array /\
+            c'.contents == cl.contents `Seq.append` cr.contents
+          )
+
+let join (#opened: _) (#a:Type) (al ar:t a)
   : SteelGhost unit opened
           (varrayptr al `star` varrayptr ar)
           (fun _ -> varrayptr al)
@@ -76,8 +93,26 @@ val join (#opened: _) (#a:Type) (al ar:t a)
             A.merge_into cl.array cr.array c'.array /\
             c'.contents == cl.contents `Seq.append` cr.contents
           )
+=
+  joinp _ _ _
 
-val split (#a:Type) (x: t a) (i:U32.t)
+val splitp (#a:Type) (x: t a) (p: perm) (i:U32.t)
+  : Steel (t a)
+          (varrayptrp x p)
+          (fun res -> varrayptrp x p `star` varrayptrp res p)
+          (fun h -> U32.v i <= A.length (h (varrayptrp x p)).array)
+          (fun h res h' ->
+            let s = h (varrayptrp x p) in
+            let sl = h' (varrayptrp x p) in
+            let sr = h' (varrayptrp res p) in
+            U32.v i <= A.length s.array /\
+            A.merge_into sl.array sr.array s.array /\
+            sl.contents == Seq.slice s.contents 0 (U32.v i) /\
+            sr.contents == Seq.slice s.contents (U32.v i) (A.length s.array) /\
+            s.contents == sl.contents `Seq.append` sr.contents
+          )
+
+let split (#a:Type) (x: t a) (i:U32.t)
   : Steel (t a)
           (varrayptr x)
           (fun res -> varrayptr x `star` varrayptr res)
@@ -92,6 +127,8 @@ val split (#a:Type) (x: t a) (i:U32.t)
             sr.contents == Seq.slice s.contents (U32.v i) (A.length s.array) /\
             s.contents == sl.contents `Seq.append` sr.contents
           )
+=
+  splitp _ _ i
 
 val alloc (#a:Type) (x:a) (n:U32.t)
   : Steel (t a)
@@ -103,7 +140,18 @@ val alloc (#a:Type) (x:a) (n:U32.t)
                A.freeable (h1 (varrayptr r)).array
              )
 
-val index (#a:Type) (r: t a) (i:U32.t)
+val indexp (#a:Type) (r: t a) (p: perm) (i:U32.t)
+  : Steel a
+             (varrayptrp r p)
+             (fun _ -> varrayptrp r p)
+             (requires fun h -> U32.v i < A.length (h (varrayptrp r p)).array)
+             (ensures fun h0 y h1 ->
+               let s = h0 (varrayptrp r p) in
+               h1 (varrayptrp r p) == s /\
+               U32.v i < A.length s.array /\
+               y == Seq.index s.contents (U32.v i))
+
+let index (#a:Type) (r: t a) (i:U32.t)
   : Steel a
              (varrayptr r)
              (fun _ -> varrayptr r)
@@ -113,6 +161,8 @@ val index (#a:Type) (r: t a) (i:U32.t)
                h1 (varrayptr r) == s /\
                U32.v i < A.length s.array /\
                y == Seq.index s.contents (U32.v i))
+=
+  indexp _ _ i
 
 val upd (#a:Type) (r: t a) (i:U32.t) (x:a)
   : Steel unit
