@@ -296,6 +296,20 @@ let write r x =
   write_pt r x;
   intro_vptr r _ x
 
+let share #a #_ r p =
+  let x = elim_vptr r p in
+  share_pt r;
+  intro_vptr r _ x;
+  intro_vptr r _ x;
+  half_perm p
+
+let gather #a #_ r p0 p1 =
+  let x1 = elim_vptr r p1 in
+  let x0 = elim_vptr r p0 in
+  gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
+  intro_vptr r (sum_perm p0 p1) x0;
+  sum_perm p0 p1
+
 (*** Lemmas on references *)
 
 let vptrp_not_null
@@ -454,3 +468,17 @@ let ghost_write r x =
   let _ = elim_ghost_vptr r _ in
   ghost_write_pt r x;
   intro_ghost_vptr r _ x
+
+let ghost_share #a #_ r p =
+  let x = elim_ghost_vptr r p in
+  ghost_share_pt r;
+  intro_ghost_vptr r _ x;
+  intro_ghost_vptr r _ x;
+  half_perm p
+
+let ghost_gather #a #_ r p0 p1 =
+  let x1 = elim_ghost_vptr r p1 in
+  let x0 = elim_ghost_vptr r p0 in
+  ghost_gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
+  intro_ghost_vptr r (sum_perm p0 p1) x0;
+  sum_perm p0 p1
