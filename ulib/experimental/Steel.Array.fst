@@ -449,7 +449,7 @@ let slice_cons_right
 #push-options "--z3rlimit 16"  // 256 --fuel 6 --ifuel 6"
 #restart-solver
 
-let rec vsplit
+let rec vsplit0
   (#opened: _)
   (#t: Type)
   (a: array2 t)
@@ -489,7 +489,7 @@ let rec vsplit
     let g2_tl = gget (varray2 (psnd hd_tl)) in
     slice_cons_left (Ghost.reveal g2_hd) (Ghost.reveal g2_tl) (U32.v i);
     slice_cons_right (Ghost.reveal g2_hd) (Ghost.reveal g2_tl) (U32.v i);
-    let sl_sr = vsplit (psnd hd_tl) j in
+    let sl_sr = vsplit0 (psnd hd_tl) j in
     reveal_star_3 (vptr (pfst hd_tl)) (varray2 (pfst sl_sr)) (varray2 (psnd sl_sr)); // FIXME: WHY WHY WHY?
     let sl = intro_vcons (pfst hd_tl) (pfst sl_sr) in
     reveal_star (varray2 sl) (varray2 (psnd sl_sr));
@@ -502,6 +502,34 @@ let rec vsplit
   end
 
 #pop-options
+
+val vsplit
+  (#opened: _)
+  (#t: Type)
+  (a: array2 t)
+  (i: U32.t)
+: SteelGhost (array2 t & array2 t) opened
+    (varray2 a)
+    (fun res -> varray2 (pfst res) `star` varray2 (psnd res))
+    (fun _ -> U32.v i <= Seq.length a)
+    (fun h res h' ->
+      let s = h (varray2 a) in
+      U32.v i <= Seq.length a /\
+      pfst res `Seq.equal` Seq.slice a 0 (U32.v i) /\
+      psnd res `Seq.equal` Seq.slice a (U32.v i) (Seq.length a) /\
+      (a <: Seq.seq (ref t)) == Seq.append (pfst res) (psnd res) /\
+      h' (varray2 (pfst res)) == Seq.slice s 0 (U32.v i) /\
+      h' (varray2 (psnd res)) `Seq.equal` Seq.slice s (U32.v i) (Seq.length a) /\
+      s == Seq.append (h' (varray2 (pfst res))) (h' (varray2 (psnd res)))
+    )
+
+let vsplit
+  #_ #t a i
+=
+  let g = gget (varray2 a) in
+  Seq.lemma_split a (U32.v i);
+  Seq.lemma_split #t (Ghost.reveal g) (U32.v i);
+  vsplit0 a i
 
 [@@erasable]
 noeq
@@ -535,8 +563,6 @@ let unpack_ith
     )
 =
   let m = get #(varray2 a) () in
-  Seq.lemma_split a (U32.v i);
-  Seq.lemma_split (Ghost.reveal m (varray2 a)) (U32.v i);
   let rsplit = vsplit a i in
   reveal_star (varray2 (pfst rsplit)) (varray2 (psnd rsplit));
   let rcons = elim_vcons (psnd rsplit) in
@@ -700,13 +726,13 @@ val gsplit0 (#opened: _) (#t:Type) (a:array t) (i:U32.t)
             U32.v i <= length a /\
             Ghost.reveal res == gsplit a i /\
             sl == Seq.slice s 0 (U32.v i) /\
-            sr == Seq.slice s (U32.v i) (length a)
+            sr == Seq.slice s (U32.v i) (length a) /\
+            s == sl `Seq.append` sr
           )
 
 #push-options "--z3rlimit 16"
 let gsplit0 #t a i =
   let a2 = elim_varray a in
-  Seq.lemma_split a2 (U32.v i);
   let res2 = vsplit a2 i in
   let res = tsplit a i in
   intro_varray (pfst res2) (pfst res);

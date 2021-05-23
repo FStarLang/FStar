@@ -89,7 +89,8 @@ val split (#a:Type) (x: t a) (i:U32.t)
             U32.v i <= A.length s.array /\
             A.merge_into sl.array sr.array s.array /\
             sl.contents == Seq.slice s.contents 0 (U32.v i) /\
-            sr.contents == Seq.slice s.contents (U32.v i) (A.length s.array)
+            sr.contents == Seq.slice s.contents (U32.v i) (A.length s.array) /\
+            s.contents == sl.contents `Seq.append` sr.contents
           )
 
 val alloc (#a:Type) (x:a) (n:U32.t)

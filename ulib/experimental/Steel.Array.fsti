@@ -165,7 +165,8 @@ val split (#t:Type) (a:array t) (i:U32.t)
             U32.v i <= length a /\
             res == gsplit a i /\
             sl == Seq.slice s 0 (U32.v i) /\
-            sr == Seq.slice s (U32.v i) (length a)
+            sr == Seq.slice s (U32.v i) (length a) /\
+            s == sl `Seq.append` sr
           )
 
 val join (#t:Type) (al ar:array t)
