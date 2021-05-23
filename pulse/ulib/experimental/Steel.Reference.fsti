@@ -151,31 +151,55 @@ val cas_pt (#t:eqtype)
 (** Second version of references: The memory contents are available inside the selector, instead of as an index of the predicate **)
 
 /// An abstract separation logic predicate stating that reference [r] is valid in memory.
-/// (AF) TODO: This should also be indexed by a permission
-val ptr (#a:Type0) (r:ref a) : slprop u#1
+
+val ptrp (#a:Type0) (r:ref a) (p: perm) : slprop u#1
+
+[@@ __steel_reduce__; __reduce__]
+unfold
+let ptr (#a:Type0) (r:ref a) : slprop u#1 = ptrp r full_perm
 
 /// A selector for references, returning the value of type [a] stored in memory
-val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
+
+val ptrp_sel (#a:Type0) (r:ref a) (p: perm) : selector a (ptrp r p)
+
+[@@ __steel_reduce__; __reduce__]
+unfold
+let ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r) = ptrp_sel r _
 
 /// Some lemmas to interoperate between the two versions of references
-val ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
+
+val ptrp_sel_interp (#a:Type0) (r:ref a) (p: perm) (m:mem) : Lemma
+  (requires interp (ptrp r p) m)
+  (ensures interp (pts_to_sl r p (ptrp_sel r p m)) m)
+
+let ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
   (requires interp (ptr r) m)
   (ensures interp (pts_to_sl r full_perm (ptr_sel r m)) m)
+= ptrp_sel_interp r full_perm m
 
-val intro_ptr_interp (#a:Type0) (r:ref a) (v:erased a) (m:mem) : Lemma
+val intro_ptrp_interp (#a:Type0) (r:ref a) (p: perm) (v:erased a) (m:mem) : Lemma
+  (requires interp (pts_to_sl r p v) m)
+  (ensures interp (ptrp r p) m)
+
+let intro_ptr_interp (#a:Type0) (r:ref a) (v:erased a) (m:mem) : Lemma
   (requires interp (pts_to_sl r full_perm v) m)
   (ensures interp (ptr r) m)
+= intro_ptrp_interp r full_perm v m
 
 /// Combining the separation logic predicate and selector into a vprop
 [@@ __steel_reduce__]
-let vptr' #a r : vprop' =
-  {hp = ptr r;
+let vptr' #a r p : vprop' =
+  {hp = ptrp r p;
    t = a;
-   sel = ptr_sel r}
+   sel = ptrp_sel r p}
 
 [@@ __steel_reduce__]
 unfold
-let vptr r = VUnit (vptr' r)
+let vptrp r p = VUnit (vptr' r p)
+
+[@@ __steel_reduce__; __reduce__]
+unfold
+let vptr r = vptrp r full_perm
 
 /// A wrapper to access a reference selector more easily.
 /// Ensuring that the corresponding ptr vprop is in the context is done by
@@ -198,10 +222,16 @@ val free (#a:Type0) (r:ref a) : Steel unit
   (ensures fun _ _ _ -> True)
 
 /// Reads the current value of reference [r]
-val read (#a:Type0) (r:ref a) : Steel a
+val readp (#a:Type0) (r:ref a) (p: perm) : Steel a
+  (vptrp r p) (fun _ -> vptrp r p)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> h0 (vptrp r p) == h1 (vptrp r p) /\ x == h1 (vptrp r p))
+
+let read (#a:Type0) (r:ref a) : Steel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h1)
+= readp r full_perm
 
 /// Writes value [x] in reference [r]
 val write (#a:Type0) (r:ref a) (x:a) : Steel unit
@@ -211,7 +241,20 @@ val write (#a:Type0) (r:ref a) (x:a) : Steel unit
 
 /// A stateful lemma variant of the pts_to_not_null lemma above.
 /// This stateful function is computationally irrelevant and does not modify memory
-val vptr_not_null (#opened: _)
+val vptrp_not_null (#opened: _)
+  (#a: Type)
+  (r: ref a)
+  (p: perm)
+: SteelGhost unit opened
+    (vptrp r p)
+    (fun _ -> vptrp r p)
+    (fun _ -> True)
+    (fun h0 _ h1 ->
+      h0 (vptrp r p) == h1 (vptrp r p) /\
+      is_null r == false
+    )
+
+let vptr_not_null (#opened: _)
   (#a: Type)
   (r: ref a)
 : SteelGhost unit opened
@@ -222,6 +265,7 @@ val vptr_not_null (#opened: _)
       sel r h0 == sel r h1 /\
       is_null r == false
     )
+= vptrp_not_null r full_perm
 
 (*** Ghost references ***)
 
@@ -296,23 +340,41 @@ val ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
 
 (* Selector version of ghost references *)
 
-val ghost_ptr (#a: Type0) (r: ghost_ref a) : slprop u#1
+val ghost_ptrp (#a: Type0) (r: ghost_ref a) (p: perm) : slprop u#1
 
-val ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
+[@@ __steel_reduce__; __reduce__]
+unfold
+let ghost_ptr (#a: Type0) (r: ghost_ref a) : slprop u#1
+= ghost_ptrp r full_perm
 
-val ghost_ptr_sel_interp (#a:Type0) (r:ghost_ref a) (m:mem) : Lemma
+val ghost_ptrp_sel (#a:Type0) (r:ghost_ref a) (p: perm) : selector a (ghost_ptrp r p)
+
+[@@ __steel_reduce__; __reduce__]
+let ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
+= ghost_ptrp_sel r _
+
+val ghost_ptrp_sel_interp (#a:Type0) (r:ghost_ref a) (p: perm) (m:mem) : Lemma
+  (requires interp (ghost_ptrp r p) m)
+  (ensures interp (ghost_pts_to_sl r p (ghost_ptrp_sel r p m)) m)
+
+let ghost_ptr_sel_interp (#a:Type0) (r:ghost_ref a) (m:mem) : Lemma
   (requires interp (ghost_ptr r) m)
   (ensures interp (ghost_pts_to_sl r full_perm (ghost_ptr_sel r m)) m)
+= ghost_ptrp_sel_interp r full_perm m
 
 [@@ __steel_reduce__]
-let ghost_vptr' #a r : vprop' =
-  {hp = ghost_ptr r;
+let ghost_vptr' #a r p : vprop' =
+  {hp = ghost_ptrp r p;
    t = a;
-   sel = ghost_ptr_sel r}
+   sel = ghost_ptrp_sel r p}
 
 [@@ __steel_reduce__]
 unfold
-let ghost_vptr r = VUnit (ghost_vptr' r)
+let ghost_vptrp r p = VUnit (ghost_vptr' r p)
+
+[@@ __steel_reduce__; __reduce__]
+unfold
+let ghost_vptr r = ghost_vptrp r full_perm
 
 [@@ __steel_reduce__]
 let ghost_sel (#a:Type) (#p:vprop) (r:ghost_ref a)
@@ -330,11 +392,19 @@ val ghost_free (#a:Type0) (#opened:inames) (r:ghost_ref a) : SteelGhost unit ope
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
 
-val ghost_read (#a:Type0) (#opened:inames) (r:ghost_ref a)
+val ghost_readp (#a:Type0) (#opened:inames) (r:ghost_ref a)
+  (p: perm)
+  : SteelGhost (Ghost.erased a) opened
+    (ghost_vptrp r p) (fun _ -> ghost_vptrp r p)
+    (requires fun _ -> True)
+    (ensures fun h0 x h1 -> h0 (ghost_vptrp r p) == h1 (ghost_vptrp r p) /\ Ghost.reveal x == h1 (ghost_vptrp r p))
+
+let ghost_read (#a:Type0) (#opened:inames) (r:ghost_ref a)
   : SteelGhost (Ghost.erased a) opened
     (ghost_vptr r) (fun _ -> ghost_vptr r)
     (requires fun _ -> True)
     (ensures fun h0 x h1 -> h0 (ghost_vptr r) == h1 (ghost_vptr r) /\ Ghost.reveal x == h1 (ghost_vptr r))
+= ghost_readp r full_perm
 
 val ghost_write (#a:Type0) (#opened:inames) (r:ghost_ref a) (x:Ghost.erased a)
   : SteelGhost unit opened
