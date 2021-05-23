@@ -887,3 +887,149 @@ let free #t r =
     (emp)
     (fun _ _ -> True)
     (fun m -> intro_emp m)
+
+#push-options "--z3rlimit 16"
+#restart-solver
+
+let rec vshare
+  (#opened: _)
+  (#t: Type)
+  (a: array2 t)
+  (p: perm)
+: SteelGhost perm opened
+    (varray2 a p)
+    (fun res -> varray2 a res `star` varray2 a res)
+    (fun _ -> True)
+    (fun h res h' ->
+      h' (varray2 a res) `Seq.equal` h (varray2 a p) /\
+      res == half_perm p
+    )
+    (decreases (Seq.length a))
+=
+  if Seq.length a = 0
+  then begin
+    elim_nil a p;
+    let h = half_perm p in
+    let a1 = intro_vnil t h in
+    assert (a1 `Seq.equal` a);
+    change_equal_slprop
+      (varray2 a1 h)
+      (varray2 a h);
+    let a2 = intro_vnil t h in
+    assert (a2 `Seq.equal` a);
+    change_equal_slprop
+      (varray2 a2 h)
+      (varray2 a h);
+    h
+  end else begin
+    let g : Ghost.erased (Seq.lseq t (Seq.length a)) = gget (varray2 a p) in
+    let hd_tl = elim_vcons a p in
+    let g_hd : Ghost.erased t = gget (vptrp (fst hd_tl) p) in
+    let g_tl : Ghost.erased (Seq.lseq t (Seq.length (snd hd_tl))) = gget (varray2 (snd hd_tl) p) in
+    assert (Ghost.reveal g == Seq.cons (Ghost.reveal g_hd) g_tl);
+    let h_hd = share (fst hd_tl) p in
+    let g_hd_1 : Ghost.erased t = gget (vptrp (fst hd_tl) h_hd) in
+    assert (Ghost.reveal g_hd_1 == Ghost.reveal g_hd);
+    let h = vshare (snd hd_tl) p in
+    let g_tl_1 : Ghost.erased (Seq.lseq t (Seq.length (snd hd_tl))) = gget (varray2 (snd hd_tl) h) in
+    assert (Ghost.reveal g_tl_1 == Ghost.reveal g_tl);
+    change_equal_slprop
+      (vptrp (fst hd_tl) h_hd)
+      (vptrp (fst hd_tl) h);
+    let a1 = intro_vcons h (fst hd_tl) (snd hd_tl) in
+    change_equal_slprop
+      (varray2 a1 h)
+      (varray2 a h);
+    change_equal_slprop
+      (vptrp (fst hd_tl) h_hd)
+      (vptrp (fst hd_tl) h);
+    let a2 = intro_vcons h (fst hd_tl) (snd hd_tl) in
+    change_equal_slprop
+      (varray2 a2 h)
+      (varray2 a h);
+    noop ();
+    h
+  end
+
+#pop-options
+
+let share a p =
+  let a2 = elim_varray a p in
+  let h = vshare a2 p in
+  intro_varray h a2 a;
+  intro_varray h a2 a;
+  h
+
+#push-options "--z3rlimit 16"
+#restart-solver
+
+let rec vgather
+  (#opened: _)
+  (#t: Type)
+  (a: array2 t)
+  (p1 p2: perm)
+: SteelGhost perm opened
+    (varray2 a p1 `star` varray2 a p2)
+    (fun res -> varray2 a res)
+    (fun _ -> True)
+    (fun h res h' ->
+      h' (varray2 a res) `Seq.equal` h (varray2 a p1) /\
+      h' (varray2 a res) `Seq.equal` h (varray2 a p2) /\
+      res == p1 `sum_perm` p2
+    )
+    (decreases (Seq.length a))
+=
+  if Seq.length a = 0
+  then begin
+    elim_nil a p1;
+    elim_nil a p2;
+    let p = p1 `sum_perm` p2 in
+    let a' = intro_vnil t p in
+    assert (a' `Seq.equal` a);
+    change_equal_slprop
+      (varray2 a' p)
+      (varray2 a p);
+    p
+  end else begin
+    let hd_tl_1 = elim_vcons a p1 in
+    let g_hd_1 : Ghost.erased t = gget (vptrp (fst hd_tl_1) p1) in
+    let g_tl_1 : Ghost.erased (Seq.lseq t (Seq.length (snd hd_tl_1))) = gget (varray2 (snd hd_tl_1) p1) in
+    let hd_tl_2 = elim_vcons a p2 in
+    Seq.lemma_cons_inj #(ref t) (fst hd_tl_1) (fst hd_tl_2) (snd hd_tl_1) (snd hd_tl_2);
+    change_equal_slprop
+      (vptrp (fst hd_tl_2) p2)
+      (vptrp (fst hd_tl_1) p2);
+    let g_hd_2 : Ghost.erased t = gget (vptrp (fst hd_tl_1) p2) in
+    let p = gather (fst hd_tl_1) p1 p2 in
+    let g_hd : Ghost.erased t = gget (vptrp (fst hd_tl_1) p) in
+    assert (Ghost.reveal g_hd == Ghost.reveal g_hd_1);
+    assert (Ghost.reveal g_hd == Ghost.reveal g_hd_2);
+    change_equal_slprop
+      (varray2 (snd hd_tl_2) p2)
+      (varray2 (snd hd_tl_1) p2);
+    let g_tl_2 : Ghost.erased (Seq.lseq t (Seq.length (snd hd_tl_1))) = gget (varray2 (snd hd_tl_1) p2) in
+    let p' = vgather (snd hd_tl_1) p1 p2 in
+    change_equal_slprop
+      (varray2 (snd hd_tl_1) p')
+      (varray2 (snd hd_tl_1) p);
+    let g_tl : Ghost.erased (Seq.lseq t (Seq.length (snd hd_tl_1))) = gget (varray2 (snd hd_tl_1) p) in
+    assert (Ghost.reveal g_tl == Ghost.reveal g_tl_1);
+    assert (Ghost.reveal g_tl == Ghost.reveal g_tl_2);
+    let a' = intro_vcons p (fst hd_tl_1) (snd hd_tl_1) in
+    change_equal_slprop
+      (varray2 a' p)
+      (varray2 a p);
+    p
+  end
+
+#pop-options
+
+let gather a p1 p2 =
+  let a1 = elim_varray a p1 in
+  let a2 = elim_varray a p2 in
+  change_equal_slprop
+    (varray2 a2 p2)
+    (varray2 a1 p2);
+  let p = vgather a1 p1 p2 in
+  intro_varray p a1 a;
+  p

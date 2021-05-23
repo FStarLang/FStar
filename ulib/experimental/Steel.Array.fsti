@@ -18,6 +18,7 @@ module Steel.Array
 open Steel.Memory
 open Steel.FractionalPermission
 open Steel.Effect
+open Steel.Effect.Atomic
 open FStar.Ghost
 module U32 = FStar.UInt32
 
@@ -276,6 +277,28 @@ val free (#t:Type) (r:array t)
              (fun _ -> emp)
              (requires fun _ -> freeable r)
              (ensures fun _ _ _ -> True)
+
+val share (#t:Type) (#uses:_) (a:array t) (p: perm)
+  : SteelGhost perm uses
+           (varrayp a p)
+           (fun res -> varrayp a res `star` varrayp a res)
+           (fun _ -> True)
+           (fun h res h' ->
+             h' (varrayp a res) == h (varrayp a p) /\
+             res == half_perm p
+           )
+
+val gather (#t:Type) (#uses:_) (a:array t) (p1 p2: perm)
+  : SteelGhost perm uses
+           (varrayp a p1 `star` varrayp a p2)
+           (fun res -> varrayp a res)
+           (fun _ -> True)
+           (fun h res h' ->
+             h' (varrayp a res) == h (varrayp a p1) /\
+             h' (varrayp a res) == h (varrayp a p2) /\
+             res == p1 `sum_perm` p2
+           )
+
 
 (* AF: Non-selector version of the Array module, with permissions,
    currently unused in Steel
