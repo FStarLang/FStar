@@ -310,3 +310,39 @@ let free #a r =
     (A.varrayp w.w_array w.w_perm)
     (A.varray ar);
   A.free ar
+
+let share r =
+  let w = elim_varrayptr r in
+  let h = A.share w.w_array w.w_perm in
+  ghost_write r.rperm h;
+  let to = ghost_read r.to in
+  intro_varrayptr r w.w_array h;
+  let rto2 : ghost_ref (to_v r.base r.from) = ghost_alloc to in
+  let rperm2 = ghost_alloc h in
+  let res = {
+    base = r.base;
+    from = r.from;
+    to = rto2;
+    rperm = rperm2
+  } in
+  change_equal_slprop
+    (ghost_vptr rto2)
+    (ghost_vptr res.to);
+  change_equal_slprop
+    (ghost_vptr rperm2)
+    (ghost_vptr res.rperm);
+  intro_varrayptr res w.w_array h;
+  return res
+
+let gather r1 r2 =
+  let w1 = elim_varrayptr r1 in
+  let w2 = elim_varrayptr r2 in
+  ghost_free r2.to;
+  ghost_free r2.rperm;
+  assert (w1.w_array == w2.w_array);
+  change_equal_slprop
+    (A.varrayp w2.w_array w2.w_perm)
+    (A.varrayp w1.w_array w2.w_perm);
+  let p = A.gather w1.w_array w1.w_perm w2.w_perm in
+  ghost_write r1.rperm p;
+  intro_varrayptr r1 w1.w_array p

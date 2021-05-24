@@ -148,3 +148,41 @@ val free (#a:Type) (r:t a)
                A.freeable (h (varrayptr r)).array
              )
              (ensures fun _ _ _ -> True)
+
+val share (#a: Type) (r: t a)
+  : Steel (t a)
+    (varrayptr r)
+    (fun res -> varrayptr r `star` varrayptr res)
+    (fun _ -> True)
+    (fun h res h' ->
+      let s = h (varrayptr r) in
+      let d = h' (varrayptr res) in
+      let s' = h' (varrayptr r) in
+      s'.perm == half_perm s.perm /\
+      s'.array == s.array /\
+      s'.contents == s.contents /\
+      d.array == s.array /\
+      d.perm == half_perm s.perm /\
+      d.contents == s.contents
+    )
+
+val gather
+  (#opened: _)
+  (#a: Type)
+  (r1 r2: t a)
+: SteelGhost unit opened
+    (varrayptr r1 `star` varrayptr r2)
+    (fun _ -> varrayptr r1)
+    (fun h ->
+      (h (varrayptr r1)).array == (h (varrayptr r2)).array
+    )
+    (fun h res h' ->
+      let s1 = h (varrayptr r1) in
+      let s2 = h (varrayptr r2) in
+      let s' = h' (varrayptr r1) in
+      s'.array == s1.array /\
+      s'.array == s2.array /\
+      s'.contents == s1.contents /\
+      s'.contents == s2.contents /\
+      s'.perm == s1.perm `sum_perm` s2.perm
+    )
