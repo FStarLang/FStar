@@ -1,9 +1,7 @@
 open List
 open Lexing
-open Migrate_parsetree
-open Migrate_parsetree.Ast_405
-open Migrate_parsetree.Ast_405.Parsetree
-open Migrate_parsetree.Versions
+open Ppxlib_ast
+open Parsetree
 open Location
 open Pprintast
 open Ast_helper
@@ -407,7 +405,11 @@ let type_metadata (md : metadata): attributes option =
   ) md in
   if List.length deriving > 0 then
     let str = String.concat "," deriving in
-    Some [ mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident str))] ]
+    Some [ {
+      attr_name = mk_sym "deriving";
+      attr_payload = PStr [Str.eval (Exp.ident (mk_lident str))];
+      attr_loc = no_location }
+    ]
   else
     None
 
@@ -415,7 +417,10 @@ let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_t
   match List.filter (function PpxDerivingShowConstant _ -> true | _ -> false) md with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in
-      let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern "fmt") (Exp.fun_ Nolabel None (Pat.any ()) e))]) in
+      let deriving_const = {
+        attr_name = mk_sym "printer";
+        attr_payload = PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern "fmt") (Exp.fun_ Nolabel None (Pat.any ()) e))];
+        attr_loc = no_location } in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
@@ -427,7 +432,7 @@ let build_one_tydecl ({tydecl_name=x;
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
-  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
+  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) tparams) in
   let (ptype_manifest: core_type option) =
     BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
@@ -439,11 +444,12 @@ let build_tydecl (td: mltydecl): structure_item_desc option =
   let type_declarations = map build_one_tydecl td in
   if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
-let build_exn (sym, tys): extension_constructor =
+let build_exn (sym, tys): type_exception =
   let tys = List.map snd tys in
   let name = mk_sym sym in
   let args = Some (Pcstr_tuple (map build_core_type tys)) in
-  Te.decl ?args:args name
+  let ctor = Te.decl ?args:args name in
+  Te.mk_exception ctor
 
 let build_module1 path (m1: mlmodule1): structure_item option =
   match m1 with
@@ -466,7 +472,7 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
   match md with
   | Some(s, m) ->
      let open_prims =
-       Str.open_ (Opn.mk ?override:(Some Fresh) (mk_lident "Prims")) in
+       Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Prims"))) in
      open_prims::(map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
@@ -485,10 +491,8 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) =
-  let migration =
-    Versions.migrate Versions.ocaml_405 Versions.ocaml_current in
   Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter (migration.copy_structure m);
+  structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) =

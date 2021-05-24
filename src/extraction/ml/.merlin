@@ -1,7 +1,7 @@
 PKG batteries
 PKG compiler-libs
 PKG zarith
-PKG ocaml-migrate-parsetree
+PKG ppxlib
 
 B ../../ocaml-output/_build/src/ocaml-output
 B ../../ocaml-output/_build/src/basic/ml

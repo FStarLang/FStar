@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -860,6 +861,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
 
     let skip =
         Options.admit_smt_queries () ||
+        Env.too_early_in_prims env   ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("

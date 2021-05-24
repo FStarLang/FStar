@@ -852,16 +852,22 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let r = visit_tm ff r in
          Tv_App l (r, q)
     | Tv_Refine b r ->
+        let b = on_sort_bv (visit_tm ff) b in
         let r = visit_tm ff r in
         Tv_Refine b r
     | Tv_Let r attrs b def t ->
+        let b = on_sort_bv (visit_tm ff) b in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
         Tv_Let r attrs b def t
-    | Tv_Match sc brs ->
+    | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
+        let ret_opt = map_opt (fun ret ->
+          match ret with
+          | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
+          | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt) ret_opt in
         let brs = map (visit_br ff) brs in
-        Tv_Match sc brs
+        Tv_Match sc ret_opt brs
     | Tv_AscribedT e t topt ->
         let e = visit_tm ff e in
         let t = visit_tm ff t in
@@ -873,27 +879,37 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   let (p, t) = b in
-  (p, visit_tm ff t)
+  let p = visit_pat ff p in
+  let t = visit_tm ff t in
+  (p, t)
+and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
+  match p with
+  | Pat_Constant c -> p
+  | Pat_Cons fv l ->
+      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
+      Pat_Cons fv l
+  | Pat_Var bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Var bv
+  | Pat_Wild bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Wild bv
+  | Pat_Dot_Term bv term ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      let term = visit_tm ff term in
+      Pat_Dot_Term bv term
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
     | C_Total ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_Total ret decr
 
     | C_GTotal ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_GTotal ret decr
 
     | C_Lemma pre post pats ->
@@ -928,7 +944,7 @@ private let get_match_body () : Tac term =
   match FStar.Reflection.Formula.unsquash (cur_goal ()) with
   | None -> fail ""
   | Some t -> match inspect t with
-             | Tv_Match sc _ -> sc
+             | Tv_Match sc _ _ -> sc
              | _ -> fail "Goal is not a match"
 
 private let rec last (x : list 'a) : Tac 'a =

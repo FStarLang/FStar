@@ -1,5 +1,5 @@
 [
-  "lßÖÖ†j\bbÈPÙ>vƒ·∑",
+  "±?ç«\u0012Pv8©\\¶)ß\u0014\u001aˇ",
   [
     [
       "SL.ExamplesPar.left",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_d511b331b2e9a0f37f337d8f61522420"
       ],
       0,
-      "fdc0064e472f2c2deb09c2051cfbc21f"
+      "166dc5028ec4d056c93e856d882e590b"
     ],
     [
       "SL.ExamplesPar.right",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_d511b331b2e9a0f37f337d8f61522420"
       ],
       0,
-      "45f5b8d97996d2cf677c21b53847c496"
+      "6cdc5bb54814fea589f9ae9171b9543c"
     ],
     [
       "SL.ExamplesPar.par1",
@@ -60,7 +60,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "341f3431586bf159507bd78f82f3de1a"
+      "60c299813a20788320326baa3ffdaca3"
     ],
     [
       "SL.ExamplesPar.par1",
@@ -76,7 +76,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "2b18f66c7f97b9ac380abced32a69c1f"
+      "9c4c87ee449a1eab07db4108cbeb07b5"
     ],
     [
       "SL.ExamplesPar.par1",
@@ -97,7 +97,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "c59119a88a3e97c2ca786dc3418eacc9"
+      "ee000cb9f573c20919a811180b1e1c92"
     ],
     [
       "SL.ExamplesPar.par2",
@@ -117,7 +117,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "8b76a5f45b19c3f1e2f110f7f3385057"
+      "11f5b02359556312d123bee4d6be5756"
     ],
     [
       "SL.ExamplesPar.par2",
@@ -133,7 +133,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "4a20c3b9c7283681e01077fa2e9073c0"
+      "11506ff8f2e49afb20695b56a1aff688"
     ],
     [
       "SL.ExamplesPar.par2",
@@ -154,7 +154,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "2cc6445fbb6c41bbbfb9cdd392a75d25"
+      "a1cc032c49fc31c8fec9f7a05e56d02c"
     ],
     [
       "SL.ExamplesPar.par3",
@@ -187,7 +187,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "8b7c7291a40127153c0b202c27a77ce2"
+      "ef99d2ca50ab30aee803639bdac0533e"
     ],
     [
       "SL.ExamplesPar.par3",
@@ -203,7 +203,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "d6d4c9938f1494d99081ebc76ea3d352"
+      "725c6eda84eefb2bb29f26851bd841bb"
     ],
     [
       "SL.ExamplesPar.par3",
@@ -224,7 +224,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "0abe6deb917f9cb9d259ba13971d27ba"
+      "0381e8c0015073791f7fe8c418dd8584"
     ],
     [
       "SL.ExamplesPar.par3'",
@@ -257,7 +257,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "113daa817d6c839c9ced65aa2283c289"
+      "bb1cb5c3c894b9c1e8c459dafa6f10ca"
     ],
     [
       "SL.ExamplesPar.par3'",
@@ -273,7 +273,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "526e6a05ea519fb259c33b0eeeb2e1b3"
+      "c54a71d94eae414c943649faee11c368"
     ],
     [
       "SL.ExamplesPar.par3'",
@@ -294,7 +294,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "63ac8880a23b2bbc31dfe256a6d5257b"
+      "5c98a578adc0f11312d819ca6d436df9"
     ],
     [
       "SL.ExamplesPar.ret",
@@ -315,7 +315,7 @@
         "token_correspondence_SL.Effect.frame_wp"
       ],
       0,
-      "43bab5c3ed5e82eb9e46e3d37440d785"
+      "b373b0709ae8c8c1642b4004775e503f"
     ],
     [
       "SL.ExamplesPar.set_to_2",
@@ -340,7 +340,7 @@
         "token_correspondence_SL.Effect.frame_wp"
       ],
       0,
-      "9c72b0ee9df9195aa6d858baa76cf105"
+      "a3d06156dba715b34f2d7259313e5144"
     ],
     [
       "SL.ExamplesPar.par_set",
@@ -352,7 +352,7 @@
         "refinement_interpretation_Tm_refine_0116e0bc649f2a43ee4109ea44fe62df"
       ],
       0,
-      "5afa62352972b42be6946aa112cae17a"
+      "7818a0efe5276025877182287aa3fdd5"
     ],
     [
       "SL.ExamplesPar.par_set",
@@ -370,7 +370,7 @@
         "typing_SL.AutoTactic.memory_cm"
       ],
       0,
-      "adf15613bc3edddfd87b57280e353511"
+      "e75241e97bb38c0134937f1320dd42a1"
     ],
     [
       "SL.ExamplesPar.par_set",
@@ -390,7 +390,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "28255a41ad8ee71bab5f026cc9e63e11"
+      "258cbda7e16493520b44362059d6d21d"
     ]
   ]
 ]

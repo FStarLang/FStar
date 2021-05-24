@@ -11,8 +11,7 @@
       * [Instructions for Windows](#instructions-for-windows)
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
-    * [Step 1. Building F* from the OCaml snapshot](#step-1-building-f-from-the-ocaml-snapshot)
-    * [Step 2l. Building the F* libraries](#step-2l-building-the-f-libraries)
+    * [Building F* and the libraries](#building-f-and-its-libraries)
   * [Bootstrapping F* in OCaml](#bootstrapping-f-in-ocaml)
     * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
     * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
@@ -77,7 +76,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
         $ fstar.exe --version
         F* 0.9.7.0-alpha1
         platform=Linux_x86_64
-        compiler=OCaml 4.09.1
+        compiler=OCaml 4.12.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -120,7 +119,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith yojson ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
+        $ opam install ocamlfind batteries stdint zarith yojson ppx_deriving ppx_deriving_yojson ppxlib=0.22.0 process
 
 5. (Optional) You can also verify all the examples, keep in mind that this will
    take a long time, use a lot of resources, and there are also some quirks
@@ -180,8 +179,7 @@ but first we explain how to get a working OCaml setup on your machine.
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.09.X should work.
-Versions outside this range are known not to work.
+The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.12.X should work.
 
 #### Instructions for Windows ####
 
@@ -192,7 +190,7 @@ Versions outside this range are known not to work.
   ```sh
   $ opam update
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.09.1+mingw64c
+  $ opam switch create ocaml-variants.4.12.0+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
@@ -244,7 +242,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process ocaml-migrate-parsetree
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
   ```
 
   **Note:** This list of opam packages is longer than the list in the
@@ -268,45 +266,36 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
   The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
   ```
 
-### Step 1. Building F\* from the OCaml snapshot ###
+### Building F\* and its libraries ###
 
-Once you have a working OCaml setup (see above) just run the following command:
+Once you have a working OCaml setup (see above) just run the following
+command (you can use -j N, where N is a parallel factor suitable for
+your machine):
 
-    $ make 1 -j6
+    $ make -j N
 
-As explained in more detail [below](#bootstrapping-f-in-ocaml), a snapshot of
-the F\* sources extracted to OCaml is checked in the F\* repo and regularly
-updated, and the command above will simply build an F\* binary out of that snapshot.
+This does three things:
 
-**Note:** On Windows this generates a *native* F\* binary, that is, a binary
-that does *not* depend on `cygwin1.dll`, since
-[the installer above](#instructions-for-windows) uses a
-*native* Windows port of OCaml.  Cygwin is just there to provide `make` and
-other utilities required for the build.
-This also means that when linking C libraries with OCaml compiled objects one
-needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
-special `flexlink` technology for this. See `examples/crypto` and
-`contrib/CoreCrypto/ml` for examples.
+1. As explained in more detail [below](#bootstrapping-f-in-ocaml), a snapshot of
+   the F\* sources extracted to OCaml is checked in the F\* repo and regularly
+   updated, and the command above will simply build an F\* binary out of that snapshot.
 
-### Step 2l. Building the F\* libraries ###
-
-Just run:
-
-    $ make -C ulib/ -j6
-
-It does two things:
-
-1. It verifies the F\* standard library, producing `.checked` files that cache
-   definitions to speed up subsequent usage.
+   **Note:** On Windows this generates a *native* F\* binary, that is,
+   a binary that does *not* depend on `cygwin1.dll`, since [the installer above](#instructions-for-windows)
+   uses a *native* Windows
+   port of OCaml.  Cygwin is just there to provide `make` and other
+   utilities required for the build.  This also means that when
+   linking C libraries with OCaml compiled objects one needs to use
+   the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
+   special `flexlink` technology for this. See `examples/crypto` and
+   `contrib/CoreCrypto/ml` for examples.
 
 2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
    `fstartaclib`), needed for building OCaml code extracted from F\*, native
-   tactics, etc. You can build this part separately with:
+   tactics, etc.
 
-        $ make libs
-
-   (this target will also rebuild `fstar.exe`, since these libraries tightly
-   depend on the executable). This rule does NOT verify anything.
+3. It verifies the F\* standard library, producing `.checked` files that cache
+   definitions to speed up subsequent usage.
 
 ## Bootstrapping F\* in OCaml
 

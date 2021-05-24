@@ -69,7 +69,9 @@ let impl_intro_gen #p #q f =
   move_requires g ()
 
 (*** Universal quantification *)
-let get_forall #a p = get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
+let get_forall #a p = 
+  assert_norm ((forall (x: a). p x) == squash ((x: a -> GTot (p x))));
+  get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 let forall_intro_gtot #a #p f =

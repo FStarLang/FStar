@@ -2,7 +2,7 @@ module U = FStar_Util
 open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
-open FStar_Ulexing
+open FStar_Sedlexing
 
 type filename = string
 
@@ -125,13 +125,13 @@ let parse fn =
     | Toplevel _ -> begin
       let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
-          | U.Inl modul ->
+          | FStar_Pervasives.Inl modul ->
              if has_extension filename interface_extensions
              then match modul with
                   | FStar_Parser_AST.Module(l,d) ->
-                    U.Inl (FStar_Parser_AST.Interface(l, d, true))
+                    FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
                   | _ -> failwith "Impossible"
-             else U.Inl modul
+             else FStar_Pervasives.Inl modul
           | _ -> fileOrFragment
       in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
@@ -139,7 +139,7 @@ let parse fn =
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
   with
     | FStar_Errors.Empty_frag ->
-      ASTFragment (U.Inr [], [])
+      ASTFragment (FStar_Pervasives.Inr [], [])
 
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
@@ -155,7 +155,7 @@ let parse_warn_error s =
     if s = ""
     then []
     else
-      let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+      let lexbuf = FStar_Sedlexing.create s "" 0 (String.length s) in
       let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in

@@ -35,6 +35,7 @@ let tr1 = function
           | UnfoldOnly  ss -> EMB.UnfoldOnly ss
           | UnfoldFully ss -> EMB.UnfoldFully ss
           | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
+          | UnfoldQual  ss -> EMB.UnfoldQual  ss
 let rt1 = function
           | EMB.Simpl          -> Simpl
           | EMB.Weak           -> Weak
@@ -49,6 +50,7 @@ let rt1 = function
           | EMB.UnfoldOnly  ss -> UnfoldOnly ss
           | EMB.UnfoldFully ss -> UnfoldFully ss
           | EMB.UnfoldAttr  ss -> UnfoldAttr  ss
+          | EMB.UnfoldQual  ss -> UnfoldQual  ss
 
 (* the one plugins actually use *)
 let e_norm_step' : norm_step EMB.embedding =
@@ -144,10 +146,10 @@ let set_urgency             = from_tac_1 B.set_urgency
 let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 
 (* sigh *)
-let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =
+let fix_either (s : ('a, 'b) either) : ('a, 'b) either =
     match s with
-    | FStar_Util.Inl a -> FStar_Pervasives.Inl a
-    | FStar_Util.Inr b -> FStar_Pervasives.Inr b
+    | Inl a -> Inl a
+    | Inr b -> Inr b
 
 (* SIGH *)
 let fmap f r =

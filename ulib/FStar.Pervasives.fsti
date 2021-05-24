@@ -131,23 +131,253 @@ val ambient (#a: Type) (x: a) : Type0
 val intro_ambient (#a: Type) (x: a) : Tot (squash (ambient x))
 
 
+///  Controlling normalization
+
+(** In any invocation of the F* normalizer, every occurrence of
+    [normalize_term e] is reduced to the full normal for of [e]. *)
+val normalize_term (#a: Type) (x: a) : Tot a
+
+(** In any invocation of the F* normalizer, every occurrence of
+    [normalize e] is reduced to the full normal for of [e]. *)
+val normalize (a: Type0) : Type0
+
+(** Value of [norm_step] are used to enable specific normalization
+    steps, controlling how the normalizer reduces terms. *)
+val norm_step : Type0
+
+(** Logical simplification, e.g., [P /\ True ~> P] *)
+val simplify : norm_step
+
+(** Weak reduction: Do not reduce under binders *)
+val weak : norm_step
+
+(** Head normal form *)
+val hnf : norm_step
+
+(** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
+val primops : norm_step
+
+(** Unfold all non-recursive definitions *)
+val delta : norm_step
+
+(** Unroll recursive calls
+
+    Note: Since F*'s termination check is semantic rather than
+    syntactically structural, recursive calls in inconsistent contexts,
+    or recursive evaluation of open terms can diverge.
+
+    When asking for the [zeta] step, F* implements a heuristic to
+    disable [zeta] when reducing terms beneath a blocked match. This
+    helps prevent some trivial looping behavior. However, it also
+    means that with [zeta] alone, your term may not reduce as much as
+    you might want. See [zeta_full] for that.
+  *)
+val zeta : norm_step
+
+(** Unroll recursive calls
+
+    Unlike [zeta], [zeta_full] has no looping prevention
+    heuristics. F* will try to unroll recursive functions as much as
+    it can, potentially looping. Use with care.
+
+    Note, [zeta_full] implies [zeta].
+    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
+ *)
+val zeta_full : norm_step
+
+(** Reduce case analysis (i.e., match) *)
+val iota : norm_step
+
+(** Use normalization-by-evaluation, instead of interpretation (experimental) *)
+val nbe : norm_step
+
+(** Reify effectful definitions into their representations *)
+val reify_ : norm_step
+
+(** Unlike [delta], unfold definitions for only the names in the given
+    list. Each string is a fully qualified name like [A.M.f] *)
+val delta_only (s: list string) : Tot norm_step
+
+(** Unfold definitions for only the names in the given list, but
+    unfold each definition encountered after unfolding as well.
+
+    For example, given
+
+      {[
+        let f0 = 0
+        let f1 = f0 + 1
+      ]}
+
+    [norm [delta_only [`%f1]] f1] will reduce to [f0 + 1].
+    [norm [delta_fully [`%f1]] f1] will reduce to [0 + 1].
+
+    Each string is a fully qualified name like [A.M.f], typically
+    constructed using a quotation, as in the example above. *)
+val delta_fully (s: list string) : Tot norm_step
+
+(** Rather than mention a symbol to unfold by name, it can be
+    convenient to tag a collection of related symbols with a common
+    attribute and then to ask the normalizer to reduce them all.
+
+    For example, given:
+
+      {[
+        irreducible let my_attr = ()
+
+        [@@my_attr]
+        let f0 = 0
+
+        [@@my_attr]
+        let f1 = f0 + 1
+      ]}
+
+   {[norm [delta_attr [`%my_attr]] f1]}
+
+   will reduce to [0 + 1].
+
+  *)
+val delta_attr (s: list string) : Tot norm_step
+
+(**
+    For example, given:
+
+      {[
+        unfold
+        let f0 = 0
+
+        inline_for_extraction
+        let f1 = f0 + 1
+
+      ]}
+
+   {[norm [delta_qualifier ["unfold"; "inline_for_extraction"]] f1]}
+
+   will reduce to [0 + 1].
+
+  *)
+val delta_qualifier (s: list string) : Tot norm_step
+
+(** [norm s e] requests normalization of [e] with the reduction steps
+    [s]. *)
+val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
+
+(** [assert_norm p] reduces [p] as much as possible and then asks the
+    SMT solver to prove the reduct, concluding [p] *)
+val assert_norm (p: Type) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+
+(** Sometimes it is convenient to introduce an equation between a term
+    and its normal form in the context. *)
+val normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x)
+
+(** Like [normalize_term_spec], but specialized to [Type0] *)
+val normalize_spec (a: Type0) : Lemma (normalize a == a)
+
+(** Like [normalize_term_spec], but with specific normalization steps *)
+val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
+
+(** Use the following to expose an ["opaque_to_smt"] definition to the
+    solver as: [reveal_opaque (`%defn) defn] *)
+let reveal_opaque (s: string) = norm_spec [delta_only [s]]
+
+
+
 /// The [DIV] effect for divergent computations
+///
+/// The wp-calculus for [DIV] is same as that of [PURE]
+
+val pure_return_wp_monotonic (#a:Type) (x:a)
+  : Lemma (pure_wp_monotonic a (pure_return a x))
+
+unfold
+let div_return (a:Type) (x:a) : pure_wp a =
+  pure_return_wp_monotonic x;
+  pure_return a x
+
+val pure_bind_wp_monotonic (#a #b:Type) (r:range) (wp1:pure_wp a) (wp2:a -> GTot (pure_wp b))
+  : Lemma (pure_wp_monotonic b (pure_bind_wp r a b wp1 wp2))
+
+unfold
+let div_bind
+  (r1:range)
+  (a b:Type)
+  (wp1:pure_wp a)
+  (wp2:a -> GTot (pure_wp b))
+  : pure_wp b
+  = pure_bind_wp_monotonic r1 wp1 wp2;
+    pure_bind_wp r1 a b wp1 wp2
+
+val pure_if_then_else_wp_monotonic (#a p:Type) (wp_then wp_else:pure_wp a)
+  : Lemma (pure_wp_monotonic a (pure_if_then_else a p wp_then wp_else))
+
+unfold
+let div_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
+  pure_if_then_else_wp_monotonic p wp_then wp_else;
+  pure_if_then_else a p wp_then wp_else
+
+val pure_ite_wp_monotonic (#a:Type) (wp:pure_wp a)
+  : Lemma (pure_wp_monotonic a (pure_ite_wp a wp))
+
+unfold
+let div_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
+  pure_ite_wp_monotonic wp;
+  pure_ite_wp a wp
+
+val pure_close_wp_monotonic (#a #b:Type) (wp:b -> GTot (pure_wp a))
+  : Lemma (pure_wp_monotonic a (pure_close_wp a b wp))
+
+unfold
+let div_close_wp (a b:Type) (wp:b -> GTot (pure_wp a)) : pure_wp a =
+  pure_close_wp_monotonic wp;
+  pure_close_wp a b wp
 
 (** The effect of divergence: from a specificational perspective it is
     identical to PURE, however the specs are given a partial
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
-new_effect DIV = PURE
+new_effect {
+  DIV : a:Type -> wp:pure_wp a -> Effect
+  with
+    return_wp = div_return
+  ; bind_wp = div_bind
+  ; if_then_else = div_if_then_else
+  ; ite_wp = div_ite_wp
+  ; stronger = pure_stronger
+  ; close_wp = div_close_wp
+  ; trivial = pure_trivial
+}
 
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
 sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
+
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
+unfold
+let div_hoare_to_wp_aux (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) (p:pure_post a) =
+  pre /\ (forall a. post a ==> p a)
+
+val div_hoare_to_wp_monotonic (#a:Type) (#pre:pure_pre) (post:pure_post' a pre)
+  : Lemma (pure_wp_monotonic a (div_hoare_to_wp_aux post))
+
+unfold
+let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
+  div_hoare_to_wp_monotonic post;
+  div_hoare_to_wp_aux post
+
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
-  DIV a (fun (p: pure_post a) -> pre /\ (forall a. post a ==> p a))
+  DIV a (div_hoare_to_wp post)
+
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a: Type) = DIV a (fun (p: pure_post a) -> (forall (x: a). p x))
+val pure_null_wp_monotonic (a:Type)
+  : Lemma (pure_wp_monotonic a (pure_null_wp a))
+
+unfold
+let div_null_wp (a:Type) : pure_wp a =
+  pure_null_wp_monotonic a;
+  pure_null_wp a
+
+effect Dv (a: Type) = DIV a (div_null_wp a)
+
 
 (** We use the [EXT] effect to underspecify external system calls
     as being impure but having no observable effect on the state *)
@@ -205,7 +435,7 @@ let st_if_then_else
       (h0: heap)
      = wp_then post h0 /\ (~p ==> wp_else post h0)
 
-(** As with [PURE] the [ite_wp] combinator names the postcondition as
+(** As with [PURE] the [wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
 unfold
 let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
@@ -743,134 +973,17 @@ val commute_nested_matches : unit
   *)
 val noextract_to (backend:string) : Tot unit
 
-///  Controlling normalization
+(** A layered effect definition may optionally be annoated with
+    (ite_soundness_by t) attribute, where t is another attribute
+    When so, the implicits and the smt guard generated when
+    checking the soundness of the if-then-else combinator, are
+    dispatched to the tactic in scope that has the t attribute (in addition
+    to the resolve_implicits attribute as usual)
 
-(** In any invocation of the F* normalizer, every occurrence of
-    [normalize_term e] is reduced to the full normal for of [e]. *)
-val normalize_term (#a: Type) (x: a) : Tot a
-
-(** In any invocation of the F* normalizer, every occurrence of
-    [normalize e] is reduced to the full normal for of [e]. *)
-val normalize (a: Type0) : Type0
-
-(** Value of [norm_step] are used to enable specific normalization
-    steps, controlling how the normalizer reduces terms. *)
-val norm_step : Type0
-
-(** Logical simplification, e.g., [P /\ True ~> P] *)
-val simplify : norm_step
-
-(** Weak reduction: Do not reduce under binders *)
-val weak : norm_step
-
-(** Head normal form *)
-val hnf : norm_step
-
-(** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
-val primops : norm_step
-
-(** Unfold all non-recursive definitions *)
-val delta : norm_step
-
-(** Unroll recursive calls
-
-    Note: Since F*'s termination check is semantic rather than
-    syntactically structural, recursive calls in inconsistent contexts,
-    or recursive evaluation of open terms can diverge.
-
-    When asking for the [zeta] step, F* implements a heuristic to
-    disable [zeta] when reducing terms beneath a blocked match. This
-    helps prevent some trivial looping behavior. However, it also
-    means that with [zeta] alone, your term may not reduce as much as
-    you might want. See [zeta_full] for that.
+    See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
-val zeta : norm_step
+val ite_soundness_by : unit
 
-(** Unroll recursive calls
-
-    Unlike [zeta], [zeta_full] has no looping prevention
-    heuristics. F* will try to unroll recursive functions as much as
-    it can, potentially looping. Use with care.
-
-    Note, [zeta_full] implies [zeta].
-    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
- *)
-val zeta_full : norm_step
-
-(** Reduce case analysis (i.e., match) *)
-val iota : norm_step
-
-(** Use normalization-by-evaluation, instead of interpretation (experimental) *)
-val nbe : norm_step
-
-(** Reify effectful definitions into their representations *)
-val reify_ : norm_step
-
-(** Unlike [delta], unfold definitions for only the names in the given
-    list. Each string is a fully qualified name like [A.M.f] *)
-val delta_only (s: list string) : Tot norm_step
-
-(** Unfold definitions for only the names in the given list, but
-    unfold each definition encountered after unfolding as well.
-
-    For example, given
-
-      {[
-        let f0 = 0
-        let f1 = f0 + 1
-      ]}
-
-    [norm [delta_only [`%f1]] f1] will reduce to [f0 + 1].
-    [norm [delta_fully [`%f1]] f1] will reduce to [0 + 1].
-
-    Each string is a fully qualified name like [A.M.f], typically
-    constructed using a quotation, as in the example above. *)
-val delta_fully (s: list string) : Tot norm_step
-
-(** Rather than mention a symbol to unfold by name, it can be
-    convenient to tag a collection of related symbols with a common
-    attribute and then to ask the normalizer to reduce them all.
-
-    For example, given:
-
-      {[
-        irreducible let my_attr = ()
-
-        [@@my_attr]
-        let f0 = 0
-
-        [@@my_attr]
-        let f1 = f0 + 1
-      ]}
-
-   {[norm [delta_attr [`%my_attr]] f1]}
-
-   will reduce to [0 + 1].
-
-  *)
-val delta_attr (s: list string) : Tot norm_step
-
-(** [norm s e] requests normalization of [e] with the reduction steps
-    [s]. *)
-val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
-
-(** [assert_norm p] reduces [p] as much as possible and then asks the
-    SMT solver to prove the reduct, concluding [p] *)
-val assert_norm (p: Type) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
-
-(** Sometimes it is convenient to introduce an equation between a term
-    and its normal form in the context. *)
-val normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x)
-
-(** Like [normalize_term_spec], but specialized to [Type0] *)
-val normalize_spec (a: Type0) : Lemma (normalize a == a)
-
-(** Like [normalize_term_spec], but with specific normalization steps *)
-val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
-
-(** Use the following to expose an ["opaque_to_smt"] definition to the
-    solver as: [reveal_opaque (`%defn) defn] *)
-let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.EncodeTerm
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -186,13 +187,13 @@ let isTotFun_axioms pos head vars guards is_pure =
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
-let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>) : term =
+let maybe_curry_app rng (head:either<op, term>) (arity:int) (args:list<term>) : term =
     let n_args = List.length args in
     match head with
-    | BU.Inr head -> //must curry
+    | Inr head -> //must curry
       mk_Apply_args head args
 
-    | BU.Inl head ->
+    | Inl head ->
         if n_args = arity
         then Util.mkApp'(head, args)
         else if n_args > arity
@@ -204,64 +205,12 @@ let maybe_curry_app rng (head:BU.either<op, term>) (arity:int) (args:list<term>)
 let maybe_curry_fvb rng fvb args =
     if fvb.fvb_thunked
     then mk_Apply_args (force_thunk fvb) args
-    else maybe_curry_app rng (BU.Inl (Var fvb.smt_id)) fvb.smt_arity args
+    else maybe_curry_app rng (Inl (Var fvb.smt_id)) fvb.smt_arity args
 
 let is_app = function
     | Var "ApplyTT"
     | Var "ApplyTF" -> true
     | _ -> false
-
-// [is_an_eta_expansion env vars body]:
-//       returns Some t'
-//               if (fun xs -> body) is an eta-expansion of t'
-//       else returns None
-let is_an_eta_expansion env vars body =
-    //assert vars <> []
-    let rec check_partial_applications t xs =
-        match t.tm, xs with
-        | App(app, [f; {tm=FreeV y}]), x::xs
-          when (is_app app && Term.fv_eq x y) ->
-          //Case 1:
-          //t is of the form (ApplyTT f x)
-          //   i.e., it's a partial or curried application of f to x
-          //recurse on f with the remaining arguments
-          check_partial_applications f xs
-
-        | App(Var f, args), _ ->
-          if List.length args = List.length xs
-          && List.forall2 (fun a v ->
-                            match a.tm with
-                            | FreeV fv -> fv_eq fv v
-                            | _ -> false)
-             args (List.rev xs)
-          then //t is of the form (f vars) for all the lambda bound variables vars
-               //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-               let n = tok_of_name env f in
-               let _ =
-                 if Env.debug env.tcenv <| Options.Other "PartialApp"
-                 then BU.print2 "is_eta_expansion %s  ... tok_of_name = %s\n"
-                                (print_smt_term t)
-                                (match n with | None -> "None" | Some x -> print_smt_term x)
-               in
-               n
-
-          else None
-
-        | _, [] ->
-          //Case 2:
-          //We're left with a closed head term applied to no arguments.
-          //This case is only reachable after unfolding the recursive calls in Case 1 (note vars <> [])
-          //and checking that the body t is of the form (ApplyTT (... (ApplyTT t x0) ... xn))
-          //where [x0;...;xn] = vars0.
-          //As long as t does not mention any of the vars, (fun vars -> body) is an eta-expansion of t
-          let fvs = Term.free_variables t in
-          if fvs |> List.for_all (fun fv -> not (BU.for_some (fv_eq fv) vars)) //t doesn't contain any of the bound variables
-          then Some t
-          else None
-
-        | _ -> None
-    in
-    check_partial_applications body (List.rev vars)
 
 let check_pattern_vars env vars pats =
     let pats =
@@ -659,7 +608,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, (k,_), _) ->
-        if (match k with BU.Inl t -> U.is_unit t | _ -> false)
+        if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
 
@@ -742,7 +691,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let guard, decls0 = encode_formula pre env' in
                   mk_and_l (guard::guards_l), decls0  in
              //AR: promote ghost to pure for non-informative types
-             let is_pure = res |> N.ghost_to_pure env.tcenv |> U.is_pure_comp in
+             let is_pure = res |> N.maybe_ghost_to_pure env.tcenv |> U.is_pure_comp in
              //cf. Bug #1750
              //We need to distinguish pure and ghost functions in the encoding
              //both in hash consing, producing different type constructors for them.
@@ -993,15 +942,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               ||  S.fv_eq_lid fv Const.exists_lid) ->
           encode_deeply_embedded_quantifier t0 env
 
-        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _) ; (v1, _); (v2, _)]
-        | Tm_fvar fv,  [(v0, _); (v1, _); (v2, _)]
-            when S.fv_eq_lid fv Const.lexcons_lid ->
-            //lex tuples are primitive
-            let v0, decls0 = encode_term v0 env in
-            let v1, decls1 = encode_term v1 env in
-            let v2, decls2 = encode_term v2 env in
-            mk_LexCons v0 v1 v2, decls0@decls1@decls2
-
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
@@ -1113,8 +1053,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (BU.Inl t, _), _) -> Some t
-                | Tm_ascribed(_, (BU.Inr c, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (Inl t, _), _) -> Some t
+                | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1169,13 +1109,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //          let reify_comp_and_body env body =
 //            let reified_body = TcUtil.reify_body env.tcenv body in
 //            let c = match c with
-//              | BU.Inl lc ->
+//              | Inl lc ->
 //                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
-//                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
+//                Inl (U.lcomp_of_comp (S.mk_Total typ))
 //
 //              (* In this case we don't have enough information to reconstruct the *)
 //              (* whole computation type and reify it *)
-//              | BU.Inr (eff_name, _) -> c
+//              | Inr (eff_name, _) -> c
 //            in
 //            c, reified_body
 //          in
@@ -1244,49 +1184,41 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 then BU.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
                        (List.map fv_name vars |> String.concat ", ")
                        (print_smt_term body);
-                match is_an_eta_expansion env vars body with
-                | Some t ->
-                  if Env.debug env.tcenv <| Options.Other "PartialApp"
-                  then BU.print1 "Yes, is an eta expansion of\n\tcore=%s\n"
-                                 (print_smt_term t);
-                  let decls = decls@decls'@decls'' in
-                  t, decls
-                | None ->
-                  let cvar_sorts = List.map fv_sort cvars in
-                  let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
-                  let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                  let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
-                  let app = mk_Apply f vars in
-                  let typing_f =
-                    match arrow_t_opt with
-                    | None ->
-                      let tot_fun_ax =
-                        let ax = (isTotFun_axioms t0.pos f vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
-                        match cvars with
-                        | [] -> ax
-                        | _ -> mkForall t0.pos ([[f]], cvars, ax)
-                      in
-                      let a_name = "tot_fun_"^fsym in
-                      [Util.mkAssume(tot_fun_ax, Some a_name, a_name)]
-                      //no typing axiom for this lambda, because we don't have enough info
-                      //but we at least mark its partial applications as total (cf. #1750)
-                    | Some t ->
-                      let f_has_t = mk_HasTypeWithFuel None f t in
-                      let a_name = "typing_"^fsym in
-                      [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
-                  in
-                  let interp_f =
-                    let a_name = "interpretation_" ^fsym in
-                    Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
-                  in
-                  let f_decls = (fdecl::typing_f)@[interp_f] in
-                  f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
+                let cvar_sorts = List.map fv_sort cvars in
+                let fsym = "Tm_abs_" ^ (BU.digest_of_string tkey_hash) in
+                let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                let f = mkApp(fsym, List.map mkFreeV cvars) in //arity ok, since introduced at cvar_sorts (#1383)
+                let app = mk_Apply f vars in
+                let typing_f =
+                  match arrow_t_opt with
+                  | None ->
+                    let tot_fun_ax =
+                      let ax = (isTotFun_axioms t0.pos f vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
+                      match cvars with
+                      | [] -> ax
+                      | _ -> mkForall t0.pos ([[f]], cvars, ax)
+                    in
+                    let a_name = "tot_fun_"^fsym in
+                    [Util.mkAssume(tot_fun_ax, Some a_name, a_name)]
+                    //no typing axiom for this lambda, because we don't have enough info
+                    //but we at least mark its partial applications as total (cf. #1750)
+                  | Some t ->
+                    let f_has_t = mk_HasTypeWithFuel None f t in
+                    let a_name = "typing_"^fsym in
+                    [Util.mkAssume(mkForall t0.pos ([[f]], cvars, f_has_t), Some a_name, a_name)]
+                in
+                let interp_f =
+                  let a_name = "interpretation_" ^fsym in
+                  Util.mkAssume(mkForall t0.pos ([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
+                in
+                let f_decls = (fdecl::typing_f)@[interp_f] in
+                f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
-      | Tm_let((_, {lbname=BU.Inr _}::_), _) ->
+      | Tm_let((_, {lbname=Inr _}::_), _) ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
-      | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+      | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let((false, _::_), _) ->
@@ -1299,7 +1231,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, pats) ->
+      | Tm_match(e, _, pats) ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1307,7 +1239,7 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term (U.ascribe e1 (BU.Inl t1, None)) env in
+        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None)) env in
         let xs, e2 = SS.open_term [S.mk_binder x] e2 in
         let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in
@@ -1547,11 +1479,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, pats) ->
+        | Tm_match(e, _, pats) ->
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 
-        | Tm_let((false, [{lbname=BU.Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
+        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 

@@ -944,7 +944,7 @@ and (translate_let :
                      let cc1 = translate_cc meta in
                      let meta1 =
                        match (eff, t1) with
-                       | (FStar_Extraction_ML_Syntax.E_GHOST, uu___7) ->
+                       | (FStar_Extraction_ML_Syntax.E_ERASABLE, uu___7) ->
                            let uu___8 = translate_flags meta in MustDisappear
                              :: uu___8
                        | (FStar_Extraction_ML_Syntax.E_PURE, TUnit) ->

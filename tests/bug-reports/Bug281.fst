@@ -40,7 +40,7 @@ val sub_einc : nat -> Tot (exp)
 let sub_einc x = EVar (x+1)
 
 val esubst : s:sub -> e:exp -> Tot (r:exp{renaming s /\ EVar? e ==> EVar? r})
-(decreases %[is_evar e; is_renaming s; 1;e])
+(decreases %[(is_evar e) <: int; is_renaming s; 1;e])
 val sub_elam : s:sub -> Tot (r:sub{renaming s ==> renaming r})
 (decreases %[1;is_renaming s; 0; EVar 0])
 
@@ -83,8 +83,10 @@ let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)
 
+open FStar.Monotonic.Pure
+
 (* another try, with raw encoding of the wp *)
-val plouf4 : s:sub -> f:exp -> PURE unit (fun (p:pure_post unit) -> (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f)) ==> p ())
+val plouf4 : s:sub -> f:exp -> PURE unit (as_pure_wp (fun (p:pure_post unit) -> (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f)) ==> p ()))
 let plouf4 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)

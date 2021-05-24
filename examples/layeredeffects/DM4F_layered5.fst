@@ -14,17 +14,27 @@ let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b 
 type post_t st a =
   a -> st -> Type0
 
-type wp (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
   st -> post_t st a -> Type0
-  
+
+let st_monotonic #st #a (w : wp0 st a) : Type0 =
+  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
+  // ^ this version seems to be less SMT-friendly
+  forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
+
+type wp st a = w:(wp0 st a){st_monotonic w}
+
 let iso1 #a #s (w : wp s a) : s -> (a & s -> Type0) -> Type0 =
   fun s p -> w s (curry p)
   
 let iso2 #a #s (w : s -> (a & s -> Type0) -> Type0) : wp s a=
+  admit ();  //AR: need monotonicity of w
   fun s p -> w s (uncurry p)
 
+open FStar.Monotonic.Pure
+
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
-  s0:st -> ID (a & st) (fun p -> wp s0 (curry p))
+  s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
 
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
@@ -85,7 +95,7 @@ let subcomp
   (a:Type)
   (st:Type0)
   (wpf wpg : wp st a)
-  (#[@@refine] u : squash (stronger wpg wpf))
+  (#[@@@ refine] u : squash (stronger wpg wpf))
   (f : repr a st wpf)
   : repr a st wpg
   = f
@@ -104,6 +114,7 @@ layered_effect {
 }
 
 let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
+  elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
 (* It's odd that I *have* to use the repr here, instead of a thunked

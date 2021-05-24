@@ -19,12 +19,12 @@ let rec not_do_much e: Tac term =
       let e = pack (Tv_Abs b e) in
       e
 
-  | Tv_Match scrut branches ->
+  | Tv_Match scrut ret_opt branches ->
       let scrut = not_do_much scrut in
       let pats, es = List.Tot.split branches in
       let es = map not_do_much es in
       let branches = zip pats es in
-      pack (Tv_Match scrut branches)
+      pack (Tv_Match scrut ret_opt branches)
 
   | Tv_Let r attrs bv e1 e2 ->
       let e1 = not_do_much e1 in

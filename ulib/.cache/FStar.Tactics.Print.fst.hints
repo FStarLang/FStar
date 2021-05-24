@@ -1,5 +1,5 @@
 [
-  "\"ÆÀ.ùLø\u0002žF\f8–‰8\u000f",
+  "´+uçTlq`üró}\u0014çA~",
   [
     [
       "FStar.Tactics.Print.print_list_aux",
@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "e1d2d177058fc259ebebff467a7de468"
+      "1d8cf19052893e49219fc0d63d1ab7a4"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -21,8 +21,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
+        "data_elim_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Tactics.Result.Success",
         "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
         "disc_equation_FStar.Reflection.Data.Tv_App",
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
@@ -38,11 +42,22 @@
         "disc_equation_FStar.Reflection.Data.Tv_Unknown",
         "disc_equation_FStar.Reflection.Data.Tv_Uvar",
         "disc_equation_FStar.Reflection.Data.Tv_Var",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
         "fuel_guarded_inversion_FStar.Reflection.Data.term_view",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.Reflection.Types.comp",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FStar.Pervasives.either@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "19561fd33f4a7ceec832786f03c95237"
+      "bf2d4161704aa4ddc43f0fa2975728ac"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -60,7 +75,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "c18e256bc06b9f5b6a8b6ebd6fb0fbfd"
+      "ca7fcee2f2c2fabfb157402ed7bd815d"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -80,7 +95,7 @@
         "fuel_guarded_inversion_FStar.Reflection.Data.vconst"
       ],
       0,
-      "448b36bf6cb0a8a4468da09abf134f26"
+      "93cc718501a11f6cf56d50aab5c6fa94"
     ]
   ]
 ]

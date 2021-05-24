@@ -1,0 +1,175 @@
+[
+  "Ç³7§\u001dé\u0001œÞÊ¤]¦V\u001ež",
+  [
+    [
+      "SelectorLogic.__proj__Mkvprop__item__t",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_SelectorLogic.Mkvprop_hp",
+        "projection_inverse_SelectorLogic.Mkvprop_hp"
+      ],
+      0,
+      "3f58c6aa3d260fd9d4d86d134f059d9d"
+    ],
+    [
+      "SelectorLogic.__proj__Mkvprop__item__sel",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_SelectorLogic.Mkvprop_hp",
+        "proj_equation_SelectorLogic.Mkvprop_t",
+        "projection_inverse_SelectorLogic.Mkvprop_hp",
+        "projection_inverse_SelectorLogic.Mkvprop_t",
+        "token_correspondence_SelectorLogic.__proj__Mkvprop__item__t"
+      ],
+      0,
+      "6815aa9e8012c99cde47c1eed5881fff"
+    ],
+    [
+      "SelectorLogic.star",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Memory.hmem",
+        "fuel_guarded_inversion_SelectorLogic.vprop",
+        "lemma_Steel.Memory.affine_star_smt",
+        "proj_equation_SelectorLogic.Mkvprop_hp",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "typing_SelectorLogic.__proj__Mkvprop__item__hp"
+      ],
+      0,
+      "167943fe3224691c85784cc546381848"
+    ],
+    [
+      "SelectorLogic.wand",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mkdtuple2",
+        "equation_FStar.Pervasives.dfst",
+        "equation_SelectorLogic.left_wand_t", "equation_Steel.Memory.hmem",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_SelectorLogic.vprop",
+        "lemma_SelectorLogic.reveal_wand", "lemma_Steel.Memory.disjoint_sym",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_SelectorLogic.Mkvprop_hp",
+        "proj_equation_SelectorLogic.Mkvprop_t",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Tm_refine_05e27cac11d5ba294d48e85e16d78292",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_5af54d756dc9f17cc8108afbe42e0ab0",
+        "token_correspondence_SelectorLogic.__proj__Mkvprop__item__t",
+        "typing_SelectorLogic.__proj__Mkvprop__item__hp"
+      ],
+      0,
+      "a4b486038219e10b8711e6dae8209c77"
+    ],
+    [
+      "SelectorLogic.star_split",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c21f79c987245230d869760422b07dc9"
+    ],
+    [
+      "SelectorLogic.star_split",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_Prims.l_Exists",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Steel.Memory.hmem",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_05e27cac11d5ba294d48e85e16d78292",
+        "refinement_interpretation_Tm_refine_26e5a8a9352d91125e9eefd658c9deba",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_5a121517d5876c554c3e043a63a98441"
+      ],
+      0,
+      "5132213873235f368098167b7f122a85"
+    ],
+    [
+      "SelectorLogic.modus_ponens_interp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_SelectorLogic.star_split", "equation_SelectorLogic.wand",
+        "equation_Steel.Memory.hmem", "lemma_SelectorLogic.reveal_wand",
+        "lemma_Steel.Memory.disjoint_sym",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "proj_equation_SelectorLogic.Mkvprop_hp",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SelectorLogic.Mkvprop_hp",
+        "refinement_interpretation_Tm_refine_05e27cac11d5ba294d48e85e16d78292",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_c2e0bb530e085ad517bea742702f5589",
+        "typing_SelectorLogic.__proj__Mkvprop__item__hp"
+      ],
+      0,
+      "9b5da3535c9ac65c221c3a4ae04b82c8"
+    ],
+    [
+      "SelectorLogic.modus_ponens_derive_sel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "256e13d0944050a4e2780898d868783e"
+    ],
+    [
+      "SelectorLogic.modus_ponens_derive_sel",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Pervasives.dfst",
+        "equation_SelectorLogic.star_split", "equation_SelectorLogic.wand",
+        "equation_Steel.Memory.hmem",
+        "fuel_guarded_inversion_SelectorLogic.vprop",
+        "lemma_SelectorLogic.reveal_wand", "lemma_Steel.Memory.disjoint_sym",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_SelectorLogic.Mkvprop_hp",
+        "proj_equation_SelectorLogic.Mkvprop_t",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_SelectorLogic.Mkvprop_hp",
+        "refinement_interpretation_Tm_refine_05e27cac11d5ba294d48e85e16d78292",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_9b1fd4d6d14e25d8d20ed48bc5bb1763",
+        "refinement_interpretation_Tm_refine_c2e0bb530e085ad517bea742702f5589",
+        "token_correspondence_SelectorLogic.__proj__Mkvprop__item__t",
+        "typing_SelectorLogic.__proj__Mkvprop__item__hp"
+      ],
+      0,
+      "a77c9688ea2933a67093669c78c50b11"
+    ]
+  ]
+]

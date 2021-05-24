@@ -26,6 +26,13 @@ module Prims
 /// define various conveniences in the language, e.g., type of
 /// attributes.
 
+
+(***** Begin trusted primitives *****)
+
+(** Primitives up to the definition of the GTot effect are trusted
+    Beyond that all definitions are fully verified *)
+
+
 (** Type of attributes *)
 assume new
 type attribute : Type0 
@@ -205,17 +212,19 @@ type l_not (p: logical) : logical = l_imp p False
 unfold
 type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p ==> r)
 
-(** One of the main axioms provided by prims is [precedes], a a
+
+(** One of the main axioms provided by prims is [precedes], a
     built-in well-founded partial order over all terms. It's typically
     written with an infix binary [<<].
 
     The [<<] order includes:
         * The [<] ordering on natural numbers
         * The subterm ordering on inductive types
-        * A lexicographic ordering on the lex_t type, below
-        * And, via FStar.WellFounded, relating [f x << f] *)
+        * [f x << D f] for data constructors D of an inductive t whose
+          arguments include a ghost or total function returning a t *)
+
 assume
-type precedes : #a: Type -> #b: Type -> a -> b -> Type0 
+type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to
@@ -279,8 +288,27 @@ let pure_post' (a pre: Type) = _: a{pre} -> GTot Type0
 let pure_post (a: Type) = pure_post' a True
 
 (** A pure weakest precondition transforms postconditions on [a]-typed
-    results to pure preconditions *)
-let pure_wp (a: Type) = pure_post a -> GTot pure_pre
+    results to pure preconditions
+
+    We require the weakest preconditions to satisfy the monotonicity
+    property over the postconditions
+    To enforce it, we first define a vanilla wp type,
+    and then refine it with the monotonicity condition *)
+let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
+
+(** The monotonicity predicate is marked opaque_to_smt,
+    meaning that its definition is hidden from the SMT solver,
+    and if required, will need to be explicitly revealed
+    This has the advantage that clients that do not need to work with it
+    directly, don't have the (quantified) definition in their solver context *)
+
+let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
+  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
+
+[@@ "opaque_to_smt"]
+let pure_wp_monotonic = pure_wp_monotonic0
+
+let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
 
 (** This predicate is an internal detail, used to optimize the
     encoding of some quantifiers to SMT by omitting their typing
@@ -402,15 +430,20 @@ let purewp_id (a: Type) (wp: pure_wp a) = wp
     vice versa) using just the identity lifting on pure wps *)
 sub_effect PURE ~> GHOST { lift_wp = purewp_id }
 
-(** As with [Tot], the primitive effect [GTot] is definitionally equal
-    to an instance of GHOST *)
-effect GTot (a: Type) = GHOST a (pure_null_wp a)
-
 (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
 effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
   GHOST a
     (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
     )
+
+(** As with [Tot], the primitive effect [GTot] is definitionally equal
+    to an instance of GHOST *)
+effect GTot (a: Type) = GHOST a (pure_null_wp a)
+
+
+(***** End trusted primitives *****)
+
+(** This point onwards, F* fully verifies all the definitions *)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
@@ -568,23 +601,6 @@ effect M (a: Type) = Tot a (attributes cps)
 (** Returning a value into the [M] effect *)
 let returnM (a: Type) (x: a) : M a = x
 
-(** The type of lexicographically ordered tuples.
-
-    Its values are usually written [%[a;b;c]] instead of
-    [LexCons a (LexCons b (LexCons c LexTop))]
-
-    Its main interest is in its ordering. In particular
-
-    [{
-      %[a;b] << %[c;d] <==> a << c  \/ (a == c /\ b << d)
-    }]
-    
-    TODO: Rather than exposing this as an an inductive type, we plan
-          to revise this as an abstract type.  *)
-type lex_t =
-  | LexTop : lex_t
-  | LexCons : #a: Type -> a -> lex_t -> lex_t
-
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
@@ -696,4 +712,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 30
+let __cache_version_number__ = 35

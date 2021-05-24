@@ -585,24 +585,21 @@ let stdout = stdout
 
 let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 
-type ('a,'b) either =
-  | Inl of 'a
-  | Inr of 'b
 [@@deriving yojson,show]
 
 let is_left = function
-  | Inl _ -> true
+  | FStar_Pervasives.Inl _ -> true
   | _ -> false
 
 let is_right = function
-  | Inr _ -> true
+  | FStar_Pervasives.Inr _ -> true
   | _ -> false
 
 let left = function
-  | Inl x -> x
+  | FStar_Pervasives.Inl x -> x
   | _ -> failwith "Not in left"
 let right = function
-  | Inr x -> x
+  | FStar_Pervasives.Inr x -> x
   | _ -> failwith "Not in right"
 
 let (-<-) f g x = f (g x)

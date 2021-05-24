@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -55,6 +56,7 @@ type step =
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr  of list<FStar.Ident.lid>
+  | UnfoldQual  of list<string>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -100,6 +102,7 @@ let rec eq_step s1 s2 =
   | UnfoldFully lids1, UnfoldFully lids2
   | UnfoldAttr lids1, UnfoldAttr lids2 ->
       List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
+  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
   | _ -> false
 
 type sig_binding = list<lident> * sigelt
@@ -120,6 +123,8 @@ type proof_namespace = list<(name_prefix * bool)>
 // A stack of namespace choices. Provides sim
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
+
+type must_tot = bool
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
@@ -174,11 +179,12 @@ and env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
-  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
-  type_of_well_typed :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
-  universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_of  :bool -> env -> term -> typ -> guard_t;
+
+  tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
+  typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
+  universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
+
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -263,7 +269,12 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_of solver module_lid nbe : env =
+let initial_env deps
+  tc_term
+  typeof_tot_or_gtot_term
+  typeof_tot_or_gtot_term_fastpath
+  universe_of
+  solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -290,15 +301,18 @@ let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_o
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
+
     tc_term=tc_term;
-    type_of=type_of;
-   type_of_well_typed =
-      (fun env t -> match type_of_well_typed env t with
-        | None -> let _, ty, _ = type_of env t in ty
-        | Some ty -> ty
-      );
-    check_type_of=check_type_of;
+    typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
+    typeof_well_typed_tot_or_gtot_term =
+      (fun env t must_tot ->
+       match typeof_tot_or_gtot_term_fastpath env t must_tot with
+       | Some k -> k, trivial_guard
+       | None ->
+         let _, k, g = typeof_tot_or_gtot_term env t must_tot in
+         k, g);
     universe_of=universe_of;
+
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
@@ -510,7 +524,7 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
@@ -556,8 +570,8 @@ let lookup_qname env (lid:lident) : qninfo =
 let lookup_sigelt (env:env) (lid:lid) : option<sigelt> =
     match lookup_qname env lid with
     | None -> None
-    | Some (BU.Inl _, rng) -> None
-    | Some (BU.Inr (se, us), rng) -> Some se
+    | Some (Inl _, rng) -> None
+    | Some (Inr (se, us), rng) -> Some se
 
 let lookup_attr (env:env) (attr:string) : list<sigelt> =
     match BU.smap_try_find (attrtab env) attr with
@@ -809,10 +823,8 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
-    let lid = fv.fv_name.v in
-    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else match qn with
+let delta_depth_of_qninfo_lid lid (qn:qninfo) : option<delta_depth> =
+    match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
     | Some (Inr(se, _), _) ->
@@ -840,6 +852,12 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_polymonadic_bind _
       | Sig_polymonadic_subcomp _ -> None
 
+
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+    let lid = fv.fv_name.v in
+    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    else delta_depth_of_qninfo_lid lid qn
+    
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
   if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
@@ -901,7 +919,7 @@ let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
   | Some r ->
     r
 
-let type_is_erasable env fv =
+let fv_has_erasable_attr env fv =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
      ex,erasable
@@ -921,7 +939,7 @@ let rec non_informative env t =
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
-      || type_is_erasable env fv
+      || fv_has_erasable_attr env fv
     | Tm_app(head, _) -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow(_, c) ->
@@ -1277,6 +1295,13 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
+
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
@@ -1510,9 +1535,14 @@ let update_effect_lattice env src tgt st_mlift =
        *     if there exists polymonadic binds i, j or j, i
        *     then there are multiple ways to bind i, j or j, i computations now
        *     so error out
+       *
+       *     02/23: But if i = j, the loop above returns the identity edge
+       *     Since that edge is not user added, if there is a (i, j)
+       *       polymonadic bind, we don't count that as a conflict
        *)
-      if exists_polymonadic_bind env i j |> is_some ||
-         exists_polymonadic_bind env j i |> is_some
+      if (not (lid_equals i j)) &&
+         (exists_polymonadic_bind env i j |> is_some ||
+          exists_polymonadic_bind env j i |> is_some)
       then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
              BU.format5 "Updating effect lattice with a lift between %s and %s \
                induces a least upper bound %s of %s and %s, and this \
@@ -1790,6 +1820,10 @@ let def_check_vars_in_set rng msg vset t =
                                       (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
     end
 
+
+let too_early_in_prims env =
+  not (lid_exists env Const.effect_GTot_lid)
+
 let def_check_closed_in rng msg l t =
     if not (Options.defensive ()) then () else
     def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
@@ -1983,11 +2017,20 @@ let dummy_solver = {
 let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
   let compare_either f1 f2 e1 e2 : bool =
       match e1, e2 with
-      | BU.Inl v1, BU.Inl v2 -> f1 v1 v2
-      | BU.Inr v1, BU.Inr v2 -> f2 v1 v2
+      | Inl v1, Inl v2 -> f1 v1 v2
+      | Inr v1, Inr v2 -> f2 v1 v2
       | _ -> false
   in
   match BU.find_opt (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
+
+let fvar_of_nonqual_lid env lid =
+    let qn = lookup_qname env lid in
+    let dd =
+        match delta_depth_of_qninfo_lid lid qn with
+        | None -> failwith "Unexpected no delta_depth"
+        | Some dd -> dd
+    in
+    fvar lid dd None
