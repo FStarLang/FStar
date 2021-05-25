@@ -141,6 +141,8 @@ Let's look at this lemma in detail again—why does it convince F* that
 Exercises: Lemmas about integer functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+`Click here <../code/exercises/Part1.Lemmas.fst>`_ for the exercise file.
+
 Exercise 1
 ..........
 
@@ -328,6 +330,8 @@ Can you prove the following lemma?
        :start-after: SNIPPET_START: def app_length
        :end-before: SNIPPET_END: def app_length
 
+.. _Part1_intrinsic_extrinsic:
+
 Intrinsic vs extrinsic proofs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -382,6 +386,8 @@ auxiliary lemma also proven there.
 
 Exercises: Reverse is injective
 ...............................
+
+`Click here <../code/exercises/Part1.Lemmas.fst>`_ for the exercise file.
 
 Prove that reverse is injective, i.e., prove the following lemma.
 
@@ -481,6 +487,8 @@ previous non-tail-recursive implementation, i.e.,
        :language: fstar
        :start-after: SNIPPET_START: fib_is_ok
        :end-before: SNIPPET_END: fib_is_ok
+
+.. _Part1_higher_order_functions:
 
 Higher-order functions
 ^^^^^^^^^^^^^^^^^^^^^^^

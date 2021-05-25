@@ -349,6 +349,8 @@ reached.
 Exercises
 ^^^^^^^^^
 
+`Click here <../code/exercises/Part1.Inductives.fst>`_ for the exercise file.
+
 Here's the definition of ``append``, a function that concatenates two
 lists. Can you give it a type that proves it always returns a list
 whose length is the sum of the lengths of its arguments.

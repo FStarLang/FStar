@@ -1,8 +1,6 @@
 module Part1.GettingOffTheGround
 
 let incr (x:int) : int = x + 1
-let incr1 (x:int) : y:int{y > x} = x + 1
-let incr2 (x:nat) : nat = x + 1
 
 val max (x:int) (y:int) : int
 let max = admit() //remove the admit and write a definition

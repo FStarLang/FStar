@@ -1,6 +1,18 @@
 module Part1.Lemmas
 open FStar.Mul
 
+let rec factorial (n:nat)
+  : nat
+  = if n = 0 then 1
+    else n * factorial (n - 1)
+
+let rec factorial_is_greater_than_arg (x:int)
+  : Lemma (requires x > 2)
+          (ensures factorial x > x)
+  = admit()
+
+////////////////////////////////////////////////////////////////////////////////
+
 let rec fibonacci (n:nat)
   : nat
   = if n <= 1
@@ -10,6 +22,8 @@ let rec fibonacci (n:nat)
 val fibonacci_greater_than_arg (n:nat{n >= 2})
   : Lemma (fibonacci n >= n)
 let fibonacci_greater_than_arg = admit()
+
+////////////////////////////////////////////////////////////////////////////////
 
 let rec app #a (l1 l2:list a)
   : list a
@@ -22,9 +36,12 @@ let rec length #a (l:list a)
   = match l with
     | [] -> 0
     | _ :: tl -> 1 + length tl
+
 val app_length (#a:Type) (l1 l2:list a)
   : Lemma (length (app l1 l2) = length l1 + length l2)
 let app_length = admit()
+
+////////////////////////////////////////////////////////////////////////////////
 
 let rec append (#a:Type) (l1 l2:list a)
   : list a
@@ -47,6 +64,8 @@ let rec rev_injective (#a:Type) (l1 l2:list a)
           (ensures  l1 == l2)
   = admit()
 
+////////////////////////////////////////////////////////////////////////////////
+
 let rec map #a #b (f: a -> b) (l:list a)
   : list b
   = match l with
@@ -59,6 +78,7 @@ let rec find f l =
   | [] -> None
   | hd :: tl -> if f hd then Some hd else find f tl
 
+////////////////////////////////////////////////////////////////////////////////
 
 //Write a simpler type for find and prove the lemmas below
 let rec find_alt f l =
@@ -74,6 +94,8 @@ let rec find_alt_ok #a (f:a -> bool) (l:list a)
     | [] -> ()
     | _ :: tl -> find_alt_ok f tl
 
+////////////////////////////////////////////////////////////////////////////////
+
 let rec fold_left #a #b (f: b -> a -> a) (l: list b) (acc:a)
   : a
   = match l with
@@ -84,6 +106,7 @@ let fold_left_Cons_is_rev (#a:Type) (l:list a)
   : Lemma (fold_left Cons l [] == reverse l)
   = admit()
 
+////////////////////////////////////////////////////////////////////////////////
 
 let rec rev_aux #a (l1 l2:list a)
   : Tot (list a) (decreases l2)
@@ -96,6 +119,8 @@ let rev #a (l:list a) : list a = rev_aux [] l
 let rev_is_ok #a (l:list a)
   : Lemma (rev l == reverse l)
   = admit()
+
+////////////////////////////////////////////////////////////////////////////////
 
 let rec fib_aux (a b n:nat)
   : Tot nat (decreases n)

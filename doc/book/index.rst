@@ -78,6 +78,8 @@ Part 2: Dependently Typed Functional Programming
 
   * Equality, type conversion, and subtyping
 
+.. _Classical:
+
   * Proof irrelevance and classical logic: prop and squash
 
   * More termination proofs
@@ -152,6 +154,8 @@ Part 6: A User's Guide to Structuring and Maintaining F* Developments
        * Sample project
 
    * Using the F* editor
+
+.. _Part6_SMT:
 
    * SMT Proofs
        * Quantifiers and Patterns

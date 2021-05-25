@@ -439,11 +439,6 @@ Some examples and common notation
 Exercises
 ^^^^^^^^^
 
-To try the `exercises associated with this chapter
-</book/code/exercises/Part1.GettingOffTheGround.fst>`_, you should
-have a working installation of the F* toolchain, `downloadable from
-here <https://github.com/FStarLang/FStar/releases>`_.
-
 This first example is just to show you how to run the tool and
 interpret its output.
 
@@ -456,10 +451,31 @@ Notice that the program begins with a ``module`` declaration. It
 contains a single definition named ``incr``. Definitions that appear
 at the scope of a module are called "top-level" definitions.
 
+You have several options to try out these examples.
+
+**F\* online**
+
+To get started and for trying small exercises, the easiest way is via
+the `online tutorial <http://fstar-lang.org/tutorial>`_. If that's
+where you're reading this, you can just use the in-browser editor
+alongside which communicates with an F* instance running in the
+cloud. Just click `on this link
+<../code/exercises/Part1.GettingOffTheGround.fst>`_ to load the
+code of an exercise in the editor.
+
+That said, the online mode can be a bit slow, depending on the load at
+the server, and the editor is very minimalistic.
+
+For anything more than small exercises, you should have a working
+local installation of the F* toolchain, as described next.
+
 **F\* in batch mode**
 
-To check the program, we can run the ``fstar`` at the command line,
-like so::
+You can download pre-built F* binaries `from here
+<https://github.com/FStarLang/FStar/releases>`_.
+
+Once you have a local installation, to check a program you can run the
+``fstar`` at the command line, like so::
 
   $ fstar Sample.fst
 
@@ -481,16 +497,6 @@ editor often use `fstar-mode.el
 <https://github.com/FStarLang/fstar-mode.el>`_, an editor plugin that
 allows interactively checking an F* program. If you plan to use F* in
 any serious way, this is strongly recommended.
-
-**F\* online**
-
-For casual experiments, the easiest way to get a working F* instance
-is from your browser at `http://fstar-lang.org/run.php
-<http://fstar-lang.org/run.php>`_. This provides a bare-bones editor
-communicating with F* running in the cloud. The online version is
-probably fine for trying out small examples, such as the exercises
-here.
-
 
 Many types for ``incr``
 .......................
@@ -576,6 +582,7 @@ that the definitions is compatible with the signature.
    :end-before: SNIPPET_END: ex1.4
 
 Try writing some more types for ``incr``.
+(`Load exercise <../code/exercises/Part1.GettingOffTheGround.fst>`_.)
 
 .. container:: toggle
 

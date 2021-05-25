@@ -48,3 +48,4 @@ functions and prove  then correct.
    part1_termination
    part1_lemmas
    part1_quicksort
+   part1_wrap

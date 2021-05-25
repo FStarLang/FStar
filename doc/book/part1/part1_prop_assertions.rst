@@ -1,4 +1,4 @@
-.. _Part1_ch2:
+.. _Part1_prop_assertions:
 
 Interfacing with an SMT solver
 ==============================
@@ -244,24 +244,19 @@ propositions themselves?
 Propositional equality
 ......................
 
-We've implicitly used the equality operator ``=`` already. This is the
-*boolean* equality operator. Given two terms ``e₁ : t`` and ``e₂ :
-t``, so long as ``t`` supports a notion of decidable equality,
-``(e₁ = e₂) : bool``.
+We learned in the previous chapter about the :ref:`two different forms
+of equality <Part1_equality>`. The type of propositional equality is
 
-But, what does it mean for a type ``t`` to support a decidable
-equality? We'll answer this question in a later section, but, for now,
-consider that not all types support equality. For example, what if
-``t`` were a function type, like ``int -> int``. To decide if two
-functions ``f₁, f₂ : int -> int`` are equal, we'd have to apply them
-to all the infinitely many integers and compare their results—clearly,
-this is not decidable.
+.. code-block:: fstar
 
-F* offers another notion of equality, propositional equality, written
-``==``. For *any type* ``t``, given terms ``e₁, e₂ : t``, the
-proposition ``e₁ == e₂`` asserts the (possibly undecidable) equality
-of ``e₁`` and ``e₂``.
+   val ( == ) (#a:Type) (x:a) (y:a) : prop
 
+Unlike decidable equality ``(=)``, propositional equality is defined
+for all types. The result type of ``(==)`` is ``prop``, the type of
+propositions, meaning that ``x == y`` is a proof-irrelevant
+proposition.
+
+   
 **Turning a Boolean into a proposition**
 
 Propositional equality provides a convenient way to turn a boolean

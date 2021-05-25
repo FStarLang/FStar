@@ -334,6 +334,8 @@ function.
 Exercise: Fibonacci in linear time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+`Click here <../code/exercises/Part1.Termination.fst>`_ for the exercise file.
+
 Here's a function to compute the :math:`n`-th Fibonacci number.
 
 .. code-block:: fstar
@@ -374,6 +376,8 @@ particular, proving that ``fib`` terminates.
 
 Exercise: Tail-recursive reversal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`Click here <../code/exercises/Part1.Termination.fst>`_ for the exercise file.
 
 Here is a function to reverse a list:
 
