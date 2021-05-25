@@ -84,7 +84,7 @@ let none_to_empty_list x =
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
-%token REQUIRES ENSURES DECREASES
+%token REQUIRES ENSURES DECREASES DECREASES_WF
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
@@ -695,6 +695,13 @@ noSeqTerm:
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | DECREASES t=typ
       { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
+  | DECREASES_WF t=noSeqTerm
+      { match t.tm with
+        | App (t1, t2, _) ->
+	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 2 2) Type_level in
+	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 2) Type_level
+	| _ -> failwith "Impossible!" }
+	  
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm

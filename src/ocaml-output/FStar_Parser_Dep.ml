@@ -1451,6 +1451,16 @@ let (collect_one :
              | FStar_Parser_AST.Ensures (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Labeled (t, uu___3, uu___4) -> collect_term t
              | FStar_Parser_AST.LexList l -> FStar_List.iter collect_term l
+             | FStar_Parser_AST.WFOrder (t1, t2) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.WellFounded" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term t1;
+                  collect_term t2)
              | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Quote (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Antiquote t -> collect_term t

@@ -201,6 +201,9 @@ and binder = {
   binder_attrs : list<attribute>
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
+and decreases_order =
+  | Decreases_lex of list<term>
+  | Decreases_wf of term * term
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
   | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
@@ -211,7 +214,7 @@ and cflag =                                                      (* flags applic
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
-  | DECREASES of list<term>
+  | DECREASES of decreases_order
 and metadata =
   | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)

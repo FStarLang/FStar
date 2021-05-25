@@ -67,6 +67,7 @@ let none_to_empty_list x =
 %token COMMA
 %token CONJUNCTION
 %token DECREASES
+%token DECREASES_WF
 %token DEFAULT
 %token DISJUNCTION
 %token DOLLAR
@@ -1447,6 +1448,13 @@ let op_expr =                                                 ( mk_ident (".(||)
 | DECREASES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level )}
+| DECREASES_WF noSeqTerm
+    {let (_1, t) = ((), $2) in
+      ( match t.tm with
+        | App (t1, t2, _) ->
+	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 2 2) Type_level in
+	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 2) Type_level
+	| _ -> failwith "Impossible!" )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
@@ -2718,5 +2726,4 @@ in
    ( x :: xs )}
 
 %%
-
 

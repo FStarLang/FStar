@@ -292,6 +292,8 @@ let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+let (well_founded_relation_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero in
   let gen uu___ = FStar_Util.incr x; FStar_Util.read x in

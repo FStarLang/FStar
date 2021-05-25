@@ -539,13 +539,17 @@ and comp_to_string c =
           then U.format1 "ALL %s" (term_to_string c.result_typ)
           else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags
-        |> List.collect (function DECREASES l ->
-           [U.format1 " (decreases [%s])"
-             (match l with
-              | [] -> ""
-              | hd::tl ->
-                tl |> List.fold_left (fun s t ->
-                  s ^ ";" ^ term_to_string t) (term_to_string hd))] | _ -> [])
+        |> List.collect (function DECREASES dec_order ->
+            (match dec_order with
+             | Decreases_lex l ->
+               [U.format1 " (decreases [%s])"
+                  (match l with
+                   | [] -> ""
+                   | hd::tl ->
+                     tl |> List.fold_left (fun s t ->
+                       s ^ ";" ^ term_to_string t) (term_to_string hd))]
+             | Decreases_wf (rel, e) -> [U.format2 "(decreases_wf %s %s)" (term_to_string rel) (term_to_string e)] | _ -> []))
+            
         |> String.concat " " in
       U.format2 "%s%s" basic dec
     )

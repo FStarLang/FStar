@@ -1058,27 +1058,39 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                      (FStar_List.collect
                         (fun uu___4 ->
                            match uu___4 with
-                           | FStar_Syntax_Syntax.DECREASES l ->
-                               let uu___5 =
-                                 let uu___6 =
-                                   match l with
-                                   | [] -> ""
-                                   | hd::tl ->
-                                       let uu___7 =
-                                         let uu___8 = term_to_string hd in
-                                         FStar_List.fold_left
-                                           (fun s ->
-                                              fun t ->
-                                                let uu___9 =
-                                                  let uu___10 =
-                                                    term_to_string t in
-                                                  Prims.op_Hat ";" uu___10 in
-                                                Prims.op_Hat s uu___9) uu___8 in
-                                       FStar_All.pipe_right tl uu___7 in
-                                 FStar_Util.format1 " (decreases [%s])"
-                                   uu___6 in
-                               [uu___5]
-                           | uu___5 -> [])) in
+                           | FStar_Syntax_Syntax.DECREASES dec_order ->
+                               (match dec_order with
+                                | FStar_Syntax_Syntax.Decreases_lex l ->
+                                    let uu___5 =
+                                      let uu___6 =
+                                        match l with
+                                        | [] -> ""
+                                        | hd::tl ->
+                                            let uu___7 =
+                                              let uu___8 = term_to_string hd in
+                                              FStar_List.fold_left
+                                                (fun s ->
+                                                   fun t ->
+                                                     let uu___9 =
+                                                       let uu___10 =
+                                                         term_to_string t in
+                                                       Prims.op_Hat ";"
+                                                         uu___10 in
+                                                     Prims.op_Hat s uu___9)
+                                                uu___8 in
+                                            FStar_All.pipe_right tl uu___7 in
+                                      FStar_Util.format1 " (decreases [%s])"
+                                        uu___6 in
+                                    [uu___5]
+                                | FStar_Syntax_Syntax.Decreases_wf (rel, e)
+                                    ->
+                                    let uu___5 =
+                                      let uu___6 = term_to_string rel in
+                                      let uu___7 = term_to_string e in
+                                      FStar_Util.format2
+                                        "(decreases_wf %s %s)" uu___6 uu___7 in
+                                    [uu___5]
+                                | uu___5 -> []))) in
                  FStar_All.pipe_right uu___3 (FStar_String.concat " ") in
                FStar_Util.format2 "%s%s" basic dec)
 and (cflag_to_string : FStar_Syntax_Syntax.cflag -> Prims.string) =

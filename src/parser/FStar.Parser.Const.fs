@@ -332,6 +332,8 @@ let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informat
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
 
+let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
+
 let gen_reset =
     let x = U.mk_ref 0 in
     let gen () = U.incr x; U.read x in

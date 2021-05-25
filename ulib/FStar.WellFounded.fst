@@ -20,6 +20,8 @@
 
 module FStar.WellFounded
 
+open FStar.Preorder
+
 noeq
 type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
@@ -41,3 +43,19 @@ let fix (#aa:Type) (#r:(aa -> aa -> Type)) (rwf:well_founded aa r)
         (x:aa)
   : Tot (p x)
   = fix_F f x (rwf x)
+
+
+
+type is_well_founded (#a:Type) (rel:relation a) =
+  forall (x:a). squash (acc a rel x)
+
+type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
+
+unfold
+let as_well_founded (#a:Type) (rel:relation a) (f:(x:a -> acc a rel x))
+  : well_founded_relation a
+  = let aux (x:a)
+      : Lemma (squash (acc a rel x))
+              [SMTPat ()]
+      = FStar.Squash.return_squash (f x) in
+    rel

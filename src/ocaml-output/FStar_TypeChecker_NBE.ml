@@ -1995,7 +1995,8 @@ and (translate_flag :
             FStar_TypeChecker_NBETerm.SHOULD_NOT_INLINE
         | FStar_Syntax_Syntax.LEMMA -> FStar_TypeChecker_NBETerm.LEMMA
         | FStar_Syntax_Syntax.CPS -> FStar_TypeChecker_NBETerm.CPS
-        | FStar_Syntax_Syntax.DECREASES l ->
+        | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_lex l)
+            ->
             let uu___ =
               FStar_All.pipe_right l (FStar_List.map (translate cfg bs)) in
             FStar_TypeChecker_NBETerm.DECREASES uu___
@@ -2018,7 +2019,10 @@ and (readback_flag :
       | FStar_TypeChecker_NBETerm.LEMMA -> FStar_Syntax_Syntax.LEMMA
       | FStar_TypeChecker_NBETerm.CPS -> FStar_Syntax_Syntax.CPS
       | FStar_TypeChecker_NBETerm.DECREASES l ->
-          let uu___ = FStar_All.pipe_right l (FStar_List.map (readback cfg)) in
+          let uu___ =
+            let uu___1 =
+              FStar_All.pipe_right l (FStar_List.map (readback cfg)) in
+            FStar_Syntax_Syntax.Decreases_lex uu___1 in
           FStar_Syntax_Syntax.DECREASES uu___
 and (translate_monadic :
   (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.term'

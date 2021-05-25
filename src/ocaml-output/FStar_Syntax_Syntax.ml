@@ -253,6 +253,9 @@ and binder =
   binder_bv: bv ;
   binder_qual: arg_qualifier FStar_Pervasives_Native.option ;
   binder_attrs: term' syntax Prims.list }
+and decreases_order =
+  | Decreases_lex of term' syntax Prims.list 
+  | Decreases_wf of (term' syntax * term' syntax) 
 and cflag =
   | TOTAL 
   | MLEFFECT 
@@ -263,7 +266,7 @@ and cflag =
   | TRIVIAL_POSTCONDITION 
   | SHOULD_NOT_INLINE 
   | CPS 
-  | DECREASES of term' syntax Prims.list 
+  | DECREASES of decreases_order 
 and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list Prims.list) 
@@ -628,6 +631,18 @@ let (__proj__Mkbinder__item__binder_attrs :
   fun projectee ->
     match projectee with
     | { binder_bv; binder_qual; binder_attrs;_} -> binder_attrs
+let (uu___is_Decreases_lex : decreases_order -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Decreases_lex _0 -> true | uu___ -> false
+let (__proj__Decreases_lex__item___0 :
+  decreases_order -> term' syntax Prims.list) =
+  fun projectee -> match projectee with | Decreases_lex _0 -> _0
+let (uu___is_Decreases_wf : decreases_order -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Decreases_wf _0 -> true | uu___ -> false
+let (__proj__Decreases_wf__item___0 :
+  decreases_order -> (term' syntax * term' syntax)) =
+  fun projectee -> match projectee with | Decreases_wf _0 -> _0
 let (uu___is_TOTAL : cflag -> Prims.bool) =
   fun projectee -> match projectee with | TOTAL -> true | uu___ -> false
 let (uu___is_MLEFFECT : cflag -> Prims.bool) =
@@ -653,7 +668,7 @@ let (uu___is_CPS : cflag -> Prims.bool) =
 let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee ->
     match projectee with | DECREASES _0 -> true | uu___ -> false
-let (__proj__DECREASES__item___0 : cflag -> term' syntax Prims.list) =
+let (__proj__DECREASES__item___0 : cflag -> decreases_order) =
   fun projectee -> match projectee with | DECREASES _0 -> _0
 let (uu___is_Meta_pattern : metadata -> Prims.bool) =
   fun projectee ->

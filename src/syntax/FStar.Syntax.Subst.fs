@@ -229,9 +229,13 @@ let rec subst' (s:subst_ts) (t:term) : term =
       //    since its solution may eventually end up being an open term
       mk_Tm_delayed (t0, s) (mk_range t.pos s)
 
+let subst_dec_order' s = function
+  | Decreases_lex l -> Decreases_lex (l |> List.map (subst' s))
+  | Decreases_wf (rel, e) -> Decreases_wf (subst' s rel, subst' s e)
+
 let subst_flags' s flags =
     flags |> List.map (function
-        | DECREASES l -> DECREASES (l |> List.map (subst' s))
+        | DECREASES dec_order -> DECREASES (subst_dec_order' s dec_order)
         | f -> f)
 
 let subst_imp' s i =
@@ -890,11 +894,14 @@ and elim_ascription (tc, topt) =
    | Inr c -> Inr (deep_compress_comp c)),
   map_opt topt deep_compress
 
+and deep_compress_dec_order = function
+  | Decreases_lex l -> Decreases_lex (l |> List.map deep_compress)
+  | Decreases_wf (rel, e) -> Decreases_wf (deep_compress rel, deep_compress e)
+
 and deep_compress_cflags flags =
     List.map
         (fun f -> match f with
-        | DECREASES l ->
-          DECREASES (l |> List.map deep_compress)
+        | DECREASES dec_order -> DECREASES (deep_compress_dec_order dec_order)
 
         (* All of these do not have a subterm, so do nothing *)
         | TOTAL

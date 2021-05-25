@@ -236,7 +236,8 @@ let (inspect_comp :
              | uu___2 -> false) flags in
       match uu___ with
       | FStar_Pervasives_Native.None -> []
-      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES ts) -> ts
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+          (FStar_Syntax_Syntax.Decreases_lex ts)) -> ts
       | uu___1 -> failwith "impossible" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uu___) ->
@@ -298,7 +299,9 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_Tot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
+            FStar_Syntax_Syntax.flags =
+              [FStar_Syntax_Syntax.DECREASES
+                 (FStar_Syntax_Syntax.Decreases_lex l)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
     | FStar_Reflection_Data.C_GTotal (t, []) ->
@@ -311,7 +314,9 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_GTot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
+            FStar_Syntax_Syntax.flags =
+              [FStar_Syntax_Syntax.DECREASES
+                 (FStar_Syntax_Syntax.Decreases_lex l)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
     | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->

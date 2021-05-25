@@ -4382,19 +4382,40 @@ and (desugar_comp :
                                         match uu___5 with
                                         | FStar_Parser_AST.Decreases
                                             (t2, uu___6) ->
-                                            let l =
+                                            let dec_order =
                                               let t3 = unparen t2 in
                                               match t3.FStar_Parser_AST.tm
                                               with
-                                              | FStar_Parser_AST.LexList l1
-                                                  -> l1
-                                              | uu___7 -> [t3] in
-                                            let uu___7 =
-                                              FStar_All.pipe_right l
-                                                (FStar_List.map
-                                                   (desugar_term env)) in
+                                              | FStar_Parser_AST.LexList l ->
+                                                  let uu___7 =
+                                                    FStar_All.pipe_right l
+                                                      (FStar_List.map
+                                                         (desugar_term env)) in
+                                                  FStar_All.pipe_right uu___7
+                                                    (fun uu___8 ->
+                                                       FStar_Syntax_Syntax.Decreases_lex
+                                                         uu___8)
+                                              | FStar_Parser_AST.WFOrder
+                                                  (t11, t21) ->
+                                                  let uu___7 =
+                                                    let uu___8 =
+                                                      desugar_term env t11 in
+                                                    let uu___9 =
+                                                      desugar_term env t21 in
+                                                    (uu___8, uu___9) in
+                                                  FStar_Syntax_Syntax.Decreases_wf
+                                                    uu___7
+                                              | uu___7 ->
+                                                  let uu___8 =
+                                                    let uu___9 =
+                                                      desugar_term env t3 in
+                                                    [uu___9] in
+                                                  FStar_All.pipe_right uu___8
+                                                    (fun uu___9 ->
+                                                       FStar_Syntax_Syntax.Decreases_lex
+                                                         uu___9) in
                                             FStar_Syntax_Syntax.DECREASES
-                                              uu___7
+                                              dec_order
                                         | uu___6 ->
                                             fail
                                               (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,

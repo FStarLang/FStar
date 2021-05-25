@@ -109,10 +109,14 @@ and inst_comp s c = match c.n with
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function
-                                        | DECREASES l -> DECREASES (l |> List.map (inst s))
+                                        | DECREASES dec_order ->
+                                          DECREASES (inst_decreases_order s dec_order)
                                         | f -> f)} in
                  S.mk_Comp ct
 
+and inst_decreases_order s = function
+    | Decreases_lex l -> Decreases_lex (l |> List.map (inst s))
+    | Decreases_wf (rel, e) -> Decreases_wf (inst s rel, inst s e)
 
 and inst_lcomp_opt s l = match l with
     | None -> None

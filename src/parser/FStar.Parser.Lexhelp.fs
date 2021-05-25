@@ -149,6 +149,7 @@ let keywords =
     ALWAYS, "calc"       ,CALC;
     ALWAYS, "class"      ,CLASS;
     ALWAYS, "decreases"  ,DECREASES;
+    ALWAYS, "decreases_wf"  ,DECREASES_WF;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
     ALWAYS, "else"       ,ELSE;

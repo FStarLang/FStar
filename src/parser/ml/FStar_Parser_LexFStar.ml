@@ -53,6 +53,7 @@ let () =
   Hashtbl.add keywords "class"         CLASS       ;
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
+  Hashtbl.add keywords "decreases_wf"  DECREASES_WF;
   Hashtbl.add keywords "effect"        EFFECT      ;
   Hashtbl.add keywords "else"          ELSE        ;
   Hashtbl.add keywords "end"           END         ;

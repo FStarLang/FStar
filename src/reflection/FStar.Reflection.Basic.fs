@@ -232,7 +232,7 @@ let inspect_comp (c : comp) : comp_view =
     let get_dec (flags : list<cflag>) : list<term> =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
         | None -> []
-        | Some (DECREASES ts) -> ts
+        | Some (DECREASES (Decreases_lex ts)) -> ts
         | _ -> failwith "impossible"
     in
     match c.n with
@@ -267,7 +267,7 @@ let pack_comp (cv : comp_view) : comp =
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES l] }
+                 ; flags = [DECREASES (Decreases_lex l)] }
         in
         S.mk_Comp ct
 
@@ -277,7 +277,7 @@ let pack_comp (cv : comp_view) : comp =
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES l] }
+                 ; flags = [DECREASES (Decreases_lex l)] }
         in
         S.mk_Comp ct
 

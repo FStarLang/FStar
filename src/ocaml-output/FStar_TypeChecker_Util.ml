@@ -229,8 +229,9 @@ let (extract_let_rec_annotation :
                                        FStar_Syntax_Util.arrow bs c1 in
                                      let c'1 =
                                        FStar_Syntax_Util.comp_set_flags c'
-                                         ((FStar_Syntax_Syntax.DECREASES d')
-                                         :: flags') in
+                                         ((FStar_Syntax_Syntax.DECREASES
+                                             (FStar_Syntax_Syntax.Decreases_lex
+                                                d')) :: flags') in
                                      let tannot =
                                        FStar_Syntax_Util.arrow bs' c'1 in
                                      (tarr1, tannot, true) in
@@ -242,11 +243,13 @@ let (extract_let_rec_annotation :
                                    | (FStar_Pervasives_Native.None, uu___10)
                                        -> (tarr, annot, false)
                                    | (FStar_Pervasives_Native.Some
-                                      (pfx, FStar_Syntax_Syntax.DECREASES d,
+                                      (pfx, FStar_Syntax_Syntax.DECREASES
+                                       (FStar_Syntax_Syntax.Decreases_lex d),
                                        sfx),
                                       FStar_Pervasives_Native.Some
                                       (pfx', FStar_Syntax_Syntax.DECREASES
-                                       d', sfx')) ->
+                                       (FStar_Syntax_Syntax.Decreases_lex
+                                       d'), sfx')) ->
                                        (FStar_Errors.log_issue rng
                                           (FStar_Errors.Warning_DeprecatedGeneric,
                                             "Multiple decreases clauses on this definition; the decreases clause on the declaration is ignored, please remove it");
@@ -254,7 +257,8 @@ let (extract_let_rec_annotation :
                                           (FStar_List.append pfx sfx)
                                           (FStar_List.append pfx' sfx'))
                                    | (FStar_Pervasives_Native.Some
-                                      (pfx, FStar_Syntax_Syntax.DECREASES d,
+                                      (pfx, FStar_Syntax_Syntax.DECREASES
+                                       (FStar_Syntax_Syntax.Decreases_lex d),
                                        sfx),
                                       FStar_Pervasives_Native.None) ->
                                        move_decreases d

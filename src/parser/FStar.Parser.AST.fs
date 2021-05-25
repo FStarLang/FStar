@@ -77,6 +77,7 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | LexList   of list<term>
+  | WFOrder   of term * term
   | Decreases of term * option<string>
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)

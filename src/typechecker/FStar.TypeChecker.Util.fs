@@ -229,18 +229,18 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           in
           let c = U.comp_set_flags c flags in
           let tarr = U.arrow bs c in
-          let c' = U.comp_set_flags c' (DECREASES d'::flags') in
+          let c' = U.comp_set_flags c' (DECREASES (Decreases_lex d')::flags') in
           let tannot = U.arrow bs' c' in
           tarr, tannot, true
         in
         match get_decreases c, get_decreases c' with
         | None, _ -> tarr, annot, false
-        | Some (pfx, DECREASES d, sfx), Some (pfx', DECREASES d', sfx') ->
+        | Some (pfx, DECREASES (Decreases_lex d), sfx), Some (pfx', DECREASES (Decreases_lex d'), sfx') ->
           Errors.log_issue rng
              (Warning_DeprecatedGeneric,
               "Multiple decreases clauses on this definition; the decreases clause on the declaration is ignored, please remove it");
           move_decreases d (pfx@sfx) (pfx'@sfx')
-        | Some (pfx, DECREASES d, sfx), None ->
+        | Some (pfx, DECREASES (Decreases_lex d), sfx), None ->
           move_decreases d (pfx@sfx) (U.comp_flags c')
         | _ -> failwith "Impossible"
   in

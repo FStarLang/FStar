@@ -351,6 +351,22 @@ let rec (subst' :
            | uu___1 ->
                let uu___2 = mk_range t.FStar_Syntax_Syntax.pos s in
                FStar_Syntax_Syntax.mk_Tm_delayed (t0, s) uu___2)
+let (subst_dec_order' :
+  FStar_Syntax_Syntax.subst_ts ->
+    FStar_Syntax_Syntax.decreases_order ->
+      FStar_Syntax_Syntax.decreases_order)
+  =
+  fun s ->
+    fun uu___ ->
+      match uu___ with
+      | FStar_Syntax_Syntax.Decreases_lex l ->
+          let uu___1 = FStar_All.pipe_right l (FStar_List.map (subst' s)) in
+          FStar_Syntax_Syntax.Decreases_lex uu___1
+      | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+          let uu___1 =
+            let uu___2 = subst' s rel in
+            let uu___3 = subst' s e in (uu___2, uu___3) in
+          FStar_Syntax_Syntax.Decreases_wf uu___1
 let (subst_flags' :
   FStar_Syntax_Syntax.subst_ts ->
     FStar_Syntax_Syntax.cflag Prims.list ->
@@ -362,9 +378,8 @@ let (subst_flags' :
         (FStar_List.map
            (fun uu___ ->
               match uu___ with
-              | FStar_Syntax_Syntax.DECREASES l ->
-                  let uu___1 =
-                    FStar_All.pipe_right l (FStar_List.map (subst' s)) in
+              | FStar_Syntax_Syntax.DECREASES dec_order ->
+                  let uu___1 = subst_dec_order' s dec_order in
                   FStar_Syntax_Syntax.DECREASES uu___1
               | f -> f))
 let (subst_imp' :
@@ -1852,6 +1867,19 @@ and (elim_ascription :
               FStar_Pervasives.Inr uu___2 in
         let uu___2 = FStar_Util.map_opt topt deep_compress in
         (uu___1, uu___2)
+and (deep_compress_dec_order :
+  FStar_Syntax_Syntax.decreases_order -> FStar_Syntax_Syntax.decreases_order)
+  =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Decreases_lex l ->
+        let uu___1 = FStar_All.pipe_right l (FStar_List.map deep_compress) in
+        FStar_Syntax_Syntax.Decreases_lex uu___1
+    | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+        let uu___1 =
+          let uu___2 = deep_compress rel in
+          let uu___3 = deep_compress e in (uu___2, uu___3) in
+        FStar_Syntax_Syntax.Decreases_wf uu___1
 and (deep_compress_cflags :
   FStar_Syntax_Syntax.cflag Prims.list ->
     FStar_Syntax_Syntax.cflag Prims.list)
@@ -1860,9 +1888,8 @@ and (deep_compress_cflags :
     FStar_List.map
       (fun f ->
          match f with
-         | FStar_Syntax_Syntax.DECREASES l ->
-             let uu___ =
-               FStar_All.pipe_right l (FStar_List.map deep_compress) in
+         | FStar_Syntax_Syntax.DECREASES dec_order ->
+             let uu___ = deep_compress_dec_order dec_order in
              FStar_Syntax_Syntax.DECREASES uu___
          | FStar_Syntax_Syntax.TOTAL -> f
          | FStar_Syntax_Syntax.MLEFFECT -> f

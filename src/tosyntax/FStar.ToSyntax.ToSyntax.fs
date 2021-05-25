@@ -1899,12 +1899,13 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     let decreases_clause = dec |>
       List.map (fun t -> match (unparen (fst t)).tm with
                       | Decreases (t, _) ->
-                        let l =
+                        let dec_order =
                           let t = unparen t in
                           match t.tm with
-                          | LexList l -> l
-                          | _ -> [t] in
-                        DECREASES (l |> List.map (desugar_term env))
+                          | LexList l -> l |> List.map (desugar_term env) |> Decreases_lex
+                          | WFOrder (t1, t2) -> Decreases_wf (desugar_term env t1, desugar_term env t2)
+                          | _ -> [desugar_term env t] |> Decreases_lex in
+                        DECREASES dec_order
                       | _ ->
                         fail (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                               "Unexpected decreases clause")) in
