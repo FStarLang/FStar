@@ -29,10 +29,10 @@ clean: clean-ocaml nuget-restore
 
 # --------------------------------------------------------------------
 nuget-restore:
-	$(RUNTIME) VS/.nuget/NuGet.exe restore VS/FStar.sln
+	dotnet restore VS/FStar.sln
 
 nuget-clean:
-	rm -r VS/packages
+	echo "nothing to do"
 
 $(FSYACC) $(FSLEX): nuget-restore
 

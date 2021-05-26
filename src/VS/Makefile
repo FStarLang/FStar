@@ -7,18 +7,12 @@ else
 RUNTIME = mono
 endif
 
-NUGET=$(RUNTIME) .nuget/NuGet.exe
-
 # --------------------------------------------------------------------
-.PHONY: all update-nuget install-packages
+.PHONY: all dotnet-restore
 
-all: update-nuget install-packages
+all: dotnet-restore
 
-update-nuget:
-	[ -d packages ] || mkdir packages
-	$(NUGET) update -self
-
-install-packages:
-	[ -d packages ] || $(MAKE) update-nuget
-	$(NUGET) restore FStar.sln
-	find packages -name '*.exe' -exec chmod +x '{}' ';'
+dotnet-restore:
+	dotnet tool restore
+	dotnet paket install
+	dotnet restore fstar.sln
