@@ -5,6 +5,10 @@ let t a = option (AP.t a)
 
 let g_is_null x = None? x
 
+let null _ = None
+
+let null_unique x = ()
+
 let varrayptr0_refine
   (#a: Type)
   (x: t a)

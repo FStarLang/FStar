@@ -43,6 +43,12 @@ val t (t:Type u#0) : Type u#0
 
 val g_is_null (#a: Type) (x: t a) : GTot bool
 
+val null (a: Type) : Pure (t a) (requires True) (ensures (fun res -> g_is_null res == true))
+
+val null_unique (#a: Type) (x: t a) : Lemma
+  (requires (g_is_null x == true))
+  (ensures (x == null a))
+
 noeq type v (t: Type u#0) = {
   array: A.array t;                      (* spatial permission range *)
   contents: Seq.lseq t (A.length array); (* actual contents *)
