@@ -119,10 +119,12 @@ val concat_length (s1 s2: string): Lemma
 val list_of_concat (s1 s2: string): Lemma
   (ensures list_of_string (s1 ^ s2) == list_of_string s1 @ list_of_string s2)
 
-val index_list_of_string (s:string) (i : nat{i < length s}) :
-  Lemma (List.Tot.index (list_of_string s) i == index s i)
-
 val index_string_of_list (l:list char) (i : nat{i < List.Tot.length l}) :
   Lemma (
     (**) list_of_string_of_list l; // necessary to get equality between the lengths
     index (string_of_list l) i == List.Tot.index l i)
+
+let index_list_of_string (s:string) (i : nat{i < length s}) :
+  Lemma (List.Tot.index (list_of_string s) i == index s i) =
+  index_string_of_list (list_of_string s) i;
+  string_of_list_of_string s
