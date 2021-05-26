@@ -1,6 +1,7 @@
 module Selectors.LList
 
 open Steel.Memory
+open Steel.SelEffect.Atomic
 open Steel.SelEffect
 
 module L = FStar.List.Tot

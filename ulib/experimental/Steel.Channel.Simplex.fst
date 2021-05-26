@@ -204,7 +204,7 @@ let mk_chan (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     intro_chan_inv #p c v;
     let c' : chan_t_sr p send recv = c in
     change_slprop (chan_inv c) (chan_inv c') (fun _ -> ());
-    c'
+    return c'
 
 module H = Steel.HigherReference
 
@@ -234,7 +234,7 @@ let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver
     let ch = { chan_chan = c; chan_lock = l } in
     change_slprop (in_state send p) (sender ch p) (fun _ -> ());
     change_slprop (in_state recv p) (receiver ch p) (fun _ -> ());
-    ch
+    return ch
 
 [@@__reduce__]
 let send_recv_in_sync (r:ref chan_val) (p:prot{more p}) #q (c:chan_t q) (vs vr:chan_val)  : slprop =
@@ -261,7 +261,7 @@ let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref c
     H.write r vs';
     intro_pure (in_state_prop (step p x) vs');
     intro_pure (chan_inv_step_p vs vs');
-    vs'
+    return vs'
 
 [@@__reduce__]
 let send_pre_available (p:sprot) #q (c:chan_t q) (vs vr:chan_val)  = send_recv_in_sync c.send p c vs vr
@@ -308,7 +308,7 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
     Steel.Utils.elim_pure (until tr == _);
     let ts : extension_of tr = next_trace vr vs tr () () in
     intro_pure (until ts == step vs.chan_prot vs.chan_msg);
-    ts
+    return ts
 
 
 let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val)
@@ -361,7 +361,7 @@ let send_receive_prelude (#p:prot) (cc:chan p)
     change_slprop (trace_until _ _ `star` chan_inv_cond _ _)
                                (trace_until cc.chan_chan.trace vr `star` chan_inv_cond vs vr)
                                (fun _ -> ());
-    (vs, vr)
+    return (vs, vr)
 
 let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
   : SteelT unit (sender c next) (fun _ -> sender c (step next x))

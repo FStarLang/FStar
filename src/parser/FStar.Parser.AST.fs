@@ -58,6 +58,7 @@ type term' =
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
   | LetOpen   of lid * term
+  | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
   | If        of term * option<term> * term * term  //option<term> here and in Match is the return annotation

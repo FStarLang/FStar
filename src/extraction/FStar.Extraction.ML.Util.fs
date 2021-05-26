@@ -153,22 +153,22 @@ let udelta_unfold (g:UEnv.uenv) = function
 
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true
-    | E_GHOST, E_GHOST   -> true
+    | E_ERASABLE, E_ERASABLE   -> true
     | E_IMPURE, E_IMPURE -> true
     | _ -> false
 
 let eff_to_string = function
     | E_PURE -> "Pure"
-    | E_GHOST -> "Ghost"
+    | E_ERASABLE -> "Erasable"
     | E_IMPURE -> "Impure"
 
 let join r f f' = match f, f' with
     | E_IMPURE, E_PURE
     | E_PURE  , E_IMPURE
     | E_IMPURE, E_IMPURE -> E_IMPURE
-    | E_GHOST , E_GHOST  -> E_GHOST
-    | E_PURE  , E_GHOST  -> E_GHOST
-    | E_GHOST , E_PURE   -> E_GHOST
+    | E_ERASABLE , E_ERASABLE  -> E_ERASABLE
+    | E_PURE  , E_ERASABLE  -> E_ERASABLE
+    | E_ERASABLE , E_PURE   -> E_ERASABLE
     | E_PURE  , E_PURE   -> E_PURE
     | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
@@ -207,7 +207,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
             if type_leq unfold_ty t1' t1
             && eff_leq f f'
             then if f=E_PURE
-                && f'=E_GHOST
+                && f'=E_ERASABLE
                 then if type_leq unfold_ty t2 t2'
                     then let body = if type_leq unfold_ty t2 ml_unit_ty
                                     then ml_unit

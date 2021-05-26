@@ -18,6 +18,9 @@ ifdef KREMLIN_HOME
 INCLUDE_PATHS+=$(KREMLIN_HOME)/kremlib
 endif
 
+#shadowing of files because of implicitly opening a namespace
+OTHERFLAGS += --warn_error -274
+
 include ../Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))

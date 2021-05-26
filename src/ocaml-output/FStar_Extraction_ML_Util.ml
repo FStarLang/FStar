@@ -244,8 +244,8 @@ let (eff_leq :
     fun f' ->
       match (f, f') with
       | (FStar_Extraction_ML_Syntax.E_PURE, uu___) -> true
-      | (FStar_Extraction_ML_Syntax.E_GHOST,
-         FStar_Extraction_ML_Syntax.E_GHOST) -> true
+      | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+         FStar_Extraction_ML_Syntax.E_ERASABLE) -> true
       | (FStar_Extraction_ML_Syntax.E_IMPURE,
          FStar_Extraction_ML_Syntax.E_IMPURE) -> true
       | uu___ -> false
@@ -253,7 +253,7 @@ let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Extraction_ML_Syntax.E_PURE -> "Pure"
-    | FStar_Extraction_ML_Syntax.E_GHOST -> "Ghost"
+    | FStar_Extraction_ML_Syntax.E_ERASABLE -> "Erasable"
     | FStar_Extraction_ML_Syntax.E_IMPURE -> "Impure"
 let (join :
   FStar_Range.range ->
@@ -273,15 +273,15 @@ let (join :
         | (FStar_Extraction_ML_Syntax.E_IMPURE,
            FStar_Extraction_ML_Syntax.E_IMPURE) ->
             FStar_Extraction_ML_Syntax.E_IMPURE
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
             FStar_Extraction_ML_Syntax.E_PURE
@@ -364,7 +364,7 @@ let rec (type_leq_c :
                    then
                      (if
                         (f = FStar_Extraction_ML_Syntax.E_PURE) &&
-                          (f' = FStar_Extraction_ML_Syntax.E_GHOST)
+                          (f' = FStar_Extraction_ML_Syntax.E_ERASABLE)
                       then
                         let uu___3 = type_leq unfold_ty t2 t2' in
                         (if uu___3

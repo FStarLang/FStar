@@ -236,6 +236,15 @@ let string_of_exported_id_kind = function
     | Exported_id_field -> "field"
     | Exported_id_term_type -> "term/type"
 
+let is_exported_id_termtype = function
+  | Exported_id_term_type -> true
+  | _ -> false
+
+let is_exported_id_field = function
+  | Exported_id_field -> true
+  | _ -> false
+
+
 let find_in_module_with_includes
     (eikind: exported_id_kind)
     (find_in_module: lident -> cont_t<'a>)
@@ -272,10 +281,6 @@ let find_in_module_with_includes
       look_into
     end
   in aux [ ns ]
-
-let is_exported_id_field = function
-  | Exported_id_field -> true
-  | _ -> false
 
 let try_lookup_id''
   env
@@ -326,6 +331,12 @@ let try_lookup_id''
             let id = ident_of_lid lid in
             find_in_record (ns_of_lid lid) id r k_record
         ) Cont_ignore env (lid_of_ids curmod_ns) id
+
+      | Record_or_dc r
+        when (is_exported_id_termtype eikind) ->
+        if ident_equals (ident_of_lid r.typename) id
+        then k_record r
+        else Cont_ignore
 
       | _ ->
         Cont_ignore
@@ -724,7 +735,6 @@ let find_all_datacons env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
-//no top-level pattern in F*, so need to do this ugliness
 let record_cache_aux_with_filter =
     // push, pop, etc. already signal-atomic: no need for BU.atomically
     let record_cache : ref<list<list<record_or_dc>>> = BU.mk_ref [[]] in
@@ -834,6 +844,23 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with
         | Some r when r.is_record -> Some r
         | _ -> None
+
+let try_lookup_record_type env (typename:lident) : option<record_or_dc> =
+  let find_in_cache (name:lident) : option<record_or_dc> =
+    let ns, id = ns_of_lid name, ident_of_lid name in
+    BU.find_map (peek_record_cache()) (fun record ->
+      if ident_equals (ident_of_lid record.typename) id
+      then Some record
+      else None
+    )
+  in
+  resolve_in_open_namespaces'' env typename
+      Exported_id_term_type
+      (fun _ -> Cont_ignore)
+      (fun _ -> Cont_ignore)
+      (fun r -> Cont_ok r)
+      (fun l -> cont_of_option Cont_ignore (find_in_cache l))
+      (fun k _ -> k)
 
 let belongs_to_record env lid record =
     (* first determine whether lid is a valid record field name, and

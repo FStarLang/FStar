@@ -270,6 +270,7 @@ val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val fv_has_strict_args     : env -> fv -> option<(list<int>)>
+val fv_has_erasable_attr   : env -> fv -> bool
 val non_informative        : env -> typ -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
@@ -356,6 +357,8 @@ val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
 
+val is_erasable_effect     : env -> lident -> bool
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 val is_reifiable_effect      : env -> lident -> bool
@@ -408,6 +411,8 @@ val guard_form                : guard_t -> guard_formula
 val check_trivial             : term -> guard_formula
 
 (* Other utils *)
+val too_early_in_prims : env -> bool
+
 val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
@@ -445,3 +450,12 @@ val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.
 for either not a recursive let, or one that does not need the totality
 check. *)
 val get_letrec_arity : env -> lbname -> option<int>
+
+(* Construct a Tm_fvar with the delta_depth metadata populated
+   -- Note, the delta_qual is not populated, so don't use this with
+      Data constructors, projectors, record identifiers etc.
+
+   -- Also, don't use this with lidents that refer to Prims, that
+      still requires special handling
+*)
+val fvar_of_nonqual_lid : env -> lident -> term

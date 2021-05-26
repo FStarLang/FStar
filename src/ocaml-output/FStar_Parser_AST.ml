@@ -45,6 +45,7 @@ type term' =
   | Let of (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
   (pattern * term)) Prims.list * term) 
   | LetOpen of (FStar_Ident.lid * term) 
+  | LetOpenRecord of (term * term * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
   | If of (term * term FStar_Pervasives_Native.option * term * term) 
@@ -182,6 +183,11 @@ let (uu___is_LetOpen : term' -> Prims.bool) =
   fun projectee -> match projectee with | LetOpen _0 -> true | uu___ -> false
 let (__proj__LetOpen__item___0 : term' -> (FStar_Ident.lid * term)) =
   fun projectee -> match projectee with | LetOpen _0 -> _0
+let (uu___is_LetOpenRecord : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | LetOpenRecord _0 -> true | uu___ -> false
+let (__proj__LetOpenRecord__item___0 : term' -> (term * term * term)) =
+  fun projectee -> match projectee with | LetOpenRecord _0 -> _0
 let (uu___is_Seq : term' -> Prims.bool) =
   fun projectee -> match projectee with | Seq _0 -> true | uu___ -> false
 let (__proj__Seq__item___0 : term' -> (term * term)) =

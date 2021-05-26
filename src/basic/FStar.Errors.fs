@@ -372,6 +372,7 @@ type raw_error =
   | Error_ErasedCtor
   | Error_RemoveUnusedTypeParameter
   | Warning_NoMagicInFSharp
+  | Error_BadLetOpenRecord
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -721,7 +722,8 @@ let default_settings : list<error_setting> =
     Error_CallToErased                                , CError, 342;
     Error_ErasedCtor                                  , CError, 343;
     Error_RemoveUnusedTypeParameter                   , CWarning, 344;
-    Warning_NoMagicInFSharp                           , CWarning, 345
+    Warning_NoMagicInFSharp                           , CWarning, 345;
+    Error_BadLetOpenRecord                            , CAlwaysError, 346;
     ]
 module BU = FStar.Util
 

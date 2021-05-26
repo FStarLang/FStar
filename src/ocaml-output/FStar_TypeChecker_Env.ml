@@ -3116,6 +3116,64 @@ let (lookup_nonrec_definition :
         let uu___ = lookup_qname env1 lid in
         FStar_All.pipe_left
           (lookup_definition_qninfo_aux false delta_levels lid) uu___
+let (delta_depth_of_qninfo_lid :
+  FStar_Ident.lident ->
+    qninfo -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
+  =
+  fun lid ->
+    fun qn ->
+      match qn with
+      | FStar_Pervasives_Native.None ->
+          FStar_Pervasives_Native.Some
+            (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+      | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl uu___, uu___1) ->
+          FStar_Pervasives_Native.Some
+            (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+      | FStar_Pervasives_Native.Some
+          (FStar_Pervasives.Inr (se, uu___), uu___1) ->
+          (match se.FStar_Syntax_Syntax.sigel with
+           | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+           | FStar_Syntax_Syntax.Sig_bundle uu___2 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+           | FStar_Syntax_Syntax.Sig_datacon uu___2 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+           | FStar_Syntax_Syntax.Sig_declare_typ uu___2 ->
+               let uu___3 =
+                 FStar_Syntax_DsEnv.delta_depth_of_declaration lid
+                   se.FStar_Syntax_Syntax.sigquals in
+               FStar_Pervasives_Native.Some uu___3
+           | FStar_Syntax_Syntax.Sig_let ((uu___2, lbs), uu___3) ->
+               FStar_Util.find_map lbs
+                 (fun lb ->
+                    let fv = FStar_Util.right lb.FStar_Syntax_Syntax.lbname in
+                    let uu___4 = FStar_Syntax_Syntax.fv_eq_lid fv lid in
+                    if uu___4
+                    then
+                      FStar_Pervasives_Native.Some
+                        (fv.FStar_Syntax_Syntax.fv_delta)
+                    else FStar_Pervasives_Native.None)
+           | FStar_Syntax_Syntax.Sig_fail uu___2 ->
+               failwith "impossible: delta_depth_of_qninfo"
+           | FStar_Syntax_Syntax.Sig_splice uu___2 ->
+               failwith "impossible: delta_depth_of_qninfo"
+           | FStar_Syntax_Syntax.Sig_assume uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_new_effect uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_sub_effect uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_effect_abbrev uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_pragma uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_polymonadic_bind uu___2 ->
+               FStar_Pervasives_Native.None
+           | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___2 ->
+               FStar_Pervasives_Native.None)
 let (delta_depth_of_qninfo :
   FStar_Syntax_Syntax.fv ->
     qninfo -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
@@ -3126,64 +3184,7 @@ let (delta_depth_of_qninfo :
       let uu___ = let uu___1 = FStar_Ident.nsstr lid in uu___1 = "Prims" in
       if uu___
       then FStar_Pervasives_Native.Some (fv.FStar_Syntax_Syntax.fv_delta)
-      else
-        (match qn with
-         | FStar_Pervasives_Native.None ->
-             FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-         | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl uu___2, uu___3)
-             ->
-             FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-         | FStar_Pervasives_Native.Some
-             (FStar_Pervasives.Inr (se, uu___2), uu___3) ->
-             (match se.FStar_Syntax_Syntax.sigel with
-              | FStar_Syntax_Syntax.Sig_inductive_typ uu___4 ->
-                  FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level
-                       Prims.int_zero)
-              | FStar_Syntax_Syntax.Sig_bundle uu___4 ->
-                  FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level
-                       Prims.int_zero)
-              | FStar_Syntax_Syntax.Sig_datacon uu___4 ->
-                  FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level
-                       Prims.int_zero)
-              | FStar_Syntax_Syntax.Sig_declare_typ uu___4 ->
-                  let uu___5 =
-                    FStar_Syntax_DsEnv.delta_depth_of_declaration lid
-                      se.FStar_Syntax_Syntax.sigquals in
-                  FStar_Pervasives_Native.Some uu___5
-              | FStar_Syntax_Syntax.Sig_let ((uu___4, lbs), uu___5) ->
-                  FStar_Util.find_map lbs
-                    (fun lb ->
-                       let fv1 =
-                         FStar_Util.right lb.FStar_Syntax_Syntax.lbname in
-                       let uu___6 = FStar_Syntax_Syntax.fv_eq_lid fv1 lid in
-                       if uu___6
-                       then
-                         FStar_Pervasives_Native.Some
-                           (fv1.FStar_Syntax_Syntax.fv_delta)
-                       else FStar_Pervasives_Native.None)
-              | FStar_Syntax_Syntax.Sig_fail uu___4 ->
-                  failwith "impossible: delta_depth_of_qninfo"
-              | FStar_Syntax_Syntax.Sig_splice uu___4 ->
-                  failwith "impossible: delta_depth_of_qninfo"
-              | FStar_Syntax_Syntax.Sig_assume uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_new_effect uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_sub_effect uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_effect_abbrev uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_pragma uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_polymonadic_bind uu___4 ->
-                  FStar_Pervasives_Native.None
-              | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___4 ->
-                  FStar_Pervasives_Native.None))
+      else delta_depth_of_qninfo_lid lid qn
 let (delta_depth_of_fv :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.delta_depth) =
   fun env1 ->
@@ -3317,7 +3318,7 @@ let cache_in_fv_tab :
                  (if should_cache then FStar_Util.smap_add tab s res else ();
                   res))
         | FStar_Pervasives_Native.Some r -> r
-let (type_is_erasable : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
+let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun env1 ->
     fun fv ->
       let f uu___ =
@@ -3340,7 +3341,7 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
               (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
              ||
              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
-            || (type_is_erasable env1 fv)
+            || (fv_has_erasable_attr env1 fv)
       | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
           non_informative env1 head
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
@@ -4173,6 +4174,18 @@ let (reify_comp :
          | FStar_Pervasives_Native.None ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
+let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
+  fun env1 ->
+    fun l ->
+      let uu___ = FStar_All.pipe_right l (norm_eff_name env1) in
+      FStar_All.pipe_right uu___
+        (fun l1 ->
+           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
+             (let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv l1
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                  FStar_Pervasives_Native.None in
+              FStar_All.pipe_right uu___1 (fv_has_erasable_attr env1)))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env1 ->
     fun s ->
@@ -5728,6 +5741,10 @@ let (def_check_vars_in_set :
                FStar_Errors.log_issue rng uu___2
              else ())
           else ()
+let (too_early_in_prims : env -> Prims.bool) =
+  fun env1 ->
+    let uu___ = lid_exists env1 FStar_Parser_Const.effect_GTot_lid in
+    Prims.op_Negation uu___
 let (def_check_closed_in :
   FStar_Range.range ->
     Prims.string ->
@@ -6189,3 +6206,15 @@ let (get_letrec_arity :
       | FStar_Pervasives_Native.Some (uu___1, arity, uu___2, uu___3) ->
           FStar_Pervasives_Native.Some arity
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+let (fvar_of_nonqual_lid :
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
+  fun env1 ->
+    fun lid ->
+      let qn = lookup_qname env1 lid in
+      let dd =
+        let uu___ = delta_depth_of_qninfo_lid lid qn in
+        match uu___ with
+        | FStar_Pervasives_Native.None ->
+            failwith "Unexpected no delta_depth"
+        | FStar_Pervasives_Native.Some dd1 -> dd1 in
+      FStar_Syntax_Syntax.fvar lid dd FStar_Pervasives_Native.None

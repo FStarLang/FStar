@@ -43,6 +43,7 @@ let none_to_empty_list x =
 %start warn_error_list
 %token AMP
 %token AND
+%token AS
 %token ASSERT
 %token ASSUME
 %token ATTRIBUTES
@@ -1472,9 +1473,22 @@ let pbs =    ( List.rev xs ) in
         let branches = focusBranches pbs (rhs2 parseState 1 5) in
         mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       )}
-| LET OPEN quident IN term
-    {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
-      ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
+| LET OPEN term IN term
+    {let (_1, _2, t, _4, e) = ($1, (), $3, (), $5) in
+      (
+            match t.tm with
+            | Ascribed(r, rty, None) ->
+              mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
+
+            | Name uid ->
+              mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr
+
+            | _ ->
+              raise_error (Fatal_SyntaxError, "Syntax error: local opens expects either opening\n\
+                                               a module or namespace using `let open T in e`\n\
+                                               or, a record type with `let open e <: t in e'`")
+                          (rhs parseState 3)
+      )}
 | LET letqualifier letbinding list_attr_letbinding_ IN term
     {let (_2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, (), $6) in
 let attrs =     ( None ) in
