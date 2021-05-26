@@ -5,7 +5,7 @@ fsharp-output
 u_boot_fsts
 u_ocaml-output
 .fstarlib
-
+paket-files
 [Bb]in/
 [Oo]bj/
 

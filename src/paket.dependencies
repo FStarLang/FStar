@@ -1,0 +1,8 @@
+source https://api.nuget.org/v3/index.json
+storage: none
+
+nuget FSharp.Compatibility.OCaml = 0.1.14
+nuget FsLexYacc
+nuget FsLexYacc.Runtime = 6.1.0
+nuget PPrintForFSharp = 0.0.2
+nuget FSharp.Core = 4.3.4

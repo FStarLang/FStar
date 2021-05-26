@@ -1,46 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>e3e96b71-22ab-4518-b08e-9c55c4d256db</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <RootNamespace>ulibfs</RootNamespace>
-    <AssemblyName>ulibfs</AssemblyName>
     <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
-    <UseStandardResourceNames>true</UseStandardResourceNames>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>ulibfs</Name>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(FSharpTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets') ">
-    <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
-  </PropertyGroup>
-  <Import Project="$(FSharpTargetsPath)" />
   <PropertyGroup>
     <FSTAR_HOME>..</FSTAR_HOME>
     <!-- Path where cached lax files should be written by default -->
@@ -54,16 +20,16 @@
     <Compile Include="fs\prims.fs" Link="prims.fs" />
     <Compile Include="fs\FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="fs\FStar_Char.fs" Link="FStar_Char.fs" />
-    <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" /> 
+    <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" />
     <Compile Include="fs\FStar_Float.fs" Link="FStar_Float.fs" />
     <Compile Include="fs\FStar_Ghost.fs" Link="FStar_Ghost.fs" />
     <Compile Include="fs\FStar_Monotonic_Heap.fs" Link="FStar_Monotonic_Heap.fs" />
     <Compile Include="fs\FStar_CommonST.fs" Link="FStar_CommonST.fs" />
     <Compile Include="fs\FStar_Heap.fs" Link="FStar_Heap.fs" />
-    <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" /> 
-    <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" /> 
-    <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" /> 
-    <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" /> 
+    <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" />
+    <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" />
+    <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" />
+    <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" />
     <Compile Include="fs\FStar_IO.fs" Link="FStar_IO.fs" />
     <Compile Include="fs\FStar_List.fs" Link="FStar_List.fs" />
     <Compile Include="fs\FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
@@ -79,13 +45,13 @@
                1. Emitting constraints for type parameters when extracting F# code (e.g. for eqtype or 'ordered')
                2. Add 'type ordered = Type{hasOrder 'a}' or similar and use it instead of 'eqtype' in Set/Map interface.
     -->
-    <Compile Include="fs\FStar_Set.fs" Link="FStar_Set.fs" /> 
+    <Compile Include="fs\FStar_Set.fs" Link="FStar_Set.fs" />
     <Compile Include="fs\FStar_ST.fs" Link="FStar_ST.fs" />
     <Compile Include="fs\FStar_Exn.fs" Link="FStar_Exn.fs" />
     <Compile Include="fs\FStar_String.fs" Link="FStar_String.fs" />
     <Compile Include="fs\FStar_UInt16.fs" Link="FStar_UInt16.fs" />
     <Compile Include="fs\FStar_UInt32.fs" Link="FStar_UInt32.fs" />
-    <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" /> 
+    <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" />
     <Compile Include="fs\FStar_UInt8.fs" Link="FStar_UInt8.fs" />
     <!-- <Compile Include="fs\FStar_Tactics_Builtins.fs" Link="FStar_Tactics_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
     <!-- <Compile Include="fs\FStar_Reflection_Types.fs" Link="FStar_Reflection_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
@@ -222,14 +188,15 @@
     <Compile Include="FStar.Int64.fsti" />
     <Compile Include="FStar.Int8.fsti" /> 
     <!-- <Compile Include="FStar.MRef.fsti" /> -->
-    <Compile Include="FStar.Map.fsti" />  <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
+    <Compile Include="FStar.Map.fsti" />
+    <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <Compile Include="FStar.Math.Euclid.fsti" /> -->
     <!-- <Compile Include="FStar.Math.Fermat.fsti" /> -->
     <!-- <Compile Include="FStar.Modifies.fsti" /> -->
     <!-- <Compile Include="FStar.ModifiesGen.fsti" /> -->
     <!-- <Compile Include="FStar.Monotonic.DependentMap.fsti" /> -->
     <Compile Include="FStar.Monotonic.Heap.fsti" />
-     <Compile Include="FStar.Monotonic.HyperHeap.fsti" />
+    <Compile Include="FStar.Monotonic.HyperHeap.fsti" />
     <Compile Include="FStar.Monotonic.HyperStack.fsti" />
     <Compile Include="FStar.Monotonic.Witnessed.fsti" />
     <Compile Include="FStar.Pervasives.fsti" />
@@ -250,7 +217,7 @@
     <Compile Include="FStar.UInt128.fsti" />
     <Compile Include="FStar.UInt16.fsti" />
     <Compile Include="FStar.UInt32.fsti" />
-    <Compile Include="FStar.UInt64.fsti" /> 
+    <Compile Include="FStar.UInt64.fsti" />
     <Compile Include="FStar.UInt8.fsti" />
     <!-- <Compile Include="FStar.Udp.fsti" /> -->
     <!-- <Compile Include="FStar.Universe.fsti" /> -->
@@ -276,20 +243,4 @@
     <!-- <Compile Include="legacy/FStar.Pointer.Derived3.fsti" /> -->
     <!-- <Compile Include="legacy/FStar.TaggedUnion.fsti" /> -->
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\src\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
