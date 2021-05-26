@@ -25,7 +25,7 @@ convince F* that ``e`` has type ``t``, i.e., deriving ``e : t``.
 
 The idea of using a type to specify properties of a program has deep
 roots in the connections between logic and computation. You may find
-it interesting to read about `proposition as types
+it interesting to read about `propositions as types
 <https://cacm.acm.org/magazines/2015/12/194626-propositions-as-types/fulltext>`_,
 a concept with many deep mathematical and philosophical
 implications. For now, it suffices to think of a type ``t`` as a

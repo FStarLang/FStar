@@ -71,7 +71,7 @@ Exercises
 ^^^^^^^^^
 
 Let's try a few simple exercises. `Click here
-<../../code/exercises/Part1.Poly.fst>`_ for the exercise file.
+<../code/exercises/Part1.Poly.fst>`_ for the exercise file.
 
 
 Try defining functions with the following signatures:

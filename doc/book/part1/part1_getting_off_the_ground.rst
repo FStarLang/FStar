@@ -36,7 +36,9 @@ Comments
 ^^^^^^^^
 
 Block comments are delimited by ``(*`` and ``*)``. Line comments begin
-with ``//``. ::
+with ``//``.
+
+.. code-block:: fstar
 
   (* this is a
      block comment *)
@@ -81,7 +83,9 @@ order of precedence.
 Conditionals
 ############
 
-You can, of course, branch on a boolean with ``if/then/else``::
+You can, of course, branch on a boolean with ``if/then/else``
+
+.. code-block:: fstar
 
   if b then 1 else 0
 
@@ -118,7 +122,9 @@ Boolean refinement types
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The F* core library, :ref:`Prims<corelib_Prims>`, defines the type of
-natural numbers as follows::
+natural numbers as follows
+
+.. code-block:: fstar
 
        let nat = x:int{x >= 0}
 
@@ -133,7 +139,9 @@ That is the type ``nat`` describes the set of terms that evaluate to an
 element of the set ``{0, 1, 2, 3, ...}``.
 
 But, there's nothing particularly special about ``nat``. You can define
-arbitrary refinements of your choosing, e.g.,::
+arbitrary refinements of your choosing, e.g.,
+
+.. code-block:: fstar
 
   let empty = x:int { false } //the empty set
   let zero = x:int{ x = 0 } //the type containing one element `0`
@@ -278,14 +286,18 @@ Named functions
 Any term in F\* can be given a name using a ``let`` binding. We'll
 want this to define a function once and to call it many times. For
 example, all of the following are synonyms and bind the lambda term
-``fun x -> x + 1`` to the name ``incr``::
+``fun x -> x + 1`` to the name ``incr``
+
+.. code-block:: fstar
 
   let incr = fun (x:int) -> x + 1
   let incr (x:int) = x + 1
   let incr x = x + 1
 
 Functions can take several arguments and the result type of a function
-can also be annotated, if desired::
+can also be annotated, if desired
+
+.. code-block:: fstar
 
   let incr (x:int) : int = x + 1
   let more_than_twice (x:int) (y:int) : bool = x > y + y
@@ -299,7 +311,9 @@ result type of a named function definition.
    of function, F* allows annotating any term ``e`` with its expected
    type ``t`` by writing ``e <: t``. This is called a *type
    ascription*. An ascription instructs F* to check that the
-   term ``e`` has the type ``t``. For example, we could have written::
+   term ``e`` has the type ``t``. For example, we could have written
+
+.. code-block:: fstar
 
      let incr = fun (x:int) -> (x + 1 <: int)
 
