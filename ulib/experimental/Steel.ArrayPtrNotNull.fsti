@@ -17,8 +17,6 @@
 (* A partial model for C array pointers. Given a type t, we model type
    t* with the following operations:
 
-   * null
-
    * alloc, free
 
    * read at some offset p[i]
@@ -31,7 +29,7 @@
      permission by "merging" back q into p.
 *)
 
-module Steel.ArrayPtr
+module Steel.ArrayPtrNotNull
 open Steel.Memory
 open Steel.Effect
 open Steel.FractionalPermission
@@ -40,8 +38,6 @@ module U32 = FStar.UInt32
 module A = Steel.Array
 
 val t (t:Type u#0) : Type u#0
-
-val g_is_null (#a: Type) (x: t a) : GTot bool
 
 noeq type v (t: Type u#0) = {
   array: A.array t;                      (* spatial permission range *)
@@ -67,95 +63,6 @@ let sel (#a:Type) (#p:vprop) (r:t a)
 : GTot (v a)
   = h (varrayptr r)
 
-val varrayptr_not_null
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelGhost unit opened
-    (varrayptr x)
-    (fun _ -> varrayptr x)
-    (fun _ -> True)
-    (fun h _ h' ->
-      h' (varrayptr x) == h (varrayptr x) /\
-      g_is_null x == false
-    )
-
-
-val is_arrayptr_or_null (#a:Type0) (r:t a) : slprop u#1
-val arrayptr_or_null_sel (#a:Type0) (r:t a) : selector (option (v a)) (is_arrayptr_or_null r)
-
-[@@ __steel_reduce__]
-let varrayptr_or_null' #a r : vprop' =
-  {hp = is_arrayptr_or_null r;
-   t = option (v a);
-   sel = arrayptr_or_null_sel r}
-
-[@@ __steel_reduce__]
-let varrayptr_or_null r = VUnit (varrayptr_or_null' r)
-
-val intro_varrayptr_or_null_none
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelGhost unit opened
-    emp
-    (fun _ -> varrayptr_or_null x)
-    (fun _ -> g_is_null x == true)
-    (fun _ _ h' -> h' (varrayptr_or_null x) == None)
-
-val intro_varrayptr_or_null_some
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelGhost unit opened
-    (varrayptr x)
-    (fun _ -> varrayptr_or_null x)
-    (fun _ -> True)
-    (fun h _ h' ->
-      g_is_null x == false /\
-      h' (varrayptr_or_null x) == Some (h (varrayptr x)
-    ))
-
-val elim_varrayptr_or_null_some
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelGhost unit opened
-    (varrayptr_or_null x)
-    (fun _ -> varrayptr x)
-    (fun h -> g_is_null x == false \/ Some? (h (varrayptr_or_null x)))
-    (fun h _ h' ->
-      g_is_null x == false /\
-      h (varrayptr_or_null x) == Some (h' (varrayptr x))
-    )
-
-val elim_varrayptr_or_null_none
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelGhost unit opened
-    (varrayptr_or_null x)
-    (fun _ -> emp)
-    (fun h -> g_is_null x == true \/ None? (h (varrayptr_or_null x)))
-    (fun h _ _ ->
-      g_is_null x == true /\
-      h (varrayptr_or_null x) == None
-    )
-
-val is_null
-  (#opened: _)
-  (#a: Type)
-  (x: t a)
-: SteelAtomic bool opened
-    (varrayptr_or_null x)
-    (fun _ -> varrayptr_or_null x)
-    (fun _ -> True)
-    (fun h res h' ->
-      let s = h (varrayptr_or_null x) in
-      h' (varrayptr_or_null x) == s /\
-      res == None? s /\
-      res == g_is_null x
-    )
 
 (* Splitting an array (inspired from Steel.Array) *)
 
