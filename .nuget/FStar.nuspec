@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<package>
+	<metadata>
+		<id>FStar</id>
+		<version>$version$</version>
+		<title>FStar</title>
+		<authors>TODO: Fill in</authors>
+		<owners>TODO: Fill in</owners>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>A nuget package with FStar for easy installation into .net projects on Windows</description>
+		<summary>FStar as a nuget package</summary>
+	</metadata>
+	<files>
+		<file src="fstar\tools\**" target="tools" />
+		<file src="fstar\build\**" target="build" />
+		<file src="fstar\lib\**" target="lib\net45" />
+	</files>
+</package>

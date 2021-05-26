@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+	    <CodeTaskFactory Condition="'$(MSBuildRuntimeType)' == 'Core'">RoslynCodeTaskFactory</CodeTaskFactory>
+		<CodeTaskFactory Condition="'$(MSBuildRuntimeType)' != 'Core'">CodeTaskFactory</CodeTaskFactory>
+		<CodeTaskAssemblyFile Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</CodeTaskAssemblyFile>
+		<CodeTaskAssemblyFile Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll</CodeTaskAssemblyFile>
+	</PropertyGroup>
     <!-- 
         A custom 'inline-task' for translating all kinds of F* source files int expected paths for F# compilation
         https://docs.microsoft.com/en-US/visualstudio/msbuild/msbuild-inline-tasks?view=vs-2019
@@ -14,7 +20,7 @@
                 3. fsti files are filtered out
                 4. the order of files is unchanged.
     -->
-    <UsingTask TaskName="TransformFStarSourceFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <UsingTask TaskName="TransformFStarSourceFiles" TaskFactory="$(CodeTaskFactory)" AssemblyFile="$(CodeTaskAssemblyFile)" >
         <ParameterGroup>
             <Odir ParameterType="System.String" Required="true" />
             <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />

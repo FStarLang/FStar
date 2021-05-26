@@ -272,7 +272,9 @@ package:
 	cp ../../version.txt $(PREFIX)/
 	cp ../../_tags $(PREFIX)/
 	cp ../../.common.mk $(PREFIX)/
+	cp ../../fsharp.extraction.targets $(PREFIX)/
 	@# Then the rest of the static files.
+    $(call fexport,.nuget)
 	$(call fexport,examples)
 	$(call fexport,tests)
 	$(call fexport,ucontrib)
