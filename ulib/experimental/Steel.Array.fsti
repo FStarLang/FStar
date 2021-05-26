@@ -157,8 +157,8 @@ val gsplit_unique
     (rl, rr) == gsplit r (len rl)
   ))
 
-val splitp (#t:Type) (a:array t) (p: perm) (i:U32.t)
-  : Steel (array t & array t)
+val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:U32.t)
+  : SteelAtomic (array t & array t) opened
           (varrayp a p)
           (fun res -> varrayp (pfst res) p `star` varrayp (psnd res) p)
           (fun _ -> U32.v i <= length a)
@@ -173,8 +173,8 @@ val splitp (#t:Type) (a:array t) (p: perm) (i:U32.t)
             s == sl `Seq.append` sr
           )
 
-let split (#t:Type) (a:array t) (i:U32.t)
-  : Steel (array t & array t)
+let split (#opened: _) (#t:Type) (a:array t) (i:U32.t)
+  : SteelAtomic (array t & array t) opened
           (varray a)
           (fun res -> varray (pfst res) `star` varray (psnd res))
           (fun _ -> U32.v i <= length a)
@@ -191,9 +191,9 @@ let split (#t:Type) (a:array t) (i:U32.t)
 =
   splitp _ _ i
 
-val joinp (#t:Type) (al ar:array t)
+val joinp (#opened: _) (#t:Type) (al ar:array t)
   (p: perm)
-  : Steel (array t)
+  : SteelAtomic (array t) opened
           (varrayp al p `star` varrayp ar p)
           (fun a -> varrayp a p)
           (fun _ -> adjacent al ar)
@@ -203,8 +203,8 @@ val joinp (#t:Type) (al ar:array t)
             merge_into al ar a
           )
 
-let join (#t:Type) (al ar:array t)
-  : Steel (array t)
+let join (#opened: _) (#t:Type) (al ar:array t)
+  : SteelAtomic (array t) opened
           (varray al `star` varray ar)
           (fun a -> varray a)
           (fun _ -> adjacent al ar)

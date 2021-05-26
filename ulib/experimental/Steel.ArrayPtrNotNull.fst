@@ -225,13 +225,13 @@ let u32_bounded_add
 
 #push-options "--z3rlimit 16"
 #restart-solver
-let split #a x i =
+let split x i =
   let w = elim_varrayptr x in
   let p = w.w_perm in
   change_equal_slprop
     (A.varrayp w.w_array w.w_perm)
     (A.varrayp w.w_array p);
-  let res2 : Ghost.erased (A.array a & A.array a) = A.gsplit0 p w.w_array i in
+  let res2 : Ghost.erased (A.array _ & A.array _) = A.gsplit0 p w.w_array i in
   reveal_star (A.varrayp (A.pfst res2) p) (A.varrayp (A.psnd res2) p);
   let x_to_1 = ghost_read x.to in
   let x_to_2 : Ghost.erased U32.t = Ghost.hide (Ghost.reveal x_to_1) in
@@ -241,7 +241,7 @@ let split #a x i =
   intro_varrayptr x (A.pfst res2) p;
   let to2 : ghost_ref (to_v x.base j) = ghost_alloc x_to_3 in
   let p2 : ghost_ref perm = ghost_alloc p in
-  let res : t a = mk_t x.base j to2 p2 in
+  let res : t _ = mk_t x.base j to2 p2 in
   change_equal_slprop
     (ghost_vptr to2)
     (ghost_vptr res.to);

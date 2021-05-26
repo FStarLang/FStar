@@ -176,8 +176,8 @@ val join (#opened: _) (#a:Type) (al ar:t a)
             c'.contents == cl.contents `Seq.append` cr.contents
           )
 
-val split (#a:Type) (x: t a) (i:U32.t)
-  : Steel (t a)
+val split (#opened: _) (#a:Type) (x: t a) (i:U32.t)
+  : SteelAtomic (t a) opened
           (varrayptr x)
           (fun res -> varrayptr x `star` varrayptr res)
           (fun h -> U32.v i <= A.length (h (varrayptr x)).array)
@@ -242,8 +242,8 @@ val free (#a:Type) (r:t a)
              )
              (ensures fun _ _ _ -> True)
 
-val share (#a: Type) (r: t a)
-  : Steel (t a)
+val share (#opened: _) (#a: Type) (r: t a)
+  : SteelAtomic (t a) opened
     (varrayptr r)
     (fun res -> varrayptr r `star` varrayptr res)
     (fun _ -> True)

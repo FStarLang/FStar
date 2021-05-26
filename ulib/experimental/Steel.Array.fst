@@ -754,7 +754,7 @@ val gsplit0 (#opened: _) (#t:Type) (p: perm) (a:array t) (i:U32.t)
 
 #push-options "--z3rlimit 32"
 #restart-solver
-let gsplit0 #t p a i =
+let gsplit0 p a i =
   let a2 = elim_varray a p in
   let res2 = vsplit p a2 i in
   let res = tsplit a i in
@@ -770,7 +770,7 @@ let gsplit0 #t p a i =
   gres
 #pop-options
 
-let splitp #t a p i =
+let splitp a p i =
   let gres = gsplit0 p a i in
   let res = tsplit a i in
   change_equal_slprop
@@ -795,7 +795,7 @@ val gjoin (#opened: _) (#t:Type) (al ar:array t)
 
 #push-options "--z3rlimit 32"
 #restart-solver
-let gjoin #t al ar p =
+let gjoin al ar p =
   let al2 = elim_varray al p in
   let ar2 = elim_varray ar p in
   let a2 = vappend al2 ar2 p in
@@ -808,8 +808,8 @@ let gjoin #t al ar p =
   res
 #pop-options
 
-let joinp #t al ar p =
-  let ga : Ghost.erased (array t) = gjoin al ar p in
+let joinp al ar p =
+  let ga : Ghost.erased (array _) = gjoin al ar p in
   let a = tmerge al ar in
   change_equal_slprop
     (varrayp (Ghost.reveal ga) p)
