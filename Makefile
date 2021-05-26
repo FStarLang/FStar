@@ -2,12 +2,10 @@
 
 include .common.mk
 
-all: no-ulib-checked
-	$(Q)+$(MAKE) -C ulib
-
-no-ulib-checked:
+all:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)+$(MAKE) -C ulib/ml
+	$(Q)+$(MAKE) -C ulib
 
 install:
 	$(Q)+$(MAKE) -C src/ocaml-output install
@@ -27,10 +25,10 @@ uninstall:
 	  $(PREFIX)/bin/fstar.exe \
 	  $(PREFIX)/share/fstar
 
-package: no-ulib-checked
+package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
 
-package_unknown_platform: no-ulib-checked
+package_unknown_platform: all
 	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
 
 clean:

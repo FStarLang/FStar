@@ -264,9 +264,7 @@ package:
 	@# Install the F* binary
 	$(call fexport-all,bin)
 	@# Then the standard library.
-	$(call fexport,ulib)
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_Int*.ml $(PREFIX)/ulib/ml
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_UInt*.ml $(PREFIX)/ulib/ml
+	$(call fexport-all,ulib)
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	cp ../../version.txt $(PREFIX)/

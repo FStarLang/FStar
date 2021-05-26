@@ -32,9 +32,6 @@ RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/opam/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
 
-# Reverify ulib, which was not in the package
-RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
-
 # Test the F* binary package
 
 # Case 1: test the fresh package
@@ -51,8 +48,8 @@ RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR
 RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
 
-# Case 3: test the fresh package without OCaml
-FROM ubuntu:20.04
+# Test the fresh package without OCaml
+FROM ubuntu:20.04 AS fstarnoocaml
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get --yes install --no-install-recommends make sudo libgomp1
@@ -72,9 +69,16 @@ COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test
 RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/test/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
-RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
 
-# Run tests
+# Case 3: test F* package without OCaml
+FROM fstarnoocaml
+RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
+RUN make -C $FSTAR_HOME/examples -j $opamthreads
+RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+
+# Case 4: test F* package without OCaml, but recheck ulib
+FROM fstarnoocaml
+RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
 RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
 RUN make -C $FSTAR_HOME/examples -j $opamthreads
 RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
