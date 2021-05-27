@@ -33,7 +33,7 @@ let rec acc_lexprod_aux (#a:Type) (#b:a -> Type) (#r_a:a -> a -> Type) (#r_b:(x:
   (t:(x:a & b x))
   (p_t:lex_t r_a r_b t (| x, y |))
   : Tot (acc (x:a & b x) (lex_t r_a r_b) t)
-        (decreases %[acc_x; acc_y])
+        (decreases acc_x)
   = match p_t with
     | Left_lex x_t _ y_t _ p_a ->
       AccIntro (acc_lexprod_aux
@@ -43,14 +43,25 @@ let rec acc_lexprod_aux (#a:Type) (#b:a -> Type) (#r_a:a -> a -> Type) (#r_b:(x:
         wf_b
         y_t
         (wf_b x_t y_t))
-    | Right_lex _ y_t _ p_b ->
-      AccIntro (acc_lexprod_aux
-        x
-        acc_x
-        wf_b
-        y_t
-        (match acc_y with
-         | AccIntro f -> f y_t p_b))
+    | Right_lex _ _ _ _ ->
+      let rec aux (y:b x) (acc_y:acc (b x) (r_b x) y) (t:(x:a & b x)) (p_t:lex_t r_a r_b t (| x, y |))
+        : Tot (acc (x:a & b x) (lex_t r_a r_b) t)
+              (decreases acc_y)
+        = match p_t with
+          | Left_lex x_t _ y_t _ p_a ->
+            AccIntro (acc_lexprod_aux
+              x_t
+              (match acc_x with
+               | AccIntro f -> f x_t p_a)
+              wf_b
+              y_t
+              (wf_b x_t y_t))
+          | Right_lex _ y_t _ p_b ->
+            AccIntro (aux
+              y_t
+              (match acc_y with
+               | AccIntro f -> f y_t p_b)) in
+      aux y acc_y t p_t
 
 (* private *)
 let acc_lexprod (#a:Type) (#b:a -> Type) (#r_a:a -> a -> Type) (#r_b:(x:a -> b x -> b x -> Type))
@@ -94,7 +105,7 @@ let rec symprod_wf_aux (#a #b:Type) (#r_a:a -> a -> Type) (#r_b:b -> b -> Type)
   (t:a & b)
   (p_t:sym_t r_a r_b t (x, y))
   : Tot (acc (a & b) (sym_t r_a r_b) t)
-        (decreases %[acc_a; acc_b])
+        (decreases acc_a)
   = match p_t with
     | Left_sym x_t _ _ p_a ->
       AccIntro (symprod_wf_aux
@@ -103,13 +114,24 @@ let rec symprod_wf_aux (#a #b:Type) (#r_a:a -> a -> Type) (#r_b:b -> b -> Type)
          | AccIntro f -> f x_t p_a)
         y
         acc_b)
-    | Right_sym _ y_t _ p_b ->
-      AccIntro (symprod_wf_aux
-        x
-        acc_a
-        y_t
-        (match acc_b with
-         | AccIntro f -> f y_t p_b))
+    | Right_sym _ _ _ _ ->
+      let rec aux (y:b) (acc_b:acc b r_b y) (t:a & b) (p_t:sym_t r_a r_b t (x, y))
+        : Tot (acc (a & b) (sym_t r_a r_b) t)
+              (decreases acc_b)
+        = match p_t with
+         | Left_sym x_t _ _ p_a ->
+           AccIntro (symprod_wf_aux
+             x_t
+             (match acc_a with
+              | AccIntro f -> f x_t p_a)
+             y
+             acc_b)
+         | Right_sym _ y_t _ p_b ->
+           AccIntro (aux
+             y_t
+             (match acc_b with
+              | AccIntro f -> f y_t p_b)) in
+      aux y acc_b t p_t
 
 let symprod_wf (#a #b:Type)
   (r_a:a -> a -> Type)
