@@ -111,7 +111,7 @@ export FSTAR_HOME=
 
 
 # Push the binary package(s) to the release.
-. `dirname $0`/release-post.sh
+. "$FSTAR_HOST_HOME/scripts/release-post.sh"
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt

@@ -19,4 +19,4 @@ BUILD_PACKAGE=$(cat $FSTAR_HOST_HOME/release/version_platform.txt)
 mv $FSTAR_HOST_HOME/release/fstar.tar.gz $FSTAR_HOST_HOME/release/$BUILD_PACKAGE
 
 # Push the release
-. `dirname $0`/release-post.sh
+. "$FSTAR_HOST_HOME/.scripts/release-post.sh"
