@@ -64,7 +64,7 @@ docker container rm container-fstar-package
 docker image rm -f fstar-package
 
 # Rename the package to its intended name with version and platform
-package_name=$(cat version_platform.txt)
+package_name=$(cat release/version_platform.txt)
 mv release/fstar.tar.gz release/$package_name
 
 # Clear the version number and push the tag, since everything has worked well so far
