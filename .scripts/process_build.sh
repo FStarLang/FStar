@@ -15,6 +15,15 @@ set -o pipefail
 
 set -x
 
+git_org=tahina-pro
+git_remote=tahina-pro
+
+# Check if the user has provided a GitHub authentication token
+[[ -n $SATS_TOKEN ]]
+
+# Switch to the F* directory (the parent of this script's directory)
+cd `dirname $0`/..
+
 # Make sure we are starting in the right place (F* repository)
 if ! [[ -d ulib ]]; then
   echo "This script is intended to be run from the root of the F* repository"
@@ -26,28 +35,6 @@ fi
 # obtained binary). FSTAR_HOST_HOME is the former.
 FSTAR_HOST_HOME=$PWD
 
-# Expects to be called from $BN_BINARYSPATH_ROOT
-function cp_to_binaries () {
-  local file=$1
-  echo "--" $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
-  cp $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
-  git add $BN_BINARYSPATH/$file
-}
-
-function cleanup_files () {
-  pushd $BN_BINARYSPATH
-  local suffix=$1
-  local files=*.$suffix
-  local file_count=$(ls -1 $files 2>/dev/null | wc -l)
-  if (( $file_count > $BN_FILESTOKEEP )); then
-    # git rm does not take absolute paths; since there are no subdirectories,
-    # use basename
-    local file_list=$(ls -t1 $files | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1)))
-    git rm $file_list -f
-  fi
-  popd
-}
-
 # Constants for showing color in output window
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
@@ -58,19 +45,26 @@ diag () {
 	echo -e "${YELLOW}$1${NC}"
 }
 
-CURRENT_VERSION=$(head -n 1 version.txt | tr -d '\r')
+diag "test if the working copy is clean"
+git diff --staged --exit-code
+git diff --exit-code
 
-diag "*** Clean up log files ***"
-if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
-  rm src/ocaml-output/fstar/HelloOcamlOutput.log
-fi
+# This script will not create a new tag. To this end, you should use
+# release-linux.sh, which will create the release tag (currently only
+# on Linux)
+
+diag "there must be a tag to this version, let that tag override version.txt"
+this_commit=$(git rev-parse HEAD)
+my_tag=$(git describe --exact-match)
+[[ $(echo $my_tag | wc -w) -eq 1 ]]
+CURRENT_VERSION=$(echo $my_tag | sed 's!^v!!')
+echo $CURRENT_VERSION > version.txt
 
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
-git clean -dffx
+git clean -ffdx
 make -j6 -C ../.. package
 
-# 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 diag "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%Y%m%d%H%M)
 COMMIT=_$(git rev-parse --short HEAD)
@@ -78,16 +72,14 @@ COMMIT=_$(git rev-parse --short HEAD)
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
-  MINOR_ZIP_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
-  cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
   unzip -o $MAJOR_ZIP_FILE
+  BINARY_PACKAGE="$MAJOR_ZIP_FILE"
 else
   TYPE="_Linux_x86_64.tar.gz"
   MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
   if [[ -f $MAJOR_TAR_FILE ]]; then
-    MINOR_TAR_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
-    cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
     tar -x -f $MAJOR_TAR_FILE
+    BINARY_PACKAGE="$MAJOR_TAR_FILE"
   else
     echo -e "* ${RED}FAIL!${NC} src/ocaml-output/make package did not create ${MAJOR_ZIP_FILE} or ${MAJOR_TAR_FILE}"
     exit 1
@@ -152,39 +144,22 @@ fi
 # From this point on, we should no longer need FSTAR_HOME.
 export FSTAR_HOME=
 
-# Got to this point, so know it passed - copy minor version out
-diag "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
-BN_BINARYSPATH_ROOT=~/binaries
-BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
-BN_FILESTOKEEP=4
+# Push the binary package(s) to the release.
 
-if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
-  git clone git@github.com:/FStarLang/binaries.git $BN_BINARYSPATH_ROOT
-fi
-
-cd $BN_BINARYSPATH_ROOT
-git fetch
-git checkout master
-git reset --hard origin/master
-
-diag "-- copy files and add to Github --"
-if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
-  cp_to_binaries $MINOR_ZIP_FILE
-fi
-if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
-  cp_to_binaries $MINOR_TAR_FILE
-fi
-
-# Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
-diag "-- Delete oldest ZIP file if more than 4 exist --"
-cleanup_files "zip"
-diag "-- Delete oldest TAR file if more than 4 exist --"
-cleanup_files "gz"
-
-# Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
-diag "--- now commit it but keep history truncated ... then push --- "
-git commit --amend -m "Adding new build package and removing oldest."
-git push git@github.com:FStarLang/binaries.git master --force
+pushd $FSTAR_HOST_HOME/src/ocaml-output
+mkdir release
+mv $BINARY_PACKAGE release
+docker build -t fstar-release \
+       --build-arg SATS_FILE=$BINARY_PACKAGE \
+       --build-arg SATS_TAG=$my_tag \
+       --build-arg SATS_COMMITISH=$this_commit \
+       --build-arg SATS_TOKEN=$SATS_TOKEN \
+       --build-arg SATS_SLUG=$git_org/FStar \
+       -f "$FSTAR_HOST_HOME/.docker/release.Dockerfile" \
+       release
+docker image rm -f fstar-release
+rm -rf release
+popd
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
