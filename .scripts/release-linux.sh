@@ -59,7 +59,7 @@ docker build -t fstar-package -f "$fstar_home/.docker/package.Dockerfile" "$fsta
 mkdir release
 docker container create --name container-fstar-package fstar-package
 docker cp container-fstar-package:/home/test/fstar.tar.gz release/fstar.tar.gz
-docker cp container-fstar-package:/home/test/version_platform.txt release/fstar.tar.gz
+docker cp container-fstar-package:/home/test/version_platform.txt release/version_platform.txt
 docker container rm container-fstar-package
 docker image rm -f fstar-package
 
