@@ -30,9 +30,9 @@ else
 fi
 
 # Check if the commit pointed to by that tag (if any) points to the current commit
-this_commit=$(git show --no-patch --format=%h)
+this_commit=$(git rev-parse HEAD)
 git_push_tag_cmd=true
-if tagged_commit=$(git show --no-patch --format=%h $my_tag) ; then
+if tagged_commit=$(git show-ref --tags --hash $my_tag) ; then
     [[ $tagged_commit = $this_commit ]]
 else
     # the tag does not exist, so we can apply it
@@ -75,7 +75,7 @@ popd
 
 # Publish the release
 docker build -t fstar-release \
-       --build_arg SATS_FILE=$package_name \
+       --build-arg SATS_FILE=$package_name \
        --build-arg SATS_TAG=$my_tag \
        --build-arg SATS_COMMITISH=$this_commit \
        --build-arg SATS_TOKEN=$SATS_TOKEN \
