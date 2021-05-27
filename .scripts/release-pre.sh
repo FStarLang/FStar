@@ -36,6 +36,7 @@ git diff --staged --exit-code
 git diff --exit-code
 
 # Detect the F* version number
+git fetch --tags $git_org
 if [[ -n $FSTAR_VERSION ]] ; then
     # It is provided by the user
     my_tag="$FSTAR_VERSION"

@@ -4,11 +4,12 @@
 # If ran separately, the starting directory should be the root directory of FStar.
 
 # Creates a tag, if necessary
-. `dirname $0`/release-linux.sh
+. `dirname $0`/release-pre.sh
 
 # We need two FSTAR_HOMEs in this script: one for the host (from where
 # we build F*) and one for the package (from where we test the
 # obtained binary). FSTAR_HOST_HOME is the former.
+cd $FSTAR_HOST_HOME
 
 # Constants for showing color in output window
 RED='\033[0;31m'

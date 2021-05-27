@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Creates a tag, if necessary
-. `dirname $0`/release-linux.sh
+. `dirname $0`/release-pre.sh
 
 # Build the package
 docker build -t fstar-package -f "$FSTAR_HOST_HOME/.docker/package.Dockerfile" "$FSTAR_HOST_HOME"
