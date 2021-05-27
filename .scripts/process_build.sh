@@ -36,15 +36,15 @@ TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
   unzip -o $MAJOR_ZIP_FILE
-  BINARY_PACKAGE="$MAJOR_ZIP_FILE"
-  cp $MAJOR_ZIP_FILE "$FSTAR_HOST_HOME/release/$BINARY_PACKAGE"
+  BUILD_PACKAGE="$MAJOR_ZIP_FILE"
+  cp $MAJOR_ZIP_FILE "$FSTAR_HOST_HOME/release/$BUILD_PACKAGE"
 else
   TYPE="_Linux_x86_64.tar.gz"
   MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
   if [[ -f $MAJOR_TAR_FILE ]]; then
     tar -x -f $MAJOR_TAR_FILE
-    BINARY_PACKAGE="$MAJOR_TAR_FILE"
-    cp $MAJOR_TAR_FILE "$FSTAR_HOST_HOME/release/$BINARY_PACKAGE"
+    BUILD_PACKAGE="$MAJOR_TAR_FILE"
+    cp $MAJOR_TAR_FILE "$FSTAR_HOST_HOME/release/$BUILD_PACKAGE"
   else
     echo -e "* ${RED}FAIL!${NC} src/ocaml-output/make package did not create ${MAJOR_ZIP_FILE} or ${MAJOR_TAR_FILE}"
     exit 1
