@@ -3,37 +3,12 @@
 # This script is called from everest-ci/ci script for a weekly build of the FStar Binaries
 # If ran separately, the starting directory should be the root directory of FStar.
 
-# Sorry, everyone
-if (( ${BASH_VERSION%%.*} < 4 )); then
-  echo "This script requires Bash >= 4. On OSX, try: brew install bash"
-  exit 1
-fi
-
-# Any error is fatal.
-set -e
-set -o pipefail
-
-set -x
-
-git_org=tahina-pro
-git_remote=tahina-pro
-
-# Check if the user has provided a GitHub authentication token
-[[ -n $SATS_TOKEN ]]
-
-# Switch to the F* directory (the parent of this script's directory)
-cd `dirname $0`/..
-
-# Make sure we are starting in the right place (F* repository)
-if ! [[ -d ulib ]]; then
-  echo "This script is intended to be run from the root of the F* repository"
-  exit 1
-fi
+# Creates a tag, if necessary
+. `dirname $0`/release-linux.sh
 
 # We need two FSTAR_HOMEs in this script: one for the host (from where
 # we build F*) and one for the package (from where we test the
 # obtained binary). FSTAR_HOST_HOME is the former.
-FSTAR_HOST_HOME=$PWD
 
 # Constants for showing color in output window
 RED='\033[0;31m'
@@ -48,17 +23,6 @@ diag () {
 diag "test if the working copy is clean"
 git diff --staged --exit-code
 git diff --exit-code
-
-# This script will not create a new tag. To this end, you should use
-# release-linux.sh, which will create the release tag (currently only
-# on Linux)
-
-diag "there must be a tag to this version, let that tag override version.txt"
-this_commit=$(git rev-parse HEAD)
-my_tag=$(git describe --tags --exact-match)
-[[ $(echo $my_tag | wc -w) -eq 1 ]]
-CURRENT_VERSION=$(echo $my_tag | sed 's!^v!!')
-echo $CURRENT_VERSION > version.txt
 
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
@@ -144,22 +108,9 @@ fi
 # From this point on, we should no longer need FSTAR_HOME.
 export FSTAR_HOME=
 
-# Push the binary package(s) to the release.
 
-pushd $FSTAR_HOST_HOME
-mkdir release
-mv src/ocaml-output/$BINARY_PACKAGE release/
-docker build -t fstar-release \
-       --build-arg SATS_FILE=$BINARY_PACKAGE \
-       --build-arg SATS_TAG=$my_tag \
-       --build-arg SATS_COMMITISH=$this_commit \
-       --build-arg SATS_TOKEN=$SATS_TOKEN \
-       --build-arg SATS_SLUG=$git_org/FStar \
-       -f .docker/release.Dockerfile \
-       release
-docker image rm -f fstar-release
-rm -rf release
-popd
+# Push the binary package(s) to the release.
+. `dirname $0`/release-post.sh
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
