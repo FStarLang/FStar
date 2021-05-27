@@ -82,3 +82,8 @@ RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamt
 RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
 RUN make -C $FSTAR_HOME/examples -j $opamthreads
 RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+
+# This is the last image. So we can also copy the file that contains
+# the desired filename for the package, to be extracted via
+# `docker cp`
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/version_platform.txt /home/test/version_platform.txt
