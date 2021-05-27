@@ -146,16 +146,16 @@ export FSTAR_HOME=
 
 # Push the binary package(s) to the release.
 
-pushd $FSTAR_HOST_HOME/src/ocaml-output
+pushd $FSTAR_HOST_HOME
 mkdir release
-mv $BINARY_PACKAGE release
+mv src/ocaml-output/$BINARY_PACKAGE release/
 docker build -t fstar-release \
        --build-arg SATS_FILE=$BINARY_PACKAGE \
        --build-arg SATS_TAG=$my_tag \
        --build-arg SATS_COMMITISH=$this_commit \
        --build-arg SATS_TOKEN=$SATS_TOKEN \
        --build-arg SATS_SLUG=$git_org/FStar \
-       -f "$FSTAR_HOST_HOME/.docker/release.Dockerfile" \
+       -f .docker/release.Dockerfile \
        release
 docker image rm -f fstar-release
 rm -rf release
