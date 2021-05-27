@@ -760,28 +760,30 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
               uu___1 in
           failwith uu___
       | uu___ ->
-          let uu___1 = FStar_TypeChecker_Env.quals_of_qninfo q in
-          (match uu___1 with
-           | FStar_Pervasives_Native.Some quals ->
-               if
-                 FStar_List.contains
-                   FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen quals
-               then
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = FStar_Syntax_Print.lid_to_string a in
-                     FStar_Util.format1
-                       "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
-                       uu___4 in
-                   (FStar_Errors.Fatal_IdentifierNotFound, uu___3) in
-                 let uu___3 = FStar_Ident.range_of_lid a in
-                 FStar_Errors.raise_error uu___2 uu___3
-               else
-                 (let uu___3 =
-                    let uu___4 = FStar_Syntax_Print.lid_to_string a in
-                    FStar_Util.format1
-                      "Name %s not found in the smtencoding env" uu___4 in
-                  failwith uu___3))
+          let quals = FStar_TypeChecker_Env.quals_of_qninfo q in
+          let uu___1 =
+            (FStar_Util.is_some quals) &&
+              (let uu___2 = FStar_All.pipe_right quals FStar_Util.must in
+               FStar_All.pipe_right uu___2
+                 (FStar_List.contains
+                    FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) in
+          if uu___1
+          then
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.lid_to_string a in
+                FStar_Util.format1
+                  "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
+                  uu___4 in
+              (FStar_Errors.Fatal_IdentifierNotFound, uu___3) in
+            let uu___3 = FStar_Ident.range_of_lid a in
+            FStar_Errors.raise_error uu___2 uu___3
+          else
+            (let uu___3 =
+               let uu___4 = FStar_Syntax_Print.lid_to_string a in
+               FStar_Util.format1 "Name %s not found in the smtencoding env"
+                 uu___4 in
+             failwith uu___3)
 let (lookup_lid : env_t -> FStar_Ident.lident -> fvar_binding) =
   fun env ->
     fun a ->

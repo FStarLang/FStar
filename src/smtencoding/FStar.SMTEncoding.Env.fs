@@ -257,8 +257,9 @@ let fail_fvar_lookup env a =
   | None ->
     failwith (BU.format1 "Name %s not found in the smtencoding and typechecker env" (Print.lid_to_string a))
   | _ ->
-    let Some quals = Env.quals_of_qninfo q in
-    if List.contains Unfold_for_unification_and_vcgen quals
+    let quals = Env.quals_of_qninfo q in
+    if BU.is_some quals &&
+       (quals |> BU.must |> List.contains Unfold_for_unification_and_vcgen)
     then Errors.raise_error (Errors.Fatal_IdentifierNotFound,
            BU.format1 "Name %s not found in the smtencoding env (the symbol is marked unfold, \
              expected it to reduce)" (Print.lid_to_string a)) (Ident.range_of_lid a)
