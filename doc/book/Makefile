@@ -3,6 +3,8 @@
 
 export FSTAR_HOME?=$(realpath ../..)
 
+FSTARLANG_ORG_ROOT?=www
+
 # You can set these variables from the command line.
 SPHINXOPTS    = -W
 SPHINXBUILD   = sphinx-build
@@ -12,10 +14,18 @@ BUILDDIR      = _build
 
 html: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	find _build -name "*.html" | xargs sed -i 's/_static/static/g'
+	rm -rf _build/html/static
+	mv _build/html/_static _build/html/static
 
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+deploy:
+	rm -rf $(FSTARLANG_ORG_ROOT)/tutorial/book/
+	cp -R _build/html $(FSTARLANG_ORG_ROOT)/tutorial/book/
+	cp -R code $(FSTARLANG_ORG_ROOT)/tutorial/book/
 
 .PHONY: help Makefile
 

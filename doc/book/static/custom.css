@@ -1,0 +1,12 @@
+.toggle .header {
+    display: block;
+    clear: both;
+}
+
+.toggle .header:after {
+    content: "Reveal ▶";
+}
+
+.toggle .header.open:after {
+    content: "Hide ▼";
+}

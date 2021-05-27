@@ -3,7 +3,7 @@
 Elements of F*
 ==============
 
-The :ref:`short tutorial<tutorial-overview>` should have provided you
+The short tutorial should have provided you
 with a basic feel for F*, in particular for how to use F* and its SMT
 solving backend for programming and proving simple functional
 programs.
@@ -120,10 +120,17 @@ Primitive constants
 Every F* program is checked in the context of some ambient primitive
 definitions taken from the core F* module :ref:`Prims<corelib_Prims>`.
 
+False
+^^^^^
+
+The type ``False`` has no elements. It represents a logical
+falsehood in F*---
+
+
 Unit
 ^^^^
 
-The primitive type ``unit`` has a single element denoted ``()``.
+The type ``unit`` has a single element denoted ``()``.
 
 
 Booleans
@@ -276,14 +283,6 @@ arbitrary refinements of your choosing, e.g.,::
   let odd = x:int { x % 2 = 1 } //the odd numbers
 
 .. note::
-
-   If you're coming from a language like C or Java where a type
-   primarily describes some properties about the representation of
-   data in memory, this view of types as describing arbitrary sets of
-   values may feel a bit alien. But, let it sink in a bit---types that
-   carve out precise sets of values will let you state and check
-   invariants about your programs that may otherwise have only been
-   implicit in your code.
 
    Refinement types in F* trace their lineage to `F7
    <https://www.microsoft.com/en-us/research/project/f7-refinement-types-for-f/>`_,
