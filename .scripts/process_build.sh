@@ -55,7 +55,7 @@ git diff --exit-code
 
 diag "there must be a tag to this version, let that tag override version.txt"
 this_commit=$(git rev-parse HEAD)
-my_tag=$(git describe --exact-match)
+my_tag=$(git describe --tags --exact-match)
 [[ $(echo $my_tag | wc -w) -eq 1 ]]
 CURRENT_VERSION=$(echo $my_tag | sed 's!^v!!')
 echo $CURRENT_VERSION > version.txt

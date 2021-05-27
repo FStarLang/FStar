@@ -21,7 +21,7 @@ git diff --exit-code
 if [[ -n $FSTAR_VERSION ]] ; then
     # It is provided by the user
     my_tag="$FSTAR_VERSION"
-elif my_tag=$(git describe --exact-match) ; then
+elif my_tag=$(git describe --tags --exact-match) ; then
     # It is the tag of the current commit
     # Check that there is only one tag
     [[ $(echo $my_tag | wc -w) -eq 1 ]]
