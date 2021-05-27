@@ -21,10 +21,6 @@ diag () {
 	echo -e "${YELLOW}$1${NC}"
 }
 
-diag "test if the working copy is clean"
-git diff --staged --exit-code
-git diff --exit-code
-
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
 git clean -ffdx
