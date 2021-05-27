@@ -10,6 +10,7 @@ git_remote=tahina-pro
 
 # Detect the F* directory and enter it
 fstar_home=$(cd `dirname $0`/.. && pwd)
+[[ -n $fstar_home ]]
 pushd "$fstar_home"
 
 # Fail if the state is dirty
@@ -37,12 +38,12 @@ if tagged_commit=$(git show-ref --tags --hash "$my_tag") && [[ -n $tagged_commit
 else
     # the tag does not exist, but check that it does not correspond to
     # an existing branch
-    if test_ref=$(git show-ref "$my_tag") ; then
-        [[ -z "$test_ref" ]]
-    fi &&
     # so we can apply it
     # and we will need to push it before pushing the release
-    git_push_tag_cmd="git push $git_remote $my_tag" &&
+    if test_ref=$(git show-ref "$my_tag") ; then
+        [[ -z "$test_ref" ]]
+    fi
+    git_push_tag_cmd="git push $git_remote $my_tag"
     git tag "$my_tag"
 fi
 
