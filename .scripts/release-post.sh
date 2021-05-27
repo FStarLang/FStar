@@ -2,10 +2,9 @@
 # the release
 
 
-# Clear the version number and push the tag, since everything has worked well so far
+# Clear the version number, since everything has worked well so far
 pushd "$FSTAR_HOST_HOME"
 git checkout version.txt
-$git_push_tag_cmd
 
 # Publish the release
 docker build -t fstar-release \

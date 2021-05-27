@@ -51,7 +51,6 @@ fi
 
 # Check if the commit pointed to by that tag (if any) points to the current commit
 this_commit=$(git rev-parse HEAD)
-git_push_tag_cmd=true
 if tagged_commit=$(git show-ref --tags --hash "$my_tag") && [[ -n $tagged_commit ]] ; then
     [[ $tagged_commit = $this_commit ]]
 else
@@ -62,7 +61,6 @@ else
     if test_ref=$(git show-ref "$my_tag") ; then
         [[ -z "$test_ref" ]]
     fi
-    git_push_tag_cmd="git push $git_remote $my_tag"
     git tag "$my_tag"
 fi
 
