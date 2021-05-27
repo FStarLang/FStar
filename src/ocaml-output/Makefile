@@ -252,7 +252,9 @@ else
   Z3_NAME=z3
 endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
-Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
+# Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
+# See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
+Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -286,7 +288,7 @@ endif
 endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt || true # FIXME: what if z3 is installed as an opam package?
+	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
