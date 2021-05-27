@@ -4,12 +4,12 @@
 # If ran separately, the starting directory should be the root directory of FStar.
 
 # Creates a tag, if necessary
-. `dirname $0`/release-pre.sh
+. "`dirname $0`/release-pre.sh"
 
 # We need two FSTAR_HOMEs in this script: one for the host (from where
 # we build F*) and one for the package (from where we test the
 # obtained binary). FSTAR_HOST_HOME is the former.
-cd $FSTAR_HOST_HOME
+cd "$FSTAR_HOST_HOME"
 
 # Constants for showing color in output window
 RED='\033[0;31m'
@@ -30,21 +30,21 @@ diag "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%Y%m%d%H%M)
 COMMIT=_$(git rev-parse --short HEAD)
 
-mkdir $FSTAR_HOST_HOME/release
+mkdir "$FSTAR_HOST_HOME/release"
 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
   unzip -o $MAJOR_ZIP_FILE
   BINARY_PACKAGE="$MAJOR_ZIP_FILE"
-  cp $MAJOR_ZIP_FILE $FSTAR_HOST_HOME/release/$BINARY_PACKAGE
+  cp $MAJOR_ZIP_FILE "$FSTAR_HOST_HOME/release/$BINARY_PACKAGE"
 else
   TYPE="_Linux_x86_64.tar.gz"
   MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
   if [[ -f $MAJOR_TAR_FILE ]]; then
     tar -x -f $MAJOR_TAR_FILE
     BINARY_PACKAGE="$MAJOR_TAR_FILE"
-    cp $MAJOR_TAR_FILE $FSTAR_HOST_HOME/release/$BINARY_PACKAGE
+    cp $MAJOR_TAR_FILE "$FSTAR_HOST_HOME/release/$BINARY_PACKAGE"
   else
     echo -e "* ${RED}FAIL!${NC} src/ocaml-output/make package did not create ${MAJOR_ZIP_FILE} or ${MAJOR_TAR_FILE}"
     exit 1
