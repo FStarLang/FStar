@@ -32,10 +32,13 @@ fi
 # Check if the commit pointed to by that tag (if any) points to the current commit
 this_commit=$(git rev-parse HEAD)
 git_push_tag_cmd=true
-if tagged_commit=$(git show-ref --tags --hash $my_tag) ; then
+if tagged_commit=$(git show-ref --tags --hash $my_tag) && [[ -n $tagged_commit ]] ; then
     [[ $tagged_commit = $this_commit ]]
 else
-    # the tag does not exist, so we can apply it
+    # the tag does not exist, but check that it does not correspond to
+    # an existing branch
+    ! git rev-parse "$my_tag"
+    # so we can apply it
     # and we will need to push it before pushing the release
     git_push_tag_cmd="git push $git_remote $my_tag"
     git tag "$my_tag"
