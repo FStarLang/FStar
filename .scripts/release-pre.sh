@@ -14,8 +14,8 @@ set -o pipefail
 
 set -x
 
-git_org=tahina-pro
-git_remote=tahina-pro
+git_org=FStarLang
+git_remote=
 
 # Check if the user has provided a GitHub authentication token
 [[ -n $SATS_TOKEN ]]
