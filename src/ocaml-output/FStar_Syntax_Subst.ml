@@ -1009,6 +1009,13 @@ let (subst_ascription :
   =
   fun s ->
     fun asc -> subst_ascription' ([s], FStar_Syntax_Syntax.NoUseRange) asc
+let (subst_decreasing_order :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.decreases_order ->
+      FStar_Syntax_Syntax.decreases_order)
+  =
+  fun s ->
+    fun dec -> subst_dec_order' ([s], FStar_Syntax_Syntax.NoUseRange) dec
 let (closing_subst :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun bs ->
