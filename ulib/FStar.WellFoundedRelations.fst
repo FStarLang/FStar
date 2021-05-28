@@ -269,8 +269,7 @@ let lex_squash  (#a:Type) (#b:a -> Type)
 #pop-options
 
 
-
-/// Let's build towards ackermann
+/// Let's work towards ackermann
 
 unfold
 let lt : relation nat = fun x y -> x < y
@@ -286,7 +285,7 @@ let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
 
 let rec ackermann (m n:nat)
   : Tot nat (decreases {:well-founded
-             (as_well_founded (lex lt lt_dep) (lex_wf lt lt_dep lt_well_founded lt_dep_well_founded))
+             (as_well_founded (lex_wf _ _ lt_well_founded lt_dep_well_founded))
              (| m, n |) })
   = lex_squash lt lt_dep;
     if m = 0 then n + 1
