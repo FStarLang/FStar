@@ -51,6 +51,7 @@ type is_well_founded (#a:Type) (rel:relation a) =
 
 type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
 
+#push-options "--warn_error -271"
 unfold
 let as_well_founded (#a:Type) (rel:relation a) (f:(x:a -> acc a rel x))
   : well_founded_relation a
@@ -59,3 +60,4 @@ let as_well_founded (#a:Type) (rel:relation a) (f:(x:a -> acc a rel x))
               [SMTPat ()]
       = FStar.Squash.return_squash (f x) in
     rel
+#pop-options
