@@ -3137,17 +3137,25 @@ let (config' :
     fun s ->
       fun e ->
         let d =
-          FStar_All.pipe_right s
-            (FStar_List.collect
-               (fun uu___ ->
-                  match uu___ with
-                  | FStar_TypeChecker_Env.UnfoldUntil k ->
-                      [FStar_TypeChecker_Env.Unfold k]
-                  | FStar_TypeChecker_Env.Eager_unfolding ->
-                      [FStar_TypeChecker_Env.Eager_unfolding_only]
-                  | FStar_TypeChecker_Env.Inlining ->
-                      [FStar_TypeChecker_Env.InliningDelta]
-                  | uu___1 -> [])) in
+          let uu___ =
+            FStar_All.pipe_right s
+              (FStar_List.collect
+                 (fun uu___1 ->
+                    match uu___1 with
+                    | FStar_TypeChecker_Env.UnfoldUntil k ->
+                        [FStar_TypeChecker_Env.Unfold k]
+                    | FStar_TypeChecker_Env.Eager_unfolding ->
+                        [FStar_TypeChecker_Env.Eager_unfolding_only]
+                    | FStar_TypeChecker_Env.UnfoldQual l when
+                        FStar_List.contains "unfold" l ->
+                        [FStar_TypeChecker_Env.Eager_unfolding_only]
+                    | FStar_TypeChecker_Env.Inlining ->
+                        [FStar_TypeChecker_Env.InliningDelta]
+                    | FStar_TypeChecker_Env.UnfoldQual l when
+                        FStar_List.contains "inline_for_extraction" l ->
+                        [FStar_TypeChecker_Env.InliningDelta]
+                    | uu___2 -> [])) in
+          FStar_All.pipe_right uu___ FStar_List.unique in
         let d1 =
           match d with | [] -> [FStar_TypeChecker_Env.NoDelta] | uu___ -> d in
         let steps =
