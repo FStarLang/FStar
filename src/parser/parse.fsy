@@ -1454,7 +1454,9 @@ let op_expr =                                                 ( mk_ident (".(||)
         | App (t1, t2, _) ->
 	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 3 3) Type_level in
 	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 4) Type_level
-	| _ -> failwith "Impossible!" )}
+	| _ ->
+	  raise_error (Fatal_SyntaxError,
+	    "Syntax error: To use well-founded relations, write e1 e2") (rhs parseState 3) )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}

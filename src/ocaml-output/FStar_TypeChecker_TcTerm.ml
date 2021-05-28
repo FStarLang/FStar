@@ -1034,11 +1034,7 @@ let (guard_letrecs :
                          | uu___3 -> false)) in
                match uu___1 with
                | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
-                   (FStar_Syntax_Syntax.Decreases_lex l)) ->
-                   FStar_Syntax_Syntax.Decreases_lex l
-               | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
-                   (FStar_Syntax_Syntax.Decreases_wf (rel, e))) ->
-                   FStar_Syntax_Syntax.Decreases_wf (rel, e)
+                   d) -> d
                | uu___2 ->
                    let uu___3 =
                      FStar_All.pipe_right bs filter_types_and_functions in
@@ -1227,14 +1223,36 @@ let (guard_letrecs :
                   mk_precedes_lex env2 l l_prev
               | (FStar_Syntax_Syntax.Decreases_wf (rel, e),
                  FStar_Syntax_Syntax.Decreases_wf (rel_prev, e_prev)) ->
-                  let uu___ =
-                    let uu___1 = FStar_Syntax_Syntax.as_arg e in
-                    let uu___2 =
-                      let uu___3 = FStar_Syntax_Syntax.as_arg e_prev in
-                      [uu___3] in
-                    uu___1 :: uu___2 in
-                  FStar_Syntax_Syntax.mk_Tm_app rel uu___ r
-              | (uu___, uu___1) -> failwith "Cannot mix lex anf wf orderings" in
+                  ((let uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Syntax_Util.eq_tm rel rel_prev in
+                        uu___3 = FStar_Syntax_Util.Equal in
+                      Prims.op_Negation uu___2 in
+                    if uu___1
+                    then
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = FStar_Syntax_Print.term_to_string rel in
+                          let uu___5 =
+                            FStar_Syntax_Print.term_to_string rel_prev in
+                          FStar_Util.format2
+                            "Cannot build termination VC with two different well-founded relations %s and %s"
+                            uu___4 uu___5 in
+                        (FStar_Errors.Fatal_UnexpectedTerm, uu___3) in
+                      FStar_Errors.raise_error uu___2 r
+                    else ());
+                   (let uu___1 =
+                      let uu___2 = FStar_Syntax_Syntax.as_arg e in
+                      let uu___3 =
+                        let uu___4 = FStar_Syntax_Syntax.as_arg e_prev in
+                        [uu___4] in
+                      uu___2 :: uu___3 in
+                    FStar_Syntax_Syntax.mk_Tm_app rel uu___1 r))
+              | (uu___, uu___1) ->
+                  FStar_Errors.raise_error
+                    (FStar_Errors.Fatal_UnexpectedTerm,
+                      "Cannot build termination VC with a well-founded relation and lex ordering")
+                    r in
             let previous_dec = decreases_clause actuals expected_c in
             let guard_one_letrec uu___ =
               match uu___ with
@@ -4247,8 +4265,8 @@ and (tc_comp :
                                                     | (t, u_t) ->
                                                         let uu___12 =
                                                           FStar_TypeChecker_Util.new_implicit_var
-                                                            ""
-                                                            FStar_Range.dummyRange
+                                                            "implicit for type of the well-founded relation in decreases clause"
+                                                            rel.FStar_Syntax_Syntax.pos
                                                             env1 t in
                                                         (match uu___12 with
                                                          | (a, uu___13, g_a)
@@ -4267,7 +4285,7 @@ and (tc_comp :
                                                                FStar_Syntax_Syntax.mk_Tm_app
                                                                  uu___14
                                                                  uu___15
-                                                                 FStar_Range.dummyRange in
+                                                                 rel.FStar_Syntax_Syntax.pos in
                                                              let uu___14 =
                                                                let uu___15 =
                                                                  FStar_TypeChecker_Env.set_expected_typ

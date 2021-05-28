@@ -1088,7 +1088,8 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                                       let uu___6 = term_to_string rel in
                                       let uu___7 = term_to_string e in
                                       FStar_Util.format2
-                                        "(decreases_wf %s %s)" uu___6 uu___7 in
+                                        "(decreases {:well-founded %s %s})"
+                                        uu___6 uu___7 in
                                     [uu___5]
                                 | uu___5 -> []))) in
                  FStar_All.pipe_right uu___3 (FStar_String.concat " ") in

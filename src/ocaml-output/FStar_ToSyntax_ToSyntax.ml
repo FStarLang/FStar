@@ -422,6 +422,10 @@ and (free_type_vars :
       | FStar_Parser_AST.NamedTyp (uu___1, t1) -> free_type_vars env t1
       | FStar_Parser_AST.LexList l ->
           FStar_List.collect (free_type_vars env) l
+      | FStar_Parser_AST.WFOrder (rel, e) ->
+          let uu___1 = free_type_vars env rel in
+          let uu___2 = free_type_vars env e in
+          FStar_List.append uu___1 uu___2
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
       | FStar_Parser_AST.Ascribed (t1, t', tacopt) ->
           let ts = t1 :: t' ::
@@ -4403,8 +4407,10 @@ and (desugar_comp :
                                                     let uu___9 =
                                                       desugar_term env t21 in
                                                     (uu___8, uu___9) in
-                                                  FStar_Syntax_Syntax.Decreases_wf
-                                                    uu___7
+                                                  FStar_All.pipe_right uu___7
+                                                    (fun uu___8 ->
+                                                       FStar_Syntax_Syntax.Decreases_wf
+                                                         uu___8)
                                               | uu___7 ->
                                                   let uu___8 =
                                                     let uu___9 =
