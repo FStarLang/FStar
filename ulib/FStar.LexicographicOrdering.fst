@@ -16,7 +16,7 @@
    Authors: Aseem Rastogi and Nikhil Swamy
 *)
 
-module FStar.WellFoundedRelations
+module FStar.LexicographicOrdering
 
 /// This module proves that lexicographic and symmetric products are
 ///   well-founded (i.e. every element is accessible)
