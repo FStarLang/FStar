@@ -22,6 +22,8 @@ module FStar.WellFoundedRelations
 ///   well-founded (i.e. every element is accessible)
 ///
 /// The main theorems in the module are `lex_wf` and `sym_wf`
+///
+/// Towards the end, we use `lex` to prove termination for the ackermann function
 /// 
 /// Some references:
 ///   - https://github.com/coq/coq/blob/master/theories/Wellfounded/Lexicographic_Product.v
@@ -205,3 +207,88 @@ let sym_wf (#a #b:Type)
   (wf_b:well_founded r_b)
   : well_founded (sym r_a r_b)
   = fun (x, y) -> AccIntro (sym_wf_aux x (wf_a x) y (wf_b y))
+
+
+
+/// Let's now use `lex` to prove termination for the ackermann function
+///
+/// F* supports user-defined well-foundned orderings in the decreases clauses///
+///
+/// However, since those proofs are SMT-based, to use our `lex` relation,
+///   we need to define a `squash` version of it
+
+open FStar.Squash
+
+
+/// The Left_lex constructor in the squashed world
+
+let lex_squash_left (#a:Type) (#b:a -> Type)
+  (r_a:relation a)
+  (r_b:(x:a -> relation (b x)))
+  (x1:a) (y1:b x1)
+  (x2:a) (y2:b x2)
+  (p:squash (r_a x1 x2))
+  : Lemma (squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |)))
+  = bind_squash p (fun t -> return_squash (Left_lex #a #b #r_a #r_b x1 x2 y1 y2 t))
+
+///
+/// The Right_lex constructor analogously
+
+let lex_squash_right (#a:Type) (#b:a -> Type)
+  (r_a:relation a)
+  (r_b:(x:a -> relation (b x)))
+  (x:a) (y1:b x)
+  (y2:b x)
+  (p:squash (r_b x y1 y2))
+  : Lemma (squash (lex r_a r_b (| x, y1 |) (| x, y2 |)))
+  = bind_squash p (fun t -> return_squash (Right_lex #a #b #r_a #r_b x y1 y2 t))
+
+
+/// Combine the two
+
+#push-options "--warn_error -271"
+let lex_squash  (#a:Type) (#b:a -> Type)
+  (r_a:relation a)
+  (r_b:(x:a -> relation (b x)))
+  : Lemma
+      ((forall (x1:a) (x2:a) (y1:b x1) (y2:b x2).{:pattern lex r_a r_b (| x1, y1 |) (| x2, y2 |)}
+          squash (r_a x1 x2) ==> squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |))) /\
+       (forall (x:a) (y1:b x) (y2:b x).{:pattern lex r_a r_b (| x, y1 |) (| x, y2 |)}
+          squash (r_b x y1 y2) ==> squash (lex r_a r_b (| x, y1 |) (| x, y2 |))))
+  = let left
+      (x1:a) (y1:b x1)
+      (x2:a) (y2:b x2)
+      : Lemma (squash (r_a x1 x2) ==> squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |)))
+              [SMTPat ()]
+      = Classical.impl_intro (lex_squash_left r_a r_b x1 y1 x2 y2) in
+    let right (x:a) (y1:b x) (y2:b x)
+      : Lemma (squash (r_b x y1 y2) ==> squash (lex r_a r_b (| x, y1 |) (| x, y2 |)))
+              [SMTPat ()]
+      = Classical.impl_intro (lex_squash_right r_a r_b x y1 y2) in
+    ()
+#pop-options
+
+
+
+/// Let's build towards ackermann
+
+unfold
+let lt : relation nat = fun x y -> x < y
+
+unfold
+let lt_dep (_:nat) : relation nat = fun x y -> x < y
+
+let rec lt_well_founded (n:nat) : acc lt n =
+  AccIntro (fun m _ -> lt_well_founded m)
+
+let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
+  AccIntro (fun p _ -> lt_dep_well_founded m p)
+
+let rec ackermann (m n:nat)
+  : Tot nat (decreases {:well-founded
+             (as_well_founded (lex lt lt_dep) (lex_wf lt lt_dep lt_well_founded lt_dep_well_founded))
+             (| m, n |) })
+  = lex_squash lt lt_dep;
+    if m = 0 then n + 1
+    else if n = 0 then ackermann (m - 1) 1
+    else ackermann (m - 1) (ackermann m (n - 1))
