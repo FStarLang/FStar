@@ -383,8 +383,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | _ -> [S.bv_to_name b]) in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
-                | Some (DECREASES (Decreases_lex l)) -> Decreases_lex l
-                | Some (DECREASES (Decreases_wf (rel, e))) -> Decreases_wf (rel, e)
+                | Some (DECREASES d) -> d
                 | _ -> bs |> filter_types_and_functions |> Decreases_lex in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
@@ -465,8 +464,20 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         | Decreases_lex l, Decreases_lex l_prev ->
           mk_precedes_lex env l l_prev
         | Decreases_wf (rel, e), Decreases_wf (rel_prev, e_prev) ->
+          if not (U.eq_tm rel rel_prev = U.Equal)
+          then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                 BU.format2 "Cannot build termination VC with two different well-founded \
+                   relations %s and %s"
+                   (Print.term_to_string rel)
+                   (Print.term_to_string rel_prev)) r;
+          (*
+           * For well-founded relations based termination checking,
+           *   just prove that (rel e e_prev)
+           *)
           mk_Tm_app rel [as_arg e; as_arg e_prev] r
-        | _, _ -> failwith "Cannot mix lex anf wf orderings" in
+        | _, _ ->
+          Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+            "Cannot build termination VC with a well-founded relation and lex ordering") r in
 
       let previous_dec = decreases_clause actuals expected_c in
 
@@ -1521,12 +1532,21 @@ and tc_comp env c : comp                                      (* checked version
             l@[e], Env.conj_guard g g_e) ([], Env.trivial_guard) in
           DECREASES (Decreases_lex l), g
         | DECREASES (Decreases_wf (rel, e)) ->
+          (*
+           * We will check that for a fresh uvar (?u:Type),
+           *   rel:well_founded_relation ?u  and
+           *   e:?u
+           *)
           let env, _ = Env.clear_expected_typ env in
           let t, u_t = U.type_u () in
-          let a, _, g_a = TcUtil.new_implicit_var "" Range.dummyRange env t in
+          let a, _, g_a = TcUtil.new_implicit_var
+            "implicit for type of the well-founded relation in decreases clause"
+            rel.pos
+            env
+            t in
           let wf_t = mk_Tm_app
             (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
-            [as_arg a] Range.dummyRange in
+            [as_arg a] rel.pos in
           let rel, _, g_rel = tc_tot_or_gtot_term (Env.set_expected_typ env wf_t) rel in
           let e, _, g_e = tc_tot_or_gtot_term (Env.set_expected_typ env a) e in
           DECREASES (Decreases_wf (rel, e)),

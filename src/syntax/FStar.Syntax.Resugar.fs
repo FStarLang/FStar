@@ -1006,15 +1006,14 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | hd::tl ->
           match hd with
           | DECREASES dec_order ->
-            (match dec_order with
-             | Decreases_lex ts ->
-               let lexlist = mk (LexList (ts |> List.map (resugar_term' env))) in
-               let e = mk (Decreases (lexlist, None)) in
-               aux (e::l) tl
-             | Decreases_wf (rel, e) ->
-               let wf = mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
-               let e = mk (Decreases (wf, None)) in
-               aux (e::l) tl)
+            let d =
+              match dec_order with
+              | Decreases_lex ts ->
+                mk (LexList (ts |> List.map (resugar_term' env)))
+              | Decreases_wf (rel, e) ->
+                mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
+            let e = mk (Decreases (d, None)) in
+            aux (e::l) tl
           | _ -> aux l tl
       in
       let decrease = aux [] c.flags in
@@ -1027,14 +1026,15 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       let rec aux l = function
        | [] -> l
        | hd::tl ->
-          match hd with
-          | DECREASES (Decreases_lex ts) ->
-            let es = ts |> List.map (fun e -> resugar_term' env e, A.Nothing) in
-            aux (es@l) tl
-          | DECREASES (Decreases_wf (rel, e)) ->
-            let es = [rel; e] |> List.map (fun e -> resugar_term' env e, A.Nothing) in
-            aux (es@l) tl            
-          | _ -> aux l tl
+         match hd with
+         | DECREASES d ->
+           let ts =
+             match d with
+             | Decreases_lex ts -> ts
+             | Decreases_wf (rel, e) -> [rel; e] in
+           let es = ts |> List.map (fun e -> resugar_term' env e, A.Nothing) in
+           aux (es@l) tl            
+         | _ -> aux l tl
       in
       let decrease = aux [] c.flags in
       mk (A.Construct(c.effect_name, result::decrease@args))
