@@ -516,6 +516,7 @@ let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.u
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
 let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
+let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
