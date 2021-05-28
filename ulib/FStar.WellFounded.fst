@@ -23,22 +23,22 @@ module FStar.WellFounded
 open FStar.Preorder
 
 noeq
-type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
-  | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
+type acc (#a:Type) (r:(a -> a -> Type)) (x:a) : Type =
+  | AccIntro : (y:a -> r y x -> Tot (acc r y)) -> acc r x
 
-let well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> Tot (acc a r x)
+let well_founded (#a:Type) (r:(a -> a -> Type)) = x:a -> Tot (acc r x)
 
-let acc_inv (#aa:Type) (#r:(aa -> aa -> Type)) (x:aa) (a:acc aa r x)
-  : Tot (e:(y:aa -> r y x -> Tot (acc aa r y)){e << a})
+let acc_inv (#aa:Type) (#r:(aa -> aa -> Type)) (x:aa) (a:acc r x)
+  : Tot (e:(y:aa -> r y x -> Tot (acc r y)){e << a})
   = match a with | AccIntro h1 -> h1
 
 let rec fix_F (#aa:Type) (#r:(aa -> aa -> Type)) (#p:(aa -> Type))
               (f: (x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)))
-              (x:aa) (a:acc aa r x)
+              (x:aa) (a:acc r x)
   : Tot (p x) (decreases a)
   = f x (fun y h -> fix_F f y (acc_inv x a y h))
 
-let fix (#aa:Type) (#r:(aa -> aa -> Type)) (rwf:well_founded aa r)
+let fix (#aa:Type) (#r:(aa -> aa -> Type)) (rwf:well_founded r)
         (p:aa -> Type) (f:(x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)))
         (x:aa)
   : Tot (p x)
@@ -47,16 +47,16 @@ let fix (#aa:Type) (#r:(aa -> aa -> Type)) (rwf:well_founded aa r)
 
 
 type is_well_founded (#a:Type) (rel:relation a) =
-  forall (x:a). squash (acc a rel x)
+  forall (x:a). squash (acc rel x)
 
 type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
 
 #push-options "--warn_error -271"
 unfold
-let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc a rel x))
+let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc rel x))
   : well_founded_relation a
   = let aux (x:a)
-      : Lemma (squash (acc a rel x))
+      : Lemma (squash (acc rel x))
               [SMTPat ()]
       = FStar.Squash.return_squash (f x) in
     rel

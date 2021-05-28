@@ -18,48 +18,9 @@
 
 module FStar.LexicographicOrdering
 
-/// This module proves that lexicographic and symmetric products are
-///   well-founded (i.e. every element is accessible)
-///
-/// The main theorems in the module are `lex_wf` and `sym_wf`
-///
-/// Towards the end, we use `lex` to prove termination for the ackermann function
-/// 
-/// Some references:
-///   - https://github.com/coq/coq/blob/master/theories/Wellfounded/Lexicographic_Product.v
-///   - Constructing Recursion Operators in Type Theory, L. Paulson  JSC (1986) 2, 325-355
-
 open FStar.Preorder
 open FStar.ReflexiveTransitiveClosure
 open FStar.WellFounded
-
-
-/// Abbreviations for FStar.WellFounded.well_founded and
-///   FStar.WellFounded.acc with the first argument an implicit
-
-type acc (#a:Type) (rel:relation a) (x:a) = acc a rel x
-type well_founded (#a:Type) (rel:relation a) = well_founded a rel
-
-
-/// Definition of lexicographic ordering as a relation over dependent tuples
-///
-/// Two elements are related if:
-///   - Either their first components are related
-///   - Or, the first components are equal, and the second components are related
-
-noeq
-type lex (#a:Type) (#b:a -> Type) (r_a:relation a) (r_b:(x:a -> relation (b x)))
-  : (x:a & b x) -> (x:a & b x) -> Type =
-  | Left_lex:
-    x1:a -> x2:a ->
-    y1:b x1 -> y2:b x2 ->
-    r_a x1 x2 ->
-    lex r_a r_b (| x1, y1 |) (| x2, y2 |)
-  | Right_lex:
-    x:a ->
-    y1:b x -> y2:b x ->
-    r_b x y1 y2 ->
-    lex r_a r_b (| x, y1 |) (| x, y2 |)
 
 
 /// A helper lemma about reflexive transitive closure
@@ -70,7 +31,6 @@ let closure_transitive (#a:Type) (#r_a:relation a) (x y z:a)
       (ensures (closure r_a) x z)
       [SMTPat ((closure r_a) x y); SMTPat (r_a y z)]
   = assert ((closure r_a) y z)
-
 
 /// The main workhorse for the proof of lex_t well-foundedness
 ///
@@ -127,41 +87,13 @@ let rec lex_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> rela
       lex_wf_aux_y y acc_y t p_t
 
 
-/// Main theorem
-///
-/// Given two well-founded relations `r_a` and `r_b`,
-///   their lexicographic ordering is also well-founded
-
-let lex_wf (#a:Type) (#b:a -> Type)
-  (r_a:relation a)
-  (r_b:(x:a -> relation (b x)))
-  (wf_a:well_founded r_a)
-  (wf_b:(x:a -> well_founded (r_b x)))
-  : well_founded (lex r_a r_b)
-  = fun (| x, y |) ->
-    AccIntro (lex_wf_aux x (wf_a x) wf_b y (wf_b x y))
+let lex_wf #_ #_ #_ #_ wf_a wf_b =
+  fun (| x, y |) -> AccIntro (lex_wf_aux x (wf_a x) wf_b y (wf_b x y))
 
 
 /// Proof for well-foundedness of symmetric products
 ///
 /// The proof follows the same structure as for the lex ordering
-
-
-/// Symmetric product relation
-
-noeq
-type sym (#a:Type) (#b:Type) (r_a:relation a) (r_b:relation b)
-  : (a & b) -> (a & b) -> Type =  
-  | Left_sym:
-    x1:a -> x2:a ->
-    y:b ->
-    r_a x1 x2 ->
-    sym r_a r_b (x1, y) (x2, y)
-  | Right_sym:
-    x:a ->
-    y1:b -> y2:b ->
-    r_b y1 y2 ->
-    sym r_a r_b (x, y1) (x, y2)
 
 let rec sym_wf_aux (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
   (x:a) (acc_a:acc r_a x)
@@ -197,28 +129,19 @@ let rec sym_wf_aux (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
               | AccIntro f -> f y_t p_b)) in
       sym_wf_aux_y y acc_b t p_t
 
-
-/// Main theorem for symmetric product
-
-let sym_wf (#a #b:Type)
-  (r_a:relation a)
-  (r_b:relation b)
-  (wf_a:well_founded r_a)
-  (wf_b:well_founded r_b)
-  : well_founded (sym r_a r_b)
-  = fun (x, y) -> AccIntro (sym_wf_aux x (wf_a x) y (wf_b y))
+let sym_wf #_ #_ #_ #_ wf_a wf_b =
+  fun (x, y) -> AccIntro (sym_wf_aux x (wf_a x) y (wf_b y))
 
 
 
 /// Let's now use `lex` to prove termination for the ackermann function
 ///
-/// F* supports user-defined well-foundned orderings in the decreases clauses///
+/// F* supports user-defined well-foundned orderings in the decreases clauses
 ///
 /// However, since those proofs are SMT-based, to use our `lex` relation,
 ///   we need to define a `squash` version of it
 
 open FStar.Squash
-
 
 /// The Left_lex constructor in the squashed world
 
@@ -285,7 +208,7 @@ let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
 
 let rec ackermann (m n:nat)
   : Tot nat (decreases {:well-founded
-             (as_well_founded (lex_wf _ _ lt_well_founded lt_dep_well_founded))
+             (as_well_founded (lex_wf lt_well_founded lt_dep_well_founded))
              (| m, n |) })
   = lex_squash lt lt_dep;
     if m = 0 then n + 1
