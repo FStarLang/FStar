@@ -32,8 +32,8 @@ if ! [[ -d ulib ]]; then
 fi
 
 # Fail if the state is dirty
-git diff --staged --exit-code
-git diff --exit-code
+git diff --staged --exit-code --ignore-cr-at-eol
+git diff --exit-code --ignore-cr-at-eol
 
 # Detect the F* version number
 git fetch --tags $git_remote
