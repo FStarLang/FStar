@@ -1,5 +1,5 @@
 [
-  "+R>!lº©²Á¢:¿\u0001oxŽ",
+  "gø®Æ6Ö—që§4¿E²#š",
   [
     [
       "FStar.String.make",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0f32efafd43a9671f56231920856a8b4"
+      "8dd8c970db2963904a02bbe51a1edf1f"
     ],
     [
       "FStar.String.sub",
@@ -27,7 +27,29 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ba2566715af10e5ec1e69c8a2fbbf0fc"
+      "3ea574a804ee66f131082158b0b2c1ef"
+    ],
+    [
+      "FStar.String.index_string_of_list",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.String.strlen" ],
+      0,
+      "d521fc39cc400a46785e5329afd7c585"
+    ],
+    [
+      "FStar.String.index_list_of_string",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.String.strlen",
+        "refinement_interpretation_Tm_refine_1ca113d8204771fcd4ddf6572679125d",
+        "string_inversion"
+      ],
+      0,
+      "40d384c26947dbd4635b72a29d10792d"
     ]
   ]
 ]
