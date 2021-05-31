@@ -1544,8 +1544,11 @@ and tc_comp env c : comp                                      (* checked version
             rel.pos
             env
             t in
+          //well_founded_relation<u_t> t
           let wf_t = mk_Tm_app
-            (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
+            (mk_Tm_uinst
+               (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
+               [u_t])
             [as_arg a] rel.pos in
           let rel, _, g_rel = tc_tot_or_gtot_term (Env.set_expected_typ env wf_t) rel in
           let e, _, g_e = tc_tot_or_gtot_term (Env.set_expected_typ env a) e in
