@@ -97,3 +97,13 @@ let stronger_markovs_principle (p: (nat -> GTot bool))
 let stronger_markovs_principle_prop (p: (nat -> GTot prop))
     : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
     indefinite_description_ghost _ p
+
+
+(** A proof for squash p can be eliminated to get p in the Ghost effect *)
+
+let elim_squash (#p:Type0) (s:squash p) : GTot p =
+  let t : True = magic () in  //TODO: (return_squash #c_True T) doesn't work
+  let uu : squash (x:p & True) = bind_squash s (fun x -> return_squash (| x, t |)) in
+  give_proof (return_squash uu);
+  indefinite_description_ghost p (fun _ -> True)
+
