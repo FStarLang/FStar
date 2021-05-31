@@ -180,8 +180,7 @@ let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
 
 let rec ackermann (m n:nat)
   : Tot nat (decreases {:well-founded
-             (map_squash_well_founded (lex_sq_to_lex lt lt_dep)
-                                      (lex_wf lt_well_founded lt_dep_well_founded))
+             (lex_sq lt_well_founded lt_dep_well_founded)
              (| m, n |) })
   = if m = 0 then n + 1
     else if n = 0 then ackermann (m - 1) 1
