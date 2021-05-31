@@ -238,7 +238,18 @@ let (inspect_comp :
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
           (FStar_Syntax_Syntax.Decreases_lex ts)) -> ts
-      | uu___1 -> failwith "impossible" in
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+          (FStar_Syntax_Syntax.Decreases_wf uu___1)) ->
+          ((let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Syntax_Print.comp_to_string c in
+                FStar_Util.format1
+                  "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
+                  uu___5 in
+              (FStar_Errors.Warning_CantInspect, uu___4) in
+            FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
+           [])
+      | uu___1 -> failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uu___) ->
         FStar_Reflection_Data.C_Total (t, [])
