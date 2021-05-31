@@ -233,7 +233,13 @@ let inspect_comp (c : comp) : comp_view =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
         | None -> []
         | Some (DECREASES (Decreases_lex ts)) -> ts
-        | _ -> failwith "impossible"
+        | Some (DECREASES (Decreases_wf _)) ->
+          Err.log_issue c.pos (Err.Warning_CantInspect,
+            BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
+              skipping the decreases clause"
+              (Print.comp_to_string c));
+          []
+        | _ -> failwith "Impossible!"
     in
     match c.n with
     | Total (t, _) -> C_Total (t, [])

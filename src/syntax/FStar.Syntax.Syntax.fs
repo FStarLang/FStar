@@ -204,7 +204,7 @@ and binders = list<binder>                                       (* bool marks i
 and decreases_order =
   | Decreases_lex of list<term>  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
   | Decreases_wf of term * term  (* or a well-founded relation and a term *)
-and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+and cflag =                                                        (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
   | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
   | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
