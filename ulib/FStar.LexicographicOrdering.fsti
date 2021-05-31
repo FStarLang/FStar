@@ -40,73 +40,73 @@ open FStar.WellFounded
 ///   - Or, the first components are equal, and the second components are related
 
 noeq
-type lex (#a:Type) (#b:a -> Type) (r_a:relation a) (r_b:(x:a -> relation (b x)))
+type lex_t (#a:Type) (#b:a -> Type) (r_a:relation a) (r_b:(x:a -> relation (b x)))
   : (x:a & b x) -> (x:a & b x) -> Type =
   | Left_lex:
     x1:a -> x2:a ->
     y1:b x1 -> y2:b x2 ->
     r_a x1 x2 ->
-    lex r_a r_b (| x1, y1 |) (| x2, y2 |)
+    lex_t r_a r_b (| x1, y1 |) (| x2, y2 |)
   | Right_lex:
     x:a ->
     y1:b x -> y2:b x ->
     r_b x y1 y2 ->
-    lex r_a r_b (| x, y1 |) (| x, y2 |)
+    lex_t r_a r_b (| x, y1 |) (| x, y2 |)
 
 /// Given two well-founded relations `r_a` and `r_b`,
 ///   their lexicographic ordering is also well-founded
 
-val lex_wf (#a:Type) (#b:a -> Type)
+val lex_t_wf (#a:Type) (#b:a -> Type)
   (#r_a:relation a)
   (#r_b:(x:a -> relation (b x)))
   (wf_a:well_founded r_a)
   (wf_b:(x:a -> well_founded (r_b x)))
-  : well_founded (lex r_a r_b)
+  : well_founded (lex_t r_a r_b)
 
 
 /// We can also define a squashed version of lex relation
 
 unfold
-let lex_sq_aux (#a:Type) (#b:a -> Type)
+let lex_aux (#a:Type) (#b:a -> Type)
   (r_a:relation a)
   (r_b:(x:a -> relation (b x)))
-  ((| x1, y1 |):(x:a & b x))
-  ((| x2, y2 |):(x:a & b x)) =
-  (squash (r_a x1 x2)) \/
-  (x1 == x2 /\ squash ((r_b x1) y1 y2))
+  : relation (x:a & b x)
+  = fun (| x1, y1 |) (| x2, y2 |) ->
+    (squash (r_a x1 x2)) \/
+    (x1 == x2 /\ squash ((r_b x1) y1 y2))
 
 
 /// Provide a mapping from a point in lex_sq to a squashed point in lex
 
-val lex_sq_to_lex (#a:Type) (#b:a -> Type)
+val lex_to_lex_t (#a:Type) (#b:a -> Type)
   (r_a:relation a)
   (r_b:(x:a -> relation (b x)))
   (t1 t2:(x:a & b x))
-  (p:lex_sq_aux r_a r_b t1 t2)
-  : squash (lex r_a r_b t1 t2)
+  (p:lex_aux r_a r_b t1 t2)
+  : squash (lex_t r_a r_b t1 t2)
 
 /// And prove that is it is well-founded
 
-let lex_sq_wf (#a:Type) (#b:a -> Type)
+let lex_wf (#a:Type) (#b:a -> Type)
   (#r_a:relation a)
   (#r_b:(x:a -> relation (b x)))
   (wf_a:well_founded r_a)
   (wf_b:(x:a -> well_founded (r_b x)))
-  : Lemma (is_well_founded (lex_sq_aux r_a r_b))
-  = map_squash_is_well_founded (lex_sq_to_lex r_a r_b) (lex_wf wf_a wf_b)
+  : Lemma (is_well_founded (lex_aux r_a r_b))
+  = map_squash_is_well_founded (lex_to_lex_t r_a r_b) (lex_t_wf wf_a wf_b)
 
 
 /// A user-friendly lex_wf that returns a well-founded relation
 
 unfold
-let lex_sq (#a:Type) (#b:a -> Type)
+let lex (#a:Type) (#b:a -> Type)
   (#r_a:relation a)
   (#r_b:(x:a -> relation (b x)))
   (wf_a:well_founded r_a)
   (wf_b:(x:a -> well_founded (r_b x)))
   : well_founded_relation (x:a & b x)
-  = lex_sq_wf wf_a wf_b;
-    lex_sq_aux r_a r_b
+  = lex_wf wf_a wf_b;
+    lex_aux r_a r_b
 
 
 /// Symmetric product relation

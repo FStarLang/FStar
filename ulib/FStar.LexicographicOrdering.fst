@@ -48,17 +48,17 @@ let closure_transitive (#a:Type) (#r_a:relation a) (x y z:a)
 ///   but note that we only require it on elements of a that are related to x in the
 ///   transitive closure of r_a
 
-let rec lex_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> relation (b x)))
+let rec lex_t_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> relation (b x)))
   (x:a) (acc_x:acc r_a x)  //x and accessibility of x
   (wf_b:(x0:a{(closure r_a) x0 x} -> well_founded (r_b x0)))  //well-foundedness of r_b
   (y:b x) (acc_y:acc (r_b x) y)  //y and accessibility of y
   (t:(x:a & b x))  //another element t,
-  (p_t:lex r_a r_b t (| x, y |))  //that is related to (| x, y |)
-  : Tot (acc (lex r_a r_b) t)  //returns the accessibility proof for t
+  (p_t:lex_t r_a r_b t (| x, y |))  //that is related to (| x, y |)
+  : Tot (acc (lex_t r_a r_b) t)  //returns the accessibility proof for t
         (decreases acc_x)
   = match p_t with
     | Left_lex x_t _ y_t _ p_a ->
-      AccIntro (lex_wf_aux
+      AccIntro (lex_t_wf_aux
         x_t
         (match acc_x with
          | AccIntro f -> f x_t p_a)
@@ -67,12 +67,12 @@ let rec lex_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> rela
         (wf_b x_t y_t))
     | Right_lex _ _ _ _ ->
       //inner induction that keeps x same, but recurses on acc_y
-      let rec lex_wf_aux_y (y:b x) (acc_y:acc (r_b x) y) (t:(x:a & b x)) (p_t:lex r_a r_b t (| x, y |))
-        : Tot (acc (lex r_a r_b) t)
+      let rec lex_t_wf_aux_y (y:b x) (acc_y:acc (r_b x) y) (t:(x:a & b x)) (p_t:lex_t r_a r_b t (| x, y |))
+        : Tot (acc (lex_t r_a r_b) t)
               (decreases acc_y)
         = match p_t with
           | Left_lex x_t _ y_t _ p_a ->
-            AccIntro (lex_wf_aux
+            AccIntro (lex_t_wf_aux
               x_t
               (match acc_x with
                | AccIntro f -> f x_t p_a)
@@ -80,29 +80,29 @@ let rec lex_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> rela
               y_t
               (wf_b x_t y_t))
           | Right_lex _ y_t _ p_b ->
-            AccIntro (lex_wf_aux_y
+            AccIntro (lex_t_wf_aux_y
               y_t
               (match acc_y with
                | AccIntro f -> f y_t p_b)) in
-      lex_wf_aux_y y acc_y t p_t
+      lex_t_wf_aux_y y acc_y t p_t
 
 
-let lex_wf #_ #_ #_ #_ wf_a wf_b =
-  fun (| x, y |) -> AccIntro (lex_wf_aux x (wf_a x) wf_b y (wf_b x y))
+let lex_t_wf #_ #_ #_ #_ wf_a wf_b =
+  fun (| x, y |) -> AccIntro (lex_t_wf_aux x (wf_a x) wf_b y (wf_b x y))
 
 open FStar.Squash
 
 (*
  * Given lex_sq, we can output a squashed instance of lex
  *)
-let lex_sq_to_lex #a #b r_a r_b t1 t2 p =
+let lex_to_lex_t #a #b r_a r_b t1 t2 p =
   let left (p:squash (r_a (dfst t1) (dfst t2)))
-    : squash (lex r_a r_b t1 t2)
+    : squash (lex_t r_a r_b t1 t2)
     = bind_squash p (fun p ->
         return_squash (Left_lex #a #b #r_a #r_b (dfst t1) (dfst t2) (dsnd t1) (dsnd t2) p)) in
 
   let right (p:(dfst t1 == dfst t2 /\ (squash (r_b (dfst t1) (dsnd t1) (dsnd t2)))))
-    : squash (lex r_a r_b t1 t2)
+    : squash (lex_t r_a r_b t1 t2)
     = bind_squash p (fun p ->
         match p with
         | And (_:dfst t1 == dfst t2) p2 ->
@@ -180,7 +180,7 @@ let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
 
 let rec ackermann (m n:nat)
   : Tot nat (decreases {:well-founded
-             (lex_sq lt_well_founded lt_dep_well_founded)
+             (lex lt_well_founded lt_dep_well_founded)
              (| m, n |) })
   = if m = 0 then n + 1
     else if n = 0 then ackermann (m - 1) 1
