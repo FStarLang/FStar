@@ -549,8 +549,8 @@ and comp_to_string c =
                      tl |> List.fold_left (fun s t ->
                        s ^ ";" ^ term_to_string t) (term_to_string hd))]
              | Decreases_wf (rel, e) ->
-               [U.format2 "(decreases {:well-founded %s %s})" (term_to_string rel) (term_to_string e)]
-             | _ -> []))
+               [U.format2 "(decreases {:well-founded %s %s})" (term_to_string rel) (term_to_string e)])
+             | _ -> [])
             
         |> String.concat " " in
       U.format2 "%s%s" basic dec
