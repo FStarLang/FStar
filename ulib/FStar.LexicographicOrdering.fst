@@ -90,6 +90,31 @@ let rec lex_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> rela
 let lex_wf #_ #_ #_ #_ wf_a wf_b =
   fun (| x, y |) -> AccIntro (lex_wf_aux x (wf_a x) wf_b y (wf_b x y))
 
+open FStar.Squash
+
+(*
+ * Given lex_sq, we can output a squashed instance of lex
+ *)
+let lex_sq_to_lex #a #b r_a r_b t1 t2 p =
+  let left (p:squash (r_a (dfst t1) (dfst t2)))
+    : squash (lex r_a r_b t1 t2)
+    = bind_squash p (fun p ->
+        return_squash (Left_lex #a #b #r_a #r_b (dfst t1) (dfst t2) (dsnd t1) (dsnd t2) p)) in
+
+  let right (p:(dfst t1 == dfst t2 /\ (squash (r_b (dfst t1) (dsnd t1) (dsnd t2)))))
+    : squash (lex r_a r_b t1 t2)
+    = bind_squash p (fun p ->
+        match p with
+        | And (_:dfst t1 == dfst t2) p2 ->
+          bind_squash p2 (fun p2 ->
+            return_squash (Right_lex #a #b #r_a #r_b (dfst t1) (dsnd t1) (dsnd t2) p2))) in
+
+  bind_squash p (fun p ->
+    match p with
+    | Left p1 -> left p1
+    | Right p2 -> right p2)
+
+
 
 /// Proof for well-foundedness of symmetric products
 ///
@@ -138,61 +163,8 @@ let sym_wf #_ #_ #_ #_ wf_a wf_b =
 ///
 /// F* supports user-defined well-foundned orderings in the decreases clauses
 ///
-/// However, since those proofs are SMT-based, to use our `lex` relation,
-///   we need to define a `squash` version of it
-
-open FStar.Squash
-
-/// The Left_lex constructor in the squashed world
-
-let lex_squash_left (#a:Type) (#b:a -> Type)
-  (r_a:relation a)
-  (r_b:(x:a -> relation (b x)))
-  (x1:a) (y1:b x1)
-  (x2:a) (y2:b x2)
-  (p:squash (r_a x1 x2))
-  : Lemma (squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |)))
-  = bind_squash p (fun t -> return_squash (Left_lex #a #b #r_a #r_b x1 x2 y1 y2 t))
-
-///
-/// The Right_lex constructor analogously
-
-let lex_squash_right (#a:Type) (#b:a -> Type)
-  (r_a:relation a)
-  (r_b:(x:a -> relation (b x)))
-  (x:a) (y1:b x)
-  (y2:b x)
-  (p:squash (r_b x y1 y2))
-  : Lemma (squash (lex r_a r_b (| x, y1 |) (| x, y2 |)))
-  = bind_squash p (fun t -> return_squash (Right_lex #a #b #r_a #r_b x y1 y2 t))
-
-
-/// Combine the two
-
-#push-options "--warn_error -271"
-let lex_squash  (#a:Type) (#b:a -> Type)
-  (r_a:relation a)
-  (r_b:(x:a -> relation (b x)))
-  : Lemma
-      ((forall (x1:a) (x2:a) (y1:b x1) (y2:b x2).{:pattern lex r_a r_b (| x1, y1 |) (| x2, y2 |)}
-          squash (r_a x1 x2) ==> squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |))) /\
-       (forall (x:a) (y1:b x) (y2:b x).{:pattern lex r_a r_b (| x, y1 |) (| x, y2 |)}
-          squash (r_b x y1 y2) ==> squash (lex r_a r_b (| x, y1 |) (| x, y2 |))))
-  = let left
-      (x1:a) (y1:b x1)
-      (x2:a) (y2:b x2)
-      : Lemma (squash (r_a x1 x2) ==> squash (lex r_a r_b (| x1, y1 |) (| x2, y2 |)))
-              [SMTPat ()]
-      = Classical.impl_intro (lex_squash_left r_a r_b x1 y1 x2 y2) in
-    let right (x:a) (y1:b x) (y2:b x)
-      : Lemma (squash (r_b x y1 y2) ==> squash (lex r_a r_b (| x, y1 |) (| x, y2 |)))
-              [SMTPat ()]
-      = Classical.impl_intro (lex_squash_right r_a r_b x y1 y2) in
-    ()
-#pop-options
-
-
-/// Let's work towards ackermann
+/// However, since those proofs are SMT-based, instead of working with the
+///   constructive lex relation, we work with the squashed version,
 
 unfold
 let lt : relation nat = fun x y -> x < y
@@ -208,9 +180,9 @@ let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
 
 let rec ackermann (m n:nat)
   : Tot nat (decreases {:well-founded
-             (as_well_founded (lex_wf lt_well_founded lt_dep_well_founded))
+             (map_squash_well_founded (lex_sq_to_lex lt lt_dep)
+                                      (lex_wf lt_well_founded lt_dep_well_founded))
              (| m, n |) })
-  = lex_squash lt lt_dep;
-    if m = 0 then n + 1
+  = if m = 0 then n + 1
     else if n = 0 then ackermann (m - 1) 1
     else ackermann (m - 1) (ackermann m (n - 1))

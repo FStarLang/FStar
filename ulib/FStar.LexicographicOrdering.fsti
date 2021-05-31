@@ -64,6 +64,38 @@ val lex_wf (#a:Type) (#b:a -> Type)
   : well_founded (lex r_a r_b)
 
 
+/// We can also define a squashed version of lex relation
+
+unfold
+let lex_sq (#a:Type) (#b:a -> Type)
+  (r_a:relation a)
+  (r_b:(x:a -> relation (b x)))
+  ((| x1, y1 |):(x:a & b x))
+  ((| x2, y2 |):(x:a & b x)) =
+  (squash (r_a x1 x2)) \/
+  (x1 == x2 /\ squash ((r_b x1) y1 y2))
+
+
+/// Provide a mapping from a point in lex_sq to a squashed point in lex
+
+val lex_sq_to_lex (#a:Type) (#b:a -> Type)
+  (r_a:relation a)
+  (r_b:(x:a -> relation (b x)))
+  (t1 t2:(x:a & b x))
+  (p:lex_sq r_a r_b t1 t2)
+  : squash (lex r_a r_b t1 t2)
+
+/// And prove that is it is well-founded
+
+let lex_sq_wf (#a:Type) (#b:a -> Type)
+  (#r_a:relation a)
+  (#r_b:(x:a -> relation (b x)))
+  (wf_a:well_founded r_a)
+  (wf_b:(x:a -> well_founded (r_b x)))
+  : Lemma (is_well_founded (lex_sq r_a r_b))
+  = map_squash_is_well_founded (lex_sq_to_lex r_a r_b) (lex_wf wf_a wf_b)
+  
+
 /// Symmetric product relation
 
 noeq
