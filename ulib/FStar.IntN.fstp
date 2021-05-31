@@ -20,6 +20,10 @@ let vu_inv _ = ()
 
 let v_inj _ _ = ()
 
+let zero = int_to_t 0
+
+let one = int_to_t 1
+
 let add a b = Mk (add (v a) (v b))
 
 let sub a b = Mk (sub (v a) (v b))
