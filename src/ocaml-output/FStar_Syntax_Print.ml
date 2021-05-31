@@ -1090,8 +1090,8 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                                       FStar_Util.format2
                                         "(decreases {:well-founded %s %s})"
                                         uu___6 uu___7 in
-                                    [uu___5]
-                                | uu___5 -> []))) in
+                                    [uu___5])
+                           | uu___5 -> [])) in
                  FStar_All.pipe_right uu___3 (FStar_String.concat " ") in
                FStar_Util.format2 "%s%s" basic dec)
 and (cflag_to_string : FStar_Syntax_Syntax.cflag -> Prims.string) =

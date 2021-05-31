@@ -4273,9 +4273,14 @@ and (tc_comp :
                                                              ->
                                                              let wf_t =
                                                                let uu___14 =
-                                                                 FStar_TypeChecker_Env.fvar_of_nonqual_lid
-                                                                   env1
-                                                                   FStar_Parser_Const.well_founded_relation_lid in
+                                                                 let uu___15
+                                                                   =
+                                                                   FStar_TypeChecker_Env.fvar_of_nonqual_lid
+                                                                    env1
+                                                                    FStar_Parser_Const.well_founded_relation_lid in
+                                                                 FStar_Syntax_Syntax.mk_Tm_uinst
+                                                                   uu___15
+                                                                   [u_t] in
                                                                let uu___15 =
                                                                  let uu___16
                                                                    =
