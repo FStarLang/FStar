@@ -23,7 +23,7 @@ module FStar.LexicographicOrdering
 ///
 /// The main theorems in the module are `lex_wf` and `sym_wf`
 ///
-/// See FStar.LexicographicOrdering.fst for how we use `lex` to prove termination for the ackermann function
+/// See tests/micro-benchmarks/Test.WellFoundedRecursion.fst for how we use `lex` to prove termination for the ackermann function
 /// 
 /// Some references:
 ///   - https://github.com/coq/coq/blob/master/theories/Wellfounded/Lexicographic_Product.v

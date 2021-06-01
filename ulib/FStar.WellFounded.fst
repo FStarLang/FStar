@@ -74,6 +74,29 @@ type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
 open FStar.IndefiniteDescription
 
 (*
+ * Given an acc proof, we can get an acc_g proof
+ *
+ *)
+let rec acc_to_acc_g (#a:Type) (#r:relation a) (#x:a) (p:acc r x)
+  : Tot (acc_g r x) (decreases p)
+  = AccIntro_g (fun y r_y_x ->
+      match p with
+      | AccIntro f -> acc_to_acc_g (f y r_y_x))
+
+(*
+ * Which also means that a well_founded relation with acc is also well-founded with acc_g
+ *)
+#push-options "--warn_error -271"
+let acc_wf_is_well_foundned (#a:Type) (r:relation a) (wf:well_founded r)
+  : Lemma (is_well_founded r)
+  = let aux (x:a)
+      : Lemma (squash (acc_g r x))
+              [SMTPat ()]
+      = Squash.return_squash (acc_to_acc_g (wf x)) in
+    ()
+#pop-options
+
+(*
  * Given a well-founded relation, we can extract accessibility proof
  *)
 let well_founded_acc_g (#a:Type) (r:relation a{is_well_founded r}) (x:a)

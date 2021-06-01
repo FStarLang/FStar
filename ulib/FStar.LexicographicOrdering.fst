@@ -156,32 +156,3 @@ let rec sym_wf_aux (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
 
 let sym_wf #_ #_ #_ #_ wf_a wf_b =
   fun (x, y) -> AccIntro (sym_wf_aux x (wf_a x) y (wf_b y))
-
-
-
-/// Let's now use `lex` to prove termination for the ackermann function
-///
-/// F* supports user-defined well-foundned orderings in the decreases clauses
-///
-/// However, since those proofs are SMT-based, instead of working with the
-///   constructive lex relation, we work with the squashed version,
-
-unfold
-let lt : relation nat = fun x y -> x < y
-
-unfold
-let lt_dep (_:nat) : relation nat = fun x y -> x < y
-
-let rec lt_well_founded (n:nat) : acc lt n =
-  AccIntro (fun m _ -> lt_well_founded m)
-
-let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
-  AccIntro (fun p _ -> lt_dep_well_founded m p)
-
-let rec ackermann (m n:nat)
-  : Tot nat (decreases {:well-founded
-             (lex lt_well_founded lt_dep_well_founded)
-             (| m, n |) })
-  = if m = 0 then n + 1
-    else if n = 0 then ackermann (m - 1) 1
-    else ackermann (m - 1) (ackermann m (n - 1))
