@@ -1,5 +1,13 @@
 [CmdletBinding()]
 param(
+        # Path to msbuild.exe
+        [Parameter(Mandatory=$true)]
+        $msbuild,
+        
+        # Path to nuget.exe
+        [Parameter(Mandatory=$true)]
+        $nuget,
+
         # Directory in which nuget should be created
         [Parameter(Mandatory=$true)]
         $outputDir,
@@ -25,15 +33,61 @@ function UpdateVersionInNuspec{
     $xml.Save($nuspecPath)
 }
 
-    <#
-        .SYNOPSIS
-        Fetches latest available F* windows binary package from Github Releases.
-    #>
-function PickLatestWindowsBinaryPackage{
-    [CmdletBinding()] param([string] $outputDir)
+<#
+    .SYNOPSIS
+    Finds latest F* windows binary package available on Github Releases.
+#>
+function FindBinaryPackage{
+    [CmdletBinding()] param([string] $repo)
+    
+    $releasesUri = "https://api.github.com/repos/$repo/releases"
+    $releases = 
+        Invoke-WebRequest $releasesUri | 
+        ConvertFrom-Json 
+        
+    $releases = 
+        $releases | % {
+            [PSCustomObject]@{
+                name = $_.name
+                tag_name = $_.tag_name
+                # For some reason '\d{4}' or '[0-9]{4}' do not work
+                asset = @($_.assets | Where-Object { $_.name -like 'fstar_[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]_Windows_x64*'} | % { [PSCustomObject]@{ name = $_.name; url = $_.browser_download_url }})
+            } 
+        } |
+        Where-Object { $_.asset.Count -eq 1 }
 
-    # TODO: implement
-    $FStarRootPath = Join-Path -Path $outputDir -ChildPath "SomeSubFolderThatWillBeCreated"
+    if ($releases.Count -eq 0) {
+        throw "Could not find a suitable windows binary package"
+    }
+
+    $package = 
+        [PSCustomObject]@{
+            name = $releases[0].name
+            tag_name = $releases[0].tag_name
+            version = "0.$($releases[0].asset.name.Substring(6, 10))" # The date part of the filename
+            filename = $releases[0].asset.name
+            downloadUrl = $releases[0].asset.url
+        }
+
+    $package
+}
+
+<#
+    .SYNOPSIS
+    Fetches latest available F* windows binary package from Github Releases.
+#>
+function GetWindowsBinaryPackage{
+    [CmdletBinding()] param($package, [object] $outputDir)
+
+    $zip = Join-Path -Path $outputDir -ChildPath $package.filename
+    Write-Host "Downloading $package.downloadUrl to $zip"
+    Invoke-WebRequest $package.downloadUrl -OutFile $zip
+    
+    Write-Host "Extracting $zip"
+    Expand-Archive $zip -Force
+
+    $localPath = Join-Path -Path ([IO.Path]::GetFileNameWithoutExtension($package.filename)) -ChildPath "fstar"
+    $FStarRootPath = Join-Path -Path $outputDir -ChildPath $localPath
     return $FStarRootPath
 }
 
@@ -48,7 +102,7 @@ function CompileUlibfs{
 }
 
 function PackageAsNuget{
-    [CmdletBinding()] param([string] $FStarPath, [string] $outputDir)
+    [CmdletBinding()] param([string] $NugetPath, [string] $FStarPath, [string] $outputDir, [string] $version)
 
     $nuget_dir = Join-Path -Path $outputDir -ChildPath "fstar"
 
@@ -62,57 +116,57 @@ function PackageAsNuget{
           "libz3.dll", "libz3.lib", "libz3java.dll", "libz3java.lib", "Microsoft.Z3.dll", 
           "msvcp120.dll", "msvcp120d.dll", "msvcr120.dll", "msvcr120d.dll", "vcomp120.dll", "vcomp120d.dll")
 
-    try
-    {
-        Write-Host "Creating nuget structure"
-        $nuget_dir_tools = Join-Path -Path $nuget_dir -ChildPath "tools"
-        $nuget_dir_tools_bin = Join-Path -Path $nuget_dir -ChildPath "tools\bin"
-        $nuget_dir_lib = Join-Path -Path $nuget_dir -ChildPath "lib"
-        $nuget_dir_build = Join-Path -Path $nuget_dir -ChildPath "build"
+    Write-Host "Creating nuget structure"
+    $nuget_dir_tools = Join-Path -Path $nuget_dir -ChildPath "tools"
+    $nuget_dir_tools_bin = Join-Path -Path $nuget_dir -ChildPath "tools\bin"
+    $nuget_dir_lib = Join-Path -Path $nuget_dir -ChildPath "lib"
+    $nuget_dir_build = Join-Path -Path $nuget_dir -ChildPath "build"
 
-        New-Item $nuget_dir -ItemType Directory -Force | Out-Null
-        New-Item $nuget_dir_tools -ItemType Directory -Force | Out-Null
-        New-Item $nuget_dir_tools_bin -ItemType Directory -Force | Out-Null
-        New-Item $nuget_dir_lib -ItemType Directory -Force | Out-Null
-        New-Item $nuget_dir_build -ItemType Directory -Force | Out-Null
+    New-Item $nuget_dir -ItemType Directory -Force | Out-Null
+    New-Item $nuget_dir_tools -ItemType Directory -Force | Out-Null
+    New-Item $nuget_dir_tools_bin -ItemType Directory -Force | Out-Null
+    New-Item $nuget_dir_lib -ItemType Directory -Force | Out-Null
+    New-Item $nuget_dir_build -ItemType Directory -Force | Out-Null
 
-        Write-Host "Copying files..."
+    Write-Host "Copying files..."
 
-        # Copy relevant contents of <FStar_root>/bin to tools/bin
-        ForEach ($bin_file in $bin_files) {
-            $bin_file_path = Join-Path -Path $fstarbin_path -ChildPath $bin_file
-            Copy-Item -Path $bin_file_path -Destination $nuget_dir_tools_bin -Force
-        }
-
-        # Copy <FStar_root>/ulib to tools/ulib
-        Copy-Item -Path $ulib_path -Destination "$nuget_dir_tools\ulib" -Recurse -Force
-        # Do not include ulibfs build artifacts in the ulib
-        $ulib_obj = Join-Path -Path $ulib_path -ChildPath "obj"
-        $ulib_bin = Join-Path -Path $ulib_path -ChildPath "bin"
-        Remove-Item -Path $ulib_obj -Recurse -Force -ErrorAction Continue
-        Remove-Item -Path $ulib_bin -Recurse -Force -ErrorAction Continue
-
-        # Copy <FStar_root>/bin/ulib.[dll|pdb|xml] to lib
-        Copy-Item -Path $ulibfs_path -Destination $nuget_dir_lib -Force
-
-        # Copy <FStar_root>/fsharp.extraction.targets to targets and rename it to $nuget_name.targets
-        Copy-Item -Path "$FStarPath\fsharp.extraction.targets" -Destination "$nuget_dir_build\$nuget_name.targets" -Force
-        Copy-Item -Path "$FStarPath\.nuget\$nuget_name.props" -Destination $nuget_dir_build -Force
-        # copy nuspec file and set version
-        Copy-Item -Path "$FStarPath\.nuget\$nuget_name.nuspec" -Destination $outputDir -Force
-        # Bump version in the copy of nuspec 
-        UpdateVersionInNuspec "$outputDir\$nuget_name.nuspec" $version
-
-        Write-Host "Packaging..."
-        & $NugetPath @("pack", "$outputDir\$nuget_name.nuspec", "-OutputDirectory", $outputDir)
-
-        Write-Host "Finished"
+    # Copy relevant contents of <FStar_root>/bin to tools/bin
+    ForEach ($bin_file in $bin_files) {
+        $bin_file_path = Join-Path -Path $fstarbin_path -ChildPath $bin_file
+        Copy-Item -Path $bin_file_path -Destination $nuget_dir_tools_bin -Force
     }
-    finally {
-        Write-Host "Removing $nuget_dir"
-        Remove-Item -Force -LiteralPath $nuget_dir -Recurse
-        Remove-Item -Force -LiteralPath "$outputDir\$nuget_name.nuspec"
-    }
+
+    # Do not include ulibfs build artifacts in the ulib
+    $ulib_obj = Join-Path -Path $ulib_path -ChildPath "obj"
+    $ulib_bin = Join-Path -Path $ulib_path -ChildPath "bin"
+    Remove-Item -Path $ulib_obj -Recurse -Force -ErrorAction Continue
+    Remove-Item -Path $ulib_bin -Recurse -Force -ErrorAction Continue
+        
+    # Copy <FStar_root>/ulib to tools/ulib
+    Copy-Item -Path $ulib_path -Destination "$nuget_dir_tools\ulib" -Recurse -Force
+        
+    # Copy <FStar_root>/bin/ulib.[dll|pdb|xml] to lib
+    Copy-Item -Path $ulibfs_path -Destination $nuget_dir_lib -Force
+
+    # Copy <FStar_root>/fsharp.extraction.targets to targets and rename it to $nuget_name.targets
+    Copy-Item -Path "$FStarPath\fsharp.extraction.targets" -Destination "$nuget_dir_build\$nuget_name.targets" -Force
+    Copy-Item -Path "$FStarPath\.nuget\$nuget_name.props" -Destination $nuget_dir_build -Force
+    # copy nuspec file and set version
+    Copy-Item -Path "$FStarPath\.nuget\$nuget_name.nuspec" -Destination $outputDir -Force
+
+    # Copy license files
+    # NOTE: Renaming LICENSE to LICENSE.txt as otherwise nuget is complaining about 'Part URI is empty'
+    Copy-Item -Path "$FStarPath\LICENSE" -Destination "$nuget_dir\LICENSE.txt" -Force
+    Copy-Item -Path "$FStarPath\LICENSE-fsharp.txt" -Destination "$nuget_dir\LICENSE-fsharp.txt" -Force
+    Copy-Item -Path "$FStarPath\LICENSE-z3.txt" -Destination "$nuget_dir\LICENSE-z3.txt" -Force
+
+    # Bump version in the copy of nuspec 
+    UpdateVersionInNuspec "$outputDir\$nuget_name.nuspec" $version
+
+    Write-Host "Packaging..."
+    & $NugetPath @("pack", "$outputDir\$nuget_name.nuspec", "-OutputDirectory", $outputDir)
+
+    Write-Host "Finished creating package"
 }
 
 function PushToNugetOrg{
@@ -121,18 +175,20 @@ function PushToNugetOrg{
 }
 
 $nuget_name = "FStar"
+$repo = "FStarLang/FStar"
 
 New-Item $outputDir -ItemType Directory -Force | Out-Null
-$FStarBinPackagePath = Join-Path -Path $outputDir -ChildPath "fstar-binary"
 
+$package = FindBinaryPackage -repo $repo
+Write-Host "Selected package: $package"
+$FStarRootPath = GetWindowsBinaryPackage -package $package -outputDir $outputDir
 
-$FStarPath = PickLatestWindowsBinaryPackage $FStarBinPackagePath
-CompileUlibfs "msbuild.exe" $FStarPath
+CompileUlibfs -MSBuildExe $msbuild -FStarRootPath $FStarRootPath
 
-PackageAsNuget $FStarPath $outputDir
+PackageAsNuget -NugetPath $nuget -FStarPath $FStarRootPath -outputDir $outputDir -version $package.version
 
-$nuget_path = Join-Path -Path $outputDir -ChildPath "FStar.nuget"
-PushToNugetOrg "nuget.exe" $ApiKey $nuget_path
+$nuget_path = Join-Path -Path $outputDir -ChildPath "$nuget_name.$($package.version).nupkg"
+PushToNugetOrg -NugetExe $nuget -ApiKey $ApiKey -FStarNugetPath $nuget_path
 
 
 

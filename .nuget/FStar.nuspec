@@ -11,6 +11,9 @@
 		<summary>FStar as a nuget package</summary>
 	</metadata>
 	<files>
+		<file src="fstar\LICENSE.txt" target="" />
+		<file src="fstar\LICENSE-fsharp.txt" target="" />
+		<file src="fstar\LICENSE-z3.txt" target="" />
 		<file src="fstar\tools\**" target="tools" />
 		<file src="fstar\build\**" target="build" />
 		<file src="fstar\lib\**" target="lib\net45" />
