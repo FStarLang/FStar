@@ -93,7 +93,7 @@ let lex_wf (#a:Type) (#b:a -> Type)
   (wf_a:well_founded r_a)
   (wf_b:(x:a -> well_founded (r_b x)))
   : Lemma (is_well_founded (lex_aux r_a r_b))
-  = map_squash_is_well_founded (lex_to_lex_t r_a r_b) (lex_t_wf wf_a wf_b)
+  = subrelation_squash_wf (lex_to_lex_t r_a r_b) (lex_t_wf wf_a wf_b)
 
 
 /// A user-friendly lex_wf that returns a well-founded relation

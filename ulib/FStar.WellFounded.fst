@@ -71,43 +71,6 @@ type is_well_founded (#a:Type) (rel:relation a) =
 
 type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
 
-open FStar.IndefiniteDescription
-
-(*
- * Given an acc proof, we can get an acc_g proof
- *
- *)
-let rec acc_to_acc_g (#a:Type) (#r:relation a) (#x:a) (p:acc r x)
-  : Tot (acc_g r x) (decreases p)
-  = AccIntro_g (fun y r_y_x ->
-      match p with
-      | AccIntro f -> acc_to_acc_g (f y r_y_x))
-
-(*
- * Which also means that a well_founded relation with acc is also well-founded with acc_g
- *)
-#push-options "--warn_error -271"
-let acc_wf_is_well_foundned (#a:Type) (r:relation a) (wf:well_founded r)
-  : Lemma (is_well_founded r)
-  = let aux (x:a)
-      : Lemma (squash (acc_g r x))
-              [SMTPat ()]
-      = Squash.return_squash (acc_to_acc_g (wf x)) in
-    ()
-#pop-options
-
-(*
- * Given a well-founded relation, we can extract accessibility proof
- *)
-let well_founded_acc_g (#a:Type) (r:relation a{is_well_founded r}) (x:a)
-  : acc_g r x
-  = elim_squash ()
-
-(*
- * Use as_well_founded to get a well-founded relation
- *   passing in a proof for accessibility
- *)
-
 #push-options "--warn_error -271"
 unfold
 let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc_g rel x))
@@ -119,35 +82,65 @@ let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc_g rel x))
     rel
 #pop-options
 
+open FStar.IndefiniteDescription
+
 (*
- * map_squash_well_founded can be used to move between squash and non-squash worlds
+ * Proofs that subrelation and inverse image commute with well-foundedness
  *
- * See FStar.LexicographicOrdering.fst for an example
+ * Reference: Constructing Recursion Operators in Type Theory, L. Paulson  JSC (1986) 2, 325-355
  *)
 
+let subrelation_wf (#a:Type) (#r #sub_r:relation a)
+  (sub_w:(x:a -> y:a -> sub_r x y -> r x y))
+  (r_wf:well_founded r)
+  : well_founded sub_r
+  = let rec aux (x:a) (acc_r:acc r x) : Tot (acc sub_r x) (decreases acc_r) =
+      AccIntro (fun y sub_r_y_x ->
+        aux y
+          (match acc_r with
+           | AccIntro f -> f y (sub_w y x sub_r_y_x))) in
+    fun x -> aux x (r_wf x)
+
 #push-options "--warn_error -271"
-let map_squash_is_well_founded (#a:Type) (#r1 #r2:relation a)
-  (map:(x:a -> y:a -> r1 x y -> squash (r2 x y)))
-  (wf2:well_founded r2)
-  : Lemma (is_well_founded r1)
+let subrelation_squash_wf (#a:Type) (#r #sub_r:relation a)
+  (sub_w:(x:a -> y:a -> sub_r x y -> squash (r x y)))
+  (r_wf:well_founded r)
+  : Lemma (is_well_founded sub_r)
   = let aux (x:a)
-      : Lemma (squash (acc_g r1 x))
+      : Lemma (squash (acc_g sub_r x))
               [SMTPat ()]
-      = let rec acc_y (x:a) (acc2_x:acc r2 x) (y:a) (p:r1 y x)
-          : Tot (acc_g r1 y)
-                (decreases acc2_x)
+      = let rec acc_y (x:a) (acc_r:acc r x) (y:a) (p:sub_r y x)
+          : Tot (acc_g sub_r y)
+                (decreases acc_r)
           = AccIntro_g (acc_y y
-              (match acc2_x with
-               | AccIntro f -> f y (elim_squash (map y x p)))) in
-        Squash.return_squash (AccIntro_g (acc_y x (wf2 x)))
+              (match acc_r with
+               | AccIntro f -> f y (elim_squash (sub_w y x p)))) in
+        Squash.return_squash (AccIntro_g (acc_y x (r_wf x)))
     in
     ()
 #pop-options
 
 unfold
-let map_squash_well_founded (#a:Type) (#r1 #r2:relation a)
-  (map:(x:a -> y:a -> r1 x y -> squash (r2 x y)))
-  (wf2:well_founded r2)
+let subrelation_as_wf (#a:Type) (#r #sub_r:relation a)
+  (sub_w:(x:a -> y:a -> sub_r x y -> squash (r x y)))
+  (r_wf:well_founded r)
   : well_founded_relation a
-  = map_squash_is_well_founded map wf2;
-    r1
+  = subrelation_squash_wf sub_w r_wf;
+    sub_r
+
+let inverse_image (#a #b:Type) (r_b:relation b) (f:a -> b) : relation a =
+  fun x y -> r_b (f x) (f y)
+
+let inverse_image_wf (#a #b:Type) (#r_b:relation b)
+  (f:a -> b)
+  (r_b_wf:well_founded r_b)
+  : well_founded (inverse_image r_b f)
+  = let rec aux (x:a) (acc_r_b:acc r_b (f x))
+      : Tot (acc (inverse_image r_b f) x)
+            (decreases acc_r_b) =
+      let get_acc_r_b_y (y:a) (p:(inverse_image r_b f) y x)
+        : Tot (acc_r_b_y:acc r_b (f y){acc_r_b_y << acc_r_b})
+        = match acc_r_b with
+          | AccIntro g -> g (f y) p in
+      AccIntro (fun y p -> aux y (get_acc_r_b_y y p)) in
+    fun x -> aux x (r_b_wf (f x))
