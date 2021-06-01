@@ -18,7 +18,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "a71d7b393fc0ff27cf39338754972726"
+      "9a77766ae2c8d2c47936910609ef637d"
     ],
     [
       "TestUtils.test_pr_f",
@@ -27,7 +27,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "d33d32e6a99436098e272f0dbc2ae6a2"
+      "68801c0328fd341519bf52b49ea7fac2"
     ],
     [
       "TestUtils.test_ps_f",
@@ -36,7 +36,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "6f0cc1eeb1e42be1476a96bf8f87ad10"
+      "4106349384e8a3bac3f8eb083cb331c8"
     ],
     [
       "TestUtils.test_pr2_f",
@@ -45,7 +45,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b200efa7cf55563705196566133b235a"
+      "c2dc12b14ae9c27bf4f0627c57715dca"
     ]
   ]
 ]

@@ -15,11 +15,12 @@
 *)
 
 module Steel.Reference
+
+open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
-open FStar.Ghost
 module H = Steel.HigherReference
 module U = FStar.Universe
 module A = Steel.Effect.Atomic
@@ -81,7 +82,7 @@ let pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
 let alloc x =
   let r = H.alloc (U.raise_val x) in
   change_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());
-  r
+  return r
 
 let read #a #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
@@ -89,7 +90,7 @@ let read #a #p #v r =
   let x = H.read #_ #p #v' r in
   let v':a = U.downgrade_val x in
   change_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
-  v'
+  return v'
 
 let read_refine #a #p q r =
   A.lift_h_exists_atomic (fun (v:a) -> pts_to r p v `star` q v);
@@ -100,7 +101,7 @@ let read_refine #a #p q r =
     (H.pts_to r p (hide x) `star` U.lift_dom q x)
     (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x)) (fun _ -> ());
 
-  (U.downgrade_val x)
+  return (U.downgrade_val x)
 
 let write #a #v r x =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
@@ -199,6 +200,15 @@ let raise_erased (#a:Type0) (x:erased a)
 
 [@__reduce__]
 let ghost_pts_to #a r p x = H.ghost_pts_to #(U.raise_t a) r p (raise_erased x)
+
+let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (ghost_pts_to r p x) m /\ interp (ghost_pts_to r p y) m))
+            (ensures  (x == y))
+    = H.ghost_pts_to_witinv r p;
+      raise_val_inj (reveal x) (reveal y)
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
 let ghost_alloc (#a:Type) (#u:_) (x:erased a)
   : SteelGhostT (ghost_ref a) u

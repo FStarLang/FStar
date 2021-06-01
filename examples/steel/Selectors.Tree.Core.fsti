@@ -3,7 +3,9 @@ module Selectors.Tree.Core
 open Steel.Memory
 open Steel.SelEffect
 
-module Spec = FStar.Trees
+module Spec = Trees
+
+#set-options "--ide_id_info_off"
 
 (*** Type declarations *)
 

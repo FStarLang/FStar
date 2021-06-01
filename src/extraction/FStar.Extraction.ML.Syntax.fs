@@ -81,7 +81,7 @@ type mlsymbols = list<mlsymbol>
 (* -------------------------------------------------------------------- *)
 type e_tag =
   | E_PURE
-  | E_GHOST
+  | E_ERASABLE
   | E_IMPURE
 
 // Line number, file name; that's all we can emit in OCaml anyhwow

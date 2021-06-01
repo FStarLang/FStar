@@ -3218,20 +3218,13 @@ and check_inner_let env e =
        let is_inline_let = BU.for_some (U.is_fvar FStar.Parser.Const.inline_let_attr) lb.lbattrs in
        let _ =
         if is_inline_let
-        && not pure_or_ghost
+        && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let is allowed on erasable effects
         then raise_error (Errors.Fatal_ExpectedPureExpression,
                           BU.format2 "Definitions marked @inline_let are expected to be pure or ghost; \
                                       got an expression \"%s\" with effect \"%s\""
                                        (Print.term_to_string e1)
                                        (Print.lid_to_string c1.eff_name))
                           e1.pos
-       in
-       let attrs =
-         if pure_or_ghost
-         && not is_inline_let
-         && U.is_unit c1.res_typ
-         then U.inline_let_attr::lb.lbattrs
-         else lb.lbattrs
        in
        let x = {BU.left lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
@@ -3267,7 +3260,18 @@ and check_inner_let env e =
        //AR: TODO: FIXME: monadic annotations need to be adjusted for polymonadic binds
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-       let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
+       let lb = 
+         let attrs =
+           let add_inline_let =  //add inline_let if
+             not is_inline_let &&  //the letbinding is not already inline_let, and
+             ((pure_or_ghost &&  //either it is pure/ghost with unit type, or
+               U.is_unit c1.res_typ) ||
+              (Env.is_erasable_effect env c1.eff_name &&  //c1 is erasable and cres is not
+               not (Env.is_erasable_effect env cres.eff_name))) in
+           if add_inline_let
+           then U.inline_let_attr::lb.lbattrs
+           else lb.lbattrs in
+         U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
 
@@ -3722,7 +3726,7 @@ let typeof_tot_or_gtot_term env e must_tot =
         with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
     in
     if must_tot then
-      let c = N.ghost_to_pure_lcomp env c in
+      let c = N.maybe_ghost_to_pure_lcomp env c in
       if TcComm.is_total_lcomp c
       then t, c.res_typ, g
       else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)
@@ -3897,10 +3901,10 @@ let rec universe_of_aux env e =
 
 let universe_of env e =
     if debug env Options.High then
-      BU.print1 "Calling universe_of_aux with %s\n" (Print.term_to_string e);
+      BU.print1 "Calling universe_of_aux with %s {\n" (Print.term_to_string e);
     let r = universe_of_aux env e in
     if debug env Options.High then
-      BU.print1 "Got result from universe_of_aux = %s\n" (Print.term_to_string r);
+      BU.print1 "Got result from universe_of_aux = %s }\n" (Print.term_to_string r);
     level_of_type env e r
 
 let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
@@ -3924,6 +3928,7 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
     A possible restructuring would be to treat these two (type and effect) separately
       in the return type
 *)
+
 let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option<typ> =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
   let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
@@ -3932,29 +3937,21 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_delayed _
   | Tm_bvar _ -> failwith ("Impossible: " ^ Print.term_to_string t)
 
-  | Tm_name x ->
-    Some x.sort
-
-  | Tm_lazy i ->
-    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
-
-  | Tm_fvar fv ->
-    bind_opt (Env.try_lookup_and_inst_lid env [] fv.fv_name.v) (fun (t, _) ->
-      Some t)
-
-  | Tm_uinst({n=Tm_fvar fv}, us) ->
-    bind_opt (Env.try_lookup_and_inst_lid env us fv.fv_name.v) (fun (t, _) ->
-      Some t)
-
   (* Can't (easily) do this one efficiently, just return None *)
   | Tm_constant Const_reify
   | Tm_constant (Const_reflect _) -> None
 
-  | Tm_constant sc ->
-    Some (tc_constant env t.pos sc)
+  //For the following nodes, use the universe_of_aux function
+  //since these are already Tot, we don't need to check the must_tot flag
+  | Tm_name _
+  | Tm_fvar _
+  | Tm_uinst _
+  | Tm_constant _
+  | Tm_type _
+  | Tm_arrow _ -> universe_of_aux env t |> Some
 
-  | Tm_type u ->
-    Some (mk_tm_type (U_succ u))
+  | Tm_lazy i ->
+    typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_abs(bs, body, Some ({residual_effect=eff; residual_typ=tbody})) ->  //AR: maybe keep residual univ too?
     let mk_comp =
@@ -3973,41 +3970,12 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
           BU.map_opt (typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
       bind_opt tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
-        bind_opt (universeof_fastpath (Env.push_binders env bs) tbody) (fun u ->
-          Some (U.arrow bs (f tbody (Some u))))))
-
-  | Tm_arrow(bs, c) ->
-    let bs, c = SS.open_comp bs c in
-    let rec aux env us bs =
-      match bs with
-      | [] ->
-        bind_opt
-          (if c  //AR: if computation is non-total, make its universe Zero
-              |> U.comp_effect_name
-              |> Env.norm_eff_name env
-              |> Env.lookup_effect_quals env
-              |> List.existsb (fun q -> q = S.TotalEffect)
-           then universeof_fastpath env (U.comp_result c)  //AR: Why not get comp univ here if available?
-           else Some S.U_zero)
-          (fun uc -> Some (mk_tm_type (S.U_max (uc::us))))
-
-      | ({binder_bv=x;binder_qual=imp})::bs ->
-        bind_opt (universeof_fastpath env x.sort) (fun u_x ->
-          let env = Env.push_bv env x in
-          aux env (u_x::us) bs)
-    in
-    aux env [] bs
+        let u = universe_of (Env.push_binders env bs) tbody in
+        Some (U.arrow bs (f tbody (Some u)))))
 
   | Tm_abs _ -> None
 
-  | Tm_refine(x, _) ->
-    bind_opt (universeof_fastpath env x.sort) (fun u_x ->
-      Some (mk_tm_type u_x))
-
-  (* Not doing anything smart with these, so we don't even associate
-   * them appropriately. *)
-  (* | Tm_app({n=Tm_constant Const_reify}, a::hd::rest) *)
-  (* | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) *)
+  | Tm_refine(x, _) -> typeof_tot_or_gtot_term_fastpath env x.sort must_tot
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
@@ -4089,19 +4057,6 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_unknown
   | Tm_uinst _ -> None
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
-
-and universeof_fastpath env t =
-  bind_opt (typeof_tot_or_gtot_term_fastpath env t false) (fun k ->
-    let rec aux (maybe_norm:bool) (k:typ) =
-      match (SS.compress k).n with
-      | Tm_type u -> Some u
-      | Tm_meta (k, _) -> aux maybe_norm k
-      | Tm_refine (x, _) -> aux maybe_norm x.sort
-      | Tm_ascribed (k, _, _) -> aux maybe_norm k
-      | _ ->
-        if maybe_norm then aux false (N.unfold_whnf env k)
-        else None in
-    aux true k)
 
 (*
  * Precondition: G |- t : Tot _ or G |- t : GTot _

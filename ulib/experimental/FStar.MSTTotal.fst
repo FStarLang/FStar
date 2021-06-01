@@ -14,9 +14,11 @@
    limitations under the License.
 *)
 
-module MSTTotal
+module FStar.MSTTotal
 
 module P = FStar.Preorder
+
+open FStar.Monotonic.Pure
 
 type pre_t (state:Type u#2) = state -> Type0
 type post_t (state:Type u#2) (a:Type u#a) = state -> a -> state -> Type0
@@ -30,10 +32,9 @@ type repr
     =
   s0:state ->
   PURE (a & state)
-  (fun p ->
-    req s0 /\
-    (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))
-  )
+    (as_pure_wp (fun p ->
+                        req s0 /\
+                        (forall (x:a) (s1:state). (ens s0 x s1 /\ rel s0 s1) ==> p (x, s1))))
 
 let return
       (a:Type)
@@ -176,7 +177,7 @@ let lift_pure_mst_total
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
     =
-  FStar.Monotonic.Pure.wp_monotonic_pure ();
+  elim_pure_wp_monotonicity wp;
   fun s0 ->
     let x = f () in
     x, s0

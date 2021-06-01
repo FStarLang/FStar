@@ -18,7 +18,6 @@ printf \
 metatheory \
 verifythis \
 preorders \
-dm4free \
 tactics \
 param \
 typeclasses \

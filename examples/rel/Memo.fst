@@ -25,6 +25,7 @@ type codom : Type = int
 
 type heap = list (dom * codom)
 
+
 type memo (a:Type) = heap -> M (a * heap)
 let return (a:Type) (x:a) : memo a = fun h -> (x, h)
 let bind (a b:Type) (m:memo a) (f:a -> memo b) : memo b =
@@ -50,7 +51,8 @@ effect Memo (a:Type) = MEMO a (fun _ p -> forall z. p z)
 (* Access to the whole heap (for verification-debugging purpose) *)
 private
 let get_heap () : MEMO heap (fun h0 p -> p (h0, h0))
-= let f : MEMO?.repr heap (fun h0 p -> p (h0, h0)) = fun h0 -> h0, h0 in
+= admit ();
+  let f : MEMO?.repr heap (fun h0 p -> p (h0, h0)) = fun h0 -> h0, h0 in
   MEMO?.reflect f
 
 

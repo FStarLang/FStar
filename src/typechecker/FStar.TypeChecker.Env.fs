@@ -823,10 +823,8 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
-    let lid = fv.fv_name.v in
-    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else match qn with
+let delta_depth_of_qninfo_lid lid (qn:qninfo) : option<delta_depth> =
+    match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
     | Some (Inr(se, _), _) ->
@@ -854,6 +852,12 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_polymonadic_bind _
       | Sig_polymonadic_subcomp _ -> None
 
+
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+    let lid = fv.fv_name.v in
+    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    else delta_depth_of_qninfo_lid lid qn
+    
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
   if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
@@ -915,7 +919,7 @@ let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
   | Some r ->
     r
 
-let type_is_erasable env fv =
+let fv_has_erasable_attr env fv =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
      ex,erasable
@@ -935,7 +939,7 @@ let rec non_informative env t =
       fv_eq_lid fv Const.unit_lid
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
-      || type_is_erasable env fv
+      || fv_has_erasable_attr env fv
     | Tm_app(head, _) -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow(_, c) ->
@@ -1290,6 +1294,13 @@ let reify_comp env c u_c : term =
     match effect_repr_aux true env c u_c with
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
+
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
 
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
@@ -1809,6 +1820,10 @@ let def_check_vars_in_set rng msg vset t =
                                       (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
     end
 
+
+let too_early_in_prims env =
+  not (lid_exists env Const.effect_GTot_lid)
+
 let def_check_closed_in rng msg l t =
     if not (Options.defensive ()) then () else
     def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
@@ -2010,3 +2025,12 @@ let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
+
+let fvar_of_nonqual_lid env lid =
+    let qn = lookup_qname env lid in
+    let dd =
+        match delta_depth_of_qninfo_lid lid qn with
+        | None -> failwith "Unexpected no delta_depth"
+        | Some dd -> dd
+    in
+    fvar lid dd None

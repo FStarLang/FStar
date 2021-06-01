@@ -81,8 +81,6 @@ let lemma_append_cons #_ _ _ = ()
 
 let lemma_tl #_ _ _ = ()
 
-module F = FStar.FunctionalExtensionality
-
 let rec sorted_feq' (#a:Type)
                (f g : (a -> a -> Tot bool))
                (s:seq a{forall x y. f x y == g x y})

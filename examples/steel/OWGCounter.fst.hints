@@ -1,5 +1,5 @@
 [
-  "\u0017ÄŒOâ>r´2\u000f∏ìl∂q",
+  "ﬁ8+\u0004ÊeçV™îæèÖÚº¶",
   [
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "c8831e9c9cc17ab0886838370ad8607b"
+      "b1f3fe3de9fbebafd1d94dfb8fb02778"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "012e2adf51eef79972813dc4846942cd"
+      "101fb7eb7c665d5e87e85827833ad2b4"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b359e2e48c2c7cf939a8d063cc0beb73"
+      "23d5527c8d36d2cedfdfcfa2a2a72745"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "70ab6f8f7acfb0e0fbeb358c566eb5b9"
+      "59d0e4bfabe099b2d92ea3c05c2bf2bf"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "9060bba9452551a715ee3edadd0e33c1"
+      "38b6649e2cd647f0fd5b015fe5f0f139"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "6591fa5d63699a7a884ef6df0f9de585"
+      "7abfd707edf04608776f429a4e432f03"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "284ce37b6a6aee142e3c6de3a9bdb2b7"
+      "1b7f23586daeff68648ff6f87d76a60b"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "137aef2242f33677cc3e3eeb4e30946d"
+      "b7ce12a8610bee7ccdb758203ebb753d"
     ],
     [
       "OWGCounter.incr_main",
@@ -172,24 +172,32 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_OWGCounter.fst",
-        "equation_OWGCounter.half_perm", "equation_OWGCounter.snd",
-        "equation_Prims.eqtype", "equation_Prims.l_True",
-        "equation_Prims.prop",
+        "equation_OWGCounter.half_perm", "equation_OWGCounter.lock_inv",
+        "equation_OWGCounter.snd", "equation_Prims.eqtype",
+        "equation_Prims.l_True", "equation_Prims.prop",
         "equation_Steel.Effect.Common.ens_depends_only_on",
         "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.SpinLock.lock", "function_token_typing_Prims.bool",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "interpretation_Tm_abs_a0a4e14b98e87d6fcca43025d7674428",
         "interpretation_Tm_abs_b322a31bde65e330f6a85fcc1ed005d5",
         "lemma_FStar.Ghost.hide_reveal", "lemma_FStar.Ghost.reveal_hide",
-        "primitive_Prims.op_Addition",
+        "primitive_FStar.Real.op_Greater_Dot", "primitive_Prims.op_Addition",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "proj_equation_Steel.FractionalPermission.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_55e9a1e20a0937d9a783b828f83347d7",
         "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
         "refinement_interpretation_Tm_refine_f935112a2bbd45581a847b83c1286ab3",
         "token_correspondence_FStar.Pervasives.Native.fst",
@@ -197,10 +205,12 @@
         "token_correspondence_OWGCounter.fst",
         "token_correspondence_OWGCounter.snd", "true_interp",
         "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal",
-        "typing_OWGCounter.g_incr", "typing_Steel.Effect.Common.true_p"
+        "typing_OWGCounter.g_incr", "typing_Steel.Effect.Common.true_p",
+        "typing_Steel.FractionalPermission.__proj__MkPerm__item__v",
+        "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "24b25db85a4c5244272bbfd399e45d70"
+      "48bd0daaec31e3689abb5a91fca289cf"
     ]
   ]
 ]
