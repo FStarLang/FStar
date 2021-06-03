@@ -225,7 +225,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         let move_decreases d flags flags' =
           let d' =
             let s = U.rename_binders bs bs' in
-            List.map (SS.subst s) d
+            SS.subst_decreasing_order s d
           in
           let c = U.comp_set_flags c flags in
           let tarr = U.arrow bs c in

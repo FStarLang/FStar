@@ -110,6 +110,7 @@ let none_to_empty_list x =
 %token LBRACE
 %token LBRACE_BAR
 %token LBRACE_COLON_PATTERN
+%token LBRACE_COLON_WELL_FOUNDED
 %token LBRACK
 %token LBRACK_AT
 %token LBRACK_AT_AT
@@ -1447,6 +1448,15 @@ let op_expr =                                                 ( mk_ident (".(||)
 | DECREASES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level )}
+| DECREASES LBRACE_COLON_WELL_FOUNDED noSeqTerm RBRACE
+    {let (_1, _2, t, _4) = ((), (), $3, ()) in
+      ( match t.tm with
+        | App (t1, t2, _) ->
+	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 3 3) Type_level in
+	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 4) Type_level
+	| _ ->
+	  raise_error (Fatal_SyntaxError,
+	    "Syntax error: To use well-founded relations, write e1 e2") (rhs parseState 3) )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
@@ -2718,5 +2728,4 @@ in
    ( x :: xs )}
 
 %%
-
 

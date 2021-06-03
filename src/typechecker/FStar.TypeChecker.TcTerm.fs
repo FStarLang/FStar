@@ -383,8 +383,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | _ -> [S.bv_to_name b]) in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
-                | Some (DECREASES l) -> l
-                | _ -> bs |> filter_types_and_functions in
+                | Some (DECREASES d) -> d
+                | _ -> bs |> filter_types_and_functions |> Decreases_lex in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
       let rec mk_precedes_lex env l l_prev : term =
@@ -459,6 +459,26 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           else l |> List.splitAt n_prev |> fst, l_prev in
         aux l l_prev in
 
+      let mk_precedes env d d_prev =
+        match d, d_prev with
+        | Decreases_lex l, Decreases_lex l_prev ->
+          mk_precedes_lex env l l_prev
+        | Decreases_wf (rel, e), Decreases_wf (rel_prev, e_prev) ->
+          if not (U.eq_tm rel rel_prev = U.Equal)
+          then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                 BU.format2 "Cannot build termination VC with two different well-founded \
+                   relations %s and %s"
+                   (Print.term_to_string rel)
+                   (Print.term_to_string rel_prev)) r;
+          (*
+           * For well-founded relations based termination checking,
+           *   just prove that (rel e e_prev)
+           *)
+          mk_Tm_app rel [as_arg e; as_arg e_prev] r
+        | _, _ ->
+          Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+            "Cannot build termination VC with a well-founded relation and lex ordering") r in
+
       let previous_dec = decreases_clause actuals expected_c in
 
       let guard_one_letrec (l, arity, t, u_names) =
@@ -478,7 +498,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         let dec = decreases_clause formals c in
         let precedes =
           let env = Env.push_binders env formals in
-          mk_precedes_lex env dec previous_dec in
+          mk_precedes env dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
         let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
@@ -1505,12 +1525,35 @@ and tc_comp env c : comp                                      (* checked version
       let _, args = U.head_and_args tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
-        | DECREASES l ->
-            let env, _ = Env.clear_expected_typ env in
-            let l, g = l |> List.fold_left (fun (l, g) e ->
-              let e, _, g_e = tc_tot_or_gtot_term env e in
-              l@[e], Env.conj_guard g g_e) ([], Env.trivial_guard) in
-            DECREASES l, g
+        | DECREASES (Decreases_lex l) ->
+          let env, _ = Env.clear_expected_typ env in
+          let l, g = l |> List.fold_left (fun (l, g) e ->
+            let e, _, g_e = tc_tot_or_gtot_term env e in
+            l@[e], Env.conj_guard g g_e) ([], Env.trivial_guard) in
+          DECREASES (Decreases_lex l), g
+        | DECREASES (Decreases_wf (rel, e)) ->
+          (*
+           * We will check that for a fresh uvar (?u:Type),
+           *   rel:well_founded_relation ?u  and
+           *   e:?u
+           *)
+          let env, _ = Env.clear_expected_typ env in
+          let t, u_t = U.type_u () in
+          let a, _, g_a = TcUtil.new_implicit_var
+            "implicit for type of the well-founded relation in decreases clause"
+            rel.pos
+            env
+            t in
+          //well_founded_relation<u_t> t
+          let wf_t = mk_Tm_app
+            (mk_Tm_uinst
+               (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
+               [u_t])
+            [as_arg a] rel.pos in
+          let rel, _, g_rel = tc_tot_or_gtot_term (Env.set_expected_typ env wf_t) rel in
+          let e, _, g_e = tc_tot_or_gtot_term (Env.set_expected_typ env a) e in
+          DECREASES (Decreases_wf (rel, e)),
+          Env.conj_guards [g_a; g_rel; g_e]
         | f -> f, Env.trivial_guard) |> List.unzip in
       let u = env.universe_of env (fst res) in
       let c = mk_Comp ({c with

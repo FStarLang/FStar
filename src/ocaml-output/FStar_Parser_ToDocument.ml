@@ -2398,6 +2398,7 @@ and (p_noSeqTerm' :
               let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
+        | FStar_Parser_AST.WFOrder (rel, e1) -> p_dec_wf ps pb rel e1
         | FStar_Parser_AST.LexList l ->
             let uu___ =
               let uu___1 = str "%" in
@@ -2711,6 +2712,26 @@ and (p_noSeqTerm' :
                 uu___2 in
             FStar_Pprint.enclose head uu___ uu___1
         | uu___ -> p_typ ps pb e
+and (p_dec_wf :
+  Prims.bool ->
+    Prims.bool ->
+      FStar_Parser_AST.term -> FStar_Parser_AST.term -> FStar_Pprint.document)
+  =
+  fun ps ->
+    fun pb ->
+      fun rel ->
+        fun e ->
+          let uu___ =
+            let uu___1 = str "{:well-founded " in
+            let uu___2 =
+              let uu___3 = p_typ ps pb rel in
+              let uu___4 =
+                let uu___5 = p_typ ps pb e in
+                let uu___6 = str " }" in
+                FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+            FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+          FStar_Pprint.group uu___
 and (p_calcStep :
   Prims.bool -> FStar_Parser_AST.calc_step -> FStar_Pprint.document) =
   fun uu___ ->
@@ -4032,6 +4053,7 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
           let uu___2 = p_term_list false false l in
           FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
         FStar_Pprint.group uu___
+    | FStar_Parser_AST.WFOrder (rel, e1) -> p_dec_wf false false rel e1
 and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with

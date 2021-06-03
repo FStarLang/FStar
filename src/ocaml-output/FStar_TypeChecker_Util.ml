@@ -220,8 +220,8 @@ let (extract_let_rec_annotation :
                                        let s =
                                          FStar_Syntax_Util.rename_binders bs
                                            bs' in
-                                       FStar_List.map
-                                         (FStar_Syntax_Subst.subst s) d in
+                                       FStar_Syntax_Subst.subst_decreasing_order
+                                         s d in
                                      let c1 =
                                        FStar_Syntax_Util.comp_set_flags c
                                          flags in
