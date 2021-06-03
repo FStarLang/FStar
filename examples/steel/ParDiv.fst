@@ -225,7 +225,13 @@ let return #s (#c:comm_monoid s) #a (x:a) (post:a -> c.r)
  * [bind]: sequential composition works by pushing `g` into the continuation
  * at each node, finally applying it at the terminal `Ret`
  *)
-let rec bind #s (#c:comm_monoid s) #a #b (#p:c.r) (#q:a -> c.r) (#r:b -> c.r)
+let rec bind (#s:Type u#s)
+             (#c:comm_monoid s)
+             (#a:Type u#a)
+             (#b:Type u#a)
+             (#p:c.r)
+             (#q:a -> c.r)
+             (#r:b -> c.r)
              (f:eff a p q)
              (g: (x:a -> eff b (q x) r))
   : Dv (eff b p r)
@@ -237,6 +243,60 @@ let rec bind #s (#c:comm_monoid s) #a #b (#p:c.r) (#q:a -> c.r) (#r:b -> c.r)
           pre1 post1 r
           k ->
       Par pre0 post0 l pre1 post1 r (fun x0 x1 -> bind (k x0 x1) g)
+
+let frame_action (#s:Type) (#c:comm_monoid s) (#a:Type) (f:action c a) (fr:c.r)
+  : g:action c a { g.post == (fun x -> f.post x `c.star` fr) /\
+                   g.pre == f.pre `c.star` fr }
+  = let pre = f.pre `c.star` fr in
+    let post x = f.post x `c.star` fr in
+    let sem (frame:c.r) (s0:s{c.interp (c.star pre frame) s0})
+      : (x:a & s1:s{c.interp (post x `c.star` frame) s1})
+      = let (| x, s1 |) = f.sem (fr `c.star` frame) s0 in
+        (| x, s1 |)
+    in
+    { pre = pre;
+      post = post;
+      sem = sem }
+
+let rec frame (#s:Type u#s)
+              (#c:comm_monoid s)
+              (#a:Type u#a)
+              (#p:c.r)
+              (#q:a -> c.r)
+              (fr:c.r)
+              (f:eff a p q)
+   : Dv (eff a (p `c.star` fr) (fun x -> q x `c.star` fr))
+   = match f with
+     | Ret x -> Ret x
+     | Act #_ #_ #_a #_q #b f k ->
+       assert (a == _a);
+       assert (q == _q);
+       Act #s
+           #c
+           #a
+           #(fun x -> q x `c.star` fr)
+           #b
+           (frame_action #s #c #b f fr)
+           (fun (x:b) -> frame #s #c #a #(f.post x) #q fr (k x))
+     | Par pre0 #a0 post0 m0 pre1 #a1 post1 m1 k ->
+       let m0'
+         : m s c a0 (pre0 `c.star` fr) (fun x -> post0 x `c.star` fr)
+         = frame fr m0
+       in
+       let mp : m s c a ((pre0 `c.star` pre1) `c.star` fr)
+                        (fun x -> q x `c.star` fr) =
+       Par (pre0 `c.star` fr)
+           #a0
+           (fun x -> post0 x `c.star` fr)
+           m0'
+           pre1
+           #a1
+           post1
+           m1
+           (fun x0 x1 -> frame fr (k x0 x1))
+       in
+       mp
+
 
 (**
  * [par]: Parallel composition
