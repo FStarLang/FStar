@@ -115,44 +115,13 @@ let lex_to_lex_t #a #b r_a r_b t1 t2 p =
     | Right p2 -> right p2)
 
 
-
-/// Proof for well-foundedness of symmetric products
-///
-/// The proof follows the same structure as for the lex ordering
-
-let rec sym_wf_aux (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
-  (x:a) (acc_a:acc r_a x)
-  (y:b) (acc_b:acc r_b y)
-  (t:a & b)
-  (p_t:sym r_a r_b t (x, y))
-  : Tot (acc (sym r_a r_b) t)
-        (decreases acc_a)
-  = match p_t with
-    | Left_sym x_t _ _ p_a ->
-      AccIntro (sym_wf_aux
-        x_t
-        (match acc_a with
-         | AccIntro f -> f x_t p_a)
-        y
-        acc_b)
-    | Right_sym _ _ _ _ ->
-      let rec sym_wf_aux_y (y:b) (acc_b:acc r_b y) (t:a & b) (p_t:sym r_a r_b t (x, y))
-        : Tot (acc (sym r_a r_b) t)
-              (decreases acc_b)
-        = match p_t with
-         | Left_sym x_t _ _ p_a ->
-           AccIntro (sym_wf_aux
-             x_t
-             (match acc_a with
-              | AccIntro f -> f x_t p_a)
-             y
-             acc_b)
-         | Right_sym _ y_t _ p_b ->
-           AccIntro (sym_wf_aux_y
-             y_t
-             (match acc_b with
-              | AccIntro f -> f y_t p_b)) in
-      sym_wf_aux_y y acc_b t p_t
-
-let sym_wf #_ #_ #_ #_ wf_a wf_b =
-  fun (x, y) -> AccIntro (sym_wf_aux x (wf_a x) y (wf_b y))
+let lex_t_non_dep_wf #a #b #r_a #r_b wf_a wf_b =
+  let rec get_acc (t:a & b) (p:acc (lex_t r_a (fun _ -> r_b)) (tuple_to_dep_tuple t))
+    : Tot (acc (lex_t_non_dep r_a r_b) t)
+          (decreases p)
+    = let get_acc_aux (t1:a & b) (p_dep:lex_t_non_dep r_a r_b t1 t)
+        : (p1:acc (lex_t r_a (fun _ -> r_b)) (tuple_to_dep_tuple t1){p1 << p})
+        = match p with
+          | AccIntro f -> f (tuple_to_dep_tuple t1) p_dep in
+      AccIntro (fun t1 p1 -> get_acc t1 (get_acc_aux t1 p1)) in
+  fun t -> get_acc t (lex_t_wf wf_a (fun _ -> wf_b) (tuple_to_dep_tuple t))

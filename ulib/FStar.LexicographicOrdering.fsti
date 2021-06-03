@@ -18,12 +18,20 @@
 
 module FStar.LexicographicOrdering
 
-/// This module proves that lexicographic and symmetric products are
-///   well-founded (i.e. every element is accessible)
+/// This module proves that lexicographic ordering is well-founded
+///   (i.e. every element is accessible)
 ///
-/// The main theorems in the module are `lex_wf` and `sym_wf`
+/// It defines the lex relation as an inductive, and prove its well-foundedness
 ///
-/// See tests/micro-benchmarks/Test.WellFoundedRecursion.fst for how we use `lex` to prove termination for the ackermann function
+/// Since SMT proofs in F* are more amenable to squashed definitions,
+///   the module also defines a squashed version of the lex relation,
+///   and prove its well-foundedness, reusing the proof for the constructive version
+///
+/// See tests/micro-benchmarks/Test.WellFoundedRecursion.fst for
+///   how we use squashed `lex` to prove termination for the ackermann function
+///
+/// Finally, the module defines a non-dependent version of lex
+///   (in-terms of dependent lex), and uses it to prove well-foundedness of symmetric products too
 /// 
 /// Some references:
 ///   - https://github.com/coq/coq/blob/master/theories/Wellfounded/Lexicographic_Product.v
@@ -76,7 +84,7 @@ let lex_aux (#a:Type) (#b:a -> Type)
     (x1 == x2 /\ squash ((r_b x1) y1 y2))
 
 
-/// Provide a mapping from a point in lex_sq to a squashed point in lex
+/// Provide a mapping from a point in lex_aux to a squashed point in lex
 
 val lex_to_lex_t (#a:Type) (#b:a -> Type)
   (r_a:relation a)
@@ -109,7 +117,30 @@ let lex (#a:Type) (#b:a -> Type)
     lex_aux r_a r_b
 
 
+/// We can also define a non-dependent version of the lex ordering,
+///   in terms of the dependent lex tuple,
+///   and prove its well-foundedness
+
+let tuple_to_dep_tuple (#a #b:Type) (x:a & b) : dtuple2 a (fun _ -> b) =
+  (| fst x, snd x |)
+
+
+/// The non-dependent lexicographic ordering
+///   and its well-foundedness
+
+let lex_t_non_dep (#a #b:Type) (r_a:relation a) (r_b:relation b)
+  : relation (a & b)
+  = fun x y ->
+    lex_t r_a (fun _ -> r_b) (tuple_to_dep_tuple x) (tuple_to_dep_tuple y)
+
+val lex_t_non_dep_wf (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
+  (wf_a:well_founded r_a)
+  (wf_b:well_founded r_b)
+  : well_founded (lex_t_non_dep r_a r_b)
+
+
 /// Symmetric product relation
+///   we can prove its well-foundedness by showing that it is a subrelation of non-dep lex
 
 noeq
 type sym (#a:Type) (#b:Type) (r_a:relation a) (r_b:relation b)
@@ -125,11 +156,26 @@ type sym (#a:Type) (#b:Type) (r_a:relation a) (r_b:relation b)
     r_b y1 y2 ->
     sym r_a r_b (x, y1) (x, y2)
 
-/// Theorem for symmetric product
 
-val sym_wf (#a #b:Type)
+/// sym is a subrelation of non-dependent lex
+
+let sym_sub_lex (#a #b:Type) (#r_a:relation a) (#r_b:relation b)
+  (t1 t2:a & b)
+  (p:sym r_a r_b t1 t2)
+  : lex_t_non_dep r_a r_b t1 t2
+  = match p with
+    | Left_sym x1 x2 y p ->
+      Left_lex #a #(fun _ -> b) #r_a #(fun _ -> r_b) x1 x2 y y p
+    | Right_sym x y1 y2 p ->
+      Right_lex #a #(fun _ -> b) #r_a #(fun _ -> r_b) x y1 y2 p
+
+
+/// Theorem for symmetric product
+///
+let sym_wf (#a #b:Type)
   (#r_a:relation a)
   (#r_b:relation b)
   (wf_a:well_founded r_a)
   (wf_b:well_founded r_b)
   : well_founded (sym r_a r_b)
+  = subrelation_wf sym_sub_lex (lex_t_non_dep_wf wf_a wf_b)
