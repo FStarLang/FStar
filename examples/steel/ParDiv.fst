@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module ParDiv
-
+module U = FStar.Universe
 (**
  * This module provides a semantic model for a combined effect of
  * divergence, state and parallel composition of atomic actions.
@@ -95,9 +95,9 @@ noeq
 type m (s:Type u#s) (c:comm_monoid s) : (a:Type u#a) -> c.r -> post a c -> Type =
   | Ret : #a:_ -> #post:(a -> c.r) -> x:a -> m s c a (post x) post
   | Act : #a:_ -> #post:(a -> c.r) -> #b:_ -> f:action c b -> k:(x:b -> Dv (m s c a (f.post x) post)) -> m s c a f.pre post
-  | Par : pre0:_ -> #a0:_ -> post0:_ -> m0: m s c a0 pre0 post0 ->
-          pre1:_ -> #a1:_ -> post1:_ -> m1: m s c a1 pre1 post1 ->
-          #a:_ -> #post:_ -> k:(x0:a0 -> x1:a1 -> Dv (m s c a (c.star (post0 x0) (post1 x1)) post)) ->
+  | Par : pre0:_ -> post0:_ -> m0: m s c (U.raise_t unit) pre0 (fun _ -> post0) ->
+          pre1:_ -> post1:_ -> m1: m s c (U.raise_t unit) pre1 (fun _ -> post1) ->
+          #a:_ -> #post:_ -> k:m s c a (c.star post0 post1) post ->
           m s c a (c.star pre0 pre1) post
 
 
@@ -106,7 +106,7 @@ type m (s:Type u#s) (c:comm_monoid s) : (a:Type u#a) -> c.r -> post a c -> Type 
 assume
 val bools : nat -> bool
 
-/// The semantics comes is in two levels:
+/// The semantics comes in two levels:
 ///
 ///   1. A single-step relation [step] which selects an atomic action to
 ///      execute in the tree of threads
@@ -155,7 +155,7 @@ let rec step #s #c (i:nat) #pre #a #post (f:m s c a pre post) (frame:c.r) (state
           k ->
         //If both sides of a `Par` have returned
         //then step to the continuation
-        Step (post0 x0 `c.star` post1 x1) (k x0 x1) state i
+        Step (post0 `c.star` post1) k state i
 
     | Par pre0 post0 m0
           pre1 post1 m1
@@ -193,12 +193,6 @@ let rec run #s #c (i:nat) #pre #a #post (f:m s c a pre post) (state:s)
       let Step pre' f' state' j = step i f c.emp state in
       run j f' state'
 
-
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //The rest of this module shows how this semantic can be packaged up as an
 //effect in F*
@@ -228,7 +222,7 @@ let return #s (#c:comm_monoid s) #a (x:a) (post:a -> c.r)
 let rec bind (#s:Type u#s)
              (#c:comm_monoid s)
              (#a:Type u#a)
-             (#b:Type u#a)
+             (#b:Type u#b)
              (#p:c.r)
              (#q:a -> c.r)
              (#r:b -> c.r)
@@ -239,10 +233,20 @@ let rec bind (#s:Type u#s)
     | Ret x -> g x
     | Act act k ->
       Act act (fun x -> bind (k x) g)
-    | Par pre0 post0 l
-          pre1 post1 r
+    | Par pre0 post0 ml
+          pre1 post1 mr
           k ->
-      Par pre0 post0 l pre1 post1 r (fun x0 x1 -> bind (k x0 x1) g)
+      let k : m s c b (post0 `c.star` post1) r = bind k g in
+      let ml' : m s c (U.raise_t u#0 u#b unit) pre0 (fun _ -> post0) =
+         bind ml (fun _ -> Ret (U.raise_val u#0 u#b ()))
+      in
+      let mr' : m s c (U.raise_t u#0 u#b unit) pre1 (fun _ -> post1) =
+         bind mr (fun _ -> Ret (U.raise_val u#0 u#b ()))
+      in
+      Par #s #c pre0 post0 ml'
+                pre1 post1 mr'
+                #b #r k
+
 
 let frame_action (#s:Type) (#c:comm_monoid s) (#a:Type) (f:action c a) (fr:c.r)
   : g:action c a { g.post == (fun x -> f.post x `c.star` fr) /\
@@ -278,22 +282,20 @@ let rec frame (#s:Type u#s)
            #b
            (frame_action #s #c #b f fr)
            (fun (x:b) -> frame #s #c #a #(f.post x) #q fr (k x))
-     | Par pre0 #a0 post0 m0 pre1 #a1 post1 m1 k ->
+     | Par pre0 post0 m0 pre1 post1 m1 k ->
        let m0'
-         : m s c a0 (pre0 `c.star` fr) (fun x -> post0 x `c.star` fr)
+         : m s c (U.raise_t unit) (pre0 `c.star` fr) (fun x -> post0 `c.star` fr)
          = frame fr m0
        in
        let mp : m s c a ((pre0 `c.star` pre1) `c.star` fr)
                         (fun x -> q x `c.star` fr) =
        Par (pre0 `c.star` fr)
-           #a0
-           (fun x -> post0 x `c.star` fr)
+           (post0 `c.star` fr)
            m0'
            pre1
-           #a1
            post1
            m1
-           (fun x0 x1 -> frame fr (k x0 x1))
+           (frame fr k)
        in
        mp
 
@@ -303,12 +305,14 @@ let rec frame (#s:Type u#s)
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
 let par #s (#c:comm_monoid s)
-        #a0 #p0 #q0 (m0:eff a0 p0 q0)
-        #a1 #p1 #q1 (m1:eff a1 p1 q1)
- : eff (a0 & a1) (p0 `c.star` p1) (fun (x0, x1) -> q0 x0 `c.star` q1 x1)
- = Par p0 q0 m0
-       p1 q1 m1
-       #_ #(fun (x0, x1) -> c.star (q0 x0) (q1 x1)) (fun x0 x1 -> Ret (x0, x1))
+        #p0 #q0 (m0:eff unit p0 (fun _ -> q0))
+        #p1 #q1 (m1:eff unit p1 (fun _ -> q1))
+ : Dv (eff unit (p0 `c.star` p1) (fun _ -> q0 `c.star` q1))
+ = let m0' : eff (U.raise_t unit) p0 (fun _ -> q0) = bind m0 (fun _ -> Ret (U.raise_val u#0 u#0 ())) in
+   let m1' : eff (U.raise_t unit) p1 (fun _ -> q1) = bind m1 (fun _ -> Ret (U.raise_val u#0 u#0 ())) in
+   Par p0 q0 m0'
+       p1 q1 m1'
+       (Ret ())
 
 
 /// Now for an instantiation of the state with a heap
