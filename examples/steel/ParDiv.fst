@@ -92,7 +92,7 @@ type action #s (c:comm_monoid s) (a:Type) = {
  *
  *)
 noeq
-type m (s:Type u#s) (c:comm_monoid s) : (a:Type u#a) -> c.r -> post a c -> Type =
+type m (s:Type u#s) (c:comm_monoid u#s u#s s) : (a:Type u#a) -> c.r -> post a c -> Type =
   | Ret : #a:_ -> #post:(a -> c.r) -> x:a -> m s c a (post x) post
   | Act : #a:_ -> #post:(a -> c.r) -> #b:_ -> f:action c b -> k:(x:b -> Dv (m s c a (f.post x) post)) -> m s c a f.pre post
   | Par : pre0:_ -> post0:_ -> m0: m s c (U.raise_t unit) pre0 (fun _ -> post0) ->
@@ -227,7 +227,7 @@ let rec bind (#s:Type u#s)
              (#q:a -> c.r)
              (#r:b -> c.r)
              (f:eff a p q)
-             (g: (x:a -> eff b (q x) r))
+             (g: (x:a -> Dv (eff b (q x) r)))
   : Dv (eff b p r)
   = match f with
     | Ret x -> g x
@@ -322,8 +322,44 @@ let par #s (#c:comm_monoid s)
 /// Pick it in universe 1
 assume val heap : Type u#1
 
+[@@erasable]
+assume type r : Type u#1
+
+assume val emp : r
+assume val star : r -> r -> r
+assume val interp : r -> heap -> prop
 /// Assume some monoid of heap assertions
-assume val hm : comm_monoid heap
+let hm : comm_monoid u#1 u#1 heap = {
+  r = r;
+  emp = emp;
+  star = star;
+  interp = interp;
+  laws = magic()
+}
+
+////////////////////////////////////////////////////////////////////////////////
+let comp (a:Type u#a) (p:hm.r) (q:a -> hm.r) = unit -> Dv (m heap hm a p q)
+let ret (a:Type u#a) (x:a) (p: a -> hm.r) : comp a (p x) p = fun _ -> return x p
+let bnd (a:Type u#a) (b:Type u#b) (p:hm.r) (q: a -> hm.r) (r: b -> hm.r)
+        (f:comp a p q) (g: (x:a -> comp b (q x) r))
+  : comp b p r
+  = fun _ -> bind (f()) (fun x -> g x ())
+let subcomp (a:Type u#a) (p:hm.r) (q: a -> hm.r)
+            (f:comp a p q)
+  : comp a p q
+  = f
+let ite (a:Type u#a) (p:hm.r) (q: a -> hm.r)
+        (f g:comp a p q)
+  = comp a p q
+
+reflectable
+effect {
+   C (a:Type) (pre:hm.r) (q: a -> hm.r)
+   with { repr = comp;
+          return = ret;
+          bind = bnd;
+          subcomp = subcomp}
+}
 
 /// For this demo, we'll also assume that this assertions are affine
 ///  i.e., it's ok to forget some properties of the heap
@@ -335,54 +371,84 @@ assume val hm_affine (r0 r1:hm.r) (h:heap)
 assume val ref : Type u#0 -> Type u#0
 
 /// And two atomic heap assertions
-assume val ptr_live (r:ref 'a) : hm.r
 assume val pts_to (r:ref 'a) (x:'a) : hm.r
+assume val pure (p:prop) : hm.r
+
+open FStar.Ghost
 
 /// sel: Selected a reference from a heap, when that ref is live
-assume val sel (x:ref 'a) (h:heap{hm.interp (ptr_live x) h})
+assume val sel (x:ref 'a) (v:erased 'a) (h:heap{hm.interp (pts_to x v) h})
   : Tot 'a
 /// this tells us that sel is frameable
-assume val sel_ok (x:ref 'a) (h:heap) (frame:hm.r)
-  : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-           (hm_affine (ptr_live x) frame h;
-            let v = sel x h in
-            hm.interp (pts_to x v `hm.star` frame) h))
+assume val sel_ok (x:ref 'a) (v:erased 'a) (h:heap) (frame:hm.r)
+  : Lemma (hm.interp (pts_to x v `hm.star` frame) h ==>
+           (hm_affine (pts_to x v) frame h;
+            let v' = sel x v h in
+            hm.interp ((pts_to x v `hm.star` pure (reveal v == v')) `hm.star` frame) h))
 
 
 /// upd: updates a heap at a given reference, when the heap contains it
-assume val upd (x:ref 'a) (v:'a) (h:heap{hm.interp (ptr_live x) h})
+assume val upd (x:ref 'a) (v0:erased 'a) (v:'a) (h:heap{hm.interp (pts_to x v0) h})
   : Tot heap
 /// and upd is frameable too
-assume val upd_ok (x:ref 'a) (v:'a) (h:heap) (frame:hm.r)
-  : Lemma (hm.interp (ptr_live x `hm.star` frame) h ==>
-           (hm_affine (ptr_live x) frame h;
-            let h' = upd x v h in
+assume val upd_ok (x:ref 'a) (v0:erased 'a) (v:'a) (h:heap) (frame:hm.r)
+  : Lemma (hm.interp (pts_to x v0 `hm.star` frame) h ==>
+           (hm_affine (pts_to x v0) frame h;
+            let h' = upd x v0 v h in
             hm.interp (pts_to x v `hm.star` frame) h'))
 
+
 /// Here's a sample action for dereference
-let (!) (x:ref 'a)
-  : eff 'a (ptr_live x) (pts_to x)
-  = let act : action hm 'a =
+let (!) (#v0:erased 'a) (x:ref 'a)
+  : C 'a (pts_to x v0) (fun v -> pts_to x v0 `star` pure (reveal v0 == v))
+  = C?.reflect (fun _ ->
+    let act : action hm 'a =
     {
-      pre = ptr_live x;
-      post = pts_to x;
+      pre = pts_to x v0;
+      post = (fun v -> pts_to x v0 `star` pure (reveal v0 == v)) ;
       sem = (fun frame h0 ->
-        hm_affine (ptr_live x) frame h0;
-        sel_ok x h0 frame;
-        (| sel x h0, h0 |))
+        hm_affine (pts_to x v0) frame h0;
+        sel_ok x v0 h0 frame;
+        (| sel x v0 h0, h0 |))
     } in
-    Act act Ret
+    Act act Ret)
 
 /// And a sample action for assignment
-let (:=) (x:ref 'a) (v:'a)
-  : eff unit (ptr_live x) (fun _ -> pts_to x v)
-  = let act : action hm unit =
+let (:=) (#v0:erased 'a) (x:ref 'a) (v:'a)
+  : C unit (pts_to x v0) (fun _ -> pts_to x v)
+  = C?.reflect (fun _ ->
+    let act : action hm unit =
     {
-      pre = ptr_live x;
+      pre = pts_to x v0;
       post = (fun _ -> pts_to x v);
       sem = (fun frame h0 ->
-        hm_affine (ptr_live x) frame h0;
-        upd_ok x v h0 frame;
-        (| (), upd x v h0 |))
+        hm_affine (pts_to x v0) frame h0;
+        upd_ok x v0 v h0 frame;
+        (| (), upd x v0 v h0 |))
     } in
-    Act act Ret
+    Act act Ret)
+
+(* Need a better lift *)
+let lift_pure a wp (f : eqtype_as_type unit -> PURE a wp)
+  : Pure (comp a hm.emp (fun _ -> hm.emp))
+         (requires wp (fun _ -> True))
+         (ensures fun _ -> True)
+  = admit()
+
+sub_effect PURE ~> C = lift_pure
+
+assume
+val frame_r (#a:Type u#a) (#p:hm.r) (#q: a -> hm.r) (#fr:hm.r)
+            ($f: unit -> C a p q)
+    : C a (p `star` fr) (fun x -> q x `star` fr)
+assume
+val rewrite (#a:Type u#a) (p: a -> hm.r) (x:erased a) (y:a)
+    : C unit (p y  `star` pure (reveal x == y)) (fun _ -> p x)
+
+
+[@@expect_failure [19]]
+let incr (x:ref int) (v0:erased int)
+  : C unit (pts_to x v0) (fun u -> pts_to x (reveal v0 + 1))
+  = let v = !x in
+    frame_r (fun _ -> x := v + 1); //fails because of an imprecise lift
+    rewrite (fun y -> pts_to x (y + 1)) v0 v
