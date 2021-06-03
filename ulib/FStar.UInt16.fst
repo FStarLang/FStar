@@ -35,6 +35,10 @@ let vu_inv _ = ()
 
 let v_inj _ _ = ()
 
+let zero = uint_to_t 0
+
+let one = uint_to_t 1
+
 let add a b = Mk (add (v a) (v b))
 
 let add_underspec a b = Mk (add_underspec (v a) (v b))
