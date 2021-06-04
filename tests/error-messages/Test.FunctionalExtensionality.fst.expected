@@ -5,7 +5,7 @@ Test.FunctionalExtensionality.fst(36,49-36,50): (Error 19) Subtyping check faile
 Test.FunctionalExtensionality.fst(80,2-80,8): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also Test.FunctionalExtensionality.fst(80,9-80,43))
 >>]
 >> Got issues: [
-Test.FunctionalExtensionality.fst(92,36-92,47): (Error 19) Subtyping check failed; expected type _: Prims.int -> Prims.Tot Prims.int; got type Prims.nat ^-> Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
+Test.FunctionalExtensionality.fst(92,36-92,47): (Error 19) Subtyping check failed; expected type _: Prims.int -> Prims.Tot Prims.int; got type Prims.nat ^-> Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(676,18-676,24))
 >>]
 >> Got issues: [
 Test.FunctionalExtensionality.fst(142,57-142,58): (Error 19) Subtyping check failed; expected type Prims.int ^-> Prims.int; got type Prims.int ^-> Prims.nat; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.FunctionalExtensionality.fsti(103,60-103,77))

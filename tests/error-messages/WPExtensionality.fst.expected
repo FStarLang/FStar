@@ -1,5 +1,5 @@
 >> Got issues: [
-WPExtensionality.fst(118,3-118,34): (Error 19) assertion failed (Also see: prims.fst(425,31-425,44))(Other related locations: prims.fst(422,71-422,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+WPExtensionality.fst(118,3-118,34): (Error 19) assertion failed (Also see: prims.fst(424,31-424,44))(Other related locations: prims.fst(421,71-421,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 Verified module: WPExtensionality
 All verification conditions discharged successfully
