@@ -24,6 +24,19 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * F* now supports accessibility predicates based termination proofs. When writing a recursive function
+    
+    ```
+    let rec x_i : Tot t = ...
+    ```
+    
+    The decreases metric may be specified as:
+    
+    ```
+    let rec x_i : Tot t (decreses {:well-founded rel e}) = ...
+    ```
+    
+    where `rel` is a well-founded relation and `e` is an expression that decreases according to the relation in the recursive calls. See [this PR](https://github.com/FStarLang/FStar/pull/2307) for more details.
 
   * Since 2686888aab7e8fa7059b61c161ad7a2f867ee1f8, F* no longer
     supports eta equivalence. Dominique Unruh observed that the

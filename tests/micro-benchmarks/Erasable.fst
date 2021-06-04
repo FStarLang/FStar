@@ -91,7 +91,7 @@ let lift_PURE_MPURE_error (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE
   : Ghost (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     f ()
 [@@ expect_failure [189]]
 sub_effect PURE ~> MPURE = lift_PURE_MPURE_error
@@ -102,7 +102,7 @@ let lift_GHOST_MPURE (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> GHOST a w
   : Ghost (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     f ()
 [@@expect_failure [187]]
 sub_effect GHOST ~> MPURE = lift_GHOST_MPURE
@@ -111,7 +111,7 @@ let lift_PURE_MPURE (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
   : Pure (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     f ()
 sub_effect PURE ~> MPURE = lift_PURE_MPURE
 sub_effect PURE ~> MGHOST = lift_PURE_MPURE
@@ -208,7 +208,7 @@ let bind_PURE_M1 (a b:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp) 
   : Pure (repr b ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     g (f ())
 
 polymonadic_bind (PURE, M1) |> M1 = bind_PURE_M1

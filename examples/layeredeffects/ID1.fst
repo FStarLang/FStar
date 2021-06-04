@@ -11,7 +11,9 @@ let monotonic (w:wp0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val wp (a : Type u#a) : Type u#(max 1 a)
-let wp a = w:(wp0 a){monotonic w}
+let wp a = pure_wp a
+
+open FStar.Monotonic.Pure
 
 let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
   // Hmmm, the explicit post bumps the universe level
@@ -19,7 +21,7 @@ let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
 
 unfold
 let return_wp #a (x:a) : wp a =
-  fun p -> p x
+  as_pure_wp (fun p -> p x)
 
 let return (a : Type) (x : a) : repr a (return_wp x) =
  // Fun fact: using () instead of _ below makes us
@@ -32,7 +34,8 @@ let bind_wp #a #b
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = fun p -> wp_v (fun x -> wp_f x p)
+  = elim_pure_wp_monotonicity_forall ();
+    as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
@@ -58,7 +61,8 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 
 unfold
 let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
-  (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
+  elim_pure_wp_monotonicity_forall ();
+  (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
@@ -67,16 +71,18 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 : Type
 = repr a  wp
 
-let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
-  fun post _ -> f () post ()
-  
-let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
-                                                 (requires p)
-                                                 (ensures (fun _ -> True))
-  = fun post _ -> f post ()
+// AR: 05/19: commenting this code, see ID5.fst that contains these functions too
 
-let cut #a #w (p:Type0) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
-  strengthen p (fun _ -> weaken p f)
+// let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
+//   fun post _ -> f () post ()
+  
+// let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
+//                                                  (requires p)
+//                                                  (ensures (fun _ -> True))
+//   = fun post _ -> f post ()
+
+// let cut #a #w (p:Type0) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
+//   strengthen p (fun _ -> weaken p f)
   
 
 // requires to prove that
@@ -97,7 +103,7 @@ layered_effect {
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
-        ID a (fun p -> pre /\ (forall x. post x ==> p x))
+        ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
@@ -105,11 +111,13 @@ open FStar.Tactics
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r)) by (dump "")
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
    f ()
 
 unfold
-let nomon #a (w:wp a) : pure_wp a = fun p -> w p
+let nomon #a (w:wp a) : pure_wp a =
+  elim_pure_wp_monotonicity_forall ();
+  as_pure_wp (fun p -> w p)
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
   Pure (repr a wp) (requires True)
@@ -118,14 +126,14 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
 
 sub_effect PURE ~> ID = lift_pure_nd
 
-let iassert (q:Type0) : ID unit (fun p -> q /\ (q ==> p ())) = ()
+let iassert (q:Type0) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
 
 assume
-val iassume (q:Type0) : ID unit (fun p -> q ==> p ())
+val iassume (q:Type0) : ID unit (as_pure_wp (fun p -> q ==> p ()))
 
 (* Checking that it's kind of usable *)
 
-val test_f : unit -> ID int (fun p -> p 5 /\ p 3)
+val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
 let l () : int = reify (test_f ()) (fun _ -> True) ()
@@ -187,7 +195,7 @@ let rec fib (i:nat) : I nat =
        x+y
   //else fib (i-1) + fib (i-2)
 
-let test_assert () : ID unit (fun p -> p ()) =
+let test_assert () : ID unit (as_pure_wp (fun p -> p ())) =
   ();
   iassume False;
   ();

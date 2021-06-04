@@ -1724,15 +1724,21 @@ let (let_rec_arity :
           FStar_Util.map_opt dopt
             (fun d ->
                let d_bvs =
-                 let uu___2 =
-                   let uu___3 =
-                     FStar_Util.new_set FStar_Syntax_Syntax.order_bv in
-                   FStar_List.fold_left
-                     (fun s ->
-                        fun t ->
-                          let uu___4 = FStar_Syntax_Free.names t in
-                          FStar_Util.set_union s uu___4) uu___3 in
-                 FStar_All.pipe_right d uu___2 in
+                 match d with
+                 | FStar_Syntax_Syntax.Decreases_lex l ->
+                     let uu___2 =
+                       let uu___3 =
+                         FStar_Util.new_set FStar_Syntax_Syntax.order_bv in
+                       FStar_List.fold_left
+                         (fun s ->
+                            fun t ->
+                              let uu___4 = FStar_Syntax_Free.names t in
+                              FStar_Util.set_union s uu___4) uu___3 in
+                     FStar_All.pipe_right l uu___2
+                 | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+                     let uu___2 = FStar_Syntax_Free.names rel in
+                     let uu___3 = FStar_Syntax_Free.names e in
+                     FStar_Util.set_union uu___2 uu___3 in
                let uu___2 =
                  FStar_Common.tabulate n_univs (fun uu___3 -> false) in
                let uu___3 =

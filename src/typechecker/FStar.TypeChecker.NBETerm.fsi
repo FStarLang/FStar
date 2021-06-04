@@ -191,7 +191,8 @@ and cflag =
   | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
-  | DECREASES of list<t>
+  | DECREASES_lex of list<t>
+  | DECREASES_wf of (t * t)
 
 and arg = t * aqual
 and args = list<(arg)>
