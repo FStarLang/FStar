@@ -16,12 +16,12 @@
 #light "off"
 module FStar.ToSyntax.Interleave
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 //Reorders the top-level definitions/declarations in a file
 //in a proper order for consistent type-checking
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax

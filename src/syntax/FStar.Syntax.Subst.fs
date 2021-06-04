@@ -18,9 +18,10 @@
 module FStar.Syntax.Subst
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax

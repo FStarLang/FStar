@@ -1,9 +1,11 @@
 #light "off"
 module FStar.Tactics.Monad
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env

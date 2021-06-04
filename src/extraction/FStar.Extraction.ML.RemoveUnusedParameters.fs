@@ -18,8 +18,9 @@
 module FStar.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Ident
 open FStar.Compiler.Util
 open FStar.Const

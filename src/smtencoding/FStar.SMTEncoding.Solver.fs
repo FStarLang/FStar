@@ -18,8 +18,9 @@
 module FStar.SMTEncoding.Solver
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
 open FStar.Compiler.Util

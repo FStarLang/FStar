@@ -1,6 +1,6 @@
 #light "off"
 module FStar.Reflection.NBEEmbeddings
-
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Pervasives
 open FStar.Reflection.Data

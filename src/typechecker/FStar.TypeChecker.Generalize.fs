@@ -16,8 +16,10 @@
 #light "off"
 module FStar.TypeChecker.Generalize
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Errors
 open FStar.Syntax

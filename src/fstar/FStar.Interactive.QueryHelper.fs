@@ -19,7 +19,10 @@
 #light "off"
 
 module FStar.Interactive.QueryHelper
-open FStar open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Range
 open FStar.Compiler.Util

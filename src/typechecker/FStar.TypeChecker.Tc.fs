@@ -17,10 +17,9 @@
 module FStar.TypeChecker.Tc
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common

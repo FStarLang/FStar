@@ -1,8 +1,10 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.Syntax.Syntax

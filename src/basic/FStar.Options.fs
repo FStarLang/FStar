@@ -18,15 +18,17 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
 open FStar.Compiler
+open FStar.Compiler.List
 open FStar.Pervasives
 open FStar.String
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
+
 module Option = FStar.Compiler.Option
 module FC = FStar.Common
 module Util = FStar.Compiler.Util

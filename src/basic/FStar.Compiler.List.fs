@@ -35,7 +35,7 @@ let rec nth (l:list<'a>) (n:int)
         | [] ->  failwith "not enough elements"
         | _::tl -> nth tl (n - 1)
 
-let rec count (x:'a) (l:list<'a>)
+let rec count x l
   = match l with
     | [] -> 0
     | hd::tl ->
@@ -55,6 +55,8 @@ let rec append x y =
   match x with
   | [] -> y
   | hd::tl -> hd :: append tl y
+
+let ( @ ) x y = append x y
 
 let rec flatten l = match l with
     | [] -> []

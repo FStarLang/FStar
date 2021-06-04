@@ -17,10 +17,9 @@
 
 module FStar.SMTEncoding.Term
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Compiler.Util

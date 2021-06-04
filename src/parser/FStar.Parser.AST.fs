@@ -17,13 +17,13 @@
 module FStar.Parser.AST
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Errors
 module C = FStar.Parser.Const
 open FStar.Compiler.Range
 open FStar.Ident
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Const
 

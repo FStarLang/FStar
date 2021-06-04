@@ -17,9 +17,9 @@
 
 module FStar.SMTEncoding.Z3
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util

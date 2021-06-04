@@ -18,9 +18,9 @@
 module FStar.Interactive.Ide
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Range
 open FStar.Compiler.Util
 open FStar.Getopt

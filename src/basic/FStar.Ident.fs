@@ -2,7 +2,9 @@
 module FStar.Ident
 
 open Prims
+open FStar.Compiler.Effect
 open FStar.Compiler.Range
+open FStar.Compiler.List
 module List = FStar.Compiler.List
 module Util = FStar.Compiler.Util
 

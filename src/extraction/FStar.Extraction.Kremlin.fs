@@ -18,9 +18,9 @@
 
 module FStar.Extraction.Kremlin
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML

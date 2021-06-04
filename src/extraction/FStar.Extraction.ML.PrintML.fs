@@ -1,7 +1,8 @@
 #light "off"
 
 module FStar.Extraction.ML.PrintML
-
+open FStar.Compiler.Effect
+open FStar.Compiler
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.Code
 

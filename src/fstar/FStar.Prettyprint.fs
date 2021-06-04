@@ -17,11 +17,10 @@
 #light "off"
 module FStar.Prettyprint
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-
+open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Parser.ToDocument
-
+module List = FStar.Compiler.List
 module D = FStar.Parser.Driver
 module P = FStar.Pprint
 

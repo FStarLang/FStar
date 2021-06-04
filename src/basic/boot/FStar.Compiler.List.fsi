@@ -26,6 +26,7 @@ val nth : (list<'a>) -> int -> 'a
 val rev_acc : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val rev : (list<'a>) -> Tot<(list<'a>)>
 val append : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
+val ( @ ) :  (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val flatten : (list<(list<'a>)>) -> Tot<(list<'a>)>
 val iter : ('a -> unit) -> (list<'a>) -> unit
 val iter2 : ('a -> 'b -> unit) -> (list<'a>) -> list<'b> -> unit
@@ -43,7 +44,7 @@ val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list<'a>) -> (list<'b>) -> (list<'b>)
 val init : (list<'a>) -> list<'a>
 val last : (list<'a>) -> option<'a>
-val existsb : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<bool>
+val existsb : f:('a -> bool) -> (list<'a>) -> bool
 val existsML : f:('a -> bool) -> (list<'a>) -> bool
 val find : f:('a -> bool) -> (list<'a>) -> (option<'a>)
 val filter : ('a -> bool) -> (list<'a>) -> (list<'a>)

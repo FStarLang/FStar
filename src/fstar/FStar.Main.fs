@@ -16,7 +16,7 @@
 #light "off"
 module FStar.Main
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident

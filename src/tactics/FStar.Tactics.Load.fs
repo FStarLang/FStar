@@ -2,6 +2,7 @@
 
 module FStar.Tactics.Load
 open FStar.Compiler.Effect
+open FStar.Compiler
 
 let try_load_lib () : unit =
     if FStar.Options.debug_any () then

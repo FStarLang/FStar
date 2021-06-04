@@ -18,9 +18,9 @@
 
 module FStar.Extraction.ML.Code
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax

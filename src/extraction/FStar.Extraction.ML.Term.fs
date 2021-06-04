@@ -17,9 +17,9 @@
 module FStar.Extraction.ML.Term
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Compiler.Util
 open FStar.Const

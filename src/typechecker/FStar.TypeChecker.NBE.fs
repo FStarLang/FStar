@@ -19,8 +19,9 @@
 module FStar.TypeChecker.NBE
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Cfg
 open FStar.TypeChecker
 open FStar.TypeChecker.Env

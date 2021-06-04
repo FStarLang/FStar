@@ -18,10 +18,11 @@
 module FStar.Syntax.Free
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 open Prims
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax

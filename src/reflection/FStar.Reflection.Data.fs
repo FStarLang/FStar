@@ -2,6 +2,8 @@
 module FStar.Reflection.Data
 
 open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 (* NOTE: This file is exactly the same as its .fs variant. It is only
 here so the equally-named interface file in ulib/ is not taken by the

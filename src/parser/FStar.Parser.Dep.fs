@@ -24,10 +24,10 @@
 module FStar.Parser.Dep
 
 open FStar.Pervasives
-open FStar.Compiler.Effect   //for ref
-open FStar.Compiler.Effect  //for failwith
-
-open FStar open FStar.Compiler
+open FStar.Compiler.Effect   //for ref, failwith etc
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Compiler.Util

@@ -3,7 +3,7 @@ module FStar.Errors
 open FStar.Pervasives
 open FStar.String
 open FStar.Compiler.Effect
-open FStar.Exn
+open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Options

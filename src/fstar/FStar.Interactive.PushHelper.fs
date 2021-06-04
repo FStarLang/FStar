@@ -19,10 +19,11 @@
 #light "off"
 
 module FStar.Interactive.PushHelper
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors

@@ -1,12 +1,15 @@
 open Prims
 let (test_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Test"] FStar_Range.dummyRange
+  FStar_Ident.lid_of_path ["Test"] FStar_Compiler_Range.dummyRange
 let (tcenv_ref :
-  FStar_TypeChecker_Env.env FStar_Pervasives_Native.option FStar_ST.ref) =
-  FStar_Util.mk_ref FStar_Pervasives_Native.None
+  FStar_TypeChecker_Env.env FStar_Pervasives_Native.option
+    FStar_Compiler_Effect.ref)
+  = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let (test_mod_ref :
-  FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option FStar_ST.ref) =
-  FStar_Util.mk_ref
+  FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
+    FStar_Compiler_Effect.ref)
+  =
+  FStar_Compiler_Util.mk_ref
     (FStar_Pervasives_Native.Some
        {
          FStar_Syntax_Syntax.name = test_lid;
@@ -31,17 +34,19 @@ let (parse_mod :
            | (m1, env') ->
                let uu___3 =
                  let uu___4 =
-                   FStar_Ident.lid_of_path ["Test"] FStar_Range.dummyRange in
+                   FStar_Ident.lid_of_path ["Test"]
+                     FStar_Compiler_Range.dummyRange in
                  FStar_Syntax_DsEnv.prepare_module_or_interface false false
                    env' uu___4 FStar_Syntax_DsEnv.default_mii in
                (match uu___3 with | (env'1, uu___4) -> (env'1, m1)))
       | FStar_Parser_ParseIt.ParseError (err, msg, r) ->
-          FStar_Exn.raise (FStar_Errors.Error (err, msg, r, []))
+          FStar_Compiler_Effect.raise (FStar_Errors.Error (err, msg, r, []))
       | FStar_Parser_ParseIt.ASTFragment
           (FStar_Pervasives.Inr uu___1, uu___2) ->
-          let msg = FStar_Util.format1 "%s: expected a module\n" mod_name in
+          let msg =
+            FStar_Compiler_Util.format1 "%s: expected a module\n" mod_name in
           FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg)
-            FStar_Range.dummyRange
+            FStar_Compiler_Range.dummyRange
       | FStar_Parser_ParseIt.Term uu___1 ->
           failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
@@ -54,7 +59,7 @@ let (add_mods :
   fun mod_names ->
     fun dsenv ->
       fun env ->
-        FStar_List.fold_left
+        FStar_Compiler_List.fold_left
           (fun uu___ ->
              fun mod_name ->
                match uu___ with
@@ -286,12 +291,12 @@ let (init_once : unit -> unit) =
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
-              FStar_ST.op_Colon_Equals tcenv_ref
+              FStar_Compiler_Effect.op_Colon_Equals tcenv_ref
                 (FStar_Pervasives_Native.Some env4)))
 let (uu___56 : unit) = FStar_Main.setup_hooks (); init_once ()
 let (init : unit -> FStar_TypeChecker_Env.env) =
   fun uu___ ->
-    let uu___1 = FStar_ST.op_Bang tcenv_ref in
+    let uu___1 = FStar_Compiler_Effect.op_Bang tcenv_ref in
     match uu___1 with
     | FStar_Pervasives_Native.Some f -> f
     | uu___2 ->
@@ -307,14 +312,14 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
     }
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s ->
-    try
+    FStar_Compiler_Effect.try_with
       (fun uu___ ->
          match () with
          | () ->
              let tcenv = init () in
              let uu___1 =
                let uu___2 =
-                 FStar_All.pipe_left
+                 FStar_Compiler_Effect.pipe_left
                    (fun uu___3 -> FStar_Parser_ParseIt.Fragment uu___3)
                    (frag_of_text s) in
                FStar_Parser_ParseIt.parse uu___2 in
@@ -327,14 +332,12 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
               | FStar_Parser_ParseIt.ASTFragment uu___2 ->
                   failwith
                     "Impossible: parsing a Fragment always results in a Term"))
-        ()
-    with
-    | uu___ ->
-        if
-          let uu___1 = FStar_Options.trace_error () in
-          Prims.op_Negation uu___1
-        then Obj.magic (Obj.repr (FStar_Exn.raise uu___))
-        else Obj.magic (Obj.repr (failwith "unreachable"))
+      (fun uu___ ->
+         if
+           let uu___1 = FStar_Options.trace_error () in
+           Prims.op_Negation uu___1
+         then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___))
+         else Obj.magic (Obj.repr (failwith "unreachable")))
 let (tc' :
   Prims.string ->
     (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *
@@ -529,49 +532,49 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu___1 =
        let uu___2 = FStar_Errors.report_all () in
-       FStar_All.pipe_right uu___2 (fun uu___3 -> ()) in
-     try
+       FStar_Compiler_Effect.pipe_right uu___2 (fun uu___3 -> ()) in
+     FStar_Compiler_Effect.try_with
        (fun uu___1 ->
           match () with
           | () ->
               let tcenv = init () in
               let frag = frag_of_text s in
-              (try
-                 (fun uu___2 ->
-                    match () with
-                    | () ->
-                        let uu___3 =
-                          let uu___4 = FStar_ST.op_Bang test_mod_ref in
-                          FStar_Universal.tc_one_fragment uu___4 tcenv frag in
-                        (match uu___3 with
-                         | (test_mod', tcenv') ->
-                             (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
-                              FStar_ST.op_Colon_Equals tcenv_ref
-                                (FStar_Pervasives_Native.Some tcenv');
-                              (let n = FStar_Errors.get_err_count () in
-                               if n <> Prims.int_zero
-                               then
-                                 (report ();
-                                  (let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         FStar_Util.string_of_int n in
-                                       FStar_Util.format1
-                                         "%s errors were reported" uu___9 in
-                                     (FStar_Errors.Fatal_ErrorsReported,
-                                       uu___8) in
-                                   FStar_Errors.raise_err uu___7))
-                               else ())))) ()
-               with
-               | uu___2 ->
-                   (report ();
-                    FStar_Errors.raise_err
-                      (FStar_Errors.Fatal_TcOneFragmentFailed,
-                        (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
-     with
-     | uu___1 ->
-         if
-           let uu___2 = FStar_Options.trace_error () in
-           Prims.op_Negation uu___2
-         then Obj.magic (Obj.repr (FStar_Exn.raise uu___1))
-         else Obj.magic (Obj.repr (failwith "unreachable")))
+              FStar_Compiler_Effect.try_with
+                (fun uu___2 ->
+                   match () with
+                   | () ->
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_Compiler_Effect.op_Bang test_mod_ref in
+                         FStar_Universal.tc_one_fragment uu___4 tcenv frag in
+                       (match uu___3 with
+                        | (test_mod', tcenv') ->
+                            (FStar_Compiler_Effect.op_Colon_Equals
+                               test_mod_ref test_mod';
+                             FStar_Compiler_Effect.op_Colon_Equals tcenv_ref
+                               (FStar_Pervasives_Native.Some tcenv');
+                             (let n = FStar_Errors.get_err_count () in
+                              if n <> Prims.int_zero
+                              then
+                                (report ();
+                                 (let uu___7 =
+                                    let uu___8 =
+                                      let uu___9 =
+                                        FStar_Compiler_Util.string_of_int n in
+                                      FStar_Compiler_Util.format1
+                                        "%s errors were reported" uu___9 in
+                                    (FStar_Errors.Fatal_ErrorsReported,
+                                      uu___8) in
+                                  FStar_Errors.raise_err uu___7))
+                              else ()))))
+                (fun uu___2 ->
+                   report ();
+                   FStar_Errors.raise_err
+                     (FStar_Errors.Fatal_TcOneFragmentFailed,
+                       (Prims.op_Hat "tc_one_fragment failed: " s))))
+       (fun uu___1 ->
+          if
+            let uu___2 = FStar_Options.trace_error () in
+            Prims.op_Negation uu___2
+          then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___1))
+          else Obj.magic (Obj.repr (failwith "unreachable"))))

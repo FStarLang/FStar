@@ -16,8 +16,9 @@ type deps_t = FStar_Parser_Dep.deps
 type either_replst =
   (FStar_Interactive_JsonHelper.repl_state,
     FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either
-let (repl_stack : FStar_Interactive_JsonHelper.repl_stack_t FStar_ST.ref) =
-  FStar_Util.mk_ref []
+let (repl_stack :
+  FStar_Interactive_JsonHelper.repl_stack_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref []
 let (set_check_kind :
   FStar_TypeChecker_Env.env_t -> push_kind -> FStar_TypeChecker_Env.env_t) =
   fun env ->
@@ -115,7 +116,7 @@ let (repl_ld_tasks_of_deps :
   fun deps ->
     fun final_tasks ->
       let wrap fname =
-        let uu___ = FStar_Util.now () in
+        let uu___ = FStar_Compiler_Util.now () in
         {
           FStar_Interactive_JsonHelper.tf_fname = fname;
           FStar_Interactive_JsonHelper.tf_modtime = uu___
@@ -152,7 +153,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
       FStar_Dependencies.find_deps_if_needed [filename] parse_data_cache in
     match uu___ with
     | (deps, dep_graph) ->
-        let uu___1 = FStar_List.partition has_our_mod_name deps in
+        let uu___1 = FStar_Compiler_List.partition has_our_mod_name deps in
         (match uu___1 with
          | (same_name, real_deps) ->
              let intf_tasks =
@@ -165,7 +166,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      then
                        let uu___4 =
                          let uu___5 =
-                           FStar_Util.format1
+                           FStar_Compiler_Util.format1
                              "Expecting an interface, got %s" intf in
                          (FStar_Errors.Fatal_MissingInterface, uu___5) in
                        FStar_Errors.raise_err uu___4
@@ -177,14 +178,14 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      then
                        let uu___5 =
                          let uu___6 =
-                           FStar_Util.format1
+                           FStar_Compiler_Util.format1
                              "Expecting an implementation, got %s" impl in
                          (FStar_Errors.Fatal_MissingImplementation, uu___6) in
                        FStar_Errors.raise_err uu___5
                      else ());
                     (let uu___4 =
                        let uu___5 =
-                         let uu___6 = FStar_Util.now () in
+                         let uu___6 = FStar_Compiler_Util.now () in
                          {
                            FStar_Interactive_JsonHelper.tf_fname = intf;
                            FStar_Interactive_JsonHelper.tf_modtime = uu___6
@@ -198,7 +199,8 @@ let (deps_and_repl_ld_tasks_of_our_file :
                    let message = "Too many or too few files matching %s: %s" in
                    ((let uu___4 =
                        let uu___5 =
-                         FStar_Util.format message [our_mod_name; mods_str] in
+                         FStar_Compiler_Util.format message
+                           [our_mod_name; mods_str] in
                        (FStar_Errors.Fatal_TooManyOrTooFewFileMatch, uu___5) in
                      FStar_Errors.raise_err uu___4);
                     []) in
@@ -234,9 +236,9 @@ let (push_repl :
           match uu___ with
           | (depth, env) ->
               ((let uu___2 =
-                  let uu___3 = FStar_ST.op_Bang repl_stack in
+                  let uu___3 = FStar_Compiler_Effect.op_Bang repl_stack in
                   (depth, (task, st)) :: uu___3 in
-                FStar_ST.op_Colon_Equals repl_stack uu___2);
+                FStar_Compiler_Effect.op_Colon_Equals repl_stack uu___2);
                (let uu___2 = st in
                 let uu___3 = set_check_kind env push_kind1 in
                 {
@@ -279,7 +281,7 @@ let (pop_repl :
   =
   fun msg ->
     fun st ->
-      let uu___ = FStar_ST.op_Bang repl_stack in
+      let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
       match uu___ with
       | [] -> failwith "Too many pops"
       | (depth, (uu___1, st'))::stack_tl ->
@@ -287,9 +289,9 @@ let (pop_repl :
             rollback_env
               (st.FStar_Interactive_JsonHelper.repl_env).FStar_TypeChecker_Env.solver
               msg depth in
-          (FStar_ST.op_Colon_Equals repl_stack stack_tl;
+          (FStar_Compiler_Effect.op_Colon_Equals repl_stack stack_tl;
            (let uu___4 =
-              FStar_Util.physical_equality env
+              FStar_Compiler_Util.physical_equality env
                 st'.FStar_Interactive_JsonHelper.repl_env in
             FStar_Common.runtime_assert uu___4 "Inconsistent stack state");
            st')
@@ -305,7 +307,7 @@ let (tc_one :
           let uu___ =
             let uu___1 = FStar_TypeChecker_Env.dep_graph env in
             FStar_Parser_Dep.parsing_data_of uu___1 in
-          FStar_All.pipe_right modf uu___ in
+          FStar_Compiler_Effect.pipe_right modf uu___ in
         let uu___ =
           FStar_Universal.tc_one_file_for_ide env intf_opt modf parse_data in
         match uu___ with | (uu___1, env1) -> env1
@@ -374,14 +376,14 @@ let (__proj__NTBinding__item___0 :
   = fun projectee -> match projectee with | NTBinding _0 -> _0
 let (query_of_ids :
   FStar_Ident.ident Prims.list -> FStar_Interactive_CompletionTable.query) =
-  fun ids -> FStar_List.map FStar_Ident.string_of_id ids
+  fun ids -> FStar_Compiler_List.map FStar_Ident.string_of_id ids
 let (query_of_lid :
   FStar_Ident.lident -> FStar_Interactive_CompletionTable.query) =
   fun lid ->
     let uu___ =
       let uu___1 = FStar_Ident.ns_of_lid lid in
       let uu___2 = let uu___3 = FStar_Ident.ident_of_lid lid in [uu___3] in
-      FStar_List.append uu___1 uu___2 in
+      FStar_Compiler_List.op_At uu___1 uu___2 in
     query_of_ids uu___
 let (update_names_from_event :
   Prims.string ->
@@ -425,7 +427,7 @@ let (update_names_from_event :
                   (lid, uu___)) -> [lid]
               | FStar_Pervasives.Inr (lids1, uu___) -> lids1
               | uu___ -> [] in
-            FStar_List.fold_left
+            FStar_Compiler_List.fold_left
               (fun tbl ->
                  fun lid ->
                    let ns_query =
@@ -458,7 +460,7 @@ let (commit_name_tracking' :
               let uu___ = FStar_Syntax_Syntax.mod_name md in
               FStar_Ident.string_of_lid uu___ in
         let updater = update_names_from_event cur_mod_str in
-        FStar_List.fold_left updater names name_events
+        FStar_Compiler_List.fold_left updater names name_events
 let (commit_name_tracking :
   FStar_Interactive_JsonHelper.repl_state ->
     name_tracking_event Prims.list -> FStar_Interactive_JsonHelper.repl_state)
@@ -488,14 +490,15 @@ let (commit_name_tracking :
       }
 let (fresh_name_tracking_hooks :
   unit ->
-    (name_tracking_event Prims.list FStar_ST.ref *
+    (name_tracking_event Prims.list FStar_Compiler_Effect.ref *
       FStar_Syntax_DsEnv.dsenv_hooks * FStar_TypeChecker_Env.tcenv_hooks))
   =
   fun uu___ ->
-    let events = FStar_Util.mk_ref [] in
+    let events = FStar_Compiler_Util.mk_ref [] in
     let push_event evt =
-      let uu___1 = let uu___2 = FStar_ST.op_Bang events in evt :: uu___2 in
-      FStar_ST.op_Colon_Equals events uu___1 in
+      let uu___1 =
+        let uu___2 = FStar_Compiler_Effect.op_Bang events in evt :: uu___2 in
+      FStar_Compiler_Effect.op_Colon_Equals events uu___1 in
     (events,
       {
         FStar_Syntax_DsEnv.ds_push_open_hook =
@@ -560,8 +563,8 @@ let (track_name_changes :
                ((fun env1 ->
                    let uu___3 = set_hooks old_dshooks old_tchooks env1 in
                    let uu___4 =
-                     let uu___5 = FStar_ST.op_Bang events in
-                     FStar_List.rev uu___5 in
+                     let uu___5 = FStar_Compiler_Effect.op_Bang events in
+                     FStar_Compiler_List.rev uu___5 in
                    (uu___3, uu___4)))))
 let (repl_tx :
   FStar_Interactive_JsonHelper.repl_state ->
@@ -573,7 +576,7 @@ let (repl_tx :
   fun st ->
     fun push_kind1 ->
       fun task ->
-        try
+        FStar_Compiler_Effect.try_with
           (fun uu___ ->
              match () with
              | () ->
@@ -613,38 +616,39 @@ let (repl_tx :
                             | (env2, name_events) ->
                                 let uu___4 =
                                   commit_name_tracking st2 name_events in
-                                (FStar_Pervasives_Native.None, uu___4))))) ()
-        with
-        | FStar_All.Failure msg ->
-            let uu___1 =
-              let uu___2 =
-                FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_JsonHelper.repl_fname msg
-                  FStar_Pervasives_Native.None in
-              FStar_Pervasives_Native.Some uu___2 in
-            (uu___1, st)
-        | FStar_Util.SigInt ->
-            (FStar_Util.print_error "[E] Interrupt";
-             (FStar_Pervasives_Native.None, st))
-        | FStar_Errors.Error (e, msg, r, _ctx) ->
-            let uu___1 =
-              let uu___2 =
-                FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_JsonHelper.repl_fname msg
-                  (FStar_Pervasives_Native.Some r) in
-              FStar_Pervasives_Native.Some uu___2 in
-            (uu___1, st)
-        | FStar_Errors.Err (e, msg, _ctx) ->
-            let uu___1 =
-              let uu___2 =
-                FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_JsonHelper.repl_fname msg
-                  FStar_Pervasives_Native.None in
-              FStar_Pervasives_Native.Some uu___2 in
-            (uu___1, st)
-        | FStar_Errors.Stop ->
-            (FStar_Util.print_error "[E] Stop";
-             (FStar_Pervasives_Native.None, st))
+                                (FStar_Pervasives_Native.None, uu___4)))))
+          (fun uu___ ->
+             match uu___ with
+             | FStar_Compiler_Effect.Failure msg ->
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Interactive_JsonHelper.js_diag
+                       st.FStar_Interactive_JsonHelper.repl_fname msg
+                       FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.Some uu___2 in
+                 (uu___1, st)
+             | FStar_Compiler_Util.SigInt ->
+                 (FStar_Compiler_Util.print_error "[E] Interrupt";
+                  (FStar_Pervasives_Native.None, st))
+             | FStar_Errors.Error (e, msg, r, _ctx) ->
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Interactive_JsonHelper.js_diag
+                       st.FStar_Interactive_JsonHelper.repl_fname msg
+                       (FStar_Pervasives_Native.Some r) in
+                   FStar_Pervasives_Native.Some uu___2 in
+                 (uu___1, st)
+             | FStar_Errors.Err (e, msg, _ctx) ->
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Interactive_JsonHelper.js_diag
+                       st.FStar_Interactive_JsonHelper.repl_fname msg
+                       FStar_Pervasives_Native.None in
+                   FStar_Pervasives_Native.Some uu___2 in
+                 (uu___1, st)
+             | FStar_Errors.Stop ->
+                 (FStar_Compiler_Util.print_error "[E] Stop";
+                  (FStar_Pervasives_Native.None, st)))
 let (tf_of_fname : Prims.string -> FStar_Interactive_JsonHelper.timed_fname)
   =
   fun fname ->
@@ -718,11 +722,11 @@ let (repl_ldtx :
             let uu___ = repl_tx st1 LaxCheck timestamped_task in
             (match uu___ with
              | (diag, st2) ->
-                 if Prims.op_Negation (FStar_Util.is_some diag)
+                 if Prims.op_Negation (FStar_Compiler_Util.is_some diag)
                  then
                    let uu___1 =
                      let uu___2 = st2 in
-                     let uu___3 = FStar_ST.op_Bang repl_stack in
+                     let uu___3 = FStar_Compiler_Effect.op_Bang repl_stack in
                      {
                        FStar_Interactive_JsonHelper.repl_line =
                          (uu___2.FStar_Interactive_JsonHelper.repl_line);
@@ -750,14 +754,15 @@ let (repl_ldtx :
         | (tasks2, previous1) ->
             let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
       aux st tasks
-        (FStar_List.rev st.FStar_Interactive_JsonHelper.repl_deps_stack)
+        (FStar_Compiler_List.rev
+           st.FStar_Interactive_JsonHelper.repl_deps_stack)
 let (ld_deps :
   FStar_Interactive_JsonHelper.repl_state ->
     ((FStar_Interactive_JsonHelper.repl_state * Prims.string Prims.list),
       FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either)
   =
   fun st ->
-    try
+    FStar_Compiler_Effect.try_with
       (fun uu___ ->
          match () with
          | () ->
@@ -792,10 +797,9 @@ let (ld_deps :
                   (match uu___2 with
                    | FStar_Pervasives.Inr st2 -> FStar_Pervasives.Inr st2
                    | FStar_Pervasives.Inl st2 ->
-                       FStar_Pervasives.Inl (st2, deps)))) ()
-    with
-    | uu___ ->
-        (FStar_Util.print_error "[E] Failed to load deps";
+                       FStar_Pervasives.Inl (st2, deps))))
+      (fun uu___ ->
+         FStar_Compiler_Util.print_error "[E] Failed to load deps";
          FStar_Pervasives.Inr st)
 let (add_module_completions :
   Prims.string ->
@@ -818,17 +822,18 @@ let (add_module_completions :
              Prims.op_Hat (FStar_String.uppercase first) uu___1) in
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
-          let uu___ = FStar_Util.psmap_empty () in
+          let uu___ = FStar_Compiler_Util.psmap_empty () in
           let uu___1 = let uu___2 = FStar_Options.prims () in uu___2 :: deps in
-          FStar_List.fold_left
+          FStar_Compiler_List.fold_left
             (fun acc ->
                fun dep ->
                  let uu___2 = FStar_Parser_Dep.lowercase_module_name dep in
-                 FStar_Util.psmap_add acc uu___2 true) uu___ uu___1 in
+                 FStar_Compiler_Util.psmap_add acc uu___2 true) uu___ uu___1 in
         let loaded modname =
-          FStar_Util.psmap_find_default loaded_mods_set modname false in
+          FStar_Compiler_Util.psmap_find_default loaded_mods_set modname
+            false in
         let this_mod_key = FStar_Parser_Dep.lowercase_module_name this_fname in
-        FStar_List.fold_left
+        FStar_Compiler_List.fold_left
           (fun table1 ->
              fun uu___ ->
                match uu___ with
@@ -839,11 +844,11 @@ let (add_module_completions :
                    else
                      (let ns_query =
                         let uu___2 = capitalize modname in
-                        FStar_Util.split uu___2 "." in
+                        FStar_Compiler_Util.split uu___2 "." in
                       let uu___2 = loaded mod_key in
                       FStar_Interactive_CompletionTable.register_module_path
                         table1 uu___2 mod_path ns_query)) table
-          (FStar_List.rev mods)
+          (FStar_Compiler_List.rev mods)
 let (full_lax :
   Prims.string ->
     FStar_Interactive_JsonHelper.repl_state ->

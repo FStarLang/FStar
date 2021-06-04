@@ -1,8 +1,9 @@
 #light "off"
 module FStar.TypeChecker.Cfg
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler.List
+open FStar
+open FStar.Compiler
 open FStar.String
 open FStar.Const
 open FStar.Char

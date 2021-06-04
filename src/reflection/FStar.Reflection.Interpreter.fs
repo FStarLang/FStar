@@ -1,6 +1,8 @@
 #light "off"
 module FStar.Reflection.Interpreter
-
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data

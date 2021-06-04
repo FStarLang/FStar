@@ -3,6 +3,8 @@ module FStar.Tactics.CtrlRewrite
 
 open FStar.Pervasives
 open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Reflection.Data
