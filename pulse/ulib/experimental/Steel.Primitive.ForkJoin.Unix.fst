@@ -162,10 +162,11 @@ effect SteelKF (a:Type) (pre:pre_t) (post:post_t a) =
 
 // We would need requires/ensures in SteelK to have a binding with Pure.
 // But for our example, Tot is here sufficient
+
 let bind_tot_steelK_ (a:Type) (b:Type)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
-  (f:eqtype_as_type unit -> PURE a (fun _ -> True)) (g:(x:a -> steelK b framed pre post))
+  (f:eqtype_as_type unit -> PURE a (div_null_wp a)) (g:(x:a -> steelK b framed pre post))
 : steelK b
     framed
     pre

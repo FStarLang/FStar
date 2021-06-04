@@ -15,7 +15,7 @@
         "projection_inverse_Selectors.PtrLList.Mkcell_next"
       ],
       0,
-      "0284f6352f93263bede093b425a8d3b5"
+      "8f749230714cc3f1c00b834db9ce906d"
     ],
     [
       "Selectors.PtrLList.is_null",
@@ -24,7 +24,7 @@
       1,
       [ "@query", "equation_Selectors.PtrLList.null_llist" ],
       0,
-      "ab580d4d2966e8712952ef8a2bd4f06f"
+      "216e281e49cc2936505defd0b6afce88"
     ],
     [
       "Selectors.PtrLList.llist_ptr_sl'",
@@ -46,7 +46,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "424417278b7d37fde847c171c1ab3f2b"
+      "fc41ec0609f4425769cd8e1646f406ba"
     ],
     [
       "Selectors.PtrLList.llist_ptr_sel'",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "3142f104739a2760c3930f4ca4590a7d"
+      "81eb0dd0177903ef2e4d8c99e29cfa73"
     ],
     [
       "Selectors.PtrLList.llist_ptr_sl'_witinv",
@@ -116,7 +116,7 @@
         "typing_Steel.Reference.pts_to", "unit_inversion", "unit_typing"
       ],
       0,
-      "fc9b944231b46b73a38059b6af95bc6d"
+      "33cfbd04e359dd20aa83ef584bc8512f"
     ],
     [
       "Selectors.PtrLList.llist_sel_depends_only_on",
@@ -136,7 +136,7 @@
         "typing_Selectors.PtrLList.llist_ptr_sl_"
       ],
       0,
-      "15e656caee3580eee44ae5575acbc90f"
+      "a3c3206ec5aeac12a2a1c106cd046c0b"
     ],
     [
       "Selectors.PtrLList.llist_sel_depends_only_on_core",
@@ -156,7 +156,7 @@
         "typing_Selectors.PtrLList.llist_ptr_sl_"
       ],
       0,
-      "524920cdd7a46e6e881d273d036aca87"
+      "4b34184c3a06e0e2e27ee2f6f0a03d3b"
     ],
     [
       "Selectors.PtrLList.llist_ptr_sel_cell",
@@ -176,7 +176,7 @@
         "typing_Selectors.PtrLList.llist_ptr_sl"
       ],
       0,
-      "ab1fa106fc726d69c5a864fb7601ea3f"
+      "8f0cde238546e4d89f2cd587c1b9b3e8"
     ],
     [
       "Selectors.PtrLList.datas",
@@ -191,7 +191,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e1a86fee10bc583148295e4501d4351f"
+      "18ae74e89b31e3c03668dd95efffcbdd"
     ],
     [
       "Selectors.PtrLList.llist_ptr_sel",
@@ -211,7 +211,7 @@
         "token_correspondence_Selectors.PtrLList.llist_ptr_sel_cell"
       ],
       0,
-      "c86276f74a56c8de7b1cf5aa0cb1a766"
+      "69506c989ceb6e99da2b06d3fd5a2e16"
     ],
     [
       "Selectors.PtrLList.v_ptrlist",
@@ -228,7 +228,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7f6fa9b9ec618d8111d17c21880e017b"
+      "1ce7b9378c82a067826288fcf8f186d2"
     ],
     [
       "Selectors.PtrLList.v_cell",
@@ -245,7 +245,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fe86aef7288cd9b3e7062fb257099716"
+      "aa8be28a9557b7593a76f44916fa17f6"
     ],
     [
       "Selectors.PtrLList.ind_ptr_sel'",
@@ -265,7 +265,7 @@
         "typing_Steel.SelEffect.ref"
       ],
       0,
-      "c02530d51e83038c28b826a30b89fd90"
+      "ecf874f26c5c33efa231a8f863f8b143"
     ],
     [
       "Selectors.PtrLList.ind_ptr_sel_depends_only_on",
@@ -301,7 +301,7 @@
         "typing_Steel.SelEffect.ref"
       ],
       0,
-      "db89bc30b8166a5fdc01bd62d3d2ff3d"
+      "a57f26ada9cc955c7f2d1a871a587b0a"
     ],
     [
       "Selectors.PtrLList.ind_ptr_sel_depends_only_on_core",
@@ -337,7 +337,7 @@
         "typing_Steel.SelEffect.ref"
       ],
       0,
-      "e0ea88e4ea8a7b09fcea735e6a0c98d7"
+      "474a619d85e3e6d0b2c8c0186c5d7987"
     ],
     [
       "Selectors.PtrLList.ind_ptr_sel_full",
@@ -358,7 +358,7 @@
         "typing_Selectors.PtrLList.ind_ptr_sl"
       ],
       0,
-      "040305dcfb50167cb6c3f56914c9d14a"
+      "b641d66b85f43313f8b25fd690a636b9"
     ],
     [
       "Selectors.PtrLList.ind_ptr_sel",
@@ -379,7 +379,7 @@
         "token_correspondence_Selectors.PtrLList.ind_ptr_sel_full"
       ],
       0,
-      "efb39a18d2a4974d55a61049bb4486f6"
+      "ee454a0b945ee1a4589d9395a8378098"
     ],
     [
       "Selectors.PtrLList.v_full",
@@ -396,7 +396,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6654c152378e763c2974474d2427de7f"
+      "783f61070721e42c2a3735584755f2d1"
     ],
     [
       "Selectors.PtrLList.ind_sel",
@@ -413,7 +413,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "42a25a3e758bc73fee7dd20373900ad8"
+      "5a8b8df61583cabb143075c6edaf6f01"
     ],
     [
       "Selectors.PtrLList.intro_ptr_frame_lemma",
@@ -462,7 +462,7 @@
         "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "3f53a85079be6233595e55bea19ce45a"
+      "e0b7e24e71a0ffb62edc84b69bcd36ce"
     ],
     [
       "Selectors.PtrLList.intro_pts_to_frame_lemma",
@@ -504,7 +504,7 @@
         "typing_Steel.SelEffect.ptr", "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "b28a2c56c102ee1689405a5fba7609b7"
+      "b03a773116881c59c6d3255bb2b8f587"
     ],
     [
       "Selectors.PtrLList.unpack_ind_lemma",
@@ -558,7 +558,7 @@
         "typing_Steel.SelEffect.ref", "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "f12a9515e33b3c978623a5a6cf1d540a"
+      "10e46349276bc2579230a76120efa0dc"
     ],
     [
       "Selectors.PtrLList.unpack_ind_full",
@@ -567,7 +567,7 @@
       1,
       [ "@query" ],
       0,
-      "9ba5e3765582de580f82c3342dc4bb37"
+      "84d889e3cccbc4eef1b2c116395db957"
     ],
     [
       "Selectors.PtrLList.unpack_ind_full",
@@ -601,7 +601,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_Steel.SelEffect.ref"
       ],
       0,
-      "cc5745f19cc56dde9dfd4702d2be70e7"
+      "6b2fb2c70a818a23a4aca1834df85a93"
     ],
     [
       "Selectors.PtrLList.unpack_ind",
@@ -626,7 +626,7 @@
         "typing_Steel.SelEffect.ref"
       ],
       0,
-      "e67a4d9a007720fceb3525710dbc784d"
+      "40741a031a12adaf6465576debd6d270"
     ],
     [
       "Selectors.PtrLList.pack_ind_lemma",
@@ -670,7 +670,7 @@
         "typing_Steel.SelEffect.ref", "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "6c05d6a95ccbef453132c77a8964c893"
+      "c75723c254cb00700d5bd62992748078"
     ],
     [
       "Selectors.PtrLList.pack_ind",
@@ -690,7 +690,7 @@
         "true_interp", "typing_Steel.SelEffect.ref"
       ],
       0,
-      "bf6783e0a22ce0b347c178f316e6240f"
+      "75cb316c196ceb11c838f2d9d1f9205a"
     ],
     [
       "Selectors.PtrLList.llist_sel_interp",
@@ -714,7 +714,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "fb3b228b4e7750e2106b8c174ca5e119"
+      "6ea39e14e114f69ef8d5df2952a8814a"
     ],
     [
       "Selectors.PtrLList.reveal_non_empty_lemma",
@@ -735,7 +735,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bcbc18a517dd780423323033f4462a9d"
+      "6baf4d7ef2a09d6863ea99bbe4ed1db6"
     ],
     [
       "Selectors.PtrLList.is_cons",
@@ -753,7 +753,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "8e8b40b1ba0bf789c5b761032f7ce842"
+      "c3953eca3c0e44e1873bd17fdf84128e"
     ],
     [
       "Selectors.PtrLList.reveal_non_empty_cell",
@@ -773,7 +773,7 @@
         "true_interp"
       ],
       0,
-      "ebe4a3932cd4f0224d4b4e7bc8d0ec51"
+      "401ff9eee536bf3348f37fe5f07b4a86"
     ],
     [
       "Selectors.PtrLList.intro_nil_lemma",
@@ -800,7 +800,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "678c0caec56c287432dae1d44724eb10"
+      "f374d603cc6bf6ae8f8d9b1862599e41"
     ],
     [
       "Selectors.PtrLList.intro_llist_nil",
@@ -827,7 +827,7 @@
         "typing_Selectors.PtrLList.null_llist"
       ],
       0,
-      "ab4baddc44d83d141a4346e92a08502e"
+      "6f62a3fe0c496c43e7d1e2420aecea92"
     ],
     [
       "Selectors.PtrLList.elim_nil_lemma",
@@ -855,7 +855,7 @@
         "token_correspondence_Selectors.PtrLList.llist_ptr_sel"
       ],
       0,
-      "40f5a21bc643298ac3bd702b00372b26"
+      "b8c4796a4c2802c18d5ececd53dee8a8"
     ],
     [
       "Selectors.PtrLList.elim_llist_nil",
@@ -872,7 +872,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9ba864f536355c7688fc6fb440541be2"
+      "62ccb9c09d9f0ffd28ab5e92d6b9b3bb"
     ],
     [
       "Selectors.PtrLList.lemma_cons_not_null",
@@ -909,7 +909,7 @@
         "typing_FStar.Ghost.reveal", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "62b2c5887e8c405a7912874bf603eedf"
+      "090e1bf3d689583222757a46417ac9f5"
     ],
     [
       "Selectors.PtrLList.cons_is_not_null",
@@ -931,7 +931,7 @@
         "true_interp"
       ],
       0,
-      "c526c4469b013728d6e4bac74668fdf2"
+      "3ff2f0da4c8d8ed1699156e6c4f72082"
     ],
     [
       "Selectors.PtrLList.intro_cons_lemma_aux",
@@ -970,7 +970,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "69617502afa256c29411ebfad1e189ba"
+      "04d6f1f1e19eb467424d779f65328916"
     ],
     [
       "Selectors.PtrLList.intro_cons_lemma",
@@ -1046,7 +1046,7 @@
         "typing_Steel.SelEffect.ptr_sel", "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "76b80c205626817cd620786990f1a48f"
+      "b8af703b55b77c858c706dc058e1b6ec"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -1055,7 +1055,7 @@
       1,
       [ "@query" ],
       0,
-      "4469e5b4062d39044ead1630b6b75ccd"
+      "ec6808db0eb24d511b1381584d9a1030"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -1093,7 +1093,7 @@
         "typing_Steel.SelEffect.Common.star", "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "4538d0bc4f9db1e71ff7bd6abe5bb64d"
+      "ff4e15aba1cafbeea2171ee1114deae7"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -1102,7 +1102,7 @@
       1,
       [ "@query" ],
       0,
-      "7bb261df12c5f50de25fd00c1dfc6545"
+      "47ecb322e906d4107cc6b24eba814791"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -1153,7 +1153,7 @@
         "typing_Tm_abs_8dac73fb06d04b1f31afae33d2d6537f"
       ],
       0,
-      "5c925b1a06a3544a433b639ba91cfb6b"
+      "a4c3370e898417b52e64ef2783bfd93e"
     ],
     [
       "Selectors.PtrLList.elim_cons_cell",
@@ -1162,7 +1162,7 @@
       1,
       [ "@query" ],
       0,
-      "1822c22a53a5d56a3b114da7c376a55d"
+      "438434e802fef914c83ed3d9a8e06f35"
     ],
     [
       "Selectors.PtrLList.elim_cons_cell_lemma",
@@ -1258,7 +1258,7 @@
         "typing_Steel.SelEffect.vptr_"
       ],
       0,
-      "7bbc7b04095d2cf2435b9c5d78efd287"
+      "9529797e4604f11bd3dc6171f7dc73d6"
     ],
     [
       "Selectors.PtrLList.elim_cons_cell",
@@ -1282,7 +1282,7 @@
         "true_interp"
       ],
       0,
-      "01fe7e6f999390ec09a66514b3991292"
+      "2ba2448269c168b80d417addf26d4401"
     ],
     [
       "Selectors.PtrLList.elim_llist_cons",
@@ -1291,7 +1291,7 @@
       1,
       [ "@query" ],
       0,
-      "f22c5e58459332c05fb28503eb45d1fa"
+      "68d54e147ed253da958315a5a8abd7a6"
     ],
     [
       "Selectors.PtrLList.elim_llist_cons",
@@ -1350,7 +1350,7 @@
         "typing_Selectors.PtrLList.llist_ptr_sl"
       ],
       0,
-      "047880cdde13145df11a472b8fee819c"
+      "bee327055e51175a72957a3f20187e57"
     ]
   ]
 ]
