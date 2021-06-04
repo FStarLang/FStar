@@ -1,5 +1,5 @@
 [
-  "^@ØY\u0006\u001e≈\u001eçìg∞Có—’",
+  "dê‰;ååZ’Ö‰ˇ\b«ƒ˘ë",
   [
     [
       "FStar.WellFounded.acc_inv",
@@ -11,7 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "d817a7fc4f26ba73f4e00b0a1b98e460"
+      "ed8c2ebc370a46a239a0ab3374d248c4"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -20,14 +20,82 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_4e982a875db0541c1cbbc9a298d945ea_7",
+        "binder_x_9698cf3fe625edba431657e44ae8fa84_7",
         "equation_FStar.WellFounded.acc_inv",
         "fuel_guarded_inversion_FStar.WellFounded.acc",
         "token_correspondence_FStar.WellFounded.acc_inv",
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "e0e404824e00c225f32dced6242c55aa"
+      "6b99a196431fa0ace6e77384399568de"
+    ],
+    [
+      "FStar.WellFounded.as_well_founded",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.WellFounded.is_well_founded",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "26a078e3164b77a931c72d961e9292c1"
+    ],
+    [
+      "FStar.WellFounded.subrelation_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.WellFounded_interpretation_Tm_arrow_1746c45d493cb65cef6c9dae848785d2",
+        "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "784dbfced446fe4c4d95d1daba0eb52f"
+    ],
+    [
+      "FStar.WellFounded.subrelation_squash_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.WellFounded.is_well_founded",
+        "equation_Prims.squash",
+        "projection_inverse_FStar.WellFounded.AccIntro__0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "e2d87bc5d305eec971387d9aef8dc910"
+    ],
+    [
+      "FStar.WellFounded.subrelation_as_wf",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "210a03bc3de33dc274387e14f68d7e04"
+    ],
+    [
+      "FStar.WellFounded.inverse_image_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "equation_FStar.WellFounded.inverse_image",
+        "interpretation_Tm_abs_edd09bedcd003825726f248e787a0aa1",
+        "token_correspondence_FStar.WellFounded.inverse_image",
+        "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
+      ],
+      0,
+      "fc4fdfd87ebf1524a00c3840e5e19e26"
     ]
   ]
 ]

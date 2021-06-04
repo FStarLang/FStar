@@ -1,5 +1,5 @@
 [
-  "øßœèº\u0012\u001dGuV®„}6ø\u0002",
+  "”ÒZ\u0005\u001b…´√Y¢∑ªxDQi",
   [
     [
       "FStar.IndefiniteDescription.indefinite_description_ghost",
@@ -65,6 +65,23 @@
       ],
       0,
       "5e278f26a8fa6feeab4d2c7b771eefa8"
+    ],
+    [
+      "FStar.IndefiniteDescription.elim_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "95b39303212e33066238e05aade04d0d"
     ]
   ]
 ]
