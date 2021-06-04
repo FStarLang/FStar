@@ -83,8 +83,10 @@ let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)
 
+open FStar.Monotonic.Pure
+
 (* another try, with raw encoding of the wp *)
-val plouf4 : s:sub -> f:exp -> PURE unit (fun (p:pure_post unit) -> (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f)) ==> p ())
+val plouf4 : s:sub -> f:exp -> PURE unit (as_pure_wp (fun (p:pure_post unit) -> (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f)) ==> p ()))
 let plouf4 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)

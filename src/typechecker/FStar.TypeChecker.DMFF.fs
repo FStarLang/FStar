@@ -123,6 +123,7 @@ let gen_wps_for_free
   let sigelts = BU.mk_ref [] in
   let register env lident def =
     let sigelt, fv = TcUtil.mk_toplevel_definition env lident def in
+    let sigelt = { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}} in
     sigelts := sigelt :: !sigelts;
     fv
   in
@@ -1540,6 +1541,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | (x::xs) -> x :: (apply_last f xs)
   in
   let register maybe_admit name item =
+    let maybe_admit = true in
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
     let l' = lid_of_path p' ed_range in

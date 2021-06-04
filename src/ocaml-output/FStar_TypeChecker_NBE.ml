@@ -1995,10 +1995,17 @@ and (translate_flag :
             FStar_TypeChecker_NBETerm.SHOULD_NOT_INLINE
         | FStar_Syntax_Syntax.LEMMA -> FStar_TypeChecker_NBETerm.LEMMA
         | FStar_Syntax_Syntax.CPS -> FStar_TypeChecker_NBETerm.CPS
-        | FStar_Syntax_Syntax.DECREASES l ->
+        | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_lex l)
+            ->
             let uu___ =
               FStar_All.pipe_right l (FStar_List.map (translate cfg bs)) in
-            FStar_TypeChecker_NBETerm.DECREASES uu___
+            FStar_TypeChecker_NBETerm.DECREASES_lex uu___
+        | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_wf
+            (rel, e)) ->
+            let uu___ =
+              let uu___1 = translate cfg bs rel in
+              let uu___2 = translate cfg bs e in (uu___1, uu___2) in
+            FStar_TypeChecker_NBETerm.DECREASES_wf uu___
 and (readback_flag :
   config -> FStar_TypeChecker_NBETerm.cflag -> FStar_Syntax_Syntax.cflag) =
   fun cfg ->
@@ -2017,8 +2024,18 @@ and (readback_flag :
           FStar_Syntax_Syntax.SHOULD_NOT_INLINE
       | FStar_TypeChecker_NBETerm.LEMMA -> FStar_Syntax_Syntax.LEMMA
       | FStar_TypeChecker_NBETerm.CPS -> FStar_Syntax_Syntax.CPS
-      | FStar_TypeChecker_NBETerm.DECREASES l ->
-          let uu___ = FStar_All.pipe_right l (FStar_List.map (readback cfg)) in
+      | FStar_TypeChecker_NBETerm.DECREASES_lex l ->
+          let uu___ =
+            let uu___1 =
+              FStar_All.pipe_right l (FStar_List.map (readback cfg)) in
+            FStar_Syntax_Syntax.Decreases_lex uu___1 in
+          FStar_Syntax_Syntax.DECREASES uu___
+      | FStar_TypeChecker_NBETerm.DECREASES_wf (rel, e) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = readback cfg rel in
+              let uu___3 = readback cfg e in (uu___2, uu___3) in
+            FStar_Syntax_Syntax.Decreases_wf uu___1 in
           FStar_Syntax_Syntax.DECREASES uu___
 and (translate_monadic :
   (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.term'

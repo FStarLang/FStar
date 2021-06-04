@@ -87,7 +87,7 @@ let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r True
 = RSTATE?.reflect (returnc a x r)
 
-assume val wp_monotonic_pure (_:unit)
+assume val elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
     (forall (a:Type) (wp:pure_wp a).
        (forall (p q:pure_post a).
@@ -98,7 +98,7 @@ let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:eqtype_as_type unit ->
 : Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ -> f ()
 
 sub_effect PURE ~> RSTATE = lift_pure_rst

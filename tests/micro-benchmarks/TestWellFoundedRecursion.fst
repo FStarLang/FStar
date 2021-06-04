@@ -121,3 +121,46 @@ type tf =
 let rec test_tf (f:tf) =
     match f with
     | TF g -> TF (on_dom nat (fun x -> test_tf (g x)))
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+//// Termination checking using accessibility predicates ////
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+//We can write the ackermann function (and prove its termination) this way:
+
+let rec ackermann (m n:nat) : Tot nat (decreases %[m; n]) =
+  if m = 0 then n + 1
+  else if n = 0 then ackermann (m - 1) 1
+  else ackermann (m - 1) (ackermann m (n - 1))
+
+//The proof above relies on the in-built lexicographic ordering in F*
+//F* also provides termination checking based on accessibility predicates
+//  using which we can build our own lexicographic ordering and use it
+//See ulib/FStar.LexicographicOrdering.fsti
+
+open FStar.Preorder
+open FStar.WellFounded
+open FStar.LexicographicOrdering
+
+unfold
+let lt : relation nat = fun x y -> x < y
+
+unfold
+let lt_dep (_:nat) : relation nat = lt
+
+let rec lt_well_founded (n:nat) : acc lt n =
+  AccIntro (fun m _ -> lt_well_founded m)
+
+let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
+  AccIntro (fun p _ -> lt_dep_well_founded m p)
+
+let rec ackermann_wf (m n:nat)
+  : Tot nat (decreases {:well-founded
+             (lex lt_well_founded lt_dep_well_founded)
+             (| m, n |) })
+  = if m = 0 then n + 1
+    else if n = 0 then ackermann_wf (m - 1) 1
+    else ackermann_wf (m - 1) (ackermann_wf m (n - 1))
