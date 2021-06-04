@@ -289,39 +289,39 @@ let pure_return (a:Type) (x:a) : pure_wp a =
   pure_return0 a x
 
 unfold
-let pure_bind_wp (r1:range) (a b:Type) (wp1:pure_wp a) (wp2:(a -> pure_wp b)) : pure_wp b =
+let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (pure_wp b) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_bind_wp0 r1 a b wp1 wp2
+  pure_bind_wp0 a b wp1 wp2
 
 unfold
-let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : pure_wp a =
+let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_if_then_else0 a p wp_then wp_else
 
 unfold
-let pure_ite_wp (a:Type) (wp:pure_wp a) : pure_wp a =
+let pure_ite_wp (a:Type) (wp:pure_wp a) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_ite_wp0 a wp
 
 unfold
-let pure_close_wp (a b:Type) (wp:b -> pure_wp a) : pure_wp a =
+let pure_close_wp (a b:Type) (wp:b -> Tot (pure_wp a)) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_close_wp0 a b wp
 
 unfold
-let pure_null_wp (a:Type) : pure_wp a =
+let pure_null_wp (a:Type) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_null_wp0 a
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp (p:Type) : pure_wp unit =
+let pure_assert_wp (p:Type) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assert_wp0 p
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp (p:Type) : pure_wp unit =
+let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assume_wp0 p
 
@@ -353,7 +353,7 @@ sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
 unfold
-let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : pure_wp a =
+let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
 
@@ -404,7 +404,6 @@ let st_return (heap a: Type) (x: a) (p: st_post_h heap a) = p x
 unfold
 let st_bind_wp
       (heap: Type)
-      (r1: range)
       (a b: Type)
       (wp1: st_wp_h heap a)
       (wp2: (a -> GTot (st_wp_h heap b)))
@@ -490,7 +489,7 @@ let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
 (** Sequential composition of exception-raising code requires case analysing
     the result of the first computation before "running" the second one *)
 unfold
-let ex_bind_wp (r1: range) (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
+let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
     : GTot Type0 =
   forall (k: ex_post b).
     (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
@@ -588,7 +587,6 @@ let all_return (heap a: Type) (x: a) (p: all_post_h heap a) = p (V x)
 unfold
 let all_bind_wp
       (heap: Type)
-      (r1: range)
       (a b: Type)
       (wp1: all_wp_h heap a)
       (wp2: (a -> GTot (all_wp_h heap b)))

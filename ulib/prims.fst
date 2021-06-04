@@ -332,7 +332,6 @@ let pure_return0 (a: Type) (x: a) (p: pure_post a) =
     instead use FStar.Pervasives.pure_bind_wp *)
 unfold
 let pure_bind_wp0
-      (r1: range)
       (a b: Type)
       (wp1: pure_wp a)
       (wp2: (a -> GTot (pure_wp b)))
