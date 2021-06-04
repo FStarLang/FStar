@@ -318,14 +318,20 @@ assume
 type guard_free : Type0 -> Type0 
 
 (** The return combinator for the PURE effect requires
-    proving the postcondition only on [x] *)
+    proving the postcondition only on [x]
+    
+    Clients should not use it directly,
+    instead use FStar.Pervasives.pure_return *)
 unfold
-let pure_return (a: Type) (x: a) (p: pure_post a) =
+let pure_return0 (a: Type) (x: a) (p: pure_post a) =
   forall (return_val: a). return_val == x ==> p return_val
 
-(** Sequential composition for the PURE effect *)
+(** Sequential composition for the PURE effect
+
+    Clients should not use it directly,
+    instead use FStar.Pervasives.pure_bind_wp *)
 unfold
-let pure_bind_wp
+let pure_bind_wp0
       (r1: range)
       (a b: Type)
       (wp1: pure_wp a)
@@ -344,28 +350,37 @@ let pure_bind_wp
     However, the way the typechecker constructs the VC, [wp_then] is already
     weakened with [p].
 
-    Hence, here we only weaken [wp_else] *)
+    Hence, here we only weaken [wp_else]
+    
+    Clients should not use it directly,
+    instead use FStar.Pervasives.pure_if_then_else *)
 
 unfold
-let pure_if_then_else (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post a) =
+let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post a) =
   wp_then post /\ (~p ==> wp_else post)
 
 (** Conditional composition for the PURE effect, while trying to avoid
     duplicating the postcondition by giving it a local name [k].
 
     Note the use of [guard_free] here: [k] is just meant to be a macro
-    for [post]. *)
+    for [post].
+    
+    Clients should not use it directly,
+    instead use FStar.Pervasives.pure_ite_wp *)
 unfold
-let pure_ite_wp (a: Type) (wp: pure_wp a) (post: pure_post a) =
+let pure_ite_wp0 (a: Type) (wp: pure_wp a) (post: pure_post a) =
   forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
 
 (** Subsumption for the PURE effect *)
 unfold
 let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 p ==> wp2 p
 
-(** Closing a PURE WP under a binder for [b] *)
+(** Closing a PURE WP under a binder for [b]
+
+    Clients should not use it directly,
+    instead use FStar.Pervasives.pure_close_wp *)
 unfold
-let pure_close_wp (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
+let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
 
 (** Trivial WP for PURE: Prove the WP with the trivial poscondition *)
 unfold
@@ -378,13 +393,13 @@ total
 new_effect {
   PURE : a: Type -> wp: pure_wp a -> Effect
   with
-    return_wp = pure_return
-  ; bind_wp = pure_bind_wp
-  ; if_then_else = pure_if_then_else
-  ; ite_wp = pure_ite_wp
-  ; stronger = pure_stronger
-  ; close_wp = pure_close_wp
-  ; trivial = pure_trivial
+    return_wp    = pure_return0
+  ; bind_wp      = pure_bind_wp0
+  ; if_then_else = pure_if_then_else0
+  ; ite_wp       = pure_ite_wp0
+  ; stronger     = pure_stronger
+  ; close_wp     = pure_close_wp0
+  ; trivial      = pure_trivial
 }
 
 (** [Pure] is a Hoare-style counterpart of [PURE]
@@ -400,19 +415,24 @@ effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
 effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
 
 (** The primitive effect [Tot] is definitionally equal to an instance of [PURE] *)
+
+
+(** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
 unfold
-let pure_null_wp (a: Type) (p: pure_post a) = forall (any_result: a). p any_result
+let pure_null_wp0 (a: Type) (p: pure_post a) = forall (any_result: a). p any_result
 
 (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
-effect Tot (a: Type) = PURE a (pure_null_wp a)
+effect Tot (a: Type) = PURE a (pure_null_wp0 a)
 
+(** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp (p: Type) (post: pure_post unit) = p /\ post ()
+let pure_assert_wp0 (p: Type) (post: pure_post unit) = p /\ post ()
 
+(** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp (p: Type) (post: pure_post unit) = p ==> post ()
+let pure_assume_wp0 (p: Type) (post: pure_post unit) = p ==> post ()
 
 (**** The [GHOST] effect *)
 
@@ -438,7 +458,7 @@ effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
 
 (** As with [Tot], the primitive effect [GTot] is definitionally equal
     to an instance of GHOST *)
-effect GTot (a: Type) = GHOST a (pure_null_wp a)
+effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 
 
 (***** End trusted primitives *****)
