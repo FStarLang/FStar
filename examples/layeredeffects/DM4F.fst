@@ -1,5 +1,7 @@
 module DM4F
 
+open FStar.Monotonic.Pure
+
 #set-options "--print_universes"
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
@@ -12,24 +14,33 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
 
-type wp st a = w:(wp0 st a)//{st_monotonic w}
+type wp st a = w:(wp0 st a){st_monotonic w}
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> PURE (a & st) (wp s0)
+  s0:st -> PURE (a & st) (as_pure_wp (wp s0))
 
-let return (a:Type) (x:a) (st:Type0) : repr a st (fun s0 p -> p (x, s0)) =
+unfold
+let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a = fun s0 p -> p (x, s0)
+
+let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
   fun s0 -> (x, s0)
+
+unfold
+let bind_wp (#a #b:Type) (#st:Type0) (wp_c:wp st a) (wp_f:a -> wp st b) : wp st b =
+  fun s0 p -> wp_c s0 (fun (y, s1) -> wp_f y s1 p)
 
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
   (wp_f : a -> wp st b)
   (c : repr a st wp_c)
   (f : (x:a -> repr b st (wp_f x)))
-: Pure (repr b st  (fun s0 p -> wp_c s0 (fun (y, s1) -> wp_f y s1 p)))
-       (requires (st_monotonic wp_c /\ (forall x. st_monotonic (wp_f x))))
-       (ensures (fun _ -> True))
+: repr b st  (bind_wp wp_c wp_f)
 = fun s0 -> let (y, s1) = c s0 in
          f y s1
+
+unfold
+let ite_wp (#a:Type) (#st:Type0) (wpf wpg:wp st a) (b:bool) : wp st a =
+  fun s0 p -> (b ==> wpf s0 p) /\ ((~b) ==> wpg s0 p)
 
 let if_then_else
   (a:Type)
@@ -39,7 +50,7 @@ let if_then_else
   (g : repr a st wpg)
   (b : bool)
   : Type
-  = repr a st (fun s0 p -> (b ==> wpf s0 p) /\ ((~b) ==> wpg s0 p))
+  = repr a st (ite_wp wpf wpg b)
 
 let stronger
   (#a:Type) (#st:Type0)
@@ -73,11 +84,15 @@ layered_effect {
 let pure_monotonic #a (w : pure_wp a) : Type0 =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
+unfold
+let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
+  elim_pure_wp_monotonicity_forall ();
+  fun s0 p -> w (fun x -> p (x, s0))
+
 let lift_pure_st a st wp (f : eqtype_as_type unit -> PURE a wp)
-  : Pure (repr a st (fun s0 p -> wp (fun x -> p (x, s0))))
-         (requires (pure_monotonic wp))
-         (ensures (fun _ -> True))
-  = fun s0 -> (f (), s0)
+  : repr a st (lift_wp wp)
+  = elim_pure_wp_monotonicity_forall ();
+    fun s0 -> (f (), s0)
 
 sub_effect PURE ~> ST = lift_pure_st
 

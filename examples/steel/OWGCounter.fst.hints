@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "23db72066b1d9dceda091ddc33d1a08f"
+      "b1f3fe3de9fbebafd1d94dfb8fb02778"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "ff25b36bd285dd37fe39153e403bed23"
+      "101fb7eb7c665d5e87e85827833ad2b4"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "095531817ec82e24eace82fede8300e3"
+      "23d5527c8d36d2cedfdfcfa2a2a72745"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "5418ef38e8622ee20ea17a359f20ca5b"
+      "59d0e4bfabe099b2d92ea3c05c2bf2bf"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "e0e94a064a03954c53f651655f2ff7cb"
+      "38b6649e2cd647f0fd5b015fe5f0f139"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "79023c31cdda6e9d2b41299c22b4d61d"
+      "7abfd707edf04608776f429a4e432f03"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "5d688ed054a37c991ba8441be3736f9b"
+      "1b7f23586daeff68648ff6f87d76a60b"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "52030d9943b694bd2022bbca0334e90d"
+      "b7ce12a8610bee7ccdb758203ebb753d"
     ],
     [
       "OWGCounter.incr_main",
@@ -210,7 +210,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "36b846d9ed418312c2d9069472e9d9e5"
+      "48bd0daaec31e3689abb5a91fca289cf"
     ]
   ]
 ]
