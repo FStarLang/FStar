@@ -964,6 +964,29 @@ let send_b #p c #next x tr =
   change_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
   write_b c tr x
 
+
+let rec recv_aux_a (#p:dprot)
+               (c:chan p)
+               (next:dprot{more next /\ tag_of next = Recv})
+               (tr:trace p next)
+  : SteelT (msg_t next)
+           (pts_to c (A_R next tr))
+           (fun x -> pts_to c (ep_a (step next x) (extend tr x)))
+  = let tr' = get_a_r c next tr in
+    if trace_length tr >= trace_length tr'.tr then (
+      change_slprop (pts_to c _) (pts_to c _) (fun _ -> ());
+      recv_aux_a c next tr
+    )
+    else (
+      compatible_a_r_v_is_ahead tr tr';
+      let x = next_message tr tr'.tr in
+      change_slprop
+        (pts_to c _)
+        (pts_to c (ep_a (step next x) (extend tr x)))
+        (fun _ -> ());
+      return x
+  )
+
 let rec recv_a (#p:dprot)
                (c:chan p)
                (next:dprot{more next /\ tag_of next = Recv})
@@ -973,20 +996,9 @@ let rec recv_a (#p:dprot)
            (fun x -> endpoint_a c (step next x) (extend tr x))
   =
   change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
-  let tr' = get_a_r c next tr in
-  if trace_length tr >= trace_length tr'.tr then (
-     change_slprop (pts_to c _) (endpoint_a c next tr) (fun _ -> ());
-     recv_a c next tr
-  )
-  else (
-      compatible_a_r_v_is_ahead tr tr';
-      let x = next_message tr tr'.tr in
-      change_slprop
-        (pts_to c _)
-        (endpoint_a c (step next x) (extend tr x))
-        (fun _ -> ());
-      return x
-  )
+  let x = recv_aux_a c next tr in
+  let _ : unit = change_slprop (pts_to c _) (endpoint_a c _ _) (fun _ -> ()) in
+  return x
 
 let rec recv_b
   (#p:dprot)
