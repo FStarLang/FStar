@@ -410,7 +410,7 @@ let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #r
     x
 
 let bind_pure_steel_ a b #wp #pre #post #req #ens f g
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun frame ->
       let x = f () in
       g x frame
@@ -441,7 +441,7 @@ let bind_div_steel (a:Type) (b:Type)
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
 = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-  fun m0 ->
+  fun frame ->
   let x = f () in
   g x frame
 #pop-options
