@@ -220,8 +220,8 @@ let (extract_let_rec_annotation :
                                        let s =
                                          FStar_Syntax_Util.rename_binders bs
                                            bs' in
-                                       FStar_List.map
-                                         (FStar_Syntax_Subst.subst s) d in
+                                       FStar_Syntax_Subst.subst_decreasing_order
+                                         s d in
                                      let c1 =
                                        FStar_Syntax_Util.comp_set_flags c
                                          flags in
@@ -2509,32 +2509,13 @@ let (bind :
                                          | FStar_Pervasives.Inr reason ->
                                              FStar_Pervasives.Inr reason in
                                        let uu___9 =
-                                         let uu___10 =
-                                           FStar_TypeChecker_Env.try_lookup_effect_lid
-                                             env
-                                             FStar_Parser_Const.effect_GTot_lid in
-                                         FStar_Option.isNone uu___10 in
+                                         FStar_TypeChecker_Env.too_early_in_prims
+                                           env in
                                        if uu___9
                                        then
-                                         let uu___10 =
-                                           (FStar_Syntax_Util.is_tot_or_gtot_comp
-                                              c1)
-                                             &&
-                                             (FStar_Syntax_Util.is_tot_or_gtot_comp
-                                                c2) in
-                                         (if uu___10
-                                          then
-                                            FStar_Pervasives.Inl
-                                              (c2, trivial_guard,
-                                                "Early in prims; we don't have bind yet")
-                                          else
-                                            (let uu___12 =
-                                               FStar_TypeChecker_Env.get_range
-                                                 env in
-                                             FStar_Errors.raise_error
-                                               (FStar_Errors.Fatal_NonTrivialPreConditionInPrims,
-                                                 "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
-                                               uu___12))
+                                         FStar_Pervasives.Inl
+                                           (c2, trivial_guard,
+                                             "Early in prims; we don't have bind yet")
                                        else
                                          (let uu___11 =
                                             FStar_Syntax_Util.is_total_comp
@@ -3080,8 +3061,8 @@ let (maybe_assume_result_eq_pure_term_in_m :
         fun lc ->
           let should_return1 =
             (((Prims.op_Negation env.FStar_TypeChecker_Env.lax) &&
-                (FStar_TypeChecker_Env.lid_exists env
-                   FStar_Parser_Const.effect_GTot_lid))
+                (let uu___ = FStar_TypeChecker_Env.too_early_in_prims env in
+                 Prims.op_Negation uu___))
                && (should_return env (FStar_Pervasives_Native.Some e) lc))
               &&
               (let uu___ =

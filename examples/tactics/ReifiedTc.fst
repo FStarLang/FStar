@@ -38,6 +38,8 @@ assume val eq_any : #a:Type -> #b:Type -> x:a -> y:b -> Lemma (x === y)
 
 let hwp_mon = HIGH?.wp
 
+#push-options "--admit_smt_queries true"
+
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
 unfold

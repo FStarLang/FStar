@@ -694,14 +694,17 @@ let (tc_sig_let :
               | FStar_Pervasives_Native.None ->
                   FStar_Pervasives_Native.Some val_q
               | FStar_Pervasives_Native.Some q' ->
-                  let drop_logic =
+                  let drop_logic_and_irreducible =
                     FStar_List.filter
                       (fun x ->
-                         Prims.op_Negation (x = FStar_Syntax_Syntax.Logic)) in
+                         Prims.op_Negation
+                           ((x = FStar_Syntax_Syntax.Logic) ||
+                              (x = FStar_Syntax_Syntax.Irreducible))) in
                   let uu___ =
                     let uu___1 =
-                      let uu___2 = drop_logic val_q in
-                      let uu___3 = drop_logic q' in (uu___2, uu___3) in
+                      let uu___2 = drop_logic_and_irreducible val_q in
+                      let uu___3 = drop_logic_and_irreducible q' in
+                      (uu___2, uu___3) in
                     match uu___1 with
                     | (val_q1, q'1) ->
                         ((FStar_List.length val_q1) = (FStar_List.length q'1))
@@ -1919,7 +1922,37 @@ let (tc_decl' :
                                 FStar_Syntax_Syntax.sigopts =
                                   (uu___3.FStar_Syntax_Syntax.sigopts)
                               })] in
-                      ([], (FStar_List.append ses effect_and_lift_ses), env0))
+                      let effect_and_lift_ses1 =
+                        FStar_All.pipe_right effect_and_lift_ses
+                          (FStar_List.map
+                             (fun sigelt ->
+                                let uu___3 = sigelt in
+                                {
+                                  FStar_Syntax_Syntax.sigel =
+                                    (uu___3.FStar_Syntax_Syntax.sigel);
+                                  FStar_Syntax_Syntax.sigrng =
+                                    (uu___3.FStar_Syntax_Syntax.sigrng);
+                                  FStar_Syntax_Syntax.sigquals =
+                                    (uu___3.FStar_Syntax_Syntax.sigquals);
+                                  FStar_Syntax_Syntax.sigmeta =
+                                    (let uu___4 =
+                                       sigelt.FStar_Syntax_Syntax.sigmeta in
+                                     {
+                                       FStar_Syntax_Syntax.sigmeta_active =
+                                         (uu___4.FStar_Syntax_Syntax.sigmeta_active);
+                                       FStar_Syntax_Syntax.sigmeta_fact_db_ids
+                                         =
+                                         (uu___4.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                                       FStar_Syntax_Syntax.sigmeta_admit =
+                                         true
+                                     });
+                                  FStar_Syntax_Syntax.sigattrs =
+                                    (uu___3.FStar_Syntax_Syntax.sigattrs);
+                                  FStar_Syntax_Syntax.sigopts =
+                                    (uu___3.FStar_Syntax_Syntax.sigopts)
+                                })) in
+                      ([], (FStar_List.append ses effect_and_lift_ses1),
+                        env0))
                else
                  (let ne1 =
                     let uu___3 = do_two_phases env in
@@ -3886,7 +3919,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___927 : unit) =
+let (uu___933 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

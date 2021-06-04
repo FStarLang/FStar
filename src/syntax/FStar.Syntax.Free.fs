@@ -210,8 +210,8 @@ and free_names_and_uvars_comp c use_cache =
               let decreases_vars =
                 match List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags with
                 | None -> no_free_vars
-                | Some (DECREASES l) ->
-                  l |> List.fold_left (fun acc t -> union acc (free_names_and_uvars t use_cache)) no_free_vars
+                | Some (DECREASES dec_order) ->
+                  free_names_and_uvars_dec_order dec_order use_cache
               in
               //decreases clause + return type
               let us = union (free_names_and_uvars ct.result_typ use_cache) decreases_vars in
@@ -222,6 +222,14 @@ and free_names_and_uvars_comp c use_cache =
          in
          c.vars := Some (fst n);
          n
+
+and free_names_and_uvars_dec_order dec_order use_cache =
+  match dec_order with
+  | Decreases_lex l ->
+    l |> List.fold_left (fun acc t -> union acc (free_names_and_uvars t use_cache)) no_free_vars
+  | Decreases_wf (rel, e) ->
+    union (free_names_and_uvars rel use_cache)
+          (free_names_and_uvars e use_cache)
 
 and should_invalidate_cache n use_cache =
     not use_cache ||

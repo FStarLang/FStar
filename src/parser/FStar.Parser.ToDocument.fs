@@ -1257,6 +1257,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
+  | WFOrder (rel, e) ->
+    p_dec_wf ps pb rel e
   | LexList l ->
       group (str "%" ^^ p_term_list ps pb l)
   | Decreases (e, wtf) ->
@@ -1375,6 +1377,10 @@ and p_noSeqTerm' ps pb e = match e.tm with
                     ^^ p_noSeqTermAndComment false false init ^^ str ";" ^^ hardline
                     ^^ separate_map_last hardline p_calcStep steps)
   | _ -> p_typ ps pb e
+
+and p_dec_wf ps pb rel e =
+  group (str "{:well-founded " ^^ p_typ ps pb rel ^/^ p_typ ps pb e ^^ str " }")
+
 
 and p_calcStep _ (CalcStep (rel, just, next)) =
   group (p_noSeqTermAndComment false false rel ^^ space ^^ lbrace ^^ space ^^ p_noSeqTermAndComment false false just ^^ space ^^ rbrace ^^ hardline
@@ -1942,6 +1948,8 @@ and p_projectionLHS e = match e.tm with
   | CalcProof _ (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
   | LexList l -> group (str "%" ^^ p_term_list false false l)
+  | WFOrder (rel, e) ->
+    p_dec_wf false false rel e
 
 and p_constant = function
   | Const_effect -> str "Effect"

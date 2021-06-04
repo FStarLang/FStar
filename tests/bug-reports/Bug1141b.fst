@@ -15,7 +15,9 @@
 *)
 module Bug1141b
 
-effect MyTot (a:Type) = PURE a (fun p -> forall x. p x)
+open FStar.Monotonic.Pure
+
+effect MyTot (a:Type) = PURE a (as_pure_wp (fun p -> forall x. p x))
 
 [@@expect_failure]
 noeq

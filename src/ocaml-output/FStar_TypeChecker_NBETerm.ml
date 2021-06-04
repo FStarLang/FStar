@@ -104,7 +104,8 @@ and cflag =
   | SHOULD_NOT_INLINE 
   | LEMMA 
   | CPS 
-  | DECREASES of t Prims.list 
+  | DECREASES_lex of t Prims.list 
+  | DECREASES_wf of (t * t) 
 and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
@@ -316,11 +317,16 @@ let (uu___is_LEMMA : cflag -> Prims.bool) =
   fun projectee -> match projectee with | LEMMA -> true | uu___ -> false
 let (uu___is_CPS : cflag -> Prims.bool) =
   fun projectee -> match projectee with | CPS -> true | uu___ -> false
-let (uu___is_DECREASES : cflag -> Prims.bool) =
+let (uu___is_DECREASES_lex : cflag -> Prims.bool) =
   fun projectee ->
-    match projectee with | DECREASES _0 -> true | uu___ -> false
-let (__proj__DECREASES__item___0 : cflag -> t Prims.list) =
-  fun projectee -> match projectee with | DECREASES _0 -> _0
+    match projectee with | DECREASES_lex _0 -> true | uu___ -> false
+let (__proj__DECREASES_lex__item___0 : cflag -> t Prims.list) =
+  fun projectee -> match projectee with | DECREASES_lex _0 -> _0
+let (uu___is_DECREASES_wf : cflag -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DECREASES_wf _0 -> true | uu___ -> false
+let (__proj__DECREASES_wf__item___0 : cflag -> (t * t)) =
+  fun projectee -> match projectee with | DECREASES_wf _0 -> _0
 let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
   fun projectee ->

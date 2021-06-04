@@ -53,6 +53,11 @@ val v_inj (x1 x2: t): Lemma
   (requires (v x1 == v x2))
   (ensures (x1 == x2))
 
+(** Constants 0 and 1 *)
+val zero : x:t{v x = 0}
+
+val one : x:t{v x = 1}
+
 (**** Addition primitives *)
 
 (** Bounds-respecting addition
@@ -250,7 +255,7 @@ let eq_mask (a:t) (b:t)
       lemma_msb_pow2 #n (v (lognot x));
       lemma_msb_pow2 #n (v minus_x);
       lemma_minus_zero #n (v x);
-      assert (v c = zero n)
+      assert (v c = FStar.UInt.zero n)
     end;
     c
 

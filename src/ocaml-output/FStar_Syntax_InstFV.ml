@@ -215,9 +215,8 @@ and (inst_comp :
                 (FStar_List.map
                    (fun uu___4 ->
                       match uu___4 with
-                      | FStar_Syntax_Syntax.DECREASES l ->
-                          let uu___5 =
-                            FStar_All.pipe_right l (FStar_List.map (inst s)) in
+                      | FStar_Syntax_Syntax.DECREASES dec_order ->
+                          let uu___5 = inst_decreases_order s dec_order in
                           FStar_Syntax_Syntax.DECREASES uu___5
                       | f -> f)) in
             {
@@ -230,6 +229,24 @@ and (inst_comp :
               FStar_Syntax_Syntax.flags = uu___3
             } in
           FStar_Syntax_Syntax.mk_Comp ct1
+and (inst_decreases_order :
+  (FStar_Syntax_Syntax.term ->
+     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+    ->
+    FStar_Syntax_Syntax.decreases_order ->
+      FStar_Syntax_Syntax.decreases_order)
+  =
+  fun s ->
+    fun uu___ ->
+      match uu___ with
+      | FStar_Syntax_Syntax.Decreases_lex l ->
+          let uu___1 = FStar_All.pipe_right l (FStar_List.map (inst s)) in
+          FStar_Syntax_Syntax.Decreases_lex uu___1
+      | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+          let uu___1 =
+            let uu___2 = inst s rel in
+            let uu___3 = inst s e in (uu___2, uu___3) in
+          FStar_Syntax_Syntax.Decreases_wf uu___1
 and (inst_lcomp_opt :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)

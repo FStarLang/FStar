@@ -161,6 +161,7 @@ let () =
    ".(", DOT_LPAREN;
    ".[|", DOT_LBRACK_BAR;
    "{:pattern", LBRACE_COLON_PATTERN;
+   "{:well-founded", LBRACE_COLON_WELL_FOUNDED;
    ":", COLON;
    "::", COLON_COLON;
    ":=", COLON_EQUALS;
@@ -387,7 +388,7 @@ let ignored_op_char = [%sedlex.regexp? Chars ".$"]
 let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" ]
 let op_token_2 = [%sedlex.regexp? "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" ]
 let op_token_3 = [%sedlex.regexp? "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" ]
-let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" ]
+let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | "{:well-founded" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" ]
 let op_token_5 = [%sedlex.regexp? "!{" | "[@@@" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}" ]
 
 (* -------------------------------------------------------------------- *)

@@ -34,6 +34,10 @@ let of_ibuffer b = (| IMMUTABLE, b |)
 
 let of_qbuf #_ #q b = (| q, b |)
 
+let is_null #a c =
+  let x = qbuf_mbuf c in
+  B.is_null x
+
 let index c i =
   let x = qbuf_mbuf c in
   B.index x i

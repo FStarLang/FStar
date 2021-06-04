@@ -69,6 +69,7 @@ type term' =
   | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
   | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
   | LexList of term Prims.list 
+  | WFOrder of (term * term) 
   | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStar_Ident.lid 
@@ -283,6 +284,10 @@ let (uu___is_LexList : term' -> Prims.bool) =
   fun projectee -> match projectee with | LexList _0 -> true | uu___ -> false
 let (__proj__LexList__item___0 : term' -> term Prims.list) =
   fun projectee -> match projectee with | LexList _0 -> _0
+let (uu___is_WFOrder : term' -> Prims.bool) =
+  fun projectee -> match projectee with | WFOrder _0 -> true | uu___ -> false
+let (__proj__WFOrder__item___0 : term' -> (term * term)) =
+  fun projectee -> match projectee with | WFOrder _0 -> _0
 let (uu___is_Decreases : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases _0 -> true | uu___ -> false
