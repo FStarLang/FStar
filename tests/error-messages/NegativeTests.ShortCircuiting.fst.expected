@@ -2,7 +2,7 @@
 NegativeTests.ShortCircuiting.fst(21,16-21,33): (Error 19) Subtyping check failed; expected type b: Prims.bool{NegativeTests.ShortCircuiting.bad_p b}; got type Prims.bool; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.ShortCircuiting.fst(19,31-19,38))
 >>]
 >> Got issues: [
-NegativeTests.ShortCircuiting.fst(25,11-25,36): (Error 19) assertion failed (Also see: prims.fst(407,31-407,43))(Other related locations: prims.fst(404,70-404,82)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+NegativeTests.ShortCircuiting.fst(25,11-25,36): (Error 19) assertion failed (Also see: prims.fst(425,31-425,44))(Other related locations: prims.fst(422,71-422,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 NegativeTests.ShortCircuiting.fst(19,4-19,7): (Warning 240) Admitting NegativeTests.ShortCircuiting.bad without a definition
 NegativeTests.ShortCircuiting.fst(23,4-23,6): (Warning 240) Admitting NegativeTests.ShortCircuiting.ff without a definition

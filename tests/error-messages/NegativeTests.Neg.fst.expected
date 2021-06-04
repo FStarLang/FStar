@@ -1,8 +1,8 @@
 >> Got issues: [
-NegativeTests.Neg.fst(20,8-20,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(657,18-657,24))
+NegativeTests.Neg.fst(20,8-20,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(24,8-24,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(657,18-657,24))
+NegativeTests.Neg.fst(24,8-24,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(27,30-27,35): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
@@ -20,10 +20,10 @@ NegativeTests.Neg.fst(42,33-42,34): (Error 19) could not prove post-condition; T
 NegativeTests.Neg.fst(46,30-46,31): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.Native.option 'a {Some? _}; got type FStar.Pervasives.Native.option 'a; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.Native.fst(33,4-33,8))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(50,45-50,47): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.fsti(484,4-484,5))
+NegativeTests.Neg.fst(50,45-50,47): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.fsti(470,4-470,5))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(55,25-55,26): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(657,18-657,24))
+NegativeTests.Neg.fst(55,25-55,26): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(59,0-60,17): (Error 309) Type annotation _: Type0{NegativeTests.Neg.phi_1510} for inductive NegativeTests.Neg.t is not Type or eqtype, or it is eqtype but contains unopteq qualifier

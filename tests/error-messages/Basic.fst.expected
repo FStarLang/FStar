@@ -26,13 +26,13 @@ Basic.fst(13,38-13,49): (Error 19) assertion failed; The SMT solver could not pr
 Basic.fst(14,38-14,49): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(14,50-14,55))
 >>]
 >> Got issues: [
-Basic.fst(17,29-17,31): (Error 19) assertion failed (Also see: prims.fst(407,31-407,43))(Other related locations: prims.fst(404,70-404,82)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+Basic.fst(17,29-17,31): (Error 19) assertion failed (Also see: prims.fst(425,31-425,44))(Other related locations: prims.fst(422,71-422,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-Basic.fst(20,29-20,31): (Error 19) assertion failed (Also see: prims.fst(407,31-407,43))(Other related locations: prims.fst(404,70-404,82)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+Basic.fst(20,29-20,31): (Error 19) assertion failed (Also see: prims.fst(425,31-425,44))(Other related locations: prims.fst(422,71-422,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-Basic.fst(23,46-23,48): (Error 19) assertion failed (Also see: prims.fst(407,31-407,43))(Other related locations: prims.fst(404,70-404,82)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+Basic.fst(23,46-23,48): (Error 19) assertion failed (Also see: prims.fst(425,31-425,44))(Other related locations: prims.fst(422,71-422,83)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 Verified module: Basic
 All verification conditions discharged successfully

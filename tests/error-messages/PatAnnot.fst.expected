@@ -2,19 +2,19 @@
 PatAnnot.fst(25,8-25,9): (Error 19) Subtyping check failed; expected type Prims.squash Prims.l_False; got type Prims.unit; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also PatAnnot.fst(25,19-25,24))
 >>]
 >> Got issues: [
-PatAnnot.fst(28,0-30,14): (Error 19) assertion failed (Also see: prims.fst(411,54-411,66)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+PatAnnot.fst(28,0-30,14): (Error 19) assertion failed (Also see: prims.fst(430,55-430,67)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-PatAnnot.fst(33,0-35,14): (Error 19) assertion failed (Also see: prims.fst(411,54-411,66)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+PatAnnot.fst(33,0-35,14): (Error 19) assertion failed (Also see: prims.fst(430,55-430,67)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
 PatAnnot.fst(39,10-39,12): (Error 19) Subtyping check failed; expected type Prims.squash Prims.l_False; got type Prims.unit; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also PatAnnot.fst(40,26-40,31))
 >>]
 >> Got issues: [
-PatAnnot.fst(46,10-46,11): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(657,18-657,24))
+PatAnnot.fst(46,10-46,11): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
 >>]
 >> Got issues: [
-PatAnnot.fst(55,36-55,39): (Error 19) Type annotation on parameter incompatible with the expected type; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(657,18-657,24))
+PatAnnot.fst(55,36-55,39): (Error 19) Type annotation on parameter incompatible with the expected type; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(677,18-677,24))
 >>]
 Verified module: PatAnnot
 All verification conditions discharged successfully
