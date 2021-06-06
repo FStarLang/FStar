@@ -1777,18 +1777,28 @@ and (resugar_comp' :
                    | [] -> l
                    | hd::tl ->
                        (match hd with
-                        | FStar_Syntax_Syntax.DECREASES ts ->
-                            let lexlist =
-                              let uu___3 =
-                                let uu___4 =
-                                  FStar_All.pipe_right ts
-                                    (FStar_List.map (resugar_term' env)) in
-                                FStar_Parser_AST.LexList uu___4 in
-                              mk uu___3 in
+                        | FStar_Syntax_Syntax.DECREASES dec_order ->
+                            let d =
+                              match dec_order with
+                              | FStar_Syntax_Syntax.Decreases_lex ts ->
+                                  let uu___3 =
+                                    let uu___4 =
+                                      FStar_All.pipe_right ts
+                                        (FStar_List.map (resugar_term' env)) in
+                                    FStar_Parser_AST.LexList uu___4 in
+                                  mk uu___3
+                              | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+                                  let uu___3 =
+                                    let uu___4 =
+                                      let uu___5 = resugar_term' env rel in
+                                      let uu___6 = resugar_term' env e in
+                                      (uu___5, uu___6) in
+                                    FStar_Parser_AST.WFOrder uu___4 in
+                                  mk uu___3 in
                             let e =
                               mk
                                 (FStar_Parser_AST.Decreases
-                                   (lexlist, FStar_Pervasives_Native.None)) in
+                                   (d, FStar_Pervasives_Native.None)) in
                             aux (e :: l) tl
                         | uu___3 -> aux l tl) in
                  let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
@@ -1819,7 +1829,12 @@ and (resugar_comp' :
                  | [] -> l
                  | hd::tl ->
                      (match hd with
-                      | FStar_Syntax_Syntax.DECREASES ts ->
+                      | FStar_Syntax_Syntax.DECREASES d ->
+                          let ts =
+                            match d with
+                            | FStar_Syntax_Syntax.Decreases_lex ts1 -> ts1
+                            | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
+                                [rel; e] in
                           let es =
                             FStar_All.pipe_right ts
                               (FStar_List.map

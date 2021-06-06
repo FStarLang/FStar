@@ -550,8 +550,11 @@ and close_comp cfg env c =
         let flags =
             c.flags |>
             List.map (function
-                | DECREASES l ->
-                  DECREASES (l |> List.map (inline_closure_env cfg env []))
+                | DECREASES (Decreases_lex l) ->
+                  DECREASES (l |> List.map (inline_closure_env cfg env []) |> Decreases_lex)
+                | DECREASES (Decreases_wf (rel, e)) ->
+                  DECREASES (Decreases_wf (inline_closure_env cfg env [] rel,
+                                           inline_closure_env cfg env [] e))
                 | f -> f)
         in
         mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
@@ -2040,8 +2043,12 @@ and norm_comp : cfg -> env -> comp -> comp =
                 (if cfg.steps.for_extraction
                  then List.map (fun _ -> S.unit_const |> S.as_arg)
                  else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
-              let flags = ct.flags |> List.map (function DECREASES l ->
-                DECREASES (l |> List.map (norm cfg env [])) | f -> f) in
+              let flags = ct.flags |> List.map (function
+                | DECREASES (Decreases_lex l) ->
+                  DECREASES (l |> List.map (norm cfg env []) |> Decreases_lex)
+                | DECREASES (Decreases_wf (rel, e)) ->
+                  DECREASES (Decreases_wf (norm cfg env [] rel, norm cfg env [] e))
+                | f -> f) in
               let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
               { comp with n = Comp ({ct with comp_univs  = comp_univs;

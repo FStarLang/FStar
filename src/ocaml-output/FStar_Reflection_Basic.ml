@@ -236,8 +236,20 @@ let (inspect_comp :
              | uu___2 -> false) flags in
       match uu___ with
       | FStar_Pervasives_Native.None -> []
-      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES ts) -> ts
-      | uu___1 -> failwith "impossible" in
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+          (FStar_Syntax_Syntax.Decreases_lex ts)) -> ts
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+          (FStar_Syntax_Syntax.Decreases_wf uu___1)) ->
+          ((let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Syntax_Print.comp_to_string c in
+                FStar_Util.format1
+                  "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
+                  uu___5 in
+              (FStar_Errors.Warning_CantInspect, uu___4) in
+            FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
+           [])
+      | uu___1 -> failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uu___) ->
         FStar_Reflection_Data.C_Total (t, [])
@@ -298,7 +310,9 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_Tot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
+            FStar_Syntax_Syntax.flags =
+              [FStar_Syntax_Syntax.DECREASES
+                 (FStar_Syntax_Syntax.Decreases_lex l)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
     | FStar_Reflection_Data.C_GTotal (t, []) ->
@@ -311,7 +325,9 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_GTot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
+            FStar_Syntax_Syntax.flags =
+              [FStar_Syntax_Syntax.DECREASES
+                 (FStar_Syntax_Syntax.Decreases_lex l)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
     | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->

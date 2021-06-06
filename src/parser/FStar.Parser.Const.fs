@@ -123,8 +123,8 @@ let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
-let pure_assert_wp_lid    = pconst "pure_assert_wp"
-let pure_assume_wp_lid    = pconst "pure_assume_wp"
+let pure_assert_wp_lid    = pconst "pure_assert_wp0"
+let pure_assume_wp_lid    = pconst "pure_assume_wp0"
 let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid       = p2l ["FStar"; "List"; "append"]
@@ -331,6 +331,9 @@ let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+
+//the type of well-founded relations, used for decreases clauses with relations
+let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 
 let gen_reset =
     let x = U.mk_ref 0 in
