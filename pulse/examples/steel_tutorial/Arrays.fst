@@ -8,9 +8,9 @@ module U32 = FStar.UInt32
 
 /// Some examples using Steel arrays
 
-let access (#a:Type) (r:array a)
-  : Steel a (varray r) (fun _ -> varray r)
-          (requires fun h -> length (asel r h) > 1)
-          (ensures fun _ _ _ -> True)
-  = let x = index r 0ul in
-    x
+let access ()
+  : SteelT unit emp (fun _ -> emp)
+  = let r = alloc 0ul 2ul in
+    let x = index r 0ul in
+    upd r 0ul x;
+    free r
