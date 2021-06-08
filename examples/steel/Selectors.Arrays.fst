@@ -6,9 +6,23 @@ module A = Steel.Array
 module AP = Steel.ArrayPtr
 module U32 = FStar.UInt32
 
+let is_seq_max (x: nat) (l: Seq.seq nat) : Tot prop =
+  forall (i: nat {i < Seq.length l}) . (let y = Seq.index l i in (x <= y ==> x == y))
+
 let max (x1 x2: nat) : Tot nat = if x1 < x2 then x2 else x1
 
-let rec array_max (a: A.array nat) (len: U32.t { len == A.len a /\ U32.v len > 0 }) : SteelT nat (A.varray a) (fun _ -> A.varray a) =
+let rec array_max
+  (a: A.array nat) (len: U32.t { len == A.len a /\ U32.v len > 0 })
+: Steel nat
+  (A.varray a)
+  (fun _ -> A.varray a)
+  (fun _ -> True)
+  (fun h res h' ->
+    let s = h (A.varray a) in
+    h' (A.varray a) == s /\
+    is_seq_max res s
+  )
+=
   if len = 1ul
   then begin
     noop ();
@@ -33,13 +47,16 @@ let rec varray_max (a: AP.t nat) (len: U32.t) : Steel nat
     len == A.len (h (AP.varrayptr a)).AP.array /\
     U32.v len > 0
   )
-  (fun h _ h' ->
-    (h' (AP.varrayptr a)).AP.array == (h (AP.varrayptr a)).AP.array /\
-    (h' (AP.varrayptr a)).AP.perm == (h (AP.varrayptr a)).AP.perm)
+  (fun h res h' ->
+    let x = h (AP.varrayptr a) in
+    h' (AP.varrayptr a) == x /\
+    is_seq_max res x.AP.contents
+  )
 =
   if len = 1ul
   then begin
-    noop ();
+    let x : Ghost.erased (AP.v nat) = gget (AP.varrayptr a) in
+    assert (Seq.length (Ghost.reveal x).AP.contents == U32.v len);
     AP.index a 0ul
   end
   else begin
