@@ -7,7 +7,8 @@ module AP = Steel.ArrayPtr
 module U32 = FStar.UInt32
 
 let is_seq_max (x: nat) (l: Seq.seq nat) : Tot prop =
-  forall (i: nat {i < Seq.length l}) . (let y = Seq.index l i in (x <= y ==> x == y))
+  (exists (i: nat {i < Seq.length l}) . x == Seq.index l i) /\
+  (forall (i: nat {i < Seq.length l}) . Seq.index l i <= x)
 
 let max (x1 x2: nat) : Tot nat = if x1 < x2 then x2 else x1
 
