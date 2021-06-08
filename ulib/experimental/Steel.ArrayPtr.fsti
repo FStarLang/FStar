@@ -196,6 +196,8 @@ val split (#opened: _) (#a:Type) (x: t a) (i:U32.t)
             sl.perm == s.perm /\
             sr.perm == s.perm /\
             sl.contents == Seq.slice s.contents 0 (U32.v i) /\
+            A.len sl.array == i /\
+            A.len sr.array == A.len s.array `U32.sub` i /\
             sr.contents == Seq.slice s.contents (U32.v i) (A.length s.array) /\
             s.contents == sl.contents `Seq.append` sr.contents
           )
