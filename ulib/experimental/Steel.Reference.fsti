@@ -152,7 +152,7 @@ val cas_pt (#t:eqtype)
 
 /// An abstract separation logic predicate stating that reference [r] is valid in memory.
 
-val ptrp (#a:Type0) (r:ref a) (p: perm) : slprop u#1
+val ptrp (#a:Type0) (r:ref a) ([@@@smt_fallback] p: perm) : slprop u#1
 
 [@@ __steel_reduce__; __reduce__]
 unfold
@@ -164,7 +164,7 @@ val ptrp_sel (#a:Type0) (r:ref a) (p: perm) : selector a (ptrp r p)
 
 [@@ __steel_reduce__; __reduce__]
 unfold
-let ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r) = ptrp_sel r _
+let ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r) = ptrp_sel r full_perm
 
 /// Some lemmas to interoperate between the two versions of references
 
@@ -362,7 +362,7 @@ val ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
 
 (* Selector version of ghost references *)
 
-val ghost_ptrp (#a: Type0) (r: ghost_ref a) (p: perm) : slprop u#1
+val ghost_ptrp (#a: Type0) (r: ghost_ref a) ([@@@smt_fallback] p: perm) : slprop u#1
 
 [@@ __steel_reduce__; __reduce__]
 unfold
@@ -373,7 +373,7 @@ val ghost_ptrp_sel (#a:Type0) (r:ghost_ref a) (p: perm) : selector a (ghost_ptrp
 
 [@@ __steel_reduce__; __reduce__]
 let ghost_ptr_sel (#a:Type0) (r:ghost_ref a) : selector a (ghost_ptr r)
-= ghost_ptrp_sel r _
+= ghost_ptrp_sel r full_perm
 
 val ghost_ptrp_sel_interp (#a:Type0) (r:ghost_ref a) (p: perm) (m:mem) : Lemma
   (requires interp (ghost_ptrp r p) m)

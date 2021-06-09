@@ -209,8 +209,8 @@ let cas_pt #t #uses r v v_old v_new =
                  (fun _ -> ());
   return b
 
-(* Simple Reference library.
-   AF: Permissions need to be an index of the vprop ptr.
+(* Library for references with fractional permissions.
+   Permissions need to be an index of the vprop ptr.
    It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
    Using the value of the ref as a selector is ok because refs with fractional permissions
    all share the same value.
