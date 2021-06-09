@@ -33,7 +33,7 @@ let main_ref () : Steel U32.t emp (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ x _ -> x == 2ul)
   = // Allocating reference r
-    let r = alloc 0ul in
+    let r = malloc 0ul in
     // Writing value 2 in the newly allocated reference
     write r 2ul;
     // Reading value of r in memory. This was set to 2 just above
@@ -56,7 +56,7 @@ let copy_ref (r:ref U32.t) : Steel (ref U32.t)
     sel r' h1 == sel r h1)
 
   = let x = read r in
-    let r' = alloc x in
+    let r' = malloc x in
     r'
 
 (* Sharing and gathering references *)

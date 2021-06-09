@@ -10,7 +10,7 @@ module U32 = FStar.UInt32
 
 let access ()
   : SteelT unit emp (fun _ -> emp)
-  = let r = alloc 0ul 2ul in
+  = let r = malloc 0ul 2ul in
     let x = index r 0ul in
     upd r 0ul x;
     free r

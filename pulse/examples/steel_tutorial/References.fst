@@ -45,7 +45,7 @@ let main_ref () : Steel int emp (fun _ -> emp)
   (requires fun _ -> True)
   (ensures fun _ x _ -> x == 1)
   = // Allocating reference r
-    let r = alloc 0 in
+    let r = malloc 0 in
     // Writing value 2 in the newly allocated reference
     write r 2;
     // Reading value of r in memory. This was set to 2 just above
@@ -68,7 +68,7 @@ let copy_ref (#a:Type0) (r:ref a) : Steel (ref a)
     sel r' h1 == sel r h1)
 
   = let x = read r in
-    let r' = alloc x in
+    let r' = malloc x in
     r'
 
 (* Sharing and gathering references *)
