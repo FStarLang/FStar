@@ -1825,7 +1825,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            init::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.Reference.alloc" ->
+          uu___5 = "Steel.Reference.malloc" ->
           let uu___5 =
             let uu___6 = translate_expr env1 init in
             (ManuallyManaged, uu___6, (EConstant (UInt32, "1"))) in
@@ -1875,7 +1875,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            e0::e1::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.Array.alloc" ->
+          uu___5 = "Steel.Array.malloc" ->
           let uu___5 =
             let uu___6 = translate_expr env1 e0 in
             let uu___7 = translate_expr env1 e1 in
