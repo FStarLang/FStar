@@ -1,10 +1,11 @@
-module References
+module ExtractRefs
 
 open FStar.Ghost
 open Steel.FractionalPermission
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
+module U32 = FStar.UInt32
 
 /// Some examples using Steel references with fractional permissions
 
@@ -12,20 +13,8 @@ open Steel.Reference
 
 (** Swap examples **)
 
-/// The textbook separation logic swap, with the standard pts_to assertion
-let swap_textbook (#a:Type0) (r1 r2:ref a) (v1 v2:erased a) : SteelT unit
-  (pts_to r1 full_perm v1 `star` pts_to r2 full_perm v2)
-  (fun _ -> pts_to r1 full_perm v2 `star` pts_to r2 full_perm v1)
-  = let x1 = read_pt r1 in
-    let x2 = read_pt r2 in
-    write_pt r1 x2;
-    write_pt r2 x1;
-    // The extra trailing unit is a needed to trigger smt rewriting of x1 into v1 and x2 into v2
-    // It might be solved once we have smt_rewrites in subcomp
-    ()
-
 /// A selector version of swap, more idiomatic in Steel
-let swap_selector (#a:Type0) (r1 r2:ref a) : Steel unit
+let swap (r1 r2:ref U32.t) : Steel unit
   (vptr r1 `star` vptr r2)
   (fun _ -> vptr r1 `star` vptr r2)
   (requires fun _ -> True)
@@ -37,26 +26,25 @@ let swap_selector (#a:Type0) (r1 r2:ref a) : Steel unit
     write r2 x1;
     write r1 x2
 
-
 (** Allocating and Freeing references *)
 
 /// Demonstrating standard reference operations
-let main_ref () : Steel int emp (fun _ -> emp)
+let main_ref () : Steel U32.t emp (fun _ -> emp)
   (requires fun _ -> True)
-  (ensures fun _ x _ -> x == 1)
+  (ensures fun _ x _ -> x == 2ul)
   = // Allocating reference r
-    let r = malloc 0 in
+    let r = malloc 0ul in
     // Writing value 2 in the newly allocated reference
-    write r 2;
+    write r 2ul;
     // Reading value of r in memory. This was set to 2 just above
     let v = read r in
     // Freeing reference r
     free r;
     // The returned value is equal to 1, the context is now empty
-    v - 1
+    v
 
 /// Returning a new reference [r'], which is a copy of reference [r]
-let copy_ref (#a:Type0) (r:ref a) : Steel (ref a)
+let copy_ref (r:ref U32.t) : Steel (ref U32.t)
   (vptr r)
   // We allocated a new reference r', which is the return value
   (fun r' -> vptr r `star` vptr r')

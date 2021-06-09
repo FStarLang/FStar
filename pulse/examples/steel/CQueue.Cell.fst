@@ -188,7 +188,7 @@ let ralloc (#a:Type0) (x:a) : Steel (ref a)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> h1 (vptr r) == x /\ not (is_null r))
 =
-  alloc x
+  malloc x
 
 let alloc_cell
   #a data next
