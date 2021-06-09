@@ -275,7 +275,7 @@ let elim_vptr (#a:Type) (#opened:inames) (r:ref a)
     change_slprop (vptr r) (pts_to r full_perm v) v () (elim_vptr_lemma r v);
     v
 
-let alloc x =
+let malloc x =
   let r = alloc_pt x in
   intro_vptr r (hide x);
   return r

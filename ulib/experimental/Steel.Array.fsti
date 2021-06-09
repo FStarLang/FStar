@@ -58,7 +58,7 @@ let asel (#a:Type) (#p:vprop) (r:array a)
   = h (varray r)
 
 /// Allocates an array of length n, where all elements of the array initially are [x]
-val alloc (#t:Type) (x:t) (n:U32.t)
+val malloc (#t:Type) (x:t) (n:U32.t)
   : Steel (array t)
              emp
              (fun r -> varray r)
