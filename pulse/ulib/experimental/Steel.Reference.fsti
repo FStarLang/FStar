@@ -186,7 +186,7 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   = h (vptr r)
 
 /// Allocates a reference with value [x].
-val alloc (#a:Type0) (x:a) : Steel (ref a)
+val malloc (#a:Type0) (x:a) : Steel (ref a)
   emp (fun r -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> sel r h1 == x /\ not (is_null r))
