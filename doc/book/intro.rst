@@ -94,7 +94,7 @@ of ``a``-typed elements; or, more simply, a list of ``n`` values each
 of type ``a``. Like other dependently typed languages, F* supports
 inductively defined definitions of types.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: vec
    :end-before: SNIPPET_END: vec
@@ -106,7 +106,7 @@ For example, here's a recursive function ``append`` to concatenate two
 vectors. Its type shows that the resulting vector has a length that is
 the sum of the lengths of the input vectors.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: append
    :end-before: SNIPPET_END: append
@@ -116,7 +116,7 @@ to define other operations and its type helps in proving further
 properties. For example, it's easy to show that reversing a vector
 does not change its length.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: reverse
    :end-before: SNIPPET_END: reverse
@@ -125,7 +125,7 @@ Finally, to get an element from a vector, one can program a selector
 whose type also includes a :ref:`*refinement type* <refinements>` to specify that the index
 ``i`` is less than the length of the vector.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: get
    :end-before: SNIPPET_END: get
@@ -258,7 +258,7 @@ languages and F* is no exception.
 As a very simple example, consider proving that ``pow2 12 == 4096``,
 where ``pow2`` is the recursive function shown below.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: norm_spec
    :end-before: SNIPPET_END: norm_spec
@@ -273,7 +273,7 @@ This reduction machinery (called the *normalizer*) is capable not only
 of fully computing terms like ``pow2 12`` to a result, but it can also
 partially reduce symbolic F* terms, as shown in the proof below.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: trefl
    :end-before: SNIPPET_END: trefl
@@ -289,7 +289,7 @@ tactic and metaprogramming system.
 Here's a simple example of an interactive proof of a simple fact about
 propositions using F* tactics.
 
-.. literalinclude:: Vec.fst
+.. literalinclude:: code/Vec.fst
    :language: fstar
    :start-after: SNIPPET_START: tac
    :end-before: SNIPPET_END: tac
@@ -368,7 +368,7 @@ some of the following:
 
   * `Type-driven Development
     <https://www.manning.com/books/type-driven-development-with-idris>`_:
-    Introduces using dependent types to developing programs corretly
+    Introduces using dependent types to developing programs correctly
     in Idris.
 
   * `Theorem Proving in Lean

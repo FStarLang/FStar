@@ -135,7 +135,7 @@ that may refer to the ``t``-typed bound variable ``x``. The term ``e``
 is restricted to those elements ``x ∈ S``  for which ``e`` evaluates to
 ``true``.
 
-That is the type ``nat`` describes the set of terms that evaluate to an
+That is, the type ``nat`` describes the set of terms that evaluate to an
 element of the set ``{0, 1, 2, 3, ...}``.
 
 But, there's nothing particularly special about ``nat``. You can define

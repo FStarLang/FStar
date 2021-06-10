@@ -299,6 +299,8 @@ Inl? x}`` shows that the result has the same case as ``x`` (and hence
 also ``y``). We could have written the result type as ``z:either bool
 int { same_case z x }``.
 
+.. _Part1_inductives_list:
+
 Lists
 ^^^^^
 
