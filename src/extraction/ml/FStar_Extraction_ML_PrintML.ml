@@ -201,15 +201,15 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
           Typ.mk (Ptyp_tuple (map build_core_type tys))
         else
         if BatString.equal sym "option" then
-          Typ.mk (Ptyp_constr (mk_lident "option", c_tys))
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.Option.t", c_tys))
         else
           ty
       | ["Prims"] ->
         if BatString.equal sym "bool" then
-          Typ.mk (Ptyp_constr (mk_lident "bool", []))
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.Bool.t", []))
         else
         if BatString.equal sym "list" then
-          Typ.mk (Ptyp_constr (mk_lident "list", c_tys))
+          Typ.mk (Ptyp_constr (mk_lident "Stdlib.List.t", c_tys))
         else
           ty
       | _ -> ty)
