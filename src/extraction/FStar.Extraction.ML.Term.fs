@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Term
+open FStar.Pervasives
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -104,7 +105,7 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f1))
 
 (***********************************************************************)
-(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
+(* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
 let effect_as_etag =
     let cache = BU.smap_create 20 in
@@ -118,22 +119,22 @@ let effect_as_etag =
                 BU.smap_add cache (string_of_lid l) res;
                 res in
     fun g l ->
-        let l = delta_norm_eff g l in
-        if lid_equals l PC.effect_PURE_lid
-        then E_PURE
-        else if lid_equals l PC.effect_GHOST_lid
-        then E_GHOST
-        else
-            // Reifiable effects should be pure. Added guard because some effect declarations
-            // don't seem to be in the environment at this point, in particular FStar.All.ML
-            // (maybe because it's primitive?)
-            let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
-            match ed_opt with
-            | Some (ed, qualifiers) ->
-                if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
-                then E_PURE
-                else E_IMPURE
-            | None -> E_IMPURE
+    let l = delta_norm_eff g l in
+    if lid_equals l PC.effect_PURE_lid
+    then E_PURE
+    else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
+    then E_ERASABLE
+    else
+         // Reifiable effects should be pure. Added guard because some effect declarations
+         // don't seem to be in the environment at this point, in particular FStar.All.ML
+         // (maybe because it's primitive?)
+         let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
+         match ed_opt with
+         | Some (ed, qualifiers) ->
+           if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
+           then E_PURE
+           else E_IMPURE
+         | None -> E_IMPURE
 
 (********************************************************************************************)
 (* Basic syntactic operations on a term                                                     *)
@@ -183,7 +184,7 @@ let rec is_arity env t =
     | Tm_abs(_, body, _)
     | Tm_let(_, body) ->
       is_arity env body
-    | Tm_match(_, branches) ->
+    | Tm_match(_, _, branches) ->
       begin match branches with
         | (_, _, e)::_ -> is_arity env e
         | _ -> false
@@ -241,7 +242,7 @@ let rec is_type_aux env t =
       let _, body = SS.open_let_rec lbs body in
       is_type_aux env body
 
-    | Tm_match(_, branches) ->
+    | Tm_match(_, _, branches) ->
       begin match branches with
         | b::_ ->
           let _, _, e = SS.open_branch b in
@@ -1015,7 +1016,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
 
 let maybe_promote_effect ml_e tag t =
     match tag, t with
-    | E_GHOST, MLTY_Erased
+    | E_ERASABLE, MLTY_Erased
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
@@ -1153,14 +1154,14 @@ let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * 
                         (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
     match f, ty with
-    | E_GHOST, _
+    | E_ERASABLE, _
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
-           | E_GHOST, E_PURE, MLTY_Erased -> //effect downgrading for erased results
+           | E_ERASABLE, E_PURE, MLTY_Erased -> //effect downgrading for erased results
              maybe_coerce e.pos g ml_e t ty, ty
            | _ ->
              err_unexpected_eff g e ty f tag;
@@ -1204,12 +1205,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     //precondition: is_match head = true
     let apply_to_match_branches head args =
       match (head |> SS.compress |> U.unascribe).n with
-      | Tm_match (scrutinee, branches) ->
+      | Tm_match (scrutinee, _, branches) ->
         let branches =
           branches |> List.map (fun (pat, when_opt, body) ->
             pat, when_opt, { body with n = Tm_app (body, args) }
           ) in
-        { head with n = Tm_match (scrutinee, branches) }
+        { head with n = Tm_match (scrutinee, None, branches) }  //AR: dropping the return annotation, should be fine?
       | _ -> failwith "Impossible! cannot apply args to match branches if head is not a match" in
 
     let t = SS.compress top in
@@ -1262,12 +1263,24 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             | _ -> term_as_mlexpr g t
          end
 
+        | Tm_meta (t, Meta_monadic_lift (m1, _m2, _ty))
+          when effect_as_etag g m1 = E_ERASABLE ->
+          (*
+           * We would come here if m2 is not erasable,
+           *   because if it is, we would not have descended into the outer expression
+           *
+           * So if m2 is not erasable, how is erasing this lift justified?
+           *
+           * A: The typechecker ensures that _ty is non-informative
+           *)
+          ml_unit, E_ERASABLE, MLTY_Erased
+
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr g t
 
         | Tm_constant c ->
-          let _, ty, _ = TcTerm.type_of_tot_term (tcenv_of_uenv g) t in
+          let _, ty, _ = TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in  //AR: TODO: type_of_well_typed?
           let ml_ty = term_as_mlty g ty in
           with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
 
@@ -1665,7 +1678,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               let meta =
                   match f, ty with
                   | E_PURE, MLTY_Erased
-                  | E_GHOST, MLTY_Erased -> [Erased]
+                  | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
               f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
@@ -1701,7 +1714,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
-      | Tm_match(scrutinee, pats) ->
+      | Tm_match(scrutinee, _, pats) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
         let b, then_e, else_e = check_pats_for_ite pats in
         let no_lift : mlexpr -> mlty -> mlexpr = fun x t -> x in

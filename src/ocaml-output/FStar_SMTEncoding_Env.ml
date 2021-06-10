@@ -17,14 +17,14 @@ let withenv :
   = fun c -> fun uu___ -> match uu___ with | (a, b) -> (a, b, c)
 let vargs :
   'uuuuu 'uuuuu1 'uuuuu2 .
-    (('uuuuu, 'uuuuu1) FStar_Util.either * 'uuuuu2) Prims.list ->
-      (('uuuuu, 'uuuuu1) FStar_Util.either * 'uuuuu2) Prims.list
+    (('uuuuu, 'uuuuu1) FStar_Pervasives.either * 'uuuuu2) Prims.list ->
+      (('uuuuu, 'uuuuu1) FStar_Pervasives.either * 'uuuuu2) Prims.list
   =
   fun args ->
     FStar_List.filter
       (fun uu___ ->
          match uu___ with
-         | (FStar_Util.Inl uu___1, uu___2) -> false
+         | (FStar_Pervasives.Inl uu___1, uu___2) -> false
          | uu___1 -> true) args
 let (escape : Prims.string -> Prims.string) =
   fun s -> FStar_Util.replace_char s 39 95
@@ -747,16 +747,49 @@ let (new_term_constant_and_tok_from_lid_maybe_thunked :
     fun x ->
       fun arity ->
         fun th -> new_term_constant_and_tok_from_lid_aux env x arity th
+let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
+  fun env ->
+    fun a ->
+      let q = FStar_TypeChecker_Env.lookup_qname env.tcenv a in
+      match q with
+      | FStar_Pervasives_Native.None ->
+          let uu___ =
+            let uu___1 = FStar_Syntax_Print.lid_to_string a in
+            FStar_Util.format1
+              "Name %s not found in the smtencoding and typechecker env"
+              uu___1 in
+          failwith uu___
+      | uu___ ->
+          let quals = FStar_TypeChecker_Env.quals_of_qninfo q in
+          let uu___1 =
+            (FStar_Util.is_some quals) &&
+              (let uu___2 = FStar_All.pipe_right quals FStar_Util.must in
+               FStar_All.pipe_right uu___2
+                 (FStar_List.contains
+                    FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) in
+          if uu___1
+          then
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.lid_to_string a in
+                FStar_Util.format1
+                  "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
+                  uu___4 in
+              (FStar_Errors.Fatal_IdentifierNotFound, uu___3) in
+            let uu___3 = FStar_Ident.range_of_lid a in
+            FStar_Errors.raise_error uu___2 uu___3
+          else
+            (let uu___3 =
+               let uu___4 = FStar_Syntax_Print.lid_to_string a in
+               FStar_Util.format1 "Name %s not found in the smtencoding env"
+                 uu___4 in
+             failwith uu___3)
 let (lookup_lid : env_t -> FStar_Ident.lident -> fvar_binding) =
   fun env ->
     fun a ->
       let uu___ = lookup_fvar_binding env a in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Print.lid_to_string a in
-            FStar_Util.format1 "Name not found: %s" uu___2 in
-          failwith uu___1
+      | FStar_Pervasives_Native.None -> fail_fvar_lookup env a
       | FStar_Pervasives_Native.Some s -> (check_valid_fvb s; s)
 let (push_free_var_maybe_thunked :
   env_t ->
@@ -919,7 +952,7 @@ let (try_lookup_free_var :
                    | uu___4 -> FStar_Pervasives_Native.None)))
 let (lookup_free_var :
   env_t ->
-    FStar_Ident.lid FStar_Syntax_Syntax.withinfo_t ->
+    FStar_Ident.lident FStar_Syntax_Syntax.withinfo_t ->
       FStar_SMTEncoding_Term.term)
   =
   fun env ->
@@ -928,11 +961,7 @@ let (lookup_free_var :
       match uu___ with
       | FStar_Pervasives_Native.Some t -> t
       | FStar_Pervasives_Native.None ->
-          let uu___1 =
-            let uu___2 =
-              FStar_Syntax_Print.lid_to_string a.FStar_Syntax_Syntax.v in
-            FStar_Util.format1 "Name not found: %s" uu___2 in
-          failwith uu___1
+          fail_fvar_lookup env a.FStar_Syntax_Syntax.v
 let (lookup_free_var_name :
   env_t -> FStar_Ident.lident FStar_Syntax_Syntax.withinfo_t -> fvar_binding)
   = fun env -> fun a -> lookup_lid env a.FStar_Syntax_Syntax.v
@@ -940,7 +969,7 @@ let (lookup_free_var_sym :
   env_t ->
     FStar_Ident.lident FStar_Syntax_Syntax.withinfo_t ->
       ((FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term)
-        FStar_Util.either * FStar_SMTEncoding_Term.term Prims.list *
+        FStar_Pervasives.either * FStar_SMTEncoding_Term.term Prims.list *
         Prims.int))
   =
   fun env ->
@@ -952,23 +981,24 @@ let (lookup_free_var_sym :
             FStar_SMTEncoding_Term.freevars = uu___;
             FStar_SMTEncoding_Term.rng = uu___1;_}
           when env.use_zfuel_name ->
-          ((FStar_Util.Inl g), zf, (fvb.smt_arity + Prims.int_one))
+          ((FStar_Pervasives.Inl g), zf, (fvb.smt_arity + Prims.int_one))
       | uu___ ->
           (match fvb.smt_token with
            | FStar_Pervasives_Native.None when fvb.fvb_thunked ->
                let uu___1 =
-                 let uu___2 = force_thunk fvb in FStar_Util.Inr uu___2 in
+                 let uu___2 = force_thunk fvb in FStar_Pervasives.Inr uu___2 in
                (uu___1, [], (fvb.smt_arity))
            | FStar_Pervasives_Native.None ->
-               ((FStar_Util.Inl (FStar_SMTEncoding_Term.Var (fvb.smt_id))),
-                 [], (fvb.smt_arity))
+               ((FStar_Pervasives.Inl
+                   (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],
+                 (fvb.smt_arity))
            | FStar_Pervasives_Native.Some sym ->
                (match sym.FStar_SMTEncoding_Term.tm with
                 | FStar_SMTEncoding_Term.App (g, fuel::[]) ->
-                    ((FStar_Util.Inl g), [fuel],
+                    ((FStar_Pervasives.Inl g), [fuel],
                       (fvb.smt_arity + Prims.int_one))
                 | uu___1 ->
-                    ((FStar_Util.Inl
+                    ((FStar_Pervasives.Inl
                         (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],
                       (fvb.smt_arity))))
 let (tok_of_name :

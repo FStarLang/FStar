@@ -188,7 +188,7 @@ val em_invert (#a:Type) (r:ref a) (v1 v2 : a) (m1 m2 : memory)
           (ensures (v1 == v2 /\ m1 == m2))
           [SMTPat (r |> v1 <*> m1); SMTPat (r |> v2 <*> m2)]
 
-type sref = (a:Type & ref a)
+type sref = dtuple2 Type ref
 let refs = list sref
 let ii #a (r : ref a) : sref = Mkdtuple2 a r
 

@@ -24,10 +24,8 @@ let (eqtype_lid : FStar_Ident.lident) = pconst "eqtype"
 let (option_lid : FStar_Ident.lident) = psnconst "option"
 let (either_lid : FStar_Ident.lident) = psconst "either"
 let (pattern_lid : FStar_Ident.lident) = psconst "pattern"
-let (precedes_lid : FStar_Ident.lident) = pconst "precedes"
 let (lex_t_lid : FStar_Ident.lident) = pconst "lex_t"
-let (lexcons_lid : FStar_Ident.lident) = pconst "LexCons"
-let (lextop_lid : FStar_Ident.lident) = pconst "LexTop"
+let (precedes_lid : FStar_Ident.lident) = pconst "precedes"
 let (smtpat_lid : FStar_Ident.lident) = psconst "smt_pat"
 let (smtpatOr_lid : FStar_Ident.lident) = psconst "smt_pat_or"
 let (monadic_lid : FStar_Ident.lident) = pconst "M"
@@ -87,8 +85,8 @@ let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
-let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp"
-let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp"
+let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
+let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp0"
 let (assert_norm_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assert_norm"]
 let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
@@ -245,6 +243,7 @@ let (steps_reify : FStar_Ident.lident) = psconst "reify_"
 let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
+let (steps_unfoldqual : FStar_Ident.lident) = psconst "delta_qualifier"
 let (steps_nbe : FStar_Ident.lident) = psconst "nbe"
 let (deprecated_attr : FStar_Ident.lident) = pconst "deprecated"
 let (warn_on_use_attr : FStar_Ident.lident) = pconst "warn_on_use"
@@ -291,6 +290,10 @@ let (allow_informative_binders_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
+let (ite_soundness_by_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+let (well_founded_relation_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero in
   let gen uu___ = FStar_Util.incr x; FStar_Util.read x in

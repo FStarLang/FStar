@@ -59,7 +59,7 @@ let (mk_let :
           (FStar_Syntax_Syntax.Tm_let
              ((false,
                 [{
-                   FStar_Syntax_Syntax.lbname = (FStar_Util.Inl x);
+                   FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);
                    FStar_Syntax_Syntax.lbunivs = [];
                    FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
                    FStar_Syntax_Syntax.lbeff =
@@ -116,7 +116,9 @@ let (mk_match :
       let branches1 =
         FStar_All.pipe_right branches
           (FStar_List.map FStar_Syntax_Util.branch) in
-      FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_match (h, branches1))
+      FStar_Syntax_Syntax.mk
+        (FStar_Syntax_Syntax.Tm_match
+           (h, FStar_Pervasives_Native.None, branches1))
         FStar_Range.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -214,7 +216,7 @@ let (minus_nat :
           FStar_Syntax_Subst.subst
             [FStar_Syntax_Syntax.NM (minus1, Prims.int_zero)] uu___2 in
         {
-          FStar_Syntax_Syntax.lbname = (FStar_Util.Inl minus1);
+          FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl minus1);
           FStar_Syntax_Syntax.lbunivs = [];
           FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
           FStar_Syntax_Syntax.lbeff = uu___;

@@ -2,6 +2,7 @@
 module FStar.Tests.Pars
 //open FSharp.Compatibility.OCaml
 open FStar
+open FStar.Pervasives
 open FStar.All
 open FStar.Range
 open FStar.Parser
@@ -54,10 +55,9 @@ let init_once () : unit =
   let env = TcEnv.initial_env
                 FStar.Parser.Dep.empty_deps
                 TcTerm.tc_term
-                TcTerm.type_of_tot_term
-                TcTerm.type_of_well_typed_term
+                TcTerm.typeof_tot_or_gtot_term
+                TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
-                TcTerm.check_type_of_well_typed_term
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in

@@ -25,7 +25,7 @@ unfold let n = 8
 ///
 /// Except, as compared to [FStar.IntN.fstp], here:
 ///  - every occurrence of [int_t] has been replaced with [uint_t]
-///  - every occurrence of [@@%] has been replaced with [%].
+///  - every occurrence of [@%] has been replaced with [%].
 ///  - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
 
 /// This module provides an abstract type for machine integers of a
@@ -73,6 +73,11 @@ val vu_inv (x : uint_t n) : Lemma
 val v_inj (x1 x2: t): Lemma
   (requires (v x1 == v x2))
   (ensures (x1 == x2))
+
+(** Constants 0 and 1 *)
+val zero : x:t{v x = 0}
+
+val one : x:t{v x = 1}
 
 (**** Addition primitives *)
 
@@ -271,7 +276,7 @@ let eq_mask (a:t) (b:t)
       lemma_msb_pow2 #n (v (lognot x));
       lemma_msb_pow2 #n (v minus_x);
       lemma_minus_zero #n (v x);
-      assert (v c = zero n)
+      assert (v c = FStar.UInt.zero n)
     end;
     c
 

@@ -39,6 +39,7 @@ type fsteps = {
      unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
      unfold_attr  : option<list<I.lid>>;
+     unfold_qual  : option<list<string>>;
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;

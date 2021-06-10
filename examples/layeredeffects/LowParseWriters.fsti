@@ -358,7 +358,7 @@ let lift_pure_read (a:Type) (wp:pure_wp a)
     (fun _ -> False) // (lift_pure_read_post_err a wp))
     l
   )
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   ReadRepr _ (lift_pure_read_impl a wp f_pure l)
 
 sub_effect PURE ~> ERead = lift_pure_read
@@ -1216,7 +1216,7 @@ let destr_repr_impl
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-  (f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
+  ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
 : Tot (repr_impl a r_in r_out pre post post_err l (destr_repr_spec a r_in r_out pre post post_err l f_destr_spec))
 = Repr?.impl (reify (f_destr_spec ()))
 

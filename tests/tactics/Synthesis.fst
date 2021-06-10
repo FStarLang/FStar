@@ -56,7 +56,7 @@ let iszero (x : int) : int =
         let x = quote x in
         let t_int = quote int in
         let _f = fresh_bv t_int in
-        let t = Tv_Match x
+        let t = Tv_Match x None
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
         exact (pack t))

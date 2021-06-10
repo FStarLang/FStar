@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Env
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar
@@ -42,6 +43,7 @@ type step =
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr  of list<FStar.Ident.lid>
+  | UnfoldQual  of list<string>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -74,9 +76,10 @@ type name_prefix = FStar.Ident.path
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
 type proof_namespace = list<(name_prefix * bool)>
 
-type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
+type must_tot = bool
 
 (*
  * AR: The mlift record that maintains functions to lift 'source' computation types
@@ -149,11 +152,12 @@ and env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
-  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
-  type_of_well_typed :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
-  universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_of  :bool -> env -> term -> typ -> guard_t;
+
+  tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
+  typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
+  universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
+
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -189,7 +193,7 @@ and solver_t = {
     refresh      :unit -> unit;
 }
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -201,12 +205,12 @@ val preprocess : env -> term -> term -> term
 val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
+
 val initial_env : FStar.Parser.Dep.deps ->
-                  (env -> term -> term*lcomp*guard_t) ->
-                  (env -> term -> term*typ*guard_t) ->
-                  (env -> term -> option<typ>) ->
+                  (env -> term -> term * lcomp * guard_t) ->
+                  (env -> term -> must_tot -> term * typ * guard_t) ->
+                  (env -> term -> must_tot -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (bool -> env -> term -> typ -> guard_t) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 
@@ -239,7 +243,7 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
@@ -266,6 +270,7 @@ val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val fv_has_strict_args     : env -> fv -> option<(list<int>)>
+val fv_has_erasable_attr   : env -> fv -> bool
 val non_informative        : env -> typ -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
@@ -352,6 +357,8 @@ val unfold_effect_abbrev   : env -> comp -> comp_typ
 val effect_repr            : env -> comp -> universe -> option<term>
 val reify_comp             : env -> comp -> universe -> term
 
+val is_erasable_effect     : env -> lident -> bool
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 val is_reifiable_effect      : env -> lident -> bool
@@ -404,6 +411,8 @@ val guard_form                : guard_t -> guard_formula
 val check_trivial             : term -> guard_formula
 
 (* Other utils *)
+val too_early_in_prims : env -> bool
+
 val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
@@ -441,3 +450,12 @@ val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.
 for either not a recursive let, or one that does not need the totality
 check. *)
 val get_letrec_arity : env -> lbname -> option<int>
+
+(* Construct a Tm_fvar with the delta_depth metadata populated
+   -- Note, the delta_qual is not populated, so don't use this with
+      Data constructors, projectors, record identifiers etc.
+
+   -- Also, don't use this with lidents that refer to Prims, that
+      still requires special handling
+*)
+val fvar_of_nonqual_lid : env -> lident -> term

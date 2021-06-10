@@ -16,6 +16,7 @@
 #light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.RemoveUnusedParameters
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 open FStar

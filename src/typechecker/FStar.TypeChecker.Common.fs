@@ -16,6 +16,7 @@
 #light "off"
 module FStar.TypeChecker.Common
 open Prims
+open FStar.Pervasives
 open FStar.ST
 open FStar.All
 
@@ -72,9 +73,20 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-type deferred = list<(string * prob)>
-type univ_ineq = universe * universe
+type deferred_reason =
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
 
+type deferred = list<(deferred_reason * string * prob)>
+
+type univ_ineq = universe * universe
 
 module C = FStar.Parser.Const
 
@@ -157,11 +169,27 @@ let id_info_table_empty =
 
 open FStar.Range
 
+let print_identifier_info info =
+  BU.format3 "id info { %s, %s : %s}"
+    (Range.string_of_range info.identifier_range)
+    (match info.identifier with
+     | Inl x -> Print.bv_to_string x
+     | Inr fv -> Print.fv_to_string fv)
+    (Print.term_to_string info.identifier_ty)
+
 let id_info__insert ty_map db info =
     let range = info.identifier_range in
     let use_range = Range.set_def_range range (Range.use_range range) in
+    let id_ty =
+      match info.identifier with
+      | Inr _ -> info.identifier_ty
+      | Inl x ->
+        // BU.print1 "id_info__insert: %s\n"
+        //           (print_identifier_info info);
+        ty_map info.identifier_ty
+    in
     let info = { info with identifier_range = use_range;
-                           identifier_ty = ty_map info.identifier_ty } in
+                           identifier_ty = id_ty } in
 
     let fn = file_of_range use_range in
     let start = start_of_range use_range in
@@ -292,7 +320,7 @@ let imp_guard_f g1 g2 = match g1, g2 with
 let binop_guard f g1 g2 = {
   guard_f=f g1.guard_f g2.guard_f;
   deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
-  deferred=g1.deferred@g2.deferred;
+  deferred=g1.deferred@g2.deferred; 
   univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
               snd g1.univ_ineqs@snd g2.univ_ineqs);
   implicits=g1.implicits@g2.implicits
@@ -445,7 +473,7 @@ let simplify (debug:bool) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, br::brs) ->
+        | Tm_match (_, _, br::brs) ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None

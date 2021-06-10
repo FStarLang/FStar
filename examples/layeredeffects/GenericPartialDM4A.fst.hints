@@ -1,5 +1,5 @@
 [
-  "{\fføÿcê!b£SÖ¡Çg+",
+  "\bì¯ùyøæ\u0015JÒ‘∏Èi5Ñ",
   [
     [
       "GenericPartialDM4A.repr",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2726cb436acf7486de7d04018890ffb0"
+      "f5ab3222e7e2e1839b92ed16855051d6"
     ],
     [
       "GenericPartialDM4A.return",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_GenericPartialDM4A.equiv" ],
       0,
-      "16825227a0d3560306ff0ac9240d62b3"
+      "35a9be71c2f2011e90407c53b4b23a61"
     ],
     [
       "GenericPartialDM4A.and_elim_2",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5771fb10d3e6dc18599f2ca784100d04"
+      "6ce430f077cc3fbf68c6a7e5fb4873f0"
     ],
     [
       "GenericPartialDM4A.iw_bind",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "16979763f95226a9f2621b5f6cb6b57b"
+      "606e20608ad403967c66f707fb3b45a5"
     ],
     [
       "GenericPartialDM4A.bind",
@@ -67,8 +67,8 @@
         "equation_GenericPartialDM4A.repr", "equation_Prims.l_and",
         "equation_Prims.squash",
         "function_token_typing_GenericPartialDM4A.op_Less_Less_Equals",
-        "interpretation_Tm_abs_0aa6ad9312ecca152b75d5e74c14d42c",
-        "l_and-interp",
+        "interpretation_Tm_abs_8f24b79611474204e733ee095e5c454b",
+        "l_and-interp", "l_quant_interp_b318409532d0e00e9125f72f3b997468",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_741bf4048d874502c2e1a313e5db9687",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
@@ -78,7 +78,7 @@
         "unit_typing"
       ],
       0,
-      "dfb53e020f43f94b40978f78f7c8f29e"
+      "4761ed243626ab6c0ef6324f6c76a124"
     ],
     [
       "GenericPartialDM4A.weaken",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f5cce2eb338a6f6be091f248ae4fcc6e"
+      "4e473af211338d9e4e3052c2e803e412"
     ],
     [
       "GenericPartialDM4A.subcomp",
@@ -115,7 +115,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "df0c5ddd87251dbc0e0f58c5974f2fe9"
+      "751a37b30b55a701cc67cc7e5a36100e"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -124,29 +124,11 @@
       1,
       [ "@query" ],
       0,
-      "f518b2f015a2f7045fc30e46c1381ed7"
+      "86468c91780fd8ce4ecdfc790fe1ff46"
     ],
     [
       "GenericPartialDM4A.DM4A",
       2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c9d2246c9fe59e43034d28603d18f30f"
-    ],
-    [
-      "GenericPartialDM4A.DM4A",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b6cc6e0ecb48fc20d012b8fbd493aed9"
-    ],
-    [
-      "GenericPartialDM4A.DM4A",
-      4,
       2,
       1,
       [
@@ -164,11 +146,11 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "544edecc7b1f5460e1681f6bc48c3730"
+      "4a15944d75badc49956d2cbc90ef01a6"
     ],
     [
       "GenericPartialDM4A.DM4A",
-      5,
+      3,
       2,
       1,
       [
@@ -188,7 +170,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "09580b753412c8781ae53e03551bcf9f"
+      "a968b632ab26dbaf8c081d3152e5e543"
     ],
     [
       "GenericPartialDM4A.lift_pure_dm4a",
@@ -212,10 +194,10 @@
         "typing_Tm_abs_dbf003a9879e111684205aae0ef8682e"
       ],
       0,
-      "d67d3bc064a1176a2792ccdb2097553e"
+      "a138b35ba7e190360d48eb4e61bfb423"
     ],
     [
-      "GenericPartialDM4A.20927",
+      "GenericPartialDM4A.17305",
       1,
       2,
       1,
@@ -224,7 +206,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ceef0abdb89b84135968530d3b41d5ab"
+      "0576c8b50969ec231554e1b7167236c7"
     ]
   ]
 ]

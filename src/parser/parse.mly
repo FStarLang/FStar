@@ -6,6 +6,7 @@
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
+open FStar_Pervasives
 open FStar_Errors
 open FStar_List
 open FStar_Util
@@ -30,21 +31,11 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-(*
- * AR: convert an option (aqualifier & attributes)
- *     to an (option aqualifier & attributes)
- *)
-let get_aqual_and_attrs aqual_universe_opt =
-  match aqual_universe_opt with
-    | None -> None, []
-    | Some (q, l) -> Some q, l
+let none_to_empty_list x = 
+  match x with
+  | None -> []
+  | Some l -> l
 
-(*
- * AR: convert an (option (aqualifier & attributes)) & X
- *     to an (option aqualifier & attributes) & X from it
- *)
-let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
-  get_aqual_and_attrs aqual_universe_opt, x
 %}
 
 %token <bytes> BYTEARRAY
@@ -71,6 +62,7 @@ let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
 %token <char> CHAR
 %token <bool> LET
 
+%token AS
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
@@ -81,18 +73,18 @@ let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
-%token REQUIRES ENSURES DECREASES
+%token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
@@ -298,8 +290,11 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  lid=lident COLON t=typ
-      { (lid, t) }
+  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
+      { 
+        let (qual, attrs), lid = qualified_lid in
+        (lid, qual, attrs, t) 
+      }
 
 constructorDecl:
   | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
@@ -455,23 +450,18 @@ letqualifier:
   | REC         { Rec }
   |             { NoLetQualifier }
 
- (* Remove with stratify *)
-aqual:
-  | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality, [] }
-  | q=aqualAndAttrsUniverses { q }
-
 (*
  * AR: this should be generalized to:
- *     (a) allow more than one attributes on the binders
- *     (b) allow attributes on non-implicit binders
+ *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
-aqualAndAttrsUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
-  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { Implicit, [t] }
-  | HASH      { Implicit, [] }
-  | DOLLAR    { Equality, [] }
+aqual: 
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH      { Implicit }
+  | DOLLAR    { Equality }
+
+binderAttributes:
+  | LBRACK_AT_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -604,7 +594,11 @@ multiBinder:
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-aqualifiedWithAttrs(X): x=pair(ioption(aqualAndAttrsUniverses), X) { get_aqual_and_attrs_and_X x }
+aqualifiedWithAttrs(X):
+  | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
+  | aq=aqual x=X { (Some aq, []), x }
+  | attrs=binderAttributes x=X { (None, attrs), x }
+  | x=X { (None, []), x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -668,10 +662,6 @@ kind:
   | t=tmArrow(tmNoEq) { {t with level=Kind} }
 
 
-
-
-
-
 term:
   | e=noSeqTerm
       { e }
@@ -685,6 +675,9 @@ term:
       { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+
+match_returning:
+  | RETURNS t=tmIff {t}
 
 noSeqTerm:
   | t=typ  { t }
@@ -702,27 +695,57 @@ noSeqTerm:
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | DECREASES t=typ
       { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
+  | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
+      (*
+       * decreases clause with relation is written as e1 e2,
+       *   where e1 is a relation and e2 is a term
+       *
+       * this is parsed as an app node, so we destruct the app node
+       *)
+      { match t.tm with
+        | App (t1, t2, _) ->
+	  let ot = mk_term (WFOrder (t1, t2)) (rhs2 parseState 3 3) Type_level in
+	  mk_term (Decreases (ot, None)) (rhs2 parseState 1 4) Type_level
+	| _ ->
+	  raise_error (Fatal_SyntaxError,
+	    "Syntax error: To use well-founded relations, write e1 e2") (rhs parseState 3) }
+	  
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
-  | IF e1=noSeqTerm THEN e2=noSeqTerm
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
+      { mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 7) Expr }
+  | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 5) Expr in
+        mk_term (If(e1, ret_opt, e2, e3)) (rhs2 parseState 1 5) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | MATCH e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
-        let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+        let branches = focusBranches pbs (rhs2 parseState 1 5) in
+        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
-  | LET OPEN uid=quident IN e=term
-      { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
+
+  | LET OPEN t=term IN e=term
+      {
+            match t.tm with
+            | Ascribed(r, rty, None) ->
+              mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
+
+            | Name uid ->
+              mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr
+
+            | _ ->
+              raise_error (Fatal_SyntaxError, "Syntax error: local opens expects either opening\n\
+                                               a module or namespace using `let open T in e`\n\
+                                               or, a record type with `let open e <: t in e'`")
+                          (rhs parseState 3)
+      }
+
   | attrs=ioption(attribute)
     LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
@@ -878,8 +901,7 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { get_aqual_and_attrs aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
@@ -887,10 +909,8 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | LPAREN q=aqual dom_tm=Tm RPAREN { get_aqual_and_attrs (Some q), dom_tm }
-
-  | aq_opt=ioption(aqual) dom_tm=Tm { get_aqual_and_attrs aq_opt, dom_tm }
+  | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
@@ -1118,7 +1138,7 @@ projectionLHS:
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mkLexList (rhs2 parseState 1 3) es }
+      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident

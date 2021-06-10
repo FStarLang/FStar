@@ -36,29 +36,27 @@ let pervasives_lid        = p2l ["FStar"; "Pervasives"]
 let fstar_ns_lid          = p2l ["FStar"]
 
 (* Primitive types *)
-let bool_lid        = pconst "bool"
-let unit_lid        = pconst "unit"
-let squash_lid      = pconst "squash"
-let auto_squash_lid = pconst "auto_squash"
-let string_lid      = pconst "string"
-let bytes_lid       = pconst "bytes"
-let int_lid         = pconst "int"
-let exn_lid         = pconst "exn"
-let list_lid        = pconst "list"
-let eqtype_lid      = pconst "eqtype"
-let option_lid      = psnconst "option"
-let either_lid      = psconst "either"
-let pattern_lid     = psconst "pattern"
-let precedes_lid    = pconst "precedes"
-let lex_t_lid       = pconst "lex_t"
-let lexcons_lid     = pconst "LexCons"
-let lextop_lid      = pconst "LexTop"
-let smtpat_lid      = psconst "smt_pat"
-let smtpatOr_lid    = psconst "smt_pat_or"
-let monadic_lid     = pconst "M"
-let spinoff_lid     = psconst "spinoff"
-let inl_lid         = psconst "Inl"
-let inr_lid         = psconst "Inr"
+let bool_lid         = pconst "bool"
+let unit_lid         = pconst "unit"
+let squash_lid       = pconst "squash"
+let auto_squash_lid  = pconst "auto_squash"
+let string_lid       = pconst "string"
+let bytes_lid        = pconst "bytes"
+let int_lid          = pconst "int"
+let exn_lid          = pconst "exn"
+let list_lid         = pconst "list"
+let eqtype_lid       = pconst "eqtype"
+let option_lid       = psnconst "option"
+let either_lid       = psconst "either"
+let pattern_lid      = psconst "pattern"
+let lex_t_lid        = pconst "lex_t"
+let precedes_lid     = pconst "precedes"
+let smtpat_lid       = psconst "smt_pat"
+let smtpatOr_lid     = psconst "smt_pat_or"
+let monadic_lid      = pconst "M"
+let spinoff_lid      = psconst "spinoff"
+let inl_lid          = psconst "Inl"
+let inr_lid          = psconst "Inr"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -125,8 +123,8 @@ let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
-let pure_assert_wp_lid    = pconst "pure_assert_wp"
-let pure_assume_wp_lid    = pconst "pure_assume_wp"
+let pure_assert_wp_lid    = pconst "pure_assert_wp0"
+let pure_assume_wp_lid    = pconst "pure_assume_wp0"
 let assert_norm_lid       = p2l ["FStar"; "Pervasives"; "assert_norm"]
 (* list_append_lid is needed to desugar @ in the compiler *)
 let list_append_lid       = p2l ["FStar"; "List"; "append"]
@@ -303,6 +301,7 @@ let steps_reify         = psconst "reify_"
 let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
+let steps_unfoldqual    = psconst "delta_qualifier"
 let steps_nbe           = psconst "nbe"
 
 (* attributes *)
@@ -331,6 +330,10 @@ let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_wit
 let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
+let ite_soundness_by_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+
+//the type of well-founded relations, used for decreases clauses with relations
+let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 
 let gen_reset =
     let x = U.mk_ref 0 in

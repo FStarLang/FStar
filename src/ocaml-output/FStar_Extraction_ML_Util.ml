@@ -20,6 +20,10 @@ let (dummy_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
   FStar_All.pipe_left
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
     (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Range"], "dummyRange"))
+let (fstar_real_of_string : FStar_Extraction_ML_Syntax.mlexpr) =
+  FStar_All.pipe_left
+    (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
+    (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Real"], "of_string"))
 let (mlconst_of_const' :
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant) =
   fun sctt ->
@@ -127,6 +131,18 @@ let (mlexpr_of_const :
     fun c ->
       match c with
       | FStar_Const.Const_range r -> mlexpr_of_range r
+      | FStar_Const.Const_real s ->
+          let str = mlconst_of_const p (FStar_Const.Const_string (s, p)) in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_All.pipe_left
+                  (FStar_Extraction_ML_Syntax.with_ty
+                     FStar_Extraction_ML_Syntax.ml_string_ty)
+                  (FStar_Extraction_ML_Syntax.MLE_Const str) in
+              [uu___2] in
+            (fstar_real_of_string, uu___1) in
+          FStar_Extraction_ML_Syntax.MLE_App uu___
       | uu___ ->
           let uu___1 = mlconst_of_const p c in
           FStar_Extraction_ML_Syntax.MLE_Const uu___1
@@ -228,8 +244,8 @@ let (eff_leq :
     fun f' ->
       match (f, f') with
       | (FStar_Extraction_ML_Syntax.E_PURE, uu___) -> true
-      | (FStar_Extraction_ML_Syntax.E_GHOST,
-         FStar_Extraction_ML_Syntax.E_GHOST) -> true
+      | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+         FStar_Extraction_ML_Syntax.E_ERASABLE) -> true
       | (FStar_Extraction_ML_Syntax.E_IMPURE,
          FStar_Extraction_ML_Syntax.E_IMPURE) -> true
       | uu___ -> false
@@ -237,7 +253,7 @@ let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Extraction_ML_Syntax.E_PURE -> "Pure"
-    | FStar_Extraction_ML_Syntax.E_GHOST -> "Ghost"
+    | FStar_Extraction_ML_Syntax.E_ERASABLE -> "Erasable"
     | FStar_Extraction_ML_Syntax.E_IMPURE -> "Impure"
 let (join :
   FStar_Range.range ->
@@ -257,15 +273,15 @@ let (join :
         | (FStar_Extraction_ML_Syntax.E_IMPURE,
            FStar_Extraction_ML_Syntax.E_IMPURE) ->
             FStar_Extraction_ML_Syntax.E_IMPURE
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
             FStar_Extraction_ML_Syntax.E_PURE
@@ -348,7 +364,7 @@ let rec (type_leq_c :
                    then
                      (if
                         (f = FStar_Extraction_ML_Syntax.E_PURE) &&
-                          (f' = FStar_Extraction_ML_Syntax.E_GHOST)
+                          (f' = FStar_Extraction_ML_Syntax.E_ERASABLE)
                       then
                         let uu___3 = type_leq unfold_ty t2 t2' in
                         (if uu___3
@@ -470,10 +486,11 @@ let rec (erase_effect_annotations :
         FStar_Extraction_ML_Syntax.MLTY_Fun uu___
     | uu___ -> t
 let is_type_abstraction :
-  'a 'b 'c . (('a, 'b) FStar_Util.either * 'c) Prims.list -> Prims.bool =
+  'a 'b 'c . (('a, 'b) FStar_Pervasives.either * 'c) Prims.list -> Prims.bool
+  =
   fun uu___ ->
     match uu___ with
-    | (FStar_Util.Inl uu___1, uu___2)::uu___3 -> true
+    | (FStar_Pervasives.Inl uu___1, uu___2)::uu___3 -> true
     | uu___1 -> false
 let (is_xtuple :
   (Prims.string Prims.list * Prims.string) ->
