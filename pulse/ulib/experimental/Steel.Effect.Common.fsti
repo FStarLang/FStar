@@ -35,6 +35,7 @@ irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
+[@@__steel_reduce__]
 let true_p : prop = True
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
@@ -144,11 +145,21 @@ type post_t (a:Type) = a -> vprop
 /// the context shrinks from all local variables in the computation to variables available at the toplevel
 let return_pre (p:vprop) : vprop = p
 
+noextract
+let hmem (p:vprop) = hmem (hp_of p)
+
 /// Abstract predicate for vprop implication. Currently implemented as an implication on the underlying slprop
 val can_be_split (p q:pre_t) : Type0
+
 /// Exposing the implementation of `can_be_split` when needed for proof purposes
 val reveal_can_be_split (_:unit) : Lemma
   (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
+
+/// A targeted version of the above
+val can_be_split_interp (r r':vprop) (h:hmem r)
+  : Lemma (requires can_be_split r r')
+          (ensures interp (hp_of r') h)
+
 
 /// A dependent version of can_be_split, to be applied to dependent postconditions
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
@@ -209,11 +220,18 @@ let rmem (pre:vprop) =
   (r0:vprop{can_be_split pre r0})
   (fun r0 -> normal (t_of r0))
 
-noextract
-let hmem (p:vprop) = hmem (hp_of p)
+/// Exposing the definition of mk_rmem to better normalize Steel VCs
+unfold noextract
+let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) ->
+  can_be_split_interp r r0 h;
+  normal (sel_of r0 h)
 
+[@@ __steel_reduce__]
 noextract
-val mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r)
+let mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r) =
+   FExt.on_dom_g
+     (r0:vprop{r `can_be_split` r0})
+     (unrestricted_mk_rmem r h)
 
 val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma (ensures reveal_can_be_split(); (mk_rmem r h) r0 == sel_of r0 h)
