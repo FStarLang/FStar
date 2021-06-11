@@ -40,6 +40,12 @@ let half_perm (p: perm) : Tot perm =
 let sum_perm (p1 p2: perm) : Tot perm =
   MkPerm (MkPerm?.v p1 +.  MkPerm?.v p2)
 
+let sum_perm_half_perm (p: perm) : Lemma
+  (half_perm p `sum_perm` half_perm p == p)
+  [SMTPat (half_perm p)]
+=
+  assert ((MkPerm?.v p /. 2.0R) +. (MkPerm?.v p /. 2.0R) == MkPerm?.v p)
+
 /// Helper to compare two permissions
 let lesser_equal_perm (p1 p2:perm) : GTot bool =
   MkPerm?.v p1 <=.  MkPerm?.v p2
