@@ -729,16 +729,16 @@ let rec equivalent_lists_once_l2 (l1 l2 l1_del l2_del:list atom) (am:amap term)
   | hd::tl ->
     if is_uvar (select hd am) then
       // We do not try to match the vprop uvar
-      let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once l1 tl l1_del l2_del am in
+      let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once_l2 l1 tl l1_del l2_del am in
       rem1, hd::rem2, l1'_del, l2'_del
     else (
       let t, n = try_candidates hd l1 am in
       if n = 1 then (
         let l1 = remove_from_list t l1 in
-        equivalent_lists_once l1 tl (t::l1_del) (hd::l2_del) am
+        equivalent_lists_once_l2 l1 tl (t::l1_del) (hd::l2_del) am
       ) else (
         // Either too many candidates for this scrutinee, or no candidate but the uvar
-        let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once l1 tl l1_del l2_del am in
+        let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once_l2 l1 tl l1_del l2_del am in
         rem1, hd::rem2, l1'_del, l2'_del
       )
     )
