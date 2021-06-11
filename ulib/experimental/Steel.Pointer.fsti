@@ -6,52 +6,8 @@ open Steel.Memory
 open Steel.FractionalPermission
 open Steel.Effect
 open Steel.Effect.Atomic
-module U32 = FStar.UInt32
 
-val size_t : Type0
-
-val reveal_size_t : unit -> Lemma (size_t == U32.t)
-
-unfold
-let coerce (#a: Type) (x: a) (b: Type) : Pure b (requires (a == b)) (ensures (fun y -> a == b /\ x == y)) = x
-
-let size_v (x: size_t) : GTot nat =
-  reveal_size_t ();
-  U32.v (coerce x U32.t)
-
-val zero_size : (zero_size: size_t { size_v zero_size == 0 })
-
-val one_size : (zero_size: size_t { size_v zero_size == 1 })
-
-let size_v_inj (x1 x2: size_t) : Lemma
-  (size_v x1 == size_v x2 ==> x1 == x2)
-  [SMTPat (size_v x1); SMTPat (size_v x2)]
-= reveal_size_t ()
-
-val ptrdiff_t : Type0
-
-module I32 = FStar.Int32
-
-val reveal_ptrdiff_t : unit -> Lemma (ptrdiff_t == I32.t)
-
-let ptrdiff_v (x: ptrdiff_t) : GTot int =
-  reveal_ptrdiff_t ();
-  I32.v (coerce x I32.t)
-
-val zero_ptrdiff : (zero_ptrdiff: ptrdiff_t { ptrdiff_v zero_ptrdiff == 0 })
-
-let ptrdiff_v_inj (x1 x2: ptrdiff_t) : Lemma
-  (ptrdiff_v x1 == ptrdiff_v x2 ==> x1 == x2)
-  [SMTPat (ptrdiff_v x1); SMTPat (ptrdiff_v x2)]
-= reveal_ptrdiff_t ()
-
-val ptrdiff_precond (x: int) : Tot prop
-
-val reveal_ptrdiff_precond (x: int) : Lemma (ptrdiff_precond x <==> FStar.Int.size x I32.n)
-
-val mk_ptrdiff (x: int) : Ghost ptrdiff_t
-  (requires (ptrdiff_precond x))
-  (ensures (fun y -> ptrdiff_v y == x))
+include Steel.CStdInt
 
 [@@erasable]
 val base_array (a: Type0) : Tot Type0
@@ -132,14 +88,14 @@ let g_le
   base p1 == base p2 /\
   size_v (offset p1) <= size_v (offset p2)
 
-let g_diff
+(*
+val g_diff
   (#a: Type0)
   (p1 p2: t a)
 : Ghost ptrdiff_t
   (requires (g_is_null p1 == false /\ g_is_null p2 == false /\ base p1 == base p2 /\ ptrdiff_precond (size_v (offset p2) - size_v (offset p1))))
-  (ensures (fun _ -> True))
-=
-  mk_ptrdiff (size_v (offset p2) - size_v (offset p1))
+  (ensures (fun y -> ptrdiff_v y == size_v (offset p2) - size_v (offset p1)))
+*)
 
 [@@erasable]
 noeq
@@ -638,10 +594,3 @@ val move
       res == g_move p1 p2 r /\
       h' (vptr_range p2 res) == h (vptr_range p1 r)
     )
-
-let mk_size_t (x: U32.t) : Pure size_t
-  (requires True)
-  (ensures (fun y -> size_v y == U32.v x))
-=
-  reveal_size_t ();
-  coerce x size_t
