@@ -107,7 +107,7 @@ let normal (#a:Type) (x:a) =
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
-    iota;zeta;primops]
+    iota;zeta;primops; simplify]
   x
 
 /// An abbreviation for the VStar constructor, allowing to use it with infix notation
