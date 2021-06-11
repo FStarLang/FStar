@@ -24,9 +24,9 @@ let array t = ref (Seq.seq t)
 let is_array r = ptr r
 let array_sel r = ptr_sel r
 
-let alloc x n =
+let malloc x n =
   let s = Seq.create (U32.v n) x in
-  alloc s
+  malloc s
 
 let index r i =
   let h = get() in
