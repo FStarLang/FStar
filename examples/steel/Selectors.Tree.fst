@@ -16,7 +16,7 @@ let rec append_left #a ptr v =
   if is_null_t ptr then (
     (**) elim_linked_tree_leaf ptr;
     let node = mk_node v ptr null_t in
-    let new_tree = alloc node in
+    let new_tree = malloc node in
     (**) intro_linked_tree_leaf #a ();
     (**) pack_tree new_tree ptr null_t;
     new_tree
@@ -33,7 +33,7 @@ let rec append_right #a ptr v =
   if is_null_t ptr then (
     (**) elim_linked_tree_leaf ptr;
     let node = mk_node v null_t ptr in
-    let new_tree = alloc node in
+    let new_tree = malloc node in
     (**) intro_linked_tree_leaf #a ();
     (**) pack_tree new_tree null_t ptr;
     new_tree
@@ -250,7 +250,7 @@ let rec insert_avl #a cmp ptr v =
   if is_null_t ptr then (
     (**) elim_linked_tree_leaf ptr;
     let node = mk_node v ptr null_t in
-    let new_tree = alloc node in
+    let new_tree = malloc node in
     (**) intro_linked_tree_leaf #a ();
     (**) pack_tree new_tree ptr null_t;
     new_tree
