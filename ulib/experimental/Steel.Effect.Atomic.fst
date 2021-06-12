@@ -279,6 +279,8 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       lemma_frame_equalities_refl p h0;
       h0
 
+let get () = SteelGhost?.reflect (get0 ())
+
 let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
   (proof:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
@@ -433,6 +435,8 @@ let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
+let extract_info p vp fact l = SteelGhost?.reflect (extract_info0 p vp fact l)
+
 let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
@@ -446,6 +450,8 @@ let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
       lemma_frame_equalities_refl p h0;
       l (core_mem m0)
 
+let extract_info_raw p fact l = SteelGhost?.reflect (extract_info_raw0 p fact l)
+
 let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
 
 let sladmit _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
@@ -458,6 +464,8 @@ let slassert0 (#opened:inames) (p:vprop) : repr unit
       let m0:full_mem = NMSTTotal.get () in
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0
+
+let slassert p = SteelGhost?.reflect (slassert0 p)
 
 let drop p = rewrite_slprop p emp
   (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
@@ -507,6 +515,8 @@ let elim_pure_aux #uses (p:prop)
 let elim_pure #uses p =
   let _ = elim_pure_aux p in
   rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ())
+
+let return #a #opened #p x = SteelAtomicBase?.reflect (return_ a x opened #p)
 
 let intro_exists #a #opened x p =
   rewrite_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x (fun x -> hp_of (p x)) m)
