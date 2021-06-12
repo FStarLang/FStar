@@ -649,6 +649,7 @@ val share
     (fun res -> vptr_range p res `star` vptr_range p res)
     (fun _ -> True)
     (fun h res h' ->
+      res == g_share r /\
       (h' (vptr_range p res) <: Seq.seq a) == (h (vptr_range p r) <: Seq.seq a)
     )
 
@@ -682,5 +683,6 @@ val gather
       r1.range_from == r2.range_from /\
       r1.range_to == r2.range_to /\
       (h' (vptr_range p res) <: Seq.seq a) == h (vptr_range p r1) /\
-      h' (vptr_range p res) == h (vptr_range p r2)
+      h' (vptr_range p res) == h (vptr_range p r2) /\
+      res == g_gather r1 r2
     )
