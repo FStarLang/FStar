@@ -450,21 +450,12 @@ val as_atomic_action_ghost (#a:Type u#a)
 
 open FStar.Ghost
 
-/// Only used to implement get below. Using reflection to define get inside the fst
-/// leads to verification issues because the repr is not abstract
-private
-val get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
-  true opened Unobservable p (fun _ -> p)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
-
 /// Returning the current global selector in the context
-let get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
+val get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
   opened
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
-  = SteelGhost?.reflect (get0 ())
 
 /// Returning the current value of the selector of vprop [p], as long as [p] is in the context
 let gget (#opened:inames) (p: vprop) : SteelGhost (erased (t_of p))
@@ -528,43 +519,21 @@ val change_slprop_rel_with_cond (#opened:inames)
 
 (* Inferring the validity of a pure proposition from the validity of a vprop in the current context *)
 
-/// Same issue as for get above
-private
-val extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-    (ensures fact)
-  ) : repr unit false opened Unobservable p (fun _ -> p)
-      (fun h -> h p == reveal vp)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-
-
-let extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-  = SteelGhost?.reflect (extract_info0 p vp fact l)
 
-private
-val extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m)
-    (ensures fact)
-  ) : repr unit false opened Unobservable p (fun _ -> p)
-      (fun h -> True)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-
-let extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
+val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> True)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-  = SteelGhost?.reflect (extract_info_raw0 p fact l)
 
 /// A noop operator, occasionally useful for forcing framing of a subsequent computation
 val noop (#opened:inames) (_:unit)
@@ -582,19 +551,11 @@ val sladmit (#a:Type)
             (_:unit)
   : SteelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
-/// Same issue as get above
-private
-val slassert0 (#opened:inames) (p:vprop) : repr unit
-  false opened Unobservable p (fun _ -> p)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1))
-
 /// Asserts the validity of vprop [p] in the current context
-let slassert (#opened_invariants:_) (p:vprop)
+val slassert (#opened_invariants:_) (p:vprop)
   : SteelGhost unit opened_invariants p (fun _ -> p)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
-  = SteelGhost?.reflect (slassert0 p)
 
 /// Drops vprop [p] from the context. Although our separation logic is affine,
 /// the frame inference tactic treats it as linear.
@@ -642,14 +603,13 @@ val elim_pure (#uses:_) (p:prop)
 /// with an informative type, but the previous computation was ghost.
 /// Else, the returned value will be given type SteelGhost, and F* will fail to typecheck
 /// the program as it will try to lift a SteelGhost computation with an informative return type
-let return (#a:Type u#a)
+val return (#a:Type u#a)
   (#opened_invariants:inames)
   (#p:a -> vprop)
   (x:a)
   : SteelAtomicBase a true opened_invariants Unobservable
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
-  = SteelAtomicBase?.reflect (return_ a x opened_invariants #p)
 
 (* Lifting the separation logic exists combinator to vprop *)
 
