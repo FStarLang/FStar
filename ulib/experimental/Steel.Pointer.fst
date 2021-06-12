@@ -402,7 +402,7 @@ let merge_left
     (ghost_vptrp ge1.e_alloc_unit ge2.e_alloc_unit_perm);
   let _ = ghost_gather ge1.e_alloc_unit ge1.e_alloc_unit_perm ge2.e_alloc_unit_perm in
   let res = g_merge_left p1 p2 (GPair r1 r2) in
-  FStar.Real.mul_dist (MkPerm?.v r1.range_write_perm) (MkPerm?.v r1.range_free_perm) (MkPerm?.v r2.range_free_perm);
+  FStar.Real.mul_dist_l_to_r (MkPerm?.v r1.range_write_perm) (MkPerm?.v r1.range_free_perm) (MkPerm?.v r2.range_free_perm);
   intro_vptr_range p1 res ge1.e_alloc_unit _ a _;
   res
 
@@ -425,7 +425,7 @@ let merge_right
     (ghost_vptrp ge1.e_alloc_unit ge2.e_alloc_unit_perm);
   let _ = ghost_gather ge1.e_alloc_unit ge1.e_alloc_unit_perm ge2.e_alloc_unit_perm in
   let res = g_merge_right p1 p2 (GPair r1 r2) in
-  FStar.Real.mul_dist (MkPerm?.v r1.range_write_perm) (MkPerm?.v r1.range_free_perm) (MkPerm?.v r2.range_free_perm);
+  FStar.Real.mul_dist_l_to_r (MkPerm?.v r1.range_write_perm) (MkPerm?.v r1.range_free_perm) (MkPerm?.v r2.range_free_perm);
   intro_vptr_range p1 res ge1.e_alloc_unit _ a _;
   res
 
@@ -441,7 +441,7 @@ let split
   let res = g_split p r in
   let alar = RS.vsplit _ ge.e_array (0 - r.range_from) in
   let _ = ghost_share ge.e_alloc_unit _ in
-  FStar.Real.mul_dist (MkPerm?.v r.range_write_perm) (MkPerm?.v (GPair?.fst res).range_free_perm) (MkPerm?.v (GPair?.snd res).range_free_perm);
+  FStar.Real.mul_dist_l_to_r (MkPerm?.v r.range_write_perm) (MkPerm?.v (GPair?.fst res).range_free_perm) (MkPerm?.v (GPair?.snd res).range_free_perm);
   intro_vptr_range p (GPair?.fst res) ge.e_alloc_unit _ (RS.GPair?.fst alar) _;
   intro_vptr_range p (GPair?.snd res) ge.e_alloc_unit _ (RS.GPair?.snd alar) _;
   res
@@ -453,4 +453,37 @@ let move
 = let ge = elim_vptr_range p1 r in
   let res = g_move p1 p2 r in
   intro_vptr_range p2 res ge.e_alloc_unit _ ge.e_array _;
+  res
+
+let share
+  p r
+=
+  let ge = elim_vptr_range p _ in
+  let _ = ghost_share ge.e_alloc_unit _ in
+  let _ = RS.vshare ge.e_array _ in
+  let res = g_share r in
+  FStar.Real.mul_div_2 (MkPerm?.v r.range_write_perm) (MkPerm?.v r.range_free_perm) FStar.Real.two;
+  intro_vptr_range p res ge.e_alloc_unit _ ge.e_array _;
+  intro_vptr_range p res ge.e_alloc_unit _ ge.e_array _;
+  res
+
+let gather
+  p r1 r2
+=
+  let g1 = elim_vptr_range p r1 in
+  let g2 = elim_vptr_range p r2 in
+  let _ : squash (r1.range_free_perm == r2.range_free_perm) = () in
+  let _ : squash (r1.range_from == r2.range_from) = () in
+  let _ : squash (r1.range_to == r2.range_to) = () in
+  change_equal_slprop
+    (ghost_vptrp g2.e_alloc_unit _)
+    (ghost_vptrp g1.e_alloc_unit g2.e_alloc_unit_perm);
+  let _ = ghost_gather g1.e_alloc_unit g1.e_alloc_unit_perm g2.e_alloc_unit_perm in
+  change_equal_slprop
+    (RS.varray2 g2.e_array _)
+    (RS.varray2 g1.e_array r2.range_write_perm);
+  let _ = RS.vgather g1.e_array r1.range_write_perm r2.range_write_perm in
+  let res = g_gather r1 r2 in
+  FStar.Real.mul_dist_r_to_l (MkPerm?.v r1.range_write_perm) (MkPerm?.v r2.range_write_perm) (MkPerm?.v r1.range_free_perm);
+  intro_vptr_range p res g1.e_alloc_unit _ g1.e_array _;
   res

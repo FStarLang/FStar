@@ -633,3 +633,54 @@ val move
       res == g_move p1 p2 r /\
       h' (vptr_range p2 res) == h (vptr_range p1 r)
     )
+
+let g_share
+  (r: range)
+: Tot range
+= { r with range_write_perm = half_perm r.range_write_perm }
+
+val share
+  (#opened: _)
+  (#a: Type)
+  (p: t a)
+  (r: range)
+: SteelGhost range opened
+    (vptr_range p r)
+    (fun res -> vptr_range p res `star` vptr_range p res)
+    (fun _ -> True)
+    (fun h res h' ->
+      (h' (vptr_range p res) <: Seq.seq a) == (h (vptr_range p r) <: Seq.seq a)
+    )
+
+let g_gather
+  (r1 r2: range)
+: Pure range
+  (requires (
+    r1.range_free_perm == r2.range_free_perm /\
+    r1.range_from == r2.range_from /\
+    r1.range_to == r2.range_to
+  ))
+  (ensures (fun _ -> True))
+=
+  { r1 with range_write_perm = r1.range_write_perm `sum_perm` r2.range_write_perm }
+
+val gather
+  (#opened: _)
+  (#a: Type)
+  (p: t a)
+  (r1 r2: range)
+: SteelGhost range opened
+    (vptr_range p r1 `star` vptr_range p r2)
+    (fun res -> vptr_range p res)
+    (fun _ ->
+      r1.range_free_perm == r2.range_free_perm /\
+      r1.range_from == r2.range_from /\
+      r1.range_to == r2.range_to
+    )
+    (fun h res h' ->
+      r1.range_free_perm == r2.range_free_perm /\
+      r1.range_from == r2.range_from /\
+      r1.range_to == r2.range_to /\
+      (h' (vptr_range p res) <: Seq.seq a) == h (vptr_range p r1) /\
+      h' (vptr_range p res) == h (vptr_range p r2)
+    )

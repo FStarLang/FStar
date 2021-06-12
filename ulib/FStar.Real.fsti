@@ -107,8 +107,28 @@ let add_assoc = assert (forall x y z. (x +. y) +.z = (x +. y) +. z)
 let mul_comm = assert (forall x y. x *. y = y *.x)
 let mul_assoc = assert (forall x y z. (x *. y) *.z = (x *. y) *. z)
 
-let mul_dist
+let mul_dist_l_to_r
   (a b c: real)
 : Lemma
   ((a *. b) +. (a *. c) == a *. (b +. c))
+= ()
+
+let mul_dist_r_to_l
+  (a b c: real)
+: Lemma
+  ((a *. c) +. (b *. c) == (a +. b) *. c)
+= ()
+
+let mul_div
+  (a b c: real)
+: Lemma
+  (requires (c <> 0.0R))
+  (ensures ((a *. b) /. c == a *. (b /. c)))
+= ()
+
+let mul_div_2
+  (a b c: real)
+: Lemma
+  (requires (c <> 0.0R))
+  (ensures ((a *. b) /. c == (a /. c) *. b))
 = ()
