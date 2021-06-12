@@ -502,25 +502,6 @@ let pack_ith
   let a' = vappend res.ith_lhs rhs p in
   change_equal_slprop (varray2 a' p) (varray2 a p)
 
-let seq_index_append_cons
-  (#t: Type)
-  (i: nat)
-  (a: Seq.seq t) (x: t) (b: Seq.seq t)
-: Lemma
-  (requires (Seq.length a == i))
-  (ensures (Seq.index (Seq.append a (Seq.cons x b)) i == x))
-= ()
-
-let seq_upd_append_cons
-  (#t: Type)
-  (i: nat)
-  (y: t)
-  (a: Seq.seq t) (x: t) (b: Seq.seq t)
-: Lemma
-  (Seq.length a == i ==> Seq.upd (Seq.append a (Seq.cons x b)) i y == Seq.append a (Seq.cons y b))
-=
-  assert (Seq.length a == i ==> Seq.upd (Seq.append a (Seq.cons x b)) i y `Seq.equal` Seq.append a (Seq.cons y b))
-
 let rec valloc
   (#t: Type)
   (i: nat)

@@ -99,9 +99,16 @@ let mul_nil_r = assert (forall n. n *. 0.0R = 0.0R)
 let mul_id_l = assert (forall n. 1.0R *. n = n)
 let mul_id_r = assert (forall n. n *. 1.0R = n)
 
+let mul_id (x: real) : Lemma (1.0R *. x == x) = ()
+
 let add_comm = assert (forall x y. x +. y = y +.x)
 let add_assoc = assert (forall x y z. (x +. y) +.z = (x +. y) +. z)
 
 let mul_comm = assert (forall x y. x *. y = y *.x)
 let mul_assoc = assert (forall x y z. (x *. y) *.z = (x *. y) *. z)
-let mul_dist = assert (forall x y z. x *. (y +. z) = (x *. y) +. (x *.z))
+
+let mul_dist
+  (a b c: real)
+: Lemma
+  ((a *. b) +. (a *. c) == a *. (b +. c))
+= ()

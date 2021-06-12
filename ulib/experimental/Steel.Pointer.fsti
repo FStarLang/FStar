@@ -10,6 +10,10 @@ open Steel.Effect.Atomic
 include Steel.CStdInt
 
 [@@erasable]
+noeq
+type gpair (a1 a2: Type) : Type = | GPair: (fst: a1) -> (snd: a2) -> gpair a1 a2
+
+[@@erasable]
 val base_array (a: Type0) : Tot Type0
 
 val base_array_len
@@ -79,6 +83,7 @@ val g_sub
     size_v (offset res) == size_v (offset p) - size_v off
   ))
 
+(*
 let g_le
   (#a: Type0)
   (p1 p2: t a)
@@ -88,7 +93,6 @@ let g_le
   base p1 == base p2 /\
   size_v (offset p1) <= size_v (offset p2)
 
-(*
 val g_diff
   (#a: Type0)
   (p1 p2: t a)
@@ -379,7 +383,7 @@ let deref
     )
 = index x _ zero_ptrdiff 
 
-val iupd
+val index_upd
   (#a: Type)
   (x: t a)
   (r: range)
@@ -389,6 +393,7 @@ val iupd
     (vptr_range x r)
     (fun _ -> vptr_range x r)
     (fun _ ->
+      r.range_write_perm == full_perm /\
       r.range_from <= ptrdiff_v i /\
       ptrdiff_v i < r.range_to
     )
@@ -406,17 +411,13 @@ let upd
 : Steel unit
     (vptr_range x r)
     (fun _ -> vptr_range x r)
-    (fun _ -> True)
+    (fun _ -> r.range_write_perm == full_perm)
     (fun _ _ h' ->
       ptr_sel0 r x h' == v
     )
-= iupd x r zero_ptrdiff v
+= index_upd x r zero_ptrdiff v
 
-[@@erasable]
-noeq
-type gpair (a1 a2: Type) : Type = | GPair: (fst: a1) -> (snd: a2) -> gpair a1 a2
-
-let g_merge
+let g_merge_left
   (#a: Type)
   (p1 p2: t a)
   (r: gpair range range)
@@ -426,29 +427,21 @@ let g_merge
     g_is_null p1 == false /\
     g_is_null p2 == false /\
     base p1 == base p2 /\
-    (size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from \/
-      size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from) /\
+    size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from /\
     r1.range_write_perm == r2.range_write_perm
   ))
   (ensures (fun _ -> True))
 = 
   let GPair r1 r2 = r in
-  if size_v (offset p1) + r1.range_to = size_v (offset p2) + r2.range_from
-  then {
+  {
     range_from = r1.range_from;
     range_to = r2.range_to - size_v (offset p1) + size_v (offset p2);
     range_write_perm = r1.range_write_perm;
     range_free_perm = r1.range_free_perm `sum_perm` r2.range_free_perm;
     range_prf = ();
-  } else {
-    range_from = r2.range_from - size_v (offset p1) + size_v (offset p2);
-    range_to = r1.range_to;
-    range_write_perm = r1.range_write_perm;
-    range_free_perm = r1.range_free_perm `sum_perm` r2.range_free_perm;
-    range_prf = ();
   }
 
-val merge
+val merge_left
   (#opened: _)
   (#a: Type)
   (p1 p2: t a)
@@ -459,18 +452,63 @@ val merge
     (fun _ ->
       (g_is_null p1 == false /\ g_is_null p2 == false) ==> (
       base p1 == base p2 /\
-      (size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from \/
-        size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from) /\
+      (size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from) /\
       r1.range_write_perm == r2.range_write_perm
     ))
     (fun h res h' ->
       g_is_null p1 == false /\ g_is_null p2 == false /\
       base p1 == base p2 /\
-      (size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from \/
-        size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from) /\
+      (size_v (offset p1) + r1.range_to == size_v (offset p2) + r2.range_from) /\
       r1.range_write_perm == r2.range_write_perm /\
-      res == g_merge p1 p2 (GPair r1 r2) /\
+      res == g_merge_left p1 p2 (GPair r1 r2) /\
       h' (vptr_range p1 res) == h (vptr_range p1 r1) `Seq.append` h (vptr_range p2 r2)
+    )
+
+let g_merge_right
+  (#a: Type)
+  (p1 p2: t a)
+  (r: gpair range range)
+: Pure range
+  (requires (
+    let GPair r1 r2 = r in
+    g_is_null p1 == false /\
+    g_is_null p2 == false /\
+    base p1 == base p2 /\
+    size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from /\
+    r1.range_write_perm == r2.range_write_perm
+  ))
+  (ensures (fun _ -> True))
+= 
+  let GPair r1 r2 = r in
+  {
+    range_from = r2.range_from - size_v (offset p1) + size_v (offset p2);
+    range_to = r1.range_to;
+    range_write_perm = r1.range_write_perm;
+    range_free_perm = r1.range_free_perm `sum_perm` r2.range_free_perm;
+    range_prf = ();
+  }
+
+val merge_right
+  (#opened: _)
+  (#a: Type)
+  (p1 p2: t a)
+  (r1 r2: range)
+: SteelGhost range opened
+    (vptr_range p1 r1 `star` vptr_range p2 r2)
+    (fun res -> vptr_range p1 res)
+    (fun _ ->
+      (g_is_null p1 == false /\ g_is_null p2 == false) ==> (
+      base p1 == base p2 /\
+      size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from /\
+      r1.range_write_perm == r2.range_write_perm
+    ))
+    (fun h res h' ->
+      g_is_null p1 == false /\ g_is_null p2 == false /\
+      base p1 == base p2 /\
+      size_v (offset p2) + r2.range_to == size_v (offset p1) + r1.range_from /\
+      r1.range_write_perm == r2.range_write_perm /\
+      res == g_merge_right p1 p2 (GPair r1 r2) /\
+      h' (vptr_range p1 res) == h (vptr_range p2 r2) `Seq.append` h (vptr_range p1 r1)
     )
 
 let g_split
@@ -508,9 +546,9 @@ let g_split_correct
   ))
   (ensures (
     let GPair r1 r2 = g_split p r in
-    g_merge p p (g_split p r) == r
+    g_merge_left p p (g_split p r) == r
   ))
-  [SMTPat (g_merge p p (g_split p r))]
+  [SMTPat (g_merge_left p p (g_split p r))]
  = ()
 
 val split
@@ -581,7 +619,8 @@ val move
     (vptr_range p1 r)
     (fun res -> vptr_range p2 res)
     (fun _ ->
-      (g_is_null p1 == false /\ g_is_null p2 == false) ==> (
+      (g_is_null p1 == false) ==> (
+      g_is_null p2 == false /\
       base p1 == base p2 /\
       size_v (offset p1) + r.range_from <= size_v (offset p2) /\
       size_v (offset p2) <= size_v (offset p1) + r.range_to

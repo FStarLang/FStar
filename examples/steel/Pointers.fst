@@ -33,7 +33,7 @@ let test_split () : SteelT unit emp (fun _ -> emp) =
     let _ = move x x1 _ in
     let _ = split x1 _ in
     let _ = move x1 x (GPair?.fst _) in  // same here
-    let _ = merge x1 x2 _ _ in
-    let _ = merge x x1 _ _ in
+    let _ = merge_left x1 x2 _ _ in
+    let _ = merge_left x x1 _ _ in
     free x _
   end

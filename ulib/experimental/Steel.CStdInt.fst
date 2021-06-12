@@ -6,7 +6,10 @@ module Cast = FStar.Int.Cast
 
 let size_t = U64.t
 
-let size_v (x: size_t) : GTot nat =
+let size_precond x =
+  FStar.UInt.fits x U64.n == true
+
+let size_v x =
   U64.v x
 
 let size_v_inj (x1 x2: size_t) : Lemma
@@ -19,9 +22,18 @@ let mk_size_t (x: U32.t) : Pure size_t
   (ensures (fun y -> size_v y == U32.v x))
 = Cast.uint32_to_uint64 x
 
+let int_to_size_t x =
+  U64.uint_to_t x
+
+let size_precond_le x y = ()
+
+let size_add x y = x `U64.add` y
+
+let size_sub x y = x `U64.sub` y
+
 let ptrdiff_t = I64.t
 
-let ptrdiff_v (x: ptrdiff_t) : GTot int =
+let ptrdiff_v x =
   I64.v x
 
 let ptrdiff_v_inj (x1 x2: ptrdiff_t) : Lemma

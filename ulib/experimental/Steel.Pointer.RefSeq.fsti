@@ -94,6 +94,25 @@ type ith_t
   ith_rhs: array2 t;
 }
 
+let seq_index_append_cons
+  (#t: Type)
+  (i: nat)
+  (a: Seq.seq t) (x: t) (b: Seq.seq t)
+: Lemma
+  (requires (Seq.length a == i))
+  (ensures (Seq.index (Seq.append a (Seq.cons x b)) i == x))
+= ()
+
+let seq_upd_append_cons
+  (#t: Type)
+  (i: nat)
+  (y: t)
+  (a: Seq.seq t) (x: t) (b: Seq.seq t)
+: Lemma
+  (Seq.length a == i ==> Seq.upd (Seq.append a (Seq.cons x b)) i y == Seq.append a (Seq.cons y b))
+=
+  assert (Seq.length a == i ==> Seq.upd (Seq.append a (Seq.cons x b)) i y `Seq.equal` Seq.append a (Seq.cons y b))
+
 val unpack_ith
   (#opened: _)
   (#t: Type)
