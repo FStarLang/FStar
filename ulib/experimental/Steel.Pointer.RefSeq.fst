@@ -375,7 +375,7 @@ let slice_cons_right
   ((i > 0 /\ i <= Seq.length x + 1) ==> Seq.slice (Seq.cons a x) i (Seq.length x + 1) == Seq.slice x (i - 1) (Seq.length x))
 = if i > 0 && i <= Seq.length x + 1 then assert (Seq.slice (Seq.cons a x) i (Seq.length x + 1) `Seq.equal` Seq.slice x (i - 1) (Seq.length x))
 
-#push-options "--z3rlimit 32"  // 256 --fuel 6 --ifuel 6"
+#push-options "--z3rlimit 64"  // 256 --fuel 6 --ifuel 6"
 #restart-solver
 
 let rec vsplit0
