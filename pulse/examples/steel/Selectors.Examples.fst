@@ -45,6 +45,8 @@ let test2 (r1 r2:ref int) : Steel unit
   = write r1 0;
     write r1 0
 
+module T = FStar.Tactics
+
 let test3 (r1 r2 r3:ref int) : Steel unit
   (vptr r1 `star` (vptr r2 `star` vptr r3)) (fun _ -> vptr r1 `star` (vptr r2 `star` vptr r3))
   (requires fun _ -> True)
@@ -53,6 +55,7 @@ let test3 (r1 r2 r3:ref int) : Steel unit
     sel r2 h0 == sel r2 h1 /\
     sel r3 h0 == sel r3 h1
   )
+  by (T.norm normal_steps)
   = let h0 = get () in
     write r1 1;
     let h1 = get() in
