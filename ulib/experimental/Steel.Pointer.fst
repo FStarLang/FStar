@@ -156,7 +156,6 @@ let slptr_range x r = hp_of (vptr_range0 x r)
 
 let ptr_select x r = fun h -> sel_of (vptr_range0 x r) h
 
-assume
 val intro_vptr_range
   (#opened: _)
   (#a: Type)
@@ -182,6 +181,34 @@ val intro_vptr_range
       h' (vptr_range x r) == h (RS.varray2 w pw)
     )
 
+#push-options "--z3rlimit 16"
+#restart-solver
+
+let intro_vptr_range
+  #_ #a x r u pu w pw
+=
+  intro_vrefine emp (vptr_range0_refine x r);
+  intro_vrewrite (emp `vrefine` vptr_range0_refine x r) (vptr_range0_rewrite1 x r);
+  reveal_star (ghost_vptrp u pu) (RS.varray2 w pw);
+  intro_vdep
+    (emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r)
+    (ghost_vptrp u pu `star` RS.varray2 w pw)
+    (vptr_range0_payload a r);
+  intro_vrewrite
+    (emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r `vdep` vptr_range0_payload a r)
+    (vptr_range0_rewrite2 x r);
+  assert_norm (
+    emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r `vdep` vptr_range0_payload a r `vrewrite` vptr_range0_rewrite2 x r ==
+    vptr_range0 x r
+  );
+  change_slprop_rel
+    (vptr_range0 x r)
+    (vptr_range x r)
+    (fun x y -> x == y)
+    (fun _ -> ())
+
+#pop-options
+
 [@@erasable]
 noeq
 type elim_vptr_range_t
@@ -192,7 +219,6 @@ type elim_vptr_range_t
   e_array: RS.array2 a;
 }
 
-assume
 val elim_vptr_range
   (#opened: _)
   (#a: Type)
@@ -210,6 +236,40 @@ val elim_vptr_range
       res.e_array == array_of #_ #r (Some?.v x) /\
       h (vptr_range x r) == h' (RS.varray2 res.e_array r.range_write_perm)
     )
+
+let elim_vptr_range
+  #_ #a x r
+=
+  change_slprop_rel
+    (vptr_range x r)
+    (vptr_range0 x r)
+    (fun x y -> x == y)
+    (fun _ -> ());
+  assert_norm (
+    vptr_range0 x r ==
+    emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r `vdep` vptr_range0_payload a r `vrewrite` vptr_range0_rewrite2 x r
+  );
+  elim_vrewrite
+    (emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r `vdep` vptr_range0_payload a r)
+    (vptr_range0_rewrite2 x r);
+  let x' : Ghost.erased (t_r a r) = elim_vdep
+    (emp `vrefine` vptr_range0_refine x r `vrewrite` vptr_range0_rewrite1 x r)
+    (vptr_range0_payload a r)
+  in
+  let res = {
+    e_alloc_unit = (Ghost.reveal x').alloc_unit;
+    e_alloc_unit_perm = r.range_write_perm `prod_perm` r.range_free_perm;
+    e_array = array_of (Ghost.reveal x');
+  } in
+  change_equal_slprop
+    (vptr_range0_payload a r (Ghost.reveal x'))
+    (ghost_vptrp res.e_alloc_unit res.e_alloc_unit_perm `star`
+      RS.varray2 res.e_array r.range_write_perm);
+  ghost_vptrp res.e_alloc_unit res.e_alloc_unit_perm `reveal_star`
+      RS.varray2 res.e_array r.range_write_perm;
+  elim_vrewrite (emp `vrefine` vptr_range0_refine x r) (vptr_range0_rewrite1 x r);
+  elim_vrefine emp (vptr_range0_refine x r);
+  res
 
 let vptr_range_not_null
   x r
