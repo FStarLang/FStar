@@ -432,29 +432,23 @@ let intro_cons_lemma (#a:Type0) (ptr1:t a)
 
 #push-options "--fuel 1 --ifuel 1"
 
-let intro_llist_cons ptr1 ptr2 r =
-  let h = get () in
-  let x = hide (sel ptr1 h) in
-  let v = hide (sel r h) in
-  let l = hide (v_ptrlist ptr2 h) in
-  reveal_star_3 (vptr ptr1) (llist_ptr ptr2) (vptr r);
+module T = FStar.Tactics
 
+// AF: TODO: VC Normalization does not seem triggered, the "normal" call is removed early
+let intro_llist_cons (#a:Type0) (ptr1 ptr2:t a) (r:ref a)
+  : Steel unit (vptr ptr1 `star` vptr r `star` llist_ptr ptr2)
+                  (fun _ -> llist_ptr ptr1)
+                  (requires fun h -> data (sel ptr1 h) == r /\ next (sel ptr1 h) == ptr2)
+                  (ensures fun h0 _ h1 -> v_ptrlist ptr1 h1 == (sel r h0) :: v_ptrlist ptr2 h0)
+  by (T.norm normal_steps) =
+  let x = gget (vptr ptr1) in
+  let v = gget (vptr r) in
+  let l = gget (llist_ptr ptr2) in
   change_slprop (vptr ptr1 `star` llist_ptr ptr2 `star` vptr r) (llist_ptr ptr1)
     ((reveal x, reveal l), reveal v)
-  (reveal v :: l) (fun m -> intro_cons_lemma ptr1 x v l m)
-
-
-val elim_cons_cell (#a:Type0) (ptr:t a)
-  : Steel (cell a) (llist_cell ptr)
-                   (fun c -> vptr ptr `star` vptr (data c) `star` llist_cell (next c))
-                   (requires fun _ -> ptr =!= null_llist)
-                   (ensures fun h0 c h1 ->
-                     Cons? (v_cell ptr h0) /\
-                     c == sel ptr h1 /\
-                     sel ptr h1 == fst (L.hd (v_cell ptr h0)) /\
-                     sel (data c) h1 == snd (L.hd (v_cell ptr h0)) /\
-                     v_cell (next c) h1 == L.tl (v_cell ptr h0))
-
+  (reveal v :: l)
+  (fun m ->
+    intro_cons_lemma ptr1 x v l m)
 
 let elim_cons_cell_lemma (#a:Type0) (r:t a) (l:list (cell a * a)) (m:mem) : Lemma
   (requires Cons? l /\ interp (llist_ptr_sl r) m /\ llist_ptr_sel_cell r m == l)
@@ -502,8 +496,19 @@ let elim_cons_cell_lemma (#a:Type0) (r:t a) (l:list (cell a * a)) (m:mem) : Lemm
       (elim_star (pts_to_sl r full_perm x) (llist_ptr_sl' (next x) tl)));
     Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
 
-let elim_cons_cell #a ptr =
-  let h = get () in
+// AF: TODO: Same as above
+let elim_cons_cell (#a:Type0) (ptr:t a)
+  : Steel (cell a) (llist_cell ptr)
+                   (fun c -> vptr ptr `star` vptr (data c) `star` llist_cell (next c))
+                   (requires fun _ -> ptr =!= null_llist)
+                   (ensures fun h0 c h1 ->
+                     Cons? (v_cell ptr h0) /\
+                     c == sel ptr h1 /\
+                     sel ptr h1 == fst (L.hd (v_cell ptr h0)) /\
+                     sel (data c) h1 == snd (L.hd (v_cell ptr h0)) /\
+                     v_cell (next c) h1 == L.tl (v_cell ptr h0))
+  by (T.norm normal_steps)
+  = let h = get () in
   let l = hide (v_cell ptr h) in
   reveal_non_empty_cell ptr;
   let gc = hide (fst (L.hd l)) in
@@ -511,14 +516,23 @@ let elim_cons_cell #a ptr =
     (llist_cell ptr)
     (vptr ptr `star` llist_cell (next gc) `star`  vptr (data gc))
     l ((reveal gc, L.tl l), snd (L.hd l)) (fun m -> elim_cons_cell_lemma ptr l m);
-  reveal_star (vptr ptr `star` llist_cell (next gc)) (vptr (data gc));
-  reveal_star (vptr ptr) (llist_cell (next gc));
   let c = read ptr in
   change_slprop (llist_cell (next gc)) (llist_cell (next c)) (L.tl l) (L.tl l) (fun _ -> ());
   change_slprop (vptr (data gc)) (vptr (data c)) (snd (L.hd l)) (snd (L.hd l)) (fun _ -> ());
   return c
 
-let elim_llist_cons ptr =
+let elim_llist_cons (#a:Type0) (ptr:t a)
+  : Steel (cell a)
+             (llist_ptr ptr)
+             (fun c -> vptr ptr `star` vptr (data c) `star` llist_ptr (next c))
+             (requires fun h -> ptr =!= null_llist)
+             (ensures fun h0 c h1 ->
+               Cons? (v_ptrlist ptr h0) /\
+               sel ptr h1 == c /\
+               sel (data c) h1 == L.hd (v_ptrlist ptr h0) /\
+               v_ptrlist (next c) h1 == L.tl (v_ptrlist ptr h0)
+             )
+  by (T.norm normal_steps) =
   change_slprop_rel (llist_ptr ptr) (llist_cell ptr) (fun x y -> x == datas y) (fun _ -> ());
   let h = get () in
   let c = elim_cons_cell ptr in

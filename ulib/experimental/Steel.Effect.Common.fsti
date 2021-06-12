@@ -96,20 +96,22 @@ let to_vprop' (p:slprop) = {hp = p; t = unit; sel = fun _ -> ()}
 unfold
 let to_vprop (p:slprop) = VUnit (to_vprop' p)
 
-/// The core normalization primitive used to simplify Verification Conditions before encoding
-/// them to an SMT solver.
+/// Normalization steps for norm below.
 /// All functions marked as `unfold`, or with the `__steel_reduce__` attribute will be reduced,
 /// as well as some functions internal to the selector framework
 unfold
-let normal (#a:Type) (x:a) =
-  norm [
-    delta_attr [`%__steel_reduce__];
+let normal_steps =
+   [delta_attr [`%__steel_reduce__];
     delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
     iota;zeta;primops; simplify]
-  x
+
+/// The core normalization primitive used to simplify Verification Conditions before encoding
+/// them to an SMT solver.
+unfold
+let normal (#a:Type) (x:a) = norm normal_steps x
 
 /// An abbreviation for the VStar constructor, allowing to use it with infix notation
 [@@ __steel_reduce__; __reduce__]
@@ -1441,7 +1443,7 @@ let rec quote_atoms (l:list atom) = match l with
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
 /// In particular, all the sorting/list functions are entirely reduced
-let normal_steps = [primops; iota; zeta; delta_only [
+let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
           `%flatten; `%sort;
           `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
@@ -1453,7 +1455,7 @@ let normal_steps = [primops; iota; zeta; delta_only [
           `%rm]]
 
 /// The normalization function, using the above normalization steps
-let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_steps x
+let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_tac_steps x
 
 /// Helper lemma to establish relation between normalized and initial values
 let normal_elim (x:Type0) : Lemma
