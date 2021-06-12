@@ -286,18 +286,6 @@ let reveal_non_empty_tree #a ptr =
   let t = hide (v_node ptr h) in
   extract_info (tree_node ptr) t (is_node t) (reveal_non_empty_lemma ptr t)
 
-val unpack_tree_node (#a:Type0) (ptr:t a)
-  : Steel (node a)
-             (tree_node ptr)
-             (fun n -> tree_node (get_left n) `star` tree_node (get_right n) `star` vptr ptr)
-             (fun _ -> not (is_null_t ptr))
-             (fun h0 n h1 ->
-               Spec.Node? (v_node ptr h0) /\
-               sel ptr h1 == n /\
-               v_node ptr h0 == Spec.Node (sel ptr h1)
-                 (v_node (get_left n) h1) (v_node (get_right n) h1))
-
-
 let head (#a:Type0) (t:erased (tree (node a)))
   : Pure (erased (node a)) (requires Spec.Node? (reveal t)) (ensures fun _ -> True) =
   let Spec.Node n _ _ = reveal t in hide n
@@ -364,9 +352,21 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
       (elim_star (pts_to_sl pt full_perm x) (tree_sl' (get_left x) l)));
     Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
 
-let unpack_tree_node #a ptr =
-  let h = get () in
-  let t:erased (tree (node a)) = hide (v_node ptr h) in
+module T = FStar.Tactics
+
+// AF: TODO: VCs do not seem to be normalized before being passed to SMT.
+let unpack_tree_node (#a:Type0) (ptr:t a)
+  : Steel (node a)
+             (tree_node ptr)
+             (fun n -> tree_node (get_left n) `star` tree_node (get_right n) `star` vptr ptr)
+             (fun _ -> not (is_null_t ptr))
+             (fun h0 n h1 ->
+               Spec.Node? (v_node ptr h0) /\
+               sel ptr h1 == n /\
+               v_node ptr h0 == Spec.Node (sel ptr h1)
+                 (v_node (get_left n) h1) (v_node (get_right n) h1))
+  by (T.norm normal_steps) =
+  let t = gget (tree_node ptr) in
   reveal_non_empty_tree ptr;
   let gn = head t in
   change_slprop
@@ -375,8 +375,6 @@ let unpack_tree_node #a ptr =
     t ((reveal gn, reveal (gleft t)), reveal (gright t))
     (fun m -> unpack_tree_node_lemma ptr t m);
 
-  reveal_star (vptr ptr `star` tree_node (get_left gn)) (tree_node (get_right gn));
-  reveal_star (vptr ptr) (tree_node (get_left gn));
   let n = read ptr in
 
   change_slprop_rel (tree_node (get_left gn)) (tree_node (get_left n)) (fun x y -> x == y) (fun _ -> ());
@@ -384,7 +382,21 @@ let unpack_tree_node #a ptr =
 
   return n
 
-let unpack_tree #a ptr =
+// AF: TODO: Same as above
+let unpack_tree (#a: Type0) (ptr: t a)
+    : Steel (node a)
+      (linked_tree ptr)
+      (fun node ->
+        linked_tree (get_left node) `star` linked_tree (get_right node) `star` vptr ptr)
+      (requires (fun h0 -> not (is_null_t ptr)))
+      (ensures (fun h0 node h1 ->
+        v_linked_tree ptr h0 == Spec.Node
+          (get_data (sel ptr h1))
+          (v_linked_tree (get_left node) h1)
+          (v_linked_tree (get_right node) h1) /\
+        (sel ptr h1) == node
+      ))
+    by (T.norm normal_steps) =
   let h = get() in
   change_slprop_rel (linked_tree ptr) (tree_node ptr) (fun x y -> x == tree_view y) (fun _ -> ());
   let h0 = get () in
