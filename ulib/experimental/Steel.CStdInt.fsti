@@ -1,9 +1,12 @@
 module Steel.CStdInt
 
+open FStar.Mul
+
 module U32 = FStar.UInt32
 module I32 = FStar.Int32
 
-val size_t : Type0
+inline_for_extraction noextract // TODO: replace with primitive extraction
+val size_t : eqtype
 
 val size_precond (x: nat) : Tot prop
 
@@ -36,11 +39,20 @@ val size_sub (x y: size_t) : Pure size_t
   (requires (size_v x >= size_v y))
   (ensures (fun z -> size_v z == size_v x - size_v y))
 
+val size_mul (x y: size_t) : Pure size_t
+  (requires (size_precond (size_v x * size_v y)))
+  (ensures (fun z -> size_v z == size_v x * size_v y))
+
+val size_div (x y: size_t) : Pure size_t
+  (requires (size_v y > 0))
+  (ensures (fun z -> size_v z == size_v x / size_v y))
+
 let zero_size : (zero_size: size_t { size_v zero_size == 0 }) = mk_size_t 0ul
 
 let one_size : (zero_size: size_t { size_v zero_size == 1 }) = mk_size_t 1ul
 
-val ptrdiff_t : Type0
+inline_for_extraction noextract // TODO: replace with primitive extraction
+val ptrdiff_t : eqtype
 
 module I32 = FStar.Int32
 
