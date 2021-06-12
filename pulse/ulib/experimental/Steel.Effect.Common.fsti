@@ -667,6 +667,13 @@ let rec trivial_cancels (l1 l2:list atom) (am:amap term)
 exception Failed
 exception Success
 
+/// Helper to print the terms corresponding to the current list of atoms
+let rec print_atoms (l:list atom) (am:amap term) : Tac string =
+  match l with
+  | [] -> ""
+  | [hd] -> term_to_string (select hd am)
+  | hd::tl -> term_to_string (select hd am) ^ " * " ^ print_atoms tl am
+
 /// For a list of candidates l, count the number that can unify with t.
 /// Does not try to unify with a uvar, this will be done at the very end.
 /// Tries to unify with slprops with a different head symbol, it might
@@ -681,7 +688,7 @@ let rec try_candidates (t:atom) (l:list atom) (am:amap term) : Tac (atom * int) 
         let res = try if unify (select t am) (select hd am) then raise Success else raise Failed
                   with | Success -> true | _ -> false in
         let t', n' = try_candidates t tl am in
-        if res then hd, 1 + n'  else t', n'
+        if res && hd <> t' then hd, 1 + n'  else t', n'
 
 /// Remove the given term from the list. Only to be called when
 /// try_candidates succeeded
@@ -703,10 +710,39 @@ let rec equivalent_lists_once (l1 l2 l1_del l2_del:list atom) (am:amap term)
     if n = 1 then (
       let l2 = remove_from_list t l2 in
       equivalent_lists_once tl l2 (hd::l1_del) (t::l2_del) am
-    ) else
+    ) else (
       // Either too many candidates for this scrutinee, or no candidate but the uvar
       let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once tl l2 l1_del l2_del am in
       hd::rem1, rem2, l1'_del, l2'_del
+    )
+
+/// Check if two lists of slprops are equivalent by recursively calling
+/// try_candidates by iterating on l2.
+/// Assumes that only l2 contains terms with the head symbol unresolved.
+/// It returns all elements that were not resolved during this iteration *)
+/// This is very close to equivalent_lists_once above, but helps making progress
+/// when l1 contains syntactically equal candidates
+let rec equivalent_lists_once_l2 (l1 l2 l1_del l2_del:list atom) (am:amap term)
+  : Tac (list atom * list atom * list atom * list atom) =
+  match l2 with
+  | [] -> l1, [], l1_del, l2_del
+  | hd::tl ->
+    if is_uvar (select hd am) then
+      // We do not try to match the vprop uvar
+      let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once_l2 l1 tl l1_del l2_del am in
+      rem1, hd::rem2, l1'_del, l2'_del
+    else (
+      let t, n = try_candidates hd l1 am in
+      if n = 1 then (
+        let l1 = remove_from_list t l1 in
+        equivalent_lists_once_l2 l1 tl (t::l1_del) (hd::l2_del) am
+      ) else (
+        // Either too many candidates for this scrutinee, or no candidate but the uvar
+        let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once_l2 l1 tl l1_del l2_del am in
+        rem1, hd::rem2, l1'_del, l2'_del
+      )
+    )
+
 
 let get_head (l:list atom) (am:amap term) : term = match l with
   | [] -> `()
@@ -726,13 +762,6 @@ let rec try_unifying_remaining (l:list atom) (u:term) (am:amap term) : Tac unit 
       try if unify u (select hd am) then raise Success else raise Failed with
       | Success -> try_unifying_remaining tl u am
       | _ -> fail ("could not find candidate for scrutinee " ^ term_to_string (select hd am))
-
-/// Helper to print the terms corresponding to the current list of atoms
-let rec print_atoms (l:list atom) (am:amap term) : Tac string =
-  match l with
-  | [] -> ""
-  | [hd] -> term_to_string (select hd am)
-  | hd::tl -> term_to_string (select hd am) ^ " * " ^ print_atoms tl am
 
 /// Is SMT rewriting enabled for this binder
 let is_smt_binder (b:binder) : Tac bool =
@@ -850,14 +879,19 @@ let rec equivalent_lists' (n:nat) (use_smt:bool) (l1 l2 l1_del l2_del:list atom)
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
       if n' >= n then (
-        // Should always be smaller or equal to n
-        // If it is equal, no progress was made.
-        if use_smt then
-          // SMT fallback is allowed
-          let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
-          let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
-          l1_f, l2_f, b, uvar_terms
-        else fail_atoms rem1 rem2 am
+        // Try to make progress by matching non-uvars of l2 with candidates in l1
+        let rem1, rem2, l1_del', l2_del' = equivalent_lists_once_l2 rem1 rem2 l1_del' l2_del' am in
+        let n' = List.Tot.length rem1 in
+        if n' >= n then (
+          // Should always be smaller or equal to n
+          // If it is equal, no progress was made.
+          if use_smt then
+            // SMT fallback is allowed
+            let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
+            let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
+            l1_f, l2_f, b, uvar_terms
+          else fail_atoms rem1 rem2 am
+        ) else equivalent_lists' n' use_smt rem1 rem2 l1_del' l2_del' am
       ) else equivalent_lists' n' use_smt rem1 rem2 l1_del' l2_del' am
 
 /// Checks if term for atom t unifies with fall uvars in l
