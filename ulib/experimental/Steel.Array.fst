@@ -16,17 +16,23 @@
 
 module Steel.Array
 
-module P = Steel.Pointer
+let array_prop
+  (#t: Type)
+  (from: P.t t)
+  (to: Ghost.erased size_t)
+  (free_perm: perm)
+: Tot prop
+=
+   if P.g_is_null from
+   then size_v to == 0 /\ free_perm == full_perm // for unicity
+   else size_v (P.offset from) + size_v to <= size_v (P.base_array_len (P.base from)) == true
 
 noeq
 type array t = {
   from: P.t t;
   to: Ghost.erased size_t;
   free_perm: perm;
-  prf: squash (
-    if P.g_is_null from
-    then size_v to == 0 /\ free_perm == full_perm // for unicity
-    else size_v (P.offset from) + size_v to <= size_v (P.base_array_len (P.base from)));
+  prf: squash (array_prop from to free_perm);
 }
 
 let len a = Ghost.reveal a.to
@@ -285,3 +291,39 @@ let gather a p1 p2 =
   let r = P.gather a.from (range_of_array a p1) (range_of_array a p2) in
   intro_varrayp a.from _ a r.P.range_write_perm;
   r.P.range_write_perm
+
+let g_get_pointer a = a.from
+
+let get_range a p = range_of_array a p
+
+let get_pointer a p = return a.from
+
+let enter p r =
+  P.vptr_range_not_null p _;
+  let res = {
+    from = p;
+    to = int_to_size_t r.P.range_to;
+    free_perm = r.P.range_free_perm;
+    prf = ();
+  } in
+  intro_varrayp p _ res r.P.range_write_perm;
+  return res
+
+let exit' a p =
+  elim_varrayp a p
+
+let reveal r a p =
+  let sq : squash (array_prop r a.to a.free_perm) = () in
+  let res = {
+    from = r;
+    to = a.to;
+    free_perm = a.free_perm;
+    prf = sq;
+  } in
+  assert (Ghost.reveal a == res);
+  change_equal_slprop
+    (varrayp a p)
+    (varrayp res p);
+  return res
+
+let get_pointer_gsplit r i = ()

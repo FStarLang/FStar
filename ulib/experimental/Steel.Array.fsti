@@ -22,6 +22,8 @@ open Steel.Effect
 open FStar.Ghost
 open Steel.Effect.Atomic
 
+module P = Steel.Pointer
+
 /// A library for arrays in Steel, with fractional permissions.
 
 /// Abstract datatype for a Steel array of type [t]
@@ -335,3 +337,108 @@ val gather (#t:Type) (#uses:_) (a:array t) (p1 p2: perm)
              h' (varrayp a res) == h (varrayp a p2) /\
              res == p1 `sum_perm` p2
            )
+
+(* Entering (resp. exiting) abstraction from (resp. to) a pointer *)
+
+val g_get_pointer
+  (#t: Type)
+  (a: array t)
+: GTot (P.t t)
+
+val get_range
+  (#t: Type)
+  (a: array t)
+  (p: perm)
+: Tot P.range
+
+val get_pointer
+  (#opened: _)
+  (#t: Type)
+  (a: array t)
+  (p: perm)
+: SteelAtomic (P.t t) opened
+    (varrayp a p)
+    (fun _ -> varrayp a p)
+    (fun _ -> True)
+    (fun h res h' ->
+      h' (varrayp a p) == h (varrayp a p) /\
+      res == g_get_pointer a
+    )
+
+val enter
+  (#opened: _)
+  (#t: Type)
+  (p: P.t t)
+  (r: P.range)
+: SteelAtomic (array t) opened
+    (P.vptr_range p r)
+    (fun res -> varrayp res r.P.range_write_perm)
+    (fun _ -> r.P.range_from == 0)
+    (fun h res h' ->
+      (h' (varrayp res r.P.range_write_perm) <: Seq.seq t) == h (P.vptr_range p r) /\
+      g_get_pointer res == p /\
+      get_range res r.P.range_write_perm == r
+    )
+
+val exit'
+  (#opened: _)
+  (#t: Type)
+  (a: array t)
+  (p: perm)
+: SteelGhost unit opened
+    (varrayp a p)
+    (fun _ -> P.vptr_range (g_get_pointer a) (get_range a p))
+    (fun _ -> True)
+    (fun h res h' ->
+      (h' (P.vptr_range (g_get_pointer a) (get_range a p)) <: Seq.seq t) == h (varrayp a p)
+    )
+
+let exit
+  (#opened: _)
+  (#t: Type)
+  (a: array t)
+  (p: perm)
+  (ptr: P.t t)
+  (r: P.range)
+: SteelAtomic unit opened
+    (varrayp a p)
+    (fun _ -> P.vptr_range ptr r)
+    (fun _ ->
+      ptr == g_get_pointer a /\
+      r == get_range a p
+    )
+    (fun h _ h' ->
+      (h' (P.vptr_range ptr r) <: Seq.seq t) == h (varrayp a p)
+    )
+=
+  exit' a p;
+  change_equal_slprop
+    (P.vptr_range (g_get_pointer a) (get_range a p))
+    (P.vptr_range ptr r)
+
+(* The only non-ghost part in an array is its pointer. *)
+
+val reveal
+  (#opened: _)
+  (#t: Type)
+  (r: P.t t)
+  (a: Ghost.erased (array t))
+  (p: perm)
+: SteelAtomic (array t) opened
+    (varrayp a p)
+    (fun res -> varrayp res p)
+    (fun _ -> g_get_pointer a == r)
+    (fun h res h' ->
+      res == Ghost.reveal a /\
+      h' (varrayp res p) == h (varrayp a p)
+    )
+
+val get_pointer_gsplit
+  (#t: Type)
+  (r: array t)
+  (i: size_t)
+: Lemma
+  (requires (size_v i <= length r))
+  (ensures (
+    g_get_pointer (fst (gsplit r i)) == g_get_pointer r
+  ))

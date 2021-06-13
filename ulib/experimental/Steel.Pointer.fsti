@@ -156,7 +156,9 @@ val vptr_range_not_null
     (fun _ -> True)
     (fun h _ h' ->
       h' (vptr_range x r) == h (vptr_range x r) /\
-      g_is_null x == false
+      g_is_null x == false /\
+      r.range_from + size_v (offset x) >= 0 /\
+      r.range_to + size_v (offset x) <= size_v (base_array_len (base x))
     )
 
 let mk_range
