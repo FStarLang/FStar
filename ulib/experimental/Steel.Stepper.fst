@@ -166,18 +166,16 @@ let upd_even_f (n:even) : FStar.PCM.frame_preserving_upd p
                             (EvenWriteable n)
                             (Even (n + 2))
   = let f
-      : FStar.PCM.frame_preserving_upd_0 p (EvenWriteable n) (Even (n + 2))
+      : FStar.PCM.frame_preserving_upd p (EvenWriteable n) (Even (n + 2))
       = function
-        | EvenWriteable n -> Even (n + 2)
         | V n -> V (n + 1)
     in
     f
 
 let upd_odd_f (n:odd) : FStar.PCM.frame_preserving_upd p (OddWriteable n) (Odd (n + 2))
   = let f
-      : FStar.PCM.frame_preserving_upd_0 p (OddWriteable n) (Odd (n + 2))
+      : FStar.PCM.frame_preserving_upd p (OddWriteable n) (Odd (n + 2))
       = function
-        | OddWriteable n -> Odd (n + 2)
         | V n -> V (n + 1)
     in
     f
