@@ -175,3 +175,15 @@ let frame_preserving_val_to_fp_upd (#a:Type u#a) (p:pcm a)
   : frame_preserving_upd p x v
   = Classical.forall_intro (p.comm v);
     fun _ -> v
+
+let no_op_is_frame_preserving (#a:Type u#a) (p:pcm a)
+  (x:a)
+  : frame_preserving_upd p x x
+  = fun v -> v
+
+let compose_frame_preserving_updates (#a:Type u#a) (p:pcm a)
+  (x y z:a)
+  (f:frame_preserving_upd p x y)
+  (g:frame_preserving_upd p y z)
+  : frame_preserving_upd p x z
+  = fun v -> g (f v)
