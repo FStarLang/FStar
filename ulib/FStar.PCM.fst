@@ -158,39 +158,20 @@ let frame_compatible #a (p:pcm a) (x:FStar.Ghost.erased a) (v y:a) =
             composable p y frame /\
             v == op p y frame)
 
+type frame_preserving_upd (#a:Type u#a) (p:pcm a) (x y:a) =
+  v:a{
+    p.refine v /\
+    compatible p x v
+  } ->
+  v_new:a{
+    p.refine v_new /\
+    compatible p y v_new /\
+    (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
+       composable p y frame /\
+       (op p x frame == v ==> op p y frame == v_new))}
 
-(** A frame-preserving update set on a PCM p, specified in two
-    parts:
-
-    1. To update a share of a PCM from [x] to [y]:
-        - Given a full value [v] compatible with [x] (i.e. exists f. op p x f = v)
-
-        + Produce a value [z] compatible with [y] (i.e.,
-          the final heap satisfies [pts_to r y])
-
-          - if v is a refined value then so is z,
-            and respects the preorder of frame_preserving updates on refined values
-*)
-let frame_preserving_upd_0 #a (p:pcm a) (x y:a) =
-    v:a{compatible p x v}
-  -> Tot (z:a{
-            compatible p y z /\
-             (p.refine v ==> p.refine z) /\
-             (p.refine v ==> frame_preserving p v z)})
-
-(** Further, the update respects PCM frames:
-
-    For any [frame] composable with the value [v] being updated,
-    [f] only updates the [v] part of [op p v frame] to [z], obtaining
-    [op p z frame]
- *)
-let frame_preserving_upd #a (p:pcm a) (x y:a) =
-  f:frame_preserving_upd_0 p x y {
-     forall (v:a{compatible p x v}).
-         let z = f v in
-         (forall (frame:a). {:pattern (composable p v frame)}
-              composable p v frame ==>
-              composable p z frame /\
-              (compatible p x (op p v frame) ==>
-              (op p z frame == f (op p v frame))))
-  }
+let frame_preserving_val_to_fp_upd (#a:Type u#a) (p:pcm a)
+  (x:Ghost.erased a) (v:a{frame_preserving p x v /\ p.refine v})
+  : frame_preserving_upd p x v
+  = Classical.forall_intro (p.comm v);
+    fun _ -> v
