@@ -30,16 +30,23 @@ open FStar.Preorder
   PCM [p] induces the preorder [q] if for any frame preserving update of [x] to [y] and
   every element [z] compatible with [x], then [z] is before [y] in the preorder.
 *)
-let induces_preorder (#a: Type u#a) (p:pcm a) (q:preorder a) =
-  forall (x y:a). frame_preserving p x y
-         ==> (forall (z:a). compatible p x z ==> q z y)
+let induces_preorder (#a:Type u#a) (p:pcm a) (q:preorder a) =
+  forall (x y:a) (f:frame_preserving_upd p x y) (v:a).
+    p.refine v ==> compatible p x v ==> q v (f v)
+
 
 (**
   We can define a canonical preorder from any PCM by taking the quantified conjunction over all the
   preorders [q] induced by this PCM.
 *)
-let preorder_of_pcm (#a: Type u#a) (p:pcm a) : preorder a =
+let preorder_of_pcm (#a:Type u#a) (p:pcm a) : preorder a =
   fun x y -> forall (q:preorder a). induces_preorder p q ==> q x y
+
+let frame_preserving_upd_is_preorder_preserving (#a:Type u#a) (p:pcm a)
+  (x y:a) (f:frame_preserving_upd p x y)
+  (v_old:a{p.refine v_old /\ compatible p x v_old})
+  : Lemma ((preorder_of_pcm p) v_old (f v_old))
+  = ()
 
 (**
   This canonical preorder enjoys the nice property that it preserves fact stability of any
@@ -53,21 +60,21 @@ let stability (#a: Type u#a) (fact:a -> prop) (q:preorder a) (p:pcm a)
   = ()
 
 (** Also, every frame-preserving update to the element of the PCM respects the canonical PCM *)
-let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
-  : Lemma (requires frame_preserving p x y)
-          (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
-  = ()
+// let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
+//   : Lemma (requires frame_preserving p x y)
+//           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
+//   = ()
 
-let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
-  : Lemma
-    (requires
-      stable fact (preorder_of_pcm p) /\
-      fact v0 /\
-      frame_preserving p v v1 /\
-      compatible p v v0)
-    (ensures
-      fact v1)
-  = assert (preorder_of_pcm p v0 v1)
+// let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
+//   : Lemma
+//     (requires
+//       stable fact (preorder_of_pcm p) /\
+//       fact v0 /\
+//       frame_preserving p v v1 /\
+//       compatible p v v0)
+//     (ensures
+//       fact v1)
+//   = assert (preorder_of_pcm p v0 v1)
 
 
 
@@ -76,9 +83,9 @@ let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
 (***** Building the preorder *)
 
 (**
-  This predicate tells that the list [l] can represent a trace of elements whose evolution is
-  compatible with the preorder [q]
-*)
+//   This predicate tells that the list [l] can represent a trace of elements whose evolution is
+//   compatible with the preorder [q]
+// *)
 let rec qhistory #a (q:preorder a) (l:list a) =
   match l with
   | []
@@ -115,9 +122,9 @@ let rec extends_length_eq (#a: Type u#a) (#q:preorder a) (h0 h1:hist q)
     | hd::tl -> extends_length_eq tl h1
 
 (**
-  We build our relation of composability for traces by reflexing the extension to ensure
-  symmetry
-*)
+//   We build our relation of composability for traces by reflexing the extension to ensure
+//   symmetry
+// *)
 let p_composable (#a: Type u#a) (q:preorder a) : symrel (hist q) =
     fun x y -> extends x y \/ extends y x
 
@@ -199,10 +206,10 @@ let pcm_of_preorder (#a: Type u#a) (q:preorder a) : pcm (hist q) = {
 (***** Using the preorder *)
 
 (**
-  We check that the preorder derived from the PCM derived from the preorder
-  satisfies the same properties as the original preorder. Here, we get back history
-  extension from frame-preserving updates.
-*)
+//   We check that the preorder derived from the PCM derived from the preorder
+//   satisfies the same properties as the original preorder. Here, we get back history
+//   extension from frame-preserving updates.
+// *)
 let frame_preserving_q_aux (#a : Type u#a) (q:preorder a) (x y:hist q) (z:hist q)
   : Lemma (requires (frame_preserving (pcm_of_preorder q) x y /\ compatible (pcm_of_preorder q) x z))
           (ensures (y `extends` z))
@@ -215,10 +222,10 @@ let vhist (#a: Type u#a) (q:preorder a) = h:hist q{Cons? h}
 let curval (#a: Type u#a) (#q:preorder a) (v:vhist q) = Cons?.hd v
 
 (**
-  Given a frame-preserving update from [x] to [y]
-  for any value of resource [z] (compatible with [x])
-  the new value [y] advances the history [z] in a preorder respecting manner
-*)
+//   Given a frame-preserving update from [x] to [y]
+//   for any value of resource [z] (compatible with [x])
+//   the new value [y] advances the history [z] in a preorder respecting manner
+// *)
 let frame_preserving_q (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
@@ -245,7 +252,7 @@ let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
 
 let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
   : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
-  = ()
+  = admit ()
 
 let extend_history (#a:Type u#a) (#q:preorder a) (h0:vhist q) (v:a{q (curval h0) v})
   : h1:vhist q{h1 `extends` h0}
