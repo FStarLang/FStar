@@ -124,7 +124,7 @@ let upd_fst #a #b p q x y x' f (va, vb) =
   let wa = f va in
   let pq = tuple_pcm p q in
   compatible_tuple_l p q x' wa y vb;
-  let lemma (frame: (a & b) {composable pq (x, y) frame}):
+  let aux (frame: (a & b) {composable pq (x, y) frame}):
     Lemma (composable pq (x', y) frame /\
            (op pq (x, y) frame == (va, vb) ==> op pq (x', y) frame == (wa, vb)))
     [SMTPat (composable pq (x, y) frame)] = ()
@@ -148,23 +148,23 @@ let opt_pcm #a = {
   refine = (fun _ -> True);
 }
 
-/// We can generalize to 'a-ary products (z:'a -> f z), given a PCM for each z:
+/// We can generalize to 'a-ary products (k:'a -> f k), given a PCM for each k:
 
 open FStar.FunctionalExtensionality
 
 val prod_comp :
-  #f:('a -> Type) -> (z:'a -> pcm (f z)) ->
+  #f:('a -> Type) -> (k:'a -> pcm (f k)) ->
   restricted_t 'a f -> restricted_t 'a f -> prop
-let prod_comp p x y = forall z. composable (p z) (x z) (y z)
+let prod_comp p x y = forall k. composable (p k) (x k) (y k)
 
 val prod_op :
-  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) -> 
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) -> 
   x:restricted_t 'a f -> y: restricted_t 'a f {prod_comp p x y} -> 
   restricted_t 'a f
-let prod_op #a p x y = on_domain a (fun z -> op (p z) (x z) (y z))
+let prod_op #a p x y = on_domain a (fun k -> op (p k) (x k) (y k))
 
-val prod_one : #f:('a -> Type) -> (z:'a -> pcm (f z)) -> restricted_t 'a f
-let prod_one #a p = on_domain a (fun z -> (p z).p.one)
+val prod_one : #f:('a -> Type) -> (k:'a -> pcm (f k)) -> restricted_t 'a f
+let prod_one #a p = on_domain a (fun k -> (p k).p.one)
 
 val ext :
   #b: ('a -> Type) -> f: restricted_t 'a b -> g: restricted_t 'a b -> 
@@ -175,62 +175,62 @@ let ext #a #b f g fg =
   forall_intro fg
 
 val prod_comm :
-  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
   x:restricted_t 'a f ->
   y:restricted_t 'a f {prod_comp p x y} ->
   Lemma (prod_op p x y == prod_op p y x)
 let prod_comm p x y =
-  ext (prod_op p x y) (prod_op p y x) (fun z -> (p z).comm (x z) (y z))
+  ext (prod_op p x y) (prod_op p y x) (fun k -> (p k).comm (x k) (y k))
 
 val prod_assoc :
-  #f:('a -> Type) -> p:(w:'a -> pcm (f w)) ->
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
   x:restricted_t 'a f -> y:restricted_t 'a f ->
   z:restricted_t 'a f {prod_comp p y z /\ prod_comp p x (prod_op p y z)} ->
   Lemma (prod_comp p x y /\
          prod_comp p (prod_op p x y) z /\
          prod_op p x (prod_op p y z) == prod_op p (prod_op p x y) z)
 let prod_assoc p x y z =
-  let aux w :
-    Lemma (composable (p w) (x w) (y w) /\
-           composable (p w) (op (p w) (x w) (y w)) (z w)) 
-    [SMTPat (p w)] = (p w).assoc (x w) (y w) (z w)
+  let aux k :
+    Lemma (composable (p k) (x k) (y k) /\
+           composable (p k) (op (p k) (x k) (y k)) (z k)) 
+    [SMTPat (p k)] = (p k).assoc (x k) (y k) (z k)
   in
   ext (prod_op p x (prod_op p y z)) (prod_op p (prod_op p x y) z)
-    (fun w -> (p w).assoc (x w) (y w) (z w))
+    (fun k -> (p k).assoc (x k) (y k) (z k))
 
 val prod_assoc_r :
-  #f:('a -> Type) -> p:(w:'a -> pcm (f w)) ->
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
   x:restricted_t 'a f -> y:restricted_t 'a f ->
   z:restricted_t 'a f {prod_comp p x y /\ prod_comp p (prod_op p x y) z} ->
   Lemma (prod_comp p y z /\
          prod_comp p x (prod_op p y z) /\
          prod_op p x (prod_op p y z) == prod_op p (prod_op p x y) z)
 let prod_assoc_r #a p x y z =
-  let aux w : 
-    Lemma (composable (p w) (y w) (z w) /\
-           composable (p w) (x w) (op (p w) (y w) (z w)))
-    [SMTPat (p w)] = (p w).assoc_r (x w) (y w) (z w)
+  let aux k : 
+    Lemma (composable (p k) (y k) (z k) /\
+           composable (p k) (x k) (op (p k) (y k) (z k)))
+    [SMTPat (p k)] = (p k).assoc_r (x k) (y k) (z k)
   in
   ext (prod_op p x (prod_op p y z)) (prod_op p (prod_op p x y) z)
-    (fun w -> (p w).assoc (x w) (y w) (z w))
+    (fun k -> (p k).assoc (x k) (y k) (z k))
 
 val prod_is_unit :
-  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
   x:restricted_t 'a f ->
   Lemma (prod_comp p x (prod_one p) /\
          prod_op p x (prod_one p) == x)
 let prod_is_unit #a p x =
-  let is_unit y :
-    Lemma (composable (p y) (x y) (prod_one p y))
-    [SMTPat (p y)] = (p y).is_unit (x y)
-  in ext (prod_op p x (prod_one p)) x (fun y -> (p y).is_unit (x y))
+  let is_unit k :
+    Lemma (composable (p k) (x k) (prod_one p k))
+    [SMTPat (p k)] = (p k).is_unit (x k)
+  in ext (prod_op p x (prod_one p)) x (fun k -> (p k).is_unit (x k))
 
 val prod_refine :
-  #f:('a -> Type) -> (y:'a -> pcm (f y)) ->
+  #f:('a -> Type) -> (k:'a -> pcm (f k)) ->
   x: restricted_t 'a f -> prop
-let prod_refine p x = forall y. (p y).refine (x y)
+let prod_refine p x = forall k. (p k).refine (x k)
 
-val prod_pcm : #f:('a -> Type) -> (z:'a -> pcm (f z)) -> pcm (restricted_t 'a f)
+val prod_pcm : #f:('a -> Type) -> (k:'a -> pcm (f k)) -> pcm (restricted_t 'a f)
 let prod_pcm #a #f p = {
   p = {composable = prod_comp p; op = prod_op p; one = prod_one p};
   comm = prod_comm p;
@@ -239,6 +239,19 @@ let prod_pcm #a #f p = {
   is_unit = prod_is_unit p;
   refine = prod_refine p
 }
+
+/// Now, we can define frame-preserving updates of all components at once:
+
+val update :
+  #a:eqtype -> #f:(a -> Type) -> k:a -> x': f k ->
+  restricted_t a f -> restricted_t a f
+let update #a k x' f = on_domain a (fun k' -> if k = k' then x' else f k')
+
+val prod_upd :
+  #a:eqtype -> #f:(a -> Type) -> p:(k:a -> pcm (f k)) ->
+  k:a -> xs: restricted_t a f -> x: f k -> x': f k ->
+  frame_preserving_upd (p k) x x' ->
+  frame_preserving_upd (prod_pcm p) xs (update k x' xs)
 
 /// Similarly, given a PCM for each z:a, we can model a-ary unions with an PCM for option (x:a & f x), where
 /// - None is the unit of the PCM
