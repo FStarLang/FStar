@@ -352,9 +352,6 @@ let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
       (elim_star (pts_to_sl pt full_perm x) (tree_sl' (get_left x) l)));
     Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
 
-module T = FStar.Tactics
-
-// AF: TODO: VCs do not seem to be normalized before being passed to SMT.
 let unpack_tree_node (#a:Type0) (ptr:t a)
   : Steel (node a)
              (tree_node ptr)
@@ -365,8 +362,7 @@ let unpack_tree_node (#a:Type0) (ptr:t a)
                sel ptr h1 == n /\
                v_node ptr h0 == Spec.Node (sel ptr h1)
                  (v_node (get_left n) h1) (v_node (get_right n) h1))
-  by (T.norm normal_steps) =
-  let t = gget (tree_node ptr) in
+  = let t = gget (tree_node ptr) in
   reveal_non_empty_tree ptr;
   let gn = head t in
   change_slprop
@@ -382,7 +378,6 @@ let unpack_tree_node (#a:Type0) (ptr:t a)
 
   return n
 
-// AF: TODO: Same as above
 let unpack_tree (#a: Type0) (ptr: t a)
     : Steel (node a)
       (linked_tree ptr)
@@ -396,8 +391,7 @@ let unpack_tree (#a: Type0) (ptr: t a)
           (v_linked_tree (get_right node) h1) /\
         (sel ptr h1) == node
       ))
-    by (T.norm normal_steps) =
-  let h = get() in
+  = let h = get() in
   change_slprop_rel (linked_tree ptr) (tree_node ptr) (fun x y -> x == tree_view y) (fun _ -> ());
   let h0 = get () in
   assert (v_linked_tree ptr h == tree_view (v_node ptr h0));
