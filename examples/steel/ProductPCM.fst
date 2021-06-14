@@ -243,19 +243,19 @@ let prod_pcm #a #f p = {
 
 /// Now, we can define frame-preserving updates for all fields at once:
 
-val update :
+val fun_upd :
   #a:eqtype -> #f:(a -> Type) -> k:a -> x': f k ->
   restricted_t a f -> restricted_t a f
-let update #a k x' f = on_domain a (fun k' -> if k = k' then x' else f k')
+let fun_upd #a k x' f = on_domain a (fun k' -> if k = k' then x' else f k')
 
 val prod_upd :
   #a:eqtype -> #f:(a -> Type) -> p:(k:a -> pcm (f k)) ->
   k:a -> xs: restricted_t a f -> y: f k ->
   frame_preserving_upd (p k) (xs k) y ->
-  frame_preserving_upd (prod_pcm p) xs (update k y xs)
+  frame_preserving_upd (prod_pcm p) xs (fun_upd k y xs)
 let prod_upd #a #f_ty p k xs y f vs =
   let ws_k = f (vs k) in
-  let ws = update k ws_k vs in
+  let ws = fun_upd k ws_k vs in
   let aux (frame: _{composable (prod_pcm p) xs frame}) :
     Lemma
       // TODO unclear why it works to hoist this assumption,
@@ -263,44 +263,44 @@ let prod_upd #a #f_ty p k xs y f vs =
       // but this only proves (forall .., Q ==> P /\ R)
       (requires op (prod_pcm p) xs frame == vs)
       (ensures
-         composable (prod_pcm p) (update k y xs) frame /\
-         op (prod_pcm p) (update k y xs) frame == ws)
+         composable (prod_pcm p) (fun_upd k y xs) frame /\
+         op (prod_pcm p) (fun_upd k y xs) frame == ws)
     [SMTPat (composable (prod_pcm p) xs frame)]
-  = assert (composable (prod_pcm p) (update k y xs) frame);
-    ext (op (prod_pcm p) (update k y xs) frame) ws (fun k' -> ())
+  = assert (composable (prod_pcm p) (fun_upd k y xs) frame);
+    ext (op (prod_pcm p) (fun_upd k y xs) frame) ws (fun k' -> ())
   in
   let compat_ws_k : squash (compatible (p k) y ws_k) = () in
   let compat_vs : squash (compatible (prod_pcm p) xs vs) = () in
-  let compat_ws_ty = squash (compatible (prod_pcm p) (update k y xs) ws) in
+  let compat_ws_ty = squash (compatible (prod_pcm p) (fun_upd k y xs) ws) in
   exists_elim compat_ws_ty compat_ws_k (fun frame_k ->
   exists_elim compat_ws_ty compat_vs (fun frame_rest ->
-  let frame = update k frame_k frame_rest in
-  ext (op (prod_pcm p) frame (update k y xs)) ws (fun k' -> ())));
+  let frame = fun_upd k frame_k frame_rest in
+  ext (op (prod_pcm p) frame (fun_upd k y xs)) ws (fun k' -> ())));
   ws
 
 /// Similarly, given a PCM for each z:a, we can model a-ary unions with an PCM for option (x:a & f x), where
 /// - None is the unit of the PCM
 /// - Some (x, y) is a union with tag x and content y
 
-let union (a:Type) (f:a -> Type) (p:(x:a -> pcm (f x))) = option (x:a & f x)
+let union (#f:'a -> Type) (p:(x:'a -> pcm (f x))) = option (x:'a & f x)
 
 val union_comp :
-  f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
-  symrel (union 'a f p)
-let union_comp f p x y = match x, y with
+  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
+  symrel (union p)
+let union_comp p x y = match x, y with
   | None, z | z, None -> True
   | Some (|xa, xb|), Some (|ya, yb|) -> xa == ya /\ composable (p xa) xb yb
 
 val union_op :
-  f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
-  x:union 'a f p -> y:union 'a f p {union_comp f p x y} -> union 'a f p
-let union_op f p x y = match x, y with
+  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
+  x:union p -> y:union p {union_comp p x y} -> union p
+let union_op p x y = match x, y with
   | None, z | z, None -> z
   | Some (|xa, xb|), Some (|ya, yb|) -> Some (|xa, (p xa).p.op xb yb|)
 
-val union_pcm : f:('a -> Type) -> p:(x: 'a -> pcm (f x)) -> pcm (union 'a f p)
-let union_pcm #a f p = FStar.PCM.({
-  p = {composable = union_comp f p; op = union_op f p; one = None};
+val union_pcm : #f:('a -> Type) -> p:(x: 'a -> pcm (f x)) -> pcm (union p)
+let union_pcm p = {
+  p = {composable = union_comp p; op = union_op p; one = None};
   comm = (fun x y -> match x, y with
     | None, _ | _, None -> ()
     | Some (|xa, xb|), Some (|ya, yb|) -> (p xa).comm xb yb);
@@ -312,7 +312,8 @@ let union_pcm #a f p = FStar.PCM.({
     | Some (|xa, xb|), Some (|ya, yb|), Some (|za, zb|) -> (p xa).assoc_r xb yb zb);
   is_unit = (fun _ -> ());
   refine = (fun x -> match x with None -> True | Some (|xa, xb|) -> (p xa).refine xb)
-})
+}
+
 
 (*
 // TODO
