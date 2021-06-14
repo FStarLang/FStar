@@ -221,12 +221,21 @@ let adjacent r1 r2 =
     size_v (P.offset r1.from) + size_v r1.to == size_v (P.offset r2.from)
   end
 
-let merge r1 r2 = {
+val pure_merge
+  (#t: Type)
+  (r1 r2: array t)
+: Pure (array t)
+  (requires (adjacent r1 r2))
+  (ensures (fun r -> length r == length r1 + length r2))
+
+let pure_merge r1 r2 = {
   from = r1.from;
   to = r1.to `size_add` r2.to;
   free_perm = if g_is_null r1 then r1.free_perm else r1.free_perm `sum_perm` r2.free_perm;
   prf = ();
 }
+
+let merge r1 r2 = pure_merge r1 r2
 
 let merge_assoc r1 r2 r3 = ()
 
@@ -248,14 +257,24 @@ let gsplit r i =
   } in
   (rl, rr)
 
-#set-options "--ide_id_info_off"
-
-let splitp a p i =
+let split' a p i =
+  varrayp_not_null a p;
   elim_varrayp a _;
-  let pr_from = P.add a.from _ i in
+  let pr_from = P.g_add a.from i in
   let _ = P.move a.from pr_from _ in
   let tmp = P.split pr_from _ in
   let _ = P.move pr_from a.from (P.GPair?.fst _) in
+  let res' = gsplit a i in
+  let fres = fst res' in
+  let sres = snd res' in
+  let res = P.GPair fres sres in
+  intro_varrayp a.from _ (P.GPair?.fst res) p;
+  intro_varrayp pr_from _ (P.GPair?.snd res) p;
+  res
+
+let splitc a p i =
+  elim_varrayp a _;
+  let pr_from = P.add a.from _ i in
   let res = ({
     from = a.from;
     to = i;
@@ -267,21 +286,25 @@ let splitp a p i =
     free_perm = half_perm a.free_perm;
     prf = ();
   }) in
-  intro_varrayp a.from _ (fst res) p;
-  intro_varrayp pr_from _ (snd res) p;
+  intro_varrayp a.from _ a _;
   return res
 
-let joinp al ar p =
+let join' al ar p =
   elim_varrayp al _;
   elim_varrayp ar _;
   let _ = P.merge_left al.from ar.from _ _ in
-  let res = {
-    from = al.from;
-    to = al.to `size_add` ar.to;
-    free_perm = al.free_perm `sum_perm` ar.free_perm;
-    prf = ();
-  } in
+  let res = Ghost.hide (merge al ar) in
   intro_varrayp al.from _ res p;
+  res
+
+let joinc al ar p =
+  varrayp_not_null al _;
+  varrayp_not_null ar _;
+  elim_varrayp al _;
+  elim_varrayp ar _;
+  let res = pure_merge al ar in
+  intro_varrayp al.from _ al _;
+  intro_varrayp ar.from _ ar _;
   return res
 
 let freeable a =

@@ -22,6 +22,8 @@ open Steel.Effect
 open FStar.Ghost
 open Steel.Effect.Atomic
 
+#set-options "--ide_id_info_off"
+
 module P = Steel.Pointer
 
 /// A library for arrays in Steel, with fractional permissions.
@@ -211,7 +213,36 @@ val gsplit
     length rl == size_v i
   ))
 
-val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
+val split' (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
+  : SteelGhost (array t `P.gpair` array t) opened
+          (varrayp a p)
+          (fun res -> varrayp (P.GPair?.fst res) p `star` varrayp (P.GPair?.snd res) p)
+          (fun _ -> size_v i <= length a)
+          (fun h res h' ->
+            let s = h (varrayp a p) in
+            let sl = h' (varrayp (P.GPair?.fst res) p) in
+            let sr = h' (varrayp (P.GPair?.snd res) p) in
+            size_v i <= length a /\
+            P.GPair?.fst res == fst (gsplit a i) /\
+            P.GPair?.snd res == snd (gsplit a i) /\
+            sl == Seq.slice s 0 (size_v i) /\
+            sr == Seq.slice s (size_v i) (length a) /\
+            s == sl `Seq.append` sr
+          )
+
+val splitc (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
+  : SteelAtomicBase (array t & array t) false opened Unobservable
+          (varrayp a p)
+          (fun _ -> varrayp a p)
+          (fun _ -> size_v i <= length a)
+          (fun h res h' ->
+            h' (varrayp a p) == h (varrayp a p) /\
+            size_v i <= length a /\
+            res == gsplit a i
+          )
+
+inline_for_extraction
+let splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
   : SteelAtomicBase (array t & array t) false opened Unobservable
           (varrayp a p)
           (fun res -> varrayp (fst res) p `star` varrayp (snd res) p)
@@ -226,6 +257,16 @@ val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
             sr == Seq.slice s (size_v i) (length a) /\
             s == sl `Seq.append` sr
           )
+=
+  let res = splitc a p i in
+  let gres = split' a p i in
+  change_equal_slprop
+    (varrayp (P.GPair?.fst gres) p)
+    (varrayp (fst res) p);
+  change_equal_slprop
+    (varrayp (P.GPair?.snd gres) p)
+    (varrayp (snd res) p);
+  return res
 
 inline_for_extraction
 let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
@@ -246,7 +287,32 @@ let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
 =
   splitp _ _ i
 
-val joinp (#opened: _) (#t:Type) (al ar:array t)
+val join' (#opened: _) (#t:Type) (al ar:array t)
+  (p: perm)
+  : SteelGhost (Ghost.erased (array t)) opened
+          (varrayp al p `star` varrayp ar p)
+          (fun a -> varrayp a p)
+          (fun _ -> adjacent al ar)
+          (fun h a h' ->
+            let s = h' (varrayp a p) in
+            s == (h (varrayp al p) `Seq.append` h (varrayp ar p)) /\
+            merge_into al ar a
+          )
+
+val joinc (#opened: _) (#t:Type) (al ar:array t)
+  (p: perm)
+  : SteelAtomicBase (array t) false opened Unobservable
+          (varrayp al p `star` varrayp ar p)
+          (fun a -> varrayp al p `star` varrayp ar p)
+          (fun _ -> adjacent al ar)
+          (fun h a h' ->
+            h' (varrayp al p) == h (varrayp al p) /\
+            h' (varrayp ar p) == h (varrayp ar p) /\
+            merge_into al ar a
+          )
+
+inline_for_extraction
+let joinp (#opened: _) (#t:Type) (al ar:array t)
   (p: perm)
   : SteelAtomicBase (array t) false opened Unobservable
           (varrayp al p `star` varrayp ar p)
@@ -257,6 +323,13 @@ val joinp (#opened: _) (#t:Type) (al ar:array t)
             s == (h (varrayp al p) `Seq.append` h (varrayp ar p)) /\
             merge_into al ar a
           )
+=
+  let a = joinc al ar p in
+  let ga = join' al ar p in
+  change_equal_slprop
+    (varrayp ga p)
+    (varrayp a p);
+  return a
 
 inline_for_extraction
 let join (#opened: _) (#t:Type) (al ar:array t)
