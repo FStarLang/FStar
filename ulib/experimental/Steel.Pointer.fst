@@ -277,10 +277,106 @@ let vptr_range_not_null
   let res = elim_vptr_range x r in
   intro_vptr_range x r res.e_alloc_unit res.e_alloc_unit_perm res.e_array r.range_write_perm
 
+let vptr_range_or_null1
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: Tot vprop
+= if g_is_null x then emp else vptr_range x r
+
+let vptr_range_or_null_rewrite
+  (#a: Type)
+  (x: t a)
+  (r: range)
+  (s: t_of (vptr_range_or_null1 x r))
+: GTot (option (Seq.lseq a (r.range_to - r.range_from)))
+= if g_is_null x
+  then None
+  else Some s
+
+let vptr_range_or_null0
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: Tot vprop
+= vptr_range_or_null1 x r `vrewrite` vptr_range_or_null_rewrite x r
+
+let slptr_range_or_null x r =
+  hp_of (vptr_range_or_null0 x r)
+
+let ptr_or_null_select x r =
+  fun h -> sel_of (vptr_range_or_null0 x r) h
+
 let is_null
   x r
 =
   return (None? x)
+
+let intro_vptr_range_or_null_none x r =
+  assert (g_is_null x == true);
+  change_equal_slprop
+    emp
+    (vptr_range_or_null1 x r);
+  intro_vrewrite (vptr_range_or_null1 x r) (vptr_range_or_null_rewrite x r);
+  change_slprop_rel
+    (vptr_range_or_null0 x r)
+    (vptr_range_or_null x r)
+    (fun u v -> u == v)
+    (fun _ -> ())
+
+let intro_vptr_range_or_null_some x r =
+  vptr_range_not_null x r;
+  change_equal_slprop
+    (vptr_range x r)
+    (vptr_range_or_null1 x r);
+  intro_vrewrite (vptr_range_or_null1 x r) (vptr_range_or_null_rewrite x r);
+  change_slprop_rel
+    (vptr_range_or_null0 x r)
+    (vptr_range_or_null x r)
+    (fun u v -> u == v)
+    (fun _ -> ())
+
+let assert_null x r =
+  change_slprop_rel
+    (vptr_range_or_null x r)
+    (vptr_range_or_null0 x r)
+    (fun u v -> u == v)
+    (fun _ -> ());
+  elim_vrewrite (vptr_range_or_null1 x r) (vptr_range_or_null_rewrite x r);
+  if g_is_null x
+  then begin
+    change_equal_slprop
+      (vptr_range_or_null1 x r)
+      emp
+  end else begin
+    assert False;
+    change_slprop_rel
+      (vptr_range_or_null1 x r)
+      emp
+      (fun _ _ -> False)
+      (fun _ -> ())
+  end
+
+let assert_not_null x r =
+  change_slprop_rel
+    (vptr_range_or_null x r)
+    (vptr_range_or_null0 x r)
+    (fun u v -> u == v)
+    (fun _ -> ());
+  elim_vrewrite (vptr_range_or_null1 x r) (vptr_range_or_null_rewrite x r);
+  if g_is_null x
+  then begin
+    assert False;
+    change_slprop_rel
+      (vptr_range_or_null1 x r)
+      (vptr_range x r)
+      (fun _ _ -> False)
+      (fun _ -> ())
+  end else begin
+    change_equal_slprop
+      (vptr_range_or_null1 x r)
+      (vptr_range x r)
+  end
 
 let calloc
   x len
@@ -296,9 +392,7 @@ let calloc
     prf = prf;
   }) in
   intro_vptr_range res (calloc_range len) u _ base _;
-  change_equal_slprop
-    (vptr_range res (calloc_range len))
-    (vptr_range_or_null res (calloc_range len));
+  intro_vptr_range_or_null_some res _;
   return res
 
 #restart-solver

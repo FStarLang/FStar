@@ -89,15 +89,25 @@ val varrayp_not_null
       h' (varrayp a p) == h (varrayp a p)
     )
 
-let varrayp_or_null (#t: Type) (a: array t) (p: perm) : Tot vprop =
-  if g_is_null a then emp else varrayp a p
+val is_array_or_null (#a:Type0) (r:array a) (p: perm) : slprop u#1
+
+val array_or_null_sel (#a:Type0) (r:array a) (p: perm) : selector (option (Seq.lseq a (length r))) (is_array_or_null r p)
+
+[@@ __steel_reduce__]
+let varrayp_or_null' #a r p : vprop' =
+  {hp = is_array_or_null r p;
+   t = option (Seq.lseq a (length r));
+   sel = array_or_null_sel r p}
+
+[@@ __steel_reduce__]
+let varrayp_or_null (#t: Type) (a: array t) (p: perm) : Tot vprop = VUnit (varrayp_or_null' a p)
 
 val is_null
   (#opened: _)
   (#a: Type)
   (x: array a)
   (r: perm)
-: SteelAtomic bool opened
+: SteelAtomicBase bool true opened Unobservable
     (varrayp_or_null x r)
     (fun _ -> varrayp_or_null x r)
     (fun _ -> True)
@@ -106,7 +116,28 @@ val is_null
       res == g_is_null x
     )
 
-let assert_null
+val intro_varrayp_or_null_none
+  (#opened: _)
+  (#t: Type) (a: array t) (p: perm)
+: SteelGhost unit opened
+    emp
+    (fun _ -> varrayp_or_null a p)
+    (fun _ -> g_is_null a == true)
+    (fun _ _ h' -> h' (varrayp_or_null a p) == None)
+
+val intro_varrayp_or_null_some
+  (#opened: _)
+  (#t: Type) (a: array t) (p: perm)
+: SteelGhost unit opened
+    (varrayp a p)
+    (fun _ -> varrayp_or_null a p)
+    (fun _ -> True)
+    (fun h _ h' ->
+      g_is_null a == false /\
+      h' (varrayp_or_null a p) == Some (h (varrayp a p))
+    )
+
+val assert_null
   (#opened: _)
   (#a: Type)
   (x: array a)
@@ -114,14 +145,10 @@ let assert_null
 : SteelGhost unit opened
     (varrayp_or_null x r)
     (fun _ -> emp)
-    (fun _ -> g_is_null x == true)
-    (fun _ _ _ -> True)
-=
-  change_equal_slprop
-    (varrayp_or_null x r)
-    emp
+    (fun h -> g_is_null x == true \/ None? (h (varrayp_or_null x r)))
+    (fun h _ _ -> g_is_null x == true /\ None? (h (varrayp_or_null x r)))
 
-let assert_not_null
+val assert_not_null
   (#opened: _)
   (#a: Type)
   (x: array a)
@@ -129,16 +156,11 @@ let assert_not_null
 : SteelGhost unit opened
     (varrayp_or_null x r)
     (fun _ -> varrayp x r)
-    (fun _ -> g_is_null x == false)
+    (fun h -> g_is_null x == false \/ Some? (h (varrayp_or_null x r)))
     (fun h _ h' ->
       g_is_null x == false /\
-      h' (varrayp x r) == h (varrayp_or_null x r)
+      h (varrayp_or_null x r) == Some (h' (varrayp x r))
     )
-=
-  assert (g_is_null x == false);
-  change_equal_slprop
-    (varrayp_or_null x r)
-    (varrayp x r)
 
 
 /// Splitting an array into subarrays
@@ -190,7 +212,7 @@ val gsplit
   ))
 
 val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
-  : SteelAtomic (array t & array t) opened
+  : SteelAtomicBase (array t & array t) true opened Unobservable
           (varrayp a p)
           (fun res -> varrayp (fst res) p `star` varrayp (snd res) p)
           (fun _ -> size_v i <= length a)
@@ -207,7 +229,7 @@ val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
 
 inline_for_extraction
 let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
-  : SteelAtomic (array t & array t) opened
+  : SteelAtomicBase (array t & array t) true opened Unobservable
           (varray a)
           (fun res -> varray (fst res) `star` varray (snd res))
           (fun _ -> size_v i <= length a)
@@ -226,7 +248,7 @@ let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
 
 val joinp (#opened: _) (#t:Type) (al ar:array t)
   (p: perm)
-  : SteelAtomic (array t) opened
+  : SteelAtomicBase (array t) true opened Unobservable
           (varrayp al p `star` varrayp ar p)
           (fun a -> varrayp a p)
           (fun _ -> adjacent al ar)
@@ -238,7 +260,7 @@ val joinp (#opened: _) (#t:Type) (al ar:array t)
 
 inline_for_extraction
 let join (#opened: _) (#t:Type) (al ar:array t)
-  : SteelAtomic (array t) opened
+  : SteelAtomicBase (array t) true opened Unobservable
           (varray al `star` varray ar)
           (fun a -> varray a)
           (fun _ -> adjacent al ar)
@@ -262,12 +284,13 @@ val malloc (#t:Type) (x:t) (n:size_t)
              (fun r -> varrayp_or_null r full_perm)
              (requires fun _ -> size_v n > 0)
              (ensures fun _ r h1 ->
-               if g_is_null r
-               then True
-               else
+               match g_is_null r, h1 (varrayp_or_null r full_perm) with
+               | true, None -> True
+               | false, Some s ->
                  len r == n /\
-                 (h1 (varrayp r full_perm) <: Seq.seq t) == Seq.create (size_v n) x /\
-               freeable r
+                 (s <: Seq.seq t) == Seq.create (size_v n) x /\
+                 freeable r
+               | _ -> False
              )
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
@@ -356,7 +379,7 @@ val get_pointer
   (#t: Type)
   (a: array t)
   (p: perm)
-: SteelAtomic (P.t t) opened
+: SteelAtomicBase (P.t t) true opened Unobservable
     (varrayp a p)
     (fun _ -> varrayp a p)
     (fun _ -> True)
@@ -370,7 +393,7 @@ val enter
   (#t: Type)
   (p: P.t t)
   (r: P.range)
-: SteelAtomic (array t) opened
+: SteelAtomicBase (array t) true opened Unobservable
     (P.vptr_range p r)
     (fun res -> varrayp res r.P.range_write_perm)
     (fun _ -> r.P.range_from == 0)
@@ -400,7 +423,7 @@ let exit
   (p: perm)
   (ptr: P.t t)
   (r: P.range)
-: SteelAtomic unit opened
+: SteelGhost unit opened
     (varrayp a p)
     (fun _ -> P.vptr_range ptr r)
     (fun _ ->
@@ -424,14 +447,16 @@ val reveal
   (r: P.t t)
   (a: Ghost.erased (array t))
   (p: perm)
-: SteelAtomic (array t) opened
-    (varrayp a p)
-    (fun res -> varrayp res p)
+: SteelAtomicBase (array t) true opened Unobservable
+    (varrayp_or_null a p)
+    (fun res -> varrayp_or_null res p)
     (fun _ -> g_get_pointer a == r)
     (fun h res h' ->
       res == Ghost.reveal a /\
-      h' (varrayp res p) == h (varrayp a p)
+      h' (varrayp_or_null res p) == h (varrayp_or_null a p)
     )
+
+(* Some properties of get_pointer (useful only to define further layers on top of array *)
 
 val get_pointer_gsplit
   (#t: Type)
@@ -440,5 +465,29 @@ val get_pointer_gsplit
 : Lemma
   (requires (size_v i <= length r))
   (ensures (
-    g_get_pointer (fst (gsplit r i)) == g_get_pointer r
+    let pl = g_get_pointer (fst (gsplit r i)) in
+    let pr = g_get_pointer (snd (gsplit r i)) in
+    pl == g_get_pointer r /\
+    (P.g_is_null pl == false ==> (P.g_is_null pr == false /\ P.base pl == P.base pr))
   ))
+
+val get_pointer_merge
+  (#t: Type)
+  (r1 r2: array t)
+: Lemma
+  (requires (adjacent r1 r2))
+  (ensures (
+    g_get_pointer (merge r1 r2) == g_get_pointer r1
+  ))
+
+val length_get_pointer
+  (#t: Type)
+  (r: array t)
+: Lemma
+  (let p = g_get_pointer r in (P.g_is_null p == false ==> size_v (P.base_array_len (P.base p)) >= length r))
+
+val is_null_get_pointer
+  (#t: Type)
+  (r: array t)
+: Lemma
+  (P.g_is_null (g_get_pointer r) == g_is_null r)

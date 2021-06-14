@@ -112,19 +112,105 @@ let varrayp_not_null a p =
   P.vptr_range_not_null a.from _;
   intro_varrayp a.from _ a p
 
+[@@__steel_reduce__]
+let varrayp_or_null0
+  (#a: Type)
+  (r: array a)
+  (p: perm)
+: Tot vprop
+= P.vptr_range_or_null r.from (range_of_array r p)
+
+let is_array_or_null r p = hp_of (varrayp_or_null0 r p)
+
+let array_or_null_sel r p = fun h -> sel_of (varrayp_or_null0 r p) h
+
+let intro_varrayp_or_null
+  (#opened: _)
+  (#t: Type)
+  (ptr: P.t t)
+  (rg: P.range)
+  (a: array t)
+  (p: perm)
+: SteelGhost unit opened
+    (P.vptr_range_or_null ptr rg)
+    (fun _ -> varrayp_or_null a p)
+    (fun _ ->
+      ptr == a.from /\
+      (P.g_is_null ptr == false ==> rg == range_of_array a p)
+    )
+    (fun h _ h' -> match h' (varrayp_or_null a p), h (P.vptr_range_or_null ptr rg) with
+      | None, None -> True
+      | Some s', Some s -> (s' <: Seq.seq t) == s
+      | _ -> False
+    )
+=
+  if P.g_is_null ptr
+  then begin
+    P.assert_null ptr rg;
+    P.intro_vptr_range_or_null_none ptr (range_of_array a p);
+    change_slprop_rel
+      (P.vptr_range_or_null ptr (range_of_array a p))
+      (varrayp_or_null a p)
+      (fun x y -> x == y)
+      (fun _ -> ())    
+  end else begin
+    noop ();
+    change_slprop_rel
+      (P.vptr_range_or_null ptr rg)
+      (varrayp_or_null a p)
+      (fun x y -> x == y)
+      (fun _ -> ())
+  end
+
+let elim_varrayp_or_null
+  (#opened: _)
+  (#t: Type)
+  (a: array t)
+  (p: perm)
+: SteelGhost unit opened
+    (varrayp_or_null a p)
+    (fun _ -> P.vptr_range_or_null a.from (range_of_array a p))
+    (fun _ -> True)
+    (fun h _ h' ->
+      match h' (P.vptr_range_or_null a.from (range_of_array a p)), h (varrayp_or_null a p) with
+      | None, None -> True
+      | Some s', Some s -> (s' <: Seq.seq t) == s
+      | _ -> False
+    )
+=
+  change_slprop_rel
+    (varrayp_or_null a p)
+    (P.vptr_range_or_null a.from (range_of_array a p))
+    (fun x y -> x == y)
+    (fun _ -> ())
+
 let is_null x r =
-  change_slprop_rel
-    (varrayp_or_null x r)
-    (P.vptr_range_or_null x.from (range_of_array x r))
-    (fun u v -> u == v)
-    (fun _ -> ());
+  elim_varrayp_or_null x r;
   let res = P.is_null x.from _ in
-  change_slprop_rel
-    (P.vptr_range_or_null x.from (range_of_array x r))
-    (varrayp_or_null x r)
-    (fun u v -> u == v)
-    (fun _ -> ());
+  intro_varrayp_or_null x.from (range_of_array x r) x r;
   return res
+
+let intro_varrayp_or_null_none
+  #_ #t a p
+=
+  P.intro_vptr_range_or_null_none a.from (range_of_array a p);
+  intro_varrayp_or_null a.from (range_of_array a p) a p
+
+let intro_varrayp_or_null_some
+  #_ #t a p
+=
+  elim_varrayp a p;
+  P.intro_vptr_range_or_null_some a.from (range_of_array a p);
+  intro_varrayp_or_null a.from (range_of_array a p) a p
+
+let assert_null a p =
+  elim_varrayp_or_null a p;
+  P.assert_null a.from (range_of_array a p)
+
+let assert_not_null a p =
+  elim_varrayp_or_null a p;
+  P.assert_not_null a.from (range_of_array a p);
+  intro_varrayp a.from (range_of_array a p) a p
 
 let adjacent r1 r2 =
   P.g_is_null r1.from == P.g_is_null r2.from /\
@@ -205,44 +291,7 @@ let freeable a =
   Ghost.reveal a.to == P.base_array_len (P.base a.from) /\
   a.free_perm == full_perm
 
-val intro_varrayp_or_null
-  (#opened: _)
-  (#t: Type)
-  (ptr: P.t t)
-  (rg: P.range)
-  (a: array t)
-  (p: perm)
-: SteelGhost unit opened
-    (P.vptr_range_or_null ptr rg)
-    (fun _ -> varrayp_or_null a p)
-    (fun _ ->
-      ptr == a.from /\
-      (P.g_is_null ptr == false ==> rg == range_of_array a p)
-    )
-    (fun h _ h' -> 
-      if g_is_null a
-      then True
-      else if P.g_is_null ptr
-      then True
-      else (h' (varrayp a p) <: Seq.seq t) == (h (P.vptr_range ptr rg) <: Seq.seq t)
-    )
-
-let intro_varrayp_or_null ptr rg a p
-=
-  if g_is_null a
-  then begin
-    P.assert_null ptr _;
-    change_equal_slprop emp (varrayp_or_null a p)
-  end
-  else begin
-    P.assert_not_null ptr _;
-    intro_varrayp ptr rg a p;
-    change_equal_slprop
-      (varrayp a p)
-      (varrayp_or_null a p)
-  end
-
-let malloc x n =
+let malloc #t x n =
   let p = P.calloc x n in
   let res = {
     from = p;
@@ -250,7 +299,7 @@ let malloc x n =
     free_perm = full_perm;
     prf = ();
   } in
-  intro_varrayp_or_null p _ res full_perm;
+  intro_varrayp_or_null p (P.calloc_range n) res full_perm;
   return res
 
 let indexp r p i =
@@ -322,8 +371,14 @@ let reveal r a p =
   } in
   assert (Ghost.reveal a == res);
   change_equal_slprop
-    (varrayp a p)
-    (varrayp res p);
+    (varrayp_or_null a p)
+    (varrayp_or_null res p);
   return res
 
 let get_pointer_gsplit r i = ()
+
+let get_pointer_merge r1 r2 = ()
+
+let length_get_pointer r = ()
+
+let is_null_get_pointer r = ()

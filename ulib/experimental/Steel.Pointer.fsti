@@ -190,19 +190,62 @@ let ptr_sel0 (#a:Type) (#p:vprop) (r: ptr_range) (x: t a)
 : GTot a 
 = Seq.index (h (vptr_range x r)) 0
 
+val slptr_range_or_null
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: Tot (slprop u#1)
+
+val ptr_or_null_select
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: Tot (selector (option (Seq.lseq a (r.range_to - r.range_from))) (slptr_range_or_null x r))
+
+[@@__steel_reduce__]
+let vptr_range_or_null'
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: Tot vprop'
+= {
+  hp = slptr_range_or_null x r;
+  t = option (Seq.lseq a (r.range_to - r.range_from));
+  sel = ptr_or_null_select x r;
+}
+
+[@@__steel_reduce__]
 let vptr_range_or_null
   (#a: Type)
   (x: t a)
   (r: range)
 : Tot vprop
-= if g_is_null x then emp else vptr_range x r
+= VUnit (vptr_range_or_null' x r)
+
+[@@ __steel_reduce__]
+unfold
+let ptr_or_null_sel (#a:Type) (#p:vprop) (r: ptr_range) (x: t a)
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr_range_or_null x r))})
+: GTot (option a)
+= match h (vptr_range_or_null x r) with
+  | None -> None
+  | Some s -> Some (Seq.index s 0)
+
+[@@ __steel_reduce__]
+unfold
+let ptr_or_null_sel0 (#a:Type) (#p:vprop) (r: ptr_range) (x: t a)
+  (h:rmem p{ (can_be_split p (vptr_range_or_null x r))})
+: GTot (option a)
+= match h (vptr_range_or_null x r) with
+  | None -> None
+  | Some s -> Some (Seq.index s 0)
 
 val is_null
   (#opened: _)
   (#a: Type)
   (x: t a)
   (r: range)
-: SteelAtomic bool opened
+: SteelAtomicBase bool true opened Unobservable
     (vptr_range_or_null x r)
     (fun _ -> vptr_range_or_null x r)
     (fun _ -> True)
@@ -211,7 +254,32 @@ val is_null
       res == g_is_null x
     )
 
-let assert_null
+val intro_vptr_range_or_null_none
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: SteelGhost unit opened
+    emp
+    (fun _ -> vptr_range_or_null x r)
+    (fun _ -> g_is_null x == true)
+    (fun _ _ h' -> h' (vptr_range_or_null x r) == None)
+
+val intro_vptr_range_or_null_some
+  (#opened: _)
+  (#a: Type)
+  (x: t a)
+  (r: range)
+: SteelGhost unit opened
+    (vptr_range x r)
+    (fun _ -> vptr_range_or_null x r)
+    (fun _ -> True)
+    (fun h _ h' ->
+      g_is_null x == false /\
+      h' (vptr_range_or_null x r) == Some (h (vptr_range x r)
+    ))
+
+val assert_null
   (#opened: _)
   (#a: Type)
   (x: t a)
@@ -219,14 +287,10 @@ let assert_null
 : SteelGhost unit opened
     (vptr_range_or_null x r)
     (fun _ -> emp)
-    (fun _ -> g_is_null x == true)
-    (fun _ _ _ -> True)
-=
-  change_equal_slprop
-    (vptr_range_or_null x r)
-    emp
+    (fun h -> g_is_null x == true \/ None? (h (vptr_range_or_null x r)))
+    (fun h _ _ -> g_is_null x == true /\ h (vptr_range_or_null x r) == None)
 
-let assert_not_null
+val assert_not_null
   (#opened: _)
   (#a: Type)
   (x: t a)
@@ -234,16 +298,11 @@ let assert_not_null
 : SteelGhost unit opened
     (vptr_range_or_null x r)
     (fun _ -> vptr_range x r)
-    (fun _ -> g_is_null x == false)
+    (fun h -> g_is_null x == false \/ Some? (h (vptr_range_or_null x r)))
     (fun h _ h' ->
       g_is_null x == false /\
-      h' (vptr_range x r) == h (vptr_range_or_null x r)
+      Some (h' (vptr_range x r)) == h (vptr_range_or_null x r)
     )
-=
-  assert (g_is_null x == false);
-  change_equal_slprop
-    (vptr_range_or_null x r)
-    (vptr_range x r)
 
 let calloc_range
   (len: size_t)
@@ -259,14 +318,14 @@ val calloc
     (fun res -> vptr_range_or_null res (calloc_range len))
     (fun _ -> size_v len > 0)
     (fun _ res h' ->
-      if g_is_null res
-      then True
-      else begin
+      match g_is_null res, h' (vptr_range_or_null res (calloc_range len)) with
+      | true, None -> True
+      | false, Some s ->
         base_array_freeable (base res) /\
         base_array_len (base res) == len /\
         size_v (offset res) == 0 /\
-        h' (vptr_range res (calloc_range len)) == Seq.create (size_v len) x
-      end
+        s == Seq.create (size_v len) x
+      | _ -> False
     )
 
 let malloc_range
@@ -281,14 +340,14 @@ let malloc
     (fun res -> vptr_range_or_null res malloc_range)
     (fun _ -> True)
     (fun _ res h' ->
-      if g_is_null res
-      then True
-      else begin
+      match g_is_null res, ptr_or_null_sel0 malloc_range res h' with
+      | true, None -> True
+      | false, Some s ->
         base_array_freeable (base res) /\
         size_v (base_array_len (base res)) == 1 /\
         size_v (offset res) == 0 /\
-        ptr_sel0 malloc_range res h' == x
-      end
+        s == x
+      | _ -> False
     )
  = calloc x one_size
 
@@ -319,7 +378,7 @@ val add
   (x: t a)
   (r: range)
   (i: size_t)
-: SteelAtomic (t a) opened
+: SteelAtomicBase (t a) true opened Unobservable
     (vptr_range x r)
     (fun _ -> vptr_range x r)
     (fun _ ->
@@ -338,7 +397,7 @@ val sub
   (x: t a)
   (r: range)
   (i: size_t)
-: SteelAtomic (t a) opened
+: SteelAtomicBase (t a) true opened Unobservable
     (vptr_range x r)
     (fun _ -> vptr_range x r)
     (fun _ ->
