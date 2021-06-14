@@ -461,7 +461,7 @@ val get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
   (ensures fun h0 r h1 -> frame_equalities p h0 h1 /\ frame_equalities p r h1)
 
 /// Returning the current value of the selector of vprop [p], as long as [p] is in the context
-let gget (#opened:inames) (p: vprop) : SteelGhost (erased (t_of p))
+let gget (#opened:inames) (p: vprop) : SteelGhost (erased (normal (t_of p)))
   opened
   p (fun _ -> p)
   (requires (fun _ -> True))
