@@ -125,28 +125,6 @@ let compatible_elim
     goal #a #(fun frame -> composable pcm x frame /\ op pcm frame x == y)
     () (fun frame -> lemma frame)
 
-(**
-  To understand this predicate, one must consider the context of mutating the element [x] to
-  element [y] under the rules of [pcm]. This mutation operation is frame-preserving if:
-  1. every element that is composable with [x] is also composable with [y];
-  2. the composition of [x] with a frame is unchanged with [y]
-*)
-let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
-    (forall frame. composable pcm frame x ==> composable pcm frame y) /\
-    (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
-
-(** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
-let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
-  forall (frame:a). composable p x frame ==> frame == p.p.one
-
-(** A mutation from [x] to [p.one] is frame preserving if [p] is exclusive to [x] *)
-let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
-  : Lemma (requires exclusive p x)
-          (ensures frame_preserving p x p.p.one)
-  = p.is_unit x;
-    p.is_unit p.p.one
-
-
 (** Two elements are joinable when they can evolve to a common point. *)
 let joinable #a (p:pcm a) (x y : a) : prop =
   exists z. compatible p x z /\ compatible p y z
@@ -157,6 +135,12 @@ let frame_compatible #a (p:pcm a) (x:FStar.Ghost.erased a) (v y:a) =
             v == op p x frame ==>
             composable p y frame /\
             v == op p y frame)
+
+(*
+ * Frame preserving updates from x to y
+ *   - should preserve all frames,
+ *   - and a frame containing rest of the PCM value should continue to do so
+ *)
 
 type frame_preserving_upd (#a:Type u#a) (p:pcm a) (x y:a) =
   v:a{
@@ -170,11 +154,37 @@ type frame_preserving_upd (#a:Type u#a) (p:pcm a) (x y:a) =
        composable p y frame /\
        (op p x frame == v ==> op p y frame == v_new))}
 
+
+(*
+ * A specific case of frame preserving updates when y is a refined value
+ *
+ * All the frames of x should compose with--and the composition should result in--y
+ *)
+let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
+    (forall frame. composable pcm frame x ==> composable pcm frame y) /\
+    (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
+
+(*
+ * As expected, given frame_preserving, we can construct a frame_preserving_update
+ *)
 let frame_preserving_val_to_fp_upd (#a:Type u#a) (p:pcm a)
   (x:Ghost.erased a) (v:a{frame_preserving p x v /\ p.refine v})
   : frame_preserving_upd p x v
   = Classical.forall_intro (p.comm v);
     fun _ -> v
+
+(** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
+let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
+  forall (frame:a). composable p x frame ==> frame == p.p.one
+
+(** A mutation from [x] to [p.one] is frame preserving if [p] is exclusive to [x] *)
+let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
+  : Lemma (requires exclusive p x)
+          (ensures frame_preserving p x p.p.one)
+  = p.is_unit x;
+    p.is_unit p.p.one
+
+(* Some sanity checks on the definition of frame preserving updates *)
 
 let no_op_is_frame_preserving (#a:Type u#a) (p:pcm a)
   (x:a)

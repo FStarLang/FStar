@@ -27,8 +27,8 @@ open FStar.Preorder
 (**** PCM to preoder *)
 
 (**
-  PCM [p] induces the preorder [q] if for any frame preserving update of [x] to [y] and
-  every element [z] compatible with [x], then [z] is before [y] in the preorder.
+  PCM [p] induces the preorder [q] if for any frame preserving update of [x] to [y],
+  the argument and result of the frame preserving update are related by q
 *)
 let induces_preorder (#a:Type u#a) (p:pcm a) (q:preorder a) =
   forall (x y:a) (f:frame_preserving_upd p x y) (v:a).
