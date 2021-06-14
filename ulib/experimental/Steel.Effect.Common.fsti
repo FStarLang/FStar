@@ -2115,3 +2115,9 @@ let ite_soundness_tac () : Tac unit =
   split ();
   apply_lemma (`unfold_with_tactic);
   smt ()
+
+/// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
+/// This tactic is executed after frame inference, and just before sending the query to the SMT
+/// As such, it is a good place to add debugging features to inspect SMT queries when needed
+unfold
+let vc_norm () : Tac unit = norm normal_steps

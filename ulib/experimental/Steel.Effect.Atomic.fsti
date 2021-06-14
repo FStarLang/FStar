@@ -179,7 +179,7 @@ let subcomp_pre (#a:Type)
 // The call to with_tactic allows us to reduce VCs in a controlled way, once all
 // uvars have been resolved.
 // To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
-= T.with_tactic (fun _ -> T.norm normal_steps) (squash (
+= T.with_tactic vc_norm (squash (
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
