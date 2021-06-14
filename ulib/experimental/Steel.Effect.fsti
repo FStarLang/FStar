@@ -145,12 +145,12 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= //T.with_tactic (fun _ -> T.norm normal_steps; T.dump "goal") (
+= T.with_tactic (fun _ -> T.norm normal_steps; T.dump "goal") (squash (
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   )
-//)
+))
 
 /// Subtyping combinator for Steel computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -236,8 +236,8 @@ let my_tac () : T.Tac unit =
   resolve_tac_logical ();
   T.set_goals [subcomp_goal];
   T.norm [];
-//  T.split ();
-//  T.apply_lemma (`T.unfold_with_tactic);
+  T.split ();
+  T.apply_lemma (`T.unfold_with_tactic);
   T.smt ()
 
 /// Assembling the combinators defined above into an actual effect
