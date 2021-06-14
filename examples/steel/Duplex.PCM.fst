@@ -642,7 +642,7 @@ let upd_gen_action #p r x y f =
   change_slprop (pts_to r (reveal (hide y))) (pts_to r y) (fun _ -> ())
 
 
-#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1"
 #restart-solver
 let write_a_f_aux
   (#p:dprot)
@@ -683,26 +683,39 @@ let write_a_f_aux
         )
     in
     aux ();
-    let aux_composable frame
-      : Lemma (requires composable (A_W next tr) frame)
-              (ensures composable post frame /\ (compose (A_W next tr) frame == v ==>
-                                                compose post frame == res))
+    let aux_composable (frame:t p{composable (A_W next tr) frame})
+      : Lemma (composable post frame /\ (compose (A_W next tr) frame == v ==>
+                                        compose post frame == res))
       = match frame with
         | Nil -> ()
         | B_R q' s' ->
-          assert (ahead A next q' tr s');
-          lemma_ahead_is_longer A next tr q' s';
-          assert (trace_length tr >= trace_length s');
-          assert (ahead A (step next x) next (extend tr x) tr);
-          assert (ahead A (step next x) q' (extend tr x) s');
-          extend_increase_length tr x;
-          assert (trace_length (extend tr x) > trace_length tr)
+          if is_send (step next x) 
+          then begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s')
+          end
+          else if is_recv (step next x)
+          then begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s');
+            lemma_ahead_is_longer A next tr q' s';
+            assert (trace_length tr >= trace_length s');
+            extend_increase_length tr x;
+            assert (trace_length (extend tr x) > trace_length tr)
+          end
+          else begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s')
+          end
     in
-    Classical.forall_intro (Classical.move_requires aux_composable);
+    Classical.forall_intro aux_composable;
     res
 #pop-options
 
-#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1"
 #restart-solver
 let write_b_f_aux
 (#p:dprot)
@@ -742,22 +755,35 @@ let write_b_f_aux
           )
       in
       aux ();
-      let aux_composable frame
-      : Lemma (requires composable (B_W next tr) frame)
-              (ensures composable post frame /\ (compose (B_W next tr) frame == v ==>
-                                                compose post frame == res))
+      let aux_composable (frame:t p{composable (B_W next tr) frame})
+      : Lemma (composable post frame /\ (compose (B_W next tr) frame == v ==>
+                                        compose post frame == res))
       = match frame with
         | Nil -> ()
         | A_R q' s' ->
-          assert (ahead B next q' tr s');
-          lemma_ahead_is_longer B next tr q' s';
-          assert (trace_length tr >= trace_length s');
-          assert (ahead B (step next x) next (extend tr x) tr);
-          assert (ahead B (step next x) q' (extend tr x) s');
-          extend_increase_length tr x;
-          assert (trace_length (extend tr x) > trace_length tr)
+          if is_send (step next x) 
+          then begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s');
+            lemma_ahead_is_longer B next tr q' s';
+            assert (trace_length tr >= trace_length s');
+            extend_increase_length tr x;
+            assert (trace_length (extend tr x) > trace_length tr)
+          end
+          else if is_recv (step next x)
+          then begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s')
+          end
+          else begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s')
+          end
       in
-      Classical.forall_intro (Classical.move_requires aux_composable);
+      Classical.forall_intro aux_composable;
       res
 
 let lemma_ahead_extend_a (#p:dprot)
