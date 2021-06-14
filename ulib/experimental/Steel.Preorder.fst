@@ -59,23 +59,19 @@ let stability (#a: Type u#a) (fact:a -> prop) (q:preorder a) (p:pcm a)
     (ensures  stable fact (preorder_of_pcm p))
   = ()
 
-(** Also, every frame-preserving update to the element of the PCM respects the canonical PCM *)
-// let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
-//   : Lemma (requires frame_preserving p x y)
-//           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
-//   = ()
-
-// let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
-//   : Lemma
-//     (requires
-//       stable fact (preorder_of_pcm p) /\
-//       fact v0 /\
-//       frame_preserving p v v1 /\
-//       compatible p v v0)
-//     (ensures
-//       fact v1)
-//   = assert (preorder_of_pcm p v0 v1)
-
+let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
+  : Lemma
+    (requires
+      stable fact (preorder_of_pcm p) /\
+      p.refine v0 /\
+      fact v0 /\
+      p.refine v1 /\
+      frame_preserving p v v1 /\
+      compatible p v v0)
+    (ensures
+      fact v1)
+  = let f : frame_preserving_upd p v v1 = frame_preserving_val_to_fp_upd p v v1 in
+    frame_preserving_upd_is_preorder_preserving p v v1 f v0
 
 
 (**** Preorder to PCM *)
@@ -83,9 +79,9 @@ let stability (#a: Type u#a) (fact:a -> prop) (q:preorder a) (p:pcm a)
 (***** Building the preorder *)
 
 (**
-//   This predicate tells that the list [l] can represent a trace of elements whose evolution is
-//   compatible with the preorder [q]
-// *)
+  This predicate tells that the list [l] can represent a trace of elements whose evolution is
+  compatible with the preorder [q]
+*)
 let rec qhistory #a (q:preorder a) (l:list a) =
   match l with
   | []
@@ -122,9 +118,9 @@ let rec extends_length_eq (#a: Type u#a) (#q:preorder a) (h0 h1:hist q)
     | hd::tl -> extends_length_eq tl h1
 
 (**
-//   We build our relation of composability for traces by reflexing the extension to ensure
-//   symmetry
-// *)
+  We build our relation of composability for traces by reflexing the extension to ensure
+  symmetry
+*)
 let p_composable (#a: Type u#a) (q:preorder a) : symrel (hist q) =
     fun x y -> extends x y \/ extends y x
 
