@@ -20,6 +20,7 @@ open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
+module T = FStar.Tactics
 
 include Steel.Effect.Common
 
@@ -135,8 +136,6 @@ val bind (a:Type) (b:Type)
     (bind_req req_f ens_f req_g frame_f frame_g p1)
     (bind_ens req_f ens_f ens_g frame_f frame_g post p1 p2)
 
-module T = FStar.Tactics
-
 /// Logical precondition for subtyping relation for Steel computation.
 unfold
 let subcomp_pre (#a:Type)
@@ -145,7 +144,10 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= T.with_tactic (fun _ -> T.norm normal_steps; T.dump "goal") (squash (
+// The call to with_tactic allows us to reduce VCs in a controlled way, once all
+// uvars have been resolved.
+// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
+= T.with_tactic (fun _ -> T.norm normal_steps) (squash (
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
@@ -167,8 +169,7 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
   (f:repr a framed_f pre_f post_f req_f ens_f)
 : Pure (repr a framed_g pre_g post_g req_g ens_g)
-  (requires //T.with_tactic (fun _ -> T.dump "subcomp goal") //; T.norm []) //; T.smt ())
-    (subcomp_pre req_f ens_f req_g ens_g p1 p2))
+  (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
 
 /// Logical precondition for the if_then_else combinator
@@ -179,10 +180,9 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> // T.with_tactic (fun _ -> T.dump "if_pre") (
+= fun h ->
     (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
-  // )
 
 /// Logical postcondition for the if_then_else combinator
 unfold
@@ -193,10 +193,9 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> // T.with_tactic (fun _ -> T.dump "if_post") (
+= fun h0 x h1 ->
     (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
     ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
-//  )
 
 /// If_then_else combinator for Steel computations.
 /// The soundness of this combinator is automatically proven with respect to the subcomp
@@ -216,29 +215,6 @@ let if_then_else (a:Type)
 = repr a framed pre_f post_f
     (if_then_else_req s_pre req_then req_else p)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
-
-irreducible let ite_attr : unit = ()
-
-[@@ resolve_implicits; ite_attr]
-let my_tac () : T.Tac unit =
-  let slgs, loggoals = filter_goals (T.goals ()) in
-  T.set_goals slgs;
-  solve_indirection_eqs slgs;
-  // This is the actual subcomp goal. We can only solve it
-  // all uvars are solved
-  let subcomp_goal = T._cur_goal () in
-  match T.goals () with
-  | [] -> T.fail "should not happen"
-  | _::tl -> T.set_goals tl;
-  T.smt ();
-  T.smt ();
-  T.set_goals loggoals;
-  resolve_tac_logical ();
-  T.set_goals [subcomp_goal];
-  T.norm [];
-  T.split ();
-  T.apply_lemma (`T.unfold_with_tactic);
-  T.smt ()
 
 /// Assembling the combinators defined above into an actual effect
 [@@ite_soundness_by ite_attr]
@@ -269,7 +245,7 @@ unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> wp (fun x -> (req x) m) /\ as_requires wp
+= fun m -> (wp (fun x -> (req x) m) /\ as_requires wp)
 
 /// Logical postcondition of a Pure and a Steel composition.
 /// There exists an intermediate value (the output of the Pure computation) such that
@@ -279,7 +255,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
 : ens_t pre b post
-= fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))
+= fun m0 r m1 -> (as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1)))
 
 /// The composition combinator.
 val bind_pure_steel_ (a:Type) (b:Type)
