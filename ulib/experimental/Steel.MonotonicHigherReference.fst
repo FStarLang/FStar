@@ -108,86 +108,38 @@ let pcm_history_preorder #a #p : Preorder.preorder (history a p) =
     | Current vh0 _, Current vh1 _ ->
       vh1 `Q.extends` vh0
 
-// This proof is known to be very brittle.
-#push-options "--retry 10 --max_fuel 1 --initial_fuel 1 --max_ifuel 1 --query_stats --z3cliopt smt.qi.eager_threshold=100 --z3rlimit_factor 8"
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 0 --warn_error -271"
 let pcm_history_induces_preorder #a #p
   : Lemma (Q.induces_preorder (pcm_history #a #p)
                               (pcm_history_preorder #a #p))
   = let aux (x y:history a p)
-       : Lemma
-         (requires frame_preserving pcm_history x y)
-         (ensures (forall z. compatible pcm_history x z ==>
-                        pcm_history_preorder z y))
-               [SMTPat (frame_preserving pcm_history x y)]
-       = let aux (z:history a p)
-           : Lemma
-             (requires compatible pcm_history x z)
-             (ensures  pcm_history_preorder z y)
-             [SMTPat (compatible pcm_history x z)]
-           = match x, z with
-             | Witnessed vx, Witnessed vz ->
-               begin
-               match vz with
-               | [] ->
-                 () //empty history can be extended arbitrarily
-
-               | _ ->
-                 assert (history_composable (Current vz full_perm) z);
-                 assert (history_composable (Current vz full_perm) y); //since y is frame-preserving
-                 assert (history_compose (Current vz full_perm) y == y);
-                 //no such y exists, since y must be Current and its perm must be non-zero
-                 assert false
-               end
-
-             | Current vx _, Witnessed vz ->
-               //impossible, since x `op` z <> z
-               assert false
-
-             | Witnessed vx, Current vz _ ->
-               assert (vz `Q.extends` vx);
-               assert (history_composable z x);
-               assert (history_composable z y);
-               assert (history_compose z y == y);
-               assert (Current? y);
-               assert (history_composable (Witnessed vz) z);
-               assert (history_composable (Witnessed vz) y);
-               let Current vy _ = y in
-               assert (vy `Q.extends` vz)
-
-             | Current vx _, Current vz _ ->
-               assert (composable pcm_history (Witnessed vz) z);
-               assert (vz == vx);
-               let aux (frame:history a p)
-                 : Lemma
-                   (requires composable pcm_history x frame /\
-                             history_compose x frame == z)
-                   (ensures  pcm_history_preorder z y)
-                   [SMTPat (composable pcm_history x frame)]
-                 = match frame with
-                   | Witnessed _ ->
-                     assert (z == x);
-                     assert (history_compose frame y == y);
-                     assert (history_compose (Witnessed vz) y == y);
-                     begin
-                     match y with
-                     | Current vy _ ->
-                       assert (vy `Q.extends` vz)
-                     | Witnessed vy ->
-                       assert (history_compose (Witnessed vz) y == y);
-                       assert (vy == Q.p_op p vz vy);
-                       Q.p_op_extends p vz vy;
-                       assert (vy `Q.extends` vz)
-                     end
-
-                   | Current vframe _ ->
-                     assert (vframe == vz);
-                     assert (history_composable frame y);
-                     assert (history_compose frame y == y);
-                     assert (Current?._0 y == vz)
-               in
-               ()
-         in
-         ()
+            (f:frame_preserving_upd (pcm_history #a #p) x y)
+            (v:history a p)
+      : Lemma
+          (requires compatible (pcm_history #a #p) x v)
+          (ensures (pcm_history_preorder #a #p) v (f v))
+          [SMTPat ()]
+      = let pcm = pcm_history #a #p in
+        let v1 = f v in
+        match x, v, v1 with
+        | Witnessed _, Witnessed _, Witnessed _ ->
+          assert (composable pcm x v)
+        | Current _ _, Witnessed _, Witnessed _ -> ()
+        | Witnessed _, Current _ _, Witnessed _ -> ()
+        | Witnessed _, Witnessed _, Current _ _ ->
+          assert (composable pcm x v)
+        | Current _ _, Witnessed _, Current _ _ -> ()
+        | Witnessed _, Current _ _, Current _ _ -> ()
+        | Current hx _, Current hv _, Witnessed _
+        | Current hx _, Current hv _, Current _ _ ->
+          let frame = FStar.IndefiniteDescription.witness_exists
+            (fun frame -> composable pcm x frame /\ op pcm frame x == v) in
+          match frame with
+          | Current hf _ -> ()
+          | Witnessed hf ->
+            assert (Q.extends hx hf);
+            assert (hx == hv);
+            assert (composable pcm x (Witnessed hv))
     in
     ()
 #pop-options
