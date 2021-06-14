@@ -107,7 +107,7 @@ val is_null
   (#a: Type)
   (x: array a)
   (r: perm)
-: SteelAtomicBase bool true opened Unobservable
+: SteelAtomicBase bool false opened Unobservable
     (varrayp_or_null x r)
     (fun _ -> varrayp_or_null x r)
     (fun _ -> True)
@@ -212,7 +212,7 @@ val gsplit
   ))
 
 val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
-  : SteelAtomicBase (array t & array t) true opened Unobservable
+  : SteelAtomicBase (array t & array t) false opened Unobservable
           (varrayp a p)
           (fun res -> varrayp (fst res) p `star` varrayp (snd res) p)
           (fun _ -> size_v i <= length a)
@@ -229,7 +229,7 @@ val splitp (#opened: _) (#t:Type) (a:array t) (p: perm) (i:size_t)
 
 inline_for_extraction
 let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
-  : SteelAtomicBase (array t & array t) true opened Unobservable
+  : SteelAtomicBase (array t & array t) false opened Unobservable
           (varray a)
           (fun res -> varray (fst res) `star` varray (snd res))
           (fun _ -> size_v i <= length a)
@@ -248,7 +248,7 @@ let split (#opened: _) (#t:Type) (a:array t) (i:size_t)
 
 val joinp (#opened: _) (#t:Type) (al ar:array t)
   (p: perm)
-  : SteelAtomicBase (array t) true opened Unobservable
+  : SteelAtomicBase (array t) false opened Unobservable
           (varrayp al p `star` varrayp ar p)
           (fun a -> varrayp a p)
           (fun _ -> adjacent al ar)
@@ -260,7 +260,7 @@ val joinp (#opened: _) (#t:Type) (al ar:array t)
 
 inline_for_extraction
 let join (#opened: _) (#t:Type) (al ar:array t)
-  : SteelAtomicBase (array t) true opened Unobservable
+  : SteelAtomicBase (array t) false opened Unobservable
           (varray al `star` varray ar)
           (fun a -> varray a)
           (fun _ -> adjacent al ar)
@@ -379,7 +379,7 @@ val get_pointer
   (#t: Type)
   (a: array t)
   (p: perm)
-: SteelAtomicBase (P.t t) true opened Unobservable
+: SteelAtomicBase (P.t t) false opened Unobservable
     (varrayp a p)
     (fun _ -> varrayp a p)
     (fun _ -> True)
@@ -393,7 +393,7 @@ val enter
   (#t: Type)
   (p: P.t t)
   (r: P.range)
-: SteelAtomicBase (array t) true opened Unobservable
+: SteelAtomicBase (array t) false opened Unobservable
     (P.vptr_range p r)
     (fun res -> varrayp res r.P.range_write_perm)
     (fun _ -> r.P.range_from == 0)
@@ -447,7 +447,7 @@ val reveal
   (r: P.t t)
   (a: Ghost.erased (array t))
   (p: perm)
-: SteelAtomicBase (array t) true opened Unobservable
+: SteelAtomicBase (array t) false opened Unobservable
     (varrayp_or_null a p)
     (fun res -> varrayp_or_null res p)
     (fun _ -> g_get_pointer a == r)

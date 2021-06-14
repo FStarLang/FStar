@@ -245,7 +245,7 @@ val is_null
   (#a: Type)
   (x: t a)
   (r: range)
-: SteelAtomicBase bool true opened Unobservable
+: SteelAtomicBase bool false opened Unobservable
     (vptr_range_or_null x r)
     (fun _ -> vptr_range_or_null x r)
     (fun _ -> True)
@@ -378,7 +378,7 @@ val add
   (x: t a)
   (r: range)
   (i: size_t)
-: SteelAtomicBase (t a) true opened Unobservable
+: SteelAtomicBase (t a) false opened Unobservable
     (vptr_range x r)
     (fun _ -> vptr_range x r)
     (fun _ ->
@@ -397,7 +397,7 @@ val sub
   (x: t a)
   (r: range)
   (i: size_t)
-: SteelAtomicBase (t a) true opened Unobservable
+: SteelAtomicBase (t a) false opened Unobservable
     (vptr_range x r)
     (fun _ -> vptr_range x r)
     (fun _ ->
