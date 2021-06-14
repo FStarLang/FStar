@@ -206,10 +206,10 @@ let pcm_of_preorder (#a: Type u#a) (q:preorder a) : pcm (hist q) = {
 (***** Using the preorder *)
 
 (**
-//   We check that the preorder derived from the PCM derived from the preorder
-//   satisfies the same properties as the original preorder. Here, we get back history
-//   extension from frame-preserving updates.
-// *)
+  We check that the preorder derived from the PCM derived from the preorder
+  satisfies the same properties as the original preorder. Here, we get back history
+  extension from frame-preserving updates.
+*)
 let frame_preserving_q_aux (#a : Type u#a) (q:preorder a) (x y:hist q) (z:hist q)
   : Lemma (requires (frame_preserving (pcm_of_preorder q) x y /\ compatible (pcm_of_preorder q) x z))
           (ensures (y `extends` z))
@@ -222,10 +222,10 @@ let vhist (#a: Type u#a) (q:preorder a) = h:hist q{Cons? h}
 let curval (#a: Type u#a) (#q:preorder a) (v:vhist q) = Cons?.hd v
 
 (**
-//   Given a frame-preserving update from [x] to [y]
-//   for any value of resource [z] (compatible with [x])
-//   the new value [y] advances the history [z] in a preorder respecting manner
-// *)
+  Given a frame-preserving update from [x] to [y]
+  for any value of resource [z] (compatible with [x])
+  the new value [y] advances the history [z] in a preorder respecting manner
+*)
 let frame_preserving_q (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
@@ -250,9 +250,16 @@ let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
           [SMTPat (frame_preserving (pcm_of_preorder q) x y)]
   = ()
 
+#push-options "--warn_error -271"
 let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
   : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
-  = admit ()
+  = let fp_full (x y:hist q) (f:frame_preserving_upd (pcm_of_preorder q) x y) (v:hist q)
+      : Lemma (requires compatible (pcm_of_preorder q) x v)
+              (ensures extends (f v) v)
+              [SMTPat ()]
+      = assert (composable (pcm_of_preorder q) x v) in
+    ()
+#pop-options
 
 let extend_history (#a:Type u#a) (#q:preorder a) (h0:vhist q) (v:a{q (curval h0) v})
   : h1:vhist q{h1 `extends` h0}
