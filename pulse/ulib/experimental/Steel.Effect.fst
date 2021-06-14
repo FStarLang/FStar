@@ -205,7 +205,10 @@ let change_slprop p q proof =
   Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
 
 let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
-let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
+let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)
+let write #a #p r v0 v1 = upd_gen r v0 (Ghost.hide v1)
+  (frame_preserving_val_to_fp_upd p v0 v1);
+  change_slprop (pts_to r (Ghost.reveal (Ghost.hide v1))) (pts_to r v1) (fun _ -> ())
 let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
 let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
 
@@ -228,5 +231,3 @@ let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FS
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
-
-let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)

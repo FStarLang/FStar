@@ -259,6 +259,13 @@ val read (#a:Type)
   : SteelT (v:a { FStar.PCM.compatible pcm v0 v })
            (pts_to r v0)
            (fun _ -> pts_to r v0)
+open FStar.PCM
+
+val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+            (f:FStar.PCM.frame_preserving_upd p x y)
+  : SteelT unit
+           (pts_to r x)
+           (fun _ -> pts_to r y)
 
 val write (#a:Type)
           (#pcm:_)
@@ -326,8 +333,6 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
 
 /// Operations on PCM Refs
 
-open FStar.PCM
-
 val select_refine (#a:Type u#1) (#p:pcm a)
                   (r:ref a p)
                   (x:Ghost.erased a)
@@ -337,9 +342,3 @@ val select_refine (#a:Type u#1) (#p:pcm a)
    : SteelT  (v:a{compatible p x v /\ p.refine v})
              (pts_to r x)
              (fun v -> pts_to r (f v))
-
-val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
-            (f:FStar.PCM.frame_preserving_upd p x y)
-  : SteelT unit
-           (pts_to r x)
-           (fun _ -> pts_to r y)
