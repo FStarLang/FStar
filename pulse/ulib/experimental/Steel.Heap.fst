@@ -1056,7 +1056,6 @@ let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
 let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
   : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
   = let one = pcm.FStar.PCM.p.one in
-    assume (pcm.refine one);
     compatible_refl pcm one;
     assert (compatible pcm one one);
     assert (forall (frame:a{composable pcm v0 frame}). frame == one);

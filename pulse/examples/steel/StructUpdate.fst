@@ -45,13 +45,12 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
            (pts_to r (First #a #b x))
            (fun _ -> pts_to r (First #a #b y))
   = let f
-      : frame_preserving_upd_0
+      : frame_preserving_upd
               pcm_t
               (Ghost.hide (First #a #b x))
               (First #a #b y)
       = fun old_v ->
           match old_v with
-          | First _ -> First y
           | Both _ z -> Both y z
     in
     change_slprop (pts_to r (First (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (First (Ghost.reveal x))))) (fun _ -> ());
@@ -63,13 +62,12 @@ let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
            (pts_to r (Second #a #b x))
            (fun _ -> pts_to r (Second #a #b y))
   = let f
-      : frame_preserving_upd_0
+      : frame_preserving_upd
               pcm_t
               (Second #a #b x)
               (Second #a #b y)
       = fun old_v ->
           match old_v with
-          | Second _ -> Second y
           | Both z _ -> Both z y
     in
     change_slprop (pts_to r (Second (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (Second (Ghost.reveal x))))) (fun _ -> ());

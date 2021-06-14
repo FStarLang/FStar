@@ -642,7 +642,7 @@ let upd_gen_action #p r x y f =
   change_slprop (pts_to r (reveal (hide y))) (pts_to r y) (fun _ -> ())
 
 
-#push-options "--z3rlimit 100 --warn_error -271"
+#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
 #restart-solver
 let write_a_f_aux
   (#p:dprot)
@@ -687,7 +687,6 @@ let write_a_f_aux
       : Lemma (requires composable (A_W next tr) frame)
               (ensures composable post frame /\ (compose (A_W next tr) frame == v ==>
                                                 compose post frame == res))
-              [SMTPat()]
       = match frame with
         | Nil -> ()
         | B_R q' s' ->
@@ -699,8 +698,12 @@ let write_a_f_aux
           extend_increase_length tr x;
           assert (trace_length (extend tr x) > trace_length tr)
     in
+    Classical.forall_intro (Classical.move_requires aux_composable);
     res
+#pop-options
 
+#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
+#restart-solver
 let write_b_f_aux
 (#p:dprot)
 (#next:dprot{more next /\ tag_of next = Recv})
