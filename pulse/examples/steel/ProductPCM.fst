@@ -89,15 +89,32 @@ let tuple_pcm #a #b p q = {
   refine = (fun (xa, xb) -> p.refine xa /\ q.refine xb)
 }
 
+/// If no custom PCM is needed, p and q can be instantiated with an all-or-none PCM:
+
+val opt_comp : option 'a -> option 'a -> prop
+let opt_comp x y = match x, y with None, _ | _, None -> True | _ -> False
+
+val opt_op : x:option 'a -> y:option 'a {opt_comp x y} -> option 'a
+let opt_op x y = match x, y with None, z | z, None -> z
+
+val opt_pcm : pcm (option 'a)
+let opt_pcm #a = {
+  p = {composable = opt_comp; op = opt_op; one = None};
+  comm = (fun _ _ -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ());
+  refine = (fun _ -> True);
+}
+
+/// With the alternative definition of frame-preserving updates, we
+/// can define frame-preserving updates for a tuple PCM from
+/// frame-preserving updates on its components. For example, to define
+/// a frame-preserving update on the first component:
+
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-
-module T = FStar.Tactics
-
-/// With the alternative definition of frame-preserving updates and
-/// compat_unit_unique, we can define frame-preserving updates for a
-/// tuple PCM from frame-preserving updates on its components:
 
 val compatible_tuple_l :
   p: pcm 'a -> q: pcm 'b ->
@@ -130,25 +147,9 @@ let upd_fst #a #b p q x y x' f (va, vb) =
     [SMTPat (composable pq (x, y) frame)] = ()
   in (wa, vb)
 
-/// If no custom PCM is needed, p and q can be instantiated with an all-or-none PCM:
-
-val opt_comp : option 'a -> option 'a -> prop
-let opt_comp x y = match x, y with None, _ | _, None -> True | _ -> False
-
-val opt_op : x:option 'a -> y:option 'a {opt_comp x y} -> option 'a
-let opt_op x y = match x, y with None, z | z, None -> z
-
-val opt_pcm : pcm (option 'a)
-let opt_pcm #a = {
-  p = {composable = opt_comp; op = opt_op; one = None};
-  comm = (fun _ _ -> ());
-  assoc = (fun _ _ _ -> ());
-  assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun _ -> ());
-  refine = (fun _ -> True);
-}
-
-/// We can generalize to 'a-ary products (k:'a -> f k), given a PCM for each k:
+/// Frame-preserving updates on the second component can be done similarly.
+/// To avoid having to write a frame-preserving update for each field separately,
+/// we generalize to 'a-ary products (k:'a -> f k), given a PCM for each k:
 
 open FStar.FunctionalExtensionality
 
@@ -240,7 +241,7 @@ let prod_pcm #a #f p = {
   refine = prod_refine p
 }
 
-/// Now, we can define frame-preserving updates of all components at once:
+/// Now, we can define frame-preserving updates for all fields at once:
 
 val update :
   #a:eqtype -> #f:(a -> Type) -> k:a -> x': f k ->
@@ -249,9 +250,33 @@ let update #a k x' f = on_domain a (fun k' -> if k = k' then x' else f k')
 
 val prod_upd :
   #a:eqtype -> #f:(a -> Type) -> p:(k:a -> pcm (f k)) ->
-  k:a -> xs: restricted_t a f -> x: f k -> x': f k ->
-  frame_preserving_upd (p k) x x' ->
-  frame_preserving_upd (prod_pcm p) xs (update k x' xs)
+  k:a -> xs: restricted_t a f -> y: f k ->
+  frame_preserving_upd (p k) (xs k) y ->
+  frame_preserving_upd (prod_pcm p) xs (update k y xs)
+let prod_upd #a #f_ty p k xs y f vs =
+  let ws_k = f (vs k) in
+  let ws = update k ws_k vs in
+  let aux (frame: _{composable (prod_pcm p) xs frame}) :
+    Lemma
+      // TODO unclear why it works to hoist this assumption,
+      // because goal contains (forall .., P /\ (Q ==> R))
+      // but this only proves (forall .., Q ==> P /\ R)
+      (requires op (prod_pcm p) xs frame == vs)
+      (ensures
+         composable (prod_pcm p) (update k y xs) frame /\
+         op (prod_pcm p) (update k y xs) frame == ws)
+    [SMTPat (composable (prod_pcm p) xs frame)]
+  = assert (composable (prod_pcm p) (update k y xs) frame);
+    ext (op (prod_pcm p) (update k y xs) frame) ws (fun k' -> ())
+  in
+  let compat_ws_k : squash (compatible (p k) y ws_k) = () in
+  let compat_vs : squash (compatible (prod_pcm p) xs vs) = () in
+  let compat_ws_ty = squash (compatible (prod_pcm p) (update k y xs) ws) in
+  exists_elim compat_ws_ty compat_ws_k (fun frame_k ->
+  exists_elim compat_ws_ty compat_vs (fun frame_rest ->
+  let frame = update k frame_k frame_rest in
+  ext (op (prod_pcm p) frame (update k y xs)) ws (fun k' -> ())));
+  ws
 
 /// Similarly, given a PCM for each z:a, we can model a-ary unions with an PCM for option (x:a & f x), where
 /// - None is the unit of the PCM
