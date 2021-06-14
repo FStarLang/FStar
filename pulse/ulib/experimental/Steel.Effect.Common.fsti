@@ -226,7 +226,7 @@ let rmem (pre:vprop) =
 unfold noextract
 let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) ->
   can_be_split_interp r r0 h;
-  normal (sel_of r0 h)
+  sel_of r0 h
 
 [@@ __steel_reduce__]
 noextract
