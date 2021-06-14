@@ -33,6 +33,7 @@ irreducible let framing_implicit : unit = ()
 irreducible let __steel_reduce__ : unit = ()
 irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
+irreducible let ite_attr : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 [@@__steel_reduce__]
@@ -2082,3 +2083,35 @@ let selector_tactic () : Tac unit =
        delta_attr [`%__reduce__];
        primops; iota; zeta];
   canon' false (`true_p) (`true_p)
+
+/// Specific tactic used during the SteelAtomicBase and SteelBase effect definitions:
+/// This allows us to write more complex if_then_else combinators, while proving them
+/// sound with respect to subcomp
+[@@ resolve_implicits; ite_attr]
+let ite_soundness_tac () : Tac unit =
+  let slgs, loggoals = filter_goals (goals ()) in
+  set_goals slgs;
+  solve_indirection_eqs slgs;
+  // This is the actual subcomp goal. We can only solve it
+  // once all uvars are solved
+  let subcomp_goal = _cur_goal () in
+  match goals () with
+  | [] -> fail "should not happen"
+  | _::tl -> set_goals tl;
+  // These two goals are the separation logic equiv_forall and can_be_split.
+  // For the if branch, they can be solve by reflexivity.
+  // For the else branch, they need to call hypotheses in the context.
+  // These proofs are very simple, and can be handled by SMT, so we avoid
+  // writing tactics for it
+  smt ();
+  smt ();
+  // Now propagating all equalities for the requires/ensures
+  set_goals loggoals;
+  resolve_tac_logical ();
+  // Now taking care of the actual subcomp VC
+  set_goals [subcomp_goal];
+  norm [];
+  // We remove the with_tactic call with executing the tactic before calling the SMT.
+  split ();
+  apply_lemma (`unfold_with_tactic);
+  smt ()

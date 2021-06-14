@@ -17,6 +17,7 @@
 module Steel.Effect.Atomic
 
 open Steel.Memory
+module T = FStar.Tactics
 include Steel.Effect.Common
 
 /// This module defines atomic and ghost variants of the Steel effect
@@ -175,10 +176,15 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f)) /\
+// The call to with_tactic allows us to reduce VCs in a controlled way, once all
+// uvars have been resolved.
+// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
+= T.with_tactic (fun _ -> T.norm normal_steps) (squash (
+  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   )
+ ))
 
 /// Subtyping combinator for Steel atomic computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -201,7 +207,7 @@ val subcomp (a:Type)
   (f:repr a framed_f opened_invariants o1 pre_f post_f req_f ens_f)
 : Pure (repr a framed_g opened_invariants o2 pre_g post_g req_g ens_g)
        (requires (o1 = Unobservable || o2 = Observable) /\
-         normal (subcomp_pre req_f ens_f req_g ens_g p1 p2))
+         subcomp_pre req_f ens_f req_g ens_g p1 p2)
        (ensures fun _ -> True)
 
 /// Logical precondition for the if_then_else combinator
@@ -522,7 +528,7 @@ val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> h p == reveal vp)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
 
 val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
@@ -530,7 +536,7 @@ val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> True)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
 
 /// A noop operator, occasionally useful for forcing framing of a subsequent computation
 val noop (#opened:inames) (_:unit)
@@ -552,7 +558,7 @@ val sladmit (#a:Type)
 val slassert (#opened_invariants:_) (p:vprop)
   : SteelGhost unit opened_invariants p (fun _ -> p)
                   (requires fun _ -> True)
-                  (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
+                  (ensures fun h0 _ h1 -> frame_equalities p h0 h1)
 
 /// Drops vprop [p] from the context. Although our separation logic is affine,
 /// the frame inference tactic treats it as linear.
@@ -611,6 +617,7 @@ val return (#a:Type u#a)
 (* Lifting the separation logic exists combinator to vprop *)
 
 /// The exists separation logic combinator
+let h_exists_sl' (#a:Type u#b) (p: (a -> vprop)) : a -> slprop = fun x -> hp_of (p x)
 let h_exists_sl (#a:Type u#b) (p: (a -> vprop)) : slprop = h_exists (fun x -> hp_of (p x))
 [@@__steel_reduce__]
 unfold let h_exists #a (p:a -> vprop) : vprop = to_vprop (h_exists_sl p)
@@ -698,16 +705,16 @@ val with_invariant_g (#a:Type)
 val intro_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelGhost unit opened v (fun _ -> vrefine v p)
-  (requires (fun h -> p (h v)))
-  (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
+  (requires fun h -> p (h v))
+  (ensures fun h _ h' -> h' (vrefine v p) == h v)
 
 /// We can transform back vprop [v] refined with predicate [p] to the underlying [v],
 /// where [p] holds on the selector of [v]
 val elim_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelGhost unit opened (vrefine v p) (fun _ -> v)
-  (requires (fun _ -> True))
-  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p)) /\ p (h' v)))
+  (requires fun _ -> True)
+  (ensures fun h _ h' -> h' v == h (vrefine v p) /\ p (h' v))
 
 /// Introducing a dependent star for [v] and [q]
 val intro_vdep (#opened:inames)
