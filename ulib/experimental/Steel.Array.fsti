@@ -453,11 +453,11 @@ val get_pointer
   (a: array t)
   (p: perm)
 : SteelAtomicBase (P.t t) false opened Unobservable
-    (varrayp a p)
-    (fun _ -> varrayp a p)
+    (varrayp_or_null a p)
+    (fun _ -> varrayp_or_null a p)
     (fun _ -> True)
     (fun h res h' ->
-      h' (varrayp a p) == h (varrayp a p) /\
+      h' (varrayp_or_null a p) == h (varrayp_or_null a p) /\
       res == g_get_pointer a
     )
 
@@ -557,7 +557,7 @@ val length_get_pointer
   (#t: Type)
   (r: array t)
 : Lemma
-  (let p = g_get_pointer r in (P.g_is_null p == false ==> size_v (P.base_array_len (P.base p)) >= length r))
+  (let p = g_get_pointer r in (P.g_is_null p == false ==> size_v (P.base_array_len (P.base p)) >= length r /\ (freeable r ==> length r == size_v (P.base_array_len (P.base p)))))
 
 val is_null_get_pointer
   (#t: Type)
