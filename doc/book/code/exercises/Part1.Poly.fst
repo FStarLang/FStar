@@ -16,5 +16,5 @@ val compose (a b c:Type) (f: b -> c) (g : a -> b) : a -> c
 let apply = admit()
 let compose = admit()
 
-val twice (a:Type) (f: a -> a) (x:a) : a
-let twice = admit()
+val twice // write a signature here
+let twice a f x = compose a a a f f x
