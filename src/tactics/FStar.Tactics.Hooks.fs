@@ -79,6 +79,10 @@ let flip p = match p with
     | Neg -> Pos
     | Both -> Both
 
+let getprop (e:Env.env) (t:term) : option<term> =
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
+    U.un_squash tn
+
 let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
@@ -89,11 +93,25 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         begin match pol with
         | Pos ->
             let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
-            Simplified (FStar.Syntax.Util.t_true, gs)
+            let simpl = List.fold_left (fun t g ->
+              match getprop (goal_env g) (goal_type g) with
+              | None ->
+                  Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
+                                  (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string (goal_type g)))) e.range
+              | Some phi -> U.mk_conj phi t
+            ) FStar.Syntax.Util.t_true gs in
+            Simplified (N.normalize [Env.Simplify; Env.Primops] e simpl, [])
 
         | Both ->
             let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
-            Dual (assertion, FStar.Syntax.Util.t_true, gs)
+            let simpl = List.fold_left (fun t g ->
+              match getprop (goal_env g) (goal_type g) with
+              | None ->
+                  Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
+                                  (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string (goal_type g)))) e.range
+              | Some phi -> U.mk_conj phi t
+            ) FStar.Syntax.Util.t_true gs in
+            Dual (assertion, N.normalize [Env.Simplify; Env.Primops] e simpl, [])
 
         | Neg ->
             // Peel away tactics in negative positions, they're assumptions!
@@ -242,10 +260,6 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         let rp = f pol e ({ t with n = tp }) in
         let (_, p', gs') = explode rp in
         Dual ({t with n = tn}, p', gs@gs')
-
-let getprop (e:Env.env) (t:term) : option<term> =
-    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
-    U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->

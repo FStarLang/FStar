@@ -82,6 +82,20 @@ type tres = FStar_Syntax_Syntax.term tres_m
 let tpure : 'uuuuu . 'uuuuu -> 'uuuuu tres_m = fun x -> Unchanged x
 let (flip : pol -> pol) =
   fun p -> match p with | Pos -> Neg | Neg -> Pos | Both -> Both
+let (getprop :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    fun t ->
+      let tn =
+        FStar_TypeChecker_Normalize.normalize
+          [FStar_TypeChecker_Env.Weak;
+          FStar_TypeChecker_Env.HNF;
+          FStar_TypeChecker_Env.UnfoldUntil
+            FStar_Syntax_Syntax.delta_constant] e t in
+      FStar_Syntax_Util.un_squash tn
 let (by_tactic_interp :
   pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres) =
   fun pol1 ->
@@ -111,7 +125,43 @@ let (by_tactic_interp :
                           assertion in
                       (match uu___2 with
                        | (gs, uu___3) ->
-                           Simplified (FStar_Syntax_Util.t_true, gs))
+                           let simpl =
+                             FStar_List.fold_left
+                               (fun t1 ->
+                                  fun g ->
+                                    let uu___4 =
+                                      let uu___5 =
+                                        FStar_Tactics_Types.goal_env g in
+                                      let uu___6 =
+                                        FStar_Tactics_Types.goal_type g in
+                                      getprop uu___5 uu___6 in
+                                    match uu___4 with
+                                    | FStar_Pervasives_Native.None ->
+                                        let uu___5 =
+                                          let uu___6 =
+                                            let uu___7 =
+                                              let uu___8 =
+                                                FStar_Tactics_Types.goal_type
+                                                  g in
+                                              FStar_Syntax_Print.term_to_string
+                                                uu___8 in
+                                            FStar_Util.format1
+                                              "Tactic returned proof-relevant goal: %s"
+                                              uu___7 in
+                                          (FStar_Errors.Fatal_TacticProofRelevantGoal,
+                                            uu___6) in
+                                        FStar_Errors.raise_error uu___5
+                                          e.FStar_TypeChecker_Env.range
+                                    | FStar_Pervasives_Native.Some phi ->
+                                        FStar_Syntax_Util.mk_conj phi t1)
+                               FStar_Syntax_Util.t_true gs in
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_TypeChecker_Normalize.normalize
+                                 [FStar_TypeChecker_Env.Simplify;
+                                 FStar_TypeChecker_Env.Primops] e simpl in
+                             (uu___5, []) in
+                           Simplified uu___4)
                   | Both ->
                       let uu___2 =
                         run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
@@ -119,7 +169,43 @@ let (by_tactic_interp :
                           assertion in
                       (match uu___2 with
                        | (gs, uu___3) ->
-                           Dual (assertion, FStar_Syntax_Util.t_true, gs))
+                           let simpl =
+                             FStar_List.fold_left
+                               (fun t1 ->
+                                  fun g ->
+                                    let uu___4 =
+                                      let uu___5 =
+                                        FStar_Tactics_Types.goal_env g in
+                                      let uu___6 =
+                                        FStar_Tactics_Types.goal_type g in
+                                      getprop uu___5 uu___6 in
+                                    match uu___4 with
+                                    | FStar_Pervasives_Native.None ->
+                                        let uu___5 =
+                                          let uu___6 =
+                                            let uu___7 =
+                                              let uu___8 =
+                                                FStar_Tactics_Types.goal_type
+                                                  g in
+                                              FStar_Syntax_Print.term_to_string
+                                                uu___8 in
+                                            FStar_Util.format1
+                                              "Tactic returned proof-relevant goal: %s"
+                                              uu___7 in
+                                          (FStar_Errors.Fatal_TacticProofRelevantGoal,
+                                            uu___6) in
+                                        FStar_Errors.raise_error uu___5
+                                          e.FStar_TypeChecker_Env.range
+                                    | FStar_Pervasives_Native.Some phi ->
+                                        FStar_Syntax_Util.mk_conj phi t1)
+                               FStar_Syntax_Util.t_true gs in
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_TypeChecker_Normalize.normalize
+                                 [FStar_TypeChecker_Env.Simplify;
+                                 FStar_TypeChecker_Env.Primops] e simpl in
+                             (assertion, uu___5, []) in
+                           Dual uu___4)
                   | Neg -> Simplified (assertion, []))
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (assertion, FStar_Pervasives_Native.None)::[]) when
@@ -421,20 +507,6 @@ let rec (traverse :
                          FStar_Syntax_Syntax.vars =
                            (uu___2.FStar_Syntax_Syntax.vars)
                        }), p', (FStar_List.append gs gs')))
-let (getprop :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  =
-  fun e ->
-    fun t ->
-      let tn =
-        FStar_TypeChecker_Normalize.normalize
-          [FStar_TypeChecker_Env.Weak;
-          FStar_TypeChecker_Env.HNF;
-          FStar_TypeChecker_Env.UnfoldUntil
-            FStar_Syntax_Syntax.delta_constant] e t in
-      FStar_Syntax_Util.un_squash tn
 let (preprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
