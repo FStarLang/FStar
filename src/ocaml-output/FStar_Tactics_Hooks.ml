@@ -122,6 +122,26 @@ let (by_tactic_interp :
                            Dual (assertion, FStar_Syntax_Util.t_true, gs))
                   | Neg -> Simplified (assertion, []))
              | (FStar_Syntax_Syntax.Tm_fvar fv,
+                (tactic, FStar_Pervasives_Native.None)::(assertion,
+                                                         FStar_Pervasives_Native.None)::[])
+                 when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.process_with_tactic_lid
+                 ->
+                 let uu___2 =
+                   run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
+                     assertion.FStar_Syntax_Syntax.pos tactic e assertion in
+                 (match uu___2 with
+                  | (gs, uu___3) ->
+                      (match gs with
+                       | hd1::[] ->
+                           let uu___4 =
+                             let uu___5 = FStar_Tactics_Types.goal_type hd1 in
+                             (uu___5, []) in
+                           Simplified uu___4
+                       | uu___4 ->
+                           failwith "process_with_tactic: not a single goal"))
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (assertion, FStar_Pervasives_Native.None)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.spinoff_lid

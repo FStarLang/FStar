@@ -100,6 +100,15 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
             Simplified (assertion, [])
         end
 
+    // process_with_tactic marker
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
+            when S.fv_eq_lid fv PC.process_with_tactic_lid ->
+        let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+        begin match gs with
+        | [hd] -> Simplified (goal_type hd, [])
+        | _ -> failwith "process_with_tactic: not a single goal"
+        end
+
     // spinoff marker: simply spin off a query independently.
     // So, equivalent to `with_tactic idtac` without importing the (somewhat heavy) tactics module
     | Tm_fvar fv, [(assertion, None)]
