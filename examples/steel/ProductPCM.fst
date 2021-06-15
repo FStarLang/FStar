@@ -61,6 +61,7 @@ let frame_preserving_subframe #a p x y subframe f v =
     p.assoc y subframe frame
   in
   let lframe : squash (compatible p (op p x subframe) v) = () in
+  (* TODO Rewrite to use compatible_elim *)
   exists_elim (compatible p (op p y subframe) w) lframe (fun frame -> 
     aux frame;
     assert (op p frame (op p x subframe) == v);
@@ -256,6 +257,7 @@ val prod_upd :
 let prod_upd #a #f_ty p k xs y f vs =
   let ws_k = f (vs k) in
   let ws = fun_upd k ws_k vs in
+  (* TODO use compatible_intro? *)
   let aux (frame: _{composable (prod_pcm p) xs frame}) :
     Lemma
       // TODO unclear why it works to hoist this assumption,
@@ -272,33 +274,35 @@ let prod_upd #a #f_ty p k xs y f vs =
   let compat_ws_k : squash (compatible (p k) y ws_k) = () in
   let compat_vs : squash (compatible (prod_pcm p) xs vs) = () in
   let compat_ws_ty = squash (compatible (prod_pcm p) (fun_upd k y xs) ws) in
+  (* TODO Rewrite to use compatible_elim *)
   exists_elim compat_ws_ty compat_ws_k (fun frame_k ->
   exists_elim compat_ws_ty compat_vs (fun frame_rest ->
   let frame = fun_upd k frame_k frame_rest in
   ext (op (prod_pcm p) frame (fun_upd k y xs)) ws (fun k' -> ())));
   ws
 
-/// Similarly, given a PCM for each z:a, we can model a-ary unions with an PCM for option (x:a & f x), where
+/// Similarly, given a PCM for each k:a, we can model a-ary unions
+/// with an PCM for option (k:a & f k), where
 /// - None is the unit of the PCM
-/// - Some (x, y) is a union with tag x and content y
+/// - Some (k, x) is a union with tag k and content x
 
-let union (#f:'a -> Type) (p:(x:'a -> pcm (f x))) = option (x:'a & f x)
+let union (f:'a -> Type) = option (k:'a & f k)
 
 val union_comp :
-  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
-  symrel (union p)
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
+  symrel (union f)
 let union_comp p x y = match x, y with
   | None, z | z, None -> True
   | Some (|xa, xb|), Some (|ya, yb|) -> xa == ya /\ composable (p xa) xb yb
 
 val union_op :
-  #f:('a -> Type) -> p:(z:'a -> pcm (f z)) ->
-  x:union p -> y:union p {union_comp p x y} -> union p
+  #f:('a -> Type) -> p:(k:'a -> pcm (f k)) ->
+  x: union f -> y: union f {union_comp p x y} -> union f
 let union_op p x y = match x, y with
   | None, z | z, None -> z
   | Some (|xa, xb|), Some (|ya, yb|) -> Some (|xa, (p xa).p.op xb yb|)
 
-val union_pcm : #f:('a -> Type) -> p:(x: 'a -> pcm (f x)) -> pcm (union p)
+val union_pcm : #f:('a -> Type) -> p:(k:'a -> pcm (f k)) -> pcm (union f)
 let union_pcm p = {
   p = {composable = union_comp p; op = union_op p; one = None};
   comm = (fun x y -> match x, y with
@@ -314,6 +318,48 @@ let union_pcm p = {
   refine = (fun x -> match x with None -> True | Some (|xa, xb|) -> (p xa).refine xb)
 }
 
+/// Just like with structs, we can define frame-preserving updates on
+/// unions from frame-preserving updates on a single case:
+
+(* TODO copied from Denis's branch, move to FStar.PCM.fst *)
+let compatible_intro
+  (#a: Type u#a) (pcm:pcm a) (x y:a)
+  (frame: a)
+  : Lemma
+    (requires (composable pcm x frame /\ op pcm frame x == y))
+    (ensures (compatible pcm x y))
+  = ()
+
+val union_upd :
+  #a:eqtype -> #f:(a -> Type) -> p:(k:a -> pcm (f k)) ->
+  k:a -> x: f k -> y: f k ->
+  frame_preserving_upd (p k) x y ->
+  frame_preserving_upd (union_pcm p) (Some (|k, x|)) (Some (|k, y|))
+let union_upd p k x y f (Some (|k', v|)) =
+  compatible_elim (union_pcm p) (Some (|k, x|)) (Some (|k, v|)) (compatible (p k) x v)
+    (fun frame -> match frame with
+      | Some (|k', frame_x|) -> compatible_intro (p k) x v frame_x
+      | None -> (union_pcm p).is_unit (Some (|k, x|)); compatible_refl (p k) x);
+  let w = f v in
+  let aux (frame: _{composable (union_pcm p) (Some (|k, x|)) frame}) :
+    Lemma (composable (union_pcm p) (Some (|k, y|)) frame /\
+           (op (union_pcm p) (Some (|k, x|)) frame == Some (|k, v|) ==>
+            op (union_pcm p) (Some (|k, y|)) frame == Some (|k, w|)))
+  = match frame with
+    | None -> 
+      (union_pcm p).is_unit (Some (|k, x|));
+      (union_pcm p).is_unit (Some (|k, y|));
+      (p k).is_unit x;
+      assert (composable (p k) y (p k).p.one /\
+              (op (p k) x (p k).p.one == v ==> op (p k) y (p k).p.one == w));
+      (p k).is_unit y
+    | Some (|_, frame_x|) -> ()
+  in forall_intro aux;
+  compatible_elim (p k) y w
+    (compatible (union_pcm p) (Some (|k, y|)) (Some (|k, w|)))
+    (fun frame -> compatible_intro (union_pcm p) (Some (|k, y|)) (Some (|k, w|))
+      (Some (|k, frame|)));
+  Some (|k, w|)
 
 (*
 // TODO
