@@ -132,8 +132,8 @@ let pcm_history_induces_preorder #a #p
         | Witnessed _, Current _ _, Current _ _ -> ()
         | Current hx _, Current hv _, Witnessed _
         | Current hx _, Current hv _, Current _ _ ->
-          let frame = FStar.IndefiniteDescription.witness_exists
-            (fun frame -> composable pcm x frame /\ op pcm frame x == v) in
+          let frame = FStar.IndefiniteDescription.indefinite_description_ghost
+            (history a p) (fun frame -> composable pcm x frame /\ op pcm frame x == v) in
           match frame with
           | Current hf _ -> ()
           | Witnessed hf ->

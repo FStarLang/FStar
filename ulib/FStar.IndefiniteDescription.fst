@@ -106,11 +106,3 @@ let elim_squash (#p:Type u#a) (s:squash p) : GTot p =
     bind_squash s (fun x -> return_squash (| x, return_squash T |)) in
   give_proof (return_squash uu);
   indefinite_description_ghost p (fun _ -> squash c_True)
-
-
-(** Extracting a ghost witness for an exists *)
-
-let witness_exists (#a:Type u#a) (p:a -> prop)
-  : Ghost (x:a{p x}) (requires exists (x:a). p x) (ensures fun _ -> True)
-  = let (| x, _ |) = elim_squash (join_squash (get_proof (exists (x:a). p x))) in
-    x

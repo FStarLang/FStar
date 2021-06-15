@@ -990,8 +990,8 @@ let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
                    op p old_v_l old_v_r == old_v);
 
            assert (compatible p x old_v_l);
-           let (| frame, _ |) = FStar.IndefiniteDescription.elim_squash
-             (Squash.join_squash (Squash.get_proof (compatible p x old_v_l))) in
+           let frame = FStar.IndefiniteDescription.indefinite_description_ghost
+             a (fun frame -> composable p frame x /\ op p frame x == old_v_l) in
            assert (composable p x frame);
            assert (op p frame x == old_v_l);
            p.comm frame x;
