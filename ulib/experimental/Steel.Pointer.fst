@@ -427,6 +427,12 @@ let sub
   intro_vptr_range x r res.e_alloc_unit res.e_alloc_unit_perm res.e_array r.range_write_perm;
   return (pure_sub x i)
 
+let le x1 x2 _ _ =
+  vptr_range_not_null x1 _;
+  vptr_range_not_null x2 _;
+  assert (base x1 == base x2);
+  return ((Some?.v x1).offset `size_le` (Some?.v x2).offset)
+
 let index
   #a x r i
 =

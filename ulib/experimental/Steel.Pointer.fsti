@@ -83,7 +83,6 @@ val g_sub
     size_v (offset res) == size_v (offset p) - size_v off
   ))
 
-(*
 let g_le
   (#a: Type0)
   (p1 p2: t a)
@@ -93,6 +92,32 @@ let g_le
   base p1 == base p2 /\
   size_v (offset p1) <= size_v (offset p2)
 
+let g_le_antisym
+  (#a: Type0)
+  (p1 p2: t a)
+: Lemma
+  (requires (g_le p1 p2 /\ g_le p2 p1))
+  (ensures (p1 == p2))
+  [SMTPat (g_le p1 p2); SMTPat (g_le p2 p1)]
+= Classical.move_requires (base_offset_inj p1) p2
+
+let g_lt
+  (#a: Type0)
+  (p1 p2: t a)
+: Tot prop
+= g_is_null p1 == false /\
+  g_is_null p2 == false /\
+  base p1 == base p2 /\
+  size_v (offset p1) < size_v (offset p2)
+
+let g_lt_le_or_eq
+  (#a: Type0)
+  (p1 p2: t a)
+: Lemma
+  (g_lt p1 p2 <==> (g_le p1 p2 /\ ~ (p1 == p2)))
+= Classical.move_requires (base_offset_inj p1) p2
+
+(*
 val g_diff
   (#a: Type0)
   (p1 p2: t a)
@@ -409,6 +434,106 @@ val sub
       size_v (offset x) >= size_v i /\
       res == g_sub x i
     )
+
+(* Pointer comparisons. Here we assume that permission ranges between
+   the two pointers being compared have been separated, either by
+   spatial splitting (via split, below), or by temporal sharing (via
+   share, below.)
+   
+   TODO: for now we only allow comparison between two pointers to the
+   same array. Generalizing may need some support for pure/stateful
+   decidable equality on the underlying memory resources
+   (e.g. references.)
+*)
+
+val le
+  (#opened: _)
+  (#a: Type)
+  (x1 x2: t a)
+  (r1 r2: range)
+: SteelAtomicBase bool false opened Unobservable
+    (vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ -> vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ ->
+      (g_is_null x1 == false /\ g_is_null x2 == false) ==> (base x1 == base x2)
+    )
+    (fun h res h' ->
+      h' (vptr_range x1 r1) == h (vptr_range x1 r1) /\
+      h' (vptr_range x2 r2) == h (vptr_range x2 r2) /\
+      (res == true <==> g_le x1 x2)
+    )
+
+let equal
+  (#opened: _)
+  (#a: Type)
+  (x1 x2: t a)
+  (r1 r2: range)
+: SteelAtomicBase bool false opened Unobservable
+    (vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ -> vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ ->
+      (g_is_null x1 == false /\ g_is_null x2 == false) ==> (base x1 == base x2)
+    )
+    (fun h res h' ->
+      h' (vptr_range x1 r1) == h (vptr_range x1 r1) /\
+      h' (vptr_range x2 r2) == h (vptr_range x2 r2) /\
+      (res == true <==> x1 == x2)
+    )
+= vptr_range_not_null x1 _;
+  vptr_range_not_null x2 _;
+  let le12 = le x1 x2 _ _ in
+  let le21 = le x2 x1 _ _ in
+  return (le12 && le21)
+
+let equal_gen
+  (#opened: _)
+  (#a: Type)
+  (x1 x2: t a)
+  (r1 r2: range)
+: SteelAtomicBase bool false opened Unobservable
+    (vptr_range_or_null x1 r1 `star` vptr_range_or_null x2 r2)
+    (fun _ -> vptr_range_or_null x1 r1 `star` vptr_range_or_null x2 r2)
+    (fun _ ->
+      (g_is_null x1 == false /\ g_is_null x2 == false) ==> (base x1 == base x2)
+    )
+    (fun h res h' ->
+      h' (vptr_range_or_null x1 r1) == h (vptr_range_or_null x1 r1) /\
+      h' (vptr_range_or_null x2 r2) == h (vptr_range_or_null x2 r2) /\
+      (res == true <==> x1 == x2)
+    )
+= if is_null x1 _
+  then (noop (); is_null x2 _)
+  else if is_null x2 _
+  then return false
+  else begin
+    assert_not_null x1 _;
+    assert_not_null x2 _;
+    let res = equal x1 x2 _ _ in
+    intro_vptr_range_or_null_some x1 _;
+    intro_vptr_range_or_null_some x2 _;
+    return res
+  end
+
+let lt
+  (#opened: _)
+  (#a: Type)
+  (x1 x2: t a)
+  (r1 r2: range)
+: SteelAtomicBase bool false opened Unobservable
+    (vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ -> vptr_range x1 r1 `star` vptr_range x2 r2)
+    (fun _ ->
+      (g_is_null x1 == false /\ g_is_null x2 == false) ==> (base x1 == base x2)
+    )
+    (fun h res h' ->
+      h' (vptr_range x1 r1) == h (vptr_range x1 r1) /\
+      h' (vptr_range x2 r2) == h (vptr_range x2 r2) /\
+      (res == true <==> g_lt x1 x2)
+    )
+= let le12 = le x1 x2 _ _ in
+  let le21 = equal x1 x2 _ _ in
+  g_lt_le_or_eq x1 x2;
+  return (le12 && not le21)
 
 val index
   (#a: Type)
