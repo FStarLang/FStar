@@ -113,6 +113,12 @@ let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
 
+/// A variant of with_tactic, where term p will be replaced by the conjunction
+/// of the goals after running tactic t instead of leaving them as separate
+/// goals
+val with_tactic_inline (t : unit -> Tac unit) (p:Type u#a) : Type u#a
+
+
 (* This will run the tactic in order to (try to) produce a term of type
  * t. Note that the type looks dangerous from a logical perspective. It
  * should not lead to any inconsistency, however, as any time this term
@@ -166,3 +172,7 @@ val postprocess_for_extraction_with (tau : unit -> Tac unit) : Tot unit
 val unfold_with_tactic (t:unit -> Tac unit) (p:Type)
   : Lemma (requires p)
           (ensures (with_tactic t p))
+
+val unfold_with_tactic_inline (t:unit -> Tac unit) (p:Type)
+  : Lemma (requires p)
+          (ensures (with_tactic_inline t p))

@@ -93,6 +93,23 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         begin match pol with
         | Pos ->
             let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            Simplified (FStar.Syntax.Util.t_true, gs)
+
+        | Both ->
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            Dual (assertion, FStar.Syntax.Util.t_true, gs)
+
+        | Neg ->
+            // Peel away tactics in negative positions, they're assumptions!
+            Simplified (assertion, [])
+        end
+
+    // inline_with_tactic marker
+    | Tm_fvar fv, [(tactic, None); (assertion, None)]
+            when S.fv_eq_lid fv PC.inline_by_tactic_lid ->
+        begin match pol with
+        | Pos ->
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
             let simpl = List.fold_left (fun t g ->
               match getprop (goal_env g) (goal_type g) with
               | None ->

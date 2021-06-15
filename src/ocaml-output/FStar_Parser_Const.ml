@@ -438,6 +438,8 @@ let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
 let (by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "with_tactic"]
+let (inline_by_tactic_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Effect"; "with_tactic_inline"]
 let (synth_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let (assert_by_tactic_lid : FStar_Ident.lid) =

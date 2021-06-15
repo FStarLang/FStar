@@ -125,6 +125,31 @@ let (by_tactic_interp :
                           assertion in
                       (match uu___2 with
                        | (gs, uu___3) ->
+                           Simplified (FStar_Syntax_Util.t_true, gs))
+                  | Both ->
+                      let uu___2 =
+                        run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
+                          assertion.FStar_Syntax_Syntax.pos tactic e
+                          assertion in
+                      (match uu___2 with
+                       | (gs, uu___3) ->
+                           Dual (assertion, FStar_Syntax_Util.t_true, gs))
+                  | Neg -> Simplified (assertion, []))
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
+                (tactic, FStar_Pervasives_Native.None)::(assertion,
+                                                         FStar_Pervasives_Native.None)::[])
+                 when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.inline_by_tactic_lid
+                 ->
+                 (match pol1 with
+                  | Pos ->
+                      let uu___2 =
+                        run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
+                          assertion.FStar_Syntax_Syntax.pos tactic e
+                          assertion in
+                      (match uu___2 with
+                       | (gs, uu___3) ->
                            let simpl =
                              FStar_List.fold_left
                                (fun t1 ->

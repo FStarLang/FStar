@@ -441,6 +441,7 @@ let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
 
 let by_tactic_lid = fstar_tactics_lid' ["Effect"; "with_tactic"]
+let inline_by_tactic_lid = fstar_tactics_lid' ["Effect"; "with_tactic_inline"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
