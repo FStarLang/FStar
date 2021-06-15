@@ -1,5 +1,5 @@
 [
-  "ÂY\u001cŸà|˜ç„©ƒÖ¨E&‹",
+  "C0öÙ√∏·;]¨`\u0003nä$Ï",
   [
     [
       "Steel.MonotonicCounter.pre_pcm",
@@ -18,7 +18,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "36275fb9e9631916b71796f00cdaaada"
+      "471a5f8e5e4fe1375b938f990c7c3788"
     ],
     [
       "Steel.MonotonicCounter.mctr_pcm",
@@ -58,7 +58,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "b9cedda6b9b6d9cf954fd1a0b04b9617"
+      "93e627f63f9707f4bdff3e5402978374"
     ],
     [
       "Steel.MonotonicCounter.increasing",
@@ -74,7 +74,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "9b5028a60c1a7e7d93d6f64d64d8aee1"
+      "3033ffc7569d9717ff0a9f4df5309342"
     ],
     [
       "Steel.MonotonicCounter.mctr_induces_increases",
@@ -82,32 +82,49 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
-        "equation_Prims.nat", "equation_Steel.MonotonicCounter.increasing",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_6ee640369479b30d95d17c96f1df8c0f",
+        "b2t_def", "equation_FStar.Math.Lib.max",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.frame_preserving_upd", "equation_FStar.PCM.op",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_Prims.nat",
+        "equation_Prims.squash",
+        "equation_Steel.MonotonicCounter.increasing",
         "equation_Steel.MonotonicCounter.mctr_pcm",
         "equation_Steel.MonotonicCounter.pre_pcm",
         "equation_Steel.Preorder.induces_preorder", "int_inversion",
         "interpretation_Tm_abs_4785b8b79165f5b379972d7bfa9a5beb",
+        "interpretation_Tm_abs_54399434ab2fbdb38d469d569e9e1d52",
         "interpretation_Tm_abs_b4e02c57d356acfd3013e5337c00a78b",
         "interpretation_Tm_abs_db88fd7e58c6f69ac016355341a7f414",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
+        "proj_equation_FStar.PCM.Mkpcm_refine",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm_refine",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_3b1de445e68d5a7cbfc9e637b6d5fe5c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7eebd600d891f49b54ed679633298cb6",
+        "refinement_interpretation_Tm_refine_7fd7eadaa6330ace6901832174b56165",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "true_interp", "typing_FStar.Math.Lib.max"
+        "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
+        "true_interp", "typing_FStar.Math.Lib.max",
+        "typing_Steel.MonotonicCounter.increasing"
       ],
       0,
-      "bee39d0357a2d865dee673bbcb401159"
+      "2cfd54e7e85dabb30b1a2bb4b1fee1fc"
     ],
     [
       "Steel.MonotonicCounter.test",
@@ -141,7 +158,7 @@
         "typing_Steel.MonotonicCounter.increasing"
       ],
       0,
-      "acf821e922c12b1ecd5f1b64ff524c08"
+      "3caf74f70699848aa7e21f922ef8ad13"
     ]
   ]
 ]
