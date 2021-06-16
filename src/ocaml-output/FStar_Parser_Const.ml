@@ -85,8 +85,8 @@ let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
-let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp"
-let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp"
+let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
+let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp0"
 let (assert_norm_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assert_norm"]
 let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
