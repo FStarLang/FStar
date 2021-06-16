@@ -14,15 +14,28 @@
    limitations under the License.
 *)
 
-module Steel.Closure
+module Steel.Array
 
-open Steel.Memory
-open Steel.Effect
-open FStar.Ghost
+open Steel.Effect.Atomic
+open Steel.Reference
 
-/// A small proof-of-concept library showing that vprops can be used inside closures
+let array t = ref (Seq.seq t)
 
-let ctr_t = (p:(int -> vprop) & (x:erased int -> SteelT (y:int{y == x + 1}) (p x) p))
+let is_array r = ptr r
+let array_sel r = ptr_sel r
 
-val new_counter (u:unit) :
-  SteelT ctr_t emp (fun r -> dfst r 0)
+let malloc x n =
+  let s = Seq.create (U32.v n) x in
+  malloc s
+
+let index r i =
+  let h = get() in
+  let s = read r in
+  Seq.index s (U32.v i)
+
+let upd r i x =
+  let s = read r in
+  let s' = Seq.upd s (U32.v i) x in
+  write r s'
+
+let free r = free r

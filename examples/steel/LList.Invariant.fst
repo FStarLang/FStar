@@ -50,7 +50,7 @@ let ptr_eq (#a:Type) (x y:t a) = admit()
 ////////////////////////////////////////////////////////////////////////////////
 let rec llist' (#a:Type) (ptr:t a)
                          (l:list (cell a))
-    : Tot slprop (decreases l)
+    : Tot vprop (decreases l)
     =
     match l with
     | [] ->
@@ -65,20 +65,20 @@ let llist = llist'
 (* Helper lemmas/rewritings *)
 
 let intro_llist_nil a =
-  change_slprop emp (llist null_llist [])
+  rewrite_slprop emp (llist null_llist [])
     (fun m -> pure_interp (null_llist #a == null_llist) m;
            norm_spec [delta; zeta] ((llist (null_llist #a) [])))
 
 let intro_llist_cons #a ptr hd tl =
   intro_pure (ptr =!= null_llist);
-  change_slprop (pure (ptr =!= null_llist) `star`
+  rewrite_slprop (pure (ptr =!= null_llist) `star`
                  pts_to ptr full_perm hd `star`
                  llist' (next hd) tl)
                 (llist ptr (hd::tl))
                 (fun _ -> norm_spec [delta;zeta] (llist ptr (hd::tl)))
 
 let elim_llist_cons #a ptr hd tl =
-  change_slprop (llist ptr (hd::tl))
+  rewrite_slprop (llist ptr (hd::tl))
     (pure (ptr =!= null_llist) `star`
       pts_to ptr full_perm hd `star`
       llist' (next hd) tl)

@@ -1,10 +1,28 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Steel.FramingTestSuite
 
 open Steel.Memory
 open Steel.Effect
 
+/// A collection of small unit tests for the framing tactic
+
 assume val ref : Type0
-assume val ptr (_:ref) : slprop u#1
+assume val ptr (_:ref) : vprop
 
 assume val alloc (x:int)  : SteelT ref emp (fun y -> ptr y)
 assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
