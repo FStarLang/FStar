@@ -59,3 +59,20 @@ let test3 (r1 r2 r3:ref int) : Steel unit
     assert (sel r1 h1 == 1);
     assert (sel r2 h0 == sel r2 h1);
     write r1 0
+
+let test4 (r: ref nat) : SteelT unit (vptr r) (fun _ -> vptr r) =
+  share r;
+  gather r
+
+let rec test5 (#p: Steel.FractionalPermission.perm) (r: ref nat) (n: nat) () : SteelT unit (vptrp r p) (fun _ -> vptrp r p) =
+  if n = 0
+  then return ()
+  else begin
+    let j = n - 1 in
+    share r;
+    let _ = par
+      (test5 r j) // FIXME: does not work with (fun _ -> test5 r j ()): computed SteelBase, expected SteelT
+      (test5 r j)
+    in
+    gather r
+  end
