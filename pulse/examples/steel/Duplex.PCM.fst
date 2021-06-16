@@ -644,63 +644,93 @@ let upd_gen_action #p r x y f =
   rewrite_slprop (pts_to r (reveal (hide y))) (pts_to r y) (fun _ -> ())
 
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1"
 #restart-solver
 let write_a_f_aux
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
   (x:msg_t next)
-  : FStar.PCM.frame_preserving_upd_0 (pcm p) (A_W next tr)
+  : FStar.PCM.frame_preserving_upd (pcm p) (A_W next tr)
     (if is_send (step next x)
-    then A_W (step next x) (extend tr x)
-    else if is_recv (step next x)
-    then A_R (step next x) (extend tr x)
-    else A_Fin (step next x) (extend tr x))
-  = fun (v:t p{compatible (pcm p) (A_W next tr) v}) ->
+     then A_W (step next x) (extend tr x)
+     else if is_recv (step next x)
+     then A_R (step next x) (extend tr x)
+     else A_Fin (step next x) (extend tr x))
+  = fun v ->
     let post =
-      if is_send (step next x)
+    if is_send (step next x)
     then A_W (step next x) (extend tr x)
     else if is_recv (step next x)
     then A_R (step next x) (extend tr x)
     else A_Fin (step next x) (extend tr x)
   in
   match v with
-  | A_W n tr' ->
-      assert (n == next /\ tr' == tr);
-      compatible_refl (pcm p) post;
-      post
   | V tr' ->
-      assert (tr'.to == next /\ tr'.tr == tr);
-      let res = V ({to = (step next x); tr = extend tr x}) in
-      let aux () : Lemma (compatible (pcm p) post res)
-        = if is_send (step next x) then (
-            assert (composable post (B_R next tr));
-            assert (compose (B_R next tr) post == res)
-          ) else if is_recv (step next x) then (
-            assert (composable post (B_W (step next x) (extend tr x)));
-            assert (compose (B_W (step next x) (extend tr x)) post == res)
-          ) else (
-            assert (is_fin (step next x));
-            assert (post == A_Fin (step next x) (extend tr x));
-            assert (composable post (B_R next tr));
-            assert (compose (B_R next tr) post == res)
-          )
-      in aux ();
-      res
+    assert (tr'.to == next /\ tr'.tr == tr);
+    let res = V ({to = (step next x); tr = extend tr x}) in
 
+    let aux () : Lemma (compatible (pcm p) post res)
+      = if is_send (step next x) then (
+          assert (composable post (B_R next tr));
+          assert (compose (B_R next tr) post == res)
+        ) else if is_recv (step next x) then (
+          assert (composable post (B_W (step next x) (extend tr x)));
+          assert (compose (B_W (step next x) (extend tr x)) post == res)
+        ) else (
+          assert (is_fin (step next x));
+          assert (post == A_Fin (step next x) (extend tr x));
+          assert (composable post (B_R next tr));
+          assert (compose (B_R next tr) post == res)
+        )
+    in
+    aux ();
+    let aux_composable (frame:t p{composable (A_W next tr) frame})
+      : Lemma (composable post frame /\ (compose (A_W next tr) frame == v ==>
+                                        compose post frame == res))
+      = match frame with
+        | Nil -> ()
+        | B_R q' s' ->
+          if is_send (step next x) 
+          then begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s')
+          end
+          else if is_recv (step next x)
+          then begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s');
+            lemma_ahead_is_longer A next tr q' s';
+            assert (trace_length tr >= trace_length s');
+            extend_increase_length tr x;
+            assert (trace_length (extend tr x) > trace_length tr)
+          end
+          else begin
+            assert (ahead A next q' tr s');
+            assert (ahead A (step next x) next (extend tr x) tr);
+            assert (ahead A (step next x) q' (extend tr x) s')
+          end
+    in
+    Classical.forall_intro aux_composable;
+    res
+#pop-options
+
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1"
+#restart-solver
 let write_b_f_aux
 (#p:dprot)
 (#next:dprot{more next /\ tag_of next = Recv})
 (tr:trace p next)
 (x:msg_t next)
-: FStar.PCM.frame_preserving_upd_0 (pcm p) (B_W next tr)
+: FStar.PCM.frame_preserving_upd (pcm p) (B_W next tr)
   (if is_send (step next x)
    then B_R (step next x) (extend tr x)
    else if is_recv (step next x)
    then B_W (step next x) (extend tr x)
    else B_Fin (step next x) (extend tr x))
-= fun (v:t p{compatible (pcm p) (B_W next tr) v}) ->
+= fun v ->
   let post =
     if is_send (step next x)
     then B_R (step next x) (extend tr x)
@@ -709,10 +739,6 @@ let write_b_f_aux
     else B_Fin (step next x) (extend tr x)
   in
   match v with
-  | B_W n tr' ->
-      assert (n == next /\ tr' == tr);
-      compatible_refl (pcm p) post;
-      post
   | V tr' ->
       assert (tr'.to == next /\ tr'.tr == tr);
       let res = V ({to = (step next x); tr = extend tr x}) in
@@ -729,7 +755,37 @@ let write_b_f_aux
             assert (composable post (A_R next tr));
             assert (compose (A_R next tr) post == res)
           )
-      in aux ();
+      in
+      aux ();
+      let aux_composable (frame:t p{composable (B_W next tr) frame})
+      : Lemma (composable post frame /\ (compose (B_W next tr) frame == v ==>
+                                        compose post frame == res))
+      = match frame with
+        | Nil -> ()
+        | A_R q' s' ->
+          if is_send (step next x) 
+          then begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s');
+            lemma_ahead_is_longer B next tr q' s';
+            assert (trace_length tr >= trace_length s');
+            extend_increase_length tr x;
+            assert (trace_length (extend tr x) > trace_length tr)
+          end
+          else if is_recv (step next x)
+          then begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s')
+          end
+          else begin
+            assert (ahead B next q' tr s');
+            assert (ahead B (step next x) next (extend tr x) tr);
+            assert (ahead B (step next x) q' (extend tr x) s')
+          end
+      in
+      Classical.forall_intro aux_composable;
       res
 
 let lemma_ahead_extend_a (#p:dprot)
@@ -765,7 +821,7 @@ let write_a_f_lemma
   (#next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
   (x:msg_t next)
-  (v:t p)
+  (v:t p{(pcm p).refine v})
   (frame:t p)
   : Lemma
     (requires compatible (pcm p) (A_W next tr) v /\ composable v frame)
@@ -775,33 +831,14 @@ let write_a_f_lemma
       composable (write_a_f_aux #p #next tr x v) frame /\
       (compatible (pcm p) (A_W next tr) (compose v frame) ==>
         (compose (write_a_f_aux tr x v) frame == write_a_f_aux tr x (compose v frame))))
-  = let post = write_a_f_aux tr x v in
-    match v with
-    | A_W n tr ->
-      if Nil? frame then ()
-      else begin
-        let B_R n' tr' = frame in
-        assert (ahead A n n' tr tr');
-        let next_n = step next x in
-        let next_tr = extend tr x in
-        lemma_ahead_extend_a n' next tr' tr x;
-        let aux () : Lemma
-          (requires compatible (pcm p) (A_W next tr) (compose v frame))
-          (ensures compose post frame == write_a_f_aux tr x (compose v frame))
-          = let last = {to = next_n; tr = next_tr} in
-            lemma_ahead_is_longer A next_n next_tr n' tr';
-            assert (compose post frame == V last);
-            assert (compose v frame == V ({to = n; tr = tr}))
-        in Classical.move_requires aux ()
-      end
-    | V tr' -> ()
+  = ()
 
 let write_b_f_lemma
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Recv})
   (tr:trace p next)
   (x:msg_t next)
-  (v:t p)
+  (v:t p{(pcm p).refine v})
   (frame:t p)
   : Lemma
     (requires compatible (pcm p) (B_W next tr) v /\ composable v frame)
@@ -811,27 +848,7 @@ let write_b_f_lemma
       composable (write_b_f_aux #p #next tr x v) frame /\
       (compatible (pcm p) (B_W next tr) (compose v frame) ==>
         (compose (write_b_f_aux tr x v) frame == write_b_f_aux tr x (compose v frame))))
-  = let post = write_b_f_aux tr x v in
-    match v with
-    | B_W n tr ->
-      if Nil? frame then ()
-      else begin
-        let A_R n' tr' = frame in
-        assert (ahead B n n' tr tr');
-        let next_n = step next x in
-        let next_tr = extend tr x in
-        lemma_ahead_extend_b n' next tr' tr x;
-        let aux () : Lemma
-          (requires compatible (pcm p) (B_W next tr) (compose v frame))
-          (ensures compose post frame == write_b_f_aux tr x (compose v frame))
-          = let last = {to = next_n; tr = next_tr} in
-            lemma_ahead_is_longer B next_n next_tr n' tr';
-            Classical.move_requires (lemma_same_trace_length_ahead_refl B next_tr) tr';
-            assert (compose post frame == V last);
-            assert (compose v frame == V ({to = n; tr = tr}))
-        in Classical.move_requires aux ()
-      end
-    | V tr' -> ()
+  = ()
 
 #pop-options
 
