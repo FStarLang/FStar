@@ -187,7 +187,7 @@ allow us to:
    *introducing* a refinement type.
 
 2. make use of a term that has a refinement type, e.g., given ``x :
-   even`` we would like to be write ``x + 1``, treating ``x`` as an
+   even`` we would like to write ``x + 1``, treating ``x`` as an
    ``int`` to add ``1`` to it. This is sometimes called *eliminating*
    a refinement type.
 
@@ -270,7 +270,7 @@ simply a *lambda*. The syntax is largely inherited from OCaml, and
 this `OCaml tutorial
 <https://ocaml.org/learn/tutorials/basics.html#Defining-a-function>`_
 provides more details for those unfamiliar with the language. We'll
-assume a basic familiarity with OCaml-like syntax.x
+assume a basic familiarity with OCaml-like syntax.
 
 Lambda terms
 ............
