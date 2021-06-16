@@ -297,13 +297,33 @@ let bind a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #re
 
 #pop-options
 
+/// Need to manually remove the rewrite_with_tactic marker here
+let lemma_unfold_subcomp_pre (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (p1:squash (can_be_split pre_g pre_f))
+  (p2:squash (equiv_forall post_f post_g))
+  : Lemma (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
+          (ensures (
+          (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+        (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
+           ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        )))
+   = T.unfold_rewrite_with_tactic vc_norm (  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+        (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
+           ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ))
+
 let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
   fun frame ->
     let m0 = nmst_get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
     focus_is_restrict_mk_rmem pre_g pre_f (core_mem m0);
 
+    lemma_unfold_subcomp_pre req_f ens_f req_g ens_g p1 p2;
+
     can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant Set.empty m0) m0;
+
 
     let x = f frame in
 
