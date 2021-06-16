@@ -204,6 +204,8 @@ let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre
 
     can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant opened m0) m0;
 
+    lemma_unfold_subcomp_pre req_f ens_f req_g ens_g p1 p2;
+
     let x = f frame in
 
     let m1:full_mem = NMSTTotal.get () in
