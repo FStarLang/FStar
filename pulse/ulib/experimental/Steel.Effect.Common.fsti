@@ -2113,11 +2113,14 @@ let ite_soundness_tac () : Tac unit =
   norm [];
   // We remove the with_tactic call with executing the tactic before calling the SMT.
   split ();
-  apply_lemma (`unfold_with_tactic);
+  // Remove the `rewrite_by_tactic` nodes
+  pointwise' (fun _ -> or_else
+    (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
+    trefl);
   smt ()
 
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
 unfold
-let vc_norm () : Tac unit = norm normal_steps
+let vc_norm () : Tac unit = norm normal_steps; trefl()
