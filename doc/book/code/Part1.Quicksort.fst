@@ -40,7 +40,7 @@ let rec partition (#a:Type) (f:a -> bool) (l:list a)
       else l1, hd::l2
 //SNIPPET_END: partition
 
-//SNIPPET_START: sort
+//SNIPPET_START: sort-impl
 let rec sort (l:list int)
   : Tot (list int) (decreases (length l))
   = match l with
@@ -48,7 +48,7 @@ let rec sort (l:list int)
     | pivot :: tl ->
       let hi, lo  = partition ((<=) pivot) tl in
       append (sort lo) (pivot :: sort hi)
-//SNIPPET_END: sort
+//SNIPPET_END: sort-impl
 
 //SNIPPET_START: partition_mem
 let rec partition_mem (#a:eqtype)

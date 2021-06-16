@@ -54,8 +54,8 @@ the middle before returning. Here it is:
 
 .. literalinclude:: ../code/Part1.Quicksort.fst
        :language: fstar
-       :start-after: SNIPPET_START: sort
-       :end-before: SNIPPET_END: sort
+       :start-after: SNIPPET_START: sort-impl
+       :end-before: SNIPPET_END: sort-impl
 
 There are a few points worth discussing in detail:
 
