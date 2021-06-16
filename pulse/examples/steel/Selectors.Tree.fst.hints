@@ -39,7 +39,7 @@
         "typing_Selectors.Tree.Core.linked_tree_"
       ],
       0,
-      "3bdd77601565e00386d7634b8776f4a7"
+      "ad0019c95fb947f50665f9602d82194c"
     ],
     [
       "Selectors.Tree.append_right",
@@ -79,7 +79,7 @@
         "typing_Selectors.Tree.Core.linked_tree_"
       ],
       0,
-      "71c3f0c2b6740a81e3e4198d741ce69b"
+      "3ec2df5043e79590369b60415d4f624f"
     ],
     [
       "Selectors.Tree.height",
@@ -122,7 +122,7 @@
         "typing_Selectors.Tree.Core.linked_tree_"
       ],
       0,
-      "6b9d160ffea965f87957b05393bb4430"
+      "6db14cc8e18477dcaa1916c318bd3b48"
     ],
     [
       "Selectors.Tree.member",
@@ -169,7 +169,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "a20ca83a571f5c8cd0978b378e49c245"
+      "f20a1e1d4ebdd1adc351cbbc3ec08568"
     ],
     [
       "Selectors.Tree.rotate_left",
@@ -192,7 +192,7 @@
         "projection_inverse_Trees.Node_right", "true_interp"
       ],
       0,
-      "6e73c11772b59918645cf3ce0197a97a"
+      "16e91689346e543db89c732864b13444"
     ],
     [
       "Selectors.Tree.rotate_right",
@@ -214,7 +214,7 @@
         "projection_inverse_Trees.Node_right", "true_interp"
       ],
       0,
-      "a26db4da558545d2e223e87653dcb192"
+      "0c24bcc0c1afd2dcba1eedbb87cd0b96"
     ],
     [
       "Selectors.Tree.rotate_right_left",
@@ -237,7 +237,7 @@
         "projection_inverse_Trees.Node_right", "true_interp"
       ],
       0,
-      "90ff23081de1074a94237ba0994d2740"
+      "32fe341b19272b59eda51cad1fb9479a"
     ],
     [
       "Selectors.Tree.rotate_left_right",
@@ -260,7 +260,7 @@
         "projection_inverse_Trees.Node_right", "true_interp"
       ],
       0,
-      "67dc2c168e5bf638e3ef66d5479d3b3c"
+      "75f8b53596d782cfcab56f3ac5856cdd"
     ],
     [
       "Selectors.Tree.is_balanced",
@@ -308,7 +308,7 @@
         "typing_Selectors.Tree.Core.linked_tree_", "typing_Trees.is_balanced"
       ],
       0,
-      "30b43259801cb877d5a5fc2f13a92d9f"
+      "c7db75a7e978412a5698336968fa4678"
     ],
     [
       "Selectors.Tree.rebalance_avl",
@@ -372,7 +372,7 @@
         "typing_Trees.rebalance_avl", "unit_typing"
       ],
       0,
-      "8d0742a8f96bc1ce91fb0f725f8fa92e"
+      "17e1d6a13c4cc3a924b424ddca19f8ba"
     ],
     [
       "Selectors.Tree.insert_avl",
@@ -422,7 +422,7 @@
         "typing_Selectors.Tree.Core.linked_tree_", "typing_Trees.is_balanced"
       ],
       0,
-      "b07fefefa80fe89f4c14ca1c3843f3be"
+      "c2a5150267fcb1eb871cb41a24c8194a"
     ]
   ]
 ]
