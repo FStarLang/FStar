@@ -38,7 +38,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "b1f3fe3de9fbebafd1d94dfb8fb02778"
+      "a4a3f508bbe95a9d0bd3966be2a5f818"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_6e71154bbf25b1447433d51ad95dc207"
       ],
       0,
-      "101fb7eb7c665d5e87e85827833ad2b4"
+      "2c4b0ae01205399d5b6bd28266fc5d74"
     ],
     [
       "OWGCounter.og_acquire",
@@ -59,7 +59,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "23d5527c8d36d2cedfdfcfa2a2a72745"
+      "81d3db8162dcf325f6484d04c8c3817d"
     ],
     [
       "OWGCounter.og_release",
@@ -68,7 +68,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "59d0e4bfabe099b2d92ea3c05c2bf2bf"
+      "26c537c1b400f8f37ec266c1a56153b4"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "38b6649e2cd647f0fd5b015fe5f0f139"
+      "65ae0b6aace8f7acec5a50bb33d77312"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -107,7 +107,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "7abfd707edf04608776f429a4e432f03"
+      "3c4ce177c48c29b7abbdd879e2f12895"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -139,7 +139,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1b7f23586daeff68648ff6f87d76a60b"
+      "d1885f8a13045b6e4d90474ac116797d"
     ],
     [
       "OWGCounter.incr",
@@ -163,7 +163,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "b7ce12a8610bee7ccdb758203ebb753d"
+      "08c2b945bb7a69413fb02a85f2db357d"
     ],
     [
       "OWGCounter.incr_main",
@@ -210,7 +210,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "48bd0daaec31e3689abb5a91fca289cf"
+      "c7cc1dcc32658f4b275073078bf6ed3d"
     ]
   ]
 ]

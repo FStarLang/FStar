@@ -1084,7 +1084,6 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     let wp_sort_a_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_sort_b) in
 
     let k = U.arrow [
-      S.null_binder t_range;
       S.mk_binder a;
       S.mk_binder b;
       S.null_binder wp_sort_a;
@@ -1185,7 +1184,6 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
 
       let bind_repr =
         let bind_repr_ts = ed |> U.get_bind_repr |> must in
-        let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
         let a, wp_sort_a = fresh_a_and_wp () in
         let b, wp_sort_b = fresh_a_and_wp () in
         let wp_sort_a_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_sort_b) in
@@ -1196,7 +1194,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
         let res =
           let wp = mk_Tm_app
             (Env.inst_tscheme bind_wp |> snd)
-            (List.map as_arg [r; S.bv_to_name a; S.bv_to_name b; S.bv_to_name wp_f; S.bv_to_name wp_g])
+            (List.map as_arg [S.bv_to_name a; S.bv_to_name b; S.bv_to_name wp_f; S.bv_to_name wp_g])
             Range.dummyRange in
           mk_repr b wp in
 

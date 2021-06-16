@@ -1,0 +1,66 @@
+[
+  "jÀ•u\u0006UÂ\u007fZ\u001dxÌZ\u0012Å¾",
+  [
+    [
+      "Steel.SelArray.asel",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_07039acee423863802d9ed936edf60e4",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e3bc1d6e60647c0bb55dd811fa1dee02"
+    ],
+    [
+      "Steel.SelArray.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "c94e96b6c68109ad952fa4643c30caa0"
+    ],
+    [
+      "Steel.SelArray.index",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Steel.SelArray.length", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f7e27500b9f63b1868f3808c5b686635"
+    ],
+    [
+      "Steel.SelArray.upd",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Steel.SelArray.length", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "92790089ad5c84d1126e09281474f1fe"
+    ]
+  ]
+]

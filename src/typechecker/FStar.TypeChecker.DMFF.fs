@@ -1523,8 +1523,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
-        U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
+        //let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
   in
