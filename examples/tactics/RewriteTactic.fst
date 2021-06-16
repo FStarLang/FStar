@@ -13,32 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.Effect
+module RewriteTactic
 
-open FStar.Reflection.Types
-open FStar.Tactics.Types
-open FStar.Tactics.Result
+open FStar.Tactics
 
-let with_tactic _ p = p
+let lem () : Lemma (1 == 2) = admit ()
+let tau () = apply_lemma (`lem)
 
-let rewrite_with_tactic _ p = p
-
-let synth_by_tactic #_ _ = admit ()
-
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
-let assert_by_tactic _ _ = ()
-#pop-options
-
-let by_tactic_seman _ _ = ()
-
-let preprocess_with _ = ()
-
-let postprocess_with _ = ()
-
-let postprocess_for_extraction_with _ = ()
-
-#set-options "--no_tactics"
-
-let unfold_with_tactic _ _ = ()
-
-let unfold_rewrite_with_tactic _ _ = ()
+let test _ =
+  assert (rewrite_with_tactic tau 1 == 2)
