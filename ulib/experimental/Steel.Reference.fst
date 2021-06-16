@@ -296,14 +296,13 @@ let write r x =
   write_pt r x;
   intro_vptr r _ x
 
-let share #a #_ r p =
+let share #a #_ #p r =
   let x = elim_vptr r p in
   share_pt r;
   intro_vptr r _ x;
-  intro_vptr r _ x;
-  half_perm p
+  intro_vptr r _ x
 
-let gather #a #_ r p0 p1 =
+let gather_gen #a #_ r p0 p1 =
   let x1 = elim_vptr r p1 in
   let x0 = elim_vptr r p0 in
   gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
@@ -469,14 +468,13 @@ let ghost_write r x =
   ghost_write_pt r x;
   intro_ghost_vptr r _ x
 
-let ghost_share #a #_ r p =
+let ghost_share #a #_ #p r =
   let x = elim_ghost_vptr r p in
   ghost_share_pt r;
   intro_ghost_vptr r _ x;
-  intro_ghost_vptr r _ x;
-  half_perm p
+  intro_ghost_vptr r _ x
 
-let ghost_gather #a #_ r p0 p1 =
+let ghost_gather_gen #a #_ r p0 p1 =
   let x1 = elim_ghost_vptr r p1 in
   let x0 = elim_ghost_vptr r p0 in
   ghost_gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
