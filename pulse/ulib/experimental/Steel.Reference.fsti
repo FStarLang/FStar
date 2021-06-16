@@ -195,7 +195,7 @@ let vptr' #a r p : vprop' =
 
 [@@ __steel_reduce__]
 unfold
-let vptrp r p = VUnit (vptr' r p)
+let vptrp (#a: Type) (r: ref a) ([@@@smt_fallback] p: perm) = VUnit (vptr' r p)
 
 [@@ __steel_reduce__; __reduce__]
 unfold
@@ -239,17 +239,16 @@ val write (#a:Type0) (r:ref a) (x:a) : Steel unit
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> x == sel r h1)
 
-val share (#a:Type0) (#uses:_) (r:ref a) (p: perm)
-  : SteelGhost perm uses
+val share (#a:Type0) (#uses:_) (#p: perm) (r:ref a)
+  : SteelGhost unit uses
     (vptrp r p)
-    (fun res -> vptrp r res `star` vptrp r res)
+    (fun _ -> vptrp r (half_perm p) `star` vptrp r (half_perm p))
     (fun _ -> True)
-    (fun h res h' ->
-      res == half_perm p /\
-      h' (vptrp r res) == h (vptrp r p)
+    (fun h _ h' ->
+      h' (vptrp r (half_perm p)) == h (vptrp r p)
     )
 
-val gather (#a:Type0) (#uses:_) (r:ref a) (p0:perm) (p1:perm)
+val gather_gen (#a:Type0) (#uses:_) (r:ref a) (p0:perm) (p1:perm)
   : SteelGhost perm uses
     (vptrp r p0 `star` vptrp r p1)
     (fun res -> vptrp r res)
@@ -260,6 +259,18 @@ val gather (#a:Type0) (#uses:_) (r:ref a) (p0:perm) (p1:perm)
       h' (vptrp r res) == h (vptrp r p1)
     )
 
+let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
+  : SteelGhost unit uses
+      (vptrp r (half_perm p) `star` vptrp r (half_perm p))
+      (fun _ -> vptrp r p)
+      (fun _ -> True)
+      (fun h _ h' ->
+        h' (vptrp r p) == h (vptrp r (half_perm p))
+      )
+= let _ = gather_gen r _ _ in
+  change_equal_slprop
+    (vptrp r _)
+    (vptrp r p)
 
 /// A stateful lemma variant of the pts_to_not_null lemma above.
 /// This stateful function is computationally irrelevant and does not modify memory
@@ -392,7 +403,7 @@ let ghost_vptr' #a r p : vprop' =
 
 [@@ __steel_reduce__]
 unfold
-let ghost_vptrp r p = VUnit (ghost_vptr' r p)
+let ghost_vptrp (#a: Type) (r: ghost_ref a) ([@@@smt_fallback] p: perm) = VUnit (ghost_vptr' r p)
 
 [@@ __steel_reduce__; __reduce__]
 unfold
@@ -434,17 +445,16 @@ val ghost_write (#a:Type0) (#opened:inames) (r:ghost_ref a) (x:Ghost.erased a)
       (requires fun _ -> True)
       (ensures fun _ _ h1 -> Ghost.reveal x == h1 (ghost_vptr r))
 
-val ghost_share (#a:Type0) (#uses:_) (r:ghost_ref a) (p: perm)
-  : SteelGhost perm uses
+val ghost_share (#a:Type0) (#uses:_) (#p: perm) (r:ghost_ref a)
+  : SteelGhost unit uses
     (ghost_vptrp r p)
-    (fun res -> ghost_vptrp r res `star` ghost_vptrp r res)
+    (fun _ -> ghost_vptrp r (half_perm p) `star` ghost_vptrp r (half_perm p))
     (fun _ -> True)
     (fun h res h' ->
-      res == half_perm p /\
-      h' (ghost_vptrp r res) == h (ghost_vptrp r p)
+      h' (ghost_vptrp r (half_perm p)) == h (ghost_vptrp r p)
     )
 
-val ghost_gather (#a:Type0) (#uses:_) (r:ghost_ref a) (p0:perm) (p1:perm)
+val ghost_gather_gen (#a:Type0) (#uses:_) (r:ghost_ref a) (p0:perm) (p1:perm)
   : SteelGhost perm uses
     (ghost_vptrp r p0 `star` ghost_vptrp r p1)
     (fun res -> ghost_vptrp r res)
@@ -454,3 +464,16 @@ val ghost_gather (#a:Type0) (#uses:_) (r:ghost_ref a) (p0:perm) (p1:perm)
       h' (ghost_vptrp r res) == h (ghost_vptrp r p0) /\
       h' (ghost_vptrp r res) == h (ghost_vptrp r p1)
     )
+
+let ghost_gather (#a: Type0) (#uses: _) (#p: perm) (r: ghost_ref a)
+  : SteelGhost unit uses
+      (ghost_vptrp r (half_perm p) `star` ghost_vptrp r (half_perm p))
+      (fun _ -> ghost_vptrp r p)
+      (fun _ -> True)
+      (fun h _ h' ->
+        h' (ghost_vptrp r p) == h (ghost_vptrp r (half_perm p))
+      )
+= let _ = ghost_gather_gen r _ _ in
+  change_equal_slprop
+    (ghost_vptrp r _)
+    (ghost_vptrp r p)
