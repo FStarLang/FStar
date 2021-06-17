@@ -115,6 +115,15 @@ let build_constant (c: mlconstant): Parsetree.constant =
         | x ->
             BatString.concat v ["(Prims.parse_int \""; "\")"] in
       Const.integer s
+  | MLC_Int (v, Some (s, w)) ->
+      let s = match Z.of_string v with
+        | x when x = Z.zero -> "ZERO"
+        | x when x = Z.one -> "ONE"
+        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
+            BatString.concat v ["(STDINT.OFINT ("; "))"]
+        | x ->
+          BatString.concat v ["(STDINT.PARSE \""; "\")"] in
+      Const.integer s
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
