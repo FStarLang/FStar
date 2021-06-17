@@ -3,9 +3,9 @@ module Selectors.LList
 open FStar.Ghost
 open Steel.FractionalPermission
 module Mem = Steel.Memory
-module R = Steel.Reference
-open Steel.SelEffect.Atomic
-open Steel.SelEffect
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
 
 #push-options "--__no_positivity"
 noeq
@@ -23,8 +23,8 @@ let mk_cell #a (n: t a) (d:a) = {
 }
 
 (* AF: Need to put that in the standard library at some point *)
-let null_llist #a = R.null
-let is_null #a ptr = R.is_null ptr
+let null_llist #a = null
+let is_null #a ptr = is_null ptr
 
 let rec llist_sl' (#a:Type) (ptr:t a)
                          (l:list (cell a))
@@ -32,12 +32,12 @@ let rec llist_sl' (#a:Type) (ptr:t a)
     =
     match l with
     | [] ->
-      pure (ptr == null_llist)
+      Mem.pure (ptr == null_llist)
 
     | hd :: tl ->
-      R.pts_to ptr full_perm hd `Mem.star`
+      pts_to_sl ptr full_perm hd `Mem.star`
       llist_sl' (next hd) tl `Mem.star`
-      pure (ptr =!= null_llist)
+      Mem.pure (ptr =!= null_llist)
 
 
 let llist_sl ptr = Mem.h_exists (llist_sl' ptr)
@@ -63,7 +63,7 @@ let llist_sl'_witinv (#a:Type) (ptr:t a) : Lemma (is_witness_invariant (llist_sl
          | hd::tl ->
            Mem.pure_interp (ptr == null_llist) m;
            Mem.pure_star_interp
-             (R.pts_to ptr full_perm hd `Mem.star` llist_sl' (next hd) tl)
+             (pts_to_sl ptr full_perm hd `Mem.star` llist_sl' (next hd) tl)
              (ptr =!= null_llist) m;
            Mem.pure_interp (ptr =!= null_llist) m
 
@@ -72,11 +72,11 @@ let llist_sl'_witinv (#a:Type) (ptr:t a) : Lemma (is_witness_invariant (llist_sl
         | [] ->
            Mem.pure_interp (ptr == null_llist) m;
            Mem.pure_star_interp
-             (R.pts_to ptr full_perm hd1 `Mem.star` llist_sl' (next hd1) tl1)
+             (pts_to_sl ptr full_perm hd1 `Mem.star` llist_sl' (next hd1) tl1)
              (ptr =!= null_llist) m;
            Mem.pure_interp (ptr =!= null_llist) m
         | hd2::tl2 ->
-           R.pts_to_witinv ptr full_perm;
+           pts_to_witinv ptr full_perm;
            aux (next hd1) tl1 tl2 m
       end
 
@@ -119,16 +119,16 @@ let llist_sel_interp (#a:Type0) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
     llist_sl'_witinv ptr
 
 let intro_nil_lemma (a:Type0) (m:mem) : Lemma
-    (requires interp (hp_of vemp) m)
+    (requires interp (hp_of emp) m)
     (ensures interp (llist_sl (null_llist #a)) m /\ llist_sel (null_llist #a) m == [])
     = let ptr:t a = null_llist in
       pure_interp (ptr == null_llist) m;
       let open FStar.Tactics in
-      assert (llist_sl' ptr [] == pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
+      assert (llist_sl' ptr [] == Mem.pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
       llist_sel_interp ptr [] m
 
 let intro_llist_nil a =
-    change_slprop_2 vemp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
+    change_slprop_2 emp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
 
 let elim_nil_lemma (#a:Type0) (ptr:t a) (m:mem) : Lemma
     (requires interp (llist_sl ptr) m /\ ptr == null_llist)
@@ -152,7 +152,7 @@ let lemma_cons_not_null (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
       llist_sel_interp ptr l' m;
       match reveal l' with
       | hd::tl ->
-          let p = R.pts_to ptr full_perm (hide hd) `Mem.star` llist_sl' (next hd) tl in
+          let p = pts_to_sl ptr full_perm (hide hd) `Mem.star` llist_sl' (next hd) tl in
           pure_star_interp p (ptr =!= null_llist) m
 
 let cons_is_not_null #a ptr =
@@ -162,14 +162,14 @@ let cons_is_not_null #a ptr =
 
 let intro_cons_lemma_aux (#a:Type0) (ptr1 ptr2:t a)
   (x: cell a) (l:list (cell a)) (m:mem) : Lemma
-  (requires interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) m /\
+  (requires interp (pts_to_sl ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) m /\
     next x == ptr2)
   (ensures interp (llist_sl' ptr1 (x::l)) m)
-  = affine_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l) m;
-    R.pts_to_not_null ptr1 full_perm x m;
-    emp_unit (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l);
+  = affine_star (pts_to_sl ptr1 full_perm x) (llist_sl' ptr2 l) m;
+    pts_to_not_null ptr1 full_perm x m;
+    emp_unit (pts_to_sl ptr1 full_perm x `Mem.star` llist_sl' ptr2 l);
     pure_star_interp
-      (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l)
+      (pts_to_sl ptr1 full_perm x `Mem.star` llist_sl' ptr2 l)
       (ptr1 =!= null_llist)
       m
 
@@ -185,19 +185,19 @@ let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
       (requires disjoint ml mr /\ m == join ml mr /\
         interp (ptr ptr1) ml /\ interp (llist_sl ptr2) mr /\
         ptr_sel ptr1 m == x /\ interp (llist_sl' ptr2 l') m)
-      (ensures interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m)
+      (ensures interp (pts_to_sl ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m)
       = ptr_sel_interp ptr1 ml;
-        assert (interp (R.pts_to ptr1 full_perm x) ml);
+        assert (interp (pts_to_sl ptr1 full_perm x) ml);
         let l2 = id_elim_exists (llist_sl' ptr2) mr in
         join_commutative ml mr;
         assert (interp (llist_sl' ptr2 l2) m);
         llist_sl'_witinv ptr2;
         assert (interp (llist_sl' ptr2 l') mr);
-        intro_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l') ml mr
+        intro_star (pts_to_sl ptr1 full_perm x) (llist_sl' ptr2 l') ml mr
     in
     elim_star (ptr ptr1) (llist_sl ptr2) m;
     Classical.forall_intro_2 (Classical.move_requires_2 (aux m x));
-    assert (interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m);
+    assert (interp (pts_to_sl ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m);
     intro_cons_lemma_aux ptr1 ptr2 x l' m;
     intro_h_exists (x::l') (llist_sl' ptr1) m;
     llist_sel_interp ptr1 (x::l') m
@@ -234,7 +234,7 @@ let v_cell (#a:Type0) (#p:vprop) (r:t a)
   = h (llist_cell r)
 
 val reveal_non_empty_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
+  : Steel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
              (requires fun _ -> ptr =!= null_llist)
              (ensures fun h0 _ h1 -> v_cell ptr h0 == v_cell ptr h1 /\ Cons? (v_cell ptr h0))
 
@@ -253,29 +253,29 @@ let tail_cell_lemma (#a:Type0) (r:t a) (l:list (cell a)) (m:mem) : Lemma
     assert (interp (llist_sl' r l) m);
     let x = L.hd l in
     let tl = L.tl l in
-    let sl = R.pts_to r full_perm x `Mem.star` llist_sl' (next x) tl in
+    let sl = pts_to_sl r full_perm x `Mem.star` llist_sl' (next x) tl in
     pure_star_interp sl (r =!= null_llist) m;
     emp_unit sl;
     assert (interp sl m);
     let aux (m:mem) (ml mr:mem) : Lemma
       (requires disjoint ml mr /\ m == join ml mr /\
-        interp (R.pts_to r full_perm x) ml /\ interp (llist_sl' (next x) tl) mr)
+        interp (pts_to_sl r full_perm x) ml /\ interp (llist_sl' (next x) tl) mr)
       (ensures interp (ptr r `Mem.star` llist_sl (next x)) m /\
         sel_of (vptr r) m == x /\
         sel_of (llist_cell (next x)) m == tl)
-      = intro_h_exists (hide x) (R.pts_to r full_perm) ml;
+      = intro_ptr_interp r (hide x) ml;
         llist_sel_interp (next x) tl mr;
         intro_star (ptr r) (llist_sl (next x)) ml mr;
         ptr_sel_interp r ml;
-        R.pts_to_witinv r full_perm;
+        pts_to_witinv r full_perm;
         join_commutative ml mr
     in
-    elim_star (R.pts_to r full_perm x) (llist_sl' (next x) tl) m;
+    elim_star (pts_to_sl r full_perm x) (llist_sl' (next x) tl) m;
     Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
 
 
 val tail_cell (#a:Type0) (ptr:t a)
-  : SteelSel (t a) (llist_cell ptr)
+  : Steel (t a) (llist_cell ptr)
                    (fun n -> vptr ptr `star` llist_cell n)
                    (requires fun _ -> ptr =!= null_llist)
                    (ensures fun h0 n h1 ->
@@ -297,7 +297,7 @@ let tail_cell #a ptr =
   return (next v)
 
 val to_list_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist ptr) (fun _ -> llist_cell ptr)
+  : Steel unit (llist ptr) (fun _ -> llist_cell ptr)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> v_llist ptr h0 == datas (v_cell ptr h1))
 
@@ -305,7 +305,7 @@ let to_list_cell ptr =
   change_slprop_rel (llist ptr) (llist_cell ptr) (fun x y -> x == datas y) (fun _ -> ())
 
 val from_list_cell (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist_cell ptr) (fun _ -> llist ptr)
+  : Steel unit (llist_cell ptr) (fun _ -> llist ptr)
                   (requires fun _ -> True)
                   (ensures fun h0 _ h1 -> v_llist ptr h1 == datas (v_cell ptr h0))
 
@@ -313,18 +313,14 @@ let from_list_cell ptr =
   change_slprop_rel (llist_cell ptr) (llist ptr) (fun x y -> datas x == y) (fun _ -> ())
 
 let tail #a ptr =
-  // AF: Not sure why these gets are needed for verification?
-  let h0 = get () in
   to_list_cell ptr;
-  let h0' = get () in
   let n = tail_cell #a ptr in
   from_list_cell n;
   n
 
-
 let ind_llist_sl' (#a:Type0) (r:ref (t a)) (p:t a) : slprop u#1 =
-  R.pts_to r full_perm p `Mem.star` llist_sl p
-let ind_llist_sl (#a:Type0) (r:ref (t a)) = h_exists (ind_llist_sl' r)
+  pts_to_sl r full_perm p `Mem.star` llist_sl p
+let ind_llist_sl (#a:Type0) (r:ref (t a)) = Mem.h_exists (ind_llist_sl' r)
 
 let ind_llist_sel_full' (#a:Type0) (r:ref (t a)) : selector' (t a * list a) (ind_llist_sl r) =
   fun h ->
@@ -338,7 +334,7 @@ let ind_llist_sel_depends_only_on (#a:Type0) (ptr:ref (t a))
     let p1 = reveal (id_elim_exists (ind_llist_sl' ptr) m0) in
     let p2 = reveal (id_elim_exists (ind_llist_sl' ptr) m') in
 
-    R.pts_to_witinv ptr full_perm;
+    pts_to_witinv ptr full_perm;
     Mem.elim_wi (ind_llist_sl' ptr) p1 p2 m'
 
 let ind_llist_sel_depends_only_on_core (#a:Type0) (ptr:ref (t a))
@@ -347,7 +343,7 @@ let ind_llist_sel_depends_only_on_core (#a:Type0) (ptr:ref (t a))
   = let p1 = reveal (id_elim_exists (ind_llist_sl' ptr) m0) in
     let p2 = reveal (id_elim_exists (ind_llist_sl' ptr) (core_mem m0)) in
 
-    R.pts_to_witinv ptr full_perm;
+    pts_to_witinv ptr full_perm;
     Mem.elim_wi (ind_llist_sl' ptr) p1 p2 (core_mem m0)
 
 let ind_llist_sel_full (#a:Type0) (r:ref (t a)) : selector (t a * list a) (ind_llist_sl r) =
@@ -371,30 +367,30 @@ let v_full (#a:Type0) (#p:vprop) (r:ref (t a))
   = h (ind_llist_full r)
 
 let intro_ptr_frame_lemma (#a:Type0) (r:ref a) (x:a) (frame:slprop) (m:mem)
-  : Lemma (requires interp (R.pts_to r full_perm x `Mem.star` frame) m)
+  : Lemma (requires interp (pts_to_sl r full_perm x `Mem.star` frame) m)
           (ensures interp (ptr r `Mem.star` frame) m /\ sel_of (vptr r) m == x)
   = let aux (m:mem) (ml mr:mem) : Lemma
       (requires disjoint ml mr /\ m == join ml mr /\
-        interp (R.pts_to r full_perm x) ml /\ interp frame mr)
+        interp (pts_to_sl r full_perm x) ml /\ interp frame mr)
       (ensures interp (ptr r `Mem.star` frame) m /\
         sel_of (vptr r) m == x)
-      = intro_h_exists (hide x) (R.pts_to r full_perm) ml;
+      = intro_ptr_interp r (hide x) ml;
         intro_star (ptr r) frame ml mr;
         ptr_sel_interp r ml;
-        R.pts_to_witinv r full_perm
+        pts_to_witinv r full_perm
     in
-    elim_star (R.pts_to r full_perm x) frame m;
+    elim_star (pts_to_sl r full_perm x) frame m;
     Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
 
 let intro_pts_to_frame_lemma (#a:Type0) (r:ref a) (x:a) (frame:slprop) (m:mem)
   : Lemma (requires interp (ptr r `Mem.star` frame) m /\ sel_of (vptr r) m == x)
-          (ensures interp (R.pts_to r full_perm x `Mem.star` frame) m)
+          (ensures interp (pts_to_sl r full_perm x `Mem.star` frame) m)
   = let aux (m:mem) (ml mr:mem) : Lemma
       (requires disjoint ml mr /\ m == join ml mr /\
         interp (ptr r) ml /\ interp frame mr /\ sel_of (vptr r) ml == x)
-      (ensures interp (R.pts_to r full_perm x `Mem.star` frame) m)
+      (ensures interp (pts_to_sl r full_perm x `Mem.star` frame) m)
       = ptr_sel_interp r ml;
-        intro_star (R.pts_to r full_perm x) frame ml mr
+        intro_star (pts_to_sl r full_perm x) frame ml mr
     in
     elim_star (ptr r) frame m;
     Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
@@ -409,7 +405,7 @@ let unpack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem) : Lemma
   = intro_ptr_frame_lemma r p (llist_sl p) m
 
 val unpack_ind_full (#a:Type0) (r:ref (t a))
-  : SteelSel (t a)
+  : Steel (t a)
              (ind_llist_full r)
              (fun p -> vptr r `star` llist p)
              (requires fun _ -> True)
@@ -450,7 +446,7 @@ let pack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem)
     intro_h_exists p (ind_llist_sl' r) m;
     let (p', l') = ind_llist_sel_full r m in
     unpack_ind_lemma r p' l' m;
-    R.pts_to_witinv r full_perm
+    pts_to_witinv r full_perm
 
 let pack_ind r p =
   let h = get () in

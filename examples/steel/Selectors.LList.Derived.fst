@@ -2,7 +2,7 @@ module Selectors.LList.Derived
 
 let push p x =
   let c = mk_cell p x in
-  let head = alloc c in
+  let head = malloc c in
   intro_llist_cons head p;
   head
 
@@ -11,7 +11,7 @@ let ind_push r x =
   let h = get #(ind_llist r) () in
   let p = unpack_ind r in
   let c = mk_cell p x in
-  let head = alloc c in
+  let head = malloc c in
   intro_llist_cons head p;
   write r head;
   pack_ind r head
