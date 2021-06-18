@@ -1,4 +1,4 @@
-module StructRef
+module AggregateRef
 
 open FStar.PCM
 module M = Steel.Memory
