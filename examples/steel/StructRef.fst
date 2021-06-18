@@ -51,6 +51,13 @@ noeq type pcm_lens (#a: Type u#a) (#b: Type u#b) (p: pcm a) (q: pcm b) = {
       (ensures frame_pres p (upd raw f) s (raw.put v s));
 }
 
+let upd_resp_pcm' (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
+  : Lemma
+      (requires frame_pres q f (l.raw.get s) v)
+      (ensures frame_pres p (upd l.raw f) s (l.raw.put v s))
+      [SMTPat (frame_pres q f (l.raw.get s) v)]
+  = l.upd_resp_pcm s v f
+
 (* A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a *)
 noeq type ref (#a: Type u#a) (#b: Type u#b) (p: pcm a) (q: pcm b) = {
   l: pcm_lens p q;
@@ -69,37 +76,8 @@ let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
   put_put = (fun _ _ _ -> ());
 }
 
-// The following two lemmas aren't strictly necessary, but nice to verify
-open FStar.FunctionalExtensionality
-let upd_comp (l: lens 'a 'b) (m: lens 'b 'c) (f: 'c -> 'c) (s: 'a)
-  : Lemma (feq (upd (lens_comp l m) f) (upd l (upd m f)))
-  = ()
-let frame_pres_feq (p: pcm 'a) (f g: 'a -> 'a) (x y: 'a)
-  : Lemma (requires feq f g) (ensures frame_pres p f x y <==> frame_pres p g x y)
-  = ()
-
 let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
   (l: pcm_lens p q) (m: pcm_lens q r) : pcm_lens p r = {
   raw = lens_comp l.raw m.raw;
-  upd_resp_pcm = (fun s v f ->
-    (* Goal:
-         s: a -> v: b -> f:(b -> b) ->
-         Lemma
-           (requires frame_pres q f ((comp l m).get s) v)
-           (ensures frame_pres p (upd (comp l m) f) s ((comp l m).put v s));
-       Since 
-         (feq (upd (comp l m) f) (upd l (upd m f))
-       and 
-         feq f g ==> frame_pres p f x y <==> frame_pres p g x y,
-       suff. to show
-         (ensures frame_pres p (upd l (upd m f)) s (l.put (m.put v (l.get s)) s)).
-       Because l respects pcms, suff. to show
-         (ensures frame_pres p (upd m f) (l.get s) (m.put v (l.get s))).
-       Because m respects pcms, suff. to show
-         (ensures frame_pres p f (m.get (l.get s)) v,
-       which we have by assumption
-         (requires frame_pres q f ((comp l m).get s) v). *)
-    m.upd_resp_pcm (l.raw.get s) v f;
-    l.upd_resp_pcm s (m.raw.put v (l.raw.get s)) (upd m.raw f)
-  );
+  upd_resp_pcm = (fun _ _ _ -> ());
 }
