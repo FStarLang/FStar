@@ -29,7 +29,7 @@
         "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "7a3aea98fb8a6f23321bf4bddf4cbd2c"
+      "6a323d5f54e5784edb5d75a063e6f621"
     ],
     [
       "Selectors.Examples.test0",
@@ -42,7 +42,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "0a3a0a4213e99e8a44722884d37c292a"
+      "189b00d38b8b6b2eb3ddb2ee4cbaf48a"
     ],
     [
       "Selectors.Examples.test1",
@@ -73,7 +73,7 @@
         "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "9b47233417663033b95f693eadadfb1b"
+      "49a56a98382afed82e78f440e926775f"
     ],
     [
       "Selectors.Examples.test2",
@@ -104,7 +104,7 @@
         "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "eb0e2b27ab0eb34e4baf7714d33a36af"
+      "df210daf2fc891babac6fd6d507f2cf7"
     ],
     [
       "Selectors.Examples.test3",
@@ -118,7 +118,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "0f5be2c585cf2926f64bf1bf4dfc8bf5"
+      "ed45473f0fa8ec63c8298973c7e8b0f4"
     ]
   ]
 ]

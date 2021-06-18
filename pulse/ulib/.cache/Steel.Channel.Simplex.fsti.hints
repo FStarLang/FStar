@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "cc6bfcfe60f9e7f779c58e03b3a40326"
+      "7b80a8c982b6f0b75471fb6db70255d9"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "60b9bc5685dd2089661a75843cde2060"
+      "729bacbc36cb619edcb8dcf0900f256a"
     ]
   ]
 ]
