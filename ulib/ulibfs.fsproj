@@ -133,7 +133,7 @@
     <Compile Include="FStar.UInt.fst" />
     <Compile Include="FStar.Int.fst" />
     <Compile Include="FStar.Int.Cast.fsti" />
-    <Compile Include="fs\FStar_Int_Cast.fs" Link="FStar_Int_Cast.fs" />
+    <Compile Include="FStar.Int.Cast.fst" />
     <Compile Include="FStar.UInt128.fst" />
     <!-- <Compile Include="FStar.Universe.fst" /> -->
     <!-- <Compile Include="FStar.GSet.fst" /> -->
