@@ -191,51 +191,13 @@ let (by_tactic_interp :
                           tm.FStar_Syntax_Syntax.pos tactic e goal in
                       (match uu___4 with
                        | (gs, uu___5) ->
-                           (FStar_List.iter
-                              (fun g ->
-                                 let uu___7 =
-                                   let uu___8 =
-                                     FStar_Tactics_Types.goal_env g in
-                                   let uu___9 =
-                                     FStar_Tactics_Types.goal_type g in
-                                   getprop uu___8 uu___9 in
-                                 match uu___7 with
-                                 | FStar_Pervasives_Native.Some vc ->
-                                     ((let uu___9 =
-                                         FStar_ST.op_Bang
-                                           FStar_Tactics_Interpreter.tacdbg in
-                                       if uu___9
-                                       then
-                                         let uu___10 =
-                                           FStar_Syntax_Print.term_to_string
-                                             vc in
-                                         FStar_Util.print1
-                                           "Postprocessing left a goal: %s\n"
-                                           uu___10
-                                       else ());
-                                      (let guard =
-                                         {
-                                           FStar_TypeChecker_Common.guard_f =
-                                             (FStar_TypeChecker_Common.NonTrivial
-                                                vc);
-                                           FStar_TypeChecker_Common.deferred_to_tac
-                                             = [];
-                                           FStar_TypeChecker_Common.deferred
-                                             = [];
-                                           FStar_TypeChecker_Common.univ_ineqs
-                                             = ([], []);
-                                           FStar_TypeChecker_Common.implicits
-                                             = []
-                                         } in
-                                       let uu___9 =
-                                         FStar_Tactics_Types.goal_env g in
-                                       FStar_TypeChecker_Rel.force_trivial_guard
-                                         uu___9 guard))
-                                 | FStar_Pervasives_Native.None ->
-                                     FStar_Errors.raise_error
-                                       (FStar_Errors.Fatal_OpenGoalsInSynthesis,
-                                         "rewrite_with_tactic left open goals")
-                                       typ.FStar_Syntax_Syntax.pos) gs;
+                           ((match gs with
+                             | [] -> ()
+                             | uu___7 ->
+                                 FStar_Errors.raise_error
+                                   (FStar_Errors.Fatal_OpenGoalsInSynthesis,
+                                     "rewrite_with_tactic left open goals")
+                                   typ.FStar_Syntax_Syntax.pos);
                             (let g_imp1 =
                                FStar_TypeChecker_Rel.resolve_implicits_tac e
                                  g_imp in
