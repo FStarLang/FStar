@@ -274,7 +274,7 @@ package:
 	cp ../../.common.mk $(PREFIX)/
 	cp ../../fsharp.extraction.targets $(PREFIX)/
 	@# Then the rest of the static files.
-    $(call fexport,.nuget)
+	$(call fexport-all,.nuget)
 	$(call fexport,examples)
 	$(call fexport,tests)
 	$(call fexport,ucontrib)
