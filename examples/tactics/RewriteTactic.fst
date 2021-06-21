@@ -13,32 +13,26 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.Effect
+module RewriteTactic
 
-open FStar.Reflection.Types
-open FStar.Tactics.Types
-open FStar.Tactics.Result
+open FStar.Tactics
 
-let with_tactic _ p = p
+let lem1 () : Lemma (1 == 2) = admit ()
+let lem2 (x:int) : Lemma (1 == x)
+            = admit()
 
-let rewrite_with_tactic _ p = p
+let tau1 () = apply_lemma (`lem1)
+let tau2 () = apply_lemma (`lem2)
 
-let synth_by_tactic #_ _ = admit ()
+let test1 _ =
+  assert (rewrite_with_tactic tau1 1 == 2)
 
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
-let assert_by_tactic _ _ = ()
-#pop-options
+// SMT Failure
+[@expect_failure]
+let test2 _ =
+  assert (rewrite_with_tactic tau1 1 == 1)
 
-let by_tactic_seman _ _ = ()
-
-let preprocess_with _ = ()
-
-let postprocess_with _ = ()
-
-let postprocess_for_extraction_with _ = ()
-
-#set-options "--no_tactics"
-
-let unfold_with_tactic _ _ = ()
-
-let unfold_rewrite_with_tactic _ _ = ()
+// Uninstantiated uvar remaining
+[@expect_failure]
+let test3 _ =
+  assert (rewrite_with_tactic tau2 1 == 2)
