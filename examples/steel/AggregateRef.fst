@@ -59,6 +59,22 @@ let frame_pres_mk_upd (p: pcm 'a) (x y: Ghost.erased 'a)
   (f:('a -> 'a){frame_pres p f x y})
   : frame_preserving_upd p x y
   = fun v -> f v
+(** The converse is not true, because a frame_preserving_upd's domain
+    is restricted to v:a{p.refine v /\ compatible p x v}. *)
+
+let frame_pres_intro (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
+  (g:(v:'a{p.refine v /\ compatible p x v} ->
+    Lemma (p.refine (f v) /\ compatible p y (f v))
+    [SMTPat (compatible p x v)]))
+  (h:(
+    (v:'a{p.refine v /\ compatible p x v} ->
+      Lemma (p.refine (f v) /\ compatible p y (f v))
+      [SMTPat (compatible p x v)]) ->
+    (v:'a{p.refine v /\ compatible p x v} -> frame:'a{composable p x frame} ->
+    Lemma (composable p y frame /\ (op p x frame == v ==> op p y frame == f v))
+     [SMTPat (compatible p x v); SMTPat (composable p x frame)])))
+: Lemma (frame_pres p f x y) =
+  let _ = g in let _ = h g in ()
 
 (** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b)
     with the extra law that lens_upd lifts frame-preserving updates on
@@ -87,9 +103,36 @@ let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.raw.get s
 let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.raw.put v s
 let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.raw f s
 
-(* A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a *)
-noeq type ref (#a: Type u#a) (#b: Type u#b) (p: pcm a) (q: pcm b) = {
-  l: pcm_lens p q;
-  r: M.ref a p;
+open Aggregates
+
+let lens_fst_put (x:'a) (xy: 'a & 'b): 'a & 'b = (x, snd xy)
+let lens_fst #a #b : lens (a & b) a = {
+  get = fst;
+  put = lens_fst_put;
+  get_put = (fun _ _ -> ());
+  put_get = (fun _ -> ());
+  put_put = (fun _ _ _ -> ());
 }
 
+let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
+  raw = lens_fst;
+  upd_resp_pcm = (fun (x, y) x' f ->
+    assert (forall (v:a{p.refine v /\ compatible p x v}). p.refine (f v) /\ compatible p x' (f v));
+    frame_pres_intro (tuple_pcm p q) (lens_upd lens_fst f) (x, y) (x', y)
+      (fun (v, w) ->
+        let compat_ty = compatible (tuple_pcm p q) (x', y) (f v, w) in
+        compatible_elim p x' (f v) compat_ty (fun frame_v ->
+        compatible_elim q y w compat_ty (fun frame_w ->
+        compatible_intro (tuple_pcm p q) (x', y) (f v, w) (frame_v, frame_w))))
+      (fun aux (v, w) _ ->
+        let compat_ty = compatible (tuple_pcm p q) (x', y) (f v, w) in
+        compatible_elim p x' (f v) compat_ty (fun frame_v ->
+        compatible_elim q y w compat_ty (fun frame_w ->
+        compatible_intro (tuple_pcm p q) (x', y) (f v, w) (frame_v, frame_w)))));
+}
+
+(* A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a *)
+noeq type ref (#a: Type u#a) (#b: Type u#b) (p: pcm a) (q: pcm b) = {
+  l: pcm_lens p q; // additionally take refinement on a?
+  r: M.ref a p;
+}
