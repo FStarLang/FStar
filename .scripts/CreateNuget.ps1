@@ -14,7 +14,15 @@ param(
 
         # Nuget.org Api Key
         [Parameter(Mandatory=$true)]
-        $ApiKey
+        $ApiKey,
+
+        # A binary package version to use, in YYYY.MM.DD format
+        [Parameter()]
+        [AllowNull()]
+        [string] $Version,
+
+        # Should a pre-release or a release nuget be produced (pre-release by default)
+        [switch]$PreRelease=$true
 )
 
 <#
@@ -38,23 +46,33 @@ function UpdateVersionInNuspec{
     Finds latest F* windows binary package available on Github Releases.
 #>
 function FindBinaryPackage{
-    [CmdletBinding()] param([string] $repo)
+    [CmdletBinding()] param([string] $repo, [string]$version, [bool]$prerelease)
     
     $releasesUri = "https://api.github.com/repos/$repo/releases"
     $releases = 
         Invoke-WebRequest $releasesUri | 
         ConvertFrom-Json 
         
+    # Assumption is that all binary packages as versioned with YYYY.MM.DD. By default they are 
+    # produced as pre-release and some of them are manually marked as released. 
     $releases = 
         $releases | % {
             [PSCustomObject]@{
                 name = $_.name
                 tag_name = $_.tag_name
+                pre_release = $_.prerelease
                 # For some reason '\d{4}' or '[0-9]{4}' do not work
                 asset = @($_.assets | Where-Object { $_.name -like 'fstar_[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]_Windows_x64*'} | % { [PSCustomObject]@{ name = $_.name; url = $_.browser_download_url }})
             } 
         } |
         Where-Object { $_.asset.Count -eq 1 }
+
+    # pick a particular version or latest by default
+    if ($version) {
+        $releases = $releases | Where-Object { $_.asset.name.Substring(6,10) -ieq $version -and $_.pre_release -eq $prerelease }
+    } else {
+        $releases = $releases | Where-Object { $_.pre_release -eq $prerelease }
+    }
 
     if ($releases.Count -eq 0) {
         throw "Could not find a suitable windows binary package"
@@ -64,6 +82,7 @@ function FindBinaryPackage{
         [PSCustomObject]@{
             name = $releases[0].name
             tag_name = $releases[0].tag_name
+            pre_release = $releases[0].pre_release
             version = "0.$($releases[0].asset.name.Substring(6, 10))" # The date part of the filename
             filename = $releases[0].asset.name
             downloadUrl = $releases[0].asset.url
@@ -179,13 +198,14 @@ $repo = "FStarLang/FStar"
 
 New-Item $outputDir -ItemType Directory -Force | Out-Null
 
-$package = FindBinaryPackage -repo $repo
+$package = FindBinaryPackage -repo $repo -version $version -prerelease $PreRelease
 Write-Host "Selected package: $package"
 $FStarRootPath = GetWindowsBinaryPackage -package $package -outputDir $outputDir
 
 CompileUlibfs -MSBuildExe $msbuild -FStarRootPath $FStarRootPath
 
-PackageAsNuget -NugetPath $nuget -FStarPath $FStarRootPath -outputDir $outputDir -version $package.version
+$nugetVersionFinal = if ($PreRelease) { "$($package.version)-pre" } else { $package.version }
+PackageAsNuget -NugetPath $nuget -FStarPath $FStarRootPath -outputDir $outputDir -version $nugetVersionFinal
 
 $nuget_path = Join-Path -Path $outputDir -ChildPath "$nuget_name.$($package.version).nupkg"
 PushToNugetOrg -NugetExe $nuget -ApiKey $ApiKey -FStarNugetPath $nuget_path
