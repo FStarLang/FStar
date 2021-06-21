@@ -1,5 +1,5 @@
 [
-  "ÏÏºLÚÀmêÂÚ<Û›ÆýH",
+  "ùêEª\fóp3D‡<­«{\u0012\u0006",
   [
     [
       "Steel.Primitive.ForkJoin.__proj__Mkthread__item__l",
@@ -11,7 +11,7 @@
         "projection_inverse_Steel.Primitive.ForkJoin.Mkthread_r"
       ],
       0,
-      "097a4090e4cae7516ae14c6cb1902ebb"
+      "5bc4167c0e836e29294d08dff73f3ffd"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_false",
@@ -23,7 +23,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "08cce6e217f1676cf1b9194282545d93"
+      "da566339e4381b52c707940d34c768ca"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_true",
@@ -32,7 +32,7 @@
       1,
       [ "@query", "equation_Steel.Primitive.ForkJoin.maybe_p" ],
       0,
-      "4615654acbcbfb9e981e03c754305c3a"
+      "2ce4175699eea776a6666f8b74d74273"
     ],
     [
       "Steel.Primitive.ForkJoin.new_thread",
@@ -41,7 +41,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "e9cf94fbcb9a8bb4b3a5ab3767733f13"
+      "d1f81b28190898a8252a10effa48e1ed"
     ],
     [
       "Steel.Primitive.ForkJoin.finish",
@@ -50,7 +50,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "12b10a8da4f36f11a0694bdb6f841454"
+      "153fe88909d382cf7b7dae034cd26e1c"
     ],
     [
       "Steel.Primitive.ForkJoin.acquire",
@@ -62,7 +62,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "8e0097097ef2d4022df687ba245c7a27"
+      "9ed3c082bf9154496307c6a4aa63ac7e"
     ],
     [
       "Steel.Primitive.ForkJoin.spawn",
@@ -71,7 +71,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "d75904f16696daea073908d51916a215"
+      "faefd14137090e25f7e2e59e8bb45196"
     ],
     [
       "Steel.Primitive.ForkJoin.fork",
@@ -89,7 +89,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "5ae9fac56732fb5063e468975f6963ca"
+      "8a20b17973038e468d2df7857c4b6b80"
     ],
     [
       "Steel.Primitive.ForkJoin.join",
@@ -97,23 +97,38 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Prims.eqtype", "equation_Steel.Effect.Common.true_p",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "bool_inversion",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Primitive.ForkJoin.lock_inv",
         "equation_Steel.Primitive.ForkJoin.lock_inv_pred",
         "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
         "function_token_typing_Prims.bool",
         "lemma_Steel.Memory.affine_star_smt",
         "proj_equation_Steel.Primitive.ForkJoin.Mkthread_r",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "true_interp", "typing_FStar.Ghost.hide",
+        "typing_Steel.Effect.Common.hp_of",
+        "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
         "typing_Steel.Primitive.ForkJoin.__proj__Mkthread__item__r",
+        "typing_Steel.Primitive.ForkJoin.lock_inv_pred",
         "typing_Steel.Primitive.ForkJoin.maybe_p",
-        "typing_Steel.Reference.pts_to"
+        "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "18055ad56987e8c5652e7ca1412a2228"
+      "c857d67326ff5e900e9aa528d4bcb738"
     ]
   ]
 ]

@@ -124,6 +124,14 @@ let compatible_elim
   Classical.exists_elim
     goal #a #(fun frame -> composable pcm x frame /\ op pcm frame x == y)
     () (fun frame -> lemma frame)
+    
+let compatible_intro
+  (#a: Type u#a) (pcm:pcm a) (x y:a)
+  (frame: a)
+  : Lemma
+    (requires (composable pcm x frame /\ op pcm frame x == y))
+    (ensures (compatible pcm x y))
+  = ()
 
 (** Two elements are joinable when they can evolve to a common point. *)
 let joinable #a (p:pcm a) (x y : a) : prop =
@@ -197,3 +205,27 @@ let compose_frame_preserving_updates (#a:Type u#a) (p:pcm a)
   (g:frame_preserving_upd p y z)
   : frame_preserving_upd p x z
   = fun v -> g (f v)
+
+let frame_preserving_subframe (#a:Type u#a) (p:pcm a) (x y:a)
+  (subframe:a{composable p x subframe /\ composable p y subframe})
+  (f:frame_preserving_upd p x y)
+  : frame_preserving_upd p (op p x subframe) (op p y subframe)
+  = fun v ->
+    compatible_elim p (op p x subframe) v (compatible p x v) (fun frame ->
+      p.comm x subframe;
+      p.assoc frame subframe x);
+    let w = f v in
+    let aux (frame: a{composable p (op p x subframe) frame}):
+      Lemma (composable p (op p y subframe) frame /\
+             (op p (op p x subframe) frame == v ==> op p (op p y subframe) frame == w))
+             [SMTPat (composable p (op p y subframe) frame)]
+    = p.assoc_r x subframe frame;
+      assert (composable p x (op p subframe frame));
+      assert (composable p y (op p subframe frame));
+      p.assoc y subframe frame
+    in
+    compatible_elim p (op p x subframe) v (compatible p (op p y subframe) w) (fun frame ->
+      aux frame;
+      p.comm frame (op p x subframe);
+      p.comm (op p y subframe) frame);
+    w
