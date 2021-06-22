@@ -24,8 +24,13 @@ open Steel.Reference
 module L = FStar.List.Tot
 module U = Steel.Utils
 
-module ST = Steel.Memory.Tactics
 module T = FStar.Tactics
+
+inline_for_extraction noextract let canon () : FStar.Tactics.Tac unit =
+  (FStar.Tactics.norm [delta_attr [`%__reduce__]]; canon' false (`true_p) (`true_p))
+
+let _: squash (forall p q. p `equiv` q <==> hp_of p `Steel.Memory.equiv` hp_of q) =
+  Classical.forall_intro_2 reveal_equiv
 
 assume
 val rewrite_pure (p q:prop)
@@ -37,17 +42,17 @@ val combine_pure (p q:prop)
   : Lemma ((pure p `star` pure q) `equiv` pure (p /\ q))
 
 assume
-val use_pure (p :prop) (q r:slprop) (_:squash (p ==> q `equiv` r))
+val use_pure (p :prop) (q r:vprop) (_:squash (p ==> q `equiv` r))
   : Lemma ((pure p `star` q) `equiv` (pure p `star` r))
 
-let stronger (p q: slprop) = forall m. interp p m ==> interp q m
-let stronger_star_r (p q r:slprop)
+let stronger (p q: vprop) = forall m. interp (hp_of p) m ==> interp (hp_of q) m
+let stronger_star_r (p q r:vprop)
   : Lemma (requires q `stronger` r)
           (ensures  (p `star` q) `stronger` (p `star` r)) = admit()
-let stronger_star_l (p q r:slprop)
+let stronger_star_l (p q r:vprop)
   : Lemma (requires p `stronger` q)
           (ensures  (p `star` r) `stronger` (q `star` r)) = admit()
-let stronger_drop_l (p q:slprop)
+let stronger_drop_l (p q:vprop)
   : Lemma (ensures  (p `star` q) `stronger` q) = admit()
 
 assume
@@ -72,7 +77,7 @@ let rev_involutive #a (xs:list a)
   = admit()
 
 
-let intro_pure_l (p:prop) (q:slprop)
+let intro_pure_l (p:prop) (q:vprop)
   : Lemma (requires p)
           (ensures (q `equiv` (pure p `star` q)))
   = admit()
@@ -115,7 +120,7 @@ let rec dlist_cons (#a:Type) ([@@@smt_fallback]previous :t a)
                              ([@@@smt_fallback]last :t a)
                              ([@@@smt_fallback]right:t a)
                              ([@@@smt_fallback]xs:list (cell a))
-    : Tot slprop (decreases xs)
+    : Tot vprop (decreases xs)
     = match xs with
       | [] ->
         pure (last == previous /\
@@ -131,7 +136,7 @@ let rec dlist_snoc (#a:Type) ([@@@smt_fallback]left:t a)
                              ([@@@smt_fallback]cur:t a)
                              ([@@@smt_fallback]nxt:t a)
                              ([@@@smt_fallback]xs:list (cell a))
-    : Tot slprop (decreases xs)
+    : Tot vprop (decreases xs)
     = match xs with
       | []  ->
         pure (last == nxt /\
@@ -164,7 +169,7 @@ let elim_pure (#p:prop) #u ()
                 (pure p) (fun _ -> emp)
                 (requires fun _ -> True)
                 (ensures fun _ _ _ -> p)
-  = let _ = Steel.Effect.Atomic.elim_pure p in ()
+  = let _ = elim_pure p in ()
 
 let rec dlist_snoc_snoc (#a:Type) (left:t a)
                                   (last:t a)
@@ -193,7 +198,7 @@ let rec dlist_snoc_snoc (#a:Type) (left:t a)
            pts_to cur x `star`
            pure (last == cur /\
                  prev x == left);
-       (equiv) { (* AC *) _ by (ST.canon()) }
+       (equiv) { (* AC *) _ by (canon()) }
            pure (next x == right) `star`
            pure (last == cur /\
                  prev x == left) `star`
@@ -213,7 +218,7 @@ let rec dlist_snoc_snoc (#a:Type) (left:t a)
            pure (prev x == left) `star`
            pure (next x == right /\ cur == last) `star`
            pts_to cur x;
-       (equiv) { (* AC *) _ by (ST.canon()) }
+       (equiv) { (* AC *) _ by (canon()) }
            pure (prev x == left) `star`
            (pure (next x == right /\ cur == last) `star`
             pts_to cur x);
@@ -231,7 +236,7 @@ let rec dlist_snoc_snoc (#a:Type) (left:t a)
            pure (prev x == left) `star`
            (pure (next x == right /\ cur == last) `star`
             pts_to last x);
-       (equiv) { (* AC *) _ by (ST.canon()) }
+       (equiv) { (* AC *) _ by (canon()) }
            pure (prev x == left) `star`
            pts_to last x `star`
            pure (next x == right /\ cur == last);
@@ -253,7 +258,7 @@ let rec dlist_snoc_snoc (#a:Type) (left:t a)
         (pure (prev x == left) `star`
          pts_to last x `star`
          dlist_snoc last (next x) (prev hd) cur xs');
-      (equiv) { _ by (ST.canon()) }
+      (equiv) { _ by (canon()) }
         pure (prev x == left) `star`
         pts_to last x `star`
         (pure (next hd == right) `star`
@@ -367,7 +372,7 @@ let dlist_cons_last (#a:Type)
             (pure (next last == right) `star`
              pts_to tail last `star`
              dlist_cons head (next x) (prev last) tail prefix));
-       (equiv) { _ by (ST.canon()) }
+       (equiv) { _ by (canon()) }
           (pts_to head x `star` pts_to tail last) `star`
            (pure (head == tail) `star`
             pure (prev x == left) `star`
@@ -379,7 +384,7 @@ let dlist_cons_last (#a:Type)
             pure (prev x == left) `star`
             pure (next last == right) `star`
             dlist_cons head (next x) (prev last) tail prefix);
-       (equiv) { _ by (ST.canon()) }
+       (equiv) { _ by (canon()) }
           (pure (head == tail) `star` pure (head =!= tail)) `star`
           (pts_to head x `star` pts_to tail last `star`
             pure (prev x == left) `star`
@@ -490,7 +495,7 @@ let rec dlist_cons_concat #a (left head1 tail1 mid:t a) (xs1:_)
          pts_to head1 x `star`
          dlist_cons head1 (next x) tail1 mid xs1') `star`
          dlist_cons tail1 mid tail2 right xs2;
-      (equiv) { _ by (ST.canon()) }
+      (equiv) { _ by (canon()) }
          pure (prev x == left) `star`
          pts_to head1 x `star`
          (dlist_cons head1 (next x) tail1 mid xs1' `star`
@@ -526,7 +531,7 @@ let intro_dlist_nil' (#a:Type) #u (left right:t a)
   : SteelGhostT unit u
       emp
       (fun _ -> dlist_cons left right left right [])
-  = change_slprop _ _ (fun _ -> dlist_cons_nil left right)
+  = rewrite_slprop _ _ (fun _ -> dlist_cons_nil left right)
 
 let dlist_cons_cons (#a:_) (head tail right:t a) (hd: cell a) (xs:_)
   : Lemma (equiv (pts_to head hd `star`
@@ -540,7 +545,7 @@ let dlist_cons_cons (#a:_) (head tail right:t a) (hd: cell a) (xs:_)
       pure (prev hd == prev hd) `star`
       (pts_to head hd `star`
        dlist_cons head (next hd) tail right xs);
-    (equiv) { _ by (ST.canon()) }
+    (equiv) { _ by (canon()) }
       pure (prev hd == prev hd) `star`
       pts_to head hd `star`
       dlist_cons head (next hd) tail right xs;
@@ -555,7 +560,7 @@ let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: cell a) (xs:_)
         dlist_cons head (next hd) tail right xs)
        (fun _ ->
         dlist_cons (prev hd) head tail right (hd::xs))
-  = change_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
+  = rewrite_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
 
 let intro_dlist_snoc_cons #a #u (left tail head:t a) (hd: cell a) (xs:_)
   : SteelGhostT unit u
@@ -574,14 +579,14 @@ let new_dlist' (#a:Type) (init:a)
     (requires fun _ -> True)
     (ensures fun _ pc _ -> data (snd pc) == init)
   = let cell = mk_cell null_dlist null_dlist init in
-    let p = alloc cell in
+    let p = alloc_pt cell in
     intro_dlist_nil' p null_dlist;
     intro_dlist_cons_cons p p null cell [];
-    (p, cell)
+    return (p, cell)
 
 assume
-val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelGhost (cell a & list _) u
+val elim_dlist_cons_tail (#a:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
+    : Steel (cell a & list _)
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to tail (fst x) `star`
@@ -590,8 +595,8 @@ val elim_dlist_cons_tail (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
         (ensures fun _ x _ -> (fst x :: snd x) == List.rev xs /\ next (fst x) == right)
 
 assume
-val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
-    : SteelGhost (cell a & list _) u
+val elim_dlist_cons_head (#a:_) (#left #tail #right: t a) (#xs:Ghost.erased (list _)) (head:t a)
+    : Steel (cell a & list _)
         (dlist_cons left head tail right xs)
         (fun x ->
           pts_to head (fst x) `star`
@@ -600,6 +605,8 @@ val elim_dlist_cons_head (#a:_) (#u:_) (#left #tail #right: t a) (#xs:Ghost.eras
         (ensures fun _ x _ -> (fst x :: snd x) == Ghost.reveal xs /\ prev (fst x) == left)
 
 let datas #a (l:list (cell a)) : list a = List.Tot.map (fun x -> x.data) l
+
+#push-options "--z3rlimit 20"
 
 let concat' (#a:_) (left head tail right: t a)
                    (left' head' tail' right': t a)
@@ -616,37 +623,39 @@ let concat' (#a:_) (left head tail right: t a)
     // let rxs = snd r in
     slassert (pts_to tail (fst r) `star`
               dlist_snoc left head (prev (fst r)) tail (snd r));
-    let old = read tail in
+    let old = read_pt tail in
     let c = { old with next = head' } in
-    write tail c;
-    change_slprop
+    write_pt tail c;
+    rewrite_slprop
       (dlist_snoc left head (prev (fst r)) tail (snd r))
       (dlist_snoc left head (prev c) tail (snd r))
       (fun _ -> ());
     intro_dlist_snoc_cons left head tail _ _;
-    change_slprop (dlist_snoc left head tail (next c) (c :: snd r))
+    rewrite_slprop (dlist_snoc left head tail (next c) (c :: snd r))
                   (dlist_cons left head tail head' (List.rev (c :: snd r)))
                   (fun _ -> dlist_cons_snoc left head tail (next c) (List.rev (c :: snd r));
                          rev_involutive (c :: snd r));
     let r' = elim_dlist_cons_head head' in
-    let old' = read head' in
+    let old' = read_pt head' in
     let c' = { old' with prev = tail } in
-    write head' c';
+    write_pt head' c';
+
     slassert (pts_to head' c' `star`
               dlist_cons head' (next (fst r')) tail' right' (snd r'));
-    change_slprop
+    rewrite_slprop
       (dlist_cons head' (next (fst r')) tail' right' (snd r'))
       (dlist_cons head' (next c') tail' right' (snd r'))
       (fun _ -> ());
+
     intro_dlist_cons_cons head' tail' right' c' (snd r');
     slassert (dlist_cons (prev c') head' tail' right' (c' :: snd r'));
-    change_slprop (dlist_cons (prev c') head' tail' right' (c' :: snd r'))
+    rewrite_slprop (dlist_cons (prev c') head' tail' right' (c' :: snd r'))
                   (dlist_cons tail head' tail' right' (c' :: snd r'))
                   (fun _ -> ());
     rev_cons c (snd r);
     assert (List.rev (c :: snd r) == List.snoc (List.rev (snd r), c));
     let res = List.snoc (List.rev (snd r), c) @ (c' :: snd r') in
-    change_slprop (dlist_cons left head tail head' (List.rev (c :: snd r)) `star`
+    rewrite_slprop (dlist_cons left head tail head' (List.rev (c :: snd r)) `star`
                    dlist_cons tail head' tail' right' (c' :: snd r'))
                   (dlist_cons left head tail' right' (List.rev (c :: snd r) @
                                                       (c' :: snd r')))
@@ -655,11 +664,11 @@ let concat' (#a:_) (left head tail right: t a)
                             tail' right'
                             (c' :: snd r'));
     assume (datas res == datas (xs @ xs'));
-    change_slprop (dlist_cons left head tail' right' (List.rev (c :: snd r) @
+    rewrite_slprop (dlist_cons left head tail' right' (List.rev (c :: snd r) @
                                                       (c' :: snd r')))
                   (dlist_cons left head tail' right' res)
                   (fun _ -> ());
-    res
+    return res
 
 // let elim_dlist_nil (#a:Type) (left ptr right:t a)
 //    : SteelT unit

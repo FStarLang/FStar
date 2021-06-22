@@ -1,29 +1,6 @@
 [
-  "\tE¿;µ$æq<ÄBI9è/5",
+  "CÉ<]‰•q’^³È~Ëïý",
   [
-    [
-      "Queue.enqueue",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.eq2",
-        "equation_Prims.l_True", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "fuel_guarded_inversion_Queue.Def.cell",
-        "interpretation_Tm_abs_1c0f9bb4b5f3fce66372ac26b0718ea8",
-        "kinding_Queue.Def.cell@tok",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp", "typing_FStar.Ghost.reveal", "typing_tok_Prims.T@tok"
-      ],
-      0,
-      "8866a83dab5054a9068b51b3348c3aa4"
-    ],
     [
       "Queue.dequeue_post_success",
       1,
@@ -39,7 +16,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "1599e025d30e6dfb903d6562f2649ba8"
+      "c066c2933e524223270aad524d75ec16"
     ],
     [
       "Queue.dequeue_post",
@@ -50,7 +27,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "4ffe94cc54531bf7f9a100ed9da3bfff"
+      "53a9821115fee1df12a7d31d5a58eb49"
     ]
   ]
 ]

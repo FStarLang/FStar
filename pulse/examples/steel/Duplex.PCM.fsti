@@ -5,10 +5,10 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Channel.Protocol
 
-let dprot' = protocol unit
-
 module P = FStar.Preorder
 module R = FStar.ReflexiveTransitiveClosure
+
+let dprot' = protocol unit
 
 // Simplifying protocols for now
 let rec no_loop (p:protocol 'a) =
@@ -46,7 +46,7 @@ type recv_next_dprot_t (name:party) =
 
 val ch : Type u#1
 
-val ep (name:party) (c:ch) (next:dprot) : slprop u#1
+val ep (name:party) (c:ch) (next:dprot) : vprop
 
 val new_channel (p:dprot)
   : SteelT (ch & ch) emp

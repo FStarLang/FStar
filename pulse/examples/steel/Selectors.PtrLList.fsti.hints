@@ -1,5 +1,5 @@
 [
-  "Å…˙kΩ\u001ckˆÈé∫Éœ·ˇe",
+  "\u0016¶ÍœAƒﬂËyb\u0001n,é¯",
   [
     [
       "Selectors.PtrLList.v_ptrlist",
@@ -10,13 +10,13 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
         "equation_Prims.l_and", "equation_Prims.logical",
         "equation_Prims.squash",
-        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "function_token_typing_Steel.Effect.Common.selector_tactic",
         "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_4d6111bd31a4d49d36a6b6c2b9097fd9",
+        "refinement_interpretation_Tm_refine_d4dfd396c966af1631f05176d8c83b3d",
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d7707c232b2f33198af986ce3dc839c1"
+      "89f9aa1de5ed79c3498e4b6cf2804658"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "a973515467d394248d0c20fef858afe2"
+      "937ddbd5ec0cdc2a4fb5b6f38ddfd4e6"
     ],
     [
       "Selectors.PtrLList.elim_llist_cons",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "92c4acf38b5b280a96be4c78bec53cdd"
+      "edc03f7c47168f6f34c189bc4ac691ac"
     ]
   ]
 ]
