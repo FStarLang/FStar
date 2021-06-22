@@ -27,6 +27,8 @@ let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 
 let reveal_can_be_split () = ()
 
+let can_be_split_interp r r' h = ()
+
 let can_be_split_trans p q r = ()
 let can_be_split_star_l p q = ()
 let can_be_split_star_r p q = ()
@@ -34,14 +36,6 @@ let can_be_split_refl p = ()
 
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
 let reveal_equiv p q = ()
-
-unfold
-let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
-
-let mk_rmem r h =
-   FExt.on_dom_g
-     (r0:vprop{r `can_be_split` r0})
-     (unrestricted_mk_rmem r h)
 
 let reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma ((mk_rmem r h) r0 == sel_of r0 h)

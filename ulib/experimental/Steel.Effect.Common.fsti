@@ -33,8 +33,10 @@ irreducible let framing_implicit : unit = ()
 irreducible let __steel_reduce__ : unit = ()
 irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
+irreducible let ite_attr : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
+[@@__steel_reduce__]
 let true_p : prop = True
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
@@ -95,20 +97,22 @@ let to_vprop' (p:slprop) = {hp = p; t = unit; sel = fun _ -> ()}
 unfold
 let to_vprop (p:slprop) = VUnit (to_vprop' p)
 
-/// The core normalization primitive used to simplify Verification Conditions before encoding
-/// them to an SMT solver.
+/// Normalization steps for norm below.
 /// All functions marked as `unfold`, or with the `__steel_reduce__` attribute will be reduced,
 /// as well as some functions internal to the selector framework
 unfold
-let normal (#a:Type) (x:a) =
-  norm [
-    delta_attr [`%__steel_reduce__];
+let normal_steps =
+   [delta_attr [`%__steel_reduce__];
     delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
-    iota;zeta;primops]
-  x
+    iota;zeta;primops; simplify]
+
+/// The core normalization primitive used to simplify Verification Conditions before encoding
+/// them to an SMT solver.
+unfold
+let normal (#a:Type) (x:a) = norm normal_steps x
 
 /// An abbreviation for the VStar constructor, allowing to use it with infix notation
 [@@ __steel_reduce__; __reduce__]
@@ -144,11 +148,21 @@ type post_t (a:Type) = a -> vprop
 /// the context shrinks from all local variables in the computation to variables available at the toplevel
 let return_pre (p:vprop) : vprop = p
 
+noextract
+let hmem (p:vprop) = hmem (hp_of p)
+
 /// Abstract predicate for vprop implication. Currently implemented as an implication on the underlying slprop
 val can_be_split (p q:pre_t) : Type0
+
 /// Exposing the implementation of `can_be_split` when needed for proof purposes
 val reveal_can_be_split (_:unit) : Lemma
   (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
+
+/// A targeted version of the above
+val can_be_split_interp (r r':vprop) (h:hmem r)
+  : Lemma (requires can_be_split r r')
+          (ensures interp (hp_of r') h)
+
 
 /// A dependent version of can_be_split, to be applied to dependent postconditions
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
@@ -209,11 +223,18 @@ let rmem (pre:vprop) =
   (r0:vprop{can_be_split pre r0})
   (fun r0 -> normal (t_of r0))
 
-noextract
-let hmem (p:vprop) = hmem (hp_of p)
+/// Exposing the definition of mk_rmem to better normalize Steel VCs
+unfold noextract
+let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) ->
+  can_be_split_interp r r0 h;
+  sel_of r0 h
 
+[@@ __steel_reduce__]
 noextract
-val mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r)
+let mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r) =
+   FExt.on_dom_g
+     (r0:vprop{r `can_be_split` r0})
+     (unrestricted_mk_rmem r h)
 
 val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma (ensures reveal_can_be_split(); (mk_rmem r h) r0 == sel_of r0 h)
@@ -1423,7 +1444,7 @@ let rec quote_atoms (l:list atom) = match l with
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
 /// In particular, all the sorting/list functions are entirely reduced
-let normal_steps = [primops; iota; zeta; delta_only [
+let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
           `%flatten; `%sort;
           `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
@@ -1435,7 +1456,7 @@ let normal_steps = [primops; iota; zeta; delta_only [
           `%rm]]
 
 /// The normalization function, using the above normalization steps
-let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_steps x
+let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_tac_steps x
 
 /// Helper lemma to establish relation between normalized and initial values
 let normal_elim (x:Type0) : Lemma
@@ -2062,3 +2083,44 @@ let selector_tactic () : Tac unit =
        delta_attr [`%__reduce__];
        primops; iota; zeta];
   canon' false (`true_p) (`true_p)
+
+/// Specific tactic used during the SteelAtomicBase and SteelBase effect definitions:
+/// This allows us to write more complex if_then_else combinators, while proving them
+/// sound with respect to subcomp
+[@@ resolve_implicits; ite_attr]
+let ite_soundness_tac () : Tac unit =
+  let slgs, loggoals = filter_goals (goals ()) in
+  set_goals slgs;
+  solve_indirection_eqs slgs;
+  // This is the actual subcomp goal. We can only solve it
+  // once all uvars are solved
+  let subcomp_goal = _cur_goal () in
+  match goals () with
+  | [] -> fail "should not happen"
+  | _::tl -> set_goals tl;
+  // These two goals are the separation logic equiv_forall and can_be_split.
+  // For the if branch, they can be solve by reflexivity.
+  // For the else branch, they need to call hypotheses in the context.
+  // These proofs are very simple, and can be handled by SMT, so we avoid
+  // writing tactics for it
+  smt ();
+  smt ();
+  // Now propagating all equalities for the requires/ensures
+  set_goals loggoals;
+  resolve_tac_logical ();
+  // Now taking care of the actual subcomp VC
+  set_goals [subcomp_goal];
+  norm [];
+  // We remove the with_tactic call with executing the tactic before calling the SMT.
+  split ();
+  // Remove the `rewrite_by_tactic` nodes
+  pointwise' (fun _ -> or_else
+    (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
+    trefl);
+  smt ()
+
+/// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
+/// This tactic is executed after frame inference, and just before sending the query to the SMT
+/// As such, it is a good place to add debugging features to inspect SMT queries when needed
+unfold
+let vc_norm () : Tac unit = norm normal_steps; trefl()
