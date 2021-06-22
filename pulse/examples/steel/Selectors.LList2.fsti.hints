@@ -1,5 +1,5 @@
 [
-  "Mœ–àò§\u0000-õ\u0010Ä~x(^\u0004",
+  "\u001d\u000f5àwÑ\u0007:œ¨\u0012\u0013j›\u0006•",
   [
     [
       "Selectors.LList2.v_llist",
@@ -10,13 +10,13 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
         "equation_Prims.l_and", "equation_Prims.logical",
         "equation_Prims.squash",
-        "function_token_typing_Steel.SelEffect.Common.selector_tactic",
+        "function_token_typing_Steel.Effect.Common.selector_tactic",
         "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_50a99e96724af4a52ca18ccf2347fe99",
+        "refinement_interpretation_Tm_refine_e44fed059093baa0f6da59d6205221f3",
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5dbe42daa4793c31acc12710fd519793"
+      "4379fc09dfc2a55833a143842667a039"
     ],
     [
       "Selectors.LList2.tail",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "64e361f2b16735fdae558298719dd152"
+      "78acc9ae1c835ab95a645f67a722c362"
     ]
   ]
 ]

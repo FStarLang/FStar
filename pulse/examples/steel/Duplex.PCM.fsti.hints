@@ -1,5 +1,5 @@
 [
-  "ñ\u0011ó‘ÄhucIl“\\(‡*",
+  "ÉÌhñz2ÿd}´”\u007ffÅ%\r",
   [
     [
       "Duplex.PCM.no_loop",
@@ -30,7 +30,7 @@
         "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "1b34d820cc9c640bbd661acf7fe42a7b"
+      "220f520939d5abf6351288c471ca39c9"
     ],
     [
       "Duplex.PCM.return",
@@ -52,7 +52,7 @@
         "true_interp"
       ],
       0,
-      "6d2a4c6caa5f65842f32269b731df498"
+      "82b96eda545908c264b30b4bdea1bc04"
     ],
     [
       "Duplex.PCM.send",
@@ -90,7 +90,7 @@
         "token_correspondence_Duplex.PCM.return", "true_interp"
       ],
       0,
-      "ac2ba121258b44f463b7696759637d0b"
+      "ea6fe60e9d5757278132a2b887844dbc"
     ],
     [
       "Duplex.PCM.recv",
@@ -128,7 +128,7 @@
         "token_correspondence_Duplex.PCM.return", "true_interp"
       ],
       0,
-      "8943ca5a4362e4ab2ff50664a6bec5bc"
+      "4b33fac46a3a973aff49b5d3ee37f1f5"
     ],
     [
       "Duplex.PCM.bind",
@@ -171,7 +171,7 @@
         "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "e664d95d5d9d4930455bbde78694841a"
+      "c282e6c0d7ecfa4b0244394d4d5ff976"
     ],
     [
       "Duplex.PCM.send_next_dprot_t",
@@ -180,7 +180,7 @@
       1,
       [ "@query", "assumption_Duplex.PCM.party__uu___haseq" ],
       0,
-      "2f6fa7c2f4ce9e8087a7f55f8d6eb86d"
+      "c72cb923c6fcfebd3925f5211165de40"
     ],
     [
       "Duplex.PCM.recv_next_dprot_t",
@@ -189,7 +189,7 @@
       1,
       [ "@query", "assumption_Duplex.PCM.party__uu___haseq" ],
       0,
-      "3288b9659daafb8145d7153aa620c369"
+      "cc3062f27a7b422ac206d06ceec7f53e"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -228,7 +228,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "4579f0830fb88cf6e74c72fb4facbaf5"
+      "93cc0c84424bc5f2017009e4da6a32e9"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -267,7 +267,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "5c64f5f1a045e488b7ac5573543affa8"
+      "28f780fe383380ffaa24a6f3a4a41aba"
     ]
   ]
 ]

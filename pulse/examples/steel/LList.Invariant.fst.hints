@@ -1,5 +1,5 @@
 [
-  "¢ÍBW∫Nù‹Wtπr—}⁄\"",
+  "Ìj\u001a\u0004\bÛÏ)Õ!åáx«I\u0004",
   [
     [
       "LList.Invariant.mk_cell",
@@ -15,7 +15,7 @@
         "projection_inverse_LList.Invariant.Mkcell_next"
       ],
       0,
-      "7100a3832d22ed7e756eec536ca8e1be"
+      "5a85577c518e299bb76c20d1c91f251e"
     ],
     [
       "LList.Invariant.llist'",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "760369464c32dad17f968a5e50901aa5"
+      "60c3ef7f6666f141b624be0b00a9c794"
     ],
     [
       "LList.Invariant.intro_llist_nil",
@@ -45,16 +45,26 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_typing_intro_Prims.Nil@tok", "equality_tok_Prims.T@tok",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "kinding_LList.Invariant.cell@tok",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_LList.Invariant.llist", "typing_LList.Invariant.null_llist",
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "ed79ae28196f4022089d6e412f94b9f1"
+      "05e1e105227c1d0465c579a4d0387030"
     ],
     [
       "LList.Invariant.intro_llist_cons",
@@ -77,7 +87,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "438ede50f1860563922b32e186b5c0c4"
+      "649b126d1c6045033d921942cd2d5ba2"
     ],
     [
       "LList.Invariant.intro_llist_cons",
@@ -93,7 +103,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f00f1c043d8c97afea8bc053fbddd9c1"
+      "cf9781bd692b052f3a5a9cd8f703b2a6"
     ],
     [
       "LList.Invariant.intro_llist_cons",
@@ -101,37 +111,35 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_LList.Invariant.t",
-        "equation_Prims.eq2", "equation_Prims.l_False",
-        "equation_Prims.l_imp", "equation_Prims.l_not",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "01e42cea21c982ff47926502a383fb3c"
-    ],
-    [
-      "LList.Invariant.intro_llist_cons",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_elim_Steel.Effect.Common.VStar",
+        "equation_LList.Invariant.llist",
         "equation_LList.Invariant.null_llist", "equation_LList.Invariant.t",
         "equation_Prims.eq2", "equation_Prims.l_False",
         "equation_Prims.l_imp", "equation_Prims.l_not",
         "equation_Prims.squash", "equation_Prims.subtype_of",
         "equation_Steel.Effect.Common.true_p",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_LList.Invariant.cell",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "kinding_LList.Invariant.cell@tok",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_7c3576760aabe55bd452e0ed74e31d09",
-        "true_interp", "typing_Steel.Reference.is_null"
+        "true_interp", "typing_LList.Invariant.llist",
+        "typing_LList.Invariant.next", "typing_Steel.Reference.is_null"
       ],
       0,
-      "3d9f8bea61eb98737d300488a99c5848"
+      "16276a2a1900352d2653c42146488292"
     ],
     [
       "LList.Invariant.elim_llist_cons",
@@ -147,7 +155,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fcd82212f637c28027b40f56b565ba23"
+      "f97b559cc16dba44c33ff85f0549a992"
     ],
     [
       "LList.Invariant.elim_llist_cons",
@@ -163,7 +171,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9216a7cde852e41c8179e86c7085daca"
+      "dd1af72c9c921c74dc70354d16a1964e"
     ],
     [
       "LList.Invariant.elim_llist_cons",
@@ -173,24 +181,46 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_LList.Invariant.llist_.fuel_instrumented",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_irrelevance_LList.Invariant.llist_.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
-        "data_typing_intro_Prims.Cons@tok", "equation_LList.Invariant.llist",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_elim_Steel.Effect.Common.VStar",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_LList.Invariant.llist", "equation_LList.Invariant.t",
         "equation_Prims.l_False", "equation_Prims.l_imp",
         "equation_Prims.l_not", "equation_Prims.squash",
-        "equation_Prims.subtype_of", "equation_Steel.Effect.Common.true_p",
+        "equation_Prims.subtype_of", "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
         "equation_with_fuel_LList.Invariant.llist_.fuel_instrumented",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_LList.Invariant.cell",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "kinding_LList.Invariant.cell@tok",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp"
+        "token_correspondence_LList.Invariant.llist_.fuel_instrumented",
+        "true_interp", "typing_FStar.Ghost.hide",
+        "typing_LList.Invariant.next", "typing_Steel.Effect.Common.star",
+        "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.Memory.pure", "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "d3b46fe2dc632c8c4567e086250052ba"
+      "a87e81de72e1d676fa9d8651ca68fde4"
     ]
   ]
 ]
