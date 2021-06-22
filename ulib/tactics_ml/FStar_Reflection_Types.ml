@@ -11,7 +11,7 @@ type ctx_uvar_and_subst = FStar_Syntax_Syntax.ctx_uvar_and_subst
 type optionstate = FStar_Options.optionstate
 
 type name        = string list
-type ident       = FStar_Range.range * string
+type ident       = FStar_Compiler_Range.range * string
 type univ_name   = ident
 type typ         = term
 type binders     = binder list
