@@ -132,21 +132,12 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
 
         // Ensure that rewriting did not leave goals
-        List.iter (fun g ->
-            match getprop (goal_env g) (goal_type g) with
-            | Some vc ->
-                begin
-                if !tacdbg then
-                  BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
-                let guard = { guard_f = NonTrivial vc
-                            ; deferred_to_tac = []
-                            ; deferred = []
-                            ; univ_ineqs = [], []
-                            ; implicits = [] } in
-                TcRel.force_trivial_guard (goal_env g) guard
-                end
-            | None ->
-                Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos) gs;
+        let _ =
+          match gs with
+          | [] -> ()
+          | _ ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos
+        in
 
         // abort if the uvar was not solved
         let g_imp = TcRel.resolve_implicits_tac e g_imp in

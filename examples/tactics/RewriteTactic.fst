@@ -17,8 +17,22 @@ module RewriteTactic
 
 open FStar.Tactics
 
-let lem () : Lemma (1 == 2) = admit ()
-let tau () = apply_lemma (`lem)
+let lem1 () : Lemma (1 == 2) = admit ()
+let lem2 (x:int) : Lemma (1 == x)
+            = admit()
 
-let test _ =
-  assert (rewrite_with_tactic tau 1 == 2)
+let tau1 () = apply_lemma (`lem1)
+let tau2 () = apply_lemma (`lem2)
+
+let test1 _ =
+  assert (rewrite_with_tactic tau1 1 == 2)
+
+// SMT Failure
+[@expect_failure]
+let test2 _ =
+  assert (rewrite_with_tactic tau1 1 == 1)
+
+// Uninstantiated uvar remaining
+[@expect_failure]
+let test3 _ =
+  assert (rewrite_with_tactic tau2 1 == 2)

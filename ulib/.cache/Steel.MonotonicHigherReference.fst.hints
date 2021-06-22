@@ -1,5 +1,5 @@
 [
-  "P\u000fщо)c™1е)eЕш{зР",
+  "0ам™C&р<Y†V§vЋЭ¦",
   [
     [
       "Steel.MonotonicHigherReference.__proj__Witnessed__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_27311b9668d16ee17a6b476d886021fd"
       ],
       0,
-      "cc7a0e419e27a4356423d28a910edefa"
+      "2ca3b60d6a508debb084a1aa25606ba0"
     ],
     [
       "Steel.MonotonicHigherReference.__proj__Current__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "4cb38f491e649d5f4424d6c2e00a36bf"
+      "e242f3fbe53e5dcb2229b5b101758dd3"
     ],
     [
       "Steel.MonotonicHigherReference.__proj__Current__item___1",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "eb45b3e7361bb7f9098cb6b0392ede61"
+      "9898ef38d530bc3044b822e15b5d4d14"
     ],
     [
       "Steel.MonotonicHigherReference.hval_tot",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "9916005420bf742efea4d22a5309e74f"
+      "522ce8bffc1dc110af77373f5b39dd06"
     ],
     [
       "Steel.MonotonicHigherReference.hperm",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "5bfd8a89c6d91afbef997c840c0611f0"
+      "a14decffcb86bca42d07ff6ebe30127a"
     ],
     [
       "Steel.MonotonicHigherReference.history_composable",
@@ -98,7 +98,7 @@
         "token_correspondence_Steel.Preorder.p_composable"
       ],
       0,
-      "943cf05d0e99c8581ed171902d1fb4d4"
+      "973459f588327a3d27633452e0031ace"
     ],
     [
       "Steel.MonotonicHigherReference.history_compose",
@@ -149,7 +149,7 @@
         "token_correspondence_Steel.Preorder.p_composable"
       ],
       0,
-      "250f242b6c469ce338b0382fb2f4cf7d"
+      "e581c89460b70357f21b72f839a3230a"
     ],
     [
       "Steel.MonotonicHigherReference.unit_history",
@@ -165,7 +165,7 @@
         "projection_inverse_Prims.Nil_a", "true_interp"
       ],
       0,
-      "bafca0f691e14b6d755af15a6019e482"
+      "1b175e44d8b4e285acc1d008502dedf8"
     ],
     [
       "Steel.MonotonicHigherReference.lem_is_unit",
@@ -225,7 +225,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "fdeaa32db26e7ec443ca4a7e08b336bf"
+      "9db9004cd9273e50cd7073e4d61d1f3b"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_l",
@@ -234,7 +234,7 @@
       1,
       [ "@query" ],
       0,
-      "f537ea744773863faac171245f60d262"
+      "faf74196c6b5968c53376d9b94af7d56"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_l",
@@ -321,7 +321,7 @@
         "typing_Steel.Preorder.p_op", "unit_typing"
       ],
       0,
-      "40371ec16aa60d7f739ceb7d0339378c"
+      "cd48ca8be3b04cc4c06dad324d01fc4d"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_r",
@@ -330,7 +330,7 @@
       1,
       [ "@query" ],
       0,
-      "6d51da72ecf6403b03fe412037dd1bc5"
+      "2d2317b5e8478dba083d671a5d593f24"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_r",
@@ -419,7 +419,7 @@
         "typing_Steel.Preorder.p_op", "unit_typing"
       ],
       0,
-      "79f05c60d429daa8c6ea75283502a819"
+      "98b9019266c4482407e6bb82ecd47805"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history",
@@ -478,7 +478,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "5dfa1e5c18f6f49774f0cc247b55c276"
+      "2def9b4f9ba645768746cc9e11002ec5"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history_preorder",
@@ -519,7 +519,7 @@
         "token_correspondence_Steel.Preorder.extends_"
       ],
       0,
-      "8e6bf69e83f31562f4663ad4bedfa571"
+      "0d7602757e3b2e2c8d154d033e4cf504"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history_induces_preorder",
@@ -641,7 +641,7 @@
         "typing_Steel.Preorder.extends", "unit_inversion", "unit_typing"
       ],
       0,
-      "2f5fb138646188151d66ce58a0a07d7e"
+      "7a88616304096d3194df8d0428620fc0"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history",
@@ -678,7 +678,7 @@
         "typing_Steel.MonotonicHigherReference.hval_tot"
       ],
       0,
-      "09a62a139ea4ceed5a13a2dc1e204074"
+      "482937979112a092c989e92d2ae91241"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history_is_frame_preserving",
@@ -687,7 +687,7 @@
       1,
       [ "@query" ],
       0,
-      "b584391055fad6e3c35f325479ae95cf"
+      "327e5d9eb763b221094b76eecba5103e"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history_is_frame_preserving",
@@ -772,7 +772,7 @@
         "typing_Steel.MonotonicHigherReference.uu___is_Current"
       ],
       0,
-      "be3139fab5746ad9d79be00c8777067d"
+      "9b0fa5632fcca13997d040bf69b7d1c4"
     ],
     [
       "Steel.MonotonicHigherReference.history_val",
@@ -787,83 +787,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0fc97210be29342cbe95a8421853580a"
-    ],
-    [
-      "Steel.MonotonicHigherReference.pts_to_body_witness_invariant",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Steel.FractionalPermission_pretyping_e01b0bd6c9f46bf8a816cebad841c6b2",
-        "constructor_distinct_Steel.MonotonicHigherReference.Current",
-        "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
-        "data_elim_Steel.MonotonicHigherReference.Current",
-        "data_elim_Steel.MonotonicHigherReference.Witnessed",
-        "disc_equation_Prims.Cons",
-        "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
-        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.joinable", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_FStar.Real.zero",
-        "equation_Steel.FractionalPermission.sum_perm",
-        "equation_Steel.Memory.is_witness_invariant",
-        "equation_Steel.MonotonicHigherReference.history_composable",
-        "equation_Steel.MonotonicHigherReference.history_compose",
-        "equation_Steel.MonotonicHigherReference.history_val",
-        "equation_Steel.MonotonicHigherReference.hperm",
-        "equation_Steel.MonotonicHigherReference.pcm_history",
-        "equation_Steel.MonotonicHigherReference.pts_to_body",
-        "equation_Steel.MonotonicHigherReference.ref",
-        "equation_Steel.MonotonicHigherReference.unit_history",
-        "equation_Steel.Preorder.extends", "equation_Steel.Preorder.hist",
-        "equation_Steel.Preorder.p_composable",
-        "equation_Steel.Preorder.vhist",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
-        "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
-        "interpretation_Tm_abs_d69afaa0166f2770808e8e99f682e501",
-        "kinding_Steel.MonotonicHigherReference.history@tok", "l_and-interp",
-        "l_or-interp", "lemma_Steel.Memory.affine_star_smt",
-        "lemma_Steel.Preorder.extends_length_eq",
-        "lemma_Steel.Preorder.p_op_extends", "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "primitive_FStar.Real.op_Plus_Dot",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
-        "proj_equation_Steel.FractionalPermission.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
-        "projection_inverse_Steel.MonotonicHigherReference.Current__0",
-        "projection_inverse_Steel.MonotonicHigherReference.Current__1",
-        "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
-        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
-        "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
-        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.MonotonicHigherReference.history_compose",
-        "token_correspondence_Steel.MonotonicHigherReference.pts_to_body",
-        "token_correspondence_Steel.Preorder.extends",
-        "token_correspondence_Steel.Preorder.extends_",
-        "token_correspondence_Steel.Preorder.p_composable",
-        "typing_Steel.FractionalPermission.__proj__MkPerm__item__v",
-        "typing_Steel.Memory.pts_to", "typing_Steel.Memory.pure",
-        "typing_Steel.MonotonicHigherReference.history_composable",
-        "typing_Steel.MonotonicHigherReference.history_val",
-        "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.Preorder.p_op"
-      ],
-      0,
-      "7dce28ef2fa0a503ab295181e1a57f55"
+      "e29b1c89922b14e7c3afed3d3ee0510d"
     ],
     [
       "Steel.MonotonicHigherReference.intro_pure",
@@ -871,23 +795,39 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_Steel.MonotonicHigherReference.Current",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
         "equation_Steel.MonotonicHigherReference.history_val",
-        "equation_Steel.MonotonicHigherReference.pcm_history",
         "equation_Steel.MonotonicHigherReference.pts_to_body",
         "equation_Steel.MonotonicHigherReference.ref",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "fuel_guarded_inversion_Steel.FractionalPermission.perm",
         "kinding_Steel.MonotonicHigherReference.history@tok",
         "lemma_Steel.Memory.reveal_equiv",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_47591fffc1088ee7c8e3cca288fd295a",
-        "typing_Steel.Memory.emp", "typing_Steel.Memory.pts_to",
+        "typing_FStar.Ghost.hide", "typing_Steel.Effect.Common.hp_of",
+        "typing_Steel.Effect.Common.to_vprop_", "typing_Steel.Memory.emp",
+        "typing_Steel.Memory.pts_to", "typing_Steel.Memory.pure",
         "typing_Steel.Memory.star",
-        "typing_Steel.MonotonicHigherReference.pcm_history"
+        "typing_Steel.MonotonicHigherReference.history_val",
+        "typing_Steel.MonotonicHigherReference.pcm_history",
+        "typing_Steel.MonotonicHigherReference.pts_to_body"
       ],
       0,
-      "bdc2dd3c1bdacb10e31af7cdc53f5f2c"
+      "f4d009b840355035c0acc3307405f6d8"
     ],
     [
       "Steel.MonotonicHigherReference.intro_pure_full",
@@ -896,7 +836,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "8d5aa7070e81ef59b240336de89af1f0"
+      "0b5340a1c8a98d3dd0bcc2e30b9a221e"
     ],
     [
       "Steel.MonotonicHigherReference.alloc",
@@ -980,7 +920,7 @@
         "typing_Steel.MonotonicHigherReference.unit_history"
       ],
       0,
-      "7767b57406d84859d7ffb9e2a80354af"
+      "284000b4f5c212877919784ffe65db39"
     ],
     [
       "Steel.MonotonicHigherReference.alloc",
@@ -1001,7 +941,7 @@
         "true_interp"
       ],
       0,
-      "e7ecbd83305493791b8c46d18b738dbd"
+      "0a5c152c955f3923648742da9f493ddb"
     ],
     [
       "Steel.MonotonicHigherReference.alloc",
@@ -1083,7 +1023,7 @@
         "typing_Steel.MonotonicHigherReference.unit_history"
       ],
       0,
-      "29a00983cc314891c1ada85d36c6e7d1"
+      "16d799ed4aaadf36112f6ed635940cb0"
     ],
     [
       "Steel.MonotonicHigherReference.extract_pure",
@@ -1091,39 +1031,44 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_Steel.FractionalPermission.MkPerm", "eq2-interp",
-        "equation_Prims.l_not", "equation_Prims.squash",
-        "equation_Steel.Effect.Atomic.join_obs",
-        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_correspondence_Steel.Preorder.qhistory.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_elim_Steel.MonotonicHigherReference.Witnessed",
+        "data_typing_intro_Prims.Nil@tok",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
         "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Memory.Tactics.req",
-        "equation_Steel.Memory.Tactics.rm",
-        "equation_Steel.MonotonicHigherReference.pcm_history",
         "equation_Steel.MonotonicHigherReference.pts_to_body",
         "equation_Steel.MonotonicHigherReference.ref",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
-        "function_token_typing_Steel.Effect.Atomic.observability_unequal",
-        "function_token_typing_Steel.Memory.slprop",
-        "kinding_Steel.MonotonicHigherReference.history@tok", "l_not-interp",
+        "equation_Steel.MonotonicHigherReference.unit_history",
+        "equation_Steel.Preorder.hist",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "equation_with_fuel_Steel.Preorder.qhistory.fuel_instrumented",
+        "kinding_Steel.MonotonicHigherReference.history@tok",
         "lemma_Steel.Memory.reveal_equiv",
-        "primitive_FStar.Real.op_Greater_Dot", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
-        "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
-        "true_interp",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
-        "typing_FStar.Ghost.reveal", "typing_Steel.Memory.Tactics.req",
-        "typing_Steel.Memory.Tactics.rm", "typing_Steel.Memory.pts_to",
-        "typing_Steel.Memory.star",
-        "typing_Steel.MonotonicHigherReference.pcm_history"
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Prims.Nil_a",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "refinement_interpretation_Tm_refine_ccdf52ecea9c5364d428cf686e858b92",
+        "token_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.Memory.emp", "typing_Steel.Memory.pts_to",
+        "typing_Steel.Memory.pure", "typing_Steel.Memory.star",
+        "typing_Steel.MonotonicHigherReference.history_val",
+        "typing_Steel.MonotonicHigherReference.pcm_history",
+        "typing_Steel.MonotonicHigherReference.unit_history"
       ],
       0,
-      "53156cfdf46c851d948ccd11dc4f33ef"
+      "8f3f61a9e0033b4add51dcd7ea650948"
     ],
     [
       "Steel.MonotonicHigherReference.elim_pure",
@@ -1148,7 +1093,7 @@
         "true_interp"
       ],
       0,
-      "1e4f06f8d4e93e989fde0414c86c1400"
+      "1aad5748317e778e51946bc0b5181629"
     ],
     [
       "Steel.MonotonicHigherReference.rewrite_erased",
@@ -1160,7 +1105,7 @@
         "refinement_interpretation_Tm_refine_f8d868fc29a9c202336ef5f443303c1f"
       ],
       0,
-      "a4bd0d3f245c8c23030a1eb332de6c81"
+      "ecc1c07815e011b7851aa46fecef7d11"
     ],
     [
       "Steel.MonotonicHigherReference.rewrite_reveal_hide",
@@ -1169,179 +1114,11 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "aac6d2f73e124d7a9c379be1b1bb7a59"
-    ],
-    [
-      "Steel.MonotonicHigherReference.pts_to_is_witness_invariant",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query",
-        "Steel.FractionalPermission_pretyping_e01b0bd6c9f46bf8a816cebad841c6b2",
-        "constructor_distinct_Steel.MonotonicHigherReference.Current",
-        "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
-        "data_elim_Steel.FractionalPermission.MkPerm",
-        "data_elim_Steel.MonotonicHigherReference.Current",
-        "data_elim_Steel.MonotonicHigherReference.Witnessed",
-        "disc_equation_Prims.Cons",
-        "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
-        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.joinable", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_FStar.Real.zero",
-        "equation_Steel.FractionalPermission.sum_perm",
-        "equation_Steel.Memory.is_witness_invariant",
-        "equation_Steel.MonotonicHigherReference.history_composable",
-        "equation_Steel.MonotonicHigherReference.history_compose",
-        "equation_Steel.MonotonicHigherReference.history_val",
-        "equation_Steel.MonotonicHigherReference.hperm",
-        "equation_Steel.MonotonicHigherReference.hval",
-        "equation_Steel.MonotonicHigherReference.hval_tot",
-        "equation_Steel.MonotonicHigherReference.pcm_history",
-        "equation_Steel.MonotonicHigherReference.pts_to",
-        "equation_Steel.MonotonicHigherReference.pts_to_body",
-        "equation_Steel.MonotonicHigherReference.ref",
-        "equation_Steel.MonotonicHigherReference.unit_history",
-        "equation_Steel.Preorder.curval", "equation_Steel.Preorder.hist",
-        "equation_Steel.Preorder.p_composable",
-        "equation_Steel.Preorder.p_op", "equation_Steel.Preorder.vhist",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
-        "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
-        "interpretation_Tm_abs_d69afaa0166f2770808e8e99f682e501",
-        "kinding_Steel.MonotonicHigherReference.history@tok", "l_and-interp",
-        "l_or-interp", "lemma_Steel.Memory.affine_star_smt",
-        "lemma_Steel.Preorder.extends_length_eq",
-        "lemma_Steel.Preorder.p_op_extends", "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "primitive_FStar.Real.op_Plus_Dot",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p", "proj_equation_Prims.Cons_hd",
-        "proj_equation_Steel.FractionalPermission.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
-        "projection_inverse_Steel.MonotonicHigherReference.Current__0",
-        "projection_inverse_Steel.MonotonicHigherReference.Current__1",
-        "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
-        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
-        "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
-        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.MonotonicHigherReference.history_compose",
-        "token_correspondence_Steel.MonotonicHigherReference.pts_to",
-        "token_correspondence_Steel.Preorder.p_composable",
-        "typing_FStar.Ghost.reveal",
-        "typing_Steel.FractionalPermission.__proj__MkPerm__item__v",
-        "typing_Steel.Memory.pts_to", "typing_Steel.Memory.pure",
-        "typing_Steel.MonotonicHigherReference.history_composable",
-        "typing_Steel.MonotonicHigherReference.history_val",
-        "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.Preorder.p_op"
-      ],
-      0,
-      "14bdef352233d73a9c69acb6ff3ba224"
+      "dd6f4b6e92f5394a6cf0739470fdaa54"
     ],
     [
       "Steel.MonotonicHigherReference.read_refine",
       1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "bool_inversion",
-        "constructor_distinct_Steel.MonotonicHigherReference.Current",
-        "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
-        "data_elim_Steel.FractionalPermission.MkPerm",
-        "data_elim_Steel.MonotonicHigherReference.Current",
-        "data_elim_Steel.MonotonicHigherReference.Witnessed",
-        "disc_equation_Prims.Cons",
-        "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
-        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op",
-        "equation_Steel.Effect.Atomic.obs_at_most_one",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Memory.Tactics.req",
-        "equation_Steel.Memory.Tactics.rm",
-        "equation_Steel.Memory.is_witness_invariant",
-        "equation_Steel.MonotonicHigherReference.history_composable",
-        "equation_Steel.MonotonicHigherReference.history_compose",
-        "equation_Steel.MonotonicHigherReference.history_val",
-        "equation_Steel.MonotonicHigherReference.hperm",
-        "equation_Steel.MonotonicHigherReference.hval",
-        "equation_Steel.MonotonicHigherReference.hval_tot",
-        "equation_Steel.MonotonicHigherReference.pcm_history",
-        "equation_Steel.MonotonicHigherReference.pts_to",
-        "equation_Steel.MonotonicHigherReference.pts_to_body",
-        "equation_Steel.MonotonicHigherReference.ref",
-        "equation_Steel.MonotonicHigherReference.unit_history",
-        "equation_Steel.Preorder.hist",
-        "equation_Steel.Preorder.p_composable",
-        "equation_Steel.Preorder.vhist",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
-        "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "function_token_typing_Steel.Memory.slprop",
-        "function_token_typing_Steel.MonotonicHigherReference.pts_to",
-        "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
-        "interpretation_Tm_abs_af7c634be68a651fc396d3a5bbfd97d3",
-        "interpretation_Tm_abs_d5d0a7458b036dd069752a4f252c85d7",
-        "kinding_Steel.MonotonicHigherReference.history@tok", "l_and-interp",
-        "l_or-interp", "lemma_FStar.Ghost.hide_reveal",
-        "lemma_FStar.Ghost.reveal_hide", "lemma_Steel.Memory.reveal_equiv",
-        "lemma_Steel.Preorder.extends_length_eq",
-        "lemma_Steel.Preorder.p_op_extends",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.MonotonicHigherReference.Current__0",
-        "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
-        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
-        "refinement_interpretation_Tm_refine_6292860b909d429bbad84da783cf0dcc",
-        "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
-        "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
-        "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.MonotonicHigherReference.history_compose",
-        "token_correspondence_Steel.Preorder.p_composable", "true_interp",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
-        "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal",
-        "typing_Steel.Memory.Tactics.req", "typing_Steel.Memory.Tactics.rm",
-        "typing_Steel.Memory.pts_to", "typing_Steel.Memory.star",
-        "typing_Steel.MonotonicHigherReference.hval_tot",
-        "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.MonotonicHigherReference.uu___is_Current",
-        "typing_Steel.Preorder.p_op"
-      ],
-      0,
-      "671d4c6b8b3e6880cc20903ec19e8541"
-    ],
-    [
-      "Steel.MonotonicHigherReference.read_refine",
-      2,
       2,
       1,
       [
@@ -1352,6 +1129,7 @@
         "disc_equation_Prims.Cons",
         "disc_equation_Steel.MonotonicHigherReference.Current",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.op",
+        "equation_Prims.squash",
         "equation_Steel.MonotonicHigherReference.history_compose",
         "equation_Steel.MonotonicHigherReference.history_val",
         "equation_Steel.MonotonicHigherReference.hperm",
@@ -1369,7 +1147,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
-        "refinement_interpretation_Tm_refine_6292860b909d429bbad84da783cf0dcc",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.MonotonicHigherReference.history_compose",
@@ -1377,7 +1155,48 @@
         "typing_Steel.MonotonicHigherReference.uu___is_Current"
       ],
       0,
-      "9b898488e0c54682c07b8a0e04e2a275"
+      "f40fc0f5bc63543a88d64506609fe77d"
+    ],
+    [
+      "Steel.MonotonicHigherReference.read_refine",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_Steel.MonotonicHigherReference.Current",
+        "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
+        "data_elim_Steel.MonotonicHigherReference.Current",
+        "disc_equation_Prims.Cons",
+        "disc_equation_Steel.MonotonicHigherReference.Current",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.op",
+        "equation_Prims.squash",
+        "equation_Steel.MonotonicHigherReference.history_compose",
+        "equation_Steel.MonotonicHigherReference.history_val",
+        "equation_Steel.MonotonicHigherReference.hperm",
+        "equation_Steel.MonotonicHigherReference.pcm_history",
+        "equation_Steel.MonotonicHigherReference.unit_history",
+        "equation_Steel.Preorder.vhist",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
+        "kinding_Steel.MonotonicHigherReference.history@tok",
+        "proj_equation_FStar.PCM.Mkpcm__op",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.PCM.Mkpcm__op",
+        "projection_inverse_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
+        "token_correspondence_Steel.MonotonicHigherReference.history_compose",
+        "typing_FStar.Ghost.reveal",
+        "typing_Steel.MonotonicHigherReference.uu___is_Current"
+      ],
+      0,
+      "72f061888c95d0c6e79a12a36c4f3d78"
     ],
     [
       "Steel.MonotonicHigherReference.read_refine",
@@ -1387,20 +1206,24 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "bool_inversion",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
         "constructor_distinct_Steel.MonotonicHigherReference.Current",
         "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
         "data_elim_Steel.FractionalPermission.MkPerm",
         "data_elim_Steel.MonotonicHigherReference.Current",
         "data_elim_Steel.MonotonicHigherReference.Witnessed",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_Prims.Cons",
         "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Memory.Tactics.req",
-        "equation_Steel.Memory.Tactics.rm",
-        "equation_Steel.Memory.is_witness_invariant",
+        "equation_FStar.PCM.op", "equation_Steel.Effect.Atomic.h_exists_sl",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
         "equation_Steel.MonotonicHigherReference.history_composable",
         "equation_Steel.MonotonicHigherReference.history_compose",
         "equation_Steel.MonotonicHigherReference.history_val",
@@ -1408,19 +1231,18 @@
         "equation_Steel.MonotonicHigherReference.hval",
         "equation_Steel.MonotonicHigherReference.hval_tot",
         "equation_Steel.MonotonicHigherReference.pcm_history",
-        "equation_Steel.MonotonicHigherReference.pts_to",
+        "equation_Steel.MonotonicHigherReference.pts_to_",
         "equation_Steel.MonotonicHigherReference.pts_to_body",
+        "equation_Steel.MonotonicHigherReference.pts_to_sl",
         "equation_Steel.MonotonicHigherReference.ref",
         "equation_Steel.MonotonicHigherReference.unit_history",
         "equation_Steel.Preorder.hist",
         "equation_Steel.Preorder.p_composable",
         "equation_Steel.Preorder.vhist",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_Steel.FractionalPermission.perm",
         "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "function_token_typing_Steel.Memory.slprop",
-        "function_token_typing_Steel.MonotonicHigherReference.pts_to",
         "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
-        "interpretation_Tm_abs_af7c634be68a651fc396d3a5bbfd97d3",
         "interpretation_Tm_abs_d69afaa0166f2770808e8e99f682e501",
         "kinding_Steel.MonotonicHigherReference.history@tok", "l_and-interp",
         "l_or-interp", "lemma_FStar.Ghost.hide_reveal",
@@ -1428,21 +1250,23 @@
         "lemma_Steel.Preorder.extends_length_eq",
         "lemma_Steel.Preorder.p_op_extends",
         "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Steel.MonotonicHigherReference.Current__0",
         "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
         "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
-        "refinement_interpretation_Tm_refine_6292860b909d429bbad84da783cf0dcc",
         "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
         "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67",
@@ -1450,17 +1274,17 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.MonotonicHigherReference.history_compose",
         "token_correspondence_Steel.Preorder.p_composable", "true_interp",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
-        "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal",
-        "typing_Steel.Memory.Tactics.req", "typing_Steel.Memory.Tactics.rm",
-        "typing_Steel.Memory.pts_to", "typing_Steel.Memory.star",
+        "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.Memory.emp", "typing_Steel.Memory.pts_to",
+        "typing_Steel.Memory.pure", "typing_Steel.Memory.star",
+        "typing_Steel.MonotonicHigherReference.history_val",
         "typing_Steel.MonotonicHigherReference.hval_tot",
         "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.MonotonicHigherReference.uu___is_Current",
+        "typing_Steel.MonotonicHigherReference.pts_to_",
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "29858886776650b5b55596e5aebfa7a5"
+      "8787823a8e07cbe13594be368d8efc85"
     ],
     [
       "Steel.MonotonicHigherReference.write",
@@ -1579,7 +1403,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "648a4b270f70aa9b4de2eabe8acf07ec"
+      "a7ac13193c6d500069b439fda19ab458"
     ],
     [
       "Steel.MonotonicHigherReference.lift_fact",
@@ -1603,7 +1427,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "503501d8029a574bf7988ca1caa936ed"
+      "af3d1175950b199a1d3e1e1e6009dcff"
     ],
     [
       "Steel.MonotonicHigherReference.lift_fact_is_stable",
@@ -1643,7 +1467,7 @@
         "typing_Prims.__proj__Cons__item__hd", "typing_Steel.Preorder.curval"
       ],
       0,
-      "a84b2ac2e56673b5d846ea8c7ee8d95e"
+      "c9a14fa8fae53735d008b3338ae951c3"
     ],
     [
       "Steel.MonotonicHigherReference.get_squash",
@@ -1655,7 +1479,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "26e75904cb372c8652a4dd8358dea5e6"
+      "9540a5e40fc0b33347fff758d0117ae5"
     ],
     [
       "Steel.MonotonicHigherReference.witness_thunk",
@@ -1664,13 +1488,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Steel.Effect.fact_valid_compat",
+        "equation_Prims.squash",
+        "equation_Steel.PCMReference.fact_valid_compat",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "l_quant_interp_b543aab419ded8a4f7e6dfbb8a35619c",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "bca7dfcf82635cb61f6eb3e605791133"
+      "ce147e0fb6c7ee1b92c5d22905dc89dc"
     ],
     [
       "Steel.MonotonicHigherReference.witness",
@@ -1678,19 +1503,33 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query",
+        "Steel.Effect.Common_interpretation_Tm_ghost_arrow_cc82ba493a2c33bf86799a8a0b382eec",
+        "Steel.MonotonicHigherReference_interpretation_Tm_arrow_e2d68ada8f486b09283219f5019d8f18",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
         "constructor_distinct_Steel.MonotonicHigherReference.Current",
         "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
         "data_elim_Steel.FractionalPermission.MkPerm",
         "data_elim_Steel.MonotonicHigherReference.Current",
         "data_elim_Steel.MonotonicHigherReference.Witnessed",
+        "data_typing_intro_Steel.Effect.Common.Mkvprop_@tok",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_Prims.Cons",
         "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_FStar.Preorder.stable",
-        "equation_Prims.squash", "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Memory.Tactics.req",
-        "equation_Steel.Memory.Tactics.rm",
+        "equation_FStar.PCM.op", "equation_FStar.Pervasives.pattern",
+        "equation_FStar.Preorder.stable", "equation_Prims.squash",
+        "equation_Steel.Effect.Common.sel_depends_only_on",
+        "equation_Steel.Effect.Common.sel_depends_only_on_core",
+        "equation_Steel.Effect.Common.selector",
+        "equation_Steel.Effect.Common.selector_",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
         "equation_Steel.MonotonicHigherReference.history_composable",
         "equation_Steel.MonotonicHigherReference.history_compose",
         "equation_Steel.MonotonicHigherReference.history_val",
@@ -1703,12 +1542,15 @@
         "equation_Steel.MonotonicHigherReference.ref",
         "equation_Steel.MonotonicHigherReference.stable_property",
         "equation_Steel.MonotonicHigherReference.unit_history",
+        "equation_Steel.MonotonicHigherReference.witnessed",
         "equation_Steel.Preorder.curval", "equation_Steel.Preorder.hist",
         "equation_Steel.Preorder.p_composable",
         "equation_Steel.Preorder.vhist",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_Steel.FractionalPermission.perm",
         "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "function_token_typing_Steel.Memory.slprop",
+        "function_token_typing_FStar.Pervasives.pattern",
+        "interpretation_Tm_abs_3186fdffb769911444e226c902379d08",
         "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
         "interpretation_Tm_abs_692b66fc1997a9fdc32a9e4899974cfa",
         "interpretation_Tm_abs_d69afaa0166f2770808e8e99f682e501",
@@ -1718,17 +1560,20 @@
         "lemma_Steel.Preorder.extends_related_head",
         "lemma_Steel.Preorder.p_op_extends",
         "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
+        "proj_equation_FStar.PCM.Mkpcm_p", "proj_equation_Prims.Cons_hd",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Steel.MonotonicHigherReference.Current__0",
         "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
@@ -1736,23 +1581,25 @@
         "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
         "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67",
+        "refinement_interpretation_Tm_refine_bb3c1f49567d9e0ea8722328de88ddaa",
         "refinement_interpretation_Tm_refine_ca7d6de5b8865b895c992cd14467ad85",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
+        "token_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "token_correspondence_Steel.MonotonicHigherReference.history_compose",
         "token_correspondence_Steel.MonotonicHigherReference.lift_fact",
         "token_correspondence_Steel.Preorder.p_composable", "true_interp",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
-        "typing_FStar.Ghost.reveal", "typing_Steel.Memory.Tactics.req",
-        "typing_Steel.Memory.Tactics.rm", "typing_Steel.Memory.pts_to",
-        "typing_Steel.Memory.star",
+        "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.Memory.emp", "typing_Steel.Memory.pts_to",
+        "typing_Steel.Memory.pure", "typing_Steel.Memory.star",
+        "typing_Steel.MonotonicHigherReference.history_val",
         "typing_Steel.MonotonicHigherReference.hval_tot",
         "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.MonotonicHigherReference.uu___is_Current",
-        "typing_Steel.Preorder.p_op"
+        "typing_Steel.Preorder.p_op",
+        "typing_Tm_abs_3186fdffb769911444e226c902379d08"
       ],
       0,
-      "cf95b79ec673bf4c7faabb9b3cd39ef1"
+      "368f39641400e988efb2b5cea2d00e13"
     ],
     [
       "Steel.MonotonicHigherReference.recall",
@@ -1762,19 +1609,23 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "bool_inversion",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
         "constructor_distinct_Steel.MonotonicHigherReference.Current",
         "constructor_distinct_Steel.MonotonicHigherReference.Witnessed",
         "data_elim_Steel.FractionalPermission.MkPerm",
         "data_elim_Steel.MonotonicHigherReference.Current",
         "data_elim_Steel.MonotonicHigherReference.Witnessed",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "disc_equation_Prims.Cons",
         "disc_equation_Steel.MonotonicHigherReference.Current", "eq2-interp",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Memory.Tactics.req",
-        "equation_Steel.Memory.Tactics.rm",
+        "equation_FStar.PCM.op", "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
         "equation_Steel.MonotonicHigherReference.history_composable",
         "equation_Steel.MonotonicHigherReference.history_compose",
         "equation_Steel.MonotonicHigherReference.history_val",
@@ -1783,17 +1634,16 @@
         "equation_Steel.MonotonicHigherReference.hval_tot",
         "equation_Steel.MonotonicHigherReference.lift_fact",
         "equation_Steel.MonotonicHigherReference.pcm_history",
-        "equation_Steel.MonotonicHigherReference.pts_to",
         "equation_Steel.MonotonicHigherReference.pts_to_body",
         "equation_Steel.MonotonicHigherReference.ref",
         "equation_Steel.MonotonicHigherReference.unit_history",
+        "equation_Steel.MonotonicHigherReference.witnessed",
         "equation_Steel.Preorder.hist",
         "equation_Steel.Preorder.p_composable",
         "equation_Steel.Preorder.vhist",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_Steel.FractionalPermission.perm",
         "fuel_guarded_inversion_Steel.MonotonicHigherReference.history",
-        "function_token_typing_Steel.Memory.slprop",
-        "function_token_typing_Steel.MonotonicHigherReference.lift_fact",
         "interpretation_Tm_abs_671264f04fcd9a754b9533e6d6b6dc2d",
         "interpretation_Tm_abs_692b66fc1997a9fdc32a9e4899974cfa",
         "interpretation_Tm_abs_d69afaa0166f2770808e8e99f682e501",
@@ -1803,39 +1653,41 @@
         "lemma_Steel.Preorder.extends_length_eq",
         "lemma_Steel.Preorder.p_op_extends",
         "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "projection_inverse_Steel.MonotonicHigherReference.Current__0",
         "refinement_interpretation_Tm_refine_18325c15da8c355ea69793940eaa87b8",
         "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "refinement_interpretation_Tm_refine_6a2749007711d14020e3deb637f1daa6",
         "refinement_interpretation_Tm_refine_755de22742540e81045eb77e443b13ab",
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67",
-        "refinement_interpretation_Tm_refine_cf7b18ff0fb6fd3a0c91ec37461a5ad6",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.MonotonicHigherReference.history_compose",
+        "token_correspondence_Steel.MonotonicHigherReference.lift_fact",
         "token_correspondence_Steel.Preorder.p_composable", "true_interp",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
-        "typing_FStar.Ghost.reveal", "typing_Steel.Memory.Tactics.req",
-        "typing_Steel.Memory.Tactics.rm", "typing_Steel.Memory.pts_to",
-        "typing_Steel.Memory.star",
+        "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.Memory.emp", "typing_Steel.Memory.pts_to",
+        "typing_Steel.Memory.pure", "typing_Steel.Memory.star",
+        "typing_Steel.MonotonicHigherReference.history_val",
         "typing_Steel.MonotonicHigherReference.hval_tot",
         "typing_Steel.MonotonicHigherReference.pcm_history",
-        "typing_Steel.MonotonicHigherReference.uu___is_Current",
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "f3fdd4f53261cadb0841cf883b2ea8e9"
+      "32d919f8450bc29f2e261d0739dd3f0d"
     ]
   ]
 ]
