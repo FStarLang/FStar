@@ -717,31 +717,33 @@ let (find_name : env -> Prims.string -> name) =
 let (find : env -> Prims.string -> Prims.int) =
   fun env1 ->
     fun x ->
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___ ->
            match () with
            | () ->
                FStar_Compiler_List.index (fun name1 -> name1.pretty = x)
-                 env1.names)
-        (fun uu___ ->
-           let uu___1 =
-             FStar_Compiler_Util.format1
-               "Internal error: name not found %s\n" x in
-           failwith uu___1)
+                 env1.names) ()
+      with
+      | uu___ ->
+          let uu___1 =
+            FStar_Compiler_Util.format1 "Internal error: name not found %s\n"
+              x in
+          failwith uu___1
 let (find_t : env -> Prims.string -> Prims.int) =
   fun env1 ->
     fun x ->
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___ ->
            match () with
            | () ->
                FStar_Compiler_List.index (fun name1 -> name1 = x)
-                 env1.names_t)
-        (fun uu___ ->
-           let uu___1 =
-             FStar_Compiler_Util.format1
-               "Internal error: name not found %s\n" x in
-           failwith uu___1)
+                 env1.names_t) ()
+      with
+      | uu___ ->
+          let uu___1 =
+            FStar_Compiler_Util.format1 "Internal error: name not found %s\n"
+              x in
+          failwith uu___1
 let add_binders : 'uuuuu . env -> (Prims.string * 'uuuuu) Prims.list -> env =
   fun env1 ->
     fun binders ->
@@ -957,7 +959,7 @@ and (translate_let :
                            let uu___7 = translate_flags meta in MustDisappear
                              :: uu___7
                        | uu___7 -> translate_flags meta in
-                     FStar_Compiler_Effect.try_with
+                     try
                        (fun uu___7 ->
                           match () with
                           | () ->
@@ -966,31 +968,30 @@ and (translate_let :
                                 (DFunction
                                    (cc1, meta1,
                                      (FStar_Compiler_List.length tvars), t1,
-                                     name2, binders, body1)))
-                       (fun uu___7 ->
-                          match uu___7 with
-                          | e ->
-                              let msg = FStar_Compiler_Util.print_exn e in
-                              ((let uu___9 =
-                                  let uu___10 =
-                                    let uu___11 =
-                                      FStar_Extraction_ML_Syntax.string_of_mlpath
-                                        name2 in
-                                    FStar_Compiler_Util.format2
-                                      "Error while extracting %s to KreMLin (%s)\n"
-                                      uu___11 msg in
-                                  (FStar_Errors.Warning_FunctionNotExtacted,
-                                    uu___10) in
-                                FStar_Errors.log_issue
-                                  FStar_Compiler_Range.dummyRange uu___9);
-                               (let msg1 =
-                                  Prims.op_Hat
-                                    "This function was not extracted:\n" msg in
-                                FStar_Pervasives_Native.Some
-                                  (DFunction
-                                     (cc1, meta1,
-                                       (FStar_Compiler_List.length tvars),
-                                       t1, name2, binders, (EAbortS msg1)))))))))
+                                     name2, binders, body1))) ()
+                     with
+                     | e ->
+                         let msg = FStar_Compiler_Util.print_exn e in
+                         ((let uu___9 =
+                             let uu___10 =
+                               let uu___11 =
+                                 FStar_Extraction_ML_Syntax.string_of_mlpath
+                                   name2 in
+                               FStar_Compiler_Util.format2
+                                 "Error while extracting %s to KreMLin (%s)\n"
+                                 uu___11 msg in
+                             (FStar_Errors.Warning_FunctionNotExtacted,
+                               uu___10) in
+                           FStar_Errors.log_issue
+                             FStar_Compiler_Range.dummyRange uu___9);
+                          (let msg1 =
+                             Prims.op_Hat
+                               "This function was not extracted:\n" msg in
+                           FStar_Pervasives_Native.Some
+                             (DFunction
+                                (cc1, meta1,
+                                  (FStar_Compiler_List.length tvars), t1,
+                                  name2, binders, (EAbortS msg1))))))))
         | { FStar_Extraction_ML_Syntax.mllb_name = name1;
             FStar_Extraction_ML_Syntax.mllb_tysc =
               FStar_Pervasives_Native.Some (tvars, t);
@@ -1009,7 +1010,7 @@ and (translate_let :
                    (fun env3 -> fun name2 -> extend_t env3 name2) env1 tvars in
                let t1 = translate_type env2 t in
                let name2 = ((env2.module_name), name1) in
-               FStar_Compiler_Effect.try_with
+               try
                  (fun uu___3 ->
                     match () with
                     | () ->
@@ -1018,26 +1019,24 @@ and (translate_let :
                           (DGlobal
                              (meta1, name2,
                                (FStar_Compiler_List.length tvars), t1, expr2)))
-                 (fun uu___3 ->
-                    match uu___3 with
-                    | e ->
-                        ((let uu___5 =
-                            let uu___6 =
-                              let uu___7 =
-                                FStar_Extraction_ML_Syntax.string_of_mlpath
-                                  name2 in
-                              let uu___8 = FStar_Compiler_Util.print_exn e in
-                              FStar_Compiler_Util.format2
-                                "Error extracting %s to KreMLin (%s)\n"
-                                uu___7 uu___8 in
-                            (FStar_Errors.Warning_DefinitionNotTranslated,
-                              uu___6) in
-                          FStar_Errors.log_issue
-                            FStar_Compiler_Range.dummyRange uu___5);
-                         FStar_Pervasives_Native.Some
-                           (DGlobal
-                              (meta1, name2,
-                                (FStar_Compiler_List.length tvars), t1, EAny)))))
+                   ()
+               with
+               | e ->
+                   ((let uu___5 =
+                       let uu___6 =
+                         let uu___7 =
+                           FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
+                         let uu___8 = FStar_Compiler_Util.print_exn e in
+                         FStar_Compiler_Util.format2
+                           "Error extracting %s to KreMLin (%s)\n" uu___7
+                           uu___8 in
+                       (FStar_Errors.Warning_DefinitionNotTranslated, uu___6) in
+                     FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+                       uu___5);
+                    FStar_Pervasives_Native.Some
+                      (DGlobal
+                         (meta1, name2, (FStar_Compiler_List.length tvars),
+                           t1, EAny))))
         | { FStar_Extraction_ML_Syntax.mllb_name = name1;
             FStar_Extraction_ML_Syntax.mllb_tysc = ts;
             FStar_Extraction_ML_Syntax.mllb_add_unit = uu___;
@@ -2881,7 +2880,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                match uu___1 with
                | (path, uu___2, uu___3) ->
                    FStar_Extraction_ML_Syntax.string_of_mlpath path in
-             FStar_Compiler_Effect.try_with
+             try
                (fun uu___1 ->
                   match () with
                   | () ->
@@ -2894,9 +2893,10 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                             "Attempting to translate module %s\n" m_name
                         else ());
                        (let uu___3 = translate_module m in
-                        FStar_Pervasives_Native.Some uu___3)))
-               (fun uu___1 ->
-                  (let uu___3 = FStar_Compiler_Util.print_exn uu___1 in
+                        FStar_Pervasives_Native.Some uu___3))) ()
+             with
+             | uu___1 ->
+                 ((let uu___3 = FStar_Compiler_Util.print_exn uu___1 in
                    FStar_Compiler_Util.print2
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);

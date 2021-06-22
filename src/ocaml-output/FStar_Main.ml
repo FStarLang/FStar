@@ -314,7 +314,7 @@ let (handle_error : Prims.exn -> unit) =
     report_errors []
 let main : 'uuuuu . unit -> 'uuuuu =
   fun uu___ ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___1 ->
          match () with
          | () ->
@@ -333,6 +333,7 @@ let main : 'uuuuu . unit -> 'uuuuu =
                          "TOTAL TIME %s ms: %s\n" uu___7 uu___8
                      else ());
                     cleanup ();
-                    FStar_Compiler_Effect.exit Prims.int_zero))))
-      (fun uu___1 ->
-         handle_error uu___1; FStar_Compiler_Effect.exit Prims.int_one)
+                    FStar_Compiler_Effect.exit Prims.int_zero)))) ()
+    with
+    | uu___1 ->
+        (handle_error uu___1; FStar_Compiler_Effect.exit Prims.int_one)

@@ -9,7 +9,7 @@ let (unpack_lsp_query :
       FStar_Compiler_Effect.pipe_right uu___
         (FStar_Compiler_Util.map_option
            FStar_Interactive_JsonHelper.js_str_int) in
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
@@ -170,33 +170,31 @@ let (unpack_lsp_query :
              {
                FStar_Interactive_JsonHelper.query_id = qid;
                FStar_Interactive_JsonHelper.q = uu___1
-             })
-      (fun uu___ ->
-         match uu___ with
-         | FStar_Interactive_JsonHelper.MissingKey msg ->
-             {
-               FStar_Interactive_JsonHelper.query_id = qid;
-               FStar_Interactive_JsonHelper.q =
-                 (FStar_Interactive_JsonHelper.BadProtocolMsg msg)
-             }
-         | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
-             FStar_Interactive_JsonHelper.wrap_jsfail qid expected got)
+             }) ()
+    with
+    | FStar_Interactive_JsonHelper.MissingKey msg ->
+        {
+          FStar_Interactive_JsonHelper.query_id = qid;
+          FStar_Interactive_JsonHelper.q =
+            (FStar_Interactive_JsonHelper.BadProtocolMsg msg)
+        }
+    | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
+        FStar_Interactive_JsonHelper.wrap_jsfail qid expected got
 let (deserialize_lsp_query :
   FStar_Compiler_Util.json -> FStar_Interactive_JsonHelper.lsp_query) =
   fun js_query ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
              let uu___1 =
                FStar_Compiler_Effect.pipe_right js_query
                  FStar_Interactive_JsonHelper.js_assoc in
-             unpack_lsp_query uu___1)
-      (fun uu___ ->
-         match uu___ with
-         | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
-             FStar_Interactive_JsonHelper.wrap_jsfail
-               FStar_Pervasives_Native.None expected got)
+             unpack_lsp_query uu___1) ()
+    with
+    | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
+        FStar_Interactive_JsonHelper.wrap_jsfail FStar_Pervasives_Native.None
+          expected got
 let (parse_lsp_query :
   Prims.string -> FStar_Interactive_JsonHelper.lsp_query) =
   fun query_str ->
@@ -474,7 +472,7 @@ let rec (read_lsp_query :
   FStar_Compiler_Util.stream_reader -> FStar_Interactive_JsonHelper.lsp_query)
   =
   fun stream ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
@@ -487,15 +485,12 @@ let rec (read_lsp_query :
                     let uu___3 = FStar_Compiler_Util.string_of_int n in
                     FStar_Compiler_Util.format1 "Could not read %s bytes"
                       uu___3 in
-                  FStar_Interactive_JsonHelper.wrap_content_szerr uu___2))
-      (fun uu___ ->
-         match uu___ with
-         | FStar_Interactive_JsonHelper.MalformedHeader ->
-             (FStar_Compiler_Util.print_error
-                "[E] Malformed Content Header\n";
-              read_lsp_query stream)
-         | FStar_Interactive_JsonHelper.InputExhausted ->
-             read_lsp_query stream)
+                  FStar_Interactive_JsonHelper.wrap_content_szerr uu___2)) ()
+    with
+    | FStar_Interactive_JsonHelper.MalformedHeader ->
+        (FStar_Compiler_Util.print_error "[E] Malformed Content Header\n";
+         read_lsp_query stream)
+    | FStar_Interactive_JsonHelper.InputExhausted -> read_lsp_query stream
 let rec (go : FStar_Interactive_JsonHelper.grepl_state -> Prims.int) =
   fun gst ->
     let query = read_lsp_query gst.FStar_Interactive_JsonHelper.grepl_stdin in

@@ -35,7 +35,7 @@ let (__do_rewrite :
           then FStar_Tactics_Monad.ret tm
           else
             (let res =
-               FStar_Compiler_Effect.try_with
+               try
                  (fun uu___1 ->
                     match () with
                     | () ->
@@ -150,14 +150,13 @@ let (__do_rewrite :
                                       =
                                       (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                   }) tm in
-                             FStar_Pervasives_Native.Some uu___3))
-                 (fun uu___1 ->
-                    match uu___1 with
-                    | FStar_Errors.Error
-                        (FStar_Errors.Error_LayeredMissingAnnot, uu___2,
-                         uu___3, uu___4)
-                        -> FStar_Pervasives_Native.None
-                    | e -> FStar_Compiler_Effect.raise e) in
+                             FStar_Pervasives_Native.Some uu___3)) ()
+               with
+               | FStar_Errors.Error
+                   (FStar_Errors.Error_LayeredMissingAnnot, uu___2, uu___3,
+                    uu___4)
+                   -> FStar_Pervasives_Native.None
+               | e -> FStar_Compiler_Effect.raise e in
              match res with
              | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret tm
              | FStar_Pervasives_Native.Some (uu___1, lcomp, g) ->

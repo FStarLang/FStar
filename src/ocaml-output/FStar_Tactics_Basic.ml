@@ -296,56 +296,54 @@ let (__do_unify_wflags :
                FStar_Compiler_Util.print2 "%%%%%%%%do_unify %s =? %s\n"
                  uu___1 uu___2)
             else ();
-            FStar_Compiler_Effect.try_with
-              (fun uu___1 ->
-                 match () with
-                 | () ->
-                     let res =
-                       if allow_guards
-                       then FStar_TypeChecker_Rel.try_teq true env1 t1 t2
-                       else FStar_TypeChecker_Rel.teq_nosmt env1 t1 t2 in
-                     (if dbg
-                      then
-                        (let uu___3 =
-                           FStar_Common.string_of_option
-                             (FStar_TypeChecker_Rel.guard_to_string env1) res in
-                         let uu___4 = FStar_Syntax_Print.term_to_string t1 in
-                         let uu___5 = FStar_Syntax_Print.term_to_string t2 in
-                         FStar_Compiler_Util.print3
-                           "%%%%%%%%do_unify (RESULT %s) %s =? %s\n" uu___3
-                           uu___4 uu___5)
-                      else ();
-                      (match res with
-                       | FStar_Pervasives_Native.None ->
-                           FStar_Tactics_Monad.ret
-                             FStar_Pervasives_Native.None
-                       | FStar_Pervasives_Native.Some g ->
-                           let uu___3 =
-                             FStar_Tactics_Monad.add_implicits
-                               g.FStar_TypeChecker_Common.implicits in
-                           FStar_Tactics_Monad.bind uu___3
-                             (fun uu___4 ->
-                                FStar_Tactics_Monad.ret
-                                  (FStar_Pervasives_Native.Some g)))))
-              (fun uu___1 ->
-                 match uu___1 with
-                 | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                     FStar_Tactics_Monad.mlog
-                       (fun uu___4 ->
-                          FStar_Compiler_Util.print1
-                            ">> do_unify error, (%s)\n" msg)
-                       (fun uu___4 ->
-                          FStar_Tactics_Monad.ret
-                            FStar_Pervasives_Native.None)
-                 | FStar_Errors.Error (uu___2, msg, r, uu___3) ->
-                     FStar_Tactics_Monad.mlog
-                       (fun uu___4 ->
-                          let uu___5 = FStar_Compiler_Range.string_of_range r in
-                          FStar_Compiler_Util.print2
-                            ">> do_unify error, (%s) at (%s)\n" msg uu___5)
-                       (fun uu___4 ->
-                          FStar_Tactics_Monad.ret
-                            FStar_Pervasives_Native.None))
+            (try
+               (fun uu___1 ->
+                  match () with
+                  | () ->
+                      let res =
+                        if allow_guards
+                        then FStar_TypeChecker_Rel.try_teq true env1 t1 t2
+                        else FStar_TypeChecker_Rel.teq_nosmt env1 t1 t2 in
+                      (if dbg
+                       then
+                         (let uu___3 =
+                            FStar_Common.string_of_option
+                              (FStar_TypeChecker_Rel.guard_to_string env1)
+                              res in
+                          let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+                          let uu___5 = FStar_Syntax_Print.term_to_string t2 in
+                          FStar_Compiler_Util.print3
+                            "%%%%%%%%do_unify (RESULT %s) %s =? %s\n" uu___3
+                            uu___4 uu___5)
+                       else ();
+                       (match res with
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Tactics_Monad.ret
+                              FStar_Pervasives_Native.None
+                        | FStar_Pervasives_Native.Some g ->
+                            let uu___3 =
+                              FStar_Tactics_Monad.add_implicits
+                                g.FStar_TypeChecker_Common.implicits in
+                            FStar_Tactics_Monad.bind uu___3
+                              (fun uu___4 ->
+                                 FStar_Tactics_Monad.ret
+                                   (FStar_Pervasives_Native.Some g))))) ()
+             with
+             | FStar_Errors.Err (uu___2, msg, uu___3) ->
+                 FStar_Tactics_Monad.mlog
+                   (fun uu___4 ->
+                      FStar_Compiler_Util.print1 ">> do_unify error, (%s)\n"
+                        msg)
+                   (fun uu___4 ->
+                      FStar_Tactics_Monad.ret FStar_Pervasives_Native.None)
+             | FStar_Errors.Error (uu___2, msg, r, uu___3) ->
+                 FStar_Tactics_Monad.mlog
+                   (fun uu___4 ->
+                      let uu___5 = FStar_Compiler_Range.string_of_range r in
+                      FStar_Compiler_Util.print2
+                        ">> do_unify error, (%s) at (%s)\n" msg uu___5)
+                   (fun uu___4 ->
+                      FStar_Tactics_Monad.ret FStar_Pervasives_Native.None))
 let (__do_unify :
   Prims.bool ->
     env ->
@@ -760,32 +758,31 @@ let (__tc :
                     FStar_TypeChecker_Env.unif_allow_ref_guards =
                       (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
                   } in
-                FStar_Compiler_Effect.try_with
+                try
                   (fun uu___1 ->
                      match () with
                      | () ->
                          let uu___2 =
                            FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
                              e1 t true in
-                         FStar_Tactics_Monad.ret uu___2)
-                  (fun uu___1 ->
-                     match uu___1 with
-                     | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                         let uu___4 = tts e1 t in
-                         let uu___5 =
-                           let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
-                           FStar_Compiler_Effect.pipe_right uu___6
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___4 uu___5 msg
-                     | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
-                         let uu___5 = tts e1 t in
-                         let uu___6 =
-                           let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
-                           FStar_Compiler_Effect.pipe_right uu___7
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___5 uu___6 msg)))
+                         FStar_Tactics_Monad.ret uu___2) ()
+                with
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
+                    let uu___4 = tts e1 t in
+                    let uu___5 =
+                      let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_Compiler_Effect.pipe_right uu___6
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e1 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_Compiler_Effect.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -901,7 +898,7 @@ let (__tc_ghost :
                     FStar_TypeChecker_Env.unif_allow_ref_guards =
                       (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
                   } in
-                FStar_Compiler_Effect.try_with
+                try
                   (fun uu___1 ->
                      match () with
                      | () ->
@@ -911,25 +908,24 @@ let (__tc_ghost :
                           | (t1, lc, g) ->
                               FStar_Tactics_Monad.ret
                                 (t1, (lc.FStar_TypeChecker_Common.res_typ),
-                                  g)))
-                  (fun uu___1 ->
-                     match uu___1 with
-                     | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                         let uu___4 = tts e1 t in
-                         let uu___5 =
-                           let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
-                           FStar_Compiler_Effect.pipe_right uu___6
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___4 uu___5 msg
-                     | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
-                         let uu___5 = tts e1 t in
-                         let uu___6 =
-                           let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
-                           FStar_Compiler_Effect.pipe_right uu___7
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___5 uu___6 msg)))
+                                  g))) ()
+                with
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
+                    let uu___4 = tts e1 t in
+                    let uu___5 =
+                      let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_Compiler_Effect.pipe_right uu___6
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e1 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_Compiler_Effect.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1145,30 +1141,29 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.unif_allow_ref_guards =
                       (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
                   } in
-                FStar_Compiler_Effect.try_with
+                try
                   (fun uu___1 ->
                      match () with
                      | () ->
                          let uu___2 = FStar_TypeChecker_TcTerm.tc_term e2 t in
-                         FStar_Tactics_Monad.ret uu___2)
-                  (fun uu___1 ->
-                     match uu___1 with
-                     | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                         let uu___4 = tts e2 t in
-                         let uu___5 =
-                           let uu___6 = FStar_TypeChecker_Env.all_binders e2 in
-                           FStar_Compiler_Effect.pipe_right uu___6
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___4 uu___5 msg
-                     | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
-                         let uu___5 = tts e2 t in
-                         let uu___6 =
-                           let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
-                           FStar_Compiler_Effect.pipe_right uu___7
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         fail3 "Cannot type %s in context (%s). Error = (%s)"
-                           uu___5 uu___6 msg)))
+                         FStar_Tactics_Monad.ret uu___2) ()
+                with
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
+                    let uu___4 = tts e2 t in
+                    let uu___5 =
+                      let uu___6 = FStar_TypeChecker_Env.all_binders e2 in
+                      FStar_Compiler_Effect.pipe_right uu___6
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e2 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
+                      FStar_Compiler_Effect.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun e ->
     fun t ->
@@ -1326,7 +1321,7 @@ let (proc_guard :
                                           "Forcing guard (%s:%s)\n" reason
                                           uu___7)
                                      (fun uu___6 ->
-                                        FStar_Compiler_Effect.try_with
+                                        try
                                           (fun uu___7 ->
                                              match () with
                                              | () ->
@@ -1355,18 +1350,20 @@ let (proc_guard :
                                                           reason)
                                                  else
                                                    FStar_Tactics_Monad.ret ())
-                                          (fun uu___7 ->
-                                             FStar_Tactics_Monad.mlog
-                                               (fun uu___8 ->
-                                                  let uu___9 =
-                                                    FStar_TypeChecker_Rel.guard_to_string
-                                                      e g in
-                                                  FStar_Compiler_Util.print1
-                                                    "guard = %s\n" uu___9)
-                                               (fun uu___8 ->
-                                                  fail1
-                                                    "Forcing the guard failed (%s)"
-                                                    reason))))))
+                                            ()
+                                        with
+                                        | uu___7 ->
+                                            FStar_Tactics_Monad.mlog
+                                              (fun uu___8 ->
+                                                 let uu___9 =
+                                                   FStar_TypeChecker_Rel.guard_to_string
+                                                     e g in
+                                                 FStar_Compiler_Util.print1
+                                                   "guard = %s\n" uu___9)
+                                              (fun uu___8 ->
+                                                 fail1
+                                                   "Forcing the guard failed (%s)"
+                                                   reason)))))
 let (tcc :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1428,7 +1425,7 @@ let divide :
         FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
           (fun p ->
              let uu___ =
-               FStar_Compiler_Effect.try_with
+               try
                  (fun uu___1 ->
                     match () with
                     | () ->
@@ -1436,9 +1433,10 @@ let divide :
                           let uu___3 = FStar_BigInt.to_int_fs n in
                           FStar_Compiler_List.splitAt uu___3
                             p.FStar_Tactics_Types.goals in
-                        FStar_Tactics_Monad.ret uu___2)
-                 (fun uu___1 ->
-                    FStar_Tactics_Monad.fail "divide: not enough goals") in
+                        FStar_Tactics_Monad.ret uu___2) ()
+               with
+               | uu___1 ->
+                   FStar_Tactics_Monad.fail "divide: not enough goals" in
              FStar_Tactics_Monad.bind uu___
                (fun uu___1 ->
                   match uu___1 with

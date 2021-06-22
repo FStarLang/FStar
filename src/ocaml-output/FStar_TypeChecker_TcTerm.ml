@@ -11124,17 +11124,17 @@ let (typeof_tot_or_gtot_term :
                (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
            } in
          let uu___1 =
-           FStar_Compiler_Effect.try_with
+           try
              (fun uu___2 -> match () with | () -> tc_tot_or_gtot_term env1 e)
-             (fun uu___2 ->
-                match uu___2 with
-                | FStar_Errors.Error (e1, msg, uu___3, ctx) ->
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 = FStar_TypeChecker_Env.get_range env1 in
-                        (e1, msg, uu___6, ctx) in
-                      FStar_Errors.Error uu___5 in
-                    FStar_Compiler_Effect.raise uu___4) in
+               ()
+           with
+           | FStar_Errors.Error (e1, msg, uu___3, ctx) ->
+               let uu___4 =
+                 let uu___5 =
+                   let uu___6 = FStar_TypeChecker_Env.get_range env1 in
+                   (e1, msg, uu___6, ctx) in
+                 FStar_Errors.Error uu___5 in
+               FStar_Compiler_Effect.raise uu___4 in
          match uu___1 with
          | (t, c, g) ->
              if must_tot

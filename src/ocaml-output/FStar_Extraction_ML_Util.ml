@@ -56,15 +56,15 @@ let (mlconst_of_const :
   =
   fun p ->
     fun c ->
-      FStar_Compiler_Effect.try_with
-        (fun uu___ -> match () with | () -> mlconst_of_const' c)
-        (fun uu___ ->
-           let uu___1 =
-             let uu___2 = FStar_Compiler_Range.string_of_range p in
-             let uu___3 = FStar_Syntax_Print.const_to_string c in
-             FStar_Compiler_Util.format2
-               "(%s) Failed to translate constant %s " uu___2 uu___3 in
-           failwith uu___1)
+      try (fun uu___ -> match () with | () -> mlconst_of_const' c) ()
+      with
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_Compiler_Range.string_of_range p in
+            let uu___3 = FStar_Syntax_Print.const_to_string c in
+            FStar_Compiler_Util.format2
+              "(%s) Failed to translate constant %s " uu___2 uu___3 in
+          failwith uu___1
 let (mlexpr_of_range :
   FStar_Compiler_Range.range -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun r ->
@@ -1572,26 +1572,24 @@ let (interpret_plugin_as_term_fun :
                                       b.FStar_Syntax_Syntax.sort in
                                   uu___6 :: accum_embeddings in
                                 aux loc uu___5 bs4 in
-                          FStar_Compiler_Effect.try_with
-                            (fun uu___3 ->
-                               match () with
-                               | () ->
-                                   let uu___4 = aux Syntax_term [] bs2 in
-                                   (match uu___4 with
-                                    | (w1, a, b) ->
-                                        let uu___5 = aux NBE_t [] bs2 in
-                                        (match uu___5 with
-                                         | (w', uu___6, uu___7) ->
-                                             FStar_Pervasives_Native.Some
-                                               (w1, w', a, b))))
-                            (fun uu___3 ->
-                               match uu___3 with
-                               | NoTacticEmbedding msg ->
-                                   ((let uu___5 =
-                                       FStar_Ident.range_of_lid
-                                         (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                                     let uu___6 =
-                                       FStar_Syntax_Print.fv_to_string fv in
-                                     not_implemented_warning uu___5 uu___6
-                                       msg);
-                                    FStar_Pervasives_Native.None))))
+                          (try
+                             (fun uu___3 ->
+                                match () with
+                                | () ->
+                                    let uu___4 = aux Syntax_term [] bs2 in
+                                    (match uu___4 with
+                                     | (w1, a, b) ->
+                                         let uu___5 = aux NBE_t [] bs2 in
+                                         (match uu___5 with
+                                          | (w', uu___6, uu___7) ->
+                                              FStar_Pervasives_Native.Some
+                                                (w1, w', a, b)))) ()
+                           with
+                           | NoTacticEmbedding msg ->
+                               ((let uu___5 =
+                                   FStar_Ident.range_of_lid
+                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                                 let uu___6 =
+                                   FStar_Syntax_Print.fv_to_string fv in
+                                 not_implemented_warning uu___5 uu___6 msg);
+                                FStar_Pervasives_Native.None))))

@@ -9,43 +9,41 @@ let with_captured_errors' :
   fun env ->
     fun sigint_handler ->
       fun f ->
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
                  FStar_Compiler_Util.with_sigint_handler sigint_handler
-                   (fun uu___1 -> f env))
-          (fun uu___ ->
-             match uu___ with
-             | FStar_Compiler_Effect.Failure msg ->
-                 let msg1 =
-                   Prims.op_Hat "ASSERTION FAILURE: "
-                     (Prims.op_Hat msg
-                        (Prims.op_Hat "\n"
-                           (Prims.op_Hat
-                              "F* may be in an inconsistent state.\n"
-                              (Prims.op_Hat
-                                 "Please file a bug report, ideally with a "
-                                 "minimized version of the program that triggered the error.")))) in
-                 ((let uu___2 = FStar_TypeChecker_Env.get_range env in
-                   FStar_Errors.log_issue uu___2
-                     (FStar_Errors.Error_IDEAssertionFailure, msg1));
-                  FStar_Pervasives_Native.None)
-             | FStar_Compiler_Util.SigInt ->
-                 (FStar_Compiler_Util.print_string "Interrupted";
-                  FStar_Pervasives_Native.None)
-             | FStar_Errors.Error (e, msg, r, ctx) ->
-                 (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
-                  FStar_Pervasives_Native.None)
-             | FStar_Errors.Err (e, msg, ctx) ->
-                 ((let uu___2 =
-                     let uu___3 =
-                       let uu___4 = FStar_TypeChecker_Env.get_range env in
-                       (e, msg, uu___4, ctx) in
-                     [uu___3] in
-                   FStar_TypeChecker_Err.add_errors env uu___2);
-                  FStar_Pervasives_Native.None)
-             | FStar_Errors.Stop -> FStar_Pervasives_Native.None)
+                   (fun uu___1 -> f env)) ()
+        with
+        | FStar_Compiler_Effect.Failure msg ->
+            let msg1 =
+              Prims.op_Hat "ASSERTION FAILURE: "
+                (Prims.op_Hat msg
+                   (Prims.op_Hat "\n"
+                      (Prims.op_Hat "F* may be in an inconsistent state.\n"
+                         (Prims.op_Hat
+                            "Please file a bug report, ideally with a "
+                            "minimized version of the program that triggered the error.")))) in
+            ((let uu___2 = FStar_TypeChecker_Env.get_range env in
+              FStar_Errors.log_issue uu___2
+                (FStar_Errors.Error_IDEAssertionFailure, msg1));
+             FStar_Pervasives_Native.None)
+        | FStar_Compiler_Util.SigInt ->
+            (FStar_Compiler_Util.print_string "Interrupted";
+             FStar_Pervasives_Native.None)
+        | FStar_Errors.Error (e, msg, r, ctx) ->
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
+             FStar_Pervasives_Native.None)
+        | FStar_Errors.Err (e, msg, ctx) ->
+            ((let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_TypeChecker_Env.get_range env in
+                  (e, msg, uu___4, ctx) in
+                [uu___3] in
+              FStar_TypeChecker_Err.add_errors env uu___2);
+             FStar_Pervasives_Native.None)
+        | FStar_Errors.Stop -> FStar_Pervasives_Native.None
 let with_captured_errors :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
@@ -587,7 +585,7 @@ let (unpack_interactive_query : FStar_Compiler_Util.json -> query) =
       let uu___ = assoc "query" "query-id" request in
       FStar_Compiler_Effect.pipe_right uu___
         FStar_Interactive_JsonHelper.js_str in
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
@@ -758,23 +756,22 @@ let (unpack_interactive_query : FStar_Compiler_Util.json -> query) =
                    let uu___3 =
                      FStar_Compiler_Util.format1 "Unknown query '%s'" query1 in
                    ProtocolViolation uu___3 in
-             { qq = uu___1; qid })
-      (fun uu___ ->
-         match uu___ with
-         | FStar_Interactive_JsonHelper.InvalidQuery msg ->
-             { qq = (ProtocolViolation msg); qid }
-         | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
-             wrap_js_failure qid expected got)
+             { qq = uu___1; qid }) ()
+    with
+    | FStar_Interactive_JsonHelper.InvalidQuery msg ->
+        { qq = (ProtocolViolation msg); qid }
+    | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
+        wrap_js_failure qid expected got
 let (deserialize_interactive_query : FStar_Compiler_Util.json -> query) =
   fun js_query ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ -> match () with | () -> unpack_interactive_query js_query)
-      (fun uu___ ->
-         match uu___ with
-         | FStar_Interactive_JsonHelper.InvalidQuery msg ->
-             { qq = (ProtocolViolation msg); qid = "?" }
-         | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
-             wrap_js_failure "?" expected got)
+        ()
+    with
+    | FStar_Interactive_JsonHelper.InvalidQuery msg ->
+        { qq = (ProtocolViolation msg); qid = "?" }
+    | FStar_Interactive_JsonHelper.UnexpectedJsonType (expected, got) ->
+        wrap_js_failure "?" expected got
 let (parse_interactive_query : Prims.string -> query) =
   fun query_str ->
     let uu___ = FStar_Compiler_Util.json_of_string query_str in
@@ -2039,7 +2036,7 @@ let run_and_rewind :
             FStar_Interactive_PushHelper.FullCheck
             FStar_Interactive_JsonHelper.Noop st in
         let results =
-          FStar_Compiler_Effect.try_with
+          try
             (fun uu___ ->
                match () with
                | () ->
@@ -2049,11 +2046,10 @@ let run_and_rewind :
                         let uu___2 = task st1 in
                         FStar_Compiler_Effect.pipe_left
                           (fun uu___3 -> FStar_Pervasives.Inl uu___3) uu___2))
-            (fun uu___ ->
-               match uu___ with
-               | FStar_Compiler_Util.SigInt ->
-                   FStar_Pervasives.Inl sigint_default
-               | e -> FStar_Pervasives.Inr e) in
+              ()
+          with
+          | FStar_Compiler_Util.SigInt -> FStar_Pervasives.Inl sigint_default
+          | e -> FStar_Pervasives.Inr e in
         let st2 = FStar_Interactive_PushHelper.pop_repl "run_and_rewind" st1 in
         match results with
         | FStar_Pervasives.Inl results1 ->
@@ -2159,19 +2155,19 @@ let run_with_parsed_and_tc_term :
                      if uu___1
                      then aux ()
                      else
-                       FStar_Compiler_Effect.try_with
-                         (fun uu___3 -> match () with | () -> aux ())
-                         (fun uu___3 ->
+                       (try (fun uu___3 -> match () with | () -> aux ()) ()
+                        with
+                        | uu___3 ->
                             let uu___4 = FStar_Errors.issue_of_exn uu___3 in
-                            match uu___4 with
-                            | FStar_Pervasives_Native.Some issue ->
-                                let uu___5 =
-                                  let uu___6 =
-                                    FStar_Errors.format_issue issue in
-                                  FStar_Compiler_Util.JsonStr uu___6 in
-                                (QueryNOK, uu___5)
-                            | FStar_Pervasives_Native.None ->
-                                FStar_Compiler_Effect.raise uu___3))
+                            (match uu___4 with
+                             | FStar_Pervasives_Native.Some issue ->
+                                 let uu___5 =
+                                   let uu___6 =
+                                     FStar_Errors.format_issue issue in
+                                   FStar_Compiler_Util.JsonStr uu___6 in
+                                 (QueryNOK, uu___5)
+                             | FStar_Pervasives_Native.None ->
+                                 FStar_Compiler_Effect.raise uu___3)))
 let run_compute :
   'uuuuu .
     FStar_Interactive_JsonHelper.repl_state ->
@@ -2410,7 +2406,7 @@ let run_search :
               FStar_Compiler_Util.format1 "%s" uu___1 in
         Prims.op_Hat (if term.st_negate then "-" else "") uu___ in
       let results =
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
@@ -2442,9 +2438,8 @@ let run_search :
                         InvalidSearch uu___2 in
                       FStar_Compiler_Effect.raise uu___1
                   | uu___1 -> (QueryOK, (FStar_Compiler_Util.JsonList js))))
-          (fun uu___ ->
-             match uu___ with
-             | InvalidSearch s -> (QueryNOK, (FStar_Compiler_Util.JsonStr s))) in
+            ()
+        with | InvalidSearch s -> (QueryNOK, (FStar_Compiler_Util.JsonStr s)) in
       (results, (FStar_Pervasives.Inl st))
 let (run_query :
   FStar_Interactive_JsonHelper.repl_state ->
@@ -2676,8 +2671,8 @@ let (interactive_mode : Prims.string -> unit) =
      if uu___3
      then interactive_mode' init
      else
-       FStar_Compiler_Effect.try_with
-         (fun uu___5 -> match () with | () -> interactive_mode' init)
-         (fun uu___5 ->
-            FStar_Errors.set_handler FStar_Errors.default_handler;
-            FStar_Compiler_Effect.raise uu___5))
+       (try (fun uu___5 -> match () with | () -> interactive_mode' init) ()
+        with
+        | uu___5 ->
+            (FStar_Errors.set_handler FStar_Errors.default_handler;
+             FStar_Compiler_Effect.raise uu___5)))

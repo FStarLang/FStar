@@ -1559,7 +1559,7 @@ let (do_solve :
                  FStar_Compiler_Range.string_of_range uu___5 in
              FStar_Compiler_Util.format1 "Ending query at %s" uu___4 in
            FStar_SMTEncoding_Encode.pop uu___3 in
-         FStar_Compiler_Effect.try_with
+         try
            (fun uu___2 ->
               match () with
               | () ->
@@ -1591,25 +1591,24 @@ let (do_solve :
                             (ask_and_report_errors tcenv1 labels prefix qry
                                suffix;
                              pop ())
-                        | uu___4 -> failwith "Impossible")))
-           (fun uu___2 ->
-              match uu___2 with
-              | FStar_SMTEncoding_Env.Inner_let_rec names ->
-                  (pop ();
-                   (let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 =
-                            FStar_Compiler_List.map
-                              FStar_Pervasives_Native.fst names in
-                          FStar_String.concat "," uu___7 in
-                        FStar_Compiler_Util.format1
-                          "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                          uu___6 in
-                      (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
-                        uu___5) in
-                    FStar_TypeChecker_Err.log_issue tcenv
-                      tcenv.FStar_TypeChecker_Env.range uu___4))))
+                        | uu___4 -> failwith "Impossible"))) ()
+         with
+         | FStar_SMTEncoding_Env.Inner_let_rec names ->
+             (pop ();
+              (let uu___4 =
+                 let uu___5 =
+                   let uu___6 =
+                     let uu___7 =
+                       FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                         names in
+                     FStar_String.concat "," uu___7 in
+                   FStar_Compiler_Util.format1
+                     "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                     uu___6 in
+                 (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
+                   uu___5) in
+               FStar_TypeChecker_Err.log_issue tcenv
+                 tcenv.FStar_TypeChecker_Env.range uu___4)))
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)

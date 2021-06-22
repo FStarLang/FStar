@@ -33,7 +33,7 @@ let (z3version_warning_message :
   =
   fun uu___ ->
     let run_proc_result =
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___1 ->
            match () with
            | () ->
@@ -41,8 +41,8 @@ let (z3version_warning_message :
                  let uu___3 = FStar_Options.z3_exe () in
                  FStar_Compiler_Util.run_process "z3_version" uu___3
                    ["-version"] FStar_Pervasives_Native.None in
-               FStar_Pervasives_Native.Some uu___2)
-        (fun uu___1 -> FStar_Pervasives_Native.None) in
+               FStar_Pervasives_Native.Some uu___2) ()
+      with | uu___1 -> FStar_Pervasives_Native.None in
     match run_proc_result with
     | FStar_Pervasives_Native.None ->
         FStar_Pervasives_Native.Some
@@ -972,16 +972,17 @@ let (z3_job :
                     FStar_Pervasives_Native.Some uu___3 in
                   FStar_Profiling.profile
                     (fun uu___3 ->
-                       FStar_Compiler_Effect.try_with
+                       try
                          (fun uu___4 ->
                             match () with
                             | () ->
                                 FStar_Compiler_Util.record_time
                                   (fun uu___5 ->
                                      doZ3Exe log_file r fresh input
-                                       label_messages))
-                         (fun uu___4 ->
-                            refresh (); FStar_Compiler_Effect.raise uu___4))
+                                       label_messages)) ()
+                       with
+                       | uu___4 ->
+                           (refresh (); FStar_Compiler_Effect.raise uu___4))
                     uu___2 "FStar.SMTEncoding.Z3 (aggregate query time)" in
                 match uu___1 with
                 | ((status, statistics), elapsed_time) ->

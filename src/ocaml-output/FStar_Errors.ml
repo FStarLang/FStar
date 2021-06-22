@@ -2733,22 +2733,21 @@ let (uu___228 :
           failwith "Callback for parsing warn_error strings is not set"
       | FStar_Pervasives_Native.Some f -> f s in
     let we = FStar_Options.warn_error () in
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___1 ->
          match () with
          | () ->
              let r = parse we in
              (FStar_Compiler_Util.smap_add error_flags we
                 (FStar_Pervasives_Native.Some r);
-              FStar_Getopt.Success))
-      (fun uu___1 ->
-         match uu___1 with
-         | Invalid_warn_error_setting msg ->
-             (FStar_Compiler_Util.smap_add error_flags we
-                FStar_Pervasives_Native.None;
-              (let uu___3 =
-                 FStar_String.op_Hat "Invalid --warn_error setting: " msg in
-               FStar_Getopt.Error uu___3))) in
+              FStar_Getopt.Success)) ()
+    with
+    | Invalid_warn_error_setting msg ->
+        (FStar_Compiler_Util.smap_add error_flags we
+           FStar_Pervasives_Native.None;
+         (let uu___3 =
+            FStar_String.op_Hat "Invalid --warn_error setting: " msg in
+          FStar_Getopt.Error uu___3)) in
   let get_error_flags uu___ =
     let we = FStar_Options.warn_error () in
     let uu___1 = FStar_Compiler_Util.smap_try_find error_flags we in
@@ -2911,22 +2910,20 @@ let with_ctx : 'a . Prims.string -> (unit -> 'a) -> 'a =
          if uu___1
          then let uu___2 = f () in FStar_Pervasives.Inr uu___2
          else
-           FStar_Compiler_Effect.try_with
-             (fun uu___3 ->
-                match () with
-                | () -> let uu___4 = f () in FStar_Pervasives.Inr uu___4)
-             (fun uu___3 ->
-                match uu___3 with
-                | FStar_Compiler_Effect.Failure msg ->
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 = error_context.get () in
-                          ctx_string uu___7 in
-                        FStar_String.op_Hat msg uu___6 in
-                      FStar_Compiler_Effect.Failure uu___5 in
-                    FStar_Pervasives.Inl uu___4
-                | ex -> FStar_Pervasives.Inl ex) in
+           (try
+              (fun uu___3 ->
+                 match () with
+                 | () -> let uu___4 = f () in FStar_Pervasives.Inr uu___4) ()
+            with
+            | FStar_Compiler_Effect.Failure msg ->
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = error_context.get () in ctx_string uu___7 in
+                    FStar_String.op_Hat msg uu___6 in
+                  FStar_Compiler_Effect.Failure uu___5 in
+                FStar_Pervasives.Inl uu___4
+            | ex -> FStar_Pervasives.Inl ex) in
        (let uu___2 = error_context.pop () in ());
        (match r with
         | FStar_Pervasives.Inr r1 -> r1
@@ -2941,11 +2938,12 @@ let catch_errors :
     let old = FStar_Compiler_Effect.op_Bang current_handler in
     FStar_Compiler_Effect.op_Colon_Equals current_handler newh;
     (let r =
-       FStar_Compiler_Effect.try_with
+       try
          (fun uu___1 ->
             match () with
             | () -> let uu___2 = f () in FStar_Pervasives_Native.Some uu___2)
-         (fun uu___1 -> err_exn uu___1; FStar_Pervasives_Native.None) in
+           ()
+       with | uu___1 -> (err_exn uu___1; FStar_Pervasives_Native.None) in
      let all_issues = newh.eh_report () in
      FStar_Compiler_Effect.op_Colon_Equals current_handler old;
      (let uu___2 =

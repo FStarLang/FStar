@@ -1457,7 +1457,7 @@ let rec (extract_one_pat :
                      (match uu___1 with
                       | (tysVarPats, restPats) ->
                           let f_ty_opt =
-                            FStar_Compiler_Effect.try_with
+                            try
                               (fun uu___2 ->
                                  match () with
                                  | () ->
@@ -1491,11 +1491,9 @@ let rec (extract_one_pat :
                                      let uu___3 =
                                        FStar_Extraction_ML_Util.uncurry_mlty_fun
                                          f_ty in
-                                     FStar_Pervasives_Native.Some uu___3)
-                              (fun uu___2 ->
-                                 match uu___2 with
-                                 | Un_extractable ->
-                                     FStar_Pervasives_Native.None) in
+                                     FStar_Pervasives_Native.Some uu___3) ()
+                            with
+                            | Un_extractable -> FStar_Pervasives_Native.None in
                           let uu___2 =
                             FStar_Compiler_Util.fold_map
                               (fun g1 ->

@@ -576,7 +576,7 @@ let (repl_tx :
   fun st ->
     fun push_kind1 ->
       fun task ->
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
@@ -616,39 +616,38 @@ let (repl_tx :
                             | (env2, name_events) ->
                                 let uu___4 =
                                   commit_name_tracking st2 name_events in
-                                (FStar_Pervasives_Native.None, uu___4)))))
-          (fun uu___ ->
-             match uu___ with
-             | FStar_Compiler_Effect.Failure msg ->
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_Interactive_JsonHelper.js_diag
-                       st.FStar_Interactive_JsonHelper.repl_fname msg
-                       FStar_Pervasives_Native.None in
-                   FStar_Pervasives_Native.Some uu___2 in
-                 (uu___1, st)
-             | FStar_Compiler_Util.SigInt ->
-                 (FStar_Compiler_Util.print_error "[E] Interrupt";
-                  (FStar_Pervasives_Native.None, st))
-             | FStar_Errors.Error (e, msg, r, _ctx) ->
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_Interactive_JsonHelper.js_diag
-                       st.FStar_Interactive_JsonHelper.repl_fname msg
-                       (FStar_Pervasives_Native.Some r) in
-                   FStar_Pervasives_Native.Some uu___2 in
-                 (uu___1, st)
-             | FStar_Errors.Err (e, msg, _ctx) ->
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_Interactive_JsonHelper.js_diag
-                       st.FStar_Interactive_JsonHelper.repl_fname msg
-                       FStar_Pervasives_Native.None in
-                   FStar_Pervasives_Native.Some uu___2 in
-                 (uu___1, st)
-             | FStar_Errors.Stop ->
-                 (FStar_Compiler_Util.print_error "[E] Stop";
-                  (FStar_Pervasives_Native.None, st)))
+                                (FStar_Pervasives_Native.None, uu___4))))) ()
+        with
+        | FStar_Compiler_Effect.Failure msg ->
+            let uu___1 =
+              let uu___2 =
+                FStar_Interactive_JsonHelper.js_diag
+                  st.FStar_Interactive_JsonHelper.repl_fname msg
+                  FStar_Pervasives_Native.None in
+              FStar_Pervasives_Native.Some uu___2 in
+            (uu___1, st)
+        | FStar_Compiler_Util.SigInt ->
+            (FStar_Compiler_Util.print_error "[E] Interrupt";
+             (FStar_Pervasives_Native.None, st))
+        | FStar_Errors.Error (e, msg, r, _ctx) ->
+            let uu___1 =
+              let uu___2 =
+                FStar_Interactive_JsonHelper.js_diag
+                  st.FStar_Interactive_JsonHelper.repl_fname msg
+                  (FStar_Pervasives_Native.Some r) in
+              FStar_Pervasives_Native.Some uu___2 in
+            (uu___1, st)
+        | FStar_Errors.Err (e, msg, _ctx) ->
+            let uu___1 =
+              let uu___2 =
+                FStar_Interactive_JsonHelper.js_diag
+                  st.FStar_Interactive_JsonHelper.repl_fname msg
+                  FStar_Pervasives_Native.None in
+              FStar_Pervasives_Native.Some uu___2 in
+            (uu___1, st)
+        | FStar_Errors.Stop ->
+            (FStar_Compiler_Util.print_error "[E] Stop";
+             (FStar_Pervasives_Native.None, st))
 let (tf_of_fname : Prims.string -> FStar_Interactive_JsonHelper.timed_fname)
   =
   fun fname ->
@@ -762,7 +761,7 @@ let (ld_deps :
       FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either)
   =
   fun st ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
@@ -797,9 +796,10 @@ let (ld_deps :
                   (match uu___2 with
                    | FStar_Pervasives.Inr st2 -> FStar_Pervasives.Inr st2
                    | FStar_Pervasives.Inl st2 ->
-                       FStar_Pervasives.Inl (st2, deps))))
-      (fun uu___ ->
-         FStar_Compiler_Util.print_error "[E] Failed to load deps";
+                       FStar_Pervasives.Inl (st2, deps)))) ()
+    with
+    | uu___ ->
+        (FStar_Compiler_Util.print_error "[E] Failed to load deps";
          FStar_Pervasives.Inr st)
 let (add_module_completions :
   Prims.string ->

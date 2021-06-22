@@ -108,7 +108,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
     let uu___ = FStar_Options.ide () in
     if uu___
     then
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___1 ->
            match () with
            | () ->
@@ -118,7 +118,8 @@ let (string_of_file_name : Prims.string -> Prims.string) =
                (match uu___2 with
                 | FStar_Pervasives_Native.None -> f
                 | FStar_Pervasives_Native.Some absolute_path -> absolute_path))
-        (fun uu___1 -> f)
+          ()
+      with | uu___1 -> f
     else f
 let (file_of_range : range -> Prims.string) =
   fun r -> let f = (r.def_range).file_name in string_of_file_name f

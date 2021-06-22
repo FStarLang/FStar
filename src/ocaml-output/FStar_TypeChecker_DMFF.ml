@@ -1511,53 +1511,54 @@ and (star_type' :
                 if uu___1
                 then false
                 else
-                  FStar_Compiler_Effect.try_with
-                    (fun uu___3 ->
-                       match () with
-                       | () ->
-                           let non_dependent_or_raise s ty1 =
-                             let sinter =
-                               let uu___4 = FStar_Syntax_Free.names ty1 in
-                               FStar_Compiler_Util.set_intersect uu___4 s in
-                             let uu___4 =
-                               let uu___5 =
-                                 FStar_Compiler_Util.set_is_empty sinter in
-                               Prims.op_Negation uu___5 in
-                             if uu___4
-                             then
-                               (debug ty1 sinter;
-                                FStar_Compiler_Effect.raise Not_found)
-                             else () in
-                           let uu___4 =
-                             FStar_Syntax_Subst.open_comp binders c in
-                           (match uu___4 with
-                            | (binders1, c1) ->
-                                let s =
-                                  FStar_Compiler_List.fold_left
-                                    (fun s1 ->
-                                       fun uu___5 ->
-                                         match uu___5 with
-                                         | {
-                                             FStar_Syntax_Syntax.binder_bv =
-                                               bv;
-                                             FStar_Syntax_Syntax.binder_qual
-                                               = uu___6;
-                                             FStar_Syntax_Syntax.binder_attrs
-                                               = uu___7;_}
-                                             ->
-                                             (non_dependent_or_raise s1
-                                                bv.FStar_Syntax_Syntax.sort;
-                                              FStar_Compiler_Util.set_add bv
-                                                s1))
-                                    FStar_Syntax_Syntax.no_names binders1 in
-                                let ct = FStar_Syntax_Util.comp_result c1 in
-                                (non_dependent_or_raise s ct;
-                                 (let k =
-                                    n - (FStar_Compiler_List.length binders1) in
-                                  if k > Prims.int_zero
-                                  then is_non_dependent_arrow ct k
-                                  else true))))
-                    (fun uu___3 -> match uu___3 with | Not_found -> false)
+                  (try
+                     (fun uu___3 ->
+                        match () with
+                        | () ->
+                            let non_dependent_or_raise s ty1 =
+                              let sinter =
+                                let uu___4 = FStar_Syntax_Free.names ty1 in
+                                FStar_Compiler_Util.set_intersect uu___4 s in
+                              let uu___4 =
+                                let uu___5 =
+                                  FStar_Compiler_Util.set_is_empty sinter in
+                                Prims.op_Negation uu___5 in
+                              if uu___4
+                              then
+                                (debug ty1 sinter;
+                                 FStar_Compiler_Effect.raise Not_found)
+                              else () in
+                            let uu___4 =
+                              FStar_Syntax_Subst.open_comp binders c in
+                            (match uu___4 with
+                             | (binders1, c1) ->
+                                 let s =
+                                   FStar_Compiler_List.fold_left
+                                     (fun s1 ->
+                                        fun uu___5 ->
+                                          match uu___5 with
+                                          | {
+                                              FStar_Syntax_Syntax.binder_bv =
+                                                bv;
+                                              FStar_Syntax_Syntax.binder_qual
+                                                = uu___6;
+                                              FStar_Syntax_Syntax.binder_attrs
+                                                = uu___7;_}
+                                              ->
+                                              (non_dependent_or_raise s1
+                                                 bv.FStar_Syntax_Syntax.sort;
+                                               FStar_Compiler_Util.set_add bv
+                                                 s1))
+                                     FStar_Syntax_Syntax.no_names binders1 in
+                                 let ct = FStar_Syntax_Util.comp_result c1 in
+                                 (non_dependent_or_raise s ct;
+                                  (let k =
+                                     n -
+                                       (FStar_Compiler_List.length binders1) in
+                                   if k > Prims.int_zero
+                                   then is_non_dependent_arrow ct k
+                                   else true)))) ()
+                   with | Not_found -> false)
             | uu___1 ->
                 ((let uu___3 =
                     let uu___4 =

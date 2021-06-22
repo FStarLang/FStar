@@ -321,31 +321,32 @@ let (load_checked_file_with_tc_result :
                             match iface with
                             | FStar_Pervasives_Native.None -> ()
                             | FStar_Pervasives_Native.Some iface1 ->
-                                FStar_Compiler_Effect.try_with
-                                  (fun uu___4 ->
-                                     match () with
-                                     | () ->
-                                         let iface_checked_fn =
-                                           FStar_Compiler_Effect.pipe_right
-                                             iface1
-                                             FStar_Parser_Dep.cache_file_name in
-                                         let uu___5 =
-                                           FStar_Compiler_Util.smap_try_find
-                                             mcache iface_checked_fn in
-                                         (match uu___5 with
-                                          | FStar_Pervasives_Native.Some
-                                              (Unknown, parsing_data1) ->
-                                              let uu___6 =
-                                                let uu___7 =
-                                                  let uu___8 =
-                                                    FStar_Compiler_Util.digest_of_file
-                                                      iface_checked_fn in
-                                                  Valid uu___8 in
-                                                (uu___7, parsing_data1) in
-                                              FStar_Compiler_Util.smap_add
-                                                mcache iface_checked_fn
-                                                uu___6
-                                          | uu___6 -> ())) (fun uu___4 -> ()) in
+                                (try
+                                   (fun uu___4 ->
+                                      match () with
+                                      | () ->
+                                          let iface_checked_fn =
+                                            FStar_Compiler_Effect.pipe_right
+                                              iface1
+                                              FStar_Parser_Dep.cache_file_name in
+                                          let uu___5 =
+                                            FStar_Compiler_Util.smap_try_find
+                                              mcache iface_checked_fn in
+                                          (match uu___5 with
+                                           | FStar_Pervasives_Native.Some
+                                               (Unknown, parsing_data1) ->
+                                               let uu___6 =
+                                                 let uu___7 =
+                                                   let uu___8 =
+                                                     FStar_Compiler_Util.digest_of_file
+                                                       iface_checked_fn in
+                                                   Valid uu___8 in
+                                                 (uu___7, parsing_data1) in
+                                               FStar_Compiler_Util.smap_add
+                                                 mcache iface_checked_fn
+                                                 uu___6
+                                           | uu___6 -> ())) ()
+                                 with | uu___4 -> ()) in
                           validate_iface_cache ();
                           FStar_Pervasives.Inr tc_result1))
                       else
@@ -407,14 +408,14 @@ let (load_parsing_data_from_cache :
       (Prims.op_Hat "While loading parsing data from " file_name)
       (fun uu___ ->
          let cache_file =
-           FStar_Compiler_Effect.try_with
+           try
              (fun uu___1 ->
                 match () with
                 | () ->
                     let uu___2 = FStar_Parser_Dep.cache_file_name file_name in
                     FStar_Compiler_Effect.pipe_right uu___2
-                      (fun uu___3 -> FStar_Pervasives_Native.Some uu___3))
-             (fun uu___1 -> FStar_Pervasives_Native.None) in
+                      (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)) ()
+           with | uu___1 -> FStar_Pervasives_Native.None in
          match cache_file with
          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
          | FStar_Pervasives_Native.Some cache_file1 ->

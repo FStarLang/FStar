@@ -424,16 +424,14 @@ let (elim_tydefs : env_t -> tydef Prims.list -> (env_t * tydef Prims.list)) =
                 fun td ->
                   match uu___3 with
                   | (env1, out) ->
-                      FStar_Compiler_Effect.try_with
-                        (fun uu___4 ->
-                           match () with
-                           | () ->
-                               let uu___5 = elim_tydef_or_decl env1 td in
-                               (match uu___5 with
-                                | (env2, td1) -> (env2, (td1 :: out))))
-                        (fun uu___4 ->
-                           match uu___4 with | Drop_tydef -> (env1, out)))
-             (env, []) tds in
+                      (try
+                         (fun uu___4 ->
+                            match () with
+                            | () ->
+                                let uu___5 = elim_tydef_or_decl env1 td in
+                                (match uu___5 with
+                                 | (env2, td1) -> (env2, (td1 :: out)))) ()
+                       with | Drop_tydef -> (env1, out))) (env, []) tds in
          match uu___2 with
          | (env1, tds1) -> (env1, (FStar_Compiler_List.rev tds1)))
 let (elim_one_mltydecl :
@@ -556,16 +554,14 @@ let (elim_module :
              fun m1 ->
                match uu___1 with
                | (env1, out) ->
-                   FStar_Compiler_Effect.try_with
-                     (fun uu___2 ->
-                        match () with
-                        | () ->
-                            let uu___3 = elim_module1 env1 m1 in
-                            (match uu___3 with
-                             | (env2, m2) -> (env2, (m2 :: out))))
-                     (fun uu___2 ->
-                        match uu___2 with | Drop_tydef -> (env1, out)))
-          (env, []) m in
+                   (try
+                      (fun uu___2 ->
+                         match () with
+                         | () ->
+                             let uu___3 = elim_module1 env1 m1 in
+                             (match uu___3 with
+                              | (env2, m2) -> (env2, (m2 :: out)))) ()
+                    with | Drop_tydef -> (env1, out))) (env, []) m in
       match uu___ with | (env1, m1) -> (env1, (FStar_Compiler_List.rev m1))
 let (set_current_module :
   env_t -> FStar_Extraction_ML_Syntax.mlpath -> env_t) =

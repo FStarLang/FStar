@@ -107,9 +107,8 @@ let with_uf_enabled : 'a . (unit -> 'a) -> 'a =
        if uu___1
        then f ()
        else
-         FStar_Compiler_Effect.try_with
-           (fun uu___3 -> match () with | () -> f ())
-           (fun uu___3 -> restore (); FStar_Compiler_Effect.raise uu___3) in
+         (try (fun uu___3 -> match () with | () -> f ()) ()
+          with | uu___3 -> (restore (); FStar_Compiler_Effect.raise uu___3)) in
      restore (); r)
 let (fail_if_ro : unit -> unit) =
   fun uu___ ->

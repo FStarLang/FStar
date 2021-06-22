@@ -418,7 +418,8 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         | MLE_Name p, [
             ({ expr = MLE_Fun ([ _ ], scrutinee) });
             ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
-          ] when (string_of_mlpath p = "FStar.Compiler.Effect.try_with") ->
+          ] when (string_of_mlpath p = "FStar.Compiler.Effect.try_with" ||
+                  string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
               match possible_match with
               | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (arg = arg') ->

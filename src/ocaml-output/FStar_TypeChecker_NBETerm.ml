@@ -1681,14 +1681,14 @@ let (string_index : args -> t FStar_Pervasives_Native.option) =
         (match uu___ with
          | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some i)
              ->
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.index s i in
-                      let uu___2 = embed e_char bogus_cbs r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.index s i in
+                       let uu___2 = embed e_char bogus_cbs r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (string_index_of : args -> t FStar_Pervasives_Native.option) =
@@ -1701,14 +1701,14 @@ let (string_index_of : args -> t FStar_Pervasives_Native.option) =
         (match uu___ with
          | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some c)
              ->
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.index_of s c in
-                      let uu___2 = embed e_int bogus_cbs r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.index_of s c in
+                       let uu___2 = embed e_int bogus_cbs r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (string_substring' : args -> t FStar_Pervasives_Native.option) =
@@ -1724,14 +1724,14 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
             FStar_Pervasives_Native.Some n2) ->
              let n11 = FStar_BigInt.to_int_fs n1 in
              let n21 = FStar_BigInt.to_int_fs n2 in
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.substring s1 n11 n21 in
-                      let uu___2 = embed e_string bogus_cbs r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.substring s1 n11 n21 in
+                       let uu___2 = embed e_string bogus_cbs r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
 let (mk_range : args -> t FStar_Pervasives_Native.option) =

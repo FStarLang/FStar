@@ -1995,16 +1995,16 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
             FStar_Pervasives_Native.Some n2) ->
              let n11 = FStar_BigInt.to_int_fs n1 in
              let n21 = FStar_BigInt.to_int_fs n2 in
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.substring s1 n11 n21 in
-                      let uu___2 =
-                        embed_simple FStar_Syntax_Embeddings.e_string
-                          psc1.psc_range r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.substring s1 n11 n21 in
+                       let uu___2 =
+                         embed_simple FStar_Syntax_Embeddings.e_string
+                           psc1.psc_range r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None in
   let string_of_int rng i =
@@ -2028,16 +2028,16 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
         (match uu___ with
          | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some i)
              ->
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.index s i in
-                      let uu___2 =
-                        embed_simple FStar_Syntax_Embeddings.e_char
-                          psc1.psc_range r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.index s i in
+                       let uu___2 =
+                         embed_simple FStar_Syntax_Embeddings.e_char
+                           psc1.psc_range r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None in
   let string_index_of psc1 _norm_cb args =
@@ -2049,16 +2049,16 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
         (match uu___ with
          | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some c)
              ->
-             FStar_Compiler_Effect.try_with
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      let r = FStar_String.index_of s c in
-                      let uu___2 =
-                        embed_simple FStar_Syntax_Embeddings.e_int
-                          psc1.psc_range r in
-                      FStar_Pervasives_Native.Some uu___2)
-               (fun uu___1 -> FStar_Pervasives_Native.None)
+             (try
+                (fun uu___1 ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.index_of s c in
+                       let uu___2 =
+                         embed_simple FStar_Syntax_Embeddings.e_int
+                           psc1.psc_range r in
+                       FStar_Pervasives_Native.Some uu___2) ()
+              with | uu___1 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None in
   let mk_range psc1 _norm_cb args =

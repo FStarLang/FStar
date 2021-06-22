@@ -96,7 +96,7 @@ let (should_fail :
   =
   fun x ->
     fun y ->
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___ ->
            match () with
            | () ->
@@ -122,10 +122,10 @@ let (should_fail :
                     let uu___3 = FStar_Syntax_Print.term_to_string f in
                     FStar_Compiler_Util.print3
                       "%s and %s are unifiable if %s\n" uu___1 uu___2 uu___3))
-        (fun uu___ ->
-           match uu___ with
-           | FStar_Errors.Error (e, msg, r, _ctx) ->
-               FStar_Compiler_Util.print1 "%s\n" msg)
+          ()
+      with
+      | FStar_Errors.Error (e, msg, r, _ctx) ->
+          FStar_Compiler_Util.print1 "%s\n" msg
 let (unify' : Prims.string -> Prims.string -> unit) =
   fun x ->
     fun y ->

@@ -607,8 +607,12 @@ let rec (doc_of_expr :
                                                                 FStar_Extraction_ML_Syntax.loc
                                                                   = uu___5;_}::[])
                  when
-                 let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                 uu___6 = "FStar.Compiler.Effect.try_with" ->
+                 (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                  uu___6 = "FStar.Compiler.Effect.try_with") ||
+                   (let uu___6 =
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                    uu___6 = "FStar.All.try_with")
+                 ->
                  let branches =
                    match possible_match with
                    | {

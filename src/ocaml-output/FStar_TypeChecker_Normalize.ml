@@ -246,20 +246,21 @@ let (lookup_bvar :
   =
   fun env1 ->
     fun x ->
-      FStar_Compiler_Effect.try_with
+      try
         (fun uu___ ->
            match () with
            | () ->
                let uu___1 =
                  FStar_Compiler_List.nth env1 x.FStar_Syntax_Syntax.index in
-               FStar_Pervasives_Native.snd uu___1)
-        (fun uu___ ->
-           let uu___1 =
-             let uu___2 = FStar_Syntax_Print.db_to_string x in
-             let uu___3 = env_to_string env1 in
-             FStar_Compiler_Util.format2 "Failed to find %s\nEnv is %s\n"
-               uu___2 uu___3 in
-           failwith uu___1)
+               FStar_Pervasives_Native.snd uu___1) ()
+      with
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.db_to_string x in
+            let uu___3 = env_to_string env1 in
+            FStar_Compiler_Util.format2 "Failed to find %s\nEnv is %s\n"
+              uu___2 uu___3 in
+          failwith uu___1
 let (downgrade_ghost_effect_name :
   FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option) =
   fun l ->
@@ -310,49 +311,48 @@ let (norm_universe :
           let u2 = FStar_Syntax_Subst.compress_univ u1 in
           match u2 with
           | FStar_Syntax_Syntax.U_bvar x ->
-              FStar_Compiler_Effect.try_with
-                (fun uu___ ->
-                   match () with
-                   | () ->
-                       let uu___1 =
-                         let uu___2 = FStar_Compiler_List.nth env1 x in
-                         FStar_Pervasives_Native.snd uu___2 in
-                       (match uu___1 with
-                        | Univ u3 ->
-                            ((let uu___3 =
-                                FStar_Compiler_Effect.pipe_left
-                                  (FStar_TypeChecker_Env.debug
-                                     cfg.FStar_TypeChecker_Cfg.tcenv)
-                                  (FStar_Options.Other "univ_norm") in
-                              if uu___3
-                              then
-                                let uu___4 =
-                                  FStar_Syntax_Print.univ_to_string u3 in
-                                FStar_Compiler_Util.print1
-                                  "Univ (in norm_universe): %s\n" uu___4
-                              else ());
-                             aux u3)
-                        | Dummy -> [u2]
-                        | uu___2 ->
-                            let uu___3 =
-                              let uu___4 =
-                                FStar_Compiler_Util.string_of_int x in
-                              FStar_Compiler_Util.format1
-                                "Impossible: universe variable u@%s bound to a term"
-                                uu___4 in
-                            failwith uu___3))
-                (fun uu___ ->
-                   match uu___ with
-                   | uu___1 ->
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.allow_unbound_universes
-                       then [FStar_Syntax_Syntax.U_unknown]
-                       else
-                         (let uu___3 =
-                            let uu___4 = FStar_Compiler_Util.string_of_int x in
-                            FStar_String.op_Hat
-                              "Universe variable not found: u@" uu___4 in
-                          failwith uu___3))
+              (try
+                 (fun uu___ ->
+                    match () with
+                    | () ->
+                        let uu___1 =
+                          let uu___2 = FStar_Compiler_List.nth env1 x in
+                          FStar_Pervasives_Native.snd uu___2 in
+                        (match uu___1 with
+                         | Univ u3 ->
+                             ((let uu___3 =
+                                 FStar_Compiler_Effect.pipe_left
+                                   (FStar_TypeChecker_Env.debug
+                                      cfg.FStar_TypeChecker_Cfg.tcenv)
+                                   (FStar_Options.Other "univ_norm") in
+                               if uu___3
+                               then
+                                 let uu___4 =
+                                   FStar_Syntax_Print.univ_to_string u3 in
+                                 FStar_Compiler_Util.print1
+                                   "Univ (in norm_universe): %s\n" uu___4
+                               else ());
+                              aux u3)
+                         | Dummy -> [u2]
+                         | uu___2 ->
+                             let uu___3 =
+                               let uu___4 =
+                                 FStar_Compiler_Util.string_of_int x in
+                               FStar_Compiler_Util.format1
+                                 "Impossible: universe variable u@%s bound to a term"
+                                 uu___4 in
+                             failwith uu___3)) ()
+               with
+               | uu___1 ->
+                   if
+                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.allow_unbound_universes
+                   then [FStar_Syntax_Syntax.U_unknown]
+                   else
+                     (let uu___3 =
+                        let uu___4 = FStar_Compiler_Util.string_of_int x in
+                        FStar_String.op_Hat "Universe variable not found: u@"
+                          uu___4 in
+                      failwith uu___3))
           | FStar_Syntax_Syntax.U_unif uu___ when
               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
               -> [FStar_Syntax_Syntax.U_zero]
@@ -8391,14 +8391,15 @@ let (term_to_string :
   fun env1 ->
     fun t ->
       let t1 =
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
                  normalize [FStar_TypeChecker_Env.AllowUnboundUniverses] env1
-                   t)
-          (fun uu___ ->
-             (let uu___2 =
+                   t) ()
+        with
+        | uu___ ->
+            ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
                   FStar_Compiler_Util.format1
@@ -8412,16 +8413,17 @@ let (comp_to_string :
   fun env1 ->
     fun c ->
       let c1 =
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
                  let uu___1 =
                    FStar_TypeChecker_Cfg.config
                      [FStar_TypeChecker_Env.AllowUnboundUniverses] env1 in
-                 norm_comp uu___1 [] c)
-          (fun uu___ ->
-             (let uu___2 =
+                 norm_comp uu___1 [] c) ()
+        with
+        | uu___ ->
+            ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
                   FStar_Compiler_Util.format1

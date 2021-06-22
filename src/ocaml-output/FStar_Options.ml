@@ -842,7 +842,7 @@ let rec (parse_opt_val :
   fun opt_name ->
     fun typ ->
       fun str_val ->
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
@@ -887,14 +887,13 @@ let rec (parse_opt_val :
                       reverse_accumulated_option opt_name v
                   | WithSideEffect (side_effect, elem_spec) ->
                       (side_effect ();
-                       parse_opt_val opt_name elem_spec str_val)))
-          (fun uu___ ->
-             match uu___ with
-             | InvalidArgument opt_name1 ->
-                 let uu___1 =
-                   FStar_Compiler_Util.format1 "Invalid argument to --%s"
-                     opt_name1 in
-                 failwith uu___1)
+                       parse_opt_val opt_name elem_spec str_val))) ()
+        with
+        | InvalidArgument opt_name1 ->
+            let uu___1 =
+              FStar_Compiler_Util.format1 "Invalid argument to --%s"
+                opt_name1 in
+            failwith uu___1
 let rec (desc_of_opt_type :
   opt_type -> Prims.string FStar_Pervasives_Native.option) =
   fun typ ->
@@ -1602,7 +1601,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
     | FStar_Pervasives_Native.Some f -> f
     | FStar_Pervasives_Native.None ->
         let result =
-          FStar_Compiler_Effect.try_with
+          try
             (fun uu___1 ->
                match () with
                | () ->
@@ -1624,8 +1623,8 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                              else FStar_Compiler_Util.join_paths p filename in
                            if FStar_Compiler_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
-                           else FStar_Pervasives_Native.None)))
-            (fun uu___1 -> FStar_Pervasives_Native.None) in
+                           else FStar_Pervasives_Native.None))) ()
+          with | uu___1 -> FStar_Pervasives_Native.None in
         (if FStar_Compiler_Option.isSome result
          then FStar_Compiler_Util.smap_add file_map filename result
          else ();
@@ -2030,11 +2029,11 @@ let with_saved_options : 'a . (unit -> 'a) -> 'a =
     then
       (push ();
        (let r =
-          FStar_Compiler_Effect.try_with
+          try
             (fun uu___2 ->
                match () with
-               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3)
-            (fun uu___2 -> FStar_Pervasives.Inl uu___2) in
+               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
+          with | uu___2 -> FStar_Pervasives.Inl uu___2 in
         pop ();
         (match r with
          | FStar_Pervasives.Inr v -> v
@@ -2144,7 +2143,7 @@ let (__proj__File_argument__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | File_argument uu___ -> uu___
 let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
   fun s ->
-    FStar_Compiler_Effect.try_with
+    try
       (fun uu___ ->
          match () with
          | () ->
@@ -2157,13 +2156,12 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
                     s in
                 if res = FStar_Getopt.Success
                 then set_error_flags ()
-                else res))
-      (fun uu___ ->
-         match uu___ with
-         | File_argument s1 ->
-             let uu___1 =
-               FStar_Compiler_Util.format1 "File %s is not a valid option" s1 in
-             FStar_Getopt.Error uu___1)
+                else res)) ()
+    with
+    | File_argument s1 ->
+        let uu___1 =
+          FStar_Compiler_Util.format1 "File %s is not a valid option" s1 in
+        FStar_Getopt.Error uu___1
 let (get_vconfig : unit -> FStar_VConfig.vconfig) =
   fun uu___ ->
     let vcfg =

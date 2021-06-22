@@ -164,7 +164,7 @@ let (check_frag :
   fun env ->
     fun curmod ->
       fun frag ->
-        FStar_Compiler_Effect.try_with
+        try
           (fun uu___ ->
              match () with
              | () ->
@@ -174,24 +174,23 @@ let (check_frag :
                       let uu___2 =
                         let uu___3 = FStar_Errors.get_err_count () in
                         (m, env1, uu___3) in
-                      FStar_Pervasives_Native.Some uu___2))
-          (fun uu___ ->
-             match uu___ with
-             | FStar_Errors.Error (e, msg, r, ctx) when
-                 let uu___1 = FStar_Options.trace_error () in
-                 Prims.op_Negation uu___1 ->
-                 (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
-                  FStar_Pervasives_Native.None)
-             | FStar_Errors.Err (e, msg, ctx) when
-                 let uu___1 = FStar_Options.trace_error () in
-                 Prims.op_Negation uu___1 ->
-                 ((let uu___2 =
-                     let uu___3 =
-                       let uu___4 = FStar_TypeChecker_Env.get_range env in
-                       (e, msg, uu___4, ctx) in
-                     [uu___3] in
-                   FStar_TypeChecker_Err.add_errors env uu___2);
-                  FStar_Pervasives_Native.None))
+                      FStar_Pervasives_Native.Some uu___2)) ()
+        with
+        | FStar_Errors.Error (e, msg, r, ctx) when
+            let uu___1 = FStar_Options.trace_error () in
+            Prims.op_Negation uu___1 ->
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
+             FStar_Pervasives_Native.None)
+        | FStar_Errors.Err (e, msg, ctx) when
+            let uu___1 = FStar_Options.trace_error () in
+            Prims.op_Negation uu___1 ->
+            ((let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_TypeChecker_Env.get_range env in
+                  (e, msg, uu___4, ctx) in
+                [uu___3] in
+              FStar_TypeChecker_Err.add_errors env uu___2);
+             FStar_Pervasives_Native.None)
 let (report_fail : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Errors.report_all () in

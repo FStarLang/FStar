@@ -486,14 +486,14 @@ let (tc_inductive :
             then
               let r = tc_inductive' env1 ses quals attrs lids in (pop (); r)
             else
-              FStar_Compiler_Effect.try_with
-                (fun uu___2 ->
-                   match () with
-                   | () ->
-                       let uu___3 = tc_inductive' env1 ses quals attrs lids in
-                       FStar_Compiler_Effect.pipe_right uu___3
-                         (fun r -> pop (); r))
-                (fun uu___2 -> pop (); FStar_Compiler_Effect.raise uu___2)
+              (try
+                 (fun uu___2 ->
+                    match () with
+                    | () ->
+                        let uu___3 = tc_inductive' env1 ses quals attrs lids in
+                        FStar_Compiler_Effect.pipe_right uu___3
+                          (fun r -> pop (); r)) ()
+               with | uu___2 -> (pop (); FStar_Compiler_Effect.raise uu___2))
 let (check_must_erase_attribute :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env ->

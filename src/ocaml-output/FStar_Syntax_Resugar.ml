@@ -899,75 +899,76 @@ let rec (resugar_term' :
                      | uu___6 -> resugar_term' env t1))
            | FStar_Pervasives_Native.Some ("try_with", uu___2) when
                (FStar_Compiler_List.length args1) > Prims.int_one ->
-               FStar_Compiler_Effect.try_with
-                 (fun uu___3 ->
-                    match () with
-                    | () ->
-                        let new_args = first_two_explicit args1 in
-                        let uu___4 =
-                          match new_args with
-                          | (a1, uu___5)::(a2, uu___6)::[] -> (a1, a2)
-                          | uu___5 -> failwith "wrong arguments to try_with" in
-                        (match uu___4 with
-                         | (body, handler) ->
-                             let decomp term =
-                               let uu___5 =
-                                 let uu___6 =
-                                   FStar_Syntax_Subst.compress term in
-                                 uu___6.FStar_Syntax_Syntax.n in
-                               match uu___5 with
-                               | FStar_Syntax_Syntax.Tm_abs (x, e1, uu___6)
-                                   ->
-                                   let uu___7 =
-                                     FStar_Syntax_Subst.open_term x e1 in
-                                   (match uu___7 with | (x1, e2) -> e2)
-                               | uu___6 ->
-                                   let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 = resugar_term' env term in
-                                       FStar_Parser_AST.term_to_string uu___9 in
-                                     Prims.op_Hat
-                                       "wrong argument format to try_with: "
-                                       uu___8 in
-                                   failwith uu___7 in
-                             let body1 =
-                               let uu___5 = decomp body in
-                               resugar_term' env uu___5 in
-                             let handler1 =
-                               let uu___5 = decomp handler in
-                               resugar_term' env uu___5 in
-                             let rec resugar_body t1 =
-                               match t1.FStar_Parser_AST.tm with
-                               | FStar_Parser_AST.Match
-                                   (e1, FStar_Pervasives_Native.None,
-                                    (uu___5, uu___6, b)::[])
-                                   -> b
-                               | FStar_Parser_AST.Let (uu___5, uu___6, b) ->
-                                   b
-                               | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
-                                   let uu___5 =
-                                     let uu___6 =
-                                       let uu___7 = resugar_body t11 in
-                                       (uu___7, t2, t3) in
-                                     FStar_Parser_AST.Ascribed uu___6 in
-                                   mk uu___5
-                               | uu___5 ->
-                                   failwith
-                                     "unexpected body format to try_with" in
-                             let e1 = resugar_body body1 in
-                             let rec resugar_branches t1 =
-                               match t1.FStar_Parser_AST.tm with
-                               | FStar_Parser_AST.Match
-                                   (e2, FStar_Pervasives_Native.None,
-                                    branches)
-                                   -> branches
-                               | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
-                                   resugar_branches t11
-                               | uu___5 -> [] in
-                             let branches = resugar_branches handler1 in
-                             mk (FStar_Parser_AST.TryWith (e1, branches))))
-                 (fun uu___3 ->
-                    match uu___3 with | uu___4 -> resugar_as_app e args1)
+               (try
+                  (fun uu___3 ->
+                     match () with
+                     | () ->
+                         let new_args = first_two_explicit args1 in
+                         let uu___4 =
+                           match new_args with
+                           | (a1, uu___5)::(a2, uu___6)::[] -> (a1, a2)
+                           | uu___5 -> failwith "wrong arguments to try_with" in
+                         (match uu___4 with
+                          | (body, handler) ->
+                              let decomp term =
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_Syntax_Subst.compress term in
+                                  uu___6.FStar_Syntax_Syntax.n in
+                                match uu___5 with
+                                | FStar_Syntax_Syntax.Tm_abs (x, e1, uu___6)
+                                    ->
+                                    let uu___7 =
+                                      FStar_Syntax_Subst.open_term x e1 in
+                                    (match uu___7 with | (x1, e2) -> e2)
+                                | uu___6 ->
+                                    let uu___7 =
+                                      let uu___8 =
+                                        let uu___9 = resugar_term' env term in
+                                        FStar_Parser_AST.term_to_string
+                                          uu___9 in
+                                      Prims.op_Hat
+                                        "wrong argument format to try_with: "
+                                        uu___8 in
+                                    failwith uu___7 in
+                              let body1 =
+                                let uu___5 = decomp body in
+                                resugar_term' env uu___5 in
+                              let handler1 =
+                                let uu___5 = decomp handler in
+                                resugar_term' env uu___5 in
+                              let rec resugar_body t1 =
+                                match t1.FStar_Parser_AST.tm with
+                                | FStar_Parser_AST.Match
+                                    (e1, FStar_Pervasives_Native.None,
+                                     (uu___5, uu___6, b)::[])
+                                    -> b
+                                | FStar_Parser_AST.Let (uu___5, uu___6, b) ->
+                                    b
+                                | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
+                                    let uu___5 =
+                                      let uu___6 =
+                                        let uu___7 = resugar_body t11 in
+                                        (uu___7, t2, t3) in
+                                      FStar_Parser_AST.Ascribed uu___6 in
+                                    mk uu___5
+                                | uu___5 ->
+                                    failwith
+                                      "unexpected body format to try_with" in
+                              let e1 = resugar_body body1 in
+                              let rec resugar_branches t1 =
+                                match t1.FStar_Parser_AST.tm with
+                                | FStar_Parser_AST.Match
+                                    (e2, FStar_Pervasives_Native.None,
+                                     branches)
+                                    -> branches
+                                | FStar_Parser_AST.Ascribed (t11, t2, t3) ->
+                                    resugar_branches t11
+                                | uu___5 -> [] in
+                              let branches = resugar_branches handler1 in
+                              mk (FStar_Parser_AST.TryWith (e1, branches))))
+                    ()
+                with | uu___4 -> resugar_as_app e args1)
            | FStar_Pervasives_Native.Some ("try_with", uu___2) ->
                resugar_as_app e args1
            | FStar_Pervasives_Native.Some (op, uu___2) when

@@ -55,27 +55,28 @@ let profile :
           (if uu___1
            then f ()
            else
-             FStar_Compiler_Effect.try_with
-               (fun uu___3 ->
-                  match () with
-                  | () ->
-                      (FStar_Compiler_Effect.op_Colon_Equals c.running true;
-                       (let uu___5 = FStar_Compiler_Util.record_time f in
-                        match uu___5 with
-                        | (res, elapsed) ->
-                            ((let uu___7 =
-                                let uu___8 =
-                                  FStar_Compiler_Effect.op_Bang c.total_time in
-                                uu___8 + elapsed in
-                              FStar_Compiler_Effect.op_Colon_Equals
-                                c.total_time uu___7);
-                             FStar_Compiler_Effect.op_Colon_Equals c.running
-                               false;
-                             res))))
-               (fun uu___3 ->
-                  FStar_Compiler_Effect.op_Colon_Equals c.running false;
-                  FStar_Compiler_Effect.op_Colon_Equals c.undercount true;
-                  FStar_Compiler_Effect.raise uu___3))
+             (try
+                (fun uu___3 ->
+                   match () with
+                   | () ->
+                       (FStar_Compiler_Effect.op_Colon_Equals c.running true;
+                        (let uu___5 = FStar_Compiler_Util.record_time f in
+                         match uu___5 with
+                         | (res, elapsed) ->
+                             ((let uu___7 =
+                                 let uu___8 =
+                                   FStar_Compiler_Effect.op_Bang c.total_time in
+                                 uu___8 + elapsed in
+                               FStar_Compiler_Effect.op_Colon_Equals
+                                 c.total_time uu___7);
+                              FStar_Compiler_Effect.op_Colon_Equals c.running
+                                false;
+                              res)))) ()
+              with
+              | uu___3 ->
+                  (FStar_Compiler_Effect.op_Colon_Equals c.running false;
+                   FStar_Compiler_Effect.op_Colon_Equals c.undercount true;
+                   FStar_Compiler_Effect.raise uu___3)))
         else f ()
 let (report_and_clear : Prims.string -> unit) =
   fun tag ->
