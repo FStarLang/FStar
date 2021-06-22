@@ -1,5 +1,5 @@
 [
-  "Óç÷‚¥1Dï[Ù«z4ûA\u0003",
+  "$zçkèE\u0000-²ÒH\u0002ÝJÃ)",
   [
     [
       "TwoLockQueue.ghost_gather",
@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "7ead5c7dc5785335925691d5d6ea4b6d"
+      "a1d4f0dd90b4ef5947ef95f0b07aae79"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "086fc165d50280fcb8e97fbbbf224933"
+      "1ade06d097e577e8bbd2a2386186fb0c"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,7 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "bb9a781952ba00410bcabf610a8fc4a5"
+      "24a1238d84d9628ad0724e174d20b472"
     ],
     [
       "TwoLockQueue.open_exists",
@@ -70,7 +70,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "7bbb540922048f1f367349381302d1dc"
+      "866ffd1a8db4a6e396c4864dac7e7d8d"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -78,11 +78,13 @@
       2,
       1,
       [
-        "@query", "equation_TwoLockQueue.lock_inv",
-        "lemma_Steel.Memory.reveal_equiv", "typing_TwoLockQueue.lock_inv"
+        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "d5adcdf467f1b0c74ed0b49d25bf7689"
+      "8c55b4a0f67f78e133bac4e9130fde44"
     ],
     [
       "TwoLockQueue.__proj__Mkq_ptr__item__lock",
@@ -96,7 +98,7 @@
         "projection_inverse_TwoLockQueue.Mkq_ptr_ptr"
       ],
       0,
-      "41239d4136b0d7005647e319536bbdb3"
+      "1a86f8bcc1295a897e0ce8e95ebd926a"
     ],
     [
       "TwoLockQueue.pack_queue_invariant",
@@ -105,7 +107,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "07d521cf24f77f7d4b835889c7a78c29"
+      "b670a5bef4d07b77906e0c93e525558d"
     ],
     [
       "TwoLockQueue.__proj__Mkt__item__inv",
@@ -119,7 +121,7 @@
         "projection_inverse_TwoLockQueue.Mkt_tail"
       ],
       0,
-      "37d96d31bff66f7656cb63dca99f274d"
+      "206aca157175135c3d3cc8f195464cb4"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -128,7 +130,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "35e598e0a84876c66db3f263e5f08f2f"
+      "49a8319d14152663afba075b0c94a6dc"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -181,7 +183,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "4046cc1d107f7d3ed14694872189a774"
+      "4286cf3ee24e6b5f3c5e8ca5eb5eabcf"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -192,7 +194,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "aca31602cfbc02b4124272aa4143c8eb"
+      "90bf39c0f7eccd5770ac674e8771c1f2"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -209,7 +211,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "c82c5bb5fb6b4e76f63893d984aa334f"
+      "c9ac480e571845a5b8bb64bf7d312a0f"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -225,7 +227,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a416b1926ebdc4abf43334cd640e02c6"
+      "02333f6214598861cec394c576247ea3"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -242,7 +244,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "d6f1082fc26a57241d3865fc757283bc"
+      "8398ac8459da7de53945563ac1a00159"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -258,7 +260,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "04d6cda59704171a0ba4aab3727d224c"
+      "72e84426cbd95eb579f3b9afb33e07f8"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -332,7 +334,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "c5991eed3e518f28e6abd4cc2532b6fe"
+      "ef19939bb919ae8ff884bfb08b66378e"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -409,7 +411,7 @@
         "typing_TwoLockQueue.half", "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "56568e9912aa15c9d5813b079c3a6607"
+      "eae1fd1799f061d2b83506ca22963619"
     ]
   ]
 ]
