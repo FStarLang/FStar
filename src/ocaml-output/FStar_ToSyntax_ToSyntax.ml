@@ -302,17 +302,6 @@ let (op_as_term :
           | "!" ->
               r FStar_Parser_Const.read_lid
                 FStar_Syntax_Syntax.delta_equational
-          | "@" ->
-              let uu___2 = FStar_Options.ml_ish () in
-              if uu___2
-              then
-                r FStar_Parser_Const.list_append_lid
-                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                     (Prims.of_int (2)))
-              else
-                r FStar_Parser_Const.list_tot_append_lid
-                  (FStar_Syntax_Syntax.Delta_equational_at_level
-                     (Prims.of_int (2)))
           | "|>" ->
               r FStar_Parser_Const.pipe_right_lid
                 FStar_Syntax_Syntax.delta_equational

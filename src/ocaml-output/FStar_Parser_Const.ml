@@ -193,14 +193,19 @@ let (effect_Ghost_lid : FStar_Ident.lident) = pconst "Ghost"
 let (effect_DIV_lid : FStar_Ident.lident) = psconst "DIV"
 let (effect_Div_lid : FStar_Ident.lident) = psconst "Div"
 let (effect_Dv_lid : FStar_Ident.lident) = psconst "Dv"
-let (all_lid : FStar_Ident.lident) = p2l ["FStar"; "All"]
-let (effect_ALL_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "ALL"]
-let (effect_ML_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "ML"]
-let (failwith_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "failwith"]
+let (all_lid : FStar_Ident.lident) = p2l ["FStar"; "Compiler"; "Effect"]
+let (effect_ALL_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Compiler"; "Effect"; "ALL"]
+let (effect_ML_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Compiler"; "Effect"; "ML"]
+let (failwith_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
 let (pipe_right_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "All"; "pipe_right"]
-let (pipe_left_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "pipe_left"]
-let (try_with_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "try_with"]
+  p2l ["FStar"; "Compiler"; "Effect"; "pipe_right"]
+let (pipe_left_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Compiler"; "Effect"; "pipe_left"]
+let (try_with_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
 let (as_requires : FStar_Ident.lident) = pconst "as_requires"
 let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases"

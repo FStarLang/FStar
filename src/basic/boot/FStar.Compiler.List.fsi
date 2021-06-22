@@ -77,24 +77,24 @@ val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
 
 val count<'a when 'a : equality> // JUST FSHARP
 // IN F*: val count
-    : 'a -> (list<'a>) -> Tot<nat>
+    : #a:eqtype -> a -> (list<a>) -> Tot<nat>
 
 val mem<'a when 'a : equality> // JUST FSHARP
 // IN F*: val mem
-    : 'a -> (list<'a>) -> Tot<bool>
+    : #a:eqtype -> a -> (list<a>) -> Tot<bool>
 
 val assoc<'a, 'b when 'a : equality> // JUST FSHARP
 // IN F*: val assoc
-    : 'a -> (list<('a * 'b)>) -> Tot<(option<'b>)>
+    : #a:eqtype -> #b:Type -> a -> (list<(a * b)>) -> Tot<(option<b>)>
 
 val contains<'a when 'a : equality> // JUST FSHARP
 // IN F*: val contains
-    : 'a -> (list<'a>) -> Tot<bool>
+    : #a:eqtype -> a -> (list<a>) -> Tot<bool>
 
 val unique<'a when 'a : equality> // JUST FSHARP
 // IN F*: val unique
-    : list<'a> -> list<'a>
+    : #a:eqtype -> list<a> -> list<a>
 
 val index<'a when 'a : equality> // JUST FSHARP
 // IN F*: val index
-    : ('a -> bool) -> list<'a> -> int
+    : #a:eqtype -> (a -> bool) -> list<a> -> int

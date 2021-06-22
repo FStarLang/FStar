@@ -174,10 +174,6 @@ let op_as_term env arity op : option<S.term> =
       r C.op_Modulus delta_equational
     | "!" ->
       r C.read_lid delta_equational
-    | "@" ->
-      if Options.ml_ish ()
-      then r C.list_append_lid     (Delta_equational_at_level 2)
-      else r C.list_tot_append_lid (Delta_equational_at_level 2)
     | "|>" ->
       r C.pipe_right_lid delta_equational
     | "<|" ->

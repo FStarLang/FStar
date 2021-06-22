@@ -1,11 +1,11 @@
 let pipe_right (x : 'a) (f : ('a -> 'b)) : 'b = f x
 let pipe_left  (f : ('a -> 'b)) (x : 'a) : 'b = f x
 
-type 'a ref' = 'a ref
-type 'a ref = 'a ref'
+type 'a ref' = 'a ref[@@deriving yojson,show]
+type 'a ref = 'a ref'[@@deriving yojson,show]
 
 let op_Bang (r:'a ref) = !r
-let op_ColonEquals x y = x := y
+let op_Colon_Equals x y = x := y
 let alloc x = ref x
 let raise = raise
 let exit i = exit (Z.to_int i)

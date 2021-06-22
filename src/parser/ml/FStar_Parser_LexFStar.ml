@@ -251,7 +251,7 @@ let is_typ_app lexbuf =
       let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
       let rec aux i =
         if !(d.angle)=0 && !(d.paren)=0 then true
-        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
+        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Compiler_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
         else (upd i; aux (i + 1))
       in aux (pos + 1)
     in
@@ -469,7 +469,7 @@ match%sedlex lexbuf with
  | '`' -> BACKTICK
 
  | ident -> let id = L.lexeme lexbuf in
-   if FStar_Util.starts_with id FStar_Ident.reserved_prefix
+   if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
    then FStar_Errors.raise_error
                     (FStar_Errors.Fatal_ReservedPrefix,
                      FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")

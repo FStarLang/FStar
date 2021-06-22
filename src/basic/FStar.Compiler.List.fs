@@ -35,7 +35,7 @@ let rec nth (l:list<'a>) (n:int)
         | [] ->  failwith "not enough elements"
         | _::tl -> nth tl (n - 1)
 
-let rec count x l
+let rec count (#a:eqtype) (x:a) (l:list a) : Tot nat
   = match l with
     | [] -> 0
     | hd::tl ->

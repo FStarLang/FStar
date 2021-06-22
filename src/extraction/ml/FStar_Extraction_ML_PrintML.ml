@@ -505,7 +505,7 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      (* Use the old printer for F# extraction *)
      let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStar_Util.write_file
+         FStar_Compiler_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc

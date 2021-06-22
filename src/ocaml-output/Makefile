@@ -135,9 +135,9 @@ FStar_Parser_Parse.ml: parse.mly
 	@# open for the definition of tokens
 	$(Q)echo "open Prims" > $@
 	$(Q)echo "open FStar_Errors" >> $@
-	$(Q)echo "open FStar_List" >> $@
-	$(Q)echo "open FStar_Util" >> $@
-	$(Q)echo "open FStar_Range" >> $@
+	$(Q)echo "open FStar_Compiler_List" >> $@
+	$(Q)echo "open FStar_Compiler_Util" >> $@
+	$(Q)echo "open FStar_Compiler_Range" >> $@
 	$(Q)echo "open FStar_Options" >> $@
 	$(Q)echo "open FStar_Syntax_Syntax" >> $@
 	$(Q)echo "open FStar_Parser_Const" >> $@
@@ -187,7 +187,6 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
 	@echo [MAKE      FStar_Version.ml]
-	$(Q)echo 'open FStar_Util' > $@
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
