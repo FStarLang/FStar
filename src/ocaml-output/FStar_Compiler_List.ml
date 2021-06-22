@@ -387,7 +387,7 @@ let rec sortWith :
               (fun x -> let uu___2 = f pivot x in uu___2 > Prims.int_zero)
               tl1 in
           (match uu___1 with
-           | (hi, lo) ->
+           | (lo, hi) ->
                let uu___2 = sortWith f lo in
                let uu___3 = let uu___4 = sortWith f hi in pivot :: uu___4 in
                append uu___2 uu___3)

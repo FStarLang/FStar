@@ -237,7 +237,7 @@ let rec zip3 l1 l2 l3
 let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
-     let hi, lo  = partition (fun x -> f pivot x > 0) tl in
+     let lo, hi  = partition (fun x -> f pivot x > 0) tl in
      append (sortWith f lo) (pivot::sortWith f hi)
 
 let bool_of_compare f x y = f x y >= 0
