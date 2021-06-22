@@ -31,6 +31,7 @@ regional \
 generic \
 calc \
 steel \
+steel_tutorial \
 layeredeffects \
 misc
 

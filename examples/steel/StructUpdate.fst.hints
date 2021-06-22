@@ -1,5 +1,5 @@
 [
-  "≈±¥~ô8˝≠¿1\u00065æH≈´",
+  "\u0000»\\4uK\u0016πù`IrAœX¨",
   [
     [
       "StructUpdate.t",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "0b4b46be9a2d65721d00f07406e86224"
+      "e01bee10fedd60d4697f8f920590d069"
     ],
     [
       "StructUpdate.__proj__Both__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_98107e6b7315063dc6bd76cc8e26b604"
       ],
       0,
-      "9b23567c69b95f3d7d4570327f79dbaa"
+      "5d9621da672269d680db1ac5583fa3dd"
     ],
     [
       "StructUpdate.__proj__Both__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_98107e6b7315063dc6bd76cc8e26b604"
       ],
       0,
-      "acc26ec82043919ec04f1a808cce6bf2"
+      "93b591444dd448f2be3112ae7bb96d1a"
     ],
     [
       "StructUpdate.__proj__First__item___0",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_0e8db6bc544539abd696ca9e03b4b7c3"
       ],
       0,
-      "787d12fbc4c239b5feff80845ff74822"
+      "f4d0ac5e2e7ad6b6d34404d21a10226b"
     ],
     [
       "StructUpdate.__proj__Second__item___0",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_f7ccb138f3449f7541d6fd15f6692f09"
       ],
       0,
-      "49b0fa7d770bd804fe11774045de8e81"
+      "09323895488bcbb6bac0dd144c09870d"
     ],
     [
       "StructUpdate.comp",
@@ -74,7 +74,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "6571aabb9ad0b4d77948ad3dee0c187e"
+      "09192ed63fce05b517385cfb770d973b"
     ],
     [
       "StructUpdate.combine",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_8531fe32b408b37dc2f604ba6db5ed5a"
       ],
       0,
-      "39195297cfb8e840d8c7196d8186c3fa"
+      "1e7015f77ca510da713da0861f0ee8e2"
     ],
     [
       "StructUpdate.pcm_t",
@@ -152,7 +152,7 @@
         "typing_StructUpdate.combine", "unit_typing"
       ],
       0,
-      "7982f4217b9717966a3266ab27b612af"
+      "5aebd85d129a0ebe3a606435aa0293f6"
     ],
     [
       "StructUpdate.upd_first",
@@ -162,22 +162,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "StructUpdate_pretyping_f421d1d0405f043a57ddbcd03e5e62c9", "b2t_def",
-        "constructor_distinct_Prims.unit",
-        "constructor_distinct_StructUpdate.Both",
+        "b2t_def", "constructor_distinct_StructUpdate.Both",
         "constructor_distinct_StructUpdate.First",
         "constructor_distinct_StructUpdate.Neither",
         "constructor_distinct_StructUpdate.Second",
-        "constructor_distinct_StructUpdate.t",
-        "constructor_distinct_Tm_unit", "data_elim_FStar.PCM.Mkpcm_",
+        "constructor_distinct_Tm_unit",
         "data_typing_intro_StructUpdate.First@tok",
         "disc_equation_StructUpdate.Both",
-        "disc_equation_StructUpdate.First",
         "disc_equation_StructUpdate.Neither",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_Steel.Effect.Common.true_p",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "equation_Steel.Effect.Common.true_p",
         "equation_StructUpdate.combine", "equation_StructUpdate.comp",
         "equation_StructUpdate.pcm_t", "false_interp",
         "fuel_guarded_inversion_StructUpdate.t",
@@ -208,8 +203,8 @@
         "projection_inverse_StructUpdate.Second__0",
         "projection_inverse_StructUpdate.Second_a",
         "projection_inverse_StructUpdate.Second_b",
-        "refinement_interpretation_Tm_refine_54852a1bc2cef26288db0f49c9b390d7",
-        "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
+        "refinement_interpretation_Tm_refine_4a922d541e86e954950168c3a08a1455",
+        "refinement_interpretation_Tm_refine_83e3b52bd571dc404f8a800ff3f4f496",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
@@ -217,11 +212,11 @@
         "token_correspondence_StructUpdate.combine",
         "token_correspondence_StructUpdate.comp", "true_interp",
         "typing_FStar.Ghost.reveal",
-        "typing_FStar.PCM.__proj__Mkpcm__item__p", "typing_FStar.PCM.op",
-        "typing_StructUpdate.pcm_t", "unit_typing"
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
+        "typing_StructUpdate.pcm_t"
       ],
       0,
-      "19e166dcbb88409de6c86aa696ef4697"
+      "90c5ad76887e05abe2b39259beb2c933"
     ],
     [
       "StructUpdate.upd_second",
@@ -231,22 +226,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "StructUpdate_pretyping_f421d1d0405f043a57ddbcd03e5e62c9", "b2t_def",
-        "constructor_distinct_Prims.unit",
-        "constructor_distinct_StructUpdate.Both",
+        "b2t_def", "constructor_distinct_StructUpdate.Both",
         "constructor_distinct_StructUpdate.First",
         "constructor_distinct_StructUpdate.Neither",
         "constructor_distinct_StructUpdate.Second",
-        "constructor_distinct_StructUpdate.t",
-        "constructor_distinct_Tm_unit", "data_elim_FStar.PCM.Mkpcm_",
+        "constructor_distinct_Tm_unit",
         "data_typing_intro_StructUpdate.Second@tok",
         "disc_equation_StructUpdate.Both",
         "disc_equation_StructUpdate.Neither",
-        "disc_equation_StructUpdate.Second", "equation_FStar.PCM.compatible",
-        "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_Steel.Effect.Common.true_p",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "equation_Steel.Effect.Common.true_p",
         "equation_StructUpdate.combine", "equation_StructUpdate.comp",
         "equation_StructUpdate.pcm_t", "false_interp",
         "fuel_guarded_inversion_StructUpdate.t",
@@ -277,21 +267,21 @@
         "projection_inverse_StructUpdate.Second__0",
         "projection_inverse_StructUpdate.Second_a",
         "projection_inverse_StructUpdate.Second_b",
-        "refinement_interpretation_Tm_refine_1362e8ac9f66d6fdc7f4600f39832533",
-        "refinement_interpretation_Tm_refine_58cf83066ef0f0d6ceb00e1431616360",
-        "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
+        "refinement_interpretation_Tm_refine_2503e53f5958082e0d7cf4e656ed11b9",
+        "refinement_interpretation_Tm_refine_bdbeba7810b621713c7b302c908becc9",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_f27da1cbc871cbd632684e7dcf81fad7",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
         "token_correspondence_StructUpdate.combine",
         "token_correspondence_StructUpdate.comp", "true_interp",
         "typing_FStar.Ghost.reveal",
-        "typing_FStar.PCM.__proj__Mkpcm__item__p", "typing_FStar.PCM.op",
-        "typing_StructUpdate.pcm_t", "unit_typing"
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
+        "typing_StructUpdate.pcm_t"
       ],
       0,
-      "606a1369d8b37cf09f92aaecdf6ead73"
+      "b3fa1f50070c94bb7cfb32967912ac22"
     ]
   ]
 ]

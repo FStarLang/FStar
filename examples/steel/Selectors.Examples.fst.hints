@@ -1,5 +1,5 @@
 [
-  "ø/ê‘ﬂL÷bôÇ»TœbÂ‰",
+  "äM˜®\u000eË\u0017ˇEMZà\u0001+´ó",
   [
     [
       "Selectors.Examples.swap",
@@ -7,12 +7,29 @@
       0,
       0,
       [
-        "@query", "equation_Steel.SelEffect.Common.true_p",
-        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
+        "Selectors.Examples_interpretation_Tm_arrow_0b26c9983ad2de023775caf175276782",
+        "Selectors.Examples_interpretation_Tm_ghost_arrow_74bc720383d3fd1eb270de679f9470ca",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
+        "interpretation_Tm_abs_0c9bce3b0d769276474130058f537fd0",
+        "interpretation_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "refinement_interpretation_Tm_refine_e84761e3a7808434906cae23e3caa9da",
+        "refinement_kinding_Tm_refine_e84761e3a7808434906cae23e3caa9da",
+        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
+        "typing_Steel.Reference.vptr_",
+        "typing_Tm_abs_0c9bce3b0d769276474130058f537fd0",
+        "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "8f20e69754febd984df134ce9549b865"
+      "96041c10604ced8294a3853668934efb"
     ],
     [
       "Selectors.Examples.test0",
@@ -20,12 +37,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.SelEffect.Common.true_p",
-        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "755fad37d0f6815129419c4bc0e4bbe7"
+      "96377eb91c0a57f17c086424cef5e96a"
     ],
     [
       "Selectors.Examples.test1",
@@ -33,12 +51,30 @@
       0,
       0,
       [
-        "@query", "equation_Steel.SelEffect.Common.true_p",
-        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
+        "Selectors.Examples_interpretation_Tm_arrow_55556e4f5a1354115f8d707af6ac731c",
+        "Selectors.Examples_interpretation_Tm_ghost_arrow_46ab7ff00ebfc3ae18b7c2abf45dac9f",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Steel.Effect.Common.mk_rmem",
+        "interpretation_Tm_abs_04868d9b7888e26d5a2bad51d7c3860a",
+        "interpretation_Tm_abs_ab401011b19136651d922e7ec299f2ae",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_e89b8767d5c5ad76fb18c771cbf4ea31",
+        "refinement_kinding_Tm_refine_e89b8767d5c5ad76fb18c771cbf4ea31",
+        "true_interp", "typing_Steel.Reference.vptr_",
+        "typing_Tm_abs_04868d9b7888e26d5a2bad51d7c3860a",
+        "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "107d490fcec9753bb7d9c3d82f28bbcd"
+      "af0c29562133ed1074857dbdeb7668c3"
     ],
     [
       "Selectors.Examples.test2",
@@ -46,12 +82,30 @@
       0,
       0,
       [
-        "@query", "equation_Steel.SelEffect.Common.true_p",
-        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_ghost_arrow_3aa447697277bb40c9738c9125c3e80f",
+        "Selectors.Examples_interpretation_Tm_arrow_55556e4f5a1354115f8d707af6ac731c",
+        "Selectors.Examples_interpretation_Tm_ghost_arrow_46ab7ff00ebfc3ae18b7c2abf45dac9f",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
+        "function_token_typing_Prims.int",
+        "interpretation_Tm_abs_04868d9b7888e26d5a2bad51d7c3860a",
+        "interpretation_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_e89b8767d5c5ad76fb18c771cbf4ea31",
+        "refinement_kinding_Tm_refine_e89b8767d5c5ad76fb18c771cbf4ea31",
+        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp",
+        "typing_Steel.Reference.vptr_",
+        "typing_Tm_abs_04868d9b7888e26d5a2bad51d7c3860a",
+        "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "21eaeafba26de8dfb69cae135e854cdd"
+      "bf1075943b9f4673a9468d2782174d35"
     ],
     [
       "Selectors.Examples.test3",
@@ -59,12 +113,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.SelEffect.Common.true_p",
-        "equation_Steel.SelEffect.sel", "equation_Steel.SelEffect.vptr_",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "acab4b2441f431f254704407af43ac08"
+      "55839ae4ab0214377e514542234bee71"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "ÏÏºLÚÀmêÂÚ<Û›ÆýH",
+  "ùêEª\fóp3D‡<­«{\u0012\u0006",
   [
     [
       "Steel.Primitive.ForkJoin.__proj__Mkthread__item__l",
@@ -11,7 +11,7 @@
         "projection_inverse_Steel.Primitive.ForkJoin.Mkthread_r"
       ],
       0,
-      "6fed5aa983e682008dd73f55a1380790"
+      "9eaa3ef115c2db89781debdfd2724f35"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_false",
@@ -19,11 +19,17 @@
       2,
       1,
       [
-        "@query", "equation_Steel.Primitive.ForkJoin.maybe_p",
-        "projection_inverse_BoxBool_proj_0"
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "typing_Steel.Primitive.ForkJoin.maybe_p"
       ],
       0,
-      "44a375952d6da86e5d69918bcda7380a"
+      "bd0c2d8e4304a79c583546f18ca9e4a6"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_true",
@@ -32,7 +38,7 @@
       1,
       [ "@query", "equation_Steel.Primitive.ForkJoin.maybe_p" ],
       0,
-      "988a6fa8abe6a5802ea693d2b78c0ba7"
+      "0671f40caa0db5feb7b6e96cb570d354"
     ],
     [
       "Steel.Primitive.ForkJoin.new_thread",
@@ -41,7 +47,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "374e1fa220b4830149abb8a143ff24ea"
+      "667c687d78f12614c8a6acdce6320471"
     ],
     [
       "Steel.Primitive.ForkJoin.finish",
@@ -50,7 +56,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3446890b92360f43e45635b9f5da7fbc"
+      "b43454abee0f142faba7656fdfaf4d16"
     ],
     [
       "Steel.Primitive.ForkJoin.acquire",
@@ -62,7 +68,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "8d533ef71eeadf1a15a933ad0322df82"
+      "7b6669313e40a7471ad7dd08de630be9"
     ],
     [
       "Steel.Primitive.ForkJoin.spawn",
@@ -71,7 +77,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b1d9491db3578cda46f4426acf820bc8"
+      "a2fa2f04e5cbfc3751a0ccc3fc307292"
     ],
     [
       "Steel.Primitive.ForkJoin.fork",
@@ -89,7 +95,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "d46ac9718bde1a6be2be77994f89cbdd"
+      "c44316ae08d5ccbb415f4ec300ac5d50"
     ],
     [
       "Steel.Primitive.ForkJoin.join",
@@ -97,23 +103,38 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Prims.eqtype", "equation_Steel.Effect.Common.true_p",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "bool_inversion",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.Primitive.ForkJoin.lock_inv",
         "equation_Steel.Primitive.ForkJoin.lock_inv_pred",
         "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
         "function_token_typing_Prims.bool",
         "lemma_Steel.Memory.affine_star_smt",
         "proj_equation_Steel.Primitive.ForkJoin.Mkthread_r",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "true_interp", "typing_FStar.Ghost.hide",
+        "typing_Steel.Effect.Common.hp_of",
+        "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
         "typing_Steel.Primitive.ForkJoin.__proj__Mkthread__item__r",
+        "typing_Steel.Primitive.ForkJoin.lock_inv_pred",
         "typing_Steel.Primitive.ForkJoin.maybe_p",
-        "typing_Steel.Reference.pts_to"
+        "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "0f24753299b4d376f53eed3b1d29101f"
+      "992a38b54a264467c0234dc9211e3afa"
     ]
   ]
 ]
