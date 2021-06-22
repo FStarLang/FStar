@@ -14,7 +14,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
       ],
       0,
-      "45a4bc4b4c38ecec2ff71dd55f94c29e"
+      "17895ea5bc73120b3b9bd4d4fac9adb2"
     ],
     [
       "FStar.Algebra.CommMonoid.__proj__CM__item__associativity",
@@ -27,7 +27,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
       ],
       0,
-      "5a90f788e17ba45d135ca24303a4ee84"
+      "dd75d6733566d0bd5c565bae2507cae7"
     ],
     [
       "FStar.Algebra.CommMonoid.__proj__CM__item__commutativity",
@@ -40,7 +40,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
       ],
       0,
-      "e1c9a481e42a030ff392f9e2f5ad963e"
+      "69645b5ee912bab44deac3cebe75707f"
     ],
     [
       "FStar.Algebra.CommMonoid.right_identity",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "461ceec89925482a91c64a024dbb47ba"
+      "40ac595e78236a26f39e78f5346eba37"
     ],
     [
       "FStar.Algebra.CommMonoid.int_plus_cm",
@@ -61,7 +61,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4fc4c389223617f8b0d99cec4c0e18d5"
+      "5edede62c6ceffdd1599d7c9cf67b318"
     ],
     [
       "FStar.Algebra.CommMonoid.int_multiply_cm",
@@ -73,7 +73,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "89d92aaf0c4e07682c216f47a84a2fdf"
+      "e8ed34fead86e97519da95e0cf5840ef"
     ]
   ]
 ]

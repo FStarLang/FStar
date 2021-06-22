@@ -43,7 +43,9 @@ assume EWP_monotonicity_axiom:
 ///
 /// It's just a thunked option-returning computation
 
-type erepr (a:Type) (wp:ewp_t a) = unit -> PURE (option a) wp
+open FStar.Monotonic.Pure
+
+type erepr (a:Type) (wp:ewp_t a) = unit -> PURE (option a) (as_pure_wp wp)
 
 
 /// Defining the effect combinators

@@ -974,6 +974,11 @@ let collect_one
         | Labeled (t, _, _) ->
             collect_term t
         | LexList l -> List.iter collect_term l
+        | WFOrder (t1, t2) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.WellFounded")));
+          begin
+           collect_term t1; collect_term t2
+          end
         | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t

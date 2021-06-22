@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "0d507abb525cfe026cf7ca232a69a2e0"
+      "9fe898aa93fcabf06c8b44191b3f4f36"
     ],
     [
       "MiniParse.Tac.Base.mk_if_t",
@@ -20,7 +20,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "6a36a74fb6a30147a03a934d4efb9779"
+      "ae1f72764b5668a122efb7c448578ce6"
     ],
     [
       "MiniParse.Tac.Base.string_of_name",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cf291d4e600f769d46f2f8c75519105d"
+      "b76f6a1c1b3e97db7c60fd8b7a264c6d"
     ]
   ]
 ]

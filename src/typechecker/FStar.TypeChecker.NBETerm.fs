@@ -183,7 +183,8 @@ and cflag =
   | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
-  | DECREASES of list<t>
+  | DECREASES_lex of list<t>
+  | DECREASES_wf of (t * t)
 
 and residual_comp = {
   residual_effect:lident;

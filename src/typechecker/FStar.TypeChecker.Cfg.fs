@@ -1068,8 +1068,12 @@ let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
+        | UnfoldQual l when List.contains "unfold" l ->
+          [Env.Eager_unfolding_only]
         | Inlining -> [Env.InliningDelta]
-        | _ -> []) in
+        | UnfoldQual l when List.contains "inline_for_extraction" l ->
+          [Env.InliningDelta]
+        | _ -> []) |> List.unique in
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in

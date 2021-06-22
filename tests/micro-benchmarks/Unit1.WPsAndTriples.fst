@@ -22,7 +22,9 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
           -> x:a -> Pure (b x) (as_requires (wp x))
                              (as_ensures (wp x))
 
-val f : x:int -> PURE int (fun 'p -> x > 0 /\ 'p (x + 1)) 
+open FStar.Monotonic.Pure
+
+val f : x:int -> PURE int (as_pure_wp (fun 'p -> x > 0 /\ 'p (x + 1)))
 let f x = assert (x > 0); x + 1
 
 val h : #req:(int -> Type) -> #ens:(int -> int -> Type) -> $f:(x:int -> Pure int (req x) (ens x)) -> y:int -> Pure int (req y) (ens y)
@@ -30,3 +32,34 @@ let h #req #ens f x = f x
 
 val g : x:int -> Pure int (b2t (x > 0)) (fun y -> y == x + 1)
 let g = h (as_Pure f)
+
+
+(*
+ * We enforce monotonicity of pure wps
+ *)
+
+[@@ expect_failure]
+val bad_wp : unit -> PURE unit (as_pure_wp (fun p -> ~ (p ())))
+
+[@@ expect_failure]
+val bad_wp : unit -> PURE int (as_pure_wp (fun p -> ~ (p 3)))
+
+
+val good_wp : unit -> PURE int (as_pure_wp (fun p -> p 3))
+val good_hoare : unit -> Pure int True (fun r -> r == 3)
+
+(*
+ * An example from Dominique Unruh
+ *)
+let mono a (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
+    Lemma (wp p ==> wp q) = 
+	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ()
+
+[@@ expect_failure]
+let contradiction () : Lemma(False) = 
+    let a = unit in
+    let wp : pure_wp a = as_pure_wp (fun p -> ~ (p ())) in
+    let p x = False in let q x = True in
+    let u : squash(forall x. p x ==> q x) = () in
+    mono a wp p q u;
+    assert (wp p ==> wp q)

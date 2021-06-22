@@ -24,6 +24,48 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * F* now supports accessibility predicates based termination proofs. When writing a recursive function
+    
+    ```
+    let rec x_i : Tot t = ...
+    ```
+    
+    The decreases metric may be specified as:
+    
+    ```
+    let rec x_i : Tot t (decreses {:well-founded rel e}) = ...
+    ```
+    
+    where `rel` is a well-founded relation and `e` is an expression that decreases according to the relation in the recursive calls. See [this PR](https://github.com/FStarLang/FStar/pull/2307) for more details.
+
+  * Since 2686888aab7e8fa7059b61c161ad7a2f867ee1f8, F* no longer
+    supports eta equivalence. Dominique Unruh observed that the
+    primitive `pointwise` tactic (which treats provable equality as a
+    congruence) allows proving functional extensionality, which is
+    unsound in conjunction with subtyping in F* (see below for more
+    discussion of that). It turns out that a crucial step in that
+    unsoundness proof is the use of eta equivalence (See Bug1966a.fst
+    for a proof of that, with thanks due there also to Catalin Hritcu,
+    who writes about it here
+    https://github.com/FStarLang/FStar/wiki/SMT-Equality-and-Extensionality-in-F*).
+
+    To fix this, we removed eta equivalence. One rough intuition for
+    why eta reduction is incompatible with subtyping is that it can
+    change the type of a function, widening its domain, e.g., for
+    `f:int -> int`, reducing `(fun (x:nat) -> f x)` to `f` changes its
+    type. Restricting eta reductions to only those that are type
+    preserving turns out to not feasible in the presence of
+    abstraction and subtyping.
+
+    With the removal of eta, functional extensionality is now a
+    theorem in F\* at least for eta-expanded functions, no longer an
+    axiom, which is an improvement. The removal of eta equivalence
+    introduced regressions in some proofs that were implicitly relying
+    on it. See, for example,
+    https://github.com/FStarLang/FStar/pull/2294
+    and
+    https://github.com/project-everest/hacl-star/pull/442
+
   * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
     dependent pattern matching. F* now supports `match e returns C with |...`
     syntax for typechecking the branches with `C` appropriately substituted.

@@ -411,6 +411,8 @@ val guard_form                : guard_t -> guard_formula
 val check_trivial             : term -> guard_formula
 
 (* Other utils *)
+val too_early_in_prims : env -> bool
+
 val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit

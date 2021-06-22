@@ -61,7 +61,6 @@ open FStar.OrdSet
 open FStar.OrdSetProps
 open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
-open FStar.Reader
 open FStar.Reflection
 
 open FStar.Tactics

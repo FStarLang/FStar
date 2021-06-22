@@ -239,6 +239,8 @@ and free_type_vars env t = match (unparen t).tm with
   | NamedTyp(_, t) -> free_type_vars env t
 
   | LexList l -> List.collect (free_type_vars env) l
+  | WFOrder (rel, e) ->
+    (free_type_vars env rel) @ (free_type_vars env e)
   
   | Paren t -> failwith "impossible"
 
@@ -1894,12 +1896,13 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     let decreases_clause = dec |>
       List.map (fun t -> match (unparen (fst t)).tm with
                       | Decreases (t, _) ->
-                        let l =
+                        let dec_order =
                           let t = unparen t in
                           match t.tm with
-                          | LexList l -> l
-                          | _ -> [t] in
-                        DECREASES (l |> List.map (desugar_term env))
+                          | LexList l -> l |> List.map (desugar_term env) |> Decreases_lex
+                          | WFOrder (t1, t2) -> (desugar_term env t1, desugar_term env t2) |> Decreases_wf
+                          | _ -> [desugar_term env t] |> Decreases_lex in  //by-default a lex list of length 1
+                        DECREASES dec_order
                       | _ ->
                         fail (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                               "Unexpected decreases clause")) in
@@ -2545,6 +2548,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
 
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
     let for_free = num_indices = 1 in
+    if for_free
+    then Errors.log_issue d.drange (Errors.Warning_DeprecatedGeneric,
+            BU.format1 "DM4Free feature is deprecated and will be removed soon, \
+              use layered effects to define %s" (Ident.string_of_id eff_name));
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in

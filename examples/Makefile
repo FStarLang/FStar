@@ -18,7 +18,6 @@ printf \
 metatheory \
 verifythis \
 preorders \
-dm4free \
 tactics \
 param \
 typeclasses \
@@ -34,6 +33,7 @@ regional \
 generic \
 calc \
 steel \
+steel_tutorial \
 layeredeffects \
 misc
 

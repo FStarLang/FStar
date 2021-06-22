@@ -45,7 +45,7 @@
         "typing_Prims.__proj__Cons__item__tl", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "da5b789ef870d7c2a16c996ec069ed92"
+      "ca6885ba5f4a6b6a37061b5b67b7f975"
     ],
     [
       "MergeSort.split",
@@ -93,7 +93,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "331ae9ba3740ffbadbeb01cdc2ded7f4"
+      "1f7ee0f7bb7b678fd273ce04303b1cdd"
     ],
     [
       "MergeSort.merge_inv",
@@ -102,7 +102,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f4514d165095b51e777cd7af333955e7"
+      "ee216f744e58cc123ea713723164f901"
     ],
     [
       "MergeSort.merge",
@@ -154,7 +154,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "45bdd15e3419c6261e821b36d2017f85"
+      "cacced563f7ba02b8bfacd75d8ca8370"
     ],
     [
       "MergeSort.mergesort",
@@ -194,7 +194,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "100b894e33d9cdb71be9eb27210885a8"
+      "e36ab018bbc7dcc563673699c91c2ebd"
     ]
   ]
 ]

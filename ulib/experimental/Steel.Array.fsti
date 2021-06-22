@@ -11,16 +11,94 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.o
+   limitations under the License.
 *)
 
 module Steel.Array
-open Steel.Effect
-open Steel.Effect.Atomic
 open Steel.Memory
-open Steel.FractionalPermission
+open Steel.Effect
 open FStar.Ghost
 module U32 = FStar.UInt32
+
+/// A library for arrays in Steel
+/// TODO: Add fractional permissions to this array library
+
+/// The contents of an array of type [t] is a sequence of values of type [t]
+let contents (t:Type u#0) = FStar.Seq.seq t
+/// Returns the length of the array. Usable for specification and proof purposes,
+/// as modeled by the GTot effect
+let length #t (r:contents t) : GTot nat = Seq.length r
+
+/// Abstract datatype for a Steel array of type [t]
+val array (t:Type u#0) : Type u#0
+
+/// Separation logic predicate indicating the validity of the array in the current memory
+val is_array (#a:Type0) (r:array a) : slprop u#1
+
+/// Selector for Steel arrays. It returns the contents in memory of the array
+val array_sel (#a:Type0) (r:array a) : selector (contents a) (is_array r)
+
+/// Combining the elements above to create an array vprop
+[@@ __steel_reduce__]
+let varray' #a r : vprop' =
+  {hp = is_array r;
+   t = Seq.seq a;
+   sel = array_sel r}
+
+[@@ __steel_reduce__]
+unfold
+let varray r = VUnit (varray' r)
+
+/// A wrapper to access an array selector more easily.
+/// Ensuring that the corresponding array vprop is in the context is done by
+/// calling a variant of the framing tactic, as defined in Steel.Effect.Common
+[@@ __steel_reduce__]
+let asel (#a:Type) (#p:vprop) (r:array a)
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (varray r) /\ True)})
+  = h (varray r)
+
+/// Allocates an array of length n, where all elements of the array initially are [x]
+val malloc (#t:Type) (x:t) (n:U32.t)
+  : Steel (array t)
+             emp
+             (fun r -> varray r)
+             (requires fun _ -> True)
+             (ensures fun _ r h1 -> asel r h1 == Seq.create (U32.v n) x)
+
+/// Accesses index [i] in array [r], as long as [i] is in bounds and the array
+/// is currently valid in memory
+val index (#t:Type) (r:array t) (i:U32.t)
+  : Steel t
+             (varray r)
+             (fun _ -> varray r)
+             (requires fun h -> U32.v i < length (asel r h))
+             (ensures fun h0 x h1 ->
+               U32.v i < length (asel r h1) /\
+               asel r h0 == asel r h1 /\
+               x == Seq.index (asel r h1) (U32.v i))
+
+/// Updates index [i] in array [r] with value [x], as long as [i]
+/// is in bounds and the array is currently valid in memory
+val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
+  : Steel unit
+             (varray r)
+             (fun _ -> varray r)
+             (requires fun h -> U32.v i < length (asel r h))
+             (ensures fun h0 _ h1 ->
+               U32.v i < length (asel r h0) /\
+               asel r h1 == Seq.upd (asel r h0) (U32.v i) x)
+
+/// Frees array [r], as long as it initially was a valid array in memory
+val free (#t:Type) (r:array t)
+  : Steel unit
+             (varray r)
+             (fun _ -> emp)
+             (requires fun _ -> True)
+             (ensures fun _ _ _ -> True)
+
+
+(* AF: Non-selector version of the Array module, currently unused in Steel
+   TODO: Port this to the selector version
 
 let contents (t:Type u#0) = erased (FStar.Seq.seq t)
 let length #t (r:contents t) : GTot nat = Seq.length r
@@ -57,7 +135,7 @@ val write (#t:Type) (#p:perm{is_writeable p}) (#r:contents t) (a:array t) (i:U32
 
 val adjacent (#t:_) (al ar:array t) : prop
 
-val split (#t:Type) (#p:perm) (#r:contents t) (a:array t) (i:U32.t { U32.v i < length r })
+val split (#t:Type) (#p:perm) (#r:contents t) (a:array t) (i:U32.t { U32.v i <= length r })
   : Steel (array t & array t)
           (is_array a p r)
           (fun (al, ar) ->
@@ -87,3 +165,4 @@ val free (#t:Type) (#r:contents t) (#p:perm{is_freeable r p}) (a:array t)
   : SteelT unit
            (is_array a p r)
            (fun _ -> emp)
+*)

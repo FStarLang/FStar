@@ -21,6 +21,8 @@ open FStar.Tactics.Result
 
 let with_tactic _ p = p
 
+let rewrite_with_tactic _ p = p
+
 let synth_by_tactic #_ _ = admit ()
 
 #push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
@@ -38,3 +40,5 @@ let postprocess_for_extraction_with _ = ()
 #set-options "--no_tactics"
 
 let unfold_with_tactic _ _ = ()
+
+let unfold_rewrite_with_tactic _ _ = ()

@@ -1,5 +1,5 @@
 [
-  "¼ÓJÏ¢xá\u0006\u0001\u0018”Ë\u000bÿ9Ñ",
+  "ýÒÚB­ï=Fø\u0005\u0004^; ^H",
   [
     [
       "Duplex.PCM.no_loop",
@@ -30,7 +30,7 @@
         "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "04425b5ce25ac77fafdcf00fbbb18eb5"
+      "142551c50460185896d77876a21fc83f"
     ],
     [
       "Duplex.PCM.return",
@@ -52,7 +52,7 @@
         "true_interp"
       ],
       0,
-      "6d00d7c5c2626bece938fd00d511b40e"
+      "1dd63366540fe620a7632917289a11da"
     ],
     [
       "Duplex.PCM.send",
@@ -90,7 +90,7 @@
         "token_correspondence_Duplex.PCM.return", "true_interp"
       ],
       0,
-      "2aea5a1e780491091d337491e7c6b93f"
+      "0d3d995ac7ec608b52243dc4c0f0530e"
     ],
     [
       "Duplex.PCM.recv",
@@ -128,7 +128,7 @@
         "token_correspondence_Duplex.PCM.return", "true_interp"
       ],
       0,
-      "abf499be4657c6072ad3f56a4a960fc9"
+      "a968d3a042db4cad663a4ac09fe7180c"
     ],
     [
       "Duplex.PCM.bind",
@@ -171,7 +171,7 @@
         "well_founded_ordering_on_codomain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "1f993bba0bc274c37b75c15ab0b689f4"
+      "31af5eef90c9e18aab92bac49164a4c8"
     ],
     [
       "Duplex.PCM.send_next_dprot_t",
@@ -180,7 +180,7 @@
       1,
       [ "@query", "assumption_Duplex.PCM.party__uu___haseq" ],
       0,
-      "75bb89c686abb05d866ebf505d994223"
+      "35069e3fe8d84c2e3c725030beced769"
     ],
     [
       "Duplex.PCM.recv_next_dprot_t",
@@ -189,7 +189,7 @@
       1,
       [ "@query", "assumption_Duplex.PCM.party__uu___haseq" ],
       0,
-      "038977d17f44f0f4fd3266e4e52449c4"
+      "204115fde4dc2b3fe8ea9426f9dfa522"
     ],
     [
       "Duplex.PCM.is_send",
@@ -198,7 +198,7 @@
       1,
       [ "@query" ],
       0,
-      "bef97430459c10d5a1f52d6c4d1d738a"
+      "8e19db901217c2f39fe8e15c5a6e779e"
     ],
     [
       "Duplex.PCM.is_recv",
@@ -207,7 +207,7 @@
       1,
       [ "@query" ],
       0,
-      "dbada317ff0415f7278ea9715386ace5"
+      "ae73df9a48998dfeed93837884bfb47a"
     ],
     [
       "Duplex.PCM.next",
@@ -220,7 +220,7 @@
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589"
       ],
       0,
-      "0f3b464d646982ba300f6acbc06b6015"
+      "9315eebacde7d90497ed13add5908dae"
     ],
     [
       "Duplex.PCM.__proj__V__item___0",
@@ -232,7 +232,7 @@
         "refinement_interpretation_Tm_refine_8eed6cedcde539b1b65692c5d0b6a998"
       ],
       0,
-      "c890c7e80c5825f373aa5a74318eea85"
+      "f34f19164170d3cde02630e3a6b81691"
     ],
     [
       "Duplex.PCM.__proj__A_W__item__q",
@@ -244,7 +244,7 @@
         "refinement_interpretation_Tm_refine_e84ea1ef70c080754c8066646bdf383f"
       ],
       0,
-      "9905b47cbe7716e7aa550c8875750ce3"
+      "43fc1c3f9d8c22d5b1f13a6755c907c0"
     ],
     [
       "Duplex.PCM.__proj__A_W__item___1",
@@ -257,7 +257,7 @@
         "refinement_interpretation_Tm_refine_e84ea1ef70c080754c8066646bdf383f"
       ],
       0,
-      "15296665d5465a79d2683a9d739bc06a"
+      "7d9206052289a9a0d84fd8d61a14e498"
     ],
     [
       "Duplex.PCM.__proj__A_R__item__q",
@@ -269,7 +269,7 @@
         "refinement_interpretation_Tm_refine_7e1075965e3a7d40b0e3c39417895d6d"
       ],
       0,
-      "1677ca482e25babadf4e242add681fad"
+      "93f6027fe3605800778fb8ae924dec25"
     ],
     [
       "Duplex.PCM.__proj__A_R__item___1",
@@ -282,7 +282,7 @@
         "refinement_interpretation_Tm_refine_7e1075965e3a7d40b0e3c39417895d6d"
       ],
       0,
-      "59dd50c85902267c2da0df2f255d9940"
+      "a6c6563aa220c439bbe90256dbd72668"
     ],
     [
       "Duplex.PCM.__proj__B_R__item__q",
@@ -294,7 +294,7 @@
         "refinement_interpretation_Tm_refine_923151ece7bb4d72efe72779362c5544"
       ],
       0,
-      "279fbd5a8ffdac873291747955652c14"
+      "de5d6bd317b9461c7181c58a5f6869c2"
     ],
     [
       "Duplex.PCM.__proj__B_R__item___1",
@@ -307,7 +307,7 @@
         "refinement_interpretation_Tm_refine_923151ece7bb4d72efe72779362c5544"
       ],
       0,
-      "1a3cad6366b648338c3387fb05a0444b"
+      "c7e16567f8e105c5fd8ac429fc90ee4c"
     ],
     [
       "Duplex.PCM.__proj__B_W__item__q",
@@ -319,7 +319,7 @@
         "refinement_interpretation_Tm_refine_e0e3ae1382f6b511d2fe4d2398394201"
       ],
       0,
-      "4b1238bffc5ee951eefd1752b1f30a4a"
+      "915ef74f37d2b3c15158512002052313"
     ],
     [
       "Duplex.PCM.__proj__B_W__item___1",
@@ -332,7 +332,7 @@
         "refinement_interpretation_Tm_refine_e0e3ae1382f6b511d2fe4d2398394201"
       ],
       0,
-      "14d140ccd05b38cd6a3cf4bc2211abc9"
+      "5b7aef7064506c4b2f9717cbac68f7a4"
     ],
     [
       "Duplex.PCM.__proj__A_Fin__item__q",
@@ -344,7 +344,7 @@
         "refinement_interpretation_Tm_refine_9883ca890aff761db0fbdd09e3a5d67a"
       ],
       0,
-      "381121180e3905bf530291bd6a7e8669"
+      "b547bc1437a0f60ee21f107629637297"
     ],
     [
       "Duplex.PCM.__proj__A_Fin__item___1",
@@ -357,7 +357,7 @@
         "refinement_interpretation_Tm_refine_9883ca890aff761db0fbdd09e3a5d67a"
       ],
       0,
-      "8c5fa1b9127db0963c7f6fb70e54b685"
+      "d9945a60a9497f47cd53f9a503536925"
     ],
     [
       "Duplex.PCM.__proj__B_Fin__item__q",
@@ -369,7 +369,7 @@
         "refinement_interpretation_Tm_refine_ffe8e91ede3c168a66a0e828856d6a19"
       ],
       0,
-      "0d95d0fed954fb27e577d762e49f38da"
+      "87955273c6626cd28b267f8305056744"
     ],
     [
       "Duplex.PCM.__proj__B_Fin__item___1",
@@ -382,7 +382,7 @@
         "refinement_interpretation_Tm_refine_ffe8e91ede3c168a66a0e828856d6a19"
       ],
       0,
-      "e4d6c99d7dbd200f639f59012910ec34"
+      "21d53ee425b290de9c20a2c5e40d8827"
     ],
     [
       "Duplex.PCM.ahead",
@@ -400,7 +400,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "cd0b0ac6c679573d401ff32e427ef6b5"
+      "a5c30be7dc37ec94569860a60018b8c6"
     ],
     [
       "Duplex.PCM.ahead_refl",
@@ -427,7 +427,7 @@
         "typing_Duplex.PCM.extended_to"
       ],
       0,
-      "1f060278d934908d331279e50b5a95eb"
+      "3b18da32b7ace6edd780a0eea0f3269e"
     ],
     [
       "Duplex.PCM.trace_length",
@@ -446,7 +446,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Message"
       ],
       0,
-      "efab0794b484843b002f7a9a3f1f616d"
+      "91c266dbc3518df9c7aa37ed30550fb2"
     ],
     [
       "Duplex.PCM.composable",
@@ -482,7 +482,7 @@
         "typing_tok_Prims.T@tok", "unit_inversion"
       ],
       0,
-      "9e2c559655cdbbb983affbee4de22a4a"
+      "33d72f49331e14a9dc9f2d78eff2f7d4"
     ],
     [
       "Duplex.PCM.compose",
@@ -520,7 +520,7 @@
         "token_correspondence_Duplex.PCM.composable"
       ],
       0,
-      "6ac007c4b0c63652f5212ed059bfa910"
+      "bdf54a3c9c1b369cee0a2fd6ece1dcdf"
     ],
     [
       "Duplex.PCM.lemma_comm",
@@ -540,7 +540,7 @@
         "typing_Duplex.PCM.composable"
       ],
       0,
-      "12a9e323d952512f38d0ee1980e9dde6"
+      "f9c942111d701e97e4138230228fc0e8"
     ],
     [
       "Duplex.PCM.lemma_assoc_l",
@@ -549,7 +549,7 @@
       1,
       [ "@query" ],
       0,
-      "fd96ec474682c1dd68cf0794de6d86bb"
+      "203199727414c6b10b78836f6f41e5e8"
     ],
     [
       "Duplex.PCM.lemma_assoc_l",
@@ -586,7 +586,7 @@
         "typing_Duplex.PCM.composable", "typing_Duplex.PCM.compose"
       ],
       0,
-      "01ad557cdb7bd1b6c252608a86240ae4"
+      "47c2f14fba088ab14544475cd8d9d068"
     ],
     [
       "Duplex.PCM.lemma_assoc_r",
@@ -595,7 +595,7 @@
       1,
       [ "@query" ],
       0,
-      "c98bcc0bdb58480999165b375e8bfca0"
+      "1e28eedbba13944cd50a6ae5932d3653"
     ],
     [
       "Duplex.PCM.lemma_assoc_r",
@@ -635,7 +635,7 @@
         "typing_Duplex.PCM.composable", "typing_Duplex.PCM.compose"
       ],
       0,
-      "e2b4e47a097c4bf13e1e781ceedc86d4"
+      "9fc1757ddba9fd953d8efc183ad90f06"
     ],
     [
       "Duplex.PCM.lemma_is_unit",
@@ -664,7 +664,7 @@
         "token_correspondence_Duplex.PCM.composable", "true_interp"
       ],
       0,
-      "1edd649a32480baa7d8969f4d34d21d0"
+      "d81cbbd37f886c0f53a077b68e6addb1"
     ],
     [
       "Duplex.PCM.refine",
@@ -678,7 +678,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "8bdd0f0c027041e6c986c809f44fef84"
+      "9e0ea5ae7de5b4c3d9a7b691af4647af"
     ],
     [
       "Duplex.PCM.pcm",
@@ -701,7 +701,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op"
       ],
       0,
-      "255aedb827f8ab7766438bcc1edd2d52"
+      "d87dee44a8cf41738ed294d29ed4af6a"
     ],
     [
       "Duplex.PCM.ep_a",
@@ -732,7 +732,7 @@
         "typing_Steel.Channel.Protocol.__proj__Msg__item___0"
       ],
       0,
-      "e43deb4502d6fcf40f30174e1e165420"
+      "325cc8b25639c6f7a614973a613298aa"
     ],
     [
       "Duplex.PCM.endpoint_b",
@@ -763,7 +763,7 @@
         "typing_Steel.Channel.Protocol.__proj__Msg__item___0"
       ],
       0,
-      "60a07a5380ee3b01b6f621a64f36d309"
+      "4f04549b2c4c6571bddafd6296b71fc8"
     ],
     [
       "Duplex.PCM.frame_compatible",
@@ -772,7 +772,7 @@
       1,
       [ "@query" ],
       0,
-      "48a16e3cb8cb1c676fac86abde2994ca"
+      "28f8c3d11d6c9fba34a00ba4e73c850b"
     ],
     [
       "Duplex.PCM.select_refine'",
@@ -781,7 +781,7 @@
       1,
       [ "@query" ],
       0,
-      "b38c1be7776a98482eb5c6d48f1e314d"
+      "16fd92b79b92fab077a1e8996f982758"
     ],
     [
       "Duplex.PCM.select_refine'",
@@ -790,7 +790,7 @@
       1,
       [ "@query" ],
       0,
-      "32ea1c466bf99536f2cab8ff52d84881"
+      "021e4350ae9447d8a5d2e8acd1316e5c"
     ],
     [
       "Duplex.PCM.select_refine'",
@@ -823,7 +823,7 @@
         "true_interp"
       ],
       0,
-      "a341415570f956457fa5a6662bf37e4d"
+      "a7ce60396220b20bf4de3db8d5404472"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -832,7 +832,7 @@
       1,
       [ "@query" ],
       0,
-      "23af7c121b33413b4ce6dd9d7e26f129"
+      "49d351d9f6d0f4a68101c44003a89630"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -841,7 +841,7 @@
       1,
       [ "@query" ],
       0,
-      "8a3fc5729b06fbb10e4ef688c6c8b803"
+      "f808f566db05acbb6d75765fc71597fb"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -850,7 +850,7 @@
       1,
       [ "@query" ],
       0,
-      "f3f6e762a7945e2729f113e0711bcd33"
+      "4550074bad1fbaf2680e63f8ae499a03"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -859,7 +859,7 @@
       1,
       [ "@query" ],
       0,
-      "9abc5a427f2e404fa9232e8a1317f9a3"
+      "4e8755384d315d9850ca965042dfc421"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -868,7 +868,7 @@
       1,
       [ "@query" ],
       0,
-      "2913658684eb477770b017ba9a1efed3"
+      "fc2ca48ec2a29aa46a617fc1ff18f21e"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -877,7 +877,7 @@
       1,
       [ "@query" ],
       0,
-      "3cf50a84ca351924dbffae46fe25c6da"
+      "8d41a26d7dc300f20b65789abb6e867f"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -886,7 +886,7 @@
       1,
       [ "@query" ],
       0,
-      "fb70f9c76e404a01958963ef3a491dae"
+      "5103065ff7ddf4d14e9f3c5495f9fd63"
     ],
     [
       "Duplex.PCM.select_refine",
@@ -894,11 +894,16 @@
       2,
       1,
       [
-        "@query", "equation_Duplex.PCM.pts_to",
-        "equation_Steel.Effect.Common.true_p", "true_interp"
+        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Duplex.PCM.pts_to",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0", "true_interp"
       ],
       0,
-      "f528830cf95185f8803b68d11dfebc23"
+      "bb5582e1ae11d18d3d92b0f3e9c0cf31"
     ],
     [
       "Duplex.PCM.is_trace_prefix",
@@ -947,7 +952,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "88858b27d01a6edf3e1c18b8d7b95113"
+      "0ed984f5682c84536ad0609b29fd233e"
     ],
     [
       "Duplex.PCM.lemma_is_trace_prefix_refl",
@@ -999,7 +1004,7 @@
         "true_interp"
       ],
       0,
-      "7132f940247af735d36a5575f5ca0701"
+      "9aa580e23c9492a66a0db3608a3f7c1b"
     ],
     [
       "Duplex.PCM.lemma_is_trace_prefix_extend",
@@ -1029,13 +1034,13 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
-        "refinement_interpretation_Tm_refine_eae782661f352cae1b0656f8cc4c4435",
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
+        "refinement_interpretation_Tm_refine_ff054331fb96bee976b6f066ff2c586c",
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "d06a00fddb4718e88128d3dc4095ff85"
+      "27c5c23e53f38f95ebfd55dac67a8234"
     ],
     [
       "Duplex.PCM.lemma_is_trace_prefix_extend",
@@ -1103,7 +1108,7 @@
         "typing_Steel.Channel.Protocol.step"
       ],
       0,
-      "56b1a0bd8421941a3cc1ff58ae230273"
+      "2e2f0ad5e418a8b045b50c356ac29cea"
     ],
     [
       "Duplex.PCM.lemma_ahead_msg_msg_inversion",
@@ -1151,7 +1156,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "b1fd5c20ba984572f2f4ee8dc4a3919d"
+      "fee035f136c30a3605cfd032ac130ce8"
     ],
     [
       "Duplex.PCM.next_message_aux",
@@ -1217,7 +1222,7 @@
         "typing_Duplex.PCM.trace_length"
       ],
       0,
-      "ebbebd2f0339f485d40f3ae85dad1454"
+      "db28b58459867ea8d37389227beb8888"
     ],
     [
       "Duplex.PCM.lemma_ahead_implies_trace_prefix",
@@ -1267,7 +1272,7 @@
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to"
       ],
       0,
-      "309c3cda8530f586301b52e51967a8a0"
+      "1663acbdd654a83c9a3522c1663323a5"
     ],
     [
       "Duplex.PCM.next_message",
@@ -1276,7 +1281,7 @@
       1,
       [ "@query" ],
       0,
-      "117b20f5d1b9ef1618d184402e6aeb0b"
+      "640b58ac1c9316fc7e47c9c9c7ebdee5"
     ],
     [
       "Duplex.PCM.extend_increase_length",
@@ -1288,7 +1293,7 @@
         "refinement_interpretation_Tm_refine_a32d6af70eb825a20c139698f69438df"
       ],
       0,
-      "bbf9b337e228cf6f989cd723bce885d2"
+      "9690da3da11befe79ad51835780fe024"
     ],
     [
       "Duplex.PCM.extend_increase_length",
@@ -1356,7 +1361,7 @@
         "typing_Steel.Channel.Protocol.step"
       ],
       0,
-      "9d01e0bbf200ff544dacfbca24e91cbd"
+      "f5990f0f7c156b0878cc39fbc5e386bb"
     ],
     [
       "Duplex.PCM.next_increase_length",
@@ -1373,7 +1378,7 @@
         "token_correspondence_Duplex.PCM.next"
       ],
       0,
-      "c4dc03d76e4b58b178e47dae41267371"
+      "d82324e1f014804aca45e084ae7cc0da"
     ],
     [
       "Duplex.PCM.lemma_ahead_is_longer",
@@ -1416,7 +1421,7 @@
         "typing_Duplex.PCM.trace_length", "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "bab369046e113163097eaa4c3885e389"
+      "8109d2a40c155fc517f3419dd04159a5"
     ],
     [
       "Duplex.PCM.compatible_a_r_v_is_ahead",
@@ -1489,7 +1494,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1950e2aa93b6f44e9e7981474384e96c"
+      "a22086b33da2d5bef893ffaf19260754"
     ],
     [
       "Duplex.PCM.lemma_same_trace_length_ahead_refl'",
@@ -1498,7 +1503,7 @@
       1,
       [ "@query" ],
       0,
-      "33f0c35fd350378f973548d464adfdf3"
+      "65c01c5596343fe2ac66577d0927eab1"
     ],
     [
       "Duplex.PCM.lemma_same_trace_length_ahead_refl'",
@@ -1566,7 +1571,7 @@
         "typing_Steel.Channel.Protocol.step"
       ],
       0,
-      "c3d2281cf3a29e9c6199c8adabc1c7b0"
+      "0ec83ff4b46095d3cb8f52f1186c2c07"
     ],
     [
       "Duplex.PCM.lemma_same_trace_length_ahead_refl",
@@ -1575,7 +1580,7 @@
       1,
       [ "@query" ],
       0,
-      "e0fc662700b044f2d21318b49bcb27d8"
+      "1e519a5477fc7767803b304a11c05b3c"
     ],
     [
       "Duplex.PCM.compatible_b_r_v_is_ahead",
@@ -1655,7 +1660,7 @@
         "typing_tok_Duplex.PCM.A@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "729113d1dbea9861c4034b6c4e5bbd00"
+      "2bf1303329d729de4cab4b2621b00fb7"
     ],
     [
       "Duplex.PCM.extend_node_a_r",
@@ -1664,7 +1669,7 @@
       1,
       [ "@query" ],
       0,
-      "9230d1f168d1ed4cae7de256c90f36b3"
+      "5a4359ced6d6d421c8c105f367132e1b"
     ],
     [
       "Duplex.PCM.extend_node_a_r",
@@ -1715,7 +1720,7 @@
         "typing_Steel.Channel.Protocol.hnf", "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "7cd1a12c5afeb8dea8becd2ae71ed537"
+      "921f17f2bd051853cceebb7032f956d2"
     ],
     [
       "Duplex.PCM.extend_node_b_r",
@@ -1724,7 +1729,7 @@
       1,
       [ "@query" ],
       0,
-      "70b0ecc87149133b288d6f48dc9a2466"
+      "87cdc7d7f8f10a5cec8d12c7be217aa2"
     ],
     [
       "Duplex.PCM.extend_node_b_r",
@@ -1776,7 +1781,7 @@
         "typing_Steel.Channel.Protocol.hnf", "typing_tok_Duplex.PCM.A@tok"
       ],
       0,
-      "d2779109d54f5b57862b25f4f78dc384"
+      "3f909526c266d1e7e2666a501bc70fe3"
     ],
     [
       "Duplex.PCM.lemma_compatible_a_greater_length",
@@ -1789,7 +1794,7 @@
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589"
       ],
       0,
-      "efbe26dea3d3dbf8d8c87ef4c0586678"
+      "0f96614e7c269a6d450a85cb628ccade"
     ],
     [
       "Duplex.PCM.lemma_compatible_b_greater_length",
@@ -1802,7 +1807,7 @@
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589"
       ],
       0,
-      "e1697c01c82c857e686a6cdabcf22661"
+      "60f39bc4962ca3d0fa9ff2ae7fd0fbb3"
     ],
     [
       "Duplex.PCM.lemma_unique_next_common_prefix",
@@ -1818,12 +1823,12 @@
         "l_and-interp", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_87bb92c163cd3704b9f9eaa4b8abf40e",
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589",
+        "refinement_interpretation_Tm_refine_e80843d9d1912123383656ca66e46ec8",
         "token_correspondence_Duplex.PCM.next"
       ],
       0,
-      "ed1afa8f126752af5c77c72c8d198f1e"
+      "8b480077901ccadda0efbf006ae00598"
     ],
     [
       "Duplex.PCM.lemma_unique_next_common_prefix",
@@ -1916,7 +1921,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Message"
       ],
       0,
-      "64f1cdc3585cf18fafc653765003fe4b"
+      "1951d2a34d2e0ac8ed20f906b85622ad"
     ],
     [
       "Duplex.PCM.closure_inversion",
@@ -1930,7 +1935,7 @@
         "token_correspondence_Duplex.PCM.extended_to"
       ],
       0,
-      "d49bb95a297a631c041641f7369fe08d"
+      "94a7610490d7b84245f4fedaf16da8e7"
     ],
     [
       "Duplex.PCM.next_message_closure",
@@ -1981,7 +1986,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "8f3f57c49528c254666e73978d03783f"
+      "b88641647ef987734e8431885fd73132"
     ],
     [
       "Duplex.PCM.lemma_same_length_ahead_implies_eq",
@@ -2050,7 +2055,7 @@
         "typing_Steel.Channel.Protocol.step"
       ],
       0,
-      "104bbc73713ef4186097769cf5e49ff9"
+      "488a1ed29689c4ca641933b14788308a"
     ],
     [
       "Duplex.PCM.frame_compatible_a_extend",
@@ -2188,7 +2193,7 @@
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "d88d9f8bd3c7adb1866dbbaa0e71ea6e"
+      "55907c8201114c229047de315a6e89a1"
     ],
     [
       "Duplex.PCM.frame_compatible_b_extend",
@@ -2200,7 +2205,6 @@
         "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
         "@fuel_correspondence_Duplex.PCM.trace_length.fuel_instrumented",
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.ok.fuel_instrumented",
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
         "Duplex.PCM_interpretation_Tm_arrow_9d49407b244d671c70bd5c0c1a4ea6a6",
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
@@ -2215,7 +2219,7 @@
         "constructor_distinct_Duplex.PCM.V",
         "constructor_distinct_Steel.Channel.Protocol.Recv",
         "data_elim_Duplex.PCM.A_Fin", "data_elim_Duplex.PCM.A_R",
-        "data_elim_Duplex.PCM.A_W",
+        "data_elim_Duplex.PCM.A_W", "data_elim_Duplex.PCM.B_W",
         "data_elim_Steel.Channel.Protocol.Mkpartial_trace_of",
         "data_elim_Steel.Channel.Protocol.Msg",
         "data_typing_intro_Steel.Channel.Protocol.Mkpartial_trace_of@tok",
@@ -2249,7 +2253,6 @@
         "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
         "equation_with_fuel_Duplex.PCM.trace_length.fuel_instrumented",
         "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Duplex.PCM.t",
         "fuel_guarded_inversion_Steel.Channel.Protocol.partial_trace_of",
         "fuel_guarded_inversion_Steel.Channel.Protocol.trace",
@@ -2330,7 +2333,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "6b50ec37b792a2e36c7cf02e49cb9e57"
+      "b4fdb233a96defdbaff1a1e35a06ca94"
     ],
     [
       "Duplex.PCM.f_a_r",
@@ -2339,7 +2342,7 @@
       1,
       [ "@query" ],
       0,
-      "b5e367fdc37f994ef0f1230966c8b9d7"
+      "1c92c1ac28ce998ff252c82036446f13"
     ],
     [
       "Duplex.PCM.f_a_r",
@@ -2417,7 +2420,7 @@
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to"
       ],
       0,
-      "df127e948618ee5fa10bc191383b43b7"
+      "31a35a7b07bcd8b5bb0d0836bce68cf1"
     ],
     [
       "Duplex.PCM.f_b_r",
@@ -2426,7 +2429,7 @@
       1,
       [ "@query" ],
       0,
-      "5888d466d0ba1926ac912ee313b1e5d4"
+      "b201107b0f09b9fa9098b99477fe80bc"
     ],
     [
       "Duplex.PCM.f_b_r",
@@ -2487,7 +2490,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op"
       ],
       0,
-      "8541dcbe0d91942dfac3d63cef8eaede"
+      "f6155d46fdb2a0ae4f117c3f158a00be"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2501,7 +2504,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "577b76f494f9ec3a4014c16a710fca48"
+      "0d2293740bdfde7ec9d7dbe26853045c"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2515,7 +2518,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "6879bde7a7abaa9a75dfb199c0c86c62"
+      "cc382335c159afdc215adffda6e4d9b3"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2529,7 +2532,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "674df97661147ae1f939e352ee652bec"
+      "594172494b0c7edd97a1278fc2f19c1e"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2544,7 +2547,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "d4c5390f08db2873d5beed2d6ed748e7"
+      "31331abfad052ed02823baa4010e2e0c"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2560,7 +2563,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "c142f68a1131ad3e00d1117e158a32e3"
+      "b9b33a305ebc139ba51bb892a23275b7"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2569,7 +2572,7 @@
       1,
       [ "@query" ],
       0,
-      "f7e055ae2e1fc3c0a7e3432efdf07576"
+      "0d9bb7034aa8250335e015cf8f2a99a5"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2583,7 +2586,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "37137d637305c7d1c3791501480426f0"
+      "b614b17d2fe5cdb4d4f093d5db50501e"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2597,7 +2600,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "eabdf5090b25bf152ad16c2e53340679"
+      "34365318ef056c996c664a75bfa809ec"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2606,7 +2609,7 @@
       1,
       [ "@query" ],
       0,
-      "e1e8d320d32d58967196e5cdea65e399"
+      "d45f8840b992525dc8e0d1b2df3f1339"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2615,7 +2618,7 @@
       1,
       [ "@query" ],
       0,
-      "07a2542a1a09fe4fe5b8d61384fd587b"
+      "c6a54b5ec4a0c047344f73864f0013ac"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2629,7 +2632,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "43884aef7629f7e67582186937431244"
+      "4e036e96cd77e011f1b772bc680471c0"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2643,7 +2646,7 @@
         "refinement_interpretation_Tm_refine_babdd15f675b001e0b016a51ad213620"
       ],
       0,
-      "2a43541d40145620941b7869820acf4e"
+      "7db69f08469d6c1a1de2e04c7448bc85"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2652,7 +2655,7 @@
       1,
       [ "@query" ],
       0,
-      "b33924814e36d78da5b0de0885fce7c9"
+      "c17caa2b093f17bbf2b7e8e70c9e1f83"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2661,7 +2664,7 @@
       1,
       [ "@query" ],
       0,
-      "d624f78a30718ad134ef702d8e28671c"
+      "425b748620f37d0b9f5dc0799f67ac52"
     ],
     [
       "Duplex.PCM.get_a_r",
@@ -2689,7 +2692,7 @@
         "true_interp", "typing_Duplex.PCM.f_a_r", "unit_typing"
       ],
       0,
-      "79a2d45d408c33551abeefc7f1b5ddf9"
+      "249b316a30c20ac31fb8fca5b75014f7"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2703,7 +2706,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "ddba6ecf9d31e72c46cdb42aa14daeb4"
+      "985f712b3ec340c07e03e65265d7e3cf"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2717,7 +2720,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "fd3f59bd4fefb4554921909ed72e7cd6"
+      "c3b8b739ed21f7466ae60fa2911b6b54"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2731,7 +2734,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "2009f35de8c1700fa29ab54c6397454b"
+      "f205b2d799d1f580bd69f90b219e38a7"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2746,7 +2749,7 @@
         "refinement_interpretation_Tm_refine_752077b9727b249ccb4157c1e069fd5f"
       ],
       0,
-      "4d8db9fbc04d8c166f439776de27acd5"
+      "31e8e27e37534a3b1575f02eb00a86c4"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2762,7 +2765,7 @@
         "refinement_interpretation_Tm_refine_752077b9727b249ccb4157c1e069fd5f"
       ],
       0,
-      "5afdd0dea2b2502ecb87b49b80ec53cf"
+      "33f81c67cfc6ce70fd9a1bb2cf48c1cd"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2771,7 +2774,7 @@
       1,
       [ "@query" ],
       0,
-      "adc017510ec7f6951118a0a021314250"
+      "90dd2e716954c74ebdcf756475bebe8b"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2785,7 +2788,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "a4f0efd0253bc12b76cd0bd0d6fe8e58"
+      "9128699fd3fefb56bf507ad744dc71ae"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2799,7 +2802,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "c122c49da0d0cd4bde0e2d6c6fc5351c"
+      "9ab15f8af5d33570b1836b23636c1902"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2808,7 +2811,7 @@
       1,
       [ "@query" ],
       0,
-      "fe7af360d24a0ddbeb2eecd23448b306"
+      "359f00d20ebfb9e7d2f9f1cca3b95544"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2817,7 +2820,7 @@
       1,
       [ "@query" ],
       0,
-      "e6bcc1e146ae1d6c00dcfab0eedf649c"
+      "7a294f2671f2ab26231025c55ba4ee58"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2831,7 +2834,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "3f04184ea17c6d3acccf5a223093f9c0"
+      "7958f060f6ab08bdc9cd53be5aaac155"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2845,7 +2848,7 @@
         "refinement_interpretation_Tm_refine_5cd640ef1d352b5e2385ff34a11b2e9e"
       ],
       0,
-      "1a76f85eced5c86ebf542bdfbf711d89"
+      "9c45d81320e298d04901da885094e05c"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2854,7 +2857,7 @@
       1,
       [ "@query" ],
       0,
-      "1441d9a3c052ffeaed227a7e8726fd42"
+      "8c14e0e9ff1dacd957dafd0d7960178a"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2863,7 +2866,7 @@
       1,
       [ "@query" ],
       0,
-      "bd938365bf03354a29f34688244bea92"
+      "97df153514174194d98f670c0c3df952"
     ],
     [
       "Duplex.PCM.get_b_r",
@@ -2891,7 +2894,7 @@
         "true_interp", "typing_Duplex.PCM.f_b_r", "unit_typing"
       ],
       0,
-      "90cafcb3a5dab2c10a5738e4d29c2d21"
+      "3b8b05c07dac567b36797758bbf6aa2b"
     ],
     [
       "Duplex.PCM.upd_gen_action",
@@ -2902,12 +2905,12 @@
         "@MaxIFuel_assumption", "@query",
         "equation_Steel.Effect.Common.true_p", "kinding_Duplex.PCM.t@tok",
         "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_5a38f3cae3a1b6bc50cec949cd9d45ff",
-        "refinement_interpretation_Tm_refine_a0af8cb4450ab240c13daa9d50ed82f8",
+        "refinement_interpretation_Tm_refine_6379dcf854b802dc1b65296e27d280b7",
+        "refinement_interpretation_Tm_refine_b6ed689720bfd3e85d85e424c758a730",
         "true_interp"
       ],
       0,
-      "86d704b365559dca3603594ab32ffcee"
+      "06667c6a1661143848cb7e257479cfad"
     ],
     [
       "Duplex.PCM.write_a_f_aux",
@@ -2916,25 +2919,25 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "a71c4b53667ec21faafa0e54693aebca"
+      "46cfbf89dbe78724e1bbd36c264766d2"
     ],
     [
       "Duplex.PCM.write_a_f_aux",
       2,
       1,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
+        "@fuel_correspondence_Duplex.PCM.trace_length.fuel_instrumented",
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "@fuel_correspondence_Steel.Channel.Protocol.ok.fuel_instrumented",
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
+        "Duplex.PCM_interpretation_Tm_arrow_924a8be9206b94dbbaf9bfa65a9d5a68",
         "Duplex.PCM_interpretation_Tm_arrow_9d49407b244d671c70bd5c0c1a4ea6a6",
         "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
-        "Steel.Channel.Protocol_pretyping_9b8928235f58509ef2e6666b80acc076",
-        "assumption_Steel.Channel.Protocol.tag__uu___haseq", "b2t_def",
-        "bool_inversion", "constructor_distinct_Duplex.PCM.A",
+        "b2t_def", "bool_inversion", "constructor_distinct_Duplex.PCM.A",
         "constructor_distinct_Duplex.PCM.A_Fin",
         "constructor_distinct_Duplex.PCM.A_R",
         "constructor_distinct_Duplex.PCM.A_W",
@@ -2943,10 +2946,10 @@
         "constructor_distinct_Duplex.PCM.Nil",
         "constructor_distinct_Duplex.PCM.V",
         "constructor_distinct_Steel.Channel.Protocol.Send",
-        "data_elim_Duplex.PCM.B_R", "data_elim_FStar.PCM.Mkpcm_",
         "data_elim_Steel.Channel.Protocol.Msg",
+        "data_typing_intro_Duplex.PCM.A_W@tok",
         "data_typing_intro_Steel.Channel.Protocol.Mkpartial_trace_of@tok",
-        "disc_equation_Duplex.PCM.A", "disc_equation_Duplex.PCM.A_W",
+        "disc_equation_Duplex.PCM.A", "disc_equation_Duplex.PCM.B_R",
         "disc_equation_Duplex.PCM.Nil", "disc_equation_Duplex.PCM.V",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Recv",
@@ -2962,11 +2965,12 @@
         "equation_Duplex.PCM.p_", "equation_Duplex.PCM.partial_trace_of",
         "equation_Duplex.PCM.pcm", "equation_Duplex.PCM.refine",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_FStar.Pervasives.pattern",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "equation_FStar.Pervasives.pattern",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive", "equation_Prims.l_and",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Prims.l_and",
         "equation_Prims.squash", "equation_Steel.Channel.Protocol.more",
         "equation_Steel.Channel.Protocol.more_msgs",
         "equation_Steel.Channel.Protocol.msg_t",
@@ -2978,6 +2982,7 @@
         "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Duplex.PCM.t",
+        "fuel_guarded_inversion_Steel.Channel.Protocol.partial_trace_of",
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
         "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
         "function_token_typing_Duplex.PCM.composable",
@@ -2988,12 +2993,12 @@
         "function_token_typing_FStar.Pervasives.pattern",
         "interpretation_Tm_abs_cfac7fcf0d742c8a4e20e4a19e003c2a",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "kinding_Duplex.PCM.t@tok", "l_and-interp",
+        "kinding_Duplex.PCM.t@tok", "l_and-interp", "l_or-interp",
         "l_quant_interp_14449f8f2b5a62d0f0b255f05abbc945",
         "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
-        "lemma_Duplex.PCM.closure_inversion",
         "lemma_FStar.ReflexiveTransitiveClosure.closure_step",
-        "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
@@ -3003,6 +3008,7 @@
         "proj_equation_Steel.Channel.Protocol.Msg__0",
         "proj_equation_Steel.Channel.Protocol.Msg_k",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Duplex.PCM.A_Fin__1",
         "projection_inverse_Duplex.PCM.A_Fin_p",
         "projection_inverse_Duplex.PCM.A_Fin_q",
@@ -3027,17 +3033,20 @@
         "projection_inverse_FStar.PCM.Mkpcm_refine",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_p",
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to",
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_tr",
         "refinement_interpretation_Tm_refine_413aaf507f4f8706a6a6778a342fab00",
         "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
         "refinement_interpretation_Tm_refine_752077b9727b249ccb4157c1e069fd5f",
+        "refinement_interpretation_Tm_refine_8ca5160b58c0eac050ff74ea381d91d6",
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589",
-        "refinement_interpretation_Tm_refine_aaa6e70678738796efcf074f3ec1bd44",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
+        "refinement_interpretation_Tm_refine_caa7e2f037e0717c8f04748094282ce0",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_ed4294b257814002e345d8739e5fb5f5",
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
         "token_correspondence_Duplex.PCM.compose",
         "token_correspondence_Duplex.PCM.extended_to",
@@ -3048,7 +3057,7 @@
         "token_correspondence_FStar.ReflexiveTransitiveClosure.closure",
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "true_interp", "typing_Duplex.PCM.next", "typing_Duplex.PCM.p_",
+        "true_interp", "typing_Duplex.PCM.composable",
         "typing_Duplex.PCM.partial_trace_of", "typing_Duplex.PCM.pcm",
         "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
@@ -3056,7 +3065,7 @@
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "7fcdeda8be3786aa078267b90860a834"
+      "1fd7c0f9fb3af991fc1062b3ae0bdb7b"
     ],
     [
       "Duplex.PCM.write_b_f_aux",
@@ -3065,27 +3074,23 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "ed92cc4b0e52153a044a36dd26505337"
+      "01fee12438260df9eba2e1c682342790"
     ],
     [
       "Duplex.PCM.write_b_f_aux",
       2,
       1,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.extend.fuel_instrumented",
+        "@fuel_correspondence_Duplex.PCM.trace_length.fuel_instrumented",
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.ok.fuel_instrumented",
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
         "Duplex.PCM_interpretation_Tm_arrow_9d49407b244d671c70bd5c0c1a4ea6a6",
         "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Steel.Channel.Protocol.tag__uu___haseq", "b2t_def",
-        "bool_inversion", "bool_typing",
-        "constructor_distinct_Duplex.PCM.A_Fin",
+        "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Duplex.PCM.A_R",
         "constructor_distinct_Duplex.PCM.A_W",
         "constructor_distinct_Duplex.PCM.B",
@@ -3094,16 +3099,13 @@
         "constructor_distinct_Duplex.PCM.B_W",
         "constructor_distinct_Duplex.PCM.Nil",
         "constructor_distinct_Duplex.PCM.V",
-        "constructor_distinct_Duplex.PCM.t",
-        "constructor_distinct_Prims.unit",
-        "constructor_distinct_Steel.Channel.Protocol.Message",
         "constructor_distinct_Steel.Channel.Protocol.Recv",
-        "constructor_distinct_Steel.Channel.Protocol.Waiting",
-        "data_elim_FStar.PCM.Mkpcm_",
-        "data_elim_Steel.Channel.Protocol.Message",
-        "data_elim_Steel.Channel.Protocol.Msg", "disc_equation_Duplex.PCM.A",
-        "disc_equation_Duplex.PCM.B_W", "disc_equation_Duplex.PCM.Nil",
-        "disc_equation_Duplex.PCM.V",
+        "constructor_distinct_Tm_unit",
+        "data_elim_Steel.Channel.Protocol.Msg",
+        "data_typing_intro_Duplex.PCM.B_W@tok",
+        "data_typing_intro_Steel.Channel.Protocol.Mkpartial_trace_of@tok",
+        "disc_equation_Duplex.PCM.A", "disc_equation_Duplex.PCM.A_R",
+        "disc_equation_Duplex.PCM.Nil", "disc_equation_Duplex.PCM.V",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Recv",
         "disc_equation_Steel.Channel.Protocol.Return",
@@ -3118,12 +3120,13 @@
         "equation_Duplex.PCM.p_", "equation_Duplex.PCM.partial_trace_of",
         "equation_Duplex.PCM.pcm", "equation_Duplex.PCM.refine",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
-        "equation_FStar.PCM.symrel", "equation_FStar.Pervasives.pattern",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "equation_FStar.Pervasives.pattern",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
-        "equation_Steel.Channel.Protocol.more",
+        "equation_FStar.Preorder.transitive", "equation_Prims.l_and",
+        "equation_Prims.squash", "equation_Steel.Channel.Protocol.more",
         "equation_Steel.Channel.Protocol.more_msgs",
         "equation_Steel.Channel.Protocol.msg_t",
         "equation_Steel.Channel.Protocol.next_msg_t",
@@ -3131,27 +3134,25 @@
         "equation_Steel.Channel.Protocol.step",
         "equation_Steel.Channel.Protocol.tag_of",
         "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
-        "equation_with_fuel_Steel.Channel.Protocol.extend.fuel_instrumented",
+        "equation_with_fuel_Duplex.PCM.trace_length.fuel_instrumented",
         "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Duplex.PCM.t",
         "fuel_guarded_inversion_Steel.Channel.Protocol.partial_trace_of",
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
         "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
-        "fuel_guarded_inversion_Steel.Channel.Protocol.trace",
         "function_token_typing_Duplex.PCM.composable",
         "function_token_typing_Duplex.PCM.compose",
         "function_token_typing_Duplex.PCM.extended_to",
         "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "function_token_typing_FStar.Pervasives.pattern",
-        "function_token_typing_FStar.ReflexiveTransitiveClosure.closure",
         "interpretation_Tm_abs_cfac7fcf0d742c8a4e20e4a19e003c2a",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "kinding_Duplex.PCM.t@tok", "l_and-interp",
+        "kinding_Duplex.PCM.t@tok", "l_and-interp", "l_or-interp",
         "l_quant_interp_14449f8f2b5a62d0f0b255f05abbc945",
         "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
         "lemma_FStar.ReflexiveTransitiveClosure.closure_step",
-        "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
@@ -3161,9 +3162,7 @@
         "proj_equation_Steel.Channel.Protocol.Msg__0",
         "proj_equation_Steel.Channel.Protocol.Msg_k",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Duplex.PCM.A_Fin__1",
-        "projection_inverse_Duplex.PCM.A_Fin_p",
-        "projection_inverse_Duplex.PCM.A_Fin_q",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Duplex.PCM.A_R__1",
         "projection_inverse_Duplex.PCM.A_R_p",
         "projection_inverse_Duplex.PCM.A_R_q",
@@ -3188,19 +3187,19 @@
         "projection_inverse_FStar.PCM.Mkpcm_refine",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_p",
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to",
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_tr",
+        "refinement_interpretation_Tm_refine_0598e43b709d1428091466e0bf2d219e",
         "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
         "refinement_interpretation_Tm_refine_7fe80ef3bf4b8018d454f90cc6c5fa89",
+        "refinement_interpretation_Tm_refine_8d4e2511f42db7831a9caad9fcb7f0a7",
         "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589",
-        "refinement_interpretation_Tm_refine_a32d6af70eb825a20c139698f69438df",
+        "refinement_interpretation_Tm_refine_9567ae46f067361619539503631bad18",
+        "refinement_interpretation_Tm_refine_b9d010cbf601c92baa7204ea0522d356",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
-        "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
-        "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
-        "refinement_interpretation_Tm_refine_e7d8638408415382ff5167443d7735a2",
-        "refinement_interpretation_Tm_refine_f47040c8dd7d25f791826f6fc79edfad",
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
         "token_correspondence_Duplex.PCM.compose",
         "token_correspondence_Duplex.PCM.extended_to",
@@ -3208,19 +3207,17 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
+        "token_correspondence_FStar.ReflexiveTransitiveClosure.closure",
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "true_interp", "typing_Duplex.PCM.next", "typing_Duplex.PCM.p_",
+        "typing_Duplex.PCM.composable", "typing_Duplex.PCM.next",
         "typing_Duplex.PCM.partial_trace_of", "typing_Duplex.PCM.pcm",
-        "typing_FStar.PCM.__proj__Mkpcm__item__p", "typing_FStar.PCM.op",
-        "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__tr",
-        "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
-        "typing_Steel.Channel.Protocol.extend",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.A@tok",
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "ebd04ff11c9ad3c10b8e168a56ea6e24"
+      "ae9bea5cfe480abd97ed63aaabe9bf7e"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_a",
@@ -3229,7 +3226,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "68def1b37259ceeaa4ff878aa448f308"
+      "b8eb3ce7b6de2cc85cc15801844fbbac"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_a",
@@ -3298,7 +3295,7 @@
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.A@tok"
       ],
       0,
-      "348ee9c14ff357856b5b4a1f4fb7189a"
+      "259784eb4cc1daadfc6ce2618212a9e6"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_b",
@@ -3307,7 +3304,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "a3479bbe113c1359b61b52b520bb1d79"
+      "c76eed2d94b3e6752cdd437fae988721"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_b",
@@ -3376,7 +3373,7 @@
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "f6e4cd1b1ed8b849abe0945ea06988e8"
+      "b3ca0965d6986b6fc9072f92cdec8ddd"
     ],
     [
       "Duplex.PCM.write_a_f_lemma",
@@ -3385,120 +3382,69 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "9b802261678bf7b5b58b63fa50fa3040"
+      "d542efb7fd2c2021f9d65b7535093ddb"
     ],
     [
       "Duplex.PCM.write_a_f_lemma",
       2,
       1,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.extend.fuel_instrumented",
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
-        "Duplex.PCM_interpretation_Tm_arrow_8b7d6021a08073a7063dcbab6d720618",
+        "@query",
+        "Duplex.PCM_interpretation_Tm_arrow_8e8aa47c8c2f9c3a880c6c753fcee489",
         "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
+        "FStar.PCM_interpretation_Tm_arrow_6ee640369479b30d95d17c96f1df8c0f",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "constructor_distinct_Duplex.PCM.A_Fin",
-        "constructor_distinct_Duplex.PCM.A_R",
-        "constructor_distinct_Duplex.PCM.A_W",
-        "constructor_distinct_Duplex.PCM.B_Fin",
-        "constructor_distinct_Duplex.PCM.B_R",
         "constructor_distinct_Duplex.PCM.Nil",
         "constructor_distinct_Duplex.PCM.V",
         "constructor_distinct_Duplex.PCM.t",
         "constructor_distinct_Prims.unit",
         "constructor_distinct_Steel.Channel.Protocol.Send",
-        "data_elim_Duplex.PCM.A_Fin", "data_elim_Duplex.PCM.A_R",
-        "data_elim_Duplex.PCM.A_W", "data_elim_Duplex.PCM.V",
-        "data_elim_Steel.Channel.Protocol.Msg",
-        "disc_equation_Duplex.PCM.A_W", "disc_equation_Duplex.PCM.B_R",
-        "disc_equation_Duplex.PCM.Nil", "disc_equation_Duplex.PCM.V",
-        "disc_equation_Steel.Channel.Protocol.Msg",
-        "disc_equation_Steel.Channel.Protocol.Recv",
-        "disc_equation_Steel.Channel.Protocol.Return",
         "disc_equation_Steel.Channel.Protocol.Send",
         "equality_tok_Steel.Channel.Protocol.Send@tok",
         "equation_Duplex.PCM.composable", "equation_Duplex.PCM.compose",
         "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
-        "equation_Duplex.PCM.is_fin", "equation_Duplex.PCM.is_recv",
         "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.p_",
-        "equation_Duplex.PCM.partial_trace_of", "equation_Duplex.PCM.pcm",
-        "equation_Duplex.PCM.write_a_f_aux", "equation_FStar.PCM.compatible",
-        "equation_FStar.PCM.composable", "equation_FStar.PCM.op",
+        "equation_Duplex.PCM.pcm", "equation_Duplex.PCM.write_a_f_aux",
+        "equation_FStar.PCM.frame_preserving_upd",
         "equation_FStar.PCM.symrel", "equation_FStar.Pervasives.pattern",
         "equation_Prims.squash", "equation_Steel.Channel.Protocol.more",
         "equation_Steel.Channel.Protocol.more_msgs",
-        "equation_Steel.Channel.Protocol.msg_t",
-        "equation_Steel.Channel.Protocol.next_msg_t",
-        "equation_Steel.Channel.Protocol.protocol",
-        "equation_Steel.Channel.Protocol.step",
         "equation_Steel.Channel.Protocol.tag_of",
         "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
         "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Duplex.PCM.t",
-        "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
-        "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
         "function_token_typing_Duplex.PCM.composable",
+        "function_token_typing_Duplex.PCM.write_a_f_aux",
         "function_token_typing_FStar.Pervasives.pattern",
-        "interpretation_Tm_abs_a4239b67d81c386245c9aa811db821d1",
+        "interpretation_Tm_abs_1fae209931d181596c2572b039f4faa5",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "l_or-interp", "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
+        "l_and-interp", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
-        "proj_equation_Steel.Channel.Protocol.Mkpartial_trace_of_to",
-        "proj_equation_Steel.Channel.Protocol.Msg__0",
-        "proj_equation_Steel.Channel.Protocol.Msg_k",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Duplex.PCM.A_Fin__1",
-        "projection_inverse_Duplex.PCM.A_Fin_p",
-        "projection_inverse_Duplex.PCM.A_Fin_q",
-        "projection_inverse_Duplex.PCM.A_R__1",
-        "projection_inverse_Duplex.PCM.A_R_p",
-        "projection_inverse_Duplex.PCM.A_R_q",
-        "projection_inverse_Duplex.PCM.A_W__1",
-        "projection_inverse_Duplex.PCM.A_W_p",
-        "projection_inverse_Duplex.PCM.A_W_q",
-        "projection_inverse_Duplex.PCM.B_R__1",
-        "projection_inverse_Duplex.PCM.B_R_p",
-        "projection_inverse_Duplex.PCM.B_R_q",
         "projection_inverse_Duplex.PCM.Nil_p",
-        "projection_inverse_Duplex.PCM.V__0",
-        "projection_inverse_Duplex.PCM.V_p",
         "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to",
-        "refinement_interpretation_Tm_refine_0598e43b709d1428091466e0bf2d219e",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_413aaf507f4f8706a6a6778a342fab00",
-        "refinement_interpretation_Tm_refine_461cfd8a46819db7448c88597630bebf",
-        "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
-        "refinement_interpretation_Tm_refine_752077b9727b249ccb4157c1e069fd5f",
-        "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589",
-        "refinement_interpretation_Tm_refine_9cc34f786de68ebd49f48362bd925b73",
-        "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
+        "refinement_interpretation_Tm_refine_537242781a2f65f3b0c3817810234a02",
+        "refinement_interpretation_Tm_refine_545f63d8f9f41ce522318195a87bec4f",
+        "refinement_interpretation_Tm_refine_7eebd600d891f49b54ed679633298cb6",
+        "refinement_interpretation_Tm_refine_7fd7eadaa6330ace6901832174b56165",
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
-        "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
-        "token_correspondence_Duplex.PCM.composable",
-        "token_correspondence_Duplex.PCM.compose",
         "token_correspondence_Duplex.PCM.write_a_f_aux",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
-        "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
-        "typing_Steel.Channel.Protocol.more", "unit_inversion", "unit_typing"
+        "typing_Duplex.PCM.composable", "typing_Steel.Channel.Protocol.more",
+        "unit_typing"
       ],
       0,
-      "bc81566b682387742af5e54d9ce8fdaa"
+      "b8066e5839cb1aa3f26e02f71815f913"
     ],
     [
       "Duplex.PCM.write_b_f_lemma",
@@ -3507,10 +3453,157 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "caff6bb47ec3c109e3fe8dd6a133c621"
+      "1dad58d1739055989c07654e7d4aa743"
     ],
     [
       "Duplex.PCM.write_b_f_lemma",
+      2,
+      1,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
+        "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
+        "@query",
+        "Duplex.PCM_interpretation_Tm_arrow_5969b7721da526cb76efaf1fec913941",
+        "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
+        "FStar.PCM_interpretation_Tm_arrow_6ee640369479b30d95d17c96f1df8c0f",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "constructor_distinct_Duplex.PCM.Nil",
+        "constructor_distinct_Duplex.PCM.V",
+        "constructor_distinct_Duplex.PCM.t",
+        "constructor_distinct_Prims.unit",
+        "constructor_distinct_Steel.Channel.Protocol.Recv",
+        "disc_equation_Steel.Channel.Protocol.Recv",
+        "equality_tok_Steel.Channel.Protocol.Recv@tok",
+        "equation_Duplex.PCM.composable", "equation_Duplex.PCM.compose",
+        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
+        "equation_Duplex.PCM.is_recv", "equation_Duplex.PCM.p_",
+        "equation_Duplex.PCM.pcm", "equation_Duplex.PCM.write_b_f_aux",
+        "equation_FStar.PCM.frame_preserving_upd",
+        "equation_FStar.PCM.symrel", "equation_FStar.Pervasives.pattern",
+        "equation_Prims.squash", "equation_Steel.Channel.Protocol.more",
+        "equation_Steel.Channel.Protocol.more_msgs",
+        "equation_Steel.Channel.Protocol.tag_of",
+        "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
+        "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Duplex.PCM.t",
+        "function_token_typing_Duplex.PCM.composable",
+        "function_token_typing_Duplex.PCM.write_b_f_aux",
+        "function_token_typing_FStar.Pervasives.pattern",
+        "interpretation_Tm_abs_a4ac0704af1cc356efd79fbed4e5417b",
+        "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
+        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.PCM.Mkpcm__composable",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Duplex.PCM.Nil_p",
+        "projection_inverse_FStar.PCM.Mkpcm__composable",
+        "projection_inverse_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_537242781a2f65f3b0c3817810234a02",
+        "refinement_interpretation_Tm_refine_7444f688f917fc04efea7b60cb9d9cb0",
+        "refinement_interpretation_Tm_refine_7eebd600d891f49b54ed679633298cb6",
+        "refinement_interpretation_Tm_refine_7fd7eadaa6330ace6901832174b56165",
+        "refinement_interpretation_Tm_refine_7fe80ef3bf4b8018d454f90cc6c5fa89",
+        "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_Duplex.PCM.write_b_f_aux",
+        "typing_Duplex.PCM.composable", "typing_Steel.Channel.Protocol.more",
+        "unit_typing"
+      ],
+      0,
+      "768b6c797c413d528c53f287766c4cd3"
+    ],
+    [
+      "Duplex.PCM.write_a_f",
+      1,
+      1,
+      1,
+      [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
+      0,
+      "d84702e3466195a85617d5f1a5e134fc"
+    ],
+    [
+      "Duplex.PCM.write_a_f",
+      2,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
+        "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
+        "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
+        "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "constructor_distinct_Duplex.PCM.A_W",
+        "constructor_distinct_Duplex.PCM.V",
+        "constructor_distinct_Duplex.PCM.t",
+        "constructor_distinct_Prims.unit",
+        "constructor_distinct_Steel.Channel.Protocol.Send",
+        "data_elim_Steel.Channel.Protocol.Msg",
+        "disc_equation_Steel.Channel.Protocol.Msg",
+        "disc_equation_Steel.Channel.Protocol.Recv",
+        "disc_equation_Steel.Channel.Protocol.Return",
+        "disc_equation_Steel.Channel.Protocol.Send",
+        "equality_tok_Steel.Channel.Protocol.Send@tok",
+        "equation_Duplex.PCM.composable", "equation_Duplex.PCM.compose",
+        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
+        "equation_Duplex.PCM.is_fin", "equation_Duplex.PCM.is_recv",
+        "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.write_a_f_aux",
+        "equation_FStar.Pervasives.pattern",
+        "equation_Steel.Channel.Protocol.more",
+        "equation_Steel.Channel.Protocol.more_msgs",
+        "equation_Steel.Channel.Protocol.msg_t",
+        "equation_Steel.Channel.Protocol.next_msg_t",
+        "equation_Steel.Channel.Protocol.protocol",
+        "equation_Steel.Channel.Protocol.step",
+        "equation_Steel.Channel.Protocol.tag_of",
+        "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
+        "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
+        "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
+        "function_token_typing_Duplex.PCM.composable",
+        "function_token_typing_FStar.Pervasives.pattern",
+        "interpretation_Tm_abs_1fae209931d181596c2572b039f4faa5",
+        "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
+        "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_Steel.Channel.Protocol.Msg__0",
+        "proj_equation_Steel.Channel.Protocol.Msg_k",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_413aaf507f4f8706a6a6778a342fab00",
+        "refinement_interpretation_Tm_refine_537242781a2f65f3b0c3817810234a02",
+        "refinement_interpretation_Tm_refine_545f63d8f9f41ce522318195a87bec4f",
+        "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
+        "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
+        "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
+        "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
+        "token_correspondence_Duplex.PCM.composable",
+        "token_correspondence_Duplex.PCM.write_a_f_aux",
+        "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
+        "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
+        "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
+        "typing_Steel.Channel.Protocol.more", "unit_typing"
+      ],
+      0,
+      "f5c9c7c3cf1a6078d1a54480a892cddd"
+    ],
+    [
+      "Duplex.PCM.write_b_f",
+      1,
+      1,
+      1,
+      [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
+      0,
+      "83f7e5fb235e4b2e74300ff9b15ca9e4"
+    ],
+    [
+      "Duplex.PCM.write_b_f",
       2,
       1,
       1,
@@ -3521,23 +3614,12 @@
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
         "Duplex.PCM_interpretation_Tm_arrow_8b7d6021a08073a7063dcbab6d720618",
         "Duplex.PCM_pretyping_5561cbb70f89b60cb9d11fa7213a9c7f",
-        "FStar.PCM_interpretation_Tm_arrow_965b6cf051ccb0238013391df1e36ebe",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "bool_typing", "constructor_distinct_Duplex.PCM.A_R",
-        "constructor_distinct_Duplex.PCM.B_Fin",
-        "constructor_distinct_Duplex.PCM.B_R",
-        "constructor_distinct_Duplex.PCM.B_W",
-        "constructor_distinct_Duplex.PCM.Nil",
-        "constructor_distinct_Duplex.PCM.V",
+        "bool_typing", "constructor_distinct_Duplex.PCM.V",
         "constructor_distinct_Duplex.PCM.t",
         "constructor_distinct_Prims.unit",
         "constructor_distinct_Steel.Channel.Protocol.Recv",
-        "data_elim_Duplex.PCM.B_Fin", "data_elim_Duplex.PCM.B_R",
-        "data_elim_Duplex.PCM.B_W", "data_elim_Duplex.PCM.V",
-        "data_elim_FStar.PCM.Mkpcm_", "data_elim_Steel.Channel.Protocol.Msg",
-        "data_typing_intro_Duplex.PCM.B_W@tok",
-        "disc_equation_Duplex.PCM.A_R", "disc_equation_Duplex.PCM.B_W",
-        "disc_equation_Duplex.PCM.Nil", "disc_equation_Duplex.PCM.V",
+        "data_elim_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Msg",
         "disc_equation_Steel.Channel.Protocol.Recv",
         "disc_equation_Steel.Channel.Protocol.Return",
@@ -3546,12 +3628,8 @@
         "equation_Duplex.PCM.composable", "equation_Duplex.PCM.compose",
         "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
         "equation_Duplex.PCM.is_fin", "equation_Duplex.PCM.is_recv",
-        "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.p_",
-        "equation_Duplex.PCM.partial_trace_of", "equation_Duplex.PCM.pcm",
-        "equation_Duplex.PCM.write_b_f_aux", "equation_FStar.PCM.compatible",
-        "equation_FStar.PCM.composable", "equation_FStar.PCM.op",
+        "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.write_b_f_aux",
         "equation_FStar.PCM.symrel", "equation_FStar.Pervasives.pattern",
-        "equation_Prims.nat", "equation_Prims.squash",
         "equation_Steel.Channel.Protocol.more",
         "equation_Steel.Channel.Protocol.more_msgs",
         "equation_Steel.Channel.Protocol.msg_t",
@@ -3565,211 +3643,33 @@
         "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
         "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
         "function_token_typing_Duplex.PCM.composable",
-        "function_token_typing_FStar.Pervasives.pattern", "int_inversion",
-        "interpretation_Tm_abs_acd65243a457428c7419e236cf83498d",
+        "function_token_typing_FStar.Pervasives.pattern",
+        "interpretation_Tm_abs_a4ac0704af1cc356efd79fbed4e5417b",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "l_or-interp", "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
-        "proj_equation_Steel.Channel.Protocol.Mkpartial_trace_of_to",
+        "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_Steel.Channel.Protocol.Msg__0",
         "proj_equation_Steel.Channel.Protocol.Msg_k",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Duplex.PCM.A_R__1",
-        "projection_inverse_Duplex.PCM.A_R_p",
-        "projection_inverse_Duplex.PCM.A_R_q",
-        "projection_inverse_Duplex.PCM.B_Fin__1",
-        "projection_inverse_Duplex.PCM.B_Fin_p",
-        "projection_inverse_Duplex.PCM.B_Fin_q",
-        "projection_inverse_Duplex.PCM.B_R__1",
-        "projection_inverse_Duplex.PCM.B_R_p",
-        "projection_inverse_Duplex.PCM.B_R_q",
-        "projection_inverse_Duplex.PCM.B_W__1",
-        "projection_inverse_Duplex.PCM.B_W_p",
-        "projection_inverse_Duplex.PCM.B_W_q",
-        "projection_inverse_Duplex.PCM.Nil_p",
-        "projection_inverse_Duplex.PCM.V__0",
-        "projection_inverse_Duplex.PCM.V_p",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to",
-        "refinement_interpretation_Tm_refine_0598e43b709d1428091466e0bf2d219e",
-        "refinement_interpretation_Tm_refine_08698b4b6e166624b5bf789ac071b4cf",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_537242781a2f65f3b0c3817810234a02",
         "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
-        "refinement_interpretation_Tm_refine_752077b9727b249ccb4157c1e069fd5f",
+        "refinement_interpretation_Tm_refine_7444f688f917fc04efea7b60cb9d9cb0",
         "refinement_interpretation_Tm_refine_7fe80ef3bf4b8018d454f90cc6c5fa89",
-        "refinement_interpretation_Tm_refine_8772385fb10b2c32472701702e3006cb",
-        "refinement_interpretation_Tm_refine_928ade853e9ea2d2a30a30f546567589",
-        "refinement_interpretation_Tm_refine_9cc34f786de68ebd49f48362bd925b73",
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
         "token_correspondence_Duplex.PCM.composable",
-        "token_correspondence_Duplex.PCM.compose",
         "token_correspondence_Duplex.PCM.write_b_f_aux",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
-        "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "typing_Duplex.PCM.p_", "typing_Duplex.PCM.trace_length",
-        "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
-        "typing_Steel.Channel.Protocol.more", "unit_inversion", "unit_typing"
-      ],
-      0,
-      "2991cf6d29afe89fa291bc2c809eba19"
-    ],
-    [
-      "Duplex.PCM.write_a_f",
-      1,
-      1,
-      1,
-      [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
-      0,
-      "58005880edb77965fe08ab911d7235bf"
-    ],
-    [
-      "Duplex.PCM.write_a_f",
-      2,
-      1,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
-        "bool_inversion", "constructor_distinct_Steel.Channel.Protocol.Send",
-        "data_elim_Steel.Channel.Protocol.Msg",
-        "disc_equation_Steel.Channel.Protocol.Msg",
-        "disc_equation_Steel.Channel.Protocol.Recv",
-        "disc_equation_Steel.Channel.Protocol.Return",
-        "disc_equation_Steel.Channel.Protocol.Send",
-        "equality_tok_Steel.Channel.Protocol.Send@tok",
-        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
-        "equation_Duplex.PCM.is_fin", "equation_Duplex.PCM.is_recv",
-        "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.p_",
-        "equation_Duplex.PCM.pcm", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_FStar.Pervasives.pattern",
-        "equation_Steel.Channel.Protocol.more",
-        "equation_Steel.Channel.Protocol.more_msgs",
-        "equation_Steel.Channel.Protocol.msg_t",
-        "equation_Steel.Channel.Protocol.next_msg_t",
-        "equation_Steel.Channel.Protocol.protocol",
-        "equation_Steel.Channel.Protocol.step",
-        "equation_Steel.Channel.Protocol.tag_of",
-        "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
-        "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
-        "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
-        "function_token_typing_Duplex.PCM.composable",
-        "function_token_typing_FStar.Pervasives.pattern",
-        "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
-        "primitive_Prims.op_AmpAmp",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
-        "proj_equation_Steel.Channel.Protocol.Msg__0",
-        "proj_equation_Steel.Channel.Protocol.Msg_k",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
-        "refinement_interpretation_Tm_refine_413aaf507f4f8706a6a6778a342fab00",
-        "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
-        "refinement_interpretation_Tm_refine_aaa6e70678738796efcf074f3ec1bd44",
-        "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
-        "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
-        "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
-        "token_correspondence_Duplex.PCM.compose",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
-        "typing_Steel.Channel.Protocol.more"
+        "typing_Steel.Channel.Protocol.more", "unit_typing"
       ],
       0,
-      "137498c1397af774876804a77e1ab300"
-    ],
-    [
-      "Duplex.PCM.write_b_f",
-      1,
-      1,
-      1,
-      [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
-      0,
-      "5dbb4ff4adf6bc3d3742f72e78ddc7b1"
-    ],
-    [
-      "Duplex.PCM.write_b_f",
-      2,
-      1,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Duplex.PCM.no_loop.fuel_instrumented",
-        "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
-        "bool_inversion", "bool_typing",
-        "constructor_distinct_Steel.Channel.Protocol.Recv",
-        "data_elim_Steel.Channel.Protocol.Msg",
-        "disc_equation_Steel.Channel.Protocol.Msg",
-        "disc_equation_Steel.Channel.Protocol.Recv",
-        "disc_equation_Steel.Channel.Protocol.Return",
-        "disc_equation_Steel.Channel.Protocol.Send",
-        "equality_tok_Steel.Channel.Protocol.Recv@tok",
-        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.dprot_",
-        "equation_Duplex.PCM.is_fin", "equation_Duplex.PCM.is_recv",
-        "equation_Duplex.PCM.is_send", "equation_Duplex.PCM.p_",
-        "equation_Duplex.PCM.pcm", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_FStar.Pervasives.pattern",
-        "equation_Steel.Channel.Protocol.more",
-        "equation_Steel.Channel.Protocol.more_msgs",
-        "equation_Steel.Channel.Protocol.msg_t",
-        "equation_Steel.Channel.Protocol.next_msg_t",
-        "equation_Steel.Channel.Protocol.protocol",
-        "equation_Steel.Channel.Protocol.step",
-        "equation_Steel.Channel.Protocol.tag_of",
-        "equation_with_fuel_Duplex.PCM.no_loop.fuel_instrumented",
-        "equation_with_fuel_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_Steel.Channel.Protocol.prot",
-        "fuel_guarded_inversion_Steel.Channel.Protocol.tag",
-        "function_token_typing_Duplex.PCM.composable",
-        "function_token_typing_FStar.Pervasives.pattern",
-        "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
-        "primitive_Prims.op_AmpAmp",
-        "proj_equation_FStar.PCM.Mkpcm__composable",
-        "proj_equation_FStar.PCM.Mkpcm__op",
-        "proj_equation_FStar.PCM.Mkpcm_p",
-        "proj_equation_Steel.Channel.Protocol.Msg__0",
-        "proj_equation_Steel.Channel.Protocol.Msg_k",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__op",
-        "projection_inverse_FStar.PCM.Mkpcm_p",
-        "refinement_interpretation_Tm_refine_6aab9e7a03bb3120da3efac1eef8f539",
-        "refinement_interpretation_Tm_refine_7fe80ef3bf4b8018d454f90cc6c5fa89",
-        "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449",
-        "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
-        "refinement_interpretation_Tm_refine_f47040c8dd7d25f791826f6fc79edfad",
-        "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
-        "token_correspondence_Duplex.PCM.compose",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
-        "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "typing_Steel.Channel.Protocol.__proj__Msg__item___0",
-        "typing_Steel.Channel.Protocol.more"
-      ],
-      0,
-      "34e2bffd2eeea6074e94f02a3fa029d6"
+      "2de44b90617d27d886b794d34f4dd4d2"
     ],
     [
       "Duplex.PCM.write_a",
@@ -3778,7 +3678,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "9a038f9ff4677ee7120ebdaad1db2f8d"
+      "c64bd16f590d0d3dff71a9cdbeea8554"
     ],
     [
       "Duplex.PCM.write_a",
@@ -3829,7 +3729,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "c12f726188b5758f842a38fd8ea7345c"
+      "210fb2b6fb5ee0284a67ccd1c7238152"
     ],
     [
       "Duplex.PCM.write_b",
@@ -3838,7 +3738,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "593bd609fb68a0c2838a92b2ab857dc7"
+      "9dcc8fe15341686bdb75095437eff184"
     ],
     [
       "Duplex.PCM.write_b",
@@ -3890,7 +3790,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Return"
       ],
       0,
-      "2ba74a942050a7176493698e805fd9fb"
+      "db583ec3a29bf7ed7a36ff87f7316666"
     ],
     [
       "Duplex.PCM.alloc",
@@ -3899,35 +3799,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "interpretation_Tm_abs_b2faededb3272c0966ca1c6eaec885e3",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp", "typing_tok_Prims.T@tok"
-      ],
-      0,
-      "b48bf4f35582c068af5f2f4cf4d6005a"
-    ],
-    [
-      "Duplex.PCM.alloc",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Duplex.PCM.pcm",
-        "equation_Duplex.PCM.pts_to", "equation_Steel.Effect.Common.true_p",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Duplex.PCM.pcm", "equation_Duplex.PCM.pts_to",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Effect.Common.true_p",
         "function_token_typing_Duplex.PCM.refine",
         "proj_equation_FStar.PCM.Mkpcm_refine",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_FStar.PCM.Mkpcm_refine",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_18560a99be269827cdf5280cfb541dd2",
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
         "true_interp"
       ],
       0,
-      "a0436c3951f5ef65ee8f7cc161f822a1"
+      "3af1f8afb38098be2ae9f4ff41e422eb"
     ],
     [
       "Duplex.PCM.split",
@@ -3939,7 +3826,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3b37a7ecda6355adba4b8dcc53c4aba3"
+      "4384e9f9e675121c4c25a4ec98ab0dc2"
     ],
     [
       "Duplex.PCM.split",
@@ -3951,7 +3838,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b399fc2e2f842647d8c74bfce1882d91"
+      "583926dd89b724c15a03ed7afaa07989"
     ],
     [
       "Duplex.PCM.split",
@@ -3979,7 +3866,7 @@
         "true_interp"
       ],
       0,
-      "eec358ed3dd16c90216141359fde4517"
+      "def0a45c78ddebc331f4fff3b977cee1"
     ],
     [
       "Duplex.PCM.lem",
@@ -4017,7 +3904,7 @@
         "token_correspondence_Duplex.PCM.composable", "true_interp"
       ],
       0,
-      "d9eff542880adc59c7d28d91578824db"
+      "2e878f5d26012fd331ba1588c30af6f9"
     ],
     [
       "Duplex.PCM.new_chan",
@@ -4031,7 +3918,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "0dcf3c36ede5ce16444e13485d61d57f"
+      "9c8be351160fa27f0671b26a2f7da6b0"
     ],
     [
       "Duplex.PCM.new_chan",
@@ -4045,7 +3932,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "dbd66db6941492cadec2de72acc86173"
+      "ff78c7fbd6c5e217be7cc9d8f3a88ef2"
     ],
     [
       "Duplex.PCM.new_chan",
@@ -4143,7 +4030,7 @@
         "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "d93bef2d11704fd8f7feb8cb111db2c1"
+      "56dd798440646625606da8e6bbad81c9"
     ],
     [
       "Duplex.PCM.send_a",
@@ -4183,7 +4070,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "ae79041993179b4df2723ff08ccb38b3"
+      "955258d7cffe46a5098642d6916a71bc"
     ],
     [
       "Duplex.PCM.send_a",
@@ -4192,7 +4079,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "2ae544a49d67f31dc682f969ef52a524"
+      "704bf507522a3059b54bcc5cf42a4217"
     ],
     [
       "Duplex.PCM.send_a",
@@ -4231,7 +4118,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "9a8d2442db6eea1db4827f78bd7f6536"
+      "5a7642d28b96873d3221971a5b1057b5"
     ],
     [
       "Duplex.PCM.send_a",
@@ -4270,7 +4157,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "97998f50080676ab7ecb4eb1d828f138"
+      "34fe28dd007dc8b12daa4b5b0fe9f7a2"
     ],
     [
       "Duplex.PCM.send_a",
@@ -4314,7 +4201,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "ffd8adc03617e110a5a0afc3aa0c380b"
+      "6f82c5f8fda52cf641f86b6449a91184"
     ],
     [
       "Duplex.PCM.send_b",
@@ -4354,7 +4241,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "6df2279fc046291d87fc5148774a48e6"
+      "b4524d13a0f21197bcb95be0ed275613"
     ],
     [
       "Duplex.PCM.send_b",
@@ -4363,7 +4250,7 @@
       1,
       [ "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq" ],
       0,
-      "75016d64ae4f4932be2dbcdbf1fabd7d"
+      "d0fec68de84f94170c1efc4da1345da0"
     ],
     [
       "Duplex.PCM.send_b",
@@ -4402,7 +4289,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "588111ddfe678810d8606adcbfcaf714"
+      "86f51e4609f762898e6edf118590cc2a"
     ],
     [
       "Duplex.PCM.send_b",
@@ -4441,7 +4328,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "e6bbe24904a0befa154c50666ca2db8c"
+      "90e75f63aaf975f419697519a47ac0b3"
     ],
     [
       "Duplex.PCM.send_b",
@@ -4476,7 +4363,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "7352035a9ab29250902ccb0a447241cc"
+      "3dbea1d28afb47c42363250ca4c42e28"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4516,7 +4403,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "6a685c97c632bc41dd4aca96e506ed52"
+      "bf709d59872ecb8cc13a3302201945b1"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4555,7 +4442,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "53a8b5bf6e4b18030e0145125b9cd2a6"
+      "601ab8ba1e0845bdd663d720b8055cad"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4594,7 +4481,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "4fa9df4b488a2de445fac98dc1a741c0"
+      "f43215aa2d1a6324e0b09a091ca42df2"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4633,7 +4520,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "277894f28083232ea8cb0f1a282a8589"
+      "27e001b94993ade965a6b8e91ad38caa"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4672,7 +4559,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "f95fc087f8fad2a15cc33a7fb96b69ff"
+      "16110842a62c6ed3b1303b889fe99fb4"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4703,7 +4590,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "464d704799a163abca1452889c24533f"
+      "204a3d33ccebd34a39a8484060bdbf36"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4734,7 +4621,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "6abfbcfd38cb34ae977c0cae668bc077"
+      "7155d85073e564129b5d84e691e06292"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4763,7 +4650,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "f57c350634fb1f8babc717b8505faf23"
+      "ab80e239e82df1101e8b810b862430a3"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4802,7 +4689,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "5e6ce91e19dd08c630c5cf1f41d8bc0c"
+      "c5b1f63c0271622558842d0c1ab1b2c1"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4841,7 +4728,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "4b16e89dcae124fbb8fe11eaba3d73e5"
+      "ebaed651bc509375a80cc5fbabbda065"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4872,7 +4759,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "ef7932813705f51cfa56583908a485f5"
+      "b48d13b808ff248607fc57c57cde144b"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4903,7 +4790,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "10353ca9ce9ed96781e113fe26fe11b9"
+      "775bfd5619de015dad821e7028fe4090"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4942,7 +4829,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "cee9974f584b78fe20c6301f09038f0d"
+      "9a0951979c9ddf6d02e657a6484cc621"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -4981,7 +4868,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "e454e2c2f7b6c11ba583e9900d162239"
+      "267b10523f57fb5c32c85fe59738cce8"
     ],
     [
       "Duplex.PCM.recv_a",
@@ -5043,7 +4930,7 @@
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "1d5c016fca25b9b4a9bc93c16db4d4c5"
+      "091a43d8356bf17ce5794924ba185b57"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5083,7 +4970,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "8e77e264d29af30fd5aded69642f61dc"
+      "72958d81064ed8408221509bf5ce12a5"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5122,7 +5009,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "c3457df24e2356a925ab5b4dcad18ddc"
+      "1cfc4cd71bfc6e9243cbbf0aeac509d3"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5161,7 +5048,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "f604cdd540d22e588f03c17ec25698ed"
+      "05f9341dd4bfe66f29ab650db47dc512"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5192,7 +5079,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "ed12e9c1ee31f15fcf3a464f3e0dc9c1"
+      "25af1d6b66b4af4eb7420b47bb626936"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5223,7 +5110,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "232df6d443a203ba9f8dad0739c9c7d0"
+      "1d64750ea836fa424efbbee7f0e284c3"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5262,7 +5149,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "bab9b540458b290ec6ffdcb59fe30564"
+      "d2092d5c52465803911f501198cb6b47"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5301,7 +5188,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "843b99396bbc883cf0a611bd87d30c46"
+      "fcb4173f2325b5ac71598fe5953b06e2"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5340,7 +5227,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "db6aea5d388d9895017b78c234b58f54"
+      "6a6501f1efae87b351a9587d017f6456"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5379,7 +5266,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "026589fcfb7468d3be57aeb33a5806df"
+      "23c13c2df433391cea3abaec48bfa66d"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5410,7 +5297,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "d9f997b7ac6f7ce9ccf2d25ec52ff337"
+      "5271b9647ec5cd30564eb8a78554ba85"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5441,7 +5328,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "22501be4e9473029226b194bb6f7fce3"
+      "dcd90f5afda036f41d015e3cff8ea524"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5472,7 +5359,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "7eeee3a358234570ce34764a83406887"
+      "f8318c4447524c7d95e63dff173a4057"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5503,7 +5390,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "e8a82d45903071c8ebccfac1c80b4270"
+      "cb6f5863cbfb68aa81e6dfd0422d8465"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5534,7 +5421,7 @@
         "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "fe8bbe1adbf2970fbd9c68475087ebf6"
+      "335e939f66f016ab2604d260ef2cab76"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5573,7 +5460,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "8970daee7426b71235f09ac0357e24eb"
+      "c53053efab95fafb058bc6d72fae969f"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5612,7 +5499,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "388f04a99ad3f51fe88f31ca03ab276a"
+      "cc743c00f49d85857c60f7a28c139ddc"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5640,7 +5527,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "f394e0126f67ed2bc5f6fec482096ffa"
+      "273e536406b9de9eaacda4c2d3cf4490"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5668,7 +5555,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "cf953eb016504b59d18a8f8605411e2d"
+      "9c2eb9f64f60f7346170f6a1b33fbc18"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5707,7 +5594,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "e88f6336d1b06efbc57bc5542058a8dd"
+      "f7e4e8f29c1dd6ef84abd037417c9f9b"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5746,7 +5633,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "df608b2eb51913bb3644b7fa82499b14"
+      "534f2a3283d0fe55978f8e1fb2a790e4"
     ],
     [
       "Duplex.PCM.recv_b",
@@ -5806,7 +5693,7 @@
         "true_interp", "typing_tok_Duplex.PCM.A@tok"
       ],
       0,
-      "8128f983b35522a5c768adec77344f4a"
+      "bbf9ffdaa4d29a7419eb83cbfeac872c"
     ],
     [
       "Duplex.PCM.endpoint",
@@ -5820,7 +5707,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "02de9b11be43a1df4e811afdc5f54999"
+      "7345ccae929e7bfe870a4682d38d7722"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -5859,7 +5746,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "8d80811d18ee37ea797c177525cece01"
+      "f7a6d3aee5225ccfc0099db9221d4f8d"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -5898,7 +5785,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "46759941915480c590afb10678d1c75d"
+      "855891a5d5c0a4ed13ed7bfee74fa023"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -5937,7 +5824,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "41991700f7896ffccb3536c50f7df09a"
+      "3ae716282af0bdd95b8d1f9f3d7cbcfc"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -5976,7 +5863,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "3f4a142939700c9a6eef60331a67344c"
+      "c2bc65aad907d58c1c0ad7cbd9078878"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -6015,7 +5902,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "bb4c22a55b7fb0d166b2139e5623c296"
+      "b30b29dbeaa497a950303925c538c3c9"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -6054,7 +5941,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "325377ee7bd6793370fc893c17f309cb"
+      "bc8a9c44a333b77cbee5d9a130238f39"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -6093,7 +5980,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "a914810954a47693c9f02ae24c3ea9dc"
+      "6ab37814be6306d7bd86236cb1cd4059"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -6132,7 +6019,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "2ddedf0087e141f4fadbbd1c86b21cb3"
+      "a4ab4c7b4add574595be299c21ddd4e7"
     ],
     [
       "Duplex.PCM.send_aux",
@@ -6186,7 +6073,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "5932ef59f0915c1ec7e44d5700ebf854"
+      "399fd0610f95ed080642ae25c5ded4c7"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6225,7 +6112,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "5fdcfeaf1bbf2f8d7dc9be427c8b421d"
+      "e16f3e5c204f3306b390c3461fb8f5cb"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6264,7 +6151,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "6aa08fe3ed95730fa187c769285ff7ff"
+      "7eac151f50041c1ba29c8d8b9b27fa36"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6303,7 +6190,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "920b35cc28789fa9b6f57646b0b7213e"
+      "4d5e5ed42aa2f7c7bd9681c6fafd3c53"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6342,7 +6229,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "59c851cfa5ce13e3a318b2b2a7d6df63"
+      "217bab7eb11c4dc34f07db4e5ecb054c"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6381,7 +6268,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "d736e49525a2d12045eab8f00088ffd0"
+      "0e3afeba3d7d74bf2a94e91ff66d820d"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6420,7 +6307,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "715cd27396757d4c4aadd15bf5d15928"
+      "7d52836a3e3acbc179db5d303e769d2e"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6459,7 +6346,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "bca834488532758ec3770f91ee11af70"
+      "6efd25ca56a3377e47025efde527b601"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6498,7 +6385,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "791d118deb5f20e20bc3589df542dde0"
+      "af99a87d9bcbed1cbe7d3944f1d568fe"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6537,7 +6424,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "45c3b1b532979e8a0597c43e71f4130c"
+      "1236407642b253a8f97996d6eb4296a4"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6576,7 +6463,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "d52daeb9155991d6b82a8cbd9de9a8b5"
+      "69836d5585ced6e682ce1c27dde8aa4a"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6615,7 +6502,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "260e7c392def81882bb1e75ea5bc4c71"
+      "04758836c55686564f65fd232f17c592"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6654,7 +6541,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "7c96f7732c1ef63069070e54413936e2"
+      "0b46dd312cbbf9480e1e5c50a093b645"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6693,7 +6580,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "843f791a777c011f7974ccfb8a2027c0"
+      "90e24196ddbe789d185e7ebd6055438d"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6732,7 +6619,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "cb9fdf21c0b41bf7b1d1edfdb48f5d17"
+      "85e2f0b26ab97c71a72c18656634c703"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6771,7 +6658,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "7753cd08599525b131b89913e6ada5ea"
+      "155cd263b9d692d8d5890a1bcdb1edd3"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6810,7 +6697,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "214d342ffd574b927cd5db3532b6011a"
+      "fbdb8a425f3a2cb99fd23af5c8b5f9a2"
     ],
     [
       "Duplex.PCM.recv_aux",
@@ -6864,7 +6751,7 @@
         "true_interp", "typing_Steel.Channel.Protocol.more"
       ],
       0,
-      "ea2e3de88f9afd948f121babf2c3b1a1"
+      "e1ad05eb4a63606236e906107ceaae65"
     ],
     [
       "Duplex.PCM.eq2_prop",
@@ -6878,7 +6765,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a3962067ec48add31afd36c7d63f6a03"
+      "626ef1f39db7a15ddbcf84cd02b99863"
     ],
     [
       "Duplex.PCM.read_trace_ref",
@@ -6915,7 +6802,7 @@
         "unit_inversion"
       ],
       0,
-      "b9dc28c5ab4d7cd34a7709c87cdcde93"
+      "35b8d3926e8bcfb56e2957b3fb544c89"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -6930,7 +6817,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "f4aff83c8b39fd61c9d593675264d3b4"
+      "9fd61d7cc9b3cc0c943817da19d276cb"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -6945,7 +6832,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "86151e8af7f696a202097b5f51717dd0"
+      "c4e834d852fff28a79d520a3c5257c62"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -6960,7 +6847,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "380a399b532fb1f18463c6ff4ddb2df9"
+      "9d7b2ebc9ea8a381e00cea090732f6d5"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -6975,7 +6862,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "7b46499aceff29dddc4e8c1200dc0e82"
+      "84fb78a9b7f9e6ff5af570ac22d42398"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -6991,7 +6878,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "f344e0cdf83869d74fceb7726e4e2432"
+      "55a650a8584dae56b5ca731da5de6c95"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7007,7 +6894,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "f92f13220786fa5cbc850f22d5c0d519"
+      "e679c5fa7fa990381e59b407e735f408"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7022,7 +6909,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "2e047ab98872231d5673eb0571f16a24"
+      "a02a507566d3b90237b5ab08587c8af5"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7037,7 +6924,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "1488ce75e757f59c81c2879fcd2802b6"
+      "658d1fa7275c6cfd309c027f4daffee0"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7054,7 +6941,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "5453eef8ec1a22c3d3564b97a427a3c9"
+      "84c9cb51b0950e25ec17e23a17b7062d"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7069,7 +6956,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "74f7be20433b5f178fdab9a8f47ed543"
+      "72fe27815e198c7b4d85a37169f1cdd8"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7086,7 +6973,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "cd543cb006f1c7962c6cbd6b2bd57362"
+      "e69b0db0fbb445febaeac390e9100119"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7101,7 +6988,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "13f2622c476fd02847fb6031b71a56e2"
+      "2df625c490900021b0e40fda9a445fb2"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7116,7 +7003,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "754b48f77ae4ec966d147266d8ce2498"
+      "93fd7fc84c9b42611c74ff77cc1a60cf"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7131,7 +7018,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "d3cada96b9d1e3c8e2c0a36563415783"
+      "80326fef6ac402e0c27f22de01304840"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7146,7 +7033,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "a14a55179f5c23b7c2b93da05f3e9e17"
+      "8e8eb188882a36862221b32fe9521655"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7161,7 +7048,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "6466de154502fbf5c9b0505e95650c66"
+      "ca6289f450c40d14cdba51ccd24daaba"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7176,7 +7063,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "f1fc875faaa6cc49604173edcdc72bff"
+      "cca19b63950aa204e1c5cd4215de30af"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7192,7 +7079,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "3f79991f08bef18d5c7fcb66945683ce"
+      "c4861dfc951e2e7e1f8b220343bb4441"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7208,7 +7095,7 @@
         "refinement_interpretation_Tm_refine_6d3dad29242ad68ae6dab1c004fff6c9"
       ],
       0,
-      "2f040da1b7a81f33203cd00fe8b2ea96"
+      "523adac79594156ddf62efb8be26bfc3"
     ],
     [
       "Duplex.PCM.unpack_trace_ref",
@@ -7236,7 +7123,7 @@
         "typing_Tm_abs_2b48b5519b5f6caa42c7c76fc9e7abcb"
       ],
       0,
-      "26394ea56bdbf807a564bc5498b42f3b"
+      "4ca5d47dfc2fe6dc60ab3f73d0de8880"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7253,7 +7140,7 @@
         "refinement_interpretation_Tm_refine_c896c0e418ffd978335a21c3ee115aed"
       ],
       0,
-      "da2a408a1d84ce2cce54beb432241749"
+      "c615694d547c9c65b34083f8e29a555d"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7290,7 +7177,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "3354ce4f0389679566cc75a92ede599e"
+      "3eb7575f992791e4d2be6fab175606f7"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7327,7 +7214,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "b70c8d1d1d05951c803bac73aa37c285"
+      "7c7dbe0c20d4f97f6d46e841e8c70b72"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7364,7 +7251,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "e460e4f795d2dd7226112a63d2f5e223"
+      "b4a331f87e0bd5481d522191df76eb69"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7410,7 +7297,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "c7bd95fab86a2106a1921e630a35beaf"
+      "587210f651b9720d9924370dcc1da8e3"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7447,7 +7334,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "0752687c49bff398d4e5d9cc57ae84a0"
+      "7a9606d026f000fdc459b65631b5d05d"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7484,7 +7371,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "3bab3e5841e9526c63314a1e03f99473"
+      "bfb0f9840490dd03194bfd6213ab2505"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7521,7 +7408,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "f23b038e1fd4471daf47d0bf13b489a7"
+      "1915d1054ebb12eb91e36ccd42af58bd"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7567,7 +7454,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "b8a84c79d2290370696a913e60a08f33"
+      "627db0e0698fcbda056ebaaa64a36293"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7604,7 +7491,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "f3bab2e12dd7c7034aedcd91ec322088"
+      "e9b38840ff0704a98fb057e7222970e7"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7641,7 +7528,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "0c0090e287d01f61dff8507734aed755"
+      "a923227c591db9d4887e964102263af4"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7678,7 +7565,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "ade1b45fae4e15e8d463c17e422b2e8c"
+      "cc77c1ad80d23807c7511439496f88a6"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7724,7 +7611,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "80d1a2c88dd3396030c03770007d6eb4"
+      "fe9fbc72593c913b6d2df72572921d8f"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7761,7 +7648,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "6b261064e224456283143c4d58ffe625"
+      "2d262ef7d93030196e7a0f03250e8cb4"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7798,7 +7685,7 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k"
       ],
       0,
-      "1eef0fa328e2cb5ed69b65c9f269d1cd"
+      "559cbc2e9e86906e5c72d7fddc88f0f6"
     ],
     [
       "Duplex.PCM.pack_trace_ref",
@@ -7847,37 +7734,76 @@
         "true_interp", "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "ad555e24ed4fa24ff32233800b5a20e0"
+      "9a4811f997a39ea899a92ec3b790803e"
     ],
     [
       "Duplex.PCM.new_channel'",
       1,
-      1,
-      1,
+      2,
+      2,
       [
-        "@query", "eq2-interp", "equality_tok_Duplex.PCM.A@tok",
-        "equality_tok_Duplex.PCM.B@tok", "equation_Duplex.PCM.chan",
-        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.endpt_pred",
-        "equation_Duplex.PCM.eq2_prop", "equation_Duplex.PCM.fst",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query",
+        "Duplex.PCM_interpretation_Tm_arrow_b5a101fe4cd4d6d2778ed650b6be2623",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Steel.Effect.Common_pretyping_d2a841050d83f4aea1b9bd58a40b2409",
+        "constructor_distinct_Duplex.PCM.A",
+        "constructor_distinct_Duplex.PCM.B",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "data_elim_Steel.Effect.Common.VStar",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_Prims.Mkdtuple2@tok",
+        "data_typing_intro_Steel.Effect.Common.VStar@tok",
+        "data_typing_intro_Steel.Effect.Common.VUnit@tok", "eq2-interp",
+        "equality_tok_Duplex.PCM.A@tok", "equality_tok_Duplex.PCM.B@tok",
+        "equation_Duplex.PCM.chan", "equation_Duplex.PCM.channel",
+        "equation_Duplex.PCM.dprot", "equation_Duplex.PCM.endpoint",
+        "equation_Duplex.PCM.endpoint_a", "equation_Duplex.PCM.endpoint_b",
+        "equation_Duplex.PCM.endpt_pred", "equation_Duplex.PCM.eq2_prop",
+        "equation_Duplex.PCM.fst", "equation_Duplex.PCM.pts_to",
         "equation_Duplex.PCM.snd", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
+        "equation_Steel.Effect.Common.star",
+        "equation_Steel.Effect.Common.to_vprop_",
         "equation_Steel.Effect.Common.true_p",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "interpretation_Tm_abs_2b48b5519b5f6caa42c7c76fc9e7abcb",
+        "kinding_Prims.dtuple2@tok",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Prims.Mkdtuple2__2",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mkdtuple2__2",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "refinement_kinding_Tm_refine_c896c0e418ffd978335a21c3ee115aed",
         "token_correspondence_Duplex.PCM.fst",
         "token_correspondence_Duplex.PCM.snd",
         "token_correspondence_FStar.Pervasives.Native.fst",
-        "token_correspondence_FStar.Pervasives.Native.snd", "true_interp"
+        "token_correspondence_FStar.Pervasives.Native.snd", "true_interp",
+        "typing_Duplex.PCM.chan", "typing_Duplex.PCM.empty_trace",
+        "typing_Duplex.PCM.endpoint", "typing_Duplex.PCM.endpoint_b",
+        "typing_Duplex.PCM.endpt_pred", "typing_Duplex.PCM.eq2_prop",
+        "typing_FStar.Ghost.hide", "typing_Steel.Effect.Common.emp_",
+        "typing_Steel.Effect.Common.star",
+        "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.HigherReference.pts_to_sl",
+        "typing_Steel.HigherReference.ref", "typing_Steel.Memory.pure",
+        "typing_Tm_abs_2b48b5519b5f6caa42c7c76fc9e7abcb",
+        "typing_tok_Duplex.PCM.A@tok", "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "a61db6ed67d817bd106373d5ea0bb017"
+      "f78eb4dfc688cd502d7f49b420eee7f3"
     ],
     [
       "Duplex.PCM.channel_as_ch",
@@ -7896,7 +7822,7 @@
         "projection_inverse_Prims.Mkdtuple2__2", "true_interp"
       ],
       0,
-      "788b110dc099d12792a8a38ec70a1ac1"
+      "3fee100e56b21eddc44e0529db4dfe36"
     ],
     [
       "Duplex.PCM.new_channel",
@@ -7905,7 +7831,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "4dd3c73e9e0c0072effe96b3958d037b"
+      "bc4fb6824d76b84575b7af6721ad1f86"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -7944,7 +7870,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "fb80a09babdb8e6cafd4d1a5891832e7"
+      "c293851365384e03bfe88d173ec4061b"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -7983,7 +7909,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "db75ba210d4eb9e80a72a9e049f96281"
+      "65010d9f6cefa486fb57814f508178f8"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -8022,7 +7948,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "0416fe0efab3694517f9e7297cb7f5cc"
+      "30894d983c5980767c80a182fb0976f7"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -8065,7 +7991,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "86499fc4cdc990aa8091167f7bdc5a9a"
+      "ca44b17c9595370c502424ed8a769250"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -8104,7 +8030,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "490b1103f37b8e7c0319b50004b2e023"
+      "3380f30c8273e85ab1daf68e5afc07ed"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -8147,7 +8073,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "fa0924ed2eb97030f7cdf8b5dcf714f8"
+      "336b7f1a4fe623deb27ed9e90fd102ca"
     ],
     [
       "Duplex.PCM.channel_send'",
@@ -8188,7 +8114,7 @@
         "true_interp"
       ],
       0,
-      "b3cab148fa4c3c2c53d8ec5b534c0463"
+      "8d0bb1cc6a4268bb78f4d4a40fe496c8"
     ],
     [
       "Duplex.PCM.ch_as_channel",
@@ -8197,7 +8123,7 @@
       1,
       [ "@query", "equation_Duplex.PCM.ep" ],
       0,
-      "913fcdc2f709d83d3d6058a08d440202"
+      "5297639a62ae1c20b396e9891ca239be"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8236,7 +8162,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "00056fc82bb4ebcf1f9608cb895d455b"
+      "c8be1c24c416dbb48ad447bb488cb3e4"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8275,7 +8201,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "3269e73b64f7472b8fbc101a838ce5a3"
+      "b4ead09a46e81c885c3eeff54b1c7961"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8314,7 +8240,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "9f23de65b9ae4843fca2bd100a9ea172"
+      "f29b847fe0eb3d7ce28c349dbd7a2436"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8353,7 +8279,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "ef5909be62f97f5d3de7bf71317d3276"
+      "fb4c75251f94909cab9b10f66ba0e3b6"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8392,7 +8318,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "dc8e2725a8c12db2e27a23a47234bcc1"
+      "bff891d0dcd200e8dc93293aaee1bdc0"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8431,7 +8357,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "a686d0e38cc0c25425155a0e5274c542"
+      "bbe6a2da770bf81e4e12fca8c32bcc1a"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8470,7 +8396,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "13c4af9456599dcedbaa48aff577b257"
+      "b877b9fb4e32ef69d9ec9d1299dedaaf"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8509,7 +8435,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "d1479515e3ad0989feb352ffb6d9dc30"
+      "6deff1d4cb3d2aa4fc8ce0e1f5a3e396"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8548,7 +8474,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "b4b432494b88d68414a3779b2e0aa86f"
+      "d2dbf8f11d3f233358acbd13f6764707"
     ],
     [
       "Duplex.PCM.channel_send",
@@ -8593,7 +8519,7 @@
         "true_interp"
       ],
       0,
-      "ed7ec5913e6233d40bf0b37b383ee1a4"
+      "d742621e7edb54bdcb75a01835fb6a31"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8632,7 +8558,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "585088f7cc0f818f84a6058d9a78f9f1"
+      "40a0aea8247e5160612a5ec5a0497bd2"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8675,7 +8601,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "88a9110907f94cb51480d6774f95a664"
+      "408405d1713783cf4b6717200ca56793"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8714,7 +8640,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "223e581f7808dd7e1a94b30388eb98c9"
+      "edd05e68bdc3f7f9aa99308d720500c0"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8753,7 +8679,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "cfc662a376e0b46d1cfc19e6bc43d3aa"
+      "084dbcf2fd65f029003c05148c00671e"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8792,7 +8718,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "454d11a2f1e7660f7fb257cc825ff619"
+      "bb645f976e1facf05c287743277caa51"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8835,7 +8761,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "c6f8d73c263ea546dc70d3f3c0de5bf4"
+      "f415ce423881c92afbdddc649042584d"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8874,7 +8800,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "95c98905b0c453b28375497c90d72a1a"
+      "843cdf2702949d9f932f4e8c0e4bec57"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8917,7 +8843,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "3b8175518648c46e045a862487665482"
+      "af756bd6a71baa8c53bc524603e365d1"
     ],
     [
       "Duplex.PCM.channel_recv'",
@@ -8958,7 +8884,7 @@
         "true_interp"
       ],
       0,
-      "1ec9c7924336a77a1adc5f5440f78ad8"
+      "f2fb7c5bedc6b44a1f15ee1903a122a1"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -8997,7 +8923,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "2de773c3179f679f3248b7ade4a05cd9"
+      "f8f9e0bb48ac460d02121b5e92a9210b"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9036,7 +8962,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "27ade2201f95de52db1c770fce4d4eac"
+      "2c35363e6df505ef2a6a069a21d49220"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9075,7 +9001,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "8227ec87b298cd3c841cb00aeb3d45ce"
+      "4658b2b5611c3ac6a2cbca616574efc1"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9114,7 +9040,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "b3a35193384821b8354b8ed984c7230e"
+      "77a2580e6c6041c3b1de7ea4af229ec3"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9153,7 +9079,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "aacd799f4da6298937a8f9aadb413dc5"
+      "fd19a342171040ff4a83f04fcca5eb46"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9192,7 +9118,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "8c0e4732774dcbb917838026b8ee57a7"
+      "f3f27a072e553c143636eb4076ffac4e"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9231,7 +9157,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "a7311b1bb7e36ce0d5a08da431e57629"
+      "76806113c0d4fa880727a49a5c5d5302"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9270,7 +9196,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "7320cc704047accae197383d50c73da9"
+      "d4483edd2f443fde20738108701bed22"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9309,7 +9235,7 @@
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented"
       ],
       0,
-      "31d7bb9967dca5df727615614b52dc1f"
+      "10e882c0d92e6c98c2a5fd3de73894c1"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9348,7 +9274,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "b0ec7790be3d37fcb8d12cf5be4fef2a"
+      "eae2d783b19def2bf61f2df4ef51a7f1"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9387,7 +9313,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "11f05b08f97bd20ec2c8e65a6320cd59"
+      "88cbb02baec8cff3a129b93cb50e5b47"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9426,7 +9352,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "c0e36b03bfa3685598f80c49d54e22c5"
+      "c352bfe5943e68933990ad5100171a35"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9465,7 +9391,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "f50916f657e715cd490b171466c39ef0"
+      "a45d671fc80056a0190d25ed99ecfb3c"
     ],
     [
       "Duplex.PCM.channel_recv",
@@ -9510,7 +9436,7 @@
         "true_interp"
       ],
       0,
-      "9035bf8ccaa95e9f17aa00898c8a1c48"
+      "ff6cf5d0c6135428dd256bc3b1312524"
     ]
   ]
 ]

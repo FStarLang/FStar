@@ -14,160 +14,498 @@
    limitations under the License.
 *)
 
-
 module Steel.Effect.Atomic
 
+open Steel.Effect
 friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-val join_preserves_interp (hp:slprop) (m0 m1:mem)
-  : Lemma
-    (requires (interp hp m0 /\ disjoint m0 m1))
-    (ensures (interp hp (join m0 m1)))
-    [SMTPat (interp hp (join m0 m1))]
+let _ : squash (forall (pre:pre_t) (m0:mem{interp (hp_of pre) m0}) (m1:mem{disjoint m0 m1}).
+  mk_rmem pre m0 == mk_rmem pre (join m0 m1)) = Classical.forall_intro rmem_depends_only_on
 
-let join_preserves_interp hp m0 m1
-  = intro_emp m1;
-    intro_star hp emp m0 m1;
-    affine_star hp emp (join m0 m1)
+let req_to_act_req (#pre:vprop) (req:req_t pre) : mprop (hp_of pre) =
+  fun m ->
+    rmem_depends_only_on pre;
+    interp (hp_of pre) m /\ req (mk_rmem pre m)
 
-val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
-let respects_fp #fp p =
-  forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
+unfold
+let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
-val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
-  : Lemma (respects_fp p <==>
-           (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
-          [SMTPat (respects_fp #fp p)]
-let reveal_respects_fp p = ()
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
+: mprop2 (hp_of pre) (to_post post)
+= fun m0 x m1 -> interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\
+    ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
 
-let fp_mprop (fp:slprop) = p:(hmem fp -> prop) { respects_fp p }
+let repr a framed opened f pre post req ens =
+  action_except_full a opened (hp_of pre) (to_post post)
+    (req_to_act_req req) (ens_to_act_ens ens)
 
-val respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
-                       (q:(hmem pre -> x:a -> hmem (post x) -> prop)) : prop
-let respects_binary_fp #a #pre #post q
-  = (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
-      q h_pre x h_post <==> q (join h_pre h) x h_post) /\
-    (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
-      q h_pre x h_post <==> q h_pre x (join h_post h))
+let return_ a x opened #p = fun _ ->
+  let m0:full_mem = NMSTTotal.get () in
+  let h0 = mk_rmem (p x) (core_mem m0) in
+  lemma_frame_equalities_refl (p x) h0;
+  x
 
-val reveal_respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
-                              (q:(hmem pre -> x:a -> hmem (post x) -> prop))
-  : Lemma (respects_binary_fp q <==>
-            //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
-            (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
-              q h_pre x h_post <==> q (join h_pre h) x h_post) /\
-            //can join any disjoint heap to the post-heap and q is still valid
-            (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
-              q h_pre x h_post <==> q h_pre x (join h_post h)))
-           [SMTPat (respects_binary_fp #a #pre #post q)]
-let reveal_respects_binary_fp q = ()
+#push-options "--fuel 0 --ifuel 0"
 
-let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
-  p:(hmem pre -> x:a -> hmem (post x) -> prop){ respects_binary_fp p }
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
 
-let req_to_act_req (#pre:slprop) (req:fp_mprop pre) : mprop pre =
-  fun m -> interp pre m /\ req m
+val frame00 (#a:Type)
+          (#framed:bool)
+          (#opened:inames)
+          (#obs:observability)
+          (#pre:pre_t)
+          (#post:post_t a)
+          (#req:req_t pre)
+          (#ens:ens_t pre a post)
+          ($f:repr a framed opened obs pre post req ens)
+          (frame:vprop)
+  : repr a
+    true
+    opened
+    obs
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+    (fun h -> req (focus_rmem h pre))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)) /\
+      frame_equalities frame (focus_rmem h0 frame) (focus_rmem h1 frame))
 
-let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mprop pre post)
-: mprop2 pre post
-= fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
-
-let repr a framed opened_invariants f pre post req ens =
-    action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
-
-let return_ a x opened_invariants #p = fun _ -> x
-
-let interp_trans_left
-  (o:inames)
-  (p1 p2 frame:slprop)
-  (m:full_mem)
-  : Lemma
-    (requires sl_implies p1 p2 /\
-      interp (p1 `star` frame `star` locks_invariant o m) m)
-    (ensures interp (p2 `star` frame `star` locks_invariant o m) m)
-  = calc (equiv) {
-          (p1 `star` frame `star` locks_invariant o m);
-          (equiv) { star_associative p1 frame (locks_invariant o m) }
-          p1 `star` (frame `star` locks_invariant o m);
-    };
-    calc (equiv) {
-          (p2 `star` frame `star` locks_invariant o m);
-          (equiv) { star_associative p2 frame (locks_invariant o m) }
-          p2 `star` (frame `star` locks_invariant o m);
-    }
+module Sem = Steel.Semantics.Hoare.MST
+module Mem = Steel.Memory
 
 let equiv_middle_left_assoc (a b c d:slprop)
-  : Lemma (((a `star` b) `star` c `star` d) `equiv` (a `star` (b `star` c) `star` d))
-  = star_associative a b c;
+  : Lemma (((a `Mem.star` b) `Mem.star` c `Mem.star` d) `Mem.equiv`
+            (a `Mem.star` (b `Mem.star` c) `Mem.star` d))
+  = let open Steel.Memory in
+    star_associative a b c;
     star_congruence ((a `star` b) `star` c) d (a `star` (b `star` c)) d
 
+let frame00 #a #framed #opened #obs #pre #post #req #ens f frame =
+  fun frame' ->
+      let m0:full_mem = NMSTTotal.get () in
+
+      let snap:rmem frame = mk_rmem frame (core_mem m0) in
+      // Need to define it with type annotation, although unused, for it to trigger
+      // the pattern on the framed ensures in the def of MstTot
+      let aux:mprop (hp_of frame `Mem.star` frame') = req_frame frame snap in
+
+      focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
+
+      assert (interp (hp_of (pre `star` frame) `Mem.star` frame' `Mem.star` locks_invariant opened m0) m0);
+      equiv_middle_left_assoc (hp_of pre) (hp_of frame) frame' (locks_invariant opened m0);
+      assert (interp (hp_of pre `Mem.star` (hp_of frame `Mem.star` frame') `Mem.star` locks_invariant opened m0) m0);
+
+      let x = f (hp_of frame `Mem.star` frame') in
+
+      let m1:full_mem = NMSTTotal.get () in
+
+      assert (interp (hp_of (post x) `Mem.star` (hp_of frame `Mem.star` frame') `Mem.star` locks_invariant opened m1) m1);
+      equiv_middle_left_assoc (hp_of (post x)) (hp_of frame) frame' (locks_invariant opened m1);
+      assert (interp ((hp_of (post x) `Mem.star` hp_of frame)
+        `Mem.star` frame' `Mem.star` locks_invariant opened m1) m1);
+
+      focus_is_restrict_mk_rmem (pre `star` frame) frame (core_mem m0);
+      focus_is_restrict_mk_rmem (post x `star` frame) frame (core_mem m1);
+
+      let h0:rmem (pre `star` frame) = mk_rmem (pre `star` frame) (core_mem m0) in
+      let h1:rmem (post x `star` frame) = mk_rmem (post x `star` frame) (core_mem m1) in
+      assert (focus_rmem h0 frame == focus_rmem h1 frame);
+
+      focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
+
+      lemma_frame_equalities_refl frame (focus_rmem h0 frame);
+
+      x
+
+#push-options "--z3rlimit 20"
+let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g =
+  fun frame ->
+    let m0:full_mem = NMSTTotal.get () in
+
+    let h0 = mk_rmem (pre_f `star` frame_f) (core_mem m0) in
+
+    let x = frame00 f frame_f frame  in
+
+    let m1:full_mem = NMSTTotal.get () in
+
+    let h1 = mk_rmem (post_f x `star` frame_f) (core_mem m1) in
+
+    let h1' = mk_rmem (pre_g x `star` frame_g x) (core_mem m1) in
+
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    focus_is_restrict_mk_rmem
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (core_mem m1);
+    focus_focus_is_focus
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (pre_g x)
+      (core_mem m1);
+    assert (focus_rmem h1' (pre_g x) == focus_rmem h1 (pre_g x));
+
+    can_be_split_3_interp
+      (hp_of (post_f x `star` frame_f))
+      (hp_of (pre_g x `star` frame_g x))
+      frame (locks_invariant opened m1) m1;
+
+    let y = frame00 (g x) (frame_g x) frame in
+
+    let m2:full_mem = NMSTTotal.get () in
+
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+
+    let h2' = mk_rmem (post_g x y `star` frame_g x) (core_mem m2) in
+    let h2 = mk_rmem (post y) (core_mem m2) in
 
 
-#push-options "--z3rlimit_factor 2"
-let bind a b opened o1 o2 #framed_f #framed_g
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2
-  f g
-  = fun frame ->
-    let m0:full_mem = NMSTTotal.get() in
-    // Initially:
-    assert (interp ((pre_f `star` frame_f) `star` frame `star` locks_invariant opened m0) m0);
-    // Need following assertion to execute f, by AC-rewriting
-    equiv_middle_left_assoc pre_f frame_f frame (locks_invariant opened m0);
-    assert (interp (pre_f `star` (frame_f `star` frame) `star` locks_invariant opened m0) m0);
 
-    let x = f (frame_f `star` frame) in
-    let m1:full_mem = NMSTTotal.get() in
+    // assert (focus_rmem h1' (pre_g x) == focus_rmem h1 (pre_g x));
 
-    // Post-condition of executing f
-    assert (interp (post_f x `star` (frame_f `star` frame) `star` locks_invariant opened m1) m1);
-    // By AC-rewriting
-    equiv_middle_left_assoc (post_f x) frame_f frame (locks_invariant opened m1);
-    assert (interp ((post_f x `star` frame_f) `star` frame `star` locks_invariant opened m1) m1);
-    // By property of sl-implies
-    interp_trans_left opened (post_f x `star` frame_f) (pre_g x `star` frame_g x) frame m1;
-    assert (interp ((pre_g x `star` frame_g x) `star` frame `star` locks_invariant opened m1) m1);
-    // By AC-rewriting:
-    equiv_middle_left_assoc (pre_g x) (frame_g x) frame (locks_invariant opened m1);
-    assert (interp (pre_g x `star` (frame_g x `star` frame) `star` locks_invariant opened m1) m1);
+    focus_focus_is_focus
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (frame_g x)
+      (core_mem m1);
 
-    let y = g x (frame_g x `star` frame) in
-    let m2:full_mem = NMSTTotal.get() in
-    // Post-condition of executing g
-    assert (interp (post_g x y `star` (frame_g x `star` frame) `star` locks_invariant opened m2) m2);
-    // By AC-rewriting
-    equiv_middle_left_assoc (post_g x y) (frame_g x) frame (locks_invariant opened m2);
-    assert (interp ((post_g x y `star` frame_g x) `star` frame `star` locks_invariant opened m2) m2);
+    focus_is_restrict_mk_rmem
+      (post_g x y `star` frame_g x)
+      (post y)
+      (core_mem m2);
 
-    interp_trans_left opened (post_g x y `star` frame_g x) (post y) frame m2;
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (frame_g x)
+      (core_mem m2);
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (post_g x y)
+      (core_mem m2);
+
+    can_be_split_3_interp
+      (hp_of (post_g x y `star` frame_g x))
+      (hp_of (post y))
+      frame (locks_invariant opened m2) m2;
+
 
     y
+
+let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
+  fun frame ->
+    let m0:full_mem = NMSTTotal.get () in
+    let h0 = mk_rmem pre_g (core_mem m0) in
+    focus_is_restrict_mk_rmem pre_g pre_f (core_mem m0);
+
+    can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant opened m0) m0;
+
+    lemma_unfold_subcomp_pre req_f ens_f req_g ens_g p1 p2;
+
+    let x = f frame in
+
+    let m1:full_mem = NMSTTotal.get () in
+    let h1 = mk_rmem (post_g x) (core_mem m1) in
+
+    focus_is_restrict_mk_rmem (post_g x) (post_f x) (core_mem m1);
+
+    can_be_split_3_interp (hp_of (post_f x)) (hp_of (post_g x)) frame (locks_invariant opened m1) m1;
+
+    x
+
 #pop-options
 
-let subcomp (a:Type) opened o1 o2 #framed_f #framed_g
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f
- = fun frame ->
-     let m0:full_mem = NMSTTotal.get() in
-     interp_trans_left opened pre_g pre_f frame m0;
-     let x = f frame in
-     let m1:full_mem = NMSTTotal.get () in
-     interp_trans_left opened (post_f x) (post_g x) frame m1;
-     x
-
-let bind_pure_steela_ (a:Type) (b:Type) opened o #wp #pre #post #req #ens f g
-= fun frame ->
-    let x = f () in
-    g x frame
+let bind_pure_steela_ a b opened o #wp f g
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+    fun frame ->
+      let x = f () in
+      g x frame
 
 let lift_ghost_atomic a o f = f
 
-let lift_atomic_steel a o #framed #pre #post #req #ens f = f
+let lift_atomic_steel a o f = f
 
 let as_atomic_action f = SteelAtomic?.reflect f
 let as_atomic_action_ghost f = SteelGhost?.reflect f
 
-let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
+(* Some helpers *)
+
+let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
+  true opened Unobservable p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> frame_equalities p h0 h1 /\ frame_equalities p r h1)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      h0
+
+let get () = SteelGhost?.reflect (get0 ())
+
+let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m)
+  )
+  : Lemma
+   (requires interp ((hp_of p) `Mem.star` r) m /\ sel_of p m == reveal vp)
+   (ensures interp ((hp_of q) `Mem.star` r) m)
+= let p = hp_of p in
+  let q = hp_of q in
+  let intro (ml mr:mem) : Lemma
+      (requires interp q ml /\ interp r mr /\ disjoint ml mr)
+      (ensures disjoint ml mr /\ interp (q `Mem.star` r) (Mem.join ml mr))
+  = Mem.intro_star q r ml mr
+  in
+  elim_star p r m;
+  Classical.forall_intro (Classical.move_requires proof);
+  Classical.forall_intro_2 (Classical.move_requires_2 intro)
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+let rewrite_slprop0 (#opened:inames) (p q:vprop)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m)
+  ) : repr unit false opened Unobservable p (fun _ -> q)
+           (fun _ -> True) (fun _ _ _ -> True)
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get () in
+      proof (core_mem m);
+      Classical.forall_intro (Classical.move_requires proof);
+      Mem.star_associative (hp_of p) frame (locks_invariant opened m);
+      intro_star p q (frame `Mem.star` locks_invariant opened m) (sel_of p m) (sel_of q m) m proof;
+      Mem.star_associative (hp_of q) frame (locks_invariant opened m)
+#pop-options
+
+let rewrite_slprop p q l = SteelGhost?.reflect (rewrite_slprop0 p q l)
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+let change_slprop0 (#opened:inames) (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : repr unit false opened Unobservable p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+      proof (core_mem m);
+      Classical.forall_intro (Classical.move_requires proof);
+      Mem.star_associative (hp_of p) frame (locks_invariant opened m);
+      intro_star p q (frame `Mem.star` locks_invariant opened m) vp vq m proof;
+      Mem.star_associative (hp_of q) frame (locks_invariant opened m)
+#pop-options
+
+let change_slprop p q vp vq l  = SteelGhost?.reflect (change_slprop0 p q vp vq l)
+
+let change_equal_slprop
+  p q
+= let m = get () in
+  let x : Ghost.erased (t_of p) = hide ((reveal m) p) in
+  let y : Ghost.erased (t_of q) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    p
+    q
+    x
+    y
+    (fun _ -> ())
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+let change_slprop_20 (#opened:inames) (p q:vprop) (vq:erased (t_of q))
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : repr unit false opened Unobservable p (fun _ -> q)
+           (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+      proof (core_mem m);
+      Classical.forall_intro (Classical.move_requires proof);
+      Mem.star_associative (hp_of p) frame (locks_invariant opened m);
+      intro_star p q (frame `Mem.star` locks_invariant opened m) (sel_of p m) vq m proof;
+      Mem.star_associative (hp_of q) frame (locks_invariant opened m)
+#pop-options
+
+let change_slprop_2 p q vq l = SteelGhost?.reflect (change_slprop_20 p q vq l)
+
+let change_slprop_rel0 (#opened:inames) (p q:vprop)
+  (rel : normal (t_of p) -> normal (t_of q) -> prop)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures
+      interp (hp_of p) m /\
+      interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : repr unit false opened Unobservable p (fun _ -> q)
+           (fun _ -> True) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+      proof (core_mem m);
+      let h0 = mk_rmem p (core_mem m) in
+      let h1 = mk_rmem q (core_mem m) in
+      reveal_mk_rmem p (core_mem m) p;
+      reveal_mk_rmem q (core_mem m) q;
+
+      Mem.star_associative (hp_of p) frame (locks_invariant opened m);
+      intro_star p q (frame `Mem.star` locks_invariant opened m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof;
+      Mem.star_associative (hp_of q) frame (locks_invariant opened m)
+
+let change_slprop_rel p q rel proof = SteelGhost?.reflect (change_slprop_rel0 p q rel proof)
+
+let change_slprop_rel_with_cond0 (#opened:inames) (p q:vprop)
+  (cond: t_of p -> prop)
+  (rel : (t_of p) -> (t_of q) -> prop)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ cond (sel_of p m))
+    (ensures
+      interp (hp_of p) m /\
+      interp (hp_of q) m /\
+      rel (sel_of p m) (sel_of q m))
+  ) : repr unit false opened Unobservable p (fun _ -> q)
+           (fun m -> cond (m p)) (fun h0 _ h1 -> rel (h0 p) (h1 q))
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get () in
+
+      Classical.forall_intro_3 reveal_mk_rmem;
+      proof (core_mem m);
+      let h0 = mk_rmem p (core_mem m) in
+      let h1 = mk_rmem q (core_mem m) in
+      reveal_mk_rmem p (core_mem m) p;
+      reveal_mk_rmem q (core_mem m) q;
+
+      Mem.star_associative (hp_of p) frame (locks_invariant opened m);
+      intro_star p q (frame `Mem.star` locks_invariant opened m) (sel_of p (core_mem m)) (sel_of q (core_mem m)) m proof;
+      Mem.star_associative (hp_of q) frame (locks_invariant opened m)
+
+let change_slprop_rel_with_cond p q cond rel proof
+  = SteelGhost?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
+
+let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : repr unit false opened Unobservable p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      l (core_mem m0)
+
+let extract_info p vp fact l = SteelGhost?.reflect (extract_info0 p vp fact l)
+
+let extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures fact)
+  ) : repr unit false opened Unobservable p (fun _ -> p)
+      (fun h -> True)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      l (core_mem m0)
+
+let extract_info_raw p fact l = SteelGhost?.reflect (extract_info_raw0 p fact l)
+
+let noop _ = change_slprop_rel emp emp (fun _ _ -> True) (fun _ -> ())
+
+let sladmit _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+
+let slassert0 (#opened:inames) (p:vprop) : repr unit
+  false opened Unobservable p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> frame_equalities p h0 h1)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0
+
+let slassert p = SteelGhost?.reflect (slassert0 p)
+
+let drop p = rewrite_slprop p emp
+  (fun m -> emp_unit (hp_of p); affine_star (hp_of p) Mem.emp m; reveal_emp())
+
+let reveal_star0 (#opened:inames) (p1 p2:vprop)
+  : repr unit false opened Unobservable (p1 `star` p2) (fun _ -> p1 `star` p2)
+   (fun _ -> True)
+   (fun h0 _ h1 ->
+     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\
+     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
+     h1 (p1 `star` p2) == (h1 p1, h1 p2)
+   )
+ = fun frame ->
+     let m:full_mem = NMSTTotal.get () in
+     Classical.forall_intro_3 reveal_mk_rmem
+
+let reveal_star p1 p2 = SteelGhost?.reflect (reveal_star0 p1 p2)
+
+let reveal_star_30 (#opened:inames) (p1 p2 p3:vprop)
+ : repr unit false opened Unobservable (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
+   (requires fun _ -> True)
+   (ensures fun h0 _ h1 ->
+     can_be_split (p1 `star` p2 `star` p3) p1 /\
+     can_be_split (p1 `star` p2 `star` p3) p2 /\
+     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
+     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
+     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
+   )
+ = fun frame ->
+     let m:full_mem = NMSTTotal.get () in
+     Classical.forall_intro_3 reveal_mk_rmem;
+     let h0 = mk_rmem (p1 `star` p2 `star` p3) (core_mem m) in
+     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p1;
+     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p2;
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2 `star` p3);
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2);
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m p3
+
+let reveal_star_3 p1 p2 p3 = SteelGhost?.reflect (reveal_star_30 p1 p2 p3)
+
+let intro_pure p = rewrite_slprop emp (pure p) (fun m -> pure_interp p m)
+
+let elim_pure_aux #uses (p:prop)
+  : SteelGhostT (_:unit{p}) uses (pure p) (fun _ -> to_vprop Mem.emp)
+  = as_atomic_action_ghost (Steel.Memory.elim_pure #uses p)
+
+let elim_pure #uses p =
+  let _ = elim_pure_aux p in
+  rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ())
+
+let return #a #opened #p x = SteelAtomicBase?.reflect (return_ a x opened #p)
+
+let intro_exists #a #opened x p =
+  rewrite_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x (h_exists_sl' p) m)
+
+let intro_exists_erased #a #opened x p =
+  rewrite_slprop (p x) (h_exists p)
+    (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) (h_exists_sl' p) m)
+
+let witness_exists #a #u #p _ =
+  SteelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
+
+let lift_exists #a #u p =
+  as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)))
+
+let exists_cong p q =
+  rewrite_slprop (h_exists p) (h_exists q)
+    (fun m -> Classical.forall_intro_2 reveal_equiv;
+            h_exists_cong (h_exists_sl' p) (h_exists_sl' q))
+
+let new_invariant #uses p =
+  rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
+  let i = as_atomic_action_ghost (new_invariant uses (hp_of p)) in
+  rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ());
+  i
 
 (*
  * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively
@@ -176,60 +514,196 @@ let new_invariant i p = SteelGhost?.reflect (Steel.Memory.new_invariant i p)
  *     But for now assuming a function
  *)
 assume val reify_steel_atomic_comp
-  (#a:Type) (#already_framed:bool) (#opened_invariants:inames) (#g:observability)
-  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelAtomicBase a already_framed opened_invariants g pre post req ens)
-  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
+  (#a:Type) (#framed:bool) (#opened_invariants:inames) (#g:observability)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelAtomicBase a framed opened_invariants g pre post req ens)
+  : repr a framed opened_invariants g pre post req ens
 
-let with_invariant #a #fp #fp' #opened i f =
-  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_atomic_comp f))
+let with_invariant #a #fp #fp' #opened #p i f =
+  rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
+  let x = as_atomic_action (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_atomic_comp f)) in
+  rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
+  return x
 
 assume val reify_steel_ghost_comp
-  (#a:Type) (#already_framed:bool) (#opened_invariants:inames)
-  (#pre:slprop u#1) (#post:a -> slprop u#1) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> SteelGhostBase a already_framed opened_invariants Unobservable pre post req ens)
-  : action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
+  (#a:Type) (#framed:bool) (#opened_invariants:inames)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> SteelGhostBase a framed opened_invariants Unobservable pre post req ens)
+  : repr a framed opened_invariants Unobservable pre post req ens
 
-let with_invariant_g #a #fp #fp' #opened i f =
-  SteelGhost?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify_steel_ghost_comp f))
+let with_invariant_g #a #fp #fp' #opened #p i f =
+  rewrite_slprop fp (to_vprop (hp_of fp)) (fun _ -> ());
+  let x = as_atomic_action_ghost (Steel.Memory.with_invariant #a #(hp_of fp) #(fun x -> hp_of (fp' x)) #opened #(hp_of p) i (reify_steel_ghost_comp f)) in
+  rewrite_slprop (to_vprop (hp_of (fp' x))) (fp' x) (fun _ -> ());
+  x
 
-let change_slprop #opened p q proof =
-  SteelGhost?.reflect (Steel.Memory.change_slprop #opened p q proof)
+let intro_vrefine v p =
+  let m = get () in
+  let x : Ghost.erased (t_of v) = gget v in
+  let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    v
+    (vrefine v p)
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
 
-let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
+let elim_vrefine v p =
+  let h = get() in
+  let x : Ghost.erased (vrefine_t v p) = gget (vrefine v p) in
+  let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
+  change_slprop
+    (vrefine v p)
+    v
+    x
+    x'
+    (fun m ->
+      interp_vrefine_hp v p m;
+      vrefine_sel_eq v p m
+    )
 
-let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
-  (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : repr unit false opened Unobservable p (fun _ -> p)
-      (fun _ -> True)
-      (fun _ _ _ -> fact)
-  = fun frame ->
-      let m:full_mem = NMSTTotal.get() in
-      proof m
+let vdep_cond
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+: Tot prop
+= q == p (fst x1)
 
-let extract_info #opened p fact proof = SteelGhost?.reflect (extract_info0 #opened p fact proof)
+let vdep_rel
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x1: t_of (v `star` q))
+  (x2: (t_of (vdep v p)))
+: Tot prop
+=
+  q == p (fst x1) /\
+  dfst (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == fst x1 /\
+  dsnd (x2 <: (dtuple2 (t_of v) (vdep_payload v p))) == snd x1
 
-let noop _ = change_slprop emp emp (fun _ -> ())
+let intro_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (v `star` q)) m /\
+    q == p (fst (sel_of (v `star` q) m))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
 
-let sladmit #a #opened #p #q _ = SteelGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+let intro_vdep
+  v q p
+=
+  reveal_star v q;
+  change_slprop_rel_with_cond
+    (v `star` q)
+    (vdep v p)
+    (vdep_cond v q p)
+    (vdep_rel v q p)
+    (fun m -> intro_vdep_lemma v q p m)
 
-let slassert p = change_slprop p p (fun m -> ())
-let intro_pure #_ p = change_slprop emp (pure p) (fun m -> pure_interp p m)
-let intro_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x p m)
-let intro_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
-let drop #_ p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
+let vdep_cond_recip
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+  (x2: t_of (vdep v p))
+: Tot prop
+= q == p (dfst (x2 <: dtuple2 (t_of v) (vdep_payload v p)))
 
-let witness_h_exists #a #u #p s = SteelGhost?.reflect (Steel.Memory.witness_h_exists #u p)
-let lift_h_exists_atomic #a #u p = SteelGhost?.reflect (Steel.Memory.lift_h_exists #u p)
-let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
+let vdep_rel_recip
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x2: (t_of (vdep v p)))
+  (x1: t_of (v `star` q))
+: Tot prop
+=
+  vdep_rel v q p x1 x2
 
-let elim_pure_aux #uses (p:prop)
-  : SteelGhostT (_:unit{p}) uses (pure p) (fun _ -> emp)
-  = SteelGhost?.reflect (Steel.Memory.elim_pure #uses p)
+let elim_vdep_lemma
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (vdep v p)) m /\
+    q == p (dfst (sel_of (vdep v p) m <: dtuple2 (t_of v) (vdep_payload v p)))
+  ))
+  (ensures (
+    interp (hp_of (v `star` q)) m /\
+    interp (hp_of (vdep v p)) m /\
+    vdep_rel v q p (sel_of (v `star` q) m) (sel_of (vdep v p) m)
+  ))
+=
+  Mem.interp_star (hp_of v) (hp_of q) m;
+  interp_vdep_hp v p m;
+  vdep_sel_eq v p m
 
-let elim_pure #uses p = elim_pure_aux p
+let elim_vdep0
+  (#opened:inames)
+  (v: vprop)
+  (p: (t_of v -> Tot vprop))
+  (q: vprop)
+: SteelGhost unit opened
+  (vdep v p)
+  (fun _ -> v `star` q)
+  (requires (fun h -> q == p (dfst (h (vdep v p)))))
+  (ensures (fun h _ h' ->
+      let fs = h' v in
+      let sn = h' q in
+      let x2 = h (vdep v p) in
+      q == p fs /\
+      dfst x2 == fs /\
+      dsnd x2 == sn
+  ))
+= change_slprop_rel_with_cond
+    (vdep v p)
+    (v `star` q)
+    (vdep_cond_recip v p q)
+    (vdep_rel_recip v q p)
+    (fun m -> elim_vdep_lemma v q p m);
+  reveal_star v q
 
-let sghost #a #opened_invariants #pre #post #req #ens f = SteelAtomicBase?.reflect (reify_steel_ghost_comp f)
+let elim_vdep
+  v p
+= let r = gget (vdep v p) in
+  let res = Ghost.hide (dfst #(t_of v) #(vdep_payload v p) (Ghost.reveal r)) in
+  elim_vdep0 v p (p (Ghost.reveal res));
+  res
 
-let return #a #opened_invariants #p x =
-  SteelAtomicBase?.reflect (fun _ -> x)
+let intro_vrewrite
+  v #t f
+= let x : Ghost.erased (t_of v) = gget v in
+  let x' : Ghost.erased t = Ghost.hide (f (Ghost.reveal x)) in
+  change_slprop
+    v
+    (vrewrite v f)
+    x
+    x'
+    (fun m ->
+      vrewrite_sel_eq v f m
+    )
+
+let elim_vrewrite
+  v #t f
+=
+  change_slprop_rel
+    (vrewrite v f)
+    v
+    (fun y x -> y == f x)
+    (fun m -> vrewrite_sel_eq v f m)

@@ -225,7 +225,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         let move_decreases d flags flags' =
           let d' =
             let s = U.rename_binders bs bs' in
-            List.map (SS.subst s) d
+            SS.subst_decreasing_order s d
           in
           let c = U.comp_set_flags c flags in
           let tarr = U.arrow bs c in
@@ -952,9 +952,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flag
     //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
     U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
   in
-  let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) r1 in
   let wp_args = [
-    S.as_arg r1;
     S.as_arg t1;
     S.as_arg t2;
     S.as_arg wp1;
@@ -1133,7 +1131,7 @@ let maybe_add_with_type env uopt lc e =
     || env.lax
     then e
     else if lcomp_has_trivial_postcondition lc
-         && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
+         && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //we have with_type in the environment
     then let u = match uopt with
                  | Some u -> u
                  | None -> env.universe_of env lc.res_typ
@@ -1246,13 +1244,13 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
               match aux () with
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
               | Inr reason -> Inr reason in
-            if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
-            then if U.is_tot_or_gtot_comp c1
-                 && U.is_tot_or_gtot_comp c2
-                 then Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
-                 else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
-                                   "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
-                                   (Env.get_range env)
+            if Env.too_early_in_prims env  //if we're very early in prims
+            then //if U.is_tot_or_gtot_comp c1
+                 //&& U.is_tot_or_gtot_comp c2
+                 Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
+                 // else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
+                 //                   "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
+                 //                   (Env.get_range env)
             else if U.is_total_comp c1
             then (*
                   * Helper routine to close the compuation c with c1's return type
@@ -1400,7 +1398,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       mk_bind c1 b c2 g
                  else if Options.vcgen_optimize_bind_as_seq()
                       && lcomp_has_trivial_postcondition lc1
-                      && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we're not very early in prims
+                      && Option.isSome (Env.try_lookup_lid env C.with_type_lid) //and we have with_type in the environment
                  then // case (b)
                       let e1' =
                         if Options.vcgen_decorate_with_type()
@@ -1506,7 +1504,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcom
 let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
   let should_return =
       not (env.lax)
-   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
+   && not (Env.too_early_in_prims env) //we're not too early in prims
    && should_return env (Some e) lc
    && not (TcComm.is_lcomp_partial_return lc)
   in

@@ -1004,8 +1004,13 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
     let n_univs = List.length lb.lbunivs in
     n_univs + List.length bs,
     U.map_opt dopt (fun d ->
-       let d_bvs = d |> List.fold_left (fun s t ->
-         set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv) in
+       let d_bvs =
+         match d with
+         | Decreases_lex l ->
+           l |> List.fold_left (fun s t ->
+             set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv)
+         | Decreases_wf (rel, e) ->
+           set_union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
 
