@@ -58,8 +58,8 @@ let rec (inst :
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, pats) ->
           let pats1 =
-            FStar_All.pipe_right pats
-              (FStar_List.map
+            FStar_Compiler_Effect.pipe_right pats
+              (FStar_Compiler_List.map
                  (fun uu___ ->
                     match uu___ with
                     | (p, wopt, t3) ->
@@ -71,7 +71,8 @@ let rec (inst :
                               let uu___1 = inst s w in
                               FStar_Pervasives_Native.Some uu___1 in
                         let t4 = inst s t3 in (p, wopt1, t4))) in
-          let asc_opt1 = FStar_Util.map_opt asc_opt (inst_ascription s) in
+          let asc_opt1 =
+            FStar_Compiler_Util.map_opt asc_opt (inst_ascription s) in
           let uu___ =
             let uu___1 = let uu___2 = inst s t2 in (uu___2, asc_opt1, pats1) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
@@ -86,8 +87,9 @@ let rec (inst :
       | FStar_Syntax_Syntax.Tm_let (lbs, t2) ->
           let lbs1 =
             let uu___ =
-              FStar_All.pipe_right (FStar_Pervasives_Native.snd lbs)
-                (FStar_List.map
+              FStar_Compiler_Effect.pipe_right
+                (FStar_Pervasives_Native.snd lbs)
+                (FStar_Compiler_List.map
                    (fun lb ->
                       let uu___1 = lb in
                       let uu___2 = inst s lb.FStar_Syntax_Syntax.lbtyp in
@@ -119,7 +121,8 @@ let rec (inst :
               let uu___3 =
                 let uu___4 =
                   let uu___5 =
-                    FStar_All.pipe_right args (FStar_List.map (inst_args s)) in
+                    FStar_Compiler_Effect.pipe_right args
+                      (FStar_Compiler_List.map (inst_args s)) in
                   (bvs, uu___5) in
                 FStar_Syntax_Syntax.Meta_pattern uu___4 in
               (uu___2, uu___3) in
@@ -148,8 +151,8 @@ and (inst_binders :
   =
   fun s ->
     fun bs ->
-      FStar_All.pipe_right bs
-        (FStar_List.map
+      FStar_Compiler_Effect.pipe_right bs
+        (FStar_Compiler_List.map
            (fun b ->
               let uu___ = b in
               let uu___1 =
@@ -165,8 +168,9 @@ and (inst_binders :
                   FStar_Syntax_Syntax.sort = uu___3
                 } in
               let uu___2 =
-                FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_attrs
-                  (FStar_List.map (inst s)) in
+                FStar_Compiler_Effect.pipe_right
+                  b.FStar_Syntax_Syntax.binder_attrs
+                  (FStar_Compiler_List.map (inst s)) in
               {
                 FStar_Syntax_Syntax.binder_bv = uu___1;
                 FStar_Syntax_Syntax.binder_qual =
@@ -186,8 +190,8 @@ and (inst_args :
   =
   fun s ->
     fun args ->
-      FStar_All.pipe_right args
-        (FStar_List.map
+      FStar_Compiler_Effect.pipe_right args
+        (FStar_Compiler_List.map
            (fun uu___ ->
               match uu___ with
               | (a, imp) -> let uu___1 = inst s a in (uu___1, imp)))
@@ -211,8 +215,8 @@ and (inst_comp :
             let uu___1 = inst s ct.FStar_Syntax_Syntax.result_typ in
             let uu___2 = inst_args s ct.FStar_Syntax_Syntax.effect_args in
             let uu___3 =
-              FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags
-                (FStar_List.map
+              FStar_Compiler_Effect.pipe_right ct.FStar_Syntax_Syntax.flags
+                (FStar_Compiler_List.map
                    (fun uu___4 ->
                       match uu___4 with
                       | FStar_Syntax_Syntax.DECREASES dec_order ->
@@ -240,7 +244,9 @@ and (inst_decreases_order :
     fun uu___ ->
       match uu___ with
       | FStar_Syntax_Syntax.Decreases_lex l ->
-          let uu___1 = FStar_All.pipe_right l (FStar_List.map (inst s)) in
+          let uu___1 =
+            FStar_Compiler_Effect.pipe_right l
+              (FStar_Compiler_List.map (inst s)) in
           FStar_Syntax_Syntax.Decreases_lex uu___1
       | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
           let uu___1 =
@@ -262,7 +268,8 @@ and (inst_lcomp_opt :
           let uu___ =
             let uu___1 = rc in
             let uu___2 =
-              FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ (inst s) in
+              FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
+                (inst s) in
             {
               FStar_Syntax_Syntax.residual_effect =
                 (uu___1.FStar_Syntax_Syntax.residual_effect);
@@ -292,7 +299,8 @@ and (inst_ascription :
                 let uu___1 = inst s t in FStar_Pervasives.Inl uu___1
             | FStar_Pervasives.Inr c ->
                 let uu___1 = inst_comp s c in FStar_Pervasives.Inr uu___1 in
-          let topt1 = FStar_Util.map_opt topt (inst s) in (annot1, topt1)
+          let topt1 = FStar_Compiler_Util.map_opt topt (inst s) in
+          (annot1, topt1)
 let (instantiate :
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun i ->
@@ -302,7 +310,7 @@ let (instantiate :
       | uu___ ->
           let inst_fv t1 fv =
             let uu___1 =
-              FStar_Util.find_opt
+              FStar_Compiler_Util.find_opt
                 (fun uu___2 ->
                    match uu___2 with
                    | (x, uu___3) ->
