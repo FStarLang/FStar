@@ -4594,6 +4594,14 @@ let rec (norm :
                                             (names1, args1)),
                                          (t1.FStar_Syntax_Syntax.pos))) ::
                                    stack1) head
+                             | FStar_Syntax_Syntax.Meta_desugared
+                                 (FStar_Syntax_Syntax.Machine_integer
+                                 (uu___7, uu___8, uu___9)) ->
+                                 norm cfg env1
+                                   ((Meta
+                                       (env1, m,
+                                         (t1.FStar_Syntax_Syntax.pos))) ::
+                                   stack1) head
                              | uu___7 -> norm cfg env1 stack1 head)
                         | [] ->
                             let head1 = norm cfg env1 [] head in
