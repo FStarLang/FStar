@@ -1175,10 +1175,6 @@ and term_as_mlexpr (g:uenv) (e:term) : (mlexpr * e_tag * mlty) =
 
 and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     let top = SS.compress top in
-    BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
-        (Range.string_of_range top.pos)
-        (Print.tag_of_term top)
-        (Print.term_to_string top));
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (Print.tag_of_term top)

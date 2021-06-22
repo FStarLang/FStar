@@ -105,6 +105,16 @@ let min_of_int_const = Z.of_int (-65536)
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
+  let stdint_module (s:FStar_Const.signedness) (w:FStar_Const.width) : string =
+    let sign = match s with
+      | FStar_Const.Signed -> "Int"
+      | FStar_Const.Unsigned -> "Uint" in
+    let with_w ws = BatString.concat "" ["Stdint."; sign; ws] in
+    match w with
+    | FStar_Const.Int8 -> with_w "8"
+    | FStar_Const.Int16 -> with_w "16"
+    | FStar_Const.Int32 -> with_w "32"
+    | FStar_Const.Int64 -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with
@@ -117,12 +127,14 @@ let build_constant (c: mlconstant): Parsetree.constant =
       Const.integer s
   | MLC_Int (v, Some (s, w)) ->
       let s = match Z.of_string v with
-        | x when x = Z.zero -> "ZERO"
-        | x when x = Z.one -> "ONE"
+        | x when x = Z.zero ->
+            BatString.concat "" [stdint_module s w; ".zero"]
+        | x when x = Z.one ->
+            BatString.concat "" [stdint_module s w; ".one"]
         | x when (min_of_int_const < x) && (x < max_of_int_const) ->
-            BatString.concat v ["(STDINT.OFINT ("; "))"]
+            BatString.concat "" ["("; stdint_module s w; ".of_int ("; v; "))"]
         | x ->
-          BatString.concat v ["(STDINT.PARSE \""; "\")"] in
+            BatString.concat "" ["("; stdint_module s w; ".of_string \""; v; "\")"] in
       Const.integer s
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
