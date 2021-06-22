@@ -125,6 +125,9 @@ let build_constant (c: mlconstant): Parsetree.constant =
         | x ->
             BatString.concat v ["(Prims.parse_int \""; "\")"] in
       Const.integer s
+  (* Special case for UInt8, as it's realized as OCaml built-in int type *)
+  | MLC_Int (v, Some (FStar_Const.Unsigned, FStar_Const.Int8)) ->
+      Const.integer v
   | MLC_Int (v, Some (s, w)) ->
       let s = match Z.of_string v with
         | x when x = Z.zero ->
