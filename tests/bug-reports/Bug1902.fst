@@ -1,5 +1,6 @@
 module Bug1902
 
+open FStar.List.Tot
 open FStar.Tactics
 
 // a few helpers

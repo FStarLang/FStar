@@ -1,4 +1,5 @@
 module Sec2.HIFC
+open FStar.List.Tot
 open FStar.Map
 let loc = int
 type store = m:Map.t loc int{forall l. contains m l}

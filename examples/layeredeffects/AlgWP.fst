@@ -5,6 +5,7 @@ can recover semantic facts from the labels alone, e.g. that interpreting
 a tree will not change the state, effectively allowing to strengthen a
 WP from intensional information about the operations in the tree. *)
 
+open FStar.List.Tot
 open Common
 open FStar.Calc
 module FE = FStar.FunctionalExtensionality
