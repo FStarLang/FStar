@@ -237,8 +237,10 @@ function refresh_hints() {
     fi
 
     # Update the version number in version.txt and fstar.opam, and if
-    # so, commit
-    update_version_number
+    # so, commit. Do this only for the master branch.
+    if [[ $CI_BRANCH = master ]] ; then
+	update_version_number
+    fi
 
     # Memorize the latest commit (which might have been a version number update)
     commit=$(git rev-parse HEAD)
