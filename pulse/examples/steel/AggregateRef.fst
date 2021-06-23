@@ -2,6 +2,7 @@ module AggregateRef
 
 open FStar.PCM
 module M = Steel.Memory
+module P = FStar.PCM
 
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
@@ -44,13 +45,13 @@ let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
   put_put = (fun _ _ _ -> ());
 }
 
-let refine (f: 'a -> prop) = x:'a{f x}
-let ( << ) (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
+let refine_t (f: 'a -> prop) = x:'a{f x}
 
-let lens_refine_get (l: lens 'a 'b) f (s: refine (f << l.get)): refine f = l.get s
-let lens_refine_put (l: lens 'a 'b) f (v: refine f) (s: refine (f << l.get)): refine (f << l.get) =
+let ( << ) (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
+let lens_refine_get (l: lens 'a 'b) f (s: refine_t (f << l.get)): refine_t f = l.get s
+let lens_refine_put (l: lens 'a 'b) f (v: refine_t f) (s: refine_t (f << l.get)): refine_t (f << l.get) =
   l.put v s
-let lens_refine (l: lens 'a 'b) (f: 'b -> prop) : lens (refine (f << l.get)) (refine f) = {
+let lens_refine (l: lens 'a 'b) (f: 'b -> prop) : lens (refine_t (f << l.get)) (refine_t f) = {
   get = lens_refine_get l f;
   put = lens_refine_put l f;
   get_put = (fun _ _ -> ());
@@ -58,15 +59,44 @@ let lens_refine (l: lens 'a 'b) (f: 'b -> prop) : lens (refine (f << l.get)) (re
   put_put = (fun _ _ _ -> ());
 }
 
+let lens_fst_put (x:'a) (xy: 'a & 'b): 'a & 'b = (x, snd xy)
+let lens_fst #a #b : lens (a & b) a = {
+  get = fst;
+  put = lens_fst_put;
+  get_put = (fun _ _ -> ());
+  put_get = (fun _ -> ());
+  put_put = (fun _ _ _ -> ());
+}
+
+(** We can create lenses for unions if we know which case of the union we are in: *)
+
+let either_l a b = x:either a b{Inl? x}
+let lens_left_put (y: 'a) (x:either_l 'a 'b): either_l 'a 'b =
+  Inl y
+let lens_left #a #b : lens (either_l a b) a = {
+  get = Inl?.v;
+  put = lens_left_put;
+  get_put = (fun _ _ -> ());
+  put_get = (fun _ -> ());
+  put_put = (fun _ _ _ -> ());
+}
+
+let lens_left_fst #a #b #c: lens (either_l (a & b) c) a = lens_comp lens_left lens_fst
+let lens_fst_left #a #b #c: lens ((either_l a b) & c) a = lens_comp lens_fst lens_left
+
 (** The non-computational part of frame_preserving_upd
     TODO: move this and lemmas about this to FStar.PCM.fst *)
-let frame_pres (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a) =
-  forall (v:'a{p.refine v /\ compatible p x v}).{:pattern compatible p x v}
-  p.refine (f v) /\
+let frame_pres_on (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
+  (v:'a{p.refine v /\ compatible p x v})
+= p.refine (f v) /\
   compatible p y (f v) /\
   (forall (frame:'a{composable p x frame}).{:pattern composable p x frame}
      composable p y frame /\
      (op p x frame == v ==> op p y frame == f v))
+
+let frame_pres (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a) =
+  forall (v:'a{p.refine v /\ compatible p x v}).{:pattern compatible p x v}
+  frame_pres_on p f x y v
 
 (** Every function satisfying frame_pres is a frame_preserving_upd *)
 let frame_pres_mk_upd (p: pcm 'a) (x y: Ghost.erased 'a)
@@ -86,147 +116,113 @@ let frame_pres_intro (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
 : Lemma (frame_pres p f x y) =
   let _ = g in ()
 
-(* TODO idea: problem is that PCM and lens need two different refinements.
-   PCM needs f \/ is_unit
-   lens just needs f
-   instead of threading refinements through all the code,
-   assume client wll instantiate with f \/ is_unit
-   and make lens refinement be x:(refine f){x is not unit}
-
-   problem:
-   - unions require restrictions
-   - restrictions mean changing the type of the pcm_lens
-   - the pcm_lens has two parts: a lens and a pcm
-   - need to change both, interact between the two gets very tricky
-   - main sticking point: a PCM needs a unit. what is the unit of a PCM restricted to the Left case?
-   - code gets "very dependently typed", can no longer take simply
-     typed code and add some things on top *)
 (** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b)
-    with the extra law that lens_upd lifts frame-preserving updates on
-    b w.r.t. q to frame-preserving updates on a w.r.t. p. *)
+    with the extra requirement that [get] and [put] be PCM morphisms. *)
 noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
-  raw: lens a b;
-  upd_resp_pcm: s: a -> v: b -> upd:(b -> b) ->
+  l: lens a b;
+  get_refine: s:a -> Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
+  get_op: s:a -> t:a ->
     Lemma
-      (requires frame_pres q upd (raw.get s) v)
-      (ensures frame_pres p (lens_upd raw upd) s (raw.put v s));
+      (requires composable p s t)
+      (ensures composable q (l.get s) (l.get t) /\ 
+               l.get (op p s t) == op q (l.get s) (l.get t))
+               // Technically, this distributivity law is derivable from the one for put:
+               //   get (s * t) = get (put (get s) s * put (get t) t)
+               //   = get (put (get s * get t) (s * t)) = get s * get t
+    [SMTPat (composable p s t); SMTPat (l.get (op p s t))];
+  put_refine: s:a -> v:b ->
+    Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
+    [SMTPat (p.refine (l.put v s))];
+  put_op: s:a -> t:a -> v:b -> w:b ->
+    Lemma
+      (requires composable p s t /\ composable q v w)
+      (ensures composable p (l.put v s) (l.put w t) /\
+               l.put (op q v w) (op p s t) == op p (l.put v s) (l.put w t))
+    [SMTPat (l.put (op q v w) (op p s t)); SMTPat (composable p (l.put v s) (l.put w t))];
 }
 
-let upd_resp_pcm' (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
-  : Lemma
-      (requires frame_pres q f (l.raw.get s) v)
-      (ensures frame_pres p (lens_upd l.raw f) s (l.raw.put v s))
-      [SMTPat (frame_pres q f (l.raw.get s) v)]
-  = l.upd_resp_pcm s v f
+let pcm_lens_compatible_get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (x y: 'a)
+: Lemma (requires compatible p x y) (ensures compatible q (l.l.get x) (l.l.get y))
+= compatible_elim p x y (compatible q (l.l.get x) (l.l.get y)) (fun frame_x ->
+  let _ = l.get_op frame_x x in
+  compatible_intro q (l.l.get x) (l.l.get y) (l.l.get frame_x))
 
-let pcm_lens_id (#p: pcm 'a): pcm_lens p p
-  = {raw = lens_id; upd_resp_pcm = (fun _ _ _ -> ())}
-let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
-  (l: pcm_lens p q) (m: pcm_lens q r): pcm_lens p r
-  = {raw = lens_comp l.raw m.raw; upd_resp_pcm = (fun _ _ _ -> ())}
+let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
+: Lemma
+    (requires frame_pres q f (l.l.get s) v)
+    (ensures frame_pres p (lens_upd l.l f) s (l.l.put v s))
+    [SMTPat (frame_pres q f (l.l.get s) v)]
+= frame_pres_intro p (lens_upd l.l f) s (l.l.put v s) (fun full ->
+    assert (p.refine full);
+    assert (compatible p s full);
+    assert (lens_upd l.l f full == l.l.put (f (l.l.get full)) full);
+    let _ = l.get_refine in
+    assert (q.refine (l.l.get full));
+    pcm_lens_compatible_get l s full;
+    assert (compatible q (l.l.get s) (l.l.get full));
+    assert (q.refine (f (l.l.get full)));
+    let _ = l.put_refine in
+    assert (p.refine (lens_upd l.l f full));
+    assert (compatible q v (f (l.l.get full)));
+    let goal = frame_pres_on p (lens_upd l.l f) s (l.l.put v s) full in
+    compatible_elim p s full goal (fun frame_s ->
+    compatible_elim q v (f (l.l.get full)) goal (fun frame_v ->
+    assert (composable q v frame_v /\ op q frame_v v == f (l.l.get full));
+    let frame_vs: 'a = l.l.put frame_v frame_s in
+    l.put_op s frame_s v frame_v;
+    assert (composable p (l.l.put v s) frame_vs);
+    p.comm frame_vs (l.l.put v s);
+    q.comm v frame_v;
+    p.comm s frame_s;
+    assert (op p frame_vs (l.l.put v s) == op p (l.l.put v s) frame_vs);
+    assert (op p frame_vs (l.l.put v s) == l.l.put (op q v frame_v) (op p s frame_s));
+    assert (op p frame_vs (l.l.put v s) == l.l.put (op q v frame_v) (op p s frame_s));
+    assert (op p frame_vs (l.l.put v s) == lens_upd l.l f full);
+    compatible_intro p (l.l.put v s) (lens_upd l.l f full) frame_vs;
+    let aux (frame:'a{composable p s frame})
+    : Lemma (composable p (l.l.put v s) frame /\
+             (op p s frame == full ==> op p (l.l.put v s) frame == lens_upd l.l f full))
+    = l.get_op s frame;
+      assert (composable q (l.l.get s) (l.l.get frame));
+      assert (composable q v (l.l.get frame));
+      assert (composable p s frame);
+      l.put_op s frame v (l.l.get frame);
+      let aux ()
+      : Lemma (requires op p s frame == full) 
+              (ensures op p (l.l.put v s) frame == lens_upd l.l f full)
+      = assert (composable p (l.l.put v s) (l.l.put (l.l.get frame) frame));
+        assert (op p (l.l.put v s) frame == op p (l.l.put v s) (l.l.put (l.l.get frame) frame));
+        assert (op p (l.l.put v s) frame == l.l.put (op q v (l.l.get frame)) (op p s frame));
+        assert (op p (l.l.put v s) frame == l.l.put (op q v (l.l.get frame)) full);
+        ()
+      in ()
+    in FStar.Classical.forall_intro aux)))
 
-let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.raw.get s
-let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.raw.put v s
-let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.raw f s
+// let pcm_lens_id (#p: pcm 'a): pcm_lens p p
+//   = {raw = lens_id; upd_resp_pcm = (fun _ _ _ -> ())}
+// let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
+//   (l: pcm_lens p q) (m: pcm_lens q r): pcm_lens p r
+//   = {raw = lens_comp l.raw m.raw; upd_resp_pcm = (fun _ _ _ -> ())}
+// 
+// let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.raw.get s
+// let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.raw.put v s
+// let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.raw f s
 
 open Aggregates
 
-let lens_fst_put (x:'a) (xy: 'a & 'b): 'a & 'b = (x, snd xy)
-let lens_fst #a #b : lens (a & b) a = {
-  get = fst;
-  put = lens_fst_put;
-  get_put = (fun _ _ -> ());
-  put_get = (fun _ -> ());
-  put_put = (fun _ _ _ -> ());
-}
+// let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
+//   l = lens_fst;
+//   upd_resp_pcm = (fun (x, y) x' f ->
+//     assert (forall (v:a{p.refine v /\ compatible p x v}). p.refine (f v) /\ compatible p x' (f v));
+//     frame_pres_intro (tuple_pcm p q) (lens_upd lens_fst f) (x, y) (x', y)
+//       (fun (v, w) ->
+//         let compat_ty = compatible (tuple_pcm p q) (x', y) (f v, w) in
+//         compatible_elim p x' (f v) compat_ty (fun frame_v ->
+//         compatible_elim q y w compat_ty (fun frame_w ->
+//         compatible_intro (tuple_pcm p q) (x', y) (f v, w) (frame_v, frame_w)))));
+// }
 
-let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
-  raw = lens_fst;
-  upd_resp_pcm = (fun (x, y) x' f ->
-    assert (forall (v:a{p.refine v /\ compatible p x v}). p.refine (f v) /\ compatible p x' (f v));
-    frame_pres_intro (tuple_pcm p q) (lens_upd lens_fst f) (x, y) (x', y)
-      (fun (v, w) ->
-        let compat_ty = compatible (tuple_pcm p q) (x', y) (f v, w) in
-        compatible_elim p x' (f v) compat_ty (fun frame_v ->
-        compatible_elim q y w compat_ty (fun frame_w ->
-        compatible_intro (tuple_pcm p q) (x', y) (f v, w) (frame_v, frame_w)))));
-}
-
-(* We can create lenses for unions if we know which case of the union we are in: *)
-
-let either_l a b = x:either a b{Inl? x}
-let lens_left_put (y: 'a) (x:either_l 'a 'b): either_l 'a 'b =
-  Inl y
-let lens_left #a #b : lens (either_l a b) a = {
-  get = Inl?.v;
-  put = lens_left_put;
-  get_put = (fun _ _ -> ());
-  put_get = (fun _ -> ());
-  put_put = (fun _ _ _ -> ());
-}
-
-let lens_left_fst #a #b #c: lens (either_l (a & b) c) a = lens_comp lens_left lens_fst
-let lens_fst_left #a #b #c: lens ((either_l a b) & c) a = lens_comp lens_fst lens_left
-
-(* TODO
-   This definition of restrictions is not quite right.
-   It requires the restricted PCM to contain the unit of the unrestricted PCM, but it's possible that a new, more restricted element of the PCM is now a unit.
-   Example: if you have PCM for a 2-case union (a + b), carrier is option (option a + option b) and unit is None.
-   But, when when we know that we are in the left case, carrier should be x:option(option a + option b){Some?x /\ Inl? (Some?.v x)}
-   and the unit should be Some (Inl None).
-    *)
-(* From a suitably well-behaved predicate f and PCM p with carrier a,
-   we can construct a PCM with carrier x:a{f x \/ x == 1} *)
-
-let satisfies (p: pcm 'a) (f: 'a -> prop) (x: 'a) = f x \/ x == p.p.one
-
-let respects #a (p: pcm a) (f: a -> prop) =
-  x:a{satisfies p f x} -> y:a{satisfies p f y /\ composable p x y} ->
-  Lemma (satisfies p f (op p x y))
-
-let satisfying (p: pcm 'a) f = x:'a{f x \/ x == p.p.one}
-
-let comp_restrict (p: pcm 'a) #f (re: respects p f): symrel (satisfying p f) = composable p
-
-let op_restrict (p: pcm 'a) #f (re: respects p f) (x: satisfying p f)
-  (y:satisfying p f{composable p x y}): satisfying p f
-= re x y; op p x y
-
-let one_restrict (p: pcm 'a) #f (re: respects p f): satisfying p f = p.p.one
-  
-let restrict (p: pcm 'a) #f (re: respects p f): pcm (satisfying p f) = {
-  p = {composable = comp_restrict p re; op = op_restrict p re; one = one_restrict p re};
-  comm = (fun x y -> p.comm x y);
-  assoc = (fun x y z -> p.assoc x y z);
-  assoc_r = (fun x y z -> p.assoc_r x y z);
-  is_unit = (fun x -> p.is_unit x);
-  refine = p.refine;
-}
-
-(* A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
-   The base type of the lens, unlike the Steel.Memory.ref, can be refined by a respects re. *)
-noeq type ref (#a: Type u#a) (#b: Type u#b) (p: pcm a) #f (re: respects p f) (q: pcm b) = {
-  l: pcm_lens (restrict p re) q;
-  r: M.ref a p;
-}
-
-(* A ref r points to a value v if there exists a whole value s in the heap such that
-   - v is inside s
-   - s satisfies re.f *)
-let pts_to (#p: pcm 'a) #f (#re: respects p f) (#q: pcm 'b) (r: ref p re q) (v: 'b): M.slprop =
-  M.(h_exists (fun s -> pts_to r.r s `star` pure (f s /\ get r.l s == v)))
-
-let weakest_respects (p: pcm 'a): respects p (fun _ -> True) =
-  fun _ _ -> ()
-
-let both (f g: 'a -> prop) (x: 'a): prop = f x /\ g x
-
-let respects_both (p: pcm 'a) #f #g (r: respects p f) (s: respects p g): respects p (both f g) =
-  fun x y -> r x y; s x y
-
-let respects_iff (p: pcm 'a) (#f #g: 'a -> prop)
-  (h:(x:'a -> Lemma (f x <==> g x))) (r: respects p f): respects p g
-= fun x y -> h x; h y; r x y; h (op p x y)
+(** A PCM for binary sums *)
 
 let either_composable (p: pcm 'a) (q: pcm 'b): symrel (option (either 'a 'b)) =
   fun x y -> match x, y with
@@ -262,48 +258,91 @@ let either_pcm (p: pcm 'a) (q: pcm 'b): pcm (option (either 'a 'b)) = {
     | Some (Inr x) -> q.refine x);
 }
 
-let is_inl (x: option (either 'a 'b)): prop = Some? x /\ Inl? (Some?.v x)
-let oeither_l a b = x:option (either a b){is_inl x}
+(** A PCM for possibly uninitialized data *)
 
-let is_inl_resp (p: pcm 'a) (q: pcm 'b): respects (either_pcm p q) is_inl =
-  fun x y -> ()
+type init a =
+| Uninitialized : init a
+| One : init a
+| Initialized : a -> init a
 
-let pcm_inl_comp #b (p: pcm 'a): symrel (oeither_l 'a b) =
-  fun (Some (Inl x)) (Some (Inl y)) -> composable p x y
-  
-let pcm_inl_op (p: pcm 'a) (x: oeither_l 'a 'b) (y: oeither_l 'a 'b{pcm_inl_comp p x y}): oeither_l 'a 'b
-= match x, y with (Some (Inl x)), (Some (Inl y)) -> Some (Inl (op p x y))
+let init_comp (p: pcm 'a): symrel (init 'a) = fun x y -> match x, y with
+  | One, _ | _, One -> True
+  | Uninitialized, Uninitialized -> True
+  | Initialized x, Initialized y -> composable p x y
+  | _, _ -> False
 
-let pcm_inl_one #b (p: pcm 'a): oeither_l 'a b = Some (Inl p.p.one)
+let init_op (p: pcm 'a) (x: init 'a) (y: init 'a{init_comp p x y}): init 'a = match x, y with
+  | One, z | z, One -> z
+  | Uninitialized, Uninitialized -> Uninitialized
+  | Initialized x, Initialized y -> Initialized (op p x y)
 
-let pcm_inl (p: pcm 'a) (q: pcm 'b): pcm (oeither_l 'a 'b) = {
-  p = {composable = pcm_inl_comp p; op = pcm_inl_op p; one = pcm_inl_one p};
-  comm = (fun (Some (Inl x)) (Some (Inl y)) -> p.comm x y);
-  assoc = (fun (Some (Inl x)) (Some (Inl y)) (Some (Inl z)) -> p.assoc x y z);
-  assoc_r = (fun (Some (Inl x)) (Some (Inl y)) (Some (Inl z)) -> p.assoc_r x y z);
-  is_unit = (fun (Some (Inl x)) -> p.is_unit x);
-  refine = (fun (Some (Inl x)) -> p.refine x)
+let init_pcm (p: pcm 'a): pcm (init 'a) = {
+  p = {composable = init_comp p; op = init_op p; one = One #'a};
+  comm = (fun x y -> match x, y with
+    | Initialized x, Initialized y -> p.comm x y
+    | _, _ -> ());
+  assoc = (fun x y z -> match x, y, z with
+    | Initialized x, Initialized y, Initialized z -> p.assoc x y z
+    | _, _, _ -> ());
+  assoc_r = (fun x y z -> match x, y, z with
+    | Initialized x, Initialized y, Initialized z -> p.assoc_r x y z
+    | _, _, _ -> ());
+  is_unit = (fun _ -> ());
+  refine = (fun x -> match x with
+    | Initialized x -> p.refine x
+    | _ -> True)
 }
 
-// let lens_inl: lens (oeither_l a b) 'a
-// let pcm_lens_inl (p: pcm 'a) (q: pcm 'b): pcm_lens (either_pcm p q) = {
-// }
+(** A refinement of a PCM p *)
 
-// {r `M.pts_to` op p (x, one) (one, y) }
-// ..
-// {r `M.pts_to` (x, one) `star` r `M.pts_to` (one, y)}
-// ..
-// {addr_of_fst r `pts_to` x `star` addr_of_snd r `pts_to` y `star` pure (lenses_compose r1.l r2.l /\ r2.r == r2.r)}
-// exists s1 s2. r `pts_to` op p s1 s2
-// get r1.l s1 = x ==> s1 is at least (x, one) (based on defn. of r1.l and fact that it's frame-preserving)
-// get r2.l s2 = y ==> s2 is at least (one, y)
-// ---------------
-// op p s1 s2 = (x, y)
-// 
-// r1 `pts_to` x
-//   M.(h_exists (fun (x, y) -> pts_to r.r (x, one) `star` pure (re.f (x, one) /\ x == x)))
-//   `star`
-// r2 `pts_to` y
-//   M.(h_exists (fun (x, y) -> pts_to r.r (one, y) `star` pure (re.f (one, y) /\ y == y)))
+noeq type pcm_refinement #a (p: pcm a) = {
+  f: a -> prop;
+  f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
+  new_one: refine_t f;
+  new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
+}
 
-(* TODO: construct instances of restricted PCMs for structs and their fields; unions and their cases *)
+let pcm_refine_comp (p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
+
+let pcm_refine_op (p: pcm 'a) (r: pcm_refinement p)
+  (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
+= r.f_closed_under_op x y; op p x y
+
+let pcm_refine (p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
+  p = {composable = pcm_refine_comp p r; op = pcm_refine_op p r; one = r.new_one};
+  comm = (fun x y -> p.comm x y);
+  assoc = (fun x y z -> p.assoc x y z);
+  assoc_r = (fun x y z -> p.assoc_r x y z);
+  is_unit = (fun x -> r.new_one_is_refined_unit x);
+  refine = p.refine;
+}
+
+let trivial_refinement (p: pcm 'a): pcm_refinement p = {
+  f = (fun x -> True);
+  f_closed_under_op = (fun _ _ -> ());
+  new_one = p.p.one;
+  new_one_is_refined_unit = p.is_unit;
+}
+
+let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
+  f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
+  f_closed_under_op = (fun _ _ -> ());
+  new_one = Some (Inl #_ #'b p.p.one);
+  new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
+}
+
+(** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
+    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re. *)
+noeq type ref (a: Type u#a) (b: Type u#b) = {
+  p: pcm a;
+  re: pcm_refinement p;
+  q: pcm b;
+  l: pcm_lens (pcm_refine p re) q;
+  r: M.ref a p;
+}
+
+// (** A ref r points to a value v if r `Steel.Memory.pts_to` put v one, where
+//     - put comes from r's pcm_lens
+//     - one is the unit of r's refined PCM for the source type *)
+// let pts_to (r: ref 'a 'b) (v: 'b): M.slprop =
+//   M.pts_to r.r (put r.l v (pcm_refine r.p r.re).P.p.one)
