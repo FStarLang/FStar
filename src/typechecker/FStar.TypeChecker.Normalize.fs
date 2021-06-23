@@ -1419,10 +1419,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
                 match stack with
-                | Cfg (cfg, dbg) :: stack ->
+                | Cfg (cfg', dbg) :: stack ->
                   maybe_debug cfg t1 dbg;
                   let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
-                  norm cfg env stack t
+                  norm cfg' env stack t
                 | _ ->
                   rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
@@ -2465,9 +2465,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       match stack with
       | [] -> t
 
-      | Cfg (cfg, dbg) :: stack ->
+      | Cfg (cfg', dbg) :: stack ->
         maybe_debug cfg t dbg;
-        rebuild cfg env stack t
+        rebuild cfg' env stack t
 
       | Meta(_, m, r)::stack ->
         let t = mk (Tm_meta(t, m)) r in

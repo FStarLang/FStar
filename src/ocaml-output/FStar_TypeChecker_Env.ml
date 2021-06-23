@@ -1287,7 +1287,7 @@ let (rename_gamma :
   =
   fun subst ->
     fun gamma ->
-      FStar_Compiler_Effect.pipe_right gamma
+      FStar_Compiler_Effect.op_Bar_Greater gamma
         (FStar_Compiler_List.map
            (fun uu___ ->
               match uu___ with
@@ -1718,11 +1718,11 @@ let (push_stack : env -> env) =
      let uu___5 =
        let uu___6 =
          let uu___7 =
-           FStar_Compiler_Effect.pipe_right env1.qtbl_name_and_index
+           FStar_Compiler_Effect.op_Bar_Greater env1.qtbl_name_and_index
              FStar_Pervasives_Native.fst in
          FStar_Compiler_Util.smap_copy uu___7 in
        let uu___7 =
-         FStar_Compiler_Effect.pipe_right env1.qtbl_name_and_index
+         FStar_Compiler_Effect.op_Bar_Greater env1.qtbl_name_and_index
            FStar_Pervasives_Native.snd in
        (uu___6, uu___7) in
      let uu___6 = FStar_Compiler_Util.smap_copy env1.normalized_eff_names in
@@ -1925,7 +1925,7 @@ let (incr_query_index : env -> env) =
     | (uu___, FStar_Pervasives_Native.None) -> env1
     | (tbl, FStar_Pervasives_Native.Some (l, n)) ->
         let uu___ =
-          FStar_Compiler_Effect.pipe_right qix
+          FStar_Compiler_Effect.op_Bar_Greater qix
             (FStar_Compiler_List.tryFind
                (fun uu___1 ->
                   match uu___1 with
@@ -2205,7 +2205,7 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
 let (has_interface : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->
-      FStar_Compiler_Effect.pipe_right env1.modules
+      FStar_Compiler_Effect.op_Bar_Greater env1.modules
         (FStar_Compiler_Util.for_some
            (fun m ->
               m.FStar_Syntax_Syntax.is_interface &&
@@ -2245,7 +2245,7 @@ let (mk_univ_subst :
   fun formals ->
     fun us ->
       let n = (FStar_Compiler_List.length formals) - Prims.int_one in
-      FStar_Compiler_Effect.pipe_right us
+      FStar_Compiler_Effect.op_Bar_Greater us
         (FStar_Compiler_List.mapi
            (fun i -> fun u -> FStar_Syntax_Syntax.UN ((n - i), u)))
 let (inst_tscheme_with :
@@ -2269,7 +2269,7 @@ let (inst_tscheme :
     | ([], t) -> ([], t)
     | (us, t) ->
         let us' =
-          FStar_Compiler_Effect.pipe_right us
+          FStar_Compiler_Effect.op_Bar_Greater us
             (FStar_Compiler_List.map (fun uu___1 -> new_u_univ ())) in
         inst_tscheme_with (us, t) us'
 let (inst_tscheme_with_range :
@@ -2325,11 +2325,11 @@ let (inst_effect_fun_with :
                then
                  (let uu___3 =
                     let uu___4 =
-                      FStar_Compiler_Effect.pipe_left
+                      FStar_Compiler_Effect.op_Less_Bar
                         FStar_Compiler_Util.string_of_int
                         (FStar_Compiler_List.length us) in
                     let uu___5 =
-                      FStar_Compiler_Effect.pipe_left
+                      FStar_Compiler_Effect.op_Less_Bar
                         FStar_Compiler_Util.string_of_int
                         (FStar_Compiler_List.length insts) in
                     let uu___6 =
@@ -2444,7 +2444,7 @@ let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
                             FStar_Compiler_Util.find_map ses
                               (fun se ->
                                  let uu___11 =
-                                   FStar_Compiler_Effect.pipe_right
+                                   FStar_Compiler_Effect.op_Bar_Greater
                                      (FStar_Syntax_Util.lids_of_sigelt se)
                                      (FStar_Compiler_Util.for_some
                                         (FStar_Ident.lid_equals lid)) in
@@ -2541,7 +2541,7 @@ let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> unit) =
 and (add_sigelts : env -> FStar_Syntax_Syntax.sigelt Prims.list -> unit) =
   fun env1 ->
     fun ses ->
-      FStar_Compiler_Effect.pipe_right ses
+      FStar_Compiler_Effect.op_Bar_Greater ses
         (FStar_Compiler_List.iter (add_sigelt env1))
 let (try_lookup_bv :
   env ->
@@ -2728,7 +2728,7 @@ let (try_lookup_lid_aux :
                    if uu___5
                    then
                      let uu___6 =
-                       (FStar_Compiler_Effect.pipe_right qs
+                       (FStar_Compiler_Effect.op_Bar_Greater qs
                           (FStar_Compiler_List.contains
                              FStar_Syntax_Syntax.Assumption))
                          || env1.is_iface in
@@ -2818,7 +2818,7 @@ let (try_lookup_lid_aux :
                      | uu___2 ->
                          effect_signature us_opt
                            (FStar_Pervasives_Native.fst se) env1.range in
-                   FStar_Compiler_Effect.pipe_right uu___1
+                   FStar_Compiler_Effect.op_Bar_Greater uu___1
                      (FStar_Compiler_Util.map_option
                         (fun uu___2 ->
                            match uu___2 with | (us_t, rng1) -> (us_t, rng1)))) in
@@ -2939,7 +2939,7 @@ let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
                  let uu___2 = FStar_Ident.string_of_id x in
                  let uu___3 = FStar_Ident.string_of_id y in uu___2 = uu___3
              | uu___2 -> false) env1.gamma in
-      FStar_Compiler_Effect.pipe_right uu___ FStar_Compiler_Option.isSome
+      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_Option.isSome
 let (try_lookup_val_decl :
   env ->
     FStar_Ident.lident ->
@@ -3087,10 +3087,10 @@ let (lookup_definition_qninfo_aux :
       fun lid ->
         fun qninfo1 ->
           let visible quals =
-            FStar_Compiler_Effect.pipe_right delta_levels
+            FStar_Compiler_Effect.op_Bar_Greater delta_levels
               (FStar_Compiler_Util.for_some
                  (fun dl ->
-                    FStar_Compiler_Effect.pipe_right quals
+                    FStar_Compiler_Effect.op_Bar_Greater quals
                       (FStar_Compiler_Util.for_some (visible_at dl)))) in
           match qninfo1 with
           | FStar_Pervasives_Native.Some
@@ -3138,7 +3138,7 @@ let (lookup_definition :
     fun env1 ->
       fun lid ->
         let uu___ = lookup_qname env1 lid in
-        FStar_Compiler_Effect.pipe_left
+        FStar_Compiler_Effect.op_Less_Bar
           (lookup_definition_qninfo delta_levels lid) uu___
 let (lookup_nonrec_definition :
   delta_level Prims.list ->
@@ -3151,7 +3151,7 @@ let (lookup_nonrec_definition :
     fun env1 ->
       fun lid ->
         let uu___ = lookup_qname env1 lid in
-        FStar_Compiler_Effect.pipe_left
+        FStar_Compiler_Effect.op_Less_Bar
           (lookup_definition_qninfo_aux false delta_levels lid) uu___
 let (delta_depth_of_qninfo_lid :
   FStar_Ident.lident ->
@@ -3234,16 +3234,16 @@ let (delta_depth_of_fv :
       else
         (let uu___2 =
            let uu___3 = FStar_Ident.string_of_lid lid in
-           FStar_Compiler_Effect.pipe_right uu___3
+           FStar_Compiler_Effect.op_Bar_Greater uu___3
              (FStar_Compiler_Util.smap_try_find env1.fv_delta_depths) in
-         FStar_Compiler_Effect.pipe_right uu___2
+         FStar_Compiler_Effect.op_Bar_Greater uu___2
            (fun d_opt ->
               let uu___3 =
-                FStar_Compiler_Effect.pipe_right d_opt
+                FStar_Compiler_Effect.op_Bar_Greater d_opt
                   FStar_Compiler_Util.is_some in
               if uu___3
               then
-                FStar_Compiler_Effect.pipe_right d_opt
+                FStar_Compiler_Effect.op_Bar_Greater d_opt
                   FStar_Compiler_Util.must
               else
                 (let uu___5 =
@@ -3304,7 +3304,7 @@ let (lookup_attrs_of_lid :
   fun env1 ->
     fun lid ->
       let uu___ = lookup_qname env1 lid in
-      FStar_Compiler_Effect.pipe_left attrs_of_qninfo uu___
+      FStar_Compiler_Effect.op_Less_Bar attrs_of_qninfo uu___
 let (fv_exists_and_has_attr :
   env -> FStar_Ident.lid -> FStar_Ident.lident -> (Prims.bool * Prims.bool))
   =
@@ -3316,7 +3316,7 @@ let (fv_exists_and_has_attr :
         | FStar_Pervasives_Native.None -> (false, false)
         | FStar_Pervasives_Native.Some attrs ->
             let uu___1 =
-              FStar_Compiler_Effect.pipe_right attrs
+              FStar_Compiler_Effect.op_Bar_Greater attrs
                 (FStar_Compiler_Util.for_some
                    (fun tm ->
                       let uu___2 =
@@ -3486,7 +3486,7 @@ let (lookup_effect_abbrev :
                 FStar_Compiler_Range.set_use_range uu___8 uu___9 in
               FStar_Ident.set_lid_range lid uu___7 in
             let uu___7 =
-              FStar_Compiler_Effect.pipe_right quals
+              FStar_Compiler_Effect.op_Bar_Greater quals
                 (FStar_Compiler_Util.for_some
                    (fun uu___8 ->
                       match uu___8 with
@@ -3507,7 +3507,7 @@ let (lookup_effect_abbrev :
                         FStar_Compiler_Range.string_of_range uu___12 in
                       let uu___12 = FStar_Syntax_Print.lid_to_string lid1 in
                       let uu___13 =
-                        FStar_Compiler_Effect.pipe_right
+                        FStar_Compiler_Effect.op_Bar_Greater
                           (FStar_Compiler_List.length univ_insts)
                           FStar_Compiler_Util.string_of_int in
                       FStar_Compiler_Util.format3
@@ -3522,7 +3522,7 @@ let (lookup_effect_abbrev :
                    let uu___13 =
                      let uu___14 = FStar_Syntax_Print.lid_to_string lid1 in
                      let uu___15 =
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          FStar_Compiler_Util.string_of_int
                          (FStar_Compiler_List.length univs) in
                      FStar_Compiler_Util.format2
@@ -3588,8 +3588,10 @@ let (num_effect_indices :
       fun r ->
         let sig_t =
           let uu___ =
-            FStar_Compiler_Effect.pipe_right name (lookup_effect_lid env1) in
-          FStar_Compiler_Effect.pipe_right uu___ FStar_Syntax_Subst.compress in
+            FStar_Compiler_Effect.op_Bar_Greater name
+              (lookup_effect_lid env1) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            FStar_Syntax_Subst.compress in
         match sig_t.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_arrow (_a::bs, uu___) ->
             FStar_Compiler_List.length bs
@@ -3748,7 +3750,7 @@ let (is_action : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun lid ->
       let uu___ = lookup_qname env1 lid in
-      FStar_Compiler_Effect.pipe_left qninfo_is_action uu___
+      FStar_Compiler_Effect.op_Less_Bar qninfo_is_action uu___
 let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   let interpreted_symbols =
     [FStar_Parser_Const.op_Eq;
@@ -3840,7 +3842,7 @@ let (effect_decl_opt :
   =
   fun env1 ->
     fun l ->
-      FStar_Compiler_Effect.pipe_right (env1.effects).decls
+      FStar_Compiler_Effect.op_Bar_Greater (env1.effects).decls
         (FStar_Compiler_Util.find_opt
            (fun uu___ ->
               match uu___ with
@@ -3860,8 +3862,9 @@ let (get_effect_decl :
 let (is_layered_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->
-      let uu___ = FStar_Compiler_Effect.pipe_right l (get_effect_decl env1) in
-      FStar_Compiler_Effect.pipe_right uu___ FStar_Syntax_Util.is_layered
+      let uu___ =
+        FStar_Compiler_Effect.op_Bar_Greater l (get_effect_decl env1) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Util.is_layered
 let (identity_mlift : mlift) =
   {
     mlift_wp =
@@ -3901,7 +3904,7 @@ let (join_opt :
                  identity_mlift)
            else
              (let uu___4 =
-                FStar_Compiler_Effect.pipe_right (env1.effects).joins
+                FStar_Compiler_Effect.op_Bar_Greater (env1.effects).joins
                   (FStar_Compiler_Util.find_opt
                      (fun uu___5 ->
                         match uu___5 with
@@ -3949,7 +3952,7 @@ let (monad_leq :
           FStar_Pervasives_Native.Some
             { msource = l1; mtarget = l2; mlift = identity_mlift }
         else
-          FStar_Compiler_Effect.pipe_right (env1.effects).order
+          FStar_Compiler_Effect.op_Bar_Greater (env1.effects).order
             (FStar_Compiler_Util.find_opt
                (fun e ->
                   (FStar_Ident.lid_equals l1 e.msource) &&
@@ -3964,7 +3967,7 @@ let wp_sig_aux :
   fun decls ->
     fun m ->
       let uu___ =
-        FStar_Compiler_Effect.pipe_right decls
+        FStar_Compiler_Effect.op_Bar_Greater decls
           (FStar_Compiler_Util.find_opt
              (fun uu___1 ->
                 match uu___1 with
@@ -4081,7 +4084,7 @@ let rec (unfold_effect_abbrev :
                        FStar_Syntax_Syntax.flags =
                          (c.FStar_Syntax_Syntax.flags)
                      } in
-                   FStar_Compiler_Effect.pipe_right uu___3
+                   FStar_Compiler_Effect.op_Bar_Greater uu___3
                      FStar_Syntax_Syntax.mk_Comp in
                  unfold_effect_abbrev env1 c2)))
 let effect_repr_aux :
@@ -4124,7 +4127,7 @@ let effect_repr_aux :
           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some (ed, uu___1) ->
               let uu___2 =
-                FStar_Compiler_Effect.pipe_right ed
+                FStar_Compiler_Effect.op_Bar_Greater ed
                   FStar_Syntax_Util.get_eff_repr in
               (match uu___2 with
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -4139,7 +4142,7 @@ let effect_repr_aux :
                          let uu___6 =
                            let uu___7 =
                              let uu___8 =
-                               FStar_Compiler_Effect.pipe_right res_typ
+                               FStar_Compiler_Effect.op_Bar_Greater res_typ
                                  FStar_Syntax_Syntax.as_arg in
                              uu___8 :: (c1.FStar_Syntax_Syntax.effect_args) in
                            (repr, uu___7) in
@@ -4164,7 +4167,7 @@ let (is_user_reflectable_effect : env -> FStar_Ident.lident -> Prims.bool) =
     fun effect_lid ->
       let effect_lid1 = norm_eff_name env1 effect_lid in
       let quals = lookup_effect_quals env1 effect_lid1 in
-      FStar_Compiler_Effect.pipe_right quals
+      FStar_Compiler_Effect.op_Bar_Greater quals
         (FStar_Compiler_List.existsb
            (fun uu___ ->
               match uu___ with
@@ -4233,15 +4236,15 @@ let (reify_comp :
 let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->
-      let uu___ = FStar_Compiler_Effect.pipe_right l (norm_eff_name env1) in
-      FStar_Compiler_Effect.pipe_right uu___
+      let uu___ = FStar_Compiler_Effect.op_Bar_Greater l (norm_eff_name env1) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
         (fun l1 ->
            (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
              (let uu___1 =
                 FStar_Syntax_Syntax.lid_as_fv l1
                   (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
                   FStar_Pervasives_Native.None in
-              FStar_Compiler_Effect.pipe_right uu___1
+              FStar_Compiler_Effect.op_Bar_Greater uu___1
                 (fv_has_erasable_attr env1)))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env1 ->
@@ -4385,7 +4388,8 @@ let (exists_polymonadic_bind :
     fun m ->
       fun n ->
         let uu___ =
-          FStar_Compiler_Effect.pipe_right (env1.effects).polymonadic_binds
+          FStar_Compiler_Effect.op_Bar_Greater
+            (env1.effects).polymonadic_binds
             (FStar_Compiler_Util.find_opt
                (fun uu___1 ->
                   match uu___1 with
@@ -4406,7 +4410,7 @@ let (exists_polymonadic_subcomp :
     fun m ->
       fun n ->
         let uu___ =
-          FStar_Compiler_Effect.pipe_right
+          FStar_Compiler_Effect.op_Bar_Greater
             (env1.effects).polymonadic_subcomps
             (FStar_Compiler_Util.find_opt
                (fun uu___1 ->
@@ -4428,16 +4432,16 @@ let (update_effect_lattice :
             let composed_lift =
               let mlift_wp env2 c =
                 let uu___ =
-                  FStar_Compiler_Effect.pipe_right c
+                  FStar_Compiler_Effect.op_Bar_Greater c
                     ((e1.mlift).mlift_wp env2) in
-                FStar_Compiler_Effect.pipe_right uu___
+                FStar_Compiler_Effect.op_Bar_Greater uu___
                   (fun uu___1 ->
                      match uu___1 with
                      | (c1, g1) ->
                          let uu___2 =
-                           FStar_Compiler_Effect.pipe_right c1
+                           FStar_Compiler_Effect.op_Bar_Greater c1
                              ((e2.mlift).mlift_wp env2) in
-                         FStar_Compiler_Effect.pipe_right uu___2
+                         FStar_Compiler_Effect.op_Bar_Greater uu___2
                            (fun uu___3 ->
                               match uu___3 with
                               | (c2, g2) ->
@@ -4468,22 +4472,22 @@ let (update_effect_lattice :
                 let uu___1 = FStar_Ident.lid_equals i j in
                 if uu___1
                 then
-                  FStar_Compiler_Effect.pipe_right (id_edge i)
+                  FStar_Compiler_Effect.op_Bar_Greater (id_edge i)
                     (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                 else
-                  FStar_Compiler_Effect.pipe_right order
+                  FStar_Compiler_Effect.op_Bar_Greater order
                     (FStar_Compiler_Util.find_opt
                        (fun e ->
                           (FStar_Ident.lid_equals e.msource i) &&
                             (FStar_Ident.lid_equals e.mtarget j))) in
           let ms =
-            FStar_Compiler_Effect.pipe_right (env1.effects).decls
+            FStar_Compiler_Effect.op_Bar_Greater (env1.effects).decls
               (FStar_Compiler_List.map
                  (fun uu___ ->
                     match uu___ with
                     | (e, uu___1) -> e.FStar_Syntax_Syntax.mname)) in
           let all_i_src =
-            FStar_Compiler_Effect.pipe_right ms
+            FStar_Compiler_Effect.op_Bar_Greater ms
               (FStar_Compiler_List.fold_left
                  (fun edges ->
                     fun i ->
@@ -4493,7 +4497,7 @@ let (update_effect_lattice :
                       | FStar_Pervasives_Native.Some e -> e :: edges
                       | FStar_Pervasives_Native.None -> edges) []) in
           let all_tgt_j =
-            FStar_Compiler_Effect.pipe_right ms
+            FStar_Compiler_Effect.op_Bar_Greater ms
               (FStar_Compiler_List.fold_left
                  (fun edges ->
                     fun j ->
@@ -4531,7 +4535,7 @@ let (update_effect_lattice :
                           (let uu___1 =
                              let uu___2 =
                                find_edge (env1.effects).order (src1, tgt1) in
-                             FStar_Compiler_Effect.pipe_right uu___2
+                             FStar_Compiler_Effect.op_Bar_Greater uu___2
                                FStar_Compiler_Util.is_some in
                            if uu___1
                            then edges1
@@ -4539,14 +4543,14 @@ let (update_effect_lattice :
                              (let uu___3 =
                                 (let uu___4 =
                                    exists_polymonadic_subcomp env1 src1 tgt1 in
-                                 FStar_Compiler_Effect.pipe_right uu___4
+                                 FStar_Compiler_Effect.op_Bar_Greater uu___4
                                    FStar_Compiler_Util.is_some)
                                   ||
                                   (let uu___4 =
                                      exists_polymonadic_subcomp env1 tgt1
                                        src1 in
-                                   FStar_Compiler_Effect.pipe_right uu___4
-                                     FStar_Compiler_Util.is_some) in
+                                   FStar_Compiler_Effect.op_Bar_Greater
+                                     uu___4 FStar_Compiler_Util.is_some) in
                               if uu___3
                               then
                                 let uu___4 =
@@ -4573,7 +4577,7 @@ let (update_effect_lattice :
               all_i_src in
           let order =
             FStar_Compiler_List.op_At new_edges (env1.effects).order in
-          FStar_Compiler_Effect.pipe_right order
+          FStar_Compiler_Effect.op_Bar_Greater order
             (FStar_Compiler_List.iter
                (fun edge2 ->
                   let uu___1 =
@@ -4581,7 +4585,7 @@ let (update_effect_lattice :
                        FStar_Parser_Const.effect_DIV_lid)
                       &&
                       (let uu___2 = lookup_effect_quals env1 edge2.mtarget in
-                       FStar_Compiler_Effect.pipe_right uu___2
+                       FStar_Compiler_Effect.op_Bar_Greater uu___2
                          (FStar_Compiler_List.contains
                             FStar_Syntax_Syntax.TotalEffect)) in
                   if uu___1
@@ -4598,10 +4602,10 @@ let (update_effect_lattice :
                     FStar_Errors.raise_error uu___2 uu___3
                   else ()));
           (let joins =
-             FStar_Compiler_Effect.pipe_right ms
+             FStar_Compiler_Effect.op_Bar_Greater ms
                (FStar_Compiler_List.collect
                   (fun i ->
-                     FStar_Compiler_Effect.pipe_right ms
+                     FStar_Compiler_Effect.op_Bar_Greater ms
                        (FStar_Compiler_List.collect
                           (fun j ->
                              let k_opt =
@@ -4611,7 +4615,7 @@ let (update_effect_lattice :
                                  FStar_Pervasives_Native.Some
                                    (i, (id_edge i), (id_edge i))
                                else
-                                 FStar_Compiler_Effect.pipe_right ms
+                                 FStar_Compiler_Effect.op_Bar_Greater ms
                                    (FStar_Compiler_List.fold_left
                                       (fun bopt ->
                                          fun k ->
@@ -4700,12 +4704,12 @@ let (update_effect_lattice :
                                     Prims.op_Negation uu___2) &&
                                      ((let uu___2 =
                                          exists_polymonadic_bind env1 i j in
-                                       FStar_Compiler_Effect.pipe_right
+                                       FStar_Compiler_Effect.op_Bar_Greater
                                          uu___2 FStar_Compiler_Util.is_some)
                                         ||
                                         (let uu___2 =
                                            exists_polymonadic_bind env1 j i in
-                                         FStar_Compiler_Effect.pipe_right
+                                         FStar_Compiler_Effect.op_Bar_Greater
                                            uu___2 FStar_Compiler_Util.is_some)) in
                                  if uu___1
                                  then
@@ -4730,16 +4734,16 @@ let (update_effect_lattice :
                                  else
                                    (let j_opt = join_opt env1 i j in
                                     let uu___3 =
-                                      (FStar_Compiler_Effect.pipe_right j_opt
-                                         FStar_Compiler_Util.is_some)
+                                      (FStar_Compiler_Effect.op_Bar_Greater
+                                         j_opt FStar_Compiler_Util.is_some)
                                         &&
                                         (let uu___4 =
                                            let uu___5 =
                                              let uu___6 =
-                                               FStar_Compiler_Effect.pipe_right
+                                               FStar_Compiler_Effect.op_Bar_Greater
                                                  j_opt
                                                  FStar_Compiler_Util.must in
-                                             FStar_Compiler_Effect.pipe_right
+                                             FStar_Compiler_Effect.op_Bar_Greater
                                                uu___6
                                                (fun uu___7 ->
                                                   match uu___7 with
@@ -4763,16 +4767,16 @@ let (update_effect_lattice :
                                           let uu___11 =
                                             let uu___12 =
                                               let uu___13 =
-                                                FStar_Compiler_Effect.pipe_right
+                                                FStar_Compiler_Effect.op_Bar_Greater
                                                   j_opt
                                                   FStar_Compiler_Util.must in
-                                              FStar_Compiler_Effect.pipe_right
+                                              FStar_Compiler_Effect.op_Bar_Greater
                                                 uu___13
                                                 (fun uu___14 ->
                                                    match uu___14 with
                                                    | (l, uu___15, uu___16) ->
                                                        l) in
-                                            FStar_Compiler_Effect.pipe_right
+                                            FStar_Compiler_Effect.op_Bar_Greater
                                               uu___12
                                               FStar_Ident.string_of_lid in
                                           FStar_Compiler_Util.format6
@@ -4867,7 +4871,7 @@ let (add_polymonadic_bind :
                  else "path in the effect lattice") in
             let uu___ =
               let uu___1 = exists_polymonadic_bind env1 m n in
-              FStar_Compiler_Effect.pipe_right uu___1
+              FStar_Compiler_Effect.op_Bar_Greater uu___1
                 FStar_Compiler_Util.is_some in
             if uu___
             then
@@ -4878,7 +4882,7 @@ let (add_polymonadic_bind :
             else
               (let uu___2 =
                  (let uu___3 = join_opt env1 m n in
-                  FStar_Compiler_Effect.pipe_right uu___3
+                  FStar_Compiler_Effect.op_Bar_Greater uu___3
                     FStar_Compiler_Util.is_some)
                    &&
                    (let uu___3 = FStar_Ident.lid_equals m n in
@@ -4973,11 +4977,11 @@ let (add_polymonadic_subcomp :
                else "path in the effect lattice") in
           let uu___ =
             (let uu___1 = exists_polymonadic_subcomp env1 m n in
-             FStar_Compiler_Effect.pipe_right uu___1
+             FStar_Compiler_Effect.op_Bar_Greater uu___1
                FStar_Compiler_Util.is_some)
               ||
               (let uu___1 = exists_polymonadic_subcomp env1 n m in
-               FStar_Compiler_Effect.pipe_right uu___1
+               FStar_Compiler_Effect.op_Bar_Greater uu___1
                  FStar_Compiler_Util.is_some) in
           if uu___
           then
@@ -4988,11 +4992,11 @@ let (add_polymonadic_subcomp :
           else
             (let uu___2 =
                (let uu___3 = monad_leq env1 m n in
-                FStar_Compiler_Effect.pipe_right uu___3
+                FStar_Compiler_Effect.op_Bar_Greater uu___3
                   FStar_Compiler_Util.is_some)
                  ||
                  (let uu___3 = monad_leq env1 n m in
-                  FStar_Compiler_Effect.pipe_right uu___3
+                  FStar_Compiler_Effect.op_Bar_Greater uu___3
                     FStar_Compiler_Util.is_some) in
              if uu___2
              then
@@ -5373,9 +5377,9 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
         if uu___
         then
           let uu___1 =
-            FStar_Compiler_Effect.pipe_right env1.gamma_sig
+            FStar_Compiler_Effect.op_Bar_Greater env1.gamma_sig
               (FStar_Compiler_List.map FStar_Pervasives_Native.snd) in
-          FStar_Compiler_Effect.pipe_right uu___1 FStar_Compiler_List.rev
+          FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.rev
         else m.FStar_Syntax_Syntax.declarations in
       add_sigelts env1 sigs;
       (let uu___1 = env1 in
@@ -5500,7 +5504,7 @@ let (bound_vars_of_bindings :
   FStar_Syntax_Syntax.binding Prims.list -> FStar_Syntax_Syntax.bv Prims.list)
   =
   fun bs ->
-    FStar_Compiler_Effect.pipe_right bs
+    FStar_Compiler_Effect.op_Bar_Greater bs
       (FStar_Compiler_List.collect
          (fun uu___ ->
             match uu___ with
@@ -5512,9 +5516,9 @@ let (binders_of_bindings :
   fun bs ->
     let uu___ =
       let uu___1 = bound_vars_of_bindings bs in
-      FStar_Compiler_Effect.pipe_right uu___1
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
         (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder) in
-    FStar_Compiler_Effect.pipe_right uu___ FStar_Compiler_List.rev
+    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
 let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
   fun env1 -> bound_vars_of_bindings env1.gamma
 let (all_binders : env -> FStar_Syntax_Syntax.binders) =
@@ -5522,7 +5526,7 @@ let (all_binders : env -> FStar_Syntax_Syntax.binders) =
 let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
   fun gamma ->
     let uu___ =
-      FStar_Compiler_Effect.pipe_right gamma
+      FStar_Compiler_Effect.op_Bar_Greater gamma
         (FStar_Compiler_List.map
            (fun uu___1 ->
               match uu___1 with
@@ -5535,7 +5539,7 @@ let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
               | FStar_Syntax_Syntax.Binding_lid (l, uu___2) ->
                   let uu___3 = FStar_Ident.string_of_lid l in
                   Prims.op_Hat "Binding_lid " uu___3)) in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat "::\n")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "::\n")
 let (string_of_delta_level : delta_level -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -5724,8 +5728,8 @@ let (string_of_proof_ns : env -> Prims.string) =
              Prims.op_Hat (if b then "+" else "-") uu___2) in
     let uu___ =
       let uu___1 = FStar_Compiler_List.map aux env1.proof_ns in
-      FStar_Compiler_Effect.pipe_right uu___1 FStar_Compiler_List.rev in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat " ")
+      FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.rev in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
 let (guard_of_guard_formula :
   FStar_TypeChecker_Common.guard_formula -> guard_t) =
   fun g ->
@@ -5746,7 +5750,7 @@ let (is_trivial : guard_t -> Prims.bool) =
         FStar_TypeChecker_Common.deferred = [];
         FStar_TypeChecker_Common.univ_ineqs = ([], []);
         FStar_TypeChecker_Common.implicits = i;_} ->
-        FStar_Compiler_Effect.pipe_right i
+        FStar_Compiler_Effect.op_Bar_Greater i
           (FStar_Compiler_Util.for_all
              (fun imp ->
                 ((imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
@@ -5812,7 +5816,7 @@ let (def_check_vars_in_set :
             let uu___1 =
               let uu___2 =
                 let uu___3 = FStar_Compiler_Util.set_difference s vset in
-                FStar_Compiler_Effect.pipe_left
+                FStar_Compiler_Effect.op_Less_Bar
                   FStar_Compiler_Util.set_is_empty uu___3 in
               Prims.op_Negation uu___2 in
             (if uu___1
@@ -5822,7 +5826,7 @@ let (def_check_vars_in_set :
                    let uu___4 = FStar_Syntax_Print.term_to_string t in
                    let uu___5 =
                      let uu___6 = FStar_Compiler_Util.set_elements s in
-                     FStar_Compiler_Effect.pipe_right uu___6
+                     FStar_Compiler_Effect.op_Bar_Greater uu___6
                        (FStar_Syntax_Print.bvs_to_string ",\n\t") in
                    FStar_Compiler_Util.format3
                      "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
@@ -5895,7 +5899,7 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                   (f, uu___5) in
                 FStar_Syntax_Syntax.Tm_app uu___4 in
               FStar_Syntax_Syntax.mk uu___3 f.FStar_Syntax_Syntax.pos in
-            FStar_Compiler_Effect.pipe_left
+            FStar_Compiler_Effect.op_Less_Bar
               (fun uu___3 -> FStar_TypeChecker_Common.NonTrivial uu___3)
               uu___2 in
           {
@@ -6157,7 +6161,7 @@ let (uvars_for_binders :
         fun reason ->
           fun r ->
             let uu___ =
-              FStar_Compiler_Effect.pipe_right bs
+              FStar_Compiler_Effect.op_Bar_Greater bs
                 (FStar_Compiler_List.fold_left
                    (fun uu___1 ->
                       fun b ->
@@ -6200,7 +6204,7 @@ let (uvars_for_binders :
                                  (match uu___3 with
                                   | (t, l_ctx_uvars, g_t) ->
                                       ((let uu___5 =
-                                          FStar_Compiler_Effect.pipe_left
+                                          FStar_Compiler_Effect.op_Less_Bar
                                             (debug env1)
                                             (FStar_Options.Other
                                                "LayeredEffectsEqns") in
@@ -6225,7 +6229,7 @@ let (uvars_for_binders :
                                           (FStar_Compiler_List.op_At uvars
                                              [t]), uu___5))))))
                    (substs, [], trivial_guard)) in
-            FStar_Compiler_Effect.pipe_right uu___
+            FStar_Compiler_Effect.op_Bar_Greater uu___
               (fun uu___1 ->
                  match uu___1 with | (uu___2, uvars, g) -> (uvars, g))
 let (pure_precondition_for_trivial_post :
@@ -6245,20 +6249,20 @@ let (pure_precondition_for_trivial_post :
                 let uu___ =
                   lookup_definition [NoDelta] env1
                     FStar_Parser_Const.trivial_pure_post_lid in
-                FStar_Compiler_Effect.pipe_right uu___
+                FStar_Compiler_Effect.op_Bar_Greater uu___
                   FStar_Compiler_Util.must in
               let uu___ = inst_tscheme_with post_ts [u] in
               match uu___ with
               | (uu___1, post) ->
                   let uu___2 =
                     let uu___3 =
-                      FStar_Compiler_Effect.pipe_right t
+                      FStar_Compiler_Effect.op_Bar_Greater t
                         FStar_Syntax_Syntax.as_arg in
                     [uu___3] in
                   FStar_Syntax_Syntax.mk_Tm_app post uu___2 r in
             let uu___ =
               let uu___1 =
-                FStar_Compiler_Effect.pipe_right trivial_post
+                FStar_Compiler_Effect.op_Bar_Greater trivial_post
                   FStar_Syntax_Syntax.as_arg in
               [uu___1] in
             FStar_Syntax_Syntax.mk_Tm_app wp uu___ r

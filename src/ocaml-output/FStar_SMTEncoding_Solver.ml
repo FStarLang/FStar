@@ -111,7 +111,7 @@ let (filter_using_facts_from :
         match a.FStar_SMTEncoding_Term.assumption_fact_ids with
         | [] -> true
         | uu___ ->
-            (FStar_Compiler_Effect.pipe_right
+            (FStar_Compiler_Effect.op_Bar_Greater
                a.FStar_SMTEncoding_Term.assumption_fact_ids
                (FStar_Compiler_Util.for_some
                   (fun uu___1 ->
@@ -148,9 +148,9 @@ let (filter_using_facts_from :
                match d with
                | FStar_SMTEncoding_Term.Module (name, decls) ->
                    let uu___ =
-                     FStar_Compiler_Effect.pipe_right decls
+                     FStar_Compiler_Effect.op_Bar_Greater decls
                        (FStar_Compiler_List.filter keep_decl) in
-                   FStar_Compiler_Effect.pipe_right uu___
+                   FStar_Compiler_Effect.op_Bar_Greater uu___
                      (fun decls1 ->
                         (FStar_SMTEncoding_Term.Module (name, decls1)) :: out)
                | uu___ ->
@@ -179,7 +179,7 @@ let rec (filter_assertions_with_stats :
                   let uu___3 =
                     let uu___4 =
                       let uu___5 =
-                        FStar_Compiler_Effect.pipe_right core1
+                        FStar_Compiler_Effect.op_Bar_Greater core1
                           (FStar_String.concat ", ") in
                       Prims.op_Hat "UNSAT CORE: " uu___5 in
                     FStar_SMTEncoding_Term.Caption uu___4 in
@@ -210,10 +210,10 @@ let rec (filter_assertions_with_stats :
                                     (n_pruned + Prims.int_one))
                           | FStar_SMTEncoding_Term.Module (name, decls) ->
                               let uu___3 =
-                                FStar_Compiler_Effect.pipe_right decls
+                                FStar_Compiler_Effect.op_Bar_Greater decls
                                   (filter_assertions_with_stats e
                                      (FStar_Pervasives_Native.Some core1)) in
-                              FStar_Compiler_Effect.pipe_right uu___3
+                              FStar_Compiler_Effect.op_Bar_Greater uu___3
                                 (fun uu___4 ->
                                    match uu___4 with
                                    | (decls1, uu___5, r, p) ->
@@ -548,7 +548,7 @@ let (detail_hint_replay :
 let (find_localized_errors :
   errors Prims.list -> errors FStar_Pervasives_Native.option) =
   fun errs ->
-    FStar_Compiler_Effect.pipe_right errs
+    FStar_Compiler_Effect.op_Bar_Greater errs
       (FStar_Compiler_List.tryFind
          (fun err ->
             match err.error_messages with | [] -> false | uu___ -> true))
@@ -566,12 +566,12 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                FStar_Compiler_Effect.pipe_right settings.query_errors
+                FStar_Compiler_Effect.op_Bar_Greater settings.query_errors
                   (FStar_Compiler_List.map error_to_short_string) in
-              FStar_Compiler_Effect.pipe_right uu___3
+              FStar_Compiler_Effect.op_Bar_Greater uu___3
                 (FStar_String.concat ";\n\t") in
-            FStar_Compiler_Effect.pipe_right uu___2 format_smt_error in
-          FStar_Compiler_Effect.pipe_right uu___1
+            FStar_Compiler_Effect.op_Bar_Greater uu___2 format_smt_error in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
             (fun uu___2 -> FStar_Pervasives.Inr uu___2)
         else
           (let uu___2 =
@@ -601,7 +601,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                settings.query_errors in
            match uu___2 with
            | (incomplete_count, canceled_count, unknown_count) ->
-               FStar_Compiler_Effect.pipe_right
+               FStar_Compiler_Effect.op_Bar_Greater
                  (match (incomplete_count, canceled_count, unknown_count)
                   with
                   | (uu___3, uu___4, uu___5) when
@@ -685,7 +685,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                     ms)),
               (fun uu___2 ->
                  let uu___3 = FStar_Compiler_Effect.op_Bang module_names in
-                 FStar_Compiler_Effect.pipe_right uu___3
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
                    (FStar_Compiler_Util.sort_with FStar_String.compare))) in
           match uu___1 with | (add, get) -> (add, get) in
         let uu___ = accumulator () in
@@ -758,7 +758,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                        then (add_discarded_name s; [])
                        else
                          (let uu___3 =
-                            FStar_Compiler_Effect.pipe_right components1
+                            FStar_Compiler_Effect.op_Bar_Greater components1
                               (FStar_String.concat ".") in
                           [uu___3]) in
                  (match core with
@@ -769,7 +769,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                         FStar_Compiler_List.collect parse_axiom_name core1 in
                       ((let uu___3 =
                           let uu___4 = get_module_names () in
-                          FStar_Compiler_Effect.pipe_right uu___4
+                          FStar_Compiler_Effect.op_Bar_Greater uu___4
                             (FStar_String.concat "\nZ3 Proof Stats:\t") in
                         FStar_Compiler_Util.print1
                           "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
@@ -780,7 +780,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                             "\nZ3 Proof Stats (Detail 1):\t" core2);
                        (let uu___4 =
                           let uu___5 = get_discarded_names () in
-                          FStar_Compiler_Effect.pipe_right uu___5
+                          FStar_Compiler_Effect.op_Bar_Greater uu___5
                             (FStar_String.concat ", ") in
                         FStar_Compiler_Util.print1
                           "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
@@ -871,7 +871,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                      uu___4);
                   (let uu___5 = FStar_Options.print_z3_statistics () in
                    if uu___5 then process_unsat_core core else ());
-                  FStar_Compiler_Effect.pipe_right errs
+                  FStar_Compiler_Effect.op_Bar_Greater errs
                     (FStar_Compiler_List.iter
                        (fun uu___5 ->
                           match uu___5 with
@@ -1048,12 +1048,12 @@ let (ask_and_report_errors :
                  let use_hints_setting =
                    let uu___2 =
                      (FStar_Options.use_hints ()) &&
-                       (FStar_Compiler_Effect.pipe_right next_hint
+                       (FStar_Compiler_Effect.op_Bar_Greater next_hint
                           FStar_Compiler_Util.is_some) in
                    if uu___2
                    then
                      let uu___3 =
-                       FStar_Compiler_Effect.pipe_right next_hint
+                       FStar_Compiler_Effect.op_Bar_Greater next_hint
                          FStar_Compiler_Util.must in
                      match uu___3 with
                      | { FStar_Compiler_Util.hint_name = uu___4;
@@ -1372,12 +1372,12 @@ let (ask_and_report_errors :
                                  all_errs in
                              let errs1 =
                                let uu___5 =
-                                 FStar_Compiler_Effect.pipe_right errs
+                                 FStar_Compiler_Effect.op_Bar_Greater errs
                                    FStar_Compiler_List.flatten in
-                               FStar_Compiler_Effect.pipe_right uu___5
+                               FStar_Compiler_Effect.op_Bar_Greater uu___5
                                  collect in
                              let errs2 =
-                               FStar_Compiler_Effect.pipe_right errs1
+                               FStar_Compiler_Effect.op_Bar_Greater errs1
                                  (FStar_Compiler_List.map
                                     (fun uu___5 ->
                                        match uu___5 with
@@ -1465,14 +1465,14 @@ let (ask_and_report_errors :
                  then
                    let uu___2 =
                      (FStar_Options.record_hints ()) &&
-                       (FStar_Compiler_Effect.pipe_right next_hint
+                       (FStar_Compiler_Effect.op_Bar_Greater next_hint
                           FStar_Compiler_Util.is_some) in
                    (if uu___2
                     then
                       let uu___3 =
-                        FStar_Compiler_Effect.pipe_right next_hint
+                        FStar_Compiler_Effect.op_Bar_Greater next_hint
                           FStar_Compiler_Util.must in
-                      FStar_Compiler_Effect.pipe_right uu___3 store_hint
+                      FStar_Compiler_Effect.op_Bar_Greater uu___3 store_hint
                     else ())
                  else quake_and_check_all_configs all_configs)
 type solver_cfg =
@@ -1547,7 +1547,7 @@ let (do_solve :
         (let uu___2 =
            let uu___3 =
              let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
-             FStar_Compiler_Effect.pipe_left
+             FStar_Compiler_Effect.op_Less_Bar
                FStar_Compiler_Range.string_of_range uu___4 in
            FStar_Compiler_Util.format1 "Starting query at %s" uu___3 in
          FStar_SMTEncoding_Encode.push uu___2);
@@ -1555,7 +1555,7 @@ let (do_solve :
            let uu___3 =
              let uu___4 =
                let uu___5 = FStar_TypeChecker_Env.get_range tcenv in
-               FStar_Compiler_Effect.pipe_left
+               FStar_Compiler_Effect.op_Less_Bar
                  FStar_Compiler_Range.string_of_range uu___5 in
              FStar_Compiler_Util.format1 "Ending query at %s" uu___4 in
            FStar_SMTEncoding_Encode.pop uu___3 in

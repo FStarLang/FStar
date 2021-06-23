@@ -2442,9 +2442,9 @@ let (ctx_string : Prims.string Prims.list -> Prims.string) =
     if uu___
     then
       let uu___1 =
-        FStar_Compiler_Effect.pipe_right ctx
+        FStar_Compiler_Effect.op_Bar_Greater ctx
           (FStar_Compiler_List.map (fun s -> FStar_String.op_Hat "\n> " s)) in
-      FStar_Compiler_Effect.pipe_right uu___1 (FStar_String.concat "")
+      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat "")
     else ""
 let (issue_message : issue -> Prims.string) =
   fun i ->

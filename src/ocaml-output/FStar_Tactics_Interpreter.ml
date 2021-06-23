@@ -1599,7 +1599,7 @@ let (uu___143 : unit) =
           uu___6 :: uu___7 in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
-    FStar_Compiler_Effect.pipe_left
+    FStar_Compiler_Effect.op_Less_Bar
       (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) uu___1 in
   FStar_Compiler_Effect.op_Colon_Equals __primitive_steps_ref uu___
 
@@ -1650,7 +1650,7 @@ let (report_implicits :
   FStar_Compiler_Range.range -> FStar_TypeChecker_Env.implicits -> unit) =
   fun rng ->
     fun is ->
-      FStar_Compiler_Effect.pipe_right is
+      FStar_Compiler_Effect.op_Bar_Greater is
         (FStar_Compiler_List.iter
            (fun imp ->
               let uu___1 =

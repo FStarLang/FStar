@@ -1577,7 +1577,7 @@ let (bv_to_name : bv -> term) =
   fun bv1 -> let uu___ = range_of_bv bv1 in mk (Tm_name bv1) uu___
 let (binders_to_names : binders -> term Prims.list) =
   fun bs ->
-    FStar_Compiler_Effect.pipe_right bs
+    FStar_Compiler_Effect.op_Bar_Greater bs
       (FStar_Compiler_List.map (fun b -> bv_to_name b.binder_bv))
 let (mk_Tm_app : term -> args -> FStar_Compiler_Range.range -> term) =
   fun t1 ->
@@ -1701,12 +1701,12 @@ let (freenames_of_binders : binders -> freenames) =
       no_names
 let (binders_of_list : bv Prims.list -> binders) =
   fun fvs ->
-    FStar_Compiler_Effect.pipe_right fvs
+    FStar_Compiler_Effect.op_Bar_Greater fvs
       (FStar_Compiler_List.map (fun t -> mk_binder t))
 let (binders_of_freenames : freenames -> binders) =
   fun fvs ->
     let uu___ = FStar_Compiler_Util.set_elements fvs in
-    FStar_Compiler_Effect.pipe_right uu___ binders_of_list
+    FStar_Compiler_Effect.op_Bar_Greater uu___ binders_of_list
 let (is_implicit : aqual -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -1737,7 +1737,7 @@ let (pat_bvs : pat -> bv Prims.list) =
                fun uu___1 -> match uu___1 with | (p2, uu___2) -> aux b1 p2) b
             pats in
     let uu___ = aux [] p in
-    FStar_Compiler_Effect.pipe_left FStar_Compiler_List.rev uu___
+    FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
 let (range_of_ropt :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option ->
     FStar_Compiler_Range.range)
@@ -1868,7 +1868,7 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
           if uu___
           then
             let uu___2 = FStar_Compiler_List.zip as1 as2 in
-            FStar_Compiler_Effect.pipe_right uu___2
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               (FStar_Compiler_List.for_all
                  (fun uu___3 ->
                     match uu___3 with

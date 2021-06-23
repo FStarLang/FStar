@@ -319,7 +319,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
              let tcenv = init () in
              let uu___1 =
                let uu___2 =
-                 FStar_Compiler_Effect.pipe_left
+                 FStar_Compiler_Effect.op_Less_Bar
                    (fun uu___3 -> FStar_Parser_ParseIt.Fragment uu___3)
                    (frag_of_text s) in
                FStar_Parser_ParseIt.parse uu___2 in
@@ -534,7 +534,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu___1 =
        let uu___2 = FStar_Errors.report_all () in
-       FStar_Compiler_Effect.pipe_right uu___2 (fun uu___3 -> ()) in
+       FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()) in
      try
        (fun uu___1 ->
           match () with

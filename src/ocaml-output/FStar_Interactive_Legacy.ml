@@ -150,7 +150,7 @@ let (push_with_kind :
           if restore_cmd_line_options
           then
             (let uu___2 = FStar_Options.restore_cmd_line_options false in
-             FStar_Compiler_Effect.pipe_right uu___2 (fun uu___3 -> ()))
+             FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()))
           else ();
           res
 let (check_frag :
@@ -194,7 +194,7 @@ let (check_frag :
 let (report_fail : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Errors.report_all () in
-     FStar_Compiler_Effect.pipe_right uu___2 (fun uu___3 -> ()));
+     FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
     FStar_Errors.clear ()
 type input_chunks =
   | Push of (Prims.bool * Prims.int * Prims.int) 
@@ -654,7 +654,7 @@ let rec (go :
                                 | FStar_Pervasives_Native.Some lid2 -> lid2) in
                            let uu___2 =
                              FStar_TypeChecker_Env.try_lookup_lid env lid1 in
-                           FStar_Compiler_Effect.pipe_right uu___2
+                           FStar_Compiler_Effect.op_Bar_Greater uu___2
                              (FStar_Compiler_Util.map_option
                                 (fun uu___3 ->
                                    match uu___3 with
@@ -693,7 +693,7 @@ let rec (go :
                                  (candidate, (FStar_String.length hs))
                            | uu___1 ->
                                let uu___2 = measure_anchored_match ts1 tc in
-                               FStar_Compiler_Effect.pipe_right uu___2
+                               FStar_Compiler_Effect.op_Bar_Greater uu___2
                                  (FStar_Compiler_Util.map_option
                                     (fun uu___3 ->
                                        match uu___3 with
@@ -713,7 +713,7 @@ let rec (go :
                          | [] -> FStar_Pervasives_Native.None
                          | hc::tc ->
                              let uu___2 = locate_match needle tc in
-                             FStar_Compiler_Effect.pipe_right uu___2
+                             FStar_Compiler_Effect.op_Bar_Greater uu___2
                                (FStar_Compiler_Util.map_option
                                   (fun uu___3 ->
                                      match uu___3 with
@@ -772,7 +772,7 @@ let rec (go :
                                ((FStar_String.length s) + out) +
                                  Prims.int_one) (FStar_String.length id)
                           orig_ns in
-                      FStar_Compiler_Effect.pipe_right exported_names
+                      FStar_Compiler_Effect.op_Bar_Greater exported_names
                         (FStar_Compiler_List.filter_map
                            (fun n ->
                               if FStar_Compiler_Util.starts_with n id
@@ -802,7 +802,7 @@ let rec (go :
                       let matches1 =
                         FStar_Compiler_List.filter_map
                           (match_lident_against needle) all_lidents_in_env in
-                      FStar_Compiler_Effect.pipe_right matches1
+                      FStar_Compiler_Effect.op_Bar_Greater matches1
                         (FStar_Compiler_List.filter
                            (fun uu___2 ->
                               match uu___2 with
@@ -836,7 +836,7 @@ let rec (go :
                                    case_b_find_matches_in_env ()
                                | FStar_Pervasives_Native.Some m ->
                                    case_a_find_transitive_includes ns m id) in
-                        FStar_Compiler_Effect.pipe_right matched_ids
+                        FStar_Compiler_Effect.op_Bar_Greater matched_ids
                           (FStar_Compiler_List.map
                              (fun x ->
                                 let uu___2 = shorten_namespace x in

@@ -100,7 +100,7 @@ let (label_goals :
               -> true
           | uu___ -> false in
         let is_a_named_continuation lhs =
-          FStar_Compiler_Effect.pipe_right (conjuncts lhs)
+          FStar_Compiler_Effect.op_Bar_Greater (conjuncts lhs)
             (FStar_Compiler_Util.for_some is_guard_free) in
         let uu___ =
           match use_env_msg with
@@ -160,7 +160,7 @@ let (label_goals :
                                  let post_name =
                                    let uu___4 =
                                      let uu___5 = FStar_Ident.next_id () in
-                                     FStar_Compiler_Effect.pipe_left
+                                     FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Compiler_Util.string_of_int
                                        uu___5 in
                                    Prims.op_Hat "^^post_condition_" uu___4 in
@@ -176,7 +176,7 @@ let (label_goals :
                                               let uu___8 =
                                                 let uu___9 =
                                                   FStar_Ident.next_id () in
-                                                FStar_Compiler_Effect.pipe_left
+                                                FStar_Compiler_Effect.op_Less_Bar
                                                   FStar_Compiler_Util.string_of_int
                                                   uu___9 in
                                               Prims.op_Hat "^^" uu___8 in
@@ -396,7 +396,7 @@ let (label_goals :
                        let new_post_name =
                          let uu___3 =
                            let uu___4 = FStar_Ident.next_id () in
-                           FStar_Compiler_Effect.pipe_left
+                           FStar_Compiler_Effect.op_Less_Bar
                              FStar_Compiler_Util.string_of_int uu___4 in
                          Prims.op_Hat "^^post_condition_" uu___3 in
                        let names =
@@ -407,7 +407,7 @@ let (label_goals :
                                   let uu___5 =
                                     let uu___6 =
                                       let uu___7 = FStar_Ident.next_id () in
-                                      FStar_Compiler_Effect.pipe_left
+                                      FStar_Compiler_Effect.op_Less_Bar
                                         FStar_Compiler_Util.string_of_int
                                         uu___7 in
                                     Prims.op_Hat "^^" uu___6 in
@@ -511,7 +511,7 @@ let (label_goals :
                                             (uu___8, rhs2) in
                                           FStar_SMTEncoding_Term.mkImp uu___7
                                             rng in
-                                        FStar_Compiler_Effect.pipe_right
+                                        FStar_Compiler_Effect.op_Bar_Greater
                                           uu___6
                                           (FStar_SMTEncoding_Term.abstr names) in
                                       let q2 =
@@ -784,7 +784,7 @@ let (detail_errors :
                        (FStar_Errors.Error_ProofObligationFailed, uu___5) in
                      FStar_Errors.log_issue r uu___4) in
           let elim labs =
-            FStar_Compiler_Effect.pipe_right labs
+            FStar_Compiler_Effect.op_Bar_Greater labs
               (FStar_Compiler_List.map
                  (fun uu___ ->
                     match uu___ with
@@ -823,7 +823,7 @@ let (detail_errors :
                        (FStar_Compiler_List.length active) in
                    FStar_Compiler_Util.print1 "%s, " uu___2);
                   (let decls =
-                     FStar_Compiler_Effect.pipe_left elim
+                     FStar_Compiler_Effect.op_Less_Bar elim
                        (FStar_Compiler_List.op_At eliminated
                           (FStar_Compiler_List.op_At errors tl)) in
                    let result = askZ3 decls in
@@ -836,7 +836,7 @@ let (detail_errors :
             (FStar_Options.Int (Prims.of_int (5)));
           (let res = linear_check [] [] all_labels in
            FStar_Compiler_Util.print_string "\n";
-           FStar_Compiler_Effect.pipe_right res
+           FStar_Compiler_Effect.op_Bar_Greater res
              (FStar_Compiler_List.iter print_result);
            (let uu___4 =
               FStar_Compiler_Util.for_all FStar_Pervasives_Native.snd res in

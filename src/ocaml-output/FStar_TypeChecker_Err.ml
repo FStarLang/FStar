@@ -111,7 +111,7 @@ let (errors_smt_detail :
               Prims.op_Hat msg (Prims.op_Hat "; " d)
           | uu___ -> msg in
         let errs1 =
-          FStar_Compiler_Effect.pipe_right errs
+          FStar_Compiler_Effect.op_Bar_Greater errs
             (FStar_Compiler_List.map
                (fun uu___ ->
                   match uu___ with
@@ -417,9 +417,9 @@ let (disjunctive_pattern_vars :
     fun v2 ->
       let vars v =
         let uu___ =
-          FStar_Compiler_Effect.pipe_right v
+          FStar_Compiler_Effect.op_Bar_Greater v
             (FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string) in
-        FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat ", ") in
+        FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
       let uu___ =
         let uu___1 = vars v1 in
         let uu___2 = vars v2 in
@@ -513,7 +513,7 @@ let (expected_pure_expression :
           let uu___1 = FStar_Syntax_Print.term_to_string e in
           let uu___2 =
             let uu___3 = name_and_result c in
-            FStar_Compiler_Effect.pipe_left FStar_Pervasives_Native.fst
+            FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.fst
               uu___3 in
           FStar_Compiler_Util.format2
             (Prims.op_Hat msg1
@@ -536,7 +536,7 @@ let (expected_ghost_expression :
           let uu___1 = FStar_Syntax_Print.term_to_string e in
           let uu___2 =
             let uu___3 = name_and_result c in
-            FStar_Compiler_Effect.pipe_left FStar_Pervasives_Native.fst
+            FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.fst
               uu___3 in
           FStar_Compiler_Util.format2
             (Prims.op_Hat msg1
@@ -564,7 +564,8 @@ let (failed_to_prove_specification_of :
       let uu___ =
         let uu___1 = FStar_Syntax_Print.lbname_to_string l in
         let uu___2 =
-          FStar_Compiler_Effect.pipe_right lbls (FStar_String.concat ", ") in
+          FStar_Compiler_Effect.op_Bar_Greater lbls
+            (FStar_String.concat ", ") in
         FStar_Compiler_Util.format2
           "Failed to prove specification of %s; assertions at [%s] may fail"
           uu___1 uu___2 in
@@ -578,7 +579,7 @@ let (failed_to_prove_specification :
           "An unknown assertion in the term at this location was not provable"
       | uu___ ->
           let uu___1 =
-            FStar_Compiler_Effect.pipe_right lbls
+            FStar_Compiler_Effect.op_Bar_Greater lbls
               (FStar_String.concat "\n\t") in
           FStar_Compiler_Util.format1
             "The following problems were found:\n\t%s" uu___1 in

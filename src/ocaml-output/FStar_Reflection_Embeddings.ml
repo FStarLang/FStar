@@ -404,7 +404,7 @@ let (e_const :
              let uu___3 = unembed' w FStar_Syntax_Embeddings.e_int i in
              FStar_Compiler_Util.bind_opt uu___3
                (fun i1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.C_Int i1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (s, uu___2)::[]) when
@@ -414,7 +414,7 @@ let (e_const :
              let uu___3 = unembed' w FStar_Syntax_Embeddings.e_string s in
              FStar_Compiler_Util.bind_opt uu___3
                (fun s1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.C_String s1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (r, uu___2)::[]) when
@@ -424,14 +424,14 @@ let (e_const :
              let uu___3 = unembed' w FStar_Syntax_Embeddings.e_range r in
              FStar_Compiler_Util.bind_opt uu___3
                (fun r1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.C_Range r1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_C_Reify.FStar_Reflection_Data.lid
              ->
-             FStar_Compiler_Effect.pipe_left
+             FStar_Compiler_Effect.op_Less_Bar
                (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                FStar_Reflection_Data.C_Reify
          | (FStar_Syntax_Syntax.Tm_fvar fv, (ns, uu___2)::[]) when
@@ -441,7 +441,7 @@ let (e_const :
              let uu___3 = unembed' w FStar_Syntax_Embeddings.e_string_list ns in
              FStar_Compiler_Util.bind_opt uu___3
                (fun ns1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.C_Reflect ns1))
          | uu___2 ->
@@ -542,7 +542,7 @@ let rec (e_pattern' :
                let uu___4 = unembed' w e_const c in
                FStar_Compiler_Util.bind_opt uu___4
                  (fun c1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
                       (FStar_Reflection_Data.Pat_Constant c1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (f, uu___3)::(ps, uu___4)::[])
@@ -563,7 +563,7 @@ let rec (e_pattern' :
                       unembed' w uu___7 ps in
                     FStar_Compiler_Util.bind_opt uu___6
                       (fun ps1 ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
                            (FStar_Reflection_Data.Pat_Cons (f1, ps1))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (bv, uu___3)::[]) when
@@ -573,7 +573,7 @@ let rec (e_pattern' :
                let uu___4 = unembed' w e_bv bv in
                FStar_Compiler_Util.bind_opt uu___4
                  (fun bv1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
                       (FStar_Reflection_Data.Pat_Var bv1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (bv, uu___3)::[]) when
@@ -583,7 +583,7 @@ let rec (e_pattern' :
                let uu___4 = unembed' w e_bv bv in
                FStar_Compiler_Util.bind_opt uu___4
                  (fun bv1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
                       (FStar_Reflection_Data.Pat_Wild bv1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (bv, uu___3)::(t2, uu___4)::[])
@@ -597,7 +597,7 @@ let rec (e_pattern' :
                     let uu___6 = unembed' w e_term t2 in
                     FStar_Compiler_Util.bind_opt uu___6
                       (fun t3 ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
                            (FStar_Reflection_Data.Pat_Dot_Term (bv1, t3))))
            | uu___3 ->
@@ -905,7 +905,7 @@ let (e_term_view_aq :
                let uu___3 = unembed' w e_bv b in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun b1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                       (FStar_Reflection_Data.Tv_Var b1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (b, uu___2)::[]) when
@@ -915,7 +915,7 @@ let (e_term_view_aq :
                let uu___3 = unembed' w e_bv b in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun b1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                       (FStar_Reflection_Data.Tv_BVar b1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (f, uu___2)::[]) when
@@ -925,7 +925,7 @@ let (e_term_view_aq :
                let uu___3 = unembed' w e_fv f in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun f1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                       (FStar_Reflection_Data.Tv_FVar f1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::(r, uu___3)::[])
@@ -939,7 +939,7 @@ let (e_term_view_aq :
                     let uu___5 = unembed' w e_argv r in
                     FStar_Compiler_Util.bind_opt uu___5
                       (fun r1 ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                            (FStar_Reflection_Data.Tv_App (l1, r1))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (b, uu___2)::(t1, uu___3)::[])
@@ -953,7 +953,7 @@ let (e_term_view_aq :
                     let uu___5 = unembed' w e_term t1 in
                     FStar_Compiler_Util.bind_opt uu___5
                       (fun t2 ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                            (FStar_Reflection_Data.Tv_Abs (b1, t2))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (b, uu___2)::(t1, uu___3)::[])
@@ -967,7 +967,7 @@ let (e_term_view_aq :
                     let uu___5 = unembed' w e_comp t1 in
                     FStar_Compiler_Util.bind_opt uu___5
                       (fun c ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                            (FStar_Reflection_Data.Tv_Arrow (b1, c))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (u, uu___2)::[]) when
@@ -977,7 +977,7 @@ let (e_term_view_aq :
                let uu___3 = unembed' w FStar_Syntax_Embeddings.e_unit u in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun u1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                       (FStar_Reflection_Data.Tv_Type ()))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (b, uu___2)::(t1, uu___3)::[])
@@ -991,7 +991,7 @@ let (e_term_view_aq :
                     let uu___5 = unembed' w e_term t1 in
                     FStar_Compiler_Util.bind_opt uu___5
                       (fun t2 ->
-                         FStar_Compiler_Effect.pipe_left
+                         FStar_Compiler_Effect.op_Less_Bar
                            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                            (FStar_Reflection_Data.Tv_Refine (b1, t2))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (c, uu___2)::[]) when
@@ -1001,7 +1001,7 @@ let (e_term_view_aq :
                let uu___3 = unembed' w e_const c in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun c1 ->
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                       (FStar_Reflection_Data.Tv_Const c1))
            | (FStar_Syntax_Syntax.Tm_fvar fv, (u, uu___2)::(l, uu___3)::[])
@@ -1015,7 +1015,7 @@ let (e_term_view_aq :
                     let ctx_u_s =
                       FStar_Syntax_Util.unlazy_as_t
                         FStar_Syntax_Syntax.Lazy_uvar l in
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
                       (FStar_Reflection_Data.Tv_Uvar (u1, ctx_u_s)))
            | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -1041,7 +1041,7 @@ let (e_term_view_aq :
                                    let uu___11 = unembed' w e_term t2 in
                                    FStar_Compiler_Util.bind_opt uu___11
                                      (fun t21 ->
-                                        FStar_Compiler_Effect.pipe_left
+                                        FStar_Compiler_Effect.op_Less_Bar
                                           (fun uu___12 ->
                                              FStar_Pervasives_Native.Some
                                                uu___12)
@@ -1064,7 +1064,7 @@ let (e_term_view_aq :
                            unembed' w e_match_returns_annotation ret_opt in
                          FStar_Compiler_Util.bind_opt uu___7
                            (fun ret_opt1 ->
-                              FStar_Compiler_Effect.pipe_left
+                              FStar_Compiler_Effect.op_Less_Bar
                                 (fun uu___8 ->
                                    FStar_Pervasives_Native.Some uu___8)
                                 (FStar_Reflection_Data.Tv_Match
@@ -1086,7 +1086,7 @@ let (e_term_view_aq :
                            unembed' w uu___8 tacopt in
                          FStar_Compiler_Util.bind_opt uu___7
                            (fun tacopt1 ->
-                              FStar_Compiler_Effect.pipe_left
+                              FStar_Compiler_Effect.op_Less_Bar
                                 (fun uu___8 ->
                                    FStar_Pervasives_Native.Some uu___8)
                                 (FStar_Reflection_Data.Tv_AscribedT
@@ -1108,7 +1108,7 @@ let (e_term_view_aq :
                            unembed' w uu___8 tacopt in
                          FStar_Compiler_Util.bind_opt uu___7
                            (fun tacopt1 ->
-                              FStar_Compiler_Effect.pipe_left
+                              FStar_Compiler_Effect.op_Less_Bar
                                 (fun uu___8 ->
                                    FStar_Pervasives_Native.Some uu___8)
                                 (FStar_Reflection_Data.Tv_AscribedC
@@ -1117,7 +1117,7 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Unknown.FStar_Reflection_Data.lid
                ->
-               FStar_Compiler_Effect.pipe_left
+               FStar_Compiler_Effect.op_Less_Bar
                  (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                  FStar_Reflection_Data.Tv_Unknown
            | uu___2 ->
@@ -1199,7 +1199,7 @@ let (e_bv_view :
                        let uu___7 = unembed' w e_term s in
                        FStar_Compiler_Util.bind_opt uu___7
                          (fun s1 ->
-                            FStar_Compiler_Effect.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               (fun uu___8 ->
                                  FStar_Pervasives_Native.Some uu___8)
                               {
@@ -1324,7 +1324,7 @@ let (e_comp_view :
                     unembed' w uu___6 md in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun md1 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.C_Total (t3, md1))))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (t2, uu___2)::(md, uu___3)::[])
@@ -1340,7 +1340,7 @@ let (e_comp_view :
                     unembed' w uu___6 md in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun md1 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.C_GTotal (t3, md1))))
          | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -1357,7 +1357,7 @@ let (e_comp_view :
                        let uu___7 = unembed' w e_term pats in
                        FStar_Compiler_Util.bind_opt uu___7
                          (fun pats1 ->
-                            FStar_Compiler_Effect.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               (fun uu___8 ->
                                  FStar_Pervasives_Native.Some uu___8)
                               (FStar_Reflection_Data.C_Lemma
@@ -1384,7 +1384,7 @@ let (e_comp_view :
                               unembed' w uu___10 args1 in
                             FStar_Compiler_Util.bind_opt uu___9
                               (fun args2 ->
-                                 FStar_Compiler_Effect.pipe_left
+                                 FStar_Compiler_Effect.op_Less_Bar
                                    (fun uu___10 ->
                                       FStar_Pervasives_Native.Some uu___10)
                                    (FStar_Reflection_Data.C_Eff
@@ -1629,7 +1629,7 @@ let (e_sigelt_view :
                                    unembed' w uu___12 dcs in
                                  FStar_Compiler_Util.bind_opt uu___11
                                    (fun dcs1 ->
-                                      FStar_Compiler_Effect.pipe_left
+                                      FStar_Compiler_Effect.op_Less_Bar
                                         (fun uu___12 ->
                                            FStar_Pervasives_Native.Some
                                              uu___12)
@@ -1656,7 +1656,7 @@ let (e_sigelt_view :
                                  let uu___11 = unembed' w e_term t2 in
                                  FStar_Compiler_Util.bind_opt uu___11
                                    (fun t3 ->
-                                      FStar_Compiler_Effect.pipe_left
+                                      FStar_Compiler_Effect.op_Less_Bar
                                         (fun uu___12 ->
                                            FStar_Pervasives_Native.Some
                                              uu___12)
@@ -1739,7 +1739,7 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
              let uu___3 = unembed' w FStar_Syntax_Embeddings.e_int i in
              FStar_Compiler_Util.bind_opt uu___3
                (fun i1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.Var i1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (e1, uu___2)::(e2, uu___3)::[])
@@ -1753,7 +1753,7 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
                   let uu___5 = unembed_exp w e2 in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun e21 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.Mult (e11, e21))))
          | uu___2 ->
@@ -1998,7 +1998,7 @@ let (e_qualifier :
              let uu___3 = unembed' w e_lid l in
              FStar_Compiler_Util.bind_opt uu___3
                (fun l1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.Reflectable l1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
@@ -2008,7 +2008,7 @@ let (e_qualifier :
              let uu___3 = unembed' w e_lid l in
              FStar_Compiler_Util.bind_opt uu___3
                (fun l1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.Discriminator l1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
@@ -2018,7 +2018,7 @@ let (e_qualifier :
              let uu___3 = unembed' w e_lid l in
              FStar_Compiler_Util.bind_opt uu___3
                (fun l1 ->
-                  FStar_Compiler_Effect.pipe_left
+                  FStar_Compiler_Effect.op_Less_Bar
                     (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                     (FStar_Reflection_Data.Action l1))
          | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::(i, uu___3)::[])
@@ -2032,7 +2032,7 @@ let (e_qualifier :
                   let uu___5 = unembed' w e_ident i in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun i1 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.Projector (l1, i1))))
          | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -2050,7 +2050,7 @@ let (e_qualifier :
                     unembed' w uu___6 ids2 in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun ids21 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.RecordType (ids11, ids21))))
          | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -2068,7 +2068,7 @@ let (e_qualifier :
                     unembed' w uu___6 ids2 in
                   FStar_Compiler_Util.bind_opt uu___5
                     (fun ids21 ->
-                       FStar_Compiler_Effect.pipe_left
+                       FStar_Compiler_Effect.op_Less_Bar
                          (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)
                          (FStar_Reflection_Data.RecordConstructor
                             (ids11, ids21))))

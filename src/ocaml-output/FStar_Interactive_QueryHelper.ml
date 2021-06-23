@@ -69,10 +69,10 @@ let (symlookup :
               let uu___ =
                 FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStar_TypeChecker_Env.dsenv lid in
-              FStar_Compiler_Effect.pipe_left (FStar_Compiler_Util.dflt lid)
-                uu___ in
+              FStar_Compiler_Effect.op_Less_Bar
+                (FStar_Compiler_Util.dflt lid) uu___ in
             let uu___ = FStar_TypeChecker_Env.try_lookup_lid tcenv lid1 in
-            FStar_Compiler_Effect.pipe_right uu___
+            FStar_Compiler_Effect.op_Bar_Greater uu___
               (FStar_Compiler_Util.map_option
                  (fun uu___1 ->
                     match uu___1 with

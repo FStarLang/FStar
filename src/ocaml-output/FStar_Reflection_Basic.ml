@@ -441,7 +441,7 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
               let uu___ =
                 let uu___1 = pack_const c in
                 FStar_Syntax_Syntax.Pat_constant uu___1 in
-              FStar_Compiler_Effect.pipe_left wrap uu___
+              FStar_Compiler_Effect.op_Less_Bar wrap uu___
           | FStar_Reflection_Data.Pat_Cons (fv, ps) ->
               let uu___ =
                 let uu___1 =
@@ -453,15 +453,15 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                       ps in
                   (fv, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
-              FStar_Compiler_Effect.pipe_left wrap uu___
+              FStar_Compiler_Effect.op_Less_Bar wrap uu___
           | FStar_Reflection_Data.Pat_Var bv ->
-              FStar_Compiler_Effect.pipe_left wrap
+              FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_var bv)
           | FStar_Reflection_Data.Pat_Wild bv ->
-              FStar_Compiler_Effect.pipe_left wrap
+              FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_wild bv)
           | FStar_Reflection_Data.Pat_Dot_Term (bv, t1) ->
-              FStar_Compiler_Effect.pipe_left wrap
+              FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_dot_term (bv, t1)) in
         let brs1 =
           FStar_Compiler_List.map
@@ -501,14 +501,15 @@ let (free_bvs :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv Prims.list) =
   fun t ->
     let uu___ = FStar_Syntax_Free.names t in
-    FStar_Compiler_Effect.pipe_right uu___ FStar_Compiler_Util.set_elements
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      FStar_Compiler_Util.set_elements
 let (free_uvars : FStar_Syntax_Syntax.term -> FStar_BigInt.t Prims.list) =
   fun t ->
     let uu___ =
       let uu___1 = FStar_Syntax_Free.uvars_uncached t in
-      FStar_Compiler_Effect.pipe_right uu___1
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
         FStar_Compiler_Util.set_elements in
-    FStar_Compiler_Effect.pipe_right uu___
+    FStar_Compiler_Effect.op_Bar_Greater uu___
       (FStar_Compiler_List.map
          (fun u ->
             let uu___1 =
@@ -564,8 +565,8 @@ let (defs_in_module :
            let ns =
              let uu___1 =
                let uu___2 = FStar_Ident.ids_of_lid l in
-               FStar_Compiler_Effect.pipe_right uu___2 init in
-             FStar_Compiler_Effect.pipe_right uu___1
+               FStar_Compiler_Effect.op_Bar_Greater uu___2 init in
+             FStar_Compiler_Effect.op_Bar_Greater uu___1
                (FStar_Compiler_List.map FStar_Ident.string_of_id) in
            if ns = modul
            then
@@ -679,7 +680,7 @@ let (syntax_to_rd_qual :
 let (sigelt_quals :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.qualifier Prims.list) =
   fun se ->
-    FStar_Compiler_Effect.pipe_right se.FStar_Syntax_Syntax.sigquals
+    FStar_Compiler_Effect.op_Bar_Greater se.FStar_Syntax_Syntax.sigquals
       (FStar_Compiler_List.map syntax_to_rd_qual)
 let (set_sigelt_quals :
   FStar_Reflection_Data.qualifier Prims.list ->
@@ -824,7 +825,7 @@ let (pack_sigelt :
               let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in [uu___3] in
             ((r, [lb]), uu___2) in
           FStar_Syntax_Syntax.Sig_let uu___1 in
-        FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_sigelt uu___
+        FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt uu___
     | FStar_Reflection_Data.Sg_Inductive (nm, us_names, param_bs, ty, ctors)
         ->
         let ind_lid =
@@ -841,7 +842,7 @@ let (pack_sigelt :
                 let uu___1 = FStar_Syntax_Syntax.mk_Total ty1 in
                 FStar_Syntax_Util.arrow param_bs uu___1 in
               let ty3 = FStar_Syntax_Subst.subst s ty2 in
-              FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_sigelt
+              FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
                 (FStar_Syntax_Syntax.Sig_datacon
                    (lid, us_names, ty3, ind_lid, nparam, [])) in
         let ctor_ses = FStar_Compiler_List.map pack_ctor ctors in
@@ -855,11 +856,11 @@ let (pack_sigelt :
           let ty1 = FStar_Syntax_Subst.close param_bs1 ty in
           let param_bs2 = FStar_Syntax_Subst.subst_binders s param_bs1 in
           let ty2 = FStar_Syntax_Subst.subst s ty1 in
-          FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_sigelt
+          FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
             (FStar_Syntax_Syntax.Sig_inductive_typ
                (ind_lid, us_names, param_bs2, ty2, [], c_lids)) in
         let se =
-          FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_sigelt
+          FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
             (FStar_Syntax_Syntax.Sig_bundle
                ((ind_se :: ctor_ses), (ind_lid :: c_lids))) in
         let uu___ = se in
@@ -876,7 +877,7 @@ let (pack_sigelt :
         let val_lid =
           FStar_Ident.lid_of_path nm FStar_Compiler_Range.dummyRange in
         let typ = FStar_Syntax_Subst.close_univ_vars us_names ty in
-        FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_sigelt
+        FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
           (FStar_Syntax_Syntax.Sig_declare_typ (val_lid, us_names, typ))
     | FStar_Reflection_Data.Unk -> failwith "packing Unk, sorry"
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =

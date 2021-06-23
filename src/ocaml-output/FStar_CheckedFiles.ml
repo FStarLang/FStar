@@ -111,18 +111,18 @@ let (hash_dependences :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                FStar_Compiler_Effect.pipe_right module_name
+                FStar_Compiler_Effect.op_Bar_Greater module_name
                   (FStar_Parser_Dep.interface_of deps) in
-              FStar_Compiler_Effect.pipe_right uu___3
+              FStar_Compiler_Effect.op_Bar_Greater uu___3
                 FStar_Compiler_Util.must in
-            FStar_Compiler_Effect.pipe_right uu___2
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               FStar_Parser_Dep.cache_file_name in
-          FStar_Compiler_Effect.pipe_right uu___1
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
             (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
         else FStar_Pervasives_Native.None in
       let binary_deps =
         let uu___ = FStar_Parser_Dep.deps_of deps fn1 in
-        FStar_Compiler_Effect.pipe_right uu___
+        FStar_Compiler_Effect.op_Bar_Greater uu___
           (FStar_Compiler_List.filter
              (fun fn2 ->
                 let uu___1 =
@@ -211,12 +211,12 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
   fun fn ->
     fun checked_fn ->
       let elt =
-        FStar_Compiler_Effect.pipe_right checked_fn
+        FStar_Compiler_Effect.op_Bar_Greater checked_fn
           (FStar_Compiler_Util.smap_try_find mcache) in
       let uu___ =
-        FStar_Compiler_Effect.pipe_right elt FStar_Compiler_Util.is_some in
+        FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.is_some in
       if uu___
-      then FStar_Compiler_Effect.pipe_right elt FStar_Compiler_Util.must
+      then FStar_Compiler_Effect.op_Bar_Greater elt FStar_Compiler_Util.must
       else
         (let add_and_return elt1 =
            FStar_Compiler_Util.smap_add mcache checked_fn elt1; elt1 in
@@ -285,10 +285,11 @@ let (load_checked_file_with_tc_result :
         | (Valid uu___, uu___1) ->
             let uu___2 =
               let uu___3 =
-                FStar_Compiler_Effect.pipe_right checked_fn load_tc_result in
-              FStar_Compiler_Effect.pipe_right uu___3
+                FStar_Compiler_Effect.op_Bar_Greater checked_fn
+                  load_tc_result in
+              FStar_Compiler_Effect.op_Bar_Greater uu___3
                 FStar_Pervasives_Native.snd in
-            FStar_Compiler_Effect.pipe_right uu___2
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               (fun uu___3 -> FStar_Pervasives.Inr uu___3)
         | (Unknown, parsing_data) ->
             let uu___ = hash_dependences deps fn in
@@ -299,7 +300,8 @@ let (load_checked_file_with_tc_result :
                   FStar_Pervasives.Inl msg)
              | FStar_Pervasives.Inr deps_dig' ->
                  let uu___1 =
-                   FStar_Compiler_Effect.pipe_right checked_fn load_tc_result in
+                   FStar_Compiler_Effect.op_Bar_Greater checked_fn
+                     load_tc_result in
                  (match uu___1 with
                   | (deps_dig, tc_result1) ->
                       if deps_dig = deps_dig'
@@ -314,9 +316,9 @@ let (load_checked_file_with_tc_result :
                          (let validate_iface_cache uu___3 =
                             let iface =
                               let uu___4 =
-                                FStar_Compiler_Effect.pipe_right fn
+                                FStar_Compiler_Effect.op_Bar_Greater fn
                                   FStar_Parser_Dep.lowercase_module_name in
-                              FStar_Compiler_Effect.pipe_right uu___4
+                              FStar_Compiler_Effect.op_Bar_Greater uu___4
                                 (FStar_Parser_Dep.interface_of deps) in
                             match iface with
                             | FStar_Pervasives_Native.None -> ()
@@ -326,7 +328,7 @@ let (load_checked_file_with_tc_result :
                                       match () with
                                       | () ->
                                           let iface_checked_fn =
-                                            FStar_Compiler_Effect.pipe_right
+                                            FStar_Compiler_Effect.op_Bar_Greater
                                               iface1
                                               FStar_Parser_Dep.cache_file_name in
                                           let uu___5 =
@@ -413,7 +415,7 @@ let (load_parsing_data_from_cache :
                 match () with
                 | () ->
                     let uu___2 = FStar_Parser_Dep.cache_file_name file_name in
-                    FStar_Compiler_Effect.pipe_right uu___2
+                    FStar_Compiler_Effect.op_Bar_Greater uu___2
                       (fun uu___3 -> FStar_Pervasives_Native.Some uu___3)) ()
            with | uu___1 -> FStar_Pervasives_Native.None in
          match cache_file with
@@ -490,12 +492,12 @@ let (load_module_from_cache :
              FStar_Parser_Dep.interface_of uu___1 uu___2 in
            let uu___1 =
              (FStar_Parser_Dep.is_implementation fn) &&
-               (FStar_Compiler_Effect.pipe_right i_fn_opt
+               (FStar_Compiler_Effect.op_Bar_Greater i_fn_opt
                   FStar_Compiler_Util.is_some) in
            if uu___1
            then
              let i_fn =
-               FStar_Compiler_Effect.pipe_right i_fn_opt
+               FStar_Compiler_Effect.op_Bar_Greater i_fn_opt
                  FStar_Compiler_Util.must in
              let i_tc = load_with_profiling i_fn in
              match i_tc with

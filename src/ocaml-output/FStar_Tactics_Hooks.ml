@@ -147,7 +147,7 @@ let (by_tactic_interp :
                           let uu___4 =
                             let uu___5 =
                               FStar_Tactics_Types.goal_of_goal_ty e assertion in
-                            FStar_Compiler_Effect.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               FStar_Pervasives_Native.fst uu___5 in
                           [uu___4] in
                         (FStar_Syntax_Util.t_true, uu___3) in
@@ -158,7 +158,7 @@ let (by_tactic_interp :
                           let uu___4 =
                             let uu___5 =
                               FStar_Tactics_Types.goal_of_goal_ty e assertion in
-                            FStar_Compiler_Effect.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               FStar_Pervasives_Native.fst uu___5 in
                           [uu___4] in
                         (assertion, FStar_Syntax_Util.t_true, uu___3) in
@@ -497,7 +497,7 @@ let (preprocess :
             then
               let uu___4 =
                 let uu___5 = FStar_TypeChecker_Env.all_binders env in
-                FStar_Compiler_Effect.pipe_right uu___5
+                FStar_Compiler_Effect.op_Bar_Greater uu___5
                   (FStar_Syntax_Print.binders_to_string ",") in
               let uu___5 = FStar_Syntax_Print.term_to_string goal in
               FStar_Compiler_Util.print2 "About to preprocess %s |= %s\n"
@@ -520,7 +520,7 @@ let (preprocess :
                   then
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders env in
-                      FStar_Compiler_Effect.pipe_right uu___7
+                      FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
                     let uu___7 = FStar_Syntax_Print.term_to_string t' in
                     FStar_Compiler_Util.print2
@@ -707,7 +707,7 @@ let (solve_implicits :
                    let uu___3 = FStar_TypeChecker_Env.get_range env in
                    run_tactic_on_all_implicits tau.FStar_Syntax_Syntax.pos
                      uu___3 tau env imps in
-                 FStar_Compiler_Effect.pipe_right gs
+                 FStar_Compiler_Effect.op_Bar_Greater gs
                    (FStar_Compiler_List.iter
                       (fun g ->
                          let uu___4 =
@@ -806,7 +806,7 @@ let (splice :
                            "splice: got decls = %s\n" uu___7
                        else ());
                       (let sigelts1 =
-                         FStar_Compiler_Effect.pipe_right sigelts
+                         FStar_Compiler_Effect.op_Bar_Greater sigelts
                            (FStar_Compiler_List.map
                               (fun se ->
                                  (match se.FStar_Syntax_Syntax.sigel with

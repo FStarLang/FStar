@@ -437,7 +437,7 @@ let (mlpath_of_lident :
 let (is_type_name : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g ->
     fun fv ->
-      FStar_Compiler_Effect.pipe_right g.type_names
+      FStar_Compiler_Effect.op_Bar_Greater g.type_names
         (FStar_Compiler_Util.for_some
            (fun uu___ ->
               match uu___ with
@@ -446,7 +446,7 @@ let (is_fv_type : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g ->
     fun fv ->
       (is_type_name g fv) ||
-        (FStar_Compiler_Effect.pipe_right g.tydefs
+        (FStar_Compiler_Effect.op_Bar_Greater g.tydefs
            (FStar_Compiler_Util.for_some
               (fun tydef1 -> FStar_Syntax_Syntax.fv_eq fv tydef1.tydef_fv)))
 let (lookup_record_field_name :
@@ -706,7 +706,7 @@ let (extend_bv :
                   else
                     if add_unit
                     then
-                      FStar_Compiler_Effect.pipe_left
+                      FStar_Compiler_Effect.op_Less_Bar
                         (FStar_Extraction_ML_Syntax.with_ty
                            FStar_Extraction_ML_Syntax.MLTY_Top)
                         (FStar_Extraction_ML_Syntax.MLE_App
@@ -820,7 +820,7 @@ let (extend_fv :
                 let mly1 =
                   if add_unit
                   then
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       (FStar_Extraction_ML_Syntax.with_ty
                          FStar_Extraction_ML_Syntax.MLTY_Top)
                       (FStar_Extraction_ML_Syntax.MLE_App

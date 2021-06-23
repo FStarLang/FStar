@@ -702,7 +702,7 @@ let (tc_one_fragment :
             let uu___1 =
               let uu___2 =
                 FStar_ToSyntax_Interleave.interleave_module ast_modul false in
-              FStar_Compiler_Effect.pipe_left (with_dsenv_of_tcenv env)
+              FStar_Compiler_Effect.op_Less_Bar (with_dsenv_of_tcenv env)
                 uu___2 in
             (match uu___1 with
              | (ast_modul1, env1) ->
@@ -710,8 +710,8 @@ let (tc_one_fragment :
                    let uu___3 =
                      FStar_ToSyntax_ToSyntax.partial_ast_modul_to_modul
                        curmod ast_modul1 in
-                   FStar_Compiler_Effect.pipe_left (with_dsenv_of_tcenv env1)
-                     uu___3 in
+                   FStar_Compiler_Effect.op_Less_Bar
+                     (with_dsenv_of_tcenv env1) uu___3 in
                  (match uu___2 with
                   | (modul, env2) ->
                       ((let uu___4 =
@@ -762,7 +762,7 @@ let (tc_one_fragment :
                             let uu___3 =
                               FStar_ToSyntax_Interleave.prefix_with_interface_decls
                                 modul.FStar_Syntax_Syntax.name a_decl in
-                            FStar_Compiler_Effect.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               (with_dsenv_of_tcenv env1) uu___3 in
                           match uu___2 with | (decls, env2) -> (env2, decls))
                      env ast_decls in
@@ -772,7 +772,7 @@ let (tc_one_fragment :
                         let uu___3 =
                           FStar_ToSyntax_ToSyntax.decls_to_sigelts
                             (FStar_Compiler_List.flatten ast_decls_l) in
-                        FStar_Compiler_Effect.pipe_left
+                        FStar_Compiler_Effect.op_Less_Bar
                           (with_dsenv_of_tcenv env1) uu___3 in
                       (match uu___2 with
                        | (sigelts, env2) ->
@@ -803,7 +803,8 @@ let (load_interface_decls :
           let uu___2 =
             let uu___3 =
               FStar_ToSyntax_Interleave.initialize_interface l decls in
-            FStar_Compiler_Effect.pipe_left (with_dsenv_of_tcenv env) uu___3 in
+            FStar_Compiler_Effect.op_Less_Bar (with_dsenv_of_tcenv env)
+              uu___3 in
           FStar_Pervasives_Native.snd uu___2
       | FStar_Parser_ParseIt.ASTFragment uu___ ->
           let uu___1 =
@@ -879,7 +880,7 @@ let (tc_one_file :
              if uu___2
              then
                let uu___3 = FStar_Options.restore_cmd_line_options true in
-               FStar_Compiler_Effect.pipe_right uu___3 (fun uu___4 -> ())
+               FStar_Compiler_Effect.op_Bar_Greater uu___3 (fun uu___4 -> ())
              else () in
            let maybe_extract_mldefs tcmod env1 =
              let uu___1 =
@@ -1073,7 +1074,7 @@ let (tc_one_file :
                             tc_result.FStar_CheckedFiles.mii
                             (FStar_TypeChecker_Normalize.erase_universes
                                tcenv) in
-                        FStar_Compiler_Effect.pipe_left
+                        FStar_Compiler_Effect.op_Less_Bar
                           (with_dsenv_of_tcenv tcenv) uu___5 in
                       match uu___4 with
                       | (uu___5, tcenv1) ->
@@ -1095,7 +1096,7 @@ let (tc_one_file :
                        (fun uu___3 ->
                           let uu___4 =
                             with_tcenv_of_env env (extend_tcenv tcmod) in
-                          FStar_Compiler_Effect.pipe_right uu___4
+                          FStar_Compiler_Effect.op_Bar_Greater uu___4
                             FStar_Pervasives_Native.snd)
                        FStar_Pervasives_Native.None
                        "FStar.Universal.extend_tcenv" in
@@ -1172,7 +1173,7 @@ let (tc_one_file_from_remaining :
           | intf::impl::remaining1 when needs_interleaving intf impl ->
               let uu___1 =
                 let uu___2 =
-                  FStar_Compiler_Effect.pipe_right impl
+                  FStar_Compiler_Effect.op_Bar_Greater impl
                     (FStar_Parser_Dep.parsing_data_of deps) in
                 tc_one_file env (FStar_Pervasives_Native.Some intf) impl
                   uu___2 in
@@ -1181,7 +1182,7 @@ let (tc_one_file_from_remaining :
           | intf_or_impl::remaining1 ->
               let uu___1 =
                 let uu___2 =
-                  FStar_Compiler_Effect.pipe_right intf_or_impl
+                  FStar_Compiler_Effect.op_Bar_Greater intf_or_impl
                     (FStar_Parser_Dep.parsing_data_of deps) in
                 tc_one_file env FStar_Pervasives_Native.None intf_or_impl
                   uu___2 in
@@ -1248,7 +1249,7 @@ let (batch_mode_tc :
             (FStar_String.concat " " filenames);
           (let uu___4 =
              let uu___5 =
-               FStar_Compiler_Effect.pipe_right filenames
+               FStar_Compiler_Effect.op_Bar_Greater filenames
                  (FStar_Compiler_List.filter FStar_Options.should_verify_file) in
              FStar_String.concat " " uu___5 in
            FStar_Compiler_Util.print1
@@ -1280,6 +1281,6 @@ let (batch_mode_tc :
                          (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
                            ());
                       ((), tcenv)) in
-               FStar_Compiler_Effect.pipe_left FStar_Pervasives_Native.snd
+               FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.snd
                  uu___3 in
              (all_mods, env1, solver_refresh))))

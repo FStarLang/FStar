@@ -20,8 +20,8 @@ effect All (a:Type) (pre:all_pre) (post:(h:unit -> Tot (all_post' a (pre h)))) =
 
 effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
 
-let pipe_right (x : 'a) (f : ('a -> ML 'b)) : ML 'b = f x
-let pipe_left  (f : ('a -> ML 'b)) (x : 'a) : ML 'b = f x
+let ( |> ) (x : 'a) (f : ('a -> ML 'b)) : ML 'b = f x
+let ( <| ) (f : ('a -> ML 'b)) (x : 'a) : ML 'b = f x
 
 assume
 val ref (a:Type0) : Type0

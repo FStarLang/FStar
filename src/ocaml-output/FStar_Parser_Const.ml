@@ -200,10 +200,6 @@ let (effect_ML_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Compiler"; "Effect"; "ML"]
 let (failwith_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
-let (pipe_right_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "pipe_right"]
-let (pipe_left_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "pipe_left"]
 let (try_with_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
 let (as_requires : FStar_Ident.lident) = pconst "as_requires"

@@ -20,7 +20,7 @@ let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
     fun d ->
       match d.FStar_Parser_AST.d with
       | FStar_Parser_AST.Tycon (uu___, uu___1, tys) ->
-          FStar_Compiler_Effect.pipe_right tys
+          FStar_Compiler_Effect.op_Bar_Greater tys
             (FStar_Compiler_Util.for_some
                (fun t ->
                   let uu___2 = FStar_Parser_AST.id_of_tycon t in
@@ -33,7 +33,7 @@ let (definition_lids :
     | FStar_Parser_AST.TopLevelLet (uu___, defs) ->
         FStar_Parser_AST.lids_of_let defs
     | FStar_Parser_AST.Tycon (uu___, uu___1, tys) ->
-        FStar_Compiler_Effect.pipe_right tys
+        FStar_Compiler_Effect.op_Bar_Greater tys
           (FStar_Compiler_List.collect
              (fun uu___2 ->
                 match uu___2 with
@@ -78,7 +78,7 @@ let rec (prefix_with_iface_decls :
       | iface_hd::iface_tl ->
           (match iface_hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
-               FStar_Compiler_Effect.pipe_right tys
+               FStar_Compiler_Effect.op_Bar_Greater tys
                  (FStar_Compiler_Util.for_some
                     (fun uu___2 ->
                        match uu___2 with
@@ -96,7 +96,7 @@ let rec (prefix_with_iface_decls :
                if Prims.op_Negation defines_x
                then
                  let uu___ =
-                   FStar_Compiler_Effect.pipe_right def_ids
+                   FStar_Compiler_Effect.op_Bar_Greater def_ids
                      (FStar_Compiler_Util.for_some
                         (fun y ->
                            let uu___1 =
@@ -104,7 +104,8 @@ let rec (prefix_with_iface_decls :
                                let uu___3 = FStar_Ident.ident_of_lid y in
                                is_val uu___3 in
                              FStar_Compiler_Util.for_some uu___2 in
-                           FStar_Compiler_Effect.pipe_right iface_tl uu___1)) in
+                           FStar_Compiler_Effect.op_Bar_Greater iface_tl
+                             uu___1)) in
                  (if uu___
                   then
                     let uu___1 =
@@ -112,10 +113,10 @@ let rec (prefix_with_iface_decls :
                         let uu___3 = FStar_Ident.string_of_id x in
                         let uu___4 =
                           let uu___5 =
-                            FStar_Compiler_Effect.pipe_right def_ids
+                            FStar_Compiler_Effect.op_Bar_Greater def_ids
                               (FStar_Compiler_List.map
                                  FStar_Ident.string_of_lid) in
-                          FStar_Compiler_Effect.pipe_right uu___5
+                          FStar_Compiler_Effect.op_Bar_Greater uu___5
                             (FStar_String.concat ", ") in
                         FStar_Compiler_Util.format2
                           "Expected the definition of %s to precede %s"
@@ -126,7 +127,7 @@ let rec (prefix_with_iface_decls :
                   else (iface, [qualify_kremlin_private impl]))
                else
                  (let mutually_defined_with_x =
-                    FStar_Compiler_Effect.pipe_right def_ids
+                    FStar_Compiler_Effect.op_Bar_Greater def_ids
                       (FStar_Compiler_List.filter
                          (fun y ->
                             let uu___1 = id_eq_lid x y in
@@ -152,7 +153,7 @@ let rec (prefix_with_iface_decls :
                                  let uu___6 = FStar_Ident.ident_of_lid y in
                                  is_val uu___6 in
                                FStar_Compiler_List.tryFind uu___5 iface_tl1 in
-                             FStar_Compiler_Effect.pipe_left
+                             FStar_Compiler_Effect.op_Less_Bar
                                FStar_Compiler_Option.isSome uu___4 in
                            if uu___3
                            then
@@ -190,7 +191,7 @@ let (check_initial_interface :
       | hd::tl ->
           (match hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
-               FStar_Compiler_Effect.pipe_right tys
+               FStar_Compiler_Effect.op_Bar_Greater tys
                  (FStar_Compiler_Util.for_some
                     (fun uu___2 ->
                        match uu___2 with
@@ -217,7 +218,7 @@ let (check_initial_interface :
                  FStar_Errors.raise_error uu___1 hd.FStar_Parser_AST.drange
                else
                  (let uu___2 =
-                    FStar_Compiler_Effect.pipe_right
+                    FStar_Compiler_Effect.op_Bar_Greater
                       hd.FStar_Parser_AST.quals
                       (FStar_Compiler_List.contains
                          FStar_Parser_AST.Assumption) in
@@ -230,7 +231,7 @@ let (check_initial_interface :
                   else ())
            | uu___ -> ()) in
     aux iface;
-    FStar_Compiler_Effect.pipe_right iface
+    FStar_Compiler_Effect.op_Bar_Greater iface
       (FStar_Compiler_List.filter
          (fun d ->
             match d.FStar_Parser_AST.d with
@@ -249,7 +250,7 @@ let (ml_mode_prefix_with_iface_decls :
           let uu___1 =
             FStar_Compiler_List.partition
               (fun d ->
-                 FStar_Compiler_Effect.pipe_right xs
+                 FStar_Compiler_Effect.op_Bar_Greater xs
                    (FStar_Compiler_Util.for_some
                       (fun x ->
                          let uu___2 = FStar_Ident.ident_of_lid x in
@@ -265,7 +266,7 @@ let ml_mode_check_initial_interface :
   =
   fun mname ->
     fun iface ->
-      FStar_Compiler_Effect.pipe_right iface
+      FStar_Compiler_Effect.op_Bar_Greater iface
         (FStar_Compiler_List.filter
            (fun d ->
               match d.FStar_Parser_AST.d with
@@ -423,7 +424,7 @@ let (interleave_module :
                                     FStar_Compiler_List.map
                                       FStar_Parser_AST.decl_to_string
                                       remaining_iface_vals in
-                                  FStar_Compiler_Effect.pipe_right uu___5
+                                  FStar_Compiler_Effect.op_Bar_Greater uu___5
                                     (FStar_String.concat "\n\t") in
                                 let uu___5 =
                                   let uu___6 =

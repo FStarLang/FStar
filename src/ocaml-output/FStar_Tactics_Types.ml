@@ -257,7 +257,7 @@ let (rename_binders :
   =
   fun subst ->
     fun bs ->
-      FStar_Compiler_Effect.pipe_right bs
+      FStar_Compiler_Effect.op_Bar_Greater bs
         (FStar_Compiler_List.map
            (fun uu___ ->
               let x = uu___.FStar_Syntax_Syntax.binder_bv in

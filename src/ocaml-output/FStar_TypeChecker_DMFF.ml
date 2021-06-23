@@ -91,7 +91,7 @@ let (gen_wps_for_free :
              let mk_lid name = FStar_Syntax_Util.dm4f_lid ed name in
              let gamma =
                let uu___1 = collect_binders wp_a1 in
-               FStar_Compiler_Effect.pipe_right uu___1
+               FStar_Compiler_Effect.op_Bar_Greater uu___1
                  FStar_Syntax_Util.name_binders in
              (let uu___2 =
                 FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
@@ -677,7 +677,7 @@ let (gen_wps_for_free :
                         let uu___5 =
                           FStar_Syntax_Syntax.mk_GTotal
                             FStar_Syntax_Util.ktype in
-                        FStar_Compiler_Effect.pipe_left
+                        FStar_Compiler_Effect.op_Less_Bar
                           FStar_TypeChecker_Common.lcomp_of_comp uu___5 in
                       FStar_TypeChecker_Common.residual_comp_of_lcomp uu___4 in
                     FStar_Pervasives_Native.Some uu___3 in
@@ -1167,7 +1167,7 @@ let (gen_wps_for_free :
                         let body =
                           let uu___4 =
                             let uu___5 =
-                              FStar_Compiler_Effect.pipe_left
+                              FStar_Compiler_Effect.op_Less_Bar
                                 FStar_Syntax_Syntax.bv_to_name
                                 post.FStar_Syntax_Syntax.binder_bv in
                             let uu___6 =
@@ -1310,7 +1310,7 @@ let (nm_of_comp : FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> nm)
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uu___) -> N t
     | FStar_Syntax_Syntax.Comp c1 when
-        FStar_Compiler_Effect.pipe_right c1.FStar_Syntax_Syntax.flags
+        FStar_Compiler_Effect.op_Bar_Greater c1.FStar_Syntax_Syntax.flags
           (FStar_Compiler_Util.for_some
              (fun uu___ ->
                 match uu___ with
@@ -1354,13 +1354,13 @@ let (double_star : FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
         let uu___1 =
           let uu___2 =
             FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None typ1 in
-          FStar_Compiler_Effect.pipe_left FStar_Syntax_Syntax.mk_binder
+          FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_binder
             uu___2 in
         [uu___1] in
       let uu___1 = FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype0 in
       FStar_Syntax_Util.arrow uu___ uu___1 in
-    let uu___ = FStar_Compiler_Effect.pipe_right typ star_once in
-    FStar_Compiler_Effect.pipe_left star_once uu___
+    let uu___ = FStar_Compiler_Effect.op_Bar_Greater typ star_once in
+    FStar_Compiler_Effect.op_Less_Bar star_once uu___
 let rec (mk_star_to_type :
   (FStar_Syntax_Syntax.term' ->
      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -1812,7 +1812,7 @@ let (is_monadic :
     match uu___ with
     | FStar_Pervasives_Native.None -> failwith "un-annotated lambda?!"
     | FStar_Pervasives_Native.Some rc ->
-        FStar_Compiler_Effect.pipe_right
+        FStar_Compiler_Effect.op_Bar_Greater
           rc.FStar_Syntax_Syntax.residual_flags
           (FStar_Compiler_Util.for_some
              (fun uu___1 ->
@@ -2244,7 +2244,7 @@ and (infer :
                            | FStar_Pervasives_Native.None ->
                                let rc1 =
                                  let uu___3 =
-                                   FStar_Compiler_Effect.pipe_right
+                                   FStar_Compiler_Effect.op_Bar_Greater
                                      rc.FStar_Syntax_Syntax.residual_flags
                                      (FStar_Compiler_Util.for_some
                                         (fun uu___4 ->
@@ -2267,7 +2267,7 @@ and (infer :
                                FStar_Pervasives_Native.Some rc1
                            | FStar_Pervasives_Native.Some rt ->
                                let uu___3 =
-                                 FStar_Compiler_Effect.pipe_right
+                                 FStar_Compiler_Effect.op_Bar_Greater
                                    rc.FStar_Syntax_Syntax.residual_flags
                                    (FStar_Compiler_Util.for_some
                                       (fun uu___4 ->
@@ -2363,7 +2363,7 @@ and (infer :
           ->
           let uu___4 =
             let uu___5 = FStar_TypeChecker_Env.lookup_lid env1.tcenv lid in
-            FStar_Compiler_Effect.pipe_left FStar_Pervasives_Native.fst
+            FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.fst
               uu___5 in
           (match uu___4 with
            | (uu___5, t) ->
@@ -2865,7 +2865,7 @@ and (mk_match :
                                 let uu___6 =
                                   FStar_Syntax_Syntax.new_bv
                                     FStar_Pervasives_Native.None p_type in
-                                FStar_Compiler_Effect.pipe_left
+                                FStar_Compiler_Effect.op_Less_Bar
                                   FStar_Syntax_Syntax.mk_binder uu___6 in
                               [uu___5] in
                             let uu___5 =
@@ -3583,11 +3583,11 @@ let (cps_and_elaborate :
                            let uu___7 =
                              let uu___8 =
                                let uu___9 =
-                                 FStar_Compiler_Effect.pipe_right ed
+                                 FStar_Compiler_Effect.op_Bar_Greater ed
                                    FStar_Syntax_Util.get_eff_repr in
-                               FStar_Compiler_Effect.pipe_right uu___9
+                               FStar_Compiler_Effect.op_Bar_Greater uu___9
                                  FStar_Compiler_Util.must in
-                             FStar_Compiler_Effect.pipe_right uu___8
+                             FStar_Compiler_Effect.op_Bar_Greater uu___8
                                FStar_Pervasives_Native.snd in
                            open_and_check env2 [] uu___7 in
                          (match uu___6 with
@@ -3642,7 +3642,7 @@ let (cps_and_elaborate :
                                           FStar_Syntax_Syntax.gen_bv
                                             "dijkstra_wp"
                                             FStar_Pervasives_Native.None wp_a in
-                                        FStar_Compiler_Effect.pipe_right
+                                        FStar_Compiler_Effect.op_Bar_Greater
                                           uu___12
                                           FStar_Syntax_Syntax.mk_binder in
                                       [uu___11] in
@@ -3708,19 +3708,20 @@ let (cps_and_elaborate :
                                 let uu___10 =
                                   let uu___11 =
                                     let uu___12 =
-                                      FStar_Compiler_Effect.pipe_right ed
+                                      FStar_Compiler_Effect.op_Bar_Greater ed
                                         FStar_Syntax_Util.get_bind_repr in
-                                    FStar_Compiler_Effect.pipe_right uu___12
-                                      FStar_Compiler_Util.must in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___12 FStar_Compiler_Util.must in
                                   elaborate_and_star dmff_env [] uu___11 in
                                 match uu___10 with
                                 | (dmff_env1, uu___11, bind_wp, bind_elab) ->
                                     let uu___12 =
                                       let uu___13 =
                                         let uu___14 =
-                                          FStar_Compiler_Effect.pipe_right ed
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            ed
                                             FStar_Syntax_Util.get_return_repr in
-                                        FStar_Compiler_Effect.pipe_right
+                                        FStar_Compiler_Effect.op_Bar_Greater
                                           uu___14 FStar_Compiler_Util.must in
                                       elaborate_and_star dmff_env1 [] uu___13 in
                                     (match uu___12 with
@@ -3796,7 +3797,7 @@ let (cps_and_elaborate :
                                                             wp_b1 in
                                                         FStar_TypeChecker_Normalize.eta_expand_with_type
                                                           env0 body1 uu___18 in
-                                                      FStar_Compiler_Effect.pipe_left
+                                                      FStar_Compiler_Effect.op_Less_Bar
                                                         FStar_Syntax_Util.abs_formals
                                                         uu___17 in
                                                     (match uu___16 with
@@ -3861,7 +3862,7 @@ let (cps_and_elaborate :
                                                                     FStar_Pervasives_Native.None
                                                                     ->
                                                                     fail ()) in
-                                                                 FStar_Compiler_Effect.pipe_right
+                                                                 FStar_Compiler_Effect.op_Bar_Greater
                                                                    uu___19
                                                                    (fun
                                                                     uu___20
@@ -4229,7 +4230,7 @@ let (cps_and_elaborate :
                                                                     uu___20 in
                                                                 ((let uu___20
                                                                     =
-                                                                    FStar_Compiler_Effect.pipe_left
+                                                                    FStar_Compiler_Effect.op_Less_Bar
                                                                     (FStar_TypeChecker_Env.debug
                                                                     env2)
                                                                     (FStar_Options.Other
@@ -4371,7 +4372,7 @@ let (cps_and_elaborate :
                                                     let uu___19 =
                                                       FStar_Syntax_Subst.compress
                                                         wp_type in
-                                                    FStar_Compiler_Effect.pipe_left
+                                                    FStar_Compiler_Effect.op_Less_Bar
                                                       FStar_Syntax_Util.unascribe
                                                       uu___19 in
                                                   uu___18.FStar_Syntax_Syntax.n in
@@ -4400,7 +4401,7 @@ let (cps_and_elaborate :
                                                              let uu___22 =
                                                                FStar_Syntax_Subst.compress
                                                                  arrow1 in
-                                                             FStar_Compiler_Effect.pipe_left
+                                                             FStar_Compiler_Effect.op_Less_Bar
                                                                FStar_Syntax_Util.unascribe
                                                                uu___22 in
                                                            uu___21.FStar_Syntax_Syntax.n in
@@ -4439,11 +4440,11 @@ let (cps_and_elaborate :
                                                                     =
                                                                     FStar_Syntax_Free.names
                                                                     bv.FStar_Syntax_Syntax.sort in
-                                                                    FStar_Compiler_Effect.pipe_right
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___27
                                                                     (FStar_Compiler_Util.set_mem
                                                                     type_param1.FStar_Syntax_Syntax.binder_bv) in
-                                                                    FStar_Compiler_Effect.pipe_right
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___26
                                                                     Prims.op_Negation)
                                                                     wp_binders1 in

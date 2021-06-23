@@ -207,8 +207,6 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     (C.read_lid       , "!" );
     (C.list_append_lid, "@" );
     (C.list_tot_append_lid,"@");
-    (C.pipe_right_lid , "|>");
-    (C.pipe_left_lid  , "<|");
     (C.op_Eq          , "=" );
     (C.op_ColonEq     , ":=");
     (C.op_notEq       , "<>");

@@ -2,7 +2,9 @@
 module FStar.Tests.Norm
 //Normalization tests
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Pervasives
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars

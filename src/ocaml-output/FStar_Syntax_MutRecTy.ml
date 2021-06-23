@@ -15,7 +15,7 @@ let (disentangle_abbrevs_from_bundle :
             FStar_Compiler_List.collect
               (fun s -> s.FStar_Syntax_Syntax.sigattrs) sigelts in
           let type_abbrev_sigelts =
-            FStar_Compiler_Effect.pipe_right sigelts
+            FStar_Compiler_Effect.op_Bar_Greater sigelts
               (FStar_Compiler_List.collect
                  (fun x ->
                     match x.FStar_Syntax_Syntax.sigel with
@@ -50,7 +50,7 @@ let (disentangle_abbrevs_from_bundle :
                }, [])
           | uu___ ->
               let type_abbrevs =
-                FStar_Compiler_Effect.pipe_right type_abbrev_sigelts
+                FStar_Compiler_Effect.op_Bar_Greater type_abbrev_sigelts
                   (FStar_Compiler_List.map
                      (fun x ->
                         match x.FStar_Syntax_Syntax.sigel with
@@ -80,7 +80,7 @@ let (disentangle_abbrevs_from_bundle :
                   let uu___1 =
                     let uu___2 =
                       FStar_Compiler_Effect.op_Bang not_unfolded_yet in
-                    FStar_Compiler_Effect.pipe_right uu___2
+                    FStar_Compiler_Effect.op_Bar_Greater uu___2
                       (FStar_Compiler_List.filter
                          (fun x ->
                             match x.FStar_Syntax_Syntax.sigel with
@@ -188,7 +188,7 @@ let (disentangle_abbrevs_from_bundle :
                   match x.FStar_Syntax_Syntax.sigel with
                   | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___1) ->
                       let quals1 =
-                        FStar_Compiler_Effect.pipe_right
+                        FStar_Compiler_Effect.op_Bar_Greater
                           x.FStar_Syntax_Syntax.sigquals
                           (FStar_Compiler_List.filter
                              (fun uu___2 ->

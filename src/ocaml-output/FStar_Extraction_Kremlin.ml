@@ -2830,7 +2830,7 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
     | FStar_Extraction_ML_Syntax.MLC_String s ->
         ((let uu___1 =
             let uu___2 = FStar_String.list_of_string s in
-            FStar_Compiler_Effect.pipe_right uu___2
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               (FStar_Compiler_Util.for_some
                  (fun c1 -> c1 = (FStar_Char.char_of_int Prims.int_zero))) in
           if uu___1

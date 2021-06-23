@@ -252,8 +252,6 @@ let all_lid          = p2l ["FStar"; "Compiler"; "Effect"]
 let effect_ALL_lid   = p2l ["FStar"; "Compiler"; "Effect"; "ALL"]
 let effect_ML_lid    = p2l ["FStar"; "Compiler"; "Effect"; "ML"]
 let failwith_lid     = p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
-let pipe_right_lid   = p2l ["FStar"; "Compiler"; "Effect"; "pipe_right"]
-let pipe_left_lid    = p2l ["FStar"; "Compiler"; "Effect"; "pipe_left"]
 let try_with_lid     = p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
 
 let as_requires    = pconst "as_requires"

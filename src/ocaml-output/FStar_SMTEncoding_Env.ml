@@ -37,7 +37,7 @@ let (mk_term_projector_name :
         let uu___1 = FStar_Ident.string_of_lid lid in
         let uu___2 = FStar_Ident.string_of_id a.FStar_Syntax_Syntax.ppname in
         FStar_Compiler_Util.format2 "%s_%s" uu___1 uu___2 in
-      FStar_Compiler_Effect.pipe_left escape uu___
+      FStar_Compiler_Effect.op_Less_Bar escape uu___
 let (primitive_projector_by_pos :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident -> Prims.int -> Prims.string)
@@ -79,7 +79,7 @@ let (mk_term_projector_name_by_pos :
       let uu___ =
         let uu___1 = FStar_Ident.string_of_lid lid in
         FStar_Compiler_Util.format2 "%s_%s" uu___1 (Prims.string_of_int i) in
-      FStar_Compiler_Effect.pipe_left escape uu___
+      FStar_Compiler_Effect.op_Less_Bar escape uu___
 let (mk_term_projector :
   FStar_Ident.lident -> FStar_Syntax_Syntax.bv -> FStar_SMTEncoding_Term.term)
   =
@@ -93,7 +93,7 @@ let (mk_term_projector :
                (FStar_SMTEncoding_Term.Term_sort,
                  FStar_SMTEncoding_Term.Term_sort))) in
         FStar_SMTEncoding_Term.mk_fv uu___1 in
-      FStar_Compiler_Effect.pipe_left FStar_SMTEncoding_Util.mkFreeV uu___
+      FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV uu___
 let (mk_term_projector_by_pos :
   FStar_Ident.lident -> Prims.int -> FStar_SMTEncoding_Term.term) =
   fun lid ->
@@ -106,7 +106,7 @@ let (mk_term_projector_by_pos :
                (FStar_SMTEncoding_Term.Term_sort,
                  FStar_SMTEncoding_Term.Term_sort))) in
         FStar_SMTEncoding_Term.mk_fv uu___1 in
-      FStar_Compiler_Effect.pipe_left FStar_SMTEncoding_Util.mkFreeV uu___
+      FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV uu___
 let mk_data_tester :
   'uuuuu .
     'uuuuu ->
@@ -218,7 +218,7 @@ let (varops : varops_t) =
     let uu___ =
       let uu___1 = FStar_Ident.string_of_id pp in
       Prims.op_Hat uu___1 (Prims.op_Hat "__" (Prims.string_of_int rn)) in
-    FStar_Compiler_Effect.pipe_left mk_unique uu___ in
+    FStar_Compiler_Effect.op_Less_Bar mk_unique uu___ in
   let new_fvar lid =
     let uu___ = FStar_Ident.string_of_lid lid in mk_unique uu___ in
   let next_id uu___ =
@@ -226,7 +226,7 @@ let (varops : varops_t) =
   let fresh mname pfx =
     let uu___ =
       let uu___1 = next_id () in
-      FStar_Compiler_Effect.pipe_left Prims.string_of_int uu___1 in
+      FStar_Compiler_Effect.op_Less_Bar Prims.string_of_int uu___1 in
     FStar_Compiler_Util.format3 "%s_%s_%s" pfx mname uu___ in
   let reset_fresh uu___ =
     FStar_Compiler_Effect.op_Colon_Equals ctr initial_ctr in
@@ -457,7 +457,7 @@ let (print_env : env_t -> Prims.string) =
                             uu___1 :: acc1) acc) [] in
     let allvars =
       let uu___ =
-        FStar_Compiler_Effect.pipe_right e.fvar_bindings
+        FStar_Compiler_Effect.op_Bar_Greater e.fvar_bindings
           FStar_Pervasives_Native.fst in
       FStar_Compiler_Util.psmap_fold uu___
         (fun _k -> fun fvb -> fun acc -> (fvb.fvar_lid) :: acc) [] in
@@ -489,7 +489,7 @@ let (lookup_fvar_binding :
   fun env ->
     fun lid ->
       let uu___ =
-        FStar_Compiler_Effect.pipe_right env.fvar_bindings
+        FStar_Compiler_Effect.op_Bar_Greater env.fvar_bindings
           FStar_Pervasives_Native.fst in
       let uu___1 = FStar_Ident.string_of_lid lid in
       FStar_Compiler_Util.psmap_try_find uu___ uu___1
@@ -538,7 +538,7 @@ let (fresh_fvar :
         let xsym = varops.fresh mname x in
         let uu___ =
           let uu___1 = FStar_SMTEncoding_Term.mk_fv (xsym, s) in
-          FStar_Compiler_Effect.pipe_left FStar_SMTEncoding_Util.mkFreeV
+          FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV
             uu___1 in
         (xsym, uu___)
 let (gen_term_var :
@@ -553,7 +553,8 @@ let (gen_term_var :
         let uu___ =
           FStar_SMTEncoding_Term.mk_fv
             (ysym, FStar_SMTEncoding_Term.Term_sort) in
-        FStar_Compiler_Effect.pipe_left FStar_SMTEncoding_Util.mkFreeV uu___ in
+        FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV
+          uu___ in
       let uu___ =
         let uu___1 = env in
         let uu___2 = add_bvar_binding (x, y) env.bvar_bindings in
@@ -778,9 +779,9 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
           let uu___1 =
             (FStar_Compiler_Util.is_some quals) &&
               (let uu___2 =
-                 FStar_Compiler_Effect.pipe_right quals
+                 FStar_Compiler_Effect.op_Bar_Greater quals
                    FStar_Compiler_Util.must in
-               FStar_Compiler_Effect.pipe_right uu___2
+               FStar_Compiler_Effect.op_Bar_Greater uu___2
                  (FStar_Compiler_List.contains
                     FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) in
           if uu___1
@@ -906,7 +907,7 @@ let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
         (fvb.smt_arity <> Prims.int_zero)
     then failwith "Forcing a non-thunk in the SMT encoding"
     else ();
-    FStar_Compiler_Effect.pipe_left FStar_SMTEncoding_Util.mkFreeV
+    FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV
       ((fvb.smt_id), FStar_SMTEncoding_Term.Term_sort, true)
 let (try_lookup_free_var :
   env_t ->
@@ -920,7 +921,7 @@ let (try_lookup_free_var :
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some fvb ->
           ((let uu___2 =
-              FStar_Compiler_Effect.pipe_left
+              FStar_Compiler_Effect.op_Less_Bar
                 (FStar_TypeChecker_Env.debug env.tcenv)
                 (FStar_Options.Other "PartialApp") in
             if uu___2
@@ -947,7 +948,7 @@ let (try_lookup_free_var :
                               let uu___6 =
                                 let uu___7 =
                                   FStar_SMTEncoding_Term.fv_of_term fuel in
-                                FStar_Compiler_Effect.pipe_right uu___7
+                                FStar_Compiler_Effect.op_Bar_Greater uu___7
                                   FStar_SMTEncoding_Term.fv_name in
                               FStar_Compiler_Util.starts_with uu___6 "fuel" in
                             if uu___5
@@ -958,10 +959,10 @@ let (try_lookup_free_var :
                                     FStar_SMTEncoding_Term.mk_fv
                                       ((fvb.smt_id),
                                         FStar_SMTEncoding_Term.Term_sort) in
-                                  FStar_Compiler_Effect.pipe_left
+                                  FStar_Compiler_Effect.op_Less_Bar
                                     FStar_SMTEncoding_Util.mkFreeV uu___8 in
                                 FStar_SMTEncoding_Term.mk_ApplyTF uu___7 fuel in
-                              FStar_Compiler_Effect.pipe_left
+                              FStar_Compiler_Effect.op_Less_Bar
                                 (fun uu___7 ->
                                    FStar_Pervasives_Native.Some uu___7)
                                 uu___6
@@ -1028,7 +1029,7 @@ let (tok_of_name :
     fun nm ->
       let uu___ =
         let uu___1 =
-          FStar_Compiler_Effect.pipe_right env.fvar_bindings
+          FStar_Compiler_Effect.op_Bar_Greater env.fvar_bindings
             FStar_Pervasives_Native.fst in
         FStar_Compiler_Util.psmap_find_map uu___1
           (fun uu___2 ->
@@ -1068,7 +1069,7 @@ let (reset_current_module_fvbs : env_t -> env_t) =
     let uu___ = env in
     let uu___1 =
       let uu___2 =
-        FStar_Compiler_Effect.pipe_right env.fvar_bindings
+        FStar_Compiler_Effect.op_Bar_Greater env.fvar_bindings
           FStar_Pervasives_Native.fst in
       (uu___2, []) in
     {
@@ -1086,7 +1087,7 @@ let (reset_current_module_fvbs : env_t -> env_t) =
     }
 let (get_current_module_fvbs : env_t -> fvar_binding Prims.list) =
   fun env ->
-    FStar_Compiler_Effect.pipe_right env.fvar_bindings
+    FStar_Compiler_Effect.op_Bar_Greater env.fvar_bindings
       FStar_Pervasives_Native.snd
 let (add_fvar_binding_to_env : fvar_binding -> env_t -> env_t) =
   fun fvb ->

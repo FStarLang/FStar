@@ -75,7 +75,7 @@ let (lid_of_ns_and_id : ipath -> ident -> lident) =
     fun id ->
       let nsstr =
         let uu___ = FStar_Compiler_List.map string_of_id ns in
-        FStar_Compiler_Effect.pipe_right uu___ text_of_path in
+        FStar_Compiler_Effect.op_Bar_Greater uu___ text_of_path in
       {
         ns;
         ident = id;
@@ -129,7 +129,7 @@ let (ml_path_of_lid : lident -> Prims.string) =
       let uu___1 = path_of_ns lid1.ns in
       let uu___2 = let uu___3 = string_of_id lid1.ident in [uu___3] in
       FStar_Compiler_List.op_At uu___1 uu___2 in
-    FStar_Compiler_Effect.pipe_left (FStar_String.concat "_") uu___
+    FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "_") uu___
 let (string_of_lid : lident -> Prims.string) = fun lid1 -> lid1.str
 let (qual_id : lident -> ident -> lident) =
   fun lid1 ->

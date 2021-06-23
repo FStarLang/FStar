@@ -81,7 +81,7 @@ let (is_prim_op :
     fun f ->
       match f.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
-          FStar_Compiler_Effect.pipe_right ps
+          FStar_Compiler_Effect.op_Bar_Greater ps
             (FStar_Compiler_Util.for_some (FStar_Syntax_Syntax.fv_eq_lid fv))
       | uu___ -> false
 let (get_lid :
@@ -140,21 +140,22 @@ let filter_imp_args :
         FStar_Pervasives_Native.option) Prims.list
   =
   fun args ->
-    FStar_Compiler_Effect.pipe_right args
+    FStar_Compiler_Effect.op_Bar_Greater args
       (FStar_Compiler_List.filter
          (fun a ->
             let uu___ =
-              FStar_Compiler_Effect.pipe_right a FStar_Pervasives_Native.snd in
-            FStar_Compiler_Effect.pipe_right uu___ filter_imp))
+              FStar_Compiler_Effect.op_Bar_Greater a
+                FStar_Pervasives_Native.snd in
+            FStar_Compiler_Effect.op_Bar_Greater uu___ filter_imp))
 let (filter_imp_binders :
   FStar_Syntax_Syntax.binder Prims.list ->
     FStar_Syntax_Syntax.binder Prims.list)
   =
   fun bs ->
-    FStar_Compiler_Effect.pipe_right bs
+    FStar_Compiler_Effect.op_Bar_Greater bs
       (FStar_Compiler_List.filter
          (fun b ->
-            FStar_Compiler_Effect.pipe_right
+            FStar_Compiler_Effect.op_Bar_Greater
               b.FStar_Syntax_Syntax.binder_qual filter_imp))
 let rec find : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
   fun f ->
@@ -198,7 +199,7 @@ let (uvar_to_string : FStar_Syntax_Syntax.uvar -> Prims.string) =
     else
       (let uu___2 =
          let uu___3 = FStar_Syntax_Unionfind.uvar_id u in
-         FStar_Compiler_Effect.pipe_right uu___3
+         FStar_Compiler_Effect.op_Bar_Greater uu___3
            FStar_Compiler_Util.string_of_int in
        Prims.op_Hat "?" uu___2)
 let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
@@ -220,11 +221,11 @@ let (univ_uvar_to_string :
       (let uu___2 =
          let uu___3 =
            let uu___4 = FStar_Syntax_Unionfind.univ_uvar_id u in
-           FStar_Compiler_Effect.pipe_right uu___4
+           FStar_Compiler_Effect.op_Bar_Greater uu___4
              FStar_Compiler_Util.string_of_int in
          let uu___4 =
            let uu___5 =
-             FStar_Compiler_Effect.pipe_right u
+             FStar_Compiler_Effect.op_Bar_Greater u
                (fun uu___6 ->
                   match uu___6 with
                   | (uu___7, u1, uu___8) -> version_to_string u1) in
@@ -272,19 +273,19 @@ let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
          | FStar_Syntax_Syntax.U_max us ->
              let uu___2 =
                let uu___3 = FStar_Compiler_List.map univ_to_string us in
-               FStar_Compiler_Effect.pipe_right uu___3
+               FStar_Compiler_Effect.op_Bar_Greater uu___3
                  (FStar_String.concat ", ") in
              FStar_Compiler_Util.format1 "(max %s)" uu___2
          | FStar_Syntax_Syntax.U_unknown -> "unknown")
 let (univs_to_string : FStar_Syntax_Syntax.universes -> Prims.string) =
   fun us ->
     let uu___ = FStar_Compiler_List.map univ_to_string us in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
 let (univ_names_to_string : FStar_Syntax_Syntax.univ_names -> Prims.string) =
   fun us ->
     let uu___ =
       FStar_Compiler_List.map (fun x -> FStar_Ident.string_of_id x) us in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
 let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -313,9 +314,10 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
           FStar_Ident.text_of_path uu___2 in
         let uu___2 =
           let uu___3 =
-            FStar_Compiler_Effect.pipe_right fns
+            FStar_Compiler_Effect.op_Bar_Greater fns
               (FStar_Compiler_List.map FStar_Ident.string_of_id) in
-          FStar_Compiler_Effect.pipe_right uu___3 (FStar_String.concat ", ") in
+          FStar_Compiler_Effect.op_Bar_Greater uu___3
+            (FStar_String.concat ", ") in
         FStar_Compiler_Util.format2 "(RecordType %s %s)" uu___1 uu___2
     | FStar_Syntax_Syntax.RecordConstructor (ns, fns) ->
         let uu___1 =
@@ -323,9 +325,10 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
           FStar_Ident.text_of_path uu___2 in
         let uu___2 =
           let uu___3 =
-            FStar_Compiler_Effect.pipe_right fns
+            FStar_Compiler_Effect.op_Bar_Greater fns
               (FStar_Compiler_List.map FStar_Ident.string_of_id) in
-          FStar_Compiler_Effect.pipe_right uu___3 (FStar_String.concat ", ") in
+          FStar_Compiler_Effect.op_Bar_Greater uu___3
+            (FStar_String.concat ", ") in
         FStar_Compiler_Util.format2 "(RecordConstructor %s %s)" uu___1 uu___2
     | FStar_Syntax_Syntax.Action eff_lid ->
         let uu___1 = lid_to_string eff_lid in
@@ -345,9 +348,9 @@ let (quals_to_string :
     | [] -> ""
     | uu___ ->
         let uu___1 =
-          FStar_Compiler_Effect.pipe_right quals
+          FStar_Compiler_Effect.op_Bar_Greater quals
             (FStar_Compiler_List.map qual_to_string) in
-        FStar_Compiler_Effect.pipe_right uu___1 (FStar_String.concat " ")
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat " ")
 let (quals_to_string' :
   FStar_Syntax_Syntax.qualifier Prims.list -> Prims.string) =
   fun quals ->
@@ -464,18 +467,18 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                (t, FStar_Syntax_Syntax.Meta_pattern (uu___3, ps)) ->
                let pats =
                  let uu___4 =
-                   FStar_Compiler_Effect.pipe_right ps
+                   FStar_Compiler_Effect.op_Bar_Greater ps
                      (FStar_Compiler_List.map
                         (fun args ->
                            let uu___5 =
-                             FStar_Compiler_Effect.pipe_right args
+                             FStar_Compiler_Effect.op_Bar_Greater args
                                (FStar_Compiler_List.map
                                   (fun uu___6 ->
                                      match uu___6 with
                                      | (t1, uu___7) -> term_to_string t1)) in
-                           FStar_Compiler_Effect.pipe_right uu___5
+                           FStar_Compiler_Effect.op_Bar_Greater uu___5
                              (FStar_String.concat "; "))) in
-                 FStar_Compiler_Effect.pipe_right uu___4
+                 FStar_Compiler_Effect.op_Bar_Greater uu___4
                    (FStar_String.concat "\\/") in
                let uu___4 = term_to_string t in
                FStar_Compiler_Util.format2 "{:pattern %s} %s" pats uu___4
@@ -537,7 +540,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                     let uu___7 =
                       FStar_Syntax_Unionfind.uvar_id
                         u.FStar_Syntax_Syntax.ctx_uvar_head in
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       FStar_Compiler_Util.string_of_int uu___7 in
                   Prims.op_Hat "?" uu___6)
            | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
@@ -551,7 +554,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    let uu___6 =
                      FStar_Compiler_List.map subst_to_string
                        (FStar_Pervasives_Native.fst s) in
-                   FStar_Compiler_Effect.pipe_right uu___6
+                   FStar_Compiler_Effect.op_Bar_Greater uu___6
                      (FStar_String.concat "; ") in
                  FStar_Compiler_Util.format2 "(%s @ %s)" uu___4 uu___5
                else
@@ -559,7 +562,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                     let uu___6 =
                       FStar_Syntax_Unionfind.uvar_id
                         u.FStar_Syntax_Syntax.ctx_uvar_head in
-                    FStar_Compiler_Effect.pipe_left
+                    FStar_Compiler_Effect.op_Less_Bar
                       FStar_Compiler_Util.string_of_int uu___6 in
                   Prims.op_Hat "?" uu___5)
            | FStar_Syntax_Syntax.Tm_constant c -> const_to_string c
@@ -604,10 +607,10 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            | FStar_Syntax_Syntax.Tm_refine (xt, f) ->
                let uu___3 = bv_to_string xt in
                let uu___4 =
-                 FStar_Compiler_Effect.pipe_right xt.FStar_Syntax_Syntax.sort
-                   term_to_string in
+                 FStar_Compiler_Effect.op_Bar_Greater
+                   xt.FStar_Syntax_Syntax.sort term_to_string in
                let uu___5 =
-                 FStar_Compiler_Effect.pipe_right f formula_to_string in
+                 FStar_Compiler_Effect.op_Bar_Greater f formula_to_string in
                FStar_Compiler_Util.format3 "(%s:%s{%s})" uu___3 uu___4 uu___5
            | FStar_Syntax_Syntax.Tm_app (t, args) ->
                let uu___3 = term_to_string t in
@@ -625,7 +628,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                        let uu___4 =
                          FStar_Compiler_Util.map_opt eff_name
                            FStar_Ident.string_of_lid in
-                       FStar_Compiler_Effect.pipe_right uu___4
+                       FStar_Compiler_Effect.op_Bar_Greater uu___4
                          (FStar_Compiler_Util.dflt "default") in
                      let uu___4 = term_to_string t in
                      FStar_Compiler_Util.format2 "[%s] %s" uu___3 uu___4
@@ -659,7 +662,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                        uu___6 in
                let uu___5 =
                  let uu___6 =
-                   FStar_Compiler_Effect.pipe_right branches
+                   FStar_Compiler_Effect.op_Bar_Greater branches
                      (FStar_Compiler_List.map branch_to_string) in
                  FStar_Compiler_Util.concat_l "\n\t|" uu___6 in
                FStar_Compiler_Util.format3 "(match %s %swith\n\t| %s)" uu___3
@@ -677,14 +680,15 @@ and (branch_to_string : FStar_Syntax_Syntax.branch -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | (p, wopt, e) ->
-        let uu___1 = FStar_Compiler_Effect.pipe_right p pat_to_string in
+        let uu___1 = FStar_Compiler_Effect.op_Bar_Greater p pat_to_string in
         let uu___2 =
           match wopt with
           | FStar_Pervasives_Native.None -> ""
           | FStar_Pervasives_Native.Some w ->
-              let uu___3 = FStar_Compiler_Effect.pipe_right w term_to_string in
+              let uu___3 =
+                FStar_Compiler_Effect.op_Bar_Greater w term_to_string in
               FStar_Compiler_Util.format1 "when %s" uu___3 in
-        let uu___3 = FStar_Compiler_Effect.pipe_right e term_to_string in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater e term_to_string in
         FStar_Compiler_Util.format3 "%s %s -> %s" uu___1 uu___2 uu___3
 and (ctx_uvar_to_string_aux :
   Prims.bool -> FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
@@ -739,9 +743,9 @@ and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
 and (subst_to_string : FStar_Syntax_Syntax.subst_t -> Prims.string) =
   fun s ->
     let uu___ =
-      FStar_Compiler_Effect.pipe_right s
+      FStar_Compiler_Effect.op_Bar_Greater s
         (FStar_Compiler_List.map subst_elt_to_string) in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat "; ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "; ")
 and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
   fun x ->
     let uu___ =
@@ -766,7 +770,7 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
                     | (x1, b) ->
                         let p = pat_to_string x1 in
                         if b then Prims.op_Hat "#" p else p) pats in
-             FStar_Compiler_Effect.pipe_right uu___4
+             FStar_Compiler_Effect.op_Bar_Greater uu___4
                (FStar_String.concat " ") in
            FStar_Compiler_Util.format2 "(%s %s)" uu___2 uu___3
        | FStar_Syntax_Syntax.Pat_dot_term (x1, uu___2) ->
@@ -805,7 +809,8 @@ and (lbs_to_string :
       let uu___ = quals_to_string' quals in
       let uu___1 =
         let uu___2 =
-          FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.snd lbs)
+          FStar_Compiler_Effect.op_Bar_Greater
+            (FStar_Pervasives_Native.snd lbs)
             (FStar_Compiler_List.map
                (fun lb ->
                   let uu___3 = attrs_to_string lb.FStar_Syntax_Syntax.lbattrs in
@@ -822,7 +827,7 @@ and (lbs_to_string :
                     else "" in
                   let uu___6 = term_to_string lb.FStar_Syntax_Syntax.lbtyp in
                   let uu___7 =
-                    FStar_Compiler_Effect.pipe_right
+                    FStar_Compiler_Effect.op_Bar_Greater
                       lb.FStar_Syntax_Syntax.lbdef term_to_string in
                   FStar_Compiler_Util.format5 "%s%s %s : %s = %s" uu___3
                     uu___4 uu___5 uu___6 uu___7)) in
@@ -839,7 +844,8 @@ and (attrs_to_string :
           let uu___2 =
             FStar_Compiler_List.map
               (fun t -> let uu___3 = term_to_string t in paren uu___3) tms in
-          FStar_Compiler_Effect.pipe_right uu___2 (FStar_String.concat "; ") in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            (FStar_String.concat "; ") in
         FStar_Compiler_Util.format1 "[@ %s]" uu___1
 and (aqual_to_string' :
   Prims.string ->
@@ -935,14 +941,15 @@ and (binders_to_string :
       if sep = " -> "
       then
         let uu___ =
-          FStar_Compiler_Effect.pipe_right bs1
+          FStar_Compiler_Effect.op_Bar_Greater bs1
             (FStar_Compiler_List.map arrow_binder_to_string) in
-        FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat sep)
+        FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat sep)
       else
         (let uu___1 =
-           FStar_Compiler_Effect.pipe_right bs1
+           FStar_Compiler_Effect.op_Bar_Greater bs1
              (FStar_Compiler_List.map binder_to_string) in
-         FStar_Compiler_Effect.pipe_right uu___1 (FStar_String.concat sep))
+         FStar_Compiler_Effect.op_Bar_Greater uu___1
+           (FStar_String.concat sep))
 and (arg_to_string :
   (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
     FStar_Pervasives_Native.option) -> Prims.string)
@@ -956,9 +963,9 @@ and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
       let uu___ = FStar_Options.print_implicits () in
       if uu___ then args else filter_imp_args args in
     let uu___ =
-      FStar_Compiler_Effect.pipe_right args1
+      FStar_Compiler_Effect.op_Bar_Greater args1
         (FStar_Compiler_List.map arg_to_string) in
-    FStar_Compiler_Effect.pipe_right uu___ (FStar_String.concat " ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
 and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
   fun c ->
     let uu___ =
@@ -1025,19 +1032,19 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                    let uu___4 = sli c1.FStar_Syntax_Syntax.effect_name in
                    let uu___5 =
                      let uu___6 =
-                       FStar_Compiler_Effect.pipe_right
+                       FStar_Compiler_Effect.op_Bar_Greater
                          c1.FStar_Syntax_Syntax.comp_univs
                          (FStar_Compiler_List.map univ_to_string) in
-                     FStar_Compiler_Effect.pipe_right uu___6
+                     FStar_Compiler_Effect.op_Bar_Greater uu___6
                        (FStar_String.concat ", ") in
                    let uu___6 =
                      term_to_string c1.FStar_Syntax_Syntax.result_typ in
                    let uu___7 =
                      let uu___8 =
-                       FStar_Compiler_Effect.pipe_right
+                       FStar_Compiler_Effect.op_Bar_Greater
                          c1.FStar_Syntax_Syntax.effect_args
                          (FStar_Compiler_List.map arg_to_string) in
-                     FStar_Compiler_Effect.pipe_right uu___8
+                     FStar_Compiler_Effect.op_Bar_Greater uu___8
                        (FStar_String.concat ", ") in
                    let uu___8 = cflags_to_string c1.FStar_Syntax_Syntax.flags in
                    FStar_Compiler_Util.format5
@@ -1045,7 +1052,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                      uu___7 uu___8
                  else
                    (let uu___5 =
-                      (FStar_Compiler_Effect.pipe_right
+                      (FStar_Compiler_Effect.op_Bar_Greater
                          c1.FStar_Syntax_Syntax.flags
                          (FStar_Compiler_Util.for_some
                             (fun uu___6 ->
@@ -1076,7 +1083,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                          (let uu___9 =
                             (let uu___10 = FStar_Options.print_effect_args () in
                              Prims.op_Negation uu___10) &&
-                              (FStar_Compiler_Effect.pipe_right
+                              (FStar_Compiler_Effect.op_Bar_Greater
                                  c1.FStar_Syntax_Syntax.flags
                                  (FStar_Compiler_Util.for_some
                                     (fun uu___10 ->
@@ -1099,7 +1106,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                                uu___12)))) in
                let dec =
                  let uu___3 =
-                   FStar_Compiler_Effect.pipe_right
+                   FStar_Compiler_Effect.op_Bar_Greater
                      c1.FStar_Syntax_Syntax.flags
                      (FStar_Compiler_List.collect
                         (fun uu___4 ->
@@ -1124,7 +1131,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                                                          uu___10 in
                                                      Prims.op_Hat s uu___9)
                                                 uu___8 in
-                                            FStar_Compiler_Effect.pipe_right
+                                            FStar_Compiler_Effect.op_Bar_Greater
                                               tl uu___7 in
                                       FStar_Compiler_Util.format1
                                         " (decreases [%s])" uu___6 in
@@ -1139,7 +1146,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                                         uu___6 uu___7 in
                                     [uu___5])
                            | uu___5 -> [])) in
-                 FStar_Compiler_Effect.pipe_right uu___3
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
                    (FStar_String.concat " ") in
                FStar_Compiler_Util.format2 "%s%s" basic dec)
 and (cflag_to_string : FStar_Syntax_Syntax.cflag -> Prims.string) =
@@ -1166,18 +1173,19 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
     | FStar_Syntax_Syntax.Meta_pattern (uu___1, ps) ->
         let pats =
           let uu___2 =
-            FStar_Compiler_Effect.pipe_right ps
+            FStar_Compiler_Effect.op_Bar_Greater ps
               (FStar_Compiler_List.map
                  (fun args ->
                     let uu___3 =
-                      FStar_Compiler_Effect.pipe_right args
+                      FStar_Compiler_Effect.op_Bar_Greater args
                         (FStar_Compiler_List.map
                            (fun uu___4 ->
                               match uu___4 with
                               | (t, uu___5) -> term_to_string t)) in
-                    FStar_Compiler_Effect.pipe_right uu___3
+                    FStar_Compiler_Effect.op_Bar_Greater uu___3
                       (FStar_String.concat "; "))) in
-          FStar_Compiler_Effect.pipe_right uu___2 (FStar_String.concat "\\/") in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            (FStar_String.concat "\\/") in
         FStar_Compiler_Util.format1 "{Meta_pattern %s}" pats
     | FStar_Syntax_Syntax.Meta_named lid ->
         let uu___1 = sli lid in
@@ -1267,7 +1275,7 @@ let (tscheme_to_string : FStar_Syntax_Syntax.tscheme -> Prims.string) =
        | (us, t) ->
            let uu___3 =
              let uu___4 = univ_names_to_string us in
-             FStar_Compiler_Effect.pipe_left enclose_universes uu___4 in
+             FStar_Compiler_Effect.op_Less_Bar enclose_universes uu___4 in
            let uu___4 = term_to_string t in
            FStar_Compiler_Util.format2 "%s%s" uu___3 uu___4)
 let (action_to_string : FStar_Syntax_Syntax.action -> Prims.string) =
@@ -1276,7 +1284,7 @@ let (action_to_string : FStar_Syntax_Syntax.action -> Prims.string) =
     let uu___1 = binders_to_string " " a.FStar_Syntax_Syntax.action_params in
     let uu___2 =
       let uu___3 = univ_names_to_string a.FStar_Syntax_Syntax.action_univs in
-      FStar_Compiler_Effect.pipe_left enclose_universes uu___3 in
+      FStar_Compiler_Effect.op_Less_Bar enclose_universes uu___3 in
     let uu___3 = term_to_string a.FStar_Syntax_Syntax.action_typ in
     let uu___4 = term_to_string a.FStar_Syntax_Syntax.action_defn in
     FStar_Compiler_Util.format5 "%s%s %s : %s = %s" uu___ uu___1 uu___2
@@ -1388,9 +1396,9 @@ let (eff_decl_to_string' :
           else
             (let actions_to_string actions =
                let uu___2 =
-                 FStar_Compiler_Effect.pipe_right actions
+                 FStar_Compiler_Effect.op_Bar_Greater actions
                    (FStar_Compiler_List.map action_to_string) in
-               FStar_Compiler_Effect.pipe_right uu___2
+               FStar_Compiler_Effect.op_Bar_Greater uu___2
                  (FStar_String.concat ",\n\t") in
              let eff_name =
                let uu___2 = FStar_Syntax_Util.is_layered ed in
@@ -1403,7 +1411,7 @@ let (eff_decl_to_string' :
                      let uu___7 =
                        let uu___8 =
                          univ_names_to_string ed.FStar_Syntax_Syntax.univs in
-                       FStar_Compiler_Effect.pipe_left enclose_universes
+                       FStar_Compiler_Effect.op_Less_Bar enclose_universes
                          uu___8 in
                      let uu___8 =
                        let uu___9 =
@@ -1441,8 +1449,9 @@ let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
       if FStar_Compiler_Util.is_some ts_opt
       then
         let uu___ =
-          FStar_Compiler_Effect.pipe_right ts_opt FStar_Compiler_Util.must in
-        FStar_Compiler_Effect.pipe_right uu___ tscheme_to_string
+          FStar_Compiler_Effect.op_Bar_Greater ts_opt
+            FStar_Compiler_Util.must in
+        FStar_Compiler_Effect.op_Bar_Greater uu___ tscheme_to_string
       else "<None>" in
     let uu___ = lid_to_string se.FStar_Syntax_Syntax.source in
     let uu___1 = lid_to_string se.FStar_Syntax_Syntax.target in
@@ -1533,7 +1542,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
       | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) ->
           let uu___1 =
             let uu___2 = FStar_Compiler_List.map sigelt_to_string ses in
-            FStar_Compiler_Effect.pipe_right uu___2
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               (FStar_String.concat "\n") in
           Prims.op_Hat "(* Sig_bundle *)" uu___1
       | FStar_Syntax_Syntax.Sig_fail (errs, lax, ses) ->
@@ -1543,7 +1552,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
               errs in
           let uu___2 =
             let uu___3 = FStar_Compiler_List.map sigelt_to_string ses in
-            FStar_Compiler_Effect.pipe_right uu___3
+            FStar_Compiler_Effect.op_Bar_Greater uu___3
               (FStar_String.concat "\n") in
           FStar_Compiler_Util.format3
             "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n" uu___ uu___1 uu___2
@@ -1589,7 +1598,8 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
           let uu___ =
             let uu___1 =
               FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-            FStar_Compiler_Effect.pipe_left (FStar_String.concat "; ") uu___1 in
+            FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ")
+              uu___1 in
           let uu___1 = term_to_string t in
           FStar_Compiler_Util.format2 "splice[%s] (%s)" uu___ uu___1
       | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty) ->
@@ -1678,12 +1688,12 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
         FStar_Compiler_Util.format2 "assume %s : %s" uu___ uu___1
     | FStar_Syntax_Syntax.Sig_bundle (ses, uu___) ->
         let uu___1 = FStar_Compiler_List.hd ses in
-        FStar_Compiler_Effect.pipe_right uu___1 sigelt_to_string_short
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short
     | FStar_Syntax_Syntax.Sig_fail (errs, lax, ses) ->
         let uu___ =
           let uu___1 =
-            FStar_Compiler_Effect.pipe_right ses FStar_Compiler_List.hd in
-          FStar_Compiler_Effect.pipe_right uu___1 sigelt_to_string_short in
+            FStar_Compiler_Effect.op_Bar_Greater ses FStar_Compiler_List.hd in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1 sigelt_to_string_short in
         FStar_Compiler_Util.format1 "[@@expect_failure] %s" uu___
     | FStar_Syntax_Syntax.Sig_new_effect ed ->
         let kw =
@@ -1707,7 +1717,7 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
     | FStar_Syntax_Syntax.Sig_splice (lids, t) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-          FStar_Compiler_Effect.pipe_left (FStar_String.concat "; ") uu___1 in
+          FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat "; ") uu___1 in
         let uu___1 = term_to_string t in
         FStar_Compiler_Util.format3 "%splice[%s] (%s)" "%s" uu___ uu___1
     | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, ty) ->
@@ -1747,12 +1757,12 @@ let (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
       let uu___2 =
         FStar_Compiler_List.map sigelt_to_string
           m.FStar_Syntax_Syntax.declarations in
-      FStar_Compiler_Effect.pipe_right uu___2 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___2 (FStar_String.concat "\n") in
     let uu___2 =
       let uu___3 =
         FStar_Compiler_List.map sigelt_to_string
           m.FStar_Syntax_Syntax.declarations in
-      FStar_Compiler_Effect.pipe_right uu___3 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___3 (FStar_String.concat "\n") in
     FStar_Compiler_Util.format3
       "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu___ uu___1
       uu___2
@@ -1815,7 +1825,7 @@ let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
             let uu___3 =
               let uu___4 =
                 let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
-                FStar_Compiler_Effect.pipe_right uu___5
+                FStar_Compiler_Effect.op_Bar_Greater uu___5
                   (FStar_String.concat " ") in
               Prims.op_Hat uu___4 ")" in
             Prims.op_Hat " " uu___3 in

@@ -290,7 +290,7 @@ let (new_z3proc_with_id :
         let uu___1 =
           FStar_Compiler_Util.incr ctr;
           (let uu___3 = FStar_Compiler_Effect.op_Bang ctr in
-           FStar_Compiler_Effect.pipe_right uu___3
+           FStar_Compiler_Effect.op_Bar_Greater uu___3
              FStar_Compiler_Util.string_of_int) in
         FStar_Compiler_Util.format1 "bg-%s" uu___1 in
       new_z3proc uu___ cmd_and_args in
@@ -540,7 +540,7 @@ let (doZ3Exe :
           fun label_messages ->
             let parse z3out =
               let lines =
-                FStar_Compiler_Effect.pipe_right
+                FStar_Compiler_Effect.op_Bar_Greater
                   (FStar_String.split [10] z3out)
                   (FStar_Compiler_List.map FStar_Compiler_Util.trim_string) in
               let smt_output1 = smt_output_sections log_file r lines in
@@ -559,7 +559,7 @@ let (doZ3Exe :
                     then FStar_Pervasives_Native.None
                     else
                       (let uu___1 =
-                         FStar_Compiler_Effect.pipe_right
+                         FStar_Compiler_Effect.op_Bar_Greater
                            (FStar_Compiler_Util.split s2 " ")
                            (FStar_Compiler_Util.sort_with
                               FStar_String.compare) in
@@ -578,11 +578,12 @@ let (doZ3Exe :
                           lblnegs rest
                       | uu___ -> [] in
                     let lblnegs1 = lblnegs lines1 in
-                    FStar_Compiler_Effect.pipe_right lblnegs1
+                    FStar_Compiler_Effect.op_Bar_Greater lblnegs1
                       (FStar_Compiler_List.collect
                          (fun l ->
                             let uu___ =
-                              FStar_Compiler_Effect.pipe_right label_messages
+                              FStar_Compiler_Effect.op_Bar_Greater
+                                label_messages
                                 (FStar_Compiler_List.tryFind
                                    (fun uu___1 ->
                                       match uu___1 with
@@ -660,7 +661,7 @@ let (doZ3Exe :
                    let uu___2 =
                      FStar_Compiler_Util.format1 "Z3 says: %s\n"
                        (FStar_String.concat "\n" smt_output1.smt_result) in
-                   FStar_Compiler_Effect.pipe_left
+                   FStar_Compiler_Effect.op_Less_Bar
                      FStar_Compiler_Util.print_string uu___2
                  else ());
                 (match smt_output1.smt_result with
@@ -786,7 +787,7 @@ let (rollback :
       FStar_Common.rollback (fun uu___ -> pop msg) fresh_scope depth
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls ->
-    FStar_Compiler_Effect.pipe_right decls
+    FStar_Compiler_Effect.op_Bar_Greater decls
       (FStar_Compiler_List.iter
          (fun uu___1 ->
             match uu___1 with
@@ -872,13 +873,13 @@ let (mk_input :
          then
            let uu___3 =
              let uu___4 =
-               FStar_Compiler_Effect.pipe_right theory
+               FStar_Compiler_Effect.op_Bar_Greater theory
                  (FStar_Compiler_Util.prefix_until
                     (fun uu___5 ->
                        match uu___5 with
                        | FStar_SMTEncoding_Term.CheckSat -> true
                        | uu___6 -> false)) in
-             FStar_Compiler_Effect.pipe_right uu___4
+             FStar_Compiler_Effect.op_Bar_Greater uu___4
                FStar_Compiler_Option.get in
            match uu___3 with
            | (prefix, check_sat, suffix) ->
@@ -895,10 +896,10 @@ let (mk_input :
                  if uu___4
                  then
                    let uu___5 =
-                     FStar_Compiler_Effect.pipe_right prefix
+                     FStar_Compiler_Effect.op_Bar_Greater prefix
                        (FStar_Compiler_List.map
                           (FStar_SMTEncoding_Term.declToSmt_no_caps options)) in
-                   FStar_Compiler_Effect.pipe_right uu___5
+                   FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_String.concat "\n")
                  else ps in
                let uu___4 =
@@ -910,7 +911,7 @@ let (mk_input :
               let uu___5 =
                 FStar_Compiler_List.map
                   (FStar_SMTEncoding_Term.declToSmt options) theory in
-              FStar_Compiler_Effect.pipe_right uu___5
+              FStar_Compiler_Effect.op_Bar_Greater uu___5
                 (FStar_String.concat "\n") in
             (uu___4, FStar_Pervasives_Native.None)) in
        match uu___1 with

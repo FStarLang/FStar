@@ -338,120 +338,123 @@ let (steps_to_string : fsteps -> Prims.string) =
           FStar_String.op_Hat "Some (" uu___ in
     let b = FStar_Compiler_Util.string_of_bool in
     let uu___ =
-      let uu___1 = FStar_Compiler_Effect.pipe_right f.beta b in
+      let uu___1 = FStar_Compiler_Effect.op_Bar_Greater f.beta b in
       let uu___2 =
-        let uu___3 = FStar_Compiler_Effect.pipe_right f.iota b in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater f.iota b in
         let uu___4 =
-          let uu___5 = FStar_Compiler_Effect.pipe_right f.zeta b in
+          let uu___5 = FStar_Compiler_Effect.op_Bar_Greater f.zeta b in
           let uu___6 =
-            let uu___7 = FStar_Compiler_Effect.pipe_right f.zeta_full b in
+            let uu___7 = FStar_Compiler_Effect.op_Bar_Greater f.zeta_full b in
             let uu___8 =
-              let uu___9 = FStar_Compiler_Effect.pipe_right f.weak b in
+              let uu___9 = FStar_Compiler_Effect.op_Bar_Greater f.weak b in
               let uu___10 =
-                let uu___11 = FStar_Compiler_Effect.pipe_right f.hnf b in
+                let uu___11 = FStar_Compiler_Effect.op_Bar_Greater f.hnf b in
                 let uu___12 =
-                  let uu___13 = FStar_Compiler_Effect.pipe_right f.primops b in
+                  let uu___13 =
+                    FStar_Compiler_Effect.op_Bar_Greater f.primops b in
                   let uu___14 =
                     let uu___15 =
-                      FStar_Compiler_Effect.pipe_right
+                      FStar_Compiler_Effect.op_Bar_Greater
                         f.do_not_unfold_pure_lets b in
                     let uu___16 =
                       let uu___17 =
-                        FStar_Compiler_Effect.pipe_right f.unfold_until
+                        FStar_Compiler_Effect.op_Bar_Greater f.unfold_until
                           (format_opt
                              FStar_Syntax_Print.delta_depth_to_string) in
                       let uu___18 =
                         let uu___19 =
-                          FStar_Compiler_Effect.pipe_right f.unfold_only
+                          FStar_Compiler_Effect.op_Bar_Greater f.unfold_only
                             (format_opt
                                (fun x ->
                                   let uu___20 =
                                     FStar_Compiler_List.map
                                       FStar_Ident.string_of_lid x in
-                                  FStar_Compiler_Effect.pipe_right uu___20
-                                    (FStar_String.concat ", "))) in
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    uu___20 (FStar_String.concat ", "))) in
                         let uu___20 =
                           let uu___21 =
-                            FStar_Compiler_Effect.pipe_right f.unfold_fully
+                            FStar_Compiler_Effect.op_Bar_Greater
+                              f.unfold_fully
                               (format_opt
                                  (fun x ->
                                     let uu___22 =
                                       FStar_Compiler_List.map
                                         FStar_Ident.string_of_lid x in
-                                    FStar_Compiler_Effect.pipe_right uu___22
-                                      (FStar_String.concat ", "))) in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___22 (FStar_String.concat ", "))) in
                           let uu___22 =
                             let uu___23 =
-                              FStar_Compiler_Effect.pipe_right f.unfold_attr
+                              FStar_Compiler_Effect.op_Bar_Greater
+                                f.unfold_attr
                                 (format_opt
                                    (fun x ->
                                       let uu___24 =
                                         FStar_Compiler_List.map
                                           FStar_Ident.string_of_lid x in
-                                      FStar_Compiler_Effect.pipe_right
+                                      FStar_Compiler_Effect.op_Bar_Greater
                                         uu___24 (FStar_String.concat ", "))) in
                             let uu___24 =
                               let uu___25 =
-                                FStar_Compiler_Effect.pipe_right
+                                FStar_Compiler_Effect.op_Bar_Greater
                                   f.unfold_qual
                                   (format_opt (FStar_String.concat ", ")) in
                               let uu___26 =
                                 let uu___27 =
-                                  FStar_Compiler_Effect.pipe_right
+                                  FStar_Compiler_Effect.op_Bar_Greater
                                     f.unfold_tac b in
                                 let uu___28 =
                                   let uu___29 =
-                                    FStar_Compiler_Effect.pipe_right
+                                    FStar_Compiler_Effect.op_Bar_Greater
                                       f.pure_subterms_within_computations b in
                                   let uu___30 =
                                     let uu___31 =
-                                      FStar_Compiler_Effect.pipe_right
+                                      FStar_Compiler_Effect.op_Bar_Greater
                                         f.simplify b in
                                     let uu___32 =
                                       let uu___33 =
-                                        FStar_Compiler_Effect.pipe_right
+                                        FStar_Compiler_Effect.op_Bar_Greater
                                           f.erase_universes b in
                                       let uu___34 =
                                         let uu___35 =
-                                          FStar_Compiler_Effect.pipe_right
+                                          FStar_Compiler_Effect.op_Bar_Greater
                                             f.allow_unbound_universes b in
                                         let uu___36 =
                                           let uu___37 =
-                                            FStar_Compiler_Effect.pipe_right
+                                            FStar_Compiler_Effect.op_Bar_Greater
                                               f.reify_ b in
                                           let uu___38 =
                                             let uu___39 =
-                                              FStar_Compiler_Effect.pipe_right
+                                              FStar_Compiler_Effect.op_Bar_Greater
                                                 f.compress_uvars b in
                                             let uu___40 =
                                               let uu___41 =
-                                                FStar_Compiler_Effect.pipe_right
+                                                FStar_Compiler_Effect.op_Bar_Greater
                                                   f.no_full_norm b in
                                               let uu___42 =
                                                 let uu___43 =
-                                                  FStar_Compiler_Effect.pipe_right
+                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                     f.check_no_uvars b in
                                                 let uu___44 =
                                                   let uu___45 =
-                                                    FStar_Compiler_Effect.pipe_right
+                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                       f.unmeta b in
                                                   let uu___46 =
                                                     let uu___47 =
-                                                      FStar_Compiler_Effect.pipe_right
+                                                      FStar_Compiler_Effect.op_Bar_Greater
                                                         f.unascribe b in
                                                     let uu___48 =
                                                       let uu___49 =
-                                                        FStar_Compiler_Effect.pipe_right
+                                                        FStar_Compiler_Effect.op_Bar_Greater
                                                           f.in_full_norm_request
                                                           b in
                                                       let uu___50 =
                                                         let uu___51 =
-                                                          FStar_Compiler_Effect.pipe_right
+                                                          FStar_Compiler_Effect.op_Bar_Greater
                                                             f.weakly_reduce_scrutinee
                                                             b in
                                                         let uu___52 =
                                                           let uu___53 =
-                                                            FStar_Compiler_Effect.pipe_right
+                                                            FStar_Compiler_Effect.op_Bar_Greater
                                                               f.for_extraction
                                                               b in
                                                           [uu___53] in
@@ -1799,22 +1802,23 @@ let try_unembed_simple :
       uu___ false FStar_Syntax_Embeddings.id_norm_cb
 let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let arg_as_int a =
-    FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (try_unembed_simple FStar_Syntax_Embeddings.e_int) in
   let arg_as_bool a =
-    FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (try_unembed_simple FStar_Syntax_Embeddings.e_bool) in
   let arg_as_char a =
-    FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (try_unembed_simple FStar_Syntax_Embeddings.e_char) in
   let arg_as_string a =
-    FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.fst a)
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
       (try_unembed_simple FStar_Syntax_Embeddings.e_string) in
   let arg_as_list e a1 =
     let uu___ =
       let uu___1 = FStar_Syntax_Embeddings.e_list e in
       try_unembed_simple uu___1 in
-    FStar_Compiler_Effect.pipe_right (FStar_Pervasives_Native.fst a1) uu___ in
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a1)
+      uu___ in
   let arg_as_bounded_int uu___ =
     match uu___ with
     | (a, uu___1) ->
@@ -1937,7 +1941,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let uu___ =
       let uu___1 = FStar_String.list_of_string s in
       FStar_Compiler_List.map charterm uu___1 in
-    FStar_Compiler_Effect.pipe_left (FStar_Syntax_Util.mk_list char_t rng)
+    FStar_Compiler_Effect.op_Less_Bar (FStar_Syntax_Util.mk_list char_t rng)
       uu___ in
   let string_of_list' rng l =
     let s = FStar_String.string_of_list l in FStar_Syntax_Util.exp_string s in
@@ -2323,10 +2327,11 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                               let uu___23 =
                                 let u32_int_to_t =
                                   let uu___24 =
-                                    FStar_Compiler_Effect.pipe_right
+                                    FStar_Compiler_Effect.op_Bar_Greater
                                       ["FStar"; "UInt32"; "uint_to_t"]
                                       FStar_Parser_Const.p2l in
-                                  FStar_Compiler_Effect.pipe_right uu___24
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    uu___24
                                     (fun l ->
                                        FStar_Syntax_Syntax.lid_as_fv l
                                          (FStar_Syntax_Syntax.Delta_constant_at_level
@@ -2338,9 +2343,10 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                     (fun c ->
                                        let uu___25 =
                                          let uu___26 =
-                                           FStar_Compiler_Effect.pipe_right c
+                                           FStar_Compiler_Effect.op_Bar_Greater
+                                             c
                                              FStar_Compiler_Util.int_of_char in
-                                         FStar_Compiler_Effect.pipe_right
+                                         FStar_Compiler_Effect.op_Bar_Greater
                                            uu___26 FStar_BigInt.of_int_fs in
                                        FStar_TypeChecker_NBETerm.int_as_bounded
                                          u32_int_to_t uu___25) in
@@ -2351,10 +2357,10 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                         fun c ->
                                           let uu___25 =
                                             let uu___26 =
-                                              FStar_Compiler_Effect.pipe_right
+                                              FStar_Compiler_Effect.op_Bar_Greater
                                                 c
                                                 FStar_Compiler_Util.int_of_char in
-                                            FStar_Compiler_Effect.pipe_right
+                                            FStar_Compiler_Effect.op_Bar_Greater
                                               uu___26 FStar_BigInt.of_int_fs in
                                           int_as_bounded r u32_int_to_t
                                             uu___25)), uu___24) in
@@ -2595,7 +2601,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let bounded_unsigned_int_types =
       ["UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"] in
     let add_sub_mul_v =
-      FStar_Compiler_Effect.pipe_right
+      FStar_Compiler_Effect.op_Bar_Greater
         (FStar_Compiler_List.op_At bounded_signed_int_types
            bounded_unsigned_int_types)
         (FStar_Compiler_List.collect
@@ -2693,7 +2699,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                 uu___2 :: uu___3 in
               uu___ :: uu___1)) in
     let div_mod_unsigned =
-      FStar_Compiler_Effect.pipe_right bounded_unsigned_int_types
+      FStar_Compiler_Effect.op_Bar_Greater bounded_unsigned_int_types
         (FStar_Compiler_List.collect
            (fun m ->
               let uu___ =
@@ -2754,7 +2760,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
               "Impossible: bad string on mask: %s\n" m in
           failwith uu___1 in
     let bitwise =
-      FStar_Compiler_Effect.pipe_right bounded_unsigned_int_types
+      FStar_Compiler_Effect.op_Bar_Greater bounded_unsigned_int_types
         (FStar_Compiler_List.collect
            (fun m ->
               let uu___ =
@@ -2934,7 +2940,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     FStar_Compiler_List.map (as_primitive_step true)
       (FStar_Compiler_List.op_At basic_ops bounded_arith_ops) in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
-  FStar_Compiler_Effect.pipe_left prim_from_list
+  FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)
 let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
   let interp_prop_eq2 psc1 _norm_cb args =
@@ -3156,7 +3162,7 @@ let (config' :
       fun e ->
         let d =
           let uu___ =
-            FStar_Compiler_Effect.pipe_right s
+            FStar_Compiler_Effect.op_Bar_Greater s
               (FStar_Compiler_List.collect
                  (fun uu___1 ->
                     match uu___1 with
@@ -3174,12 +3180,13 @@ let (config' :
                           l
                         -> [FStar_TypeChecker_Env.InliningDelta]
                     | uu___2 -> [])) in
-          FStar_Compiler_Effect.pipe_right uu___ FStar_Compiler_List.unique in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            FStar_Compiler_List.unique in
         let d1 =
           match d with | [] -> [FStar_TypeChecker_Env.NoDelta] | uu___ -> d in
         let steps =
           let uu___ = to_fsteps s in
-          FStar_Compiler_Effect.pipe_right uu___ add_nbe in
+          FStar_Compiler_Effect.op_Bar_Greater uu___ add_nbe in
         let psteps1 = let uu___ = cached_steps () in add_steps uu___ psteps in
         let uu___ =
           let uu___1 = FStar_Options.debug_any () in

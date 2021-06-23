@@ -23,7 +23,7 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
             let uu___1 =
               FStar_Compiler_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None in
-            FStar_Compiler_Effect.pipe_right uu___1
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
               FStar_Compiler_Util.trim_string in
           (FStar_Compiler_Util.smap_add cache s out; out)
     else s
@@ -132,9 +132,9 @@ let max_suffix :
         | x::xs2 -> (acc, (x :: xs2)) in
       let uu___ =
         let uu___1 =
-          FStar_Compiler_Effect.pipe_right xs FStar_Compiler_List.rev in
-        FStar_Compiler_Effect.pipe_right uu___1 (aux []) in
-      FStar_Compiler_Effect.pipe_right uu___
+          FStar_Compiler_Effect.op_Bar_Greater xs FStar_Compiler_List.rev in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 (aux []) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
         (fun uu___1 ->
            match uu___1 with
            | (xs1, ys) -> ((FStar_Compiler_List.rev ys), xs1))

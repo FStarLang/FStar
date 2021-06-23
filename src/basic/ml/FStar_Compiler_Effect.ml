@@ -1,5 +1,5 @@
-let pipe_right (x : 'a) (f : ('a -> 'b)) : 'b = f x
-let pipe_left  (f : ('a -> 'b)) (x : 'a) : 'b = f x
+let op_Bar_Greater (x : 'a) (f : ('a -> 'b)) : 'b = f x
+let op_Less_Bar  (f : ('a -> 'b)) (x : 'a) : 'b = f x
 
 type 'a ref' = 'a ref[@@deriving yojson,show]
 type 'a ref = 'a ref'[@@deriving yojson,show]
