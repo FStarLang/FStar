@@ -225,7 +225,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         let move_decreases d flags flags' =
           let d' =
             let s = U.rename_binders bs bs' in
-            List.map (SS.subst s) d
+            SS.subst_decreasing_order s d
           in
           let c = U.comp_set_flags c flags in
           let tarr = U.arrow bs c in
@@ -952,9 +952,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flag
     //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
     U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
   in
-  let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) r1 in
   let wp_args = [
-    S.as_arg r1;
     S.as_arg t1;
     S.as_arg t2;
     S.as_arg wp1;

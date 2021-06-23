@@ -7,6 +7,8 @@ open Steel.Reference
 include LList.Invariant
 module L = FStar.List.Tot.Base
 
+#set-options "--ide_id_info_off"
+
 let rec datas (#a:Type) (l:list (cell a)) : list a =
   match l with
   | [] -> []
@@ -21,10 +23,9 @@ val new_llist (#a:Type) (init:a)
 
 let new_llist #a init =
   let cell = mk_cell null_llist init in
-  let p = alloc cell in
-  assume (~ (is_null p));
+  let p = alloc_pt cell in
   intro_llist_nil a;
-  change_slprop (llist null_llist []) (llist (next cell) []) (fun _ -> ());
+  rewrite_slprop (llist null_llist []) (llist (next cell) []) (fun _ -> ());
   intro_llist_cons p cell [];
   let pc = p, [cell] in
   pc
@@ -38,9 +39,8 @@ val push (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
 
 let push #a ptr l v =
   let cell = mk_cell ptr v in
-  let p = alloc cell in
-  assume (~ (is_null p));
-  change_slprop (llist ptr l) (llist (next cell) l) (fun _ -> ());
+  let p = alloc_pt cell in
+  rewrite_slprop (llist ptr l) (llist (next cell) l) (fun _ -> ());
   intro_llist_cons p cell l;
   let pc = p, (cell::l) in
   pc
@@ -55,10 +55,10 @@ val pop (#a:Type) (ptr:t a) (l:list (cell a){Cons? l})
 let pop #a ptr l =
   let hd = L.hd l in
   let tl = L.tl l in
-  change_slprop (llist ptr l) (llist ptr (hd::tl)) (fun _ -> ());
+  rewrite_slprop (llist ptr l) (llist ptr (hd::tl)) (fun _ -> ());
   elim_llist_cons ptr hd tl;
-  let c = read ptr in
+  let c = read_pt ptr in
   let n = next hd in
-  drop (pts_to ptr full_perm c);
-  change_slprop (llist (next hd) tl) (llist (next (L.hd l)) (L.tl l)) (fun _ -> ());
+  free_pt ptr;
+  rewrite_slprop (llist (next hd) tl) (llist (next (L.hd l)) (L.tl l)) (fun _ -> ());
   return (data c)

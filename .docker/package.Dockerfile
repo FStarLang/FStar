@@ -16,7 +16,7 @@ RUN opam install --deps-only FStar/fstar.opam
 ARG opamthreads=24
 
 # Build the package, 
-RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' make PACKAGE_DOCS=0 -C FStar -j $opamthreads package_unknown_platform
+RUN eval $(opam env) && env Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" OTHERFLAGS='--admit_smt_queries true' make -C FStar -j $opamthreads package_unknown_platform
 
 # Create a separate image to test the package
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbin
@@ -31,9 +31,6 @@ COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/opam
 RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/opam/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
-
-# Reverify ulib, which was not in the package
-RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
 
 # Test the F* binary package
 
@@ -51,8 +48,8 @@ RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR
 RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
 
-# Case 3: test the fresh package without OCaml
-FROM ubuntu:20.04
+# Test the fresh package without OCaml
+FROM ubuntu:20.04 AS fstarnoocaml
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get --yes install --no-install-recommends make sudo libgomp1
@@ -72,9 +69,21 @@ COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/fstar.tar.gz /home/test
 RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/test/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
-RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
 
-# Run tests
+# Case 3: test F* package without OCaml
+FROM fstarnoocaml
 RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
 RUN make -C $FSTAR_HOME/examples -j $opamthreads
 RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+
+# Case 4: test F* package without OCaml, but recheck ulib
+FROM fstarnoocaml
+RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
+RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
+RUN make -C $FSTAR_HOME/examples -j $opamthreads
+RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+
+# This is the last image. So we can also copy the file that contains
+# the desired filename for the package, to be extracted via
+# `docker cp`
+COPY --from=fstarbuild /home/opam/FStar/src/ocaml-output/version_platform.txt /home/test/version_platform.txt

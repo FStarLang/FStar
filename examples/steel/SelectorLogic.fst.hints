@@ -1,5 +1,5 @@
 [
-  "Ç³7§\u001dé\u0001œÞÊ¤]¦V\u001ež",
+  "6\u0018Du¾+– \u00078A7kc\u0016n",
   [
     [
       "SelectorLogic.__proj__Mkvprop__item__t",
@@ -11,7 +11,7 @@
         "projection_inverse_SelectorLogic.Mkvprop_hp"
       ],
       0,
-      "3f58c6aa3d260fd9d4d86d134f059d9d"
+      "85333e56eb6272bc6051a2c1f4ae07c6"
     ],
     [
       "SelectorLogic.__proj__Mkvprop__item__sel",
@@ -26,7 +26,7 @@
         "token_correspondence_SelectorLogic.__proj__Mkvprop__item__t"
       ],
       0,
-      "6815aa9e8012c99cde47c1eed5881fff"
+      "ff6659e68672a06d8c761f1b36a8f293"
     ],
     [
       "SelectorLogic.star",
@@ -42,7 +42,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "167943fe3224691c85784cc546381848"
+      "42c420cc504abba8a57abb14d6148744"
     ],
     [
       "SelectorLogic.wand",
@@ -67,7 +67,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "a4b486038219e10b8711e6dae8209c77"
+      "159cb167cc53c5f0ff30172856568c8c"
     ],
     [
       "SelectorLogic.star_split",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "c21f79c987245230d869760422b07dc9"
+      "a828d49305e3dd159af242debf3706ae"
     ],
     [
       "SelectorLogic.star_split",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_5a121517d5876c554c3e043a63a98441"
       ],
       0,
-      "5132213873235f368098167b7f122a85"
+      "1b8a32d210735c88286939460d9af60f"
     ],
     [
       "SelectorLogic.modus_ponens_interp",
@@ -127,7 +127,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "9b5da3535c9ac65c221c3a4ae04b82c8"
+      "67e7349bc227bb21da070f5119553481"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -136,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "256e13d0944050a4e2780898d868783e"
+      "a80783b248192eba9cfdd9e876986689"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -169,7 +169,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "a77c9688ea2933a67093669c78c50b11"
+      "9fc398645a5666d9a7e4c3fce2fd2054"
     ]
   ]
 ]

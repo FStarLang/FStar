@@ -91,27 +91,21 @@ let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
 
 
 
-
-type ('a, 'x, 'uuuuu) div_return = unit
-
-type ('r1, 'a, 'b, 'wp1, 'wp2, 'uuuuu) div_bind = 'wp1
-
-type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) div_if_then_else = unit
-
-type ('a, 'wp, 'uuuuu) div_ite_wp = unit
-
-type ('a, 'b, 'wp, 'uuuuu) div_close_wp = unit
-type ('a, 'pre, 'post, 'p) div_hoare_to_wp_aux = unit
-
+type ('a, 'x, 'uuuuu) pure_return = unit
+type ('a, 'b, 'wp1, 'wp2, 'uuuuu) pure_bind_wp = 'wp1
+type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) pure_if_then_else = unit
+type ('a, 'wp, 'uuuuu) pure_ite_wp = unit
+type ('a, 'b, 'wp, 'uuuuu) pure_close_wp = unit
+type ('a, 'uuuuu) pure_null_wp = unit
+type ('p, 'uuuuu) pure_assert_wp = unit
+type ('p, 'uuuuu) pure_assume_wp = unit
 type ('a, 'pre, 'post, 'uuuuu) div_hoare_to_wp = unit
-
-type ('a, 'uuuuu) div_null_wp = unit
 type 'heap st_pre_h = unit
 type ('heap, 'a, 'pre) st_post_h' = unit
 type ('heap, 'a) st_post_h = unit
 type ('heap, 'a) st_wp_h = unit
 type ('heap, 'a, 'x, 'p, 'uuuuu) st_return = 'p
-type ('heap, 'r1, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) st_bind_wp = 'wp1
+type ('heap, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) st_bind_wp = 'wp1
 type ('heap, 'a, 'p, 'wputhen, 'wpuelse, 'post, 'h0) st_if_then_else = unit
 type ('heap, 'a, 'wp, 'post, 'h0) st_ite_wp = unit
 type ('heap, 'a, 'wp1, 'wp2) st_stronger = unit
@@ -138,7 +132,7 @@ type ('a, 'pre) ex_post' = unit
 type 'a ex_post = unit
 type 'a ex_wp = unit
 type ('a, 'x, 'p) ex_return = 'p
-type ('r1, 'a, 'b, 'wp1, 'wp2, 'p) ex_bind_wp = unit
+type ('a, 'b, 'wp1, 'wp2, 'p) ex_bind_wp = unit
 type ('a, 'p, 'wputhen, 'wpuelse, 'post) ex_if_then_else = unit
 type ('a, 'wp, 'post) ex_ite_wp = unit
 type ('a, 'wp1, 'wp2) ex_stronger = unit
@@ -150,7 +144,7 @@ type ('h, 'a, 'pre) all_post_h' = unit
 type ('h, 'a) all_post_h = unit
 type ('h, 'a) all_wp_h = unit
 type ('heap, 'a, 'x, 'p, 'uuuuu) all_return = 'p
-type ('heap, 'r1, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) all_bind_wp = 'wp1
+type ('heap, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) all_bind_wp = 'wp1
 type ('heap, 'a, 'p, 'wputhen, 'wpuelse, 'post, 'h0) all_if_then_else = unit
 type ('heap, 'a, 'wp, 'post, 'h0) all_ite_wp = unit
 type ('heap, 'a, 'wp1, 'wp2) all_stronger = unit

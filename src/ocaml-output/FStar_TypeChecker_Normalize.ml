@@ -1107,11 +1107,28 @@ and (close_comp :
                      (FStar_List.map
                         (fun uu___1 ->
                            match uu___1 with
-                           | FStar_Syntax_Syntax.DECREASES l ->
+                           | FStar_Syntax_Syntax.DECREASES
+                               (FStar_Syntax_Syntax.Decreases_lex l) ->
                                let uu___2 =
-                                 FStar_All.pipe_right l
-                                   (FStar_List.map
-                                      (inline_closure_env cfg env1 [])) in
+                                 let uu___3 =
+                                   FStar_All.pipe_right l
+                                     (FStar_List.map
+                                        (inline_closure_env cfg env1 [])) in
+                                 FStar_All.pipe_right uu___3
+                                   (fun uu___4 ->
+                                      FStar_Syntax_Syntax.Decreases_lex
+                                        uu___4) in
+                               FStar_Syntax_Syntax.DECREASES uu___2
+                           | FStar_Syntax_Syntax.DECREASES
+                               (FStar_Syntax_Syntax.Decreases_wf (rel, e)) ->
+                               let uu___2 =
+                                 let uu___3 =
+                                   let uu___4 =
+                                     inline_closure_env cfg env1 [] rel in
+                                   let uu___5 =
+                                     inline_closure_env cfg env1 [] e in
+                                   (uu___4, uu___5) in
+                                 FStar_Syntax_Syntax.Decreases_wf uu___3 in
                                FStar_Syntax_Syntax.DECREASES uu___2
                            | f -> f)) in
                  let uu___1 =
@@ -5684,10 +5701,24 @@ and (norm_comp :
                  (FStar_List.map
                     (fun uu___1 ->
                        match uu___1 with
-                       | FStar_Syntax_Syntax.DECREASES l ->
+                       | FStar_Syntax_Syntax.DECREASES
+                           (FStar_Syntax_Syntax.Decreases_lex l) ->
                            let uu___2 =
-                             FStar_All.pipe_right l
-                               (FStar_List.map (norm cfg env1 [])) in
+                             let uu___3 =
+                               FStar_All.pipe_right l
+                                 (FStar_List.map (norm cfg env1 [])) in
+                             FStar_All.pipe_right uu___3
+                               (fun uu___4 ->
+                                  FStar_Syntax_Syntax.Decreases_lex uu___4) in
+                           FStar_Syntax_Syntax.DECREASES uu___2
+                       | FStar_Syntax_Syntax.DECREASES
+                           (FStar_Syntax_Syntax.Decreases_wf (rel, e)) ->
+                           let uu___2 =
+                             let uu___3 =
+                               let uu___4 = norm cfg env1 [] rel in
+                               let uu___5 = norm cfg env1 [] e in
+                               (uu___4, uu___5) in
+                             FStar_Syntax_Syntax.Decreases_wf uu___3 in
                            FStar_Syntax_Syntax.DECREASES uu___2
                        | f -> f)) in
              let comp_univs =

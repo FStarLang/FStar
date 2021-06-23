@@ -45,7 +45,9 @@ PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
-PACKAGE_DOCS?=1
+# Set PACKAGE_DOCS to 1 if you want to include html docs into the binary package.
+# If so, then Madoko MUST be installed on the machine building the package.
+PACKAGE_DOCS?=0
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -252,7 +254,9 @@ else
   Z3_NAME=z3
 endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
-Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
+# Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
+# See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
+Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -264,9 +268,7 @@ package:
 	@# Install the F* binary
 	$(call fexport-all,bin)
 	@# Then the standard library.
-	$(call fexport,ulib)
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_Int*.ml $(PREFIX)/ulib/ml
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_UInt*.ml $(PREFIX)/ulib/ml
+	$(call fexport-all,ulib)
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	cp ../../version.txt $(PREFIX)/
@@ -290,7 +292,7 @@ endif
 endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt || true # FIXME: what if z3 is installed as an opam package?
+	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
