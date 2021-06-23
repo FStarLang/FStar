@@ -1266,7 +1266,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "c5b0f3cc6fddf1a3b02bdc1e740e4e87"
+      "6c8d79c03c2c2c101dd2331d9ec36cdf"
     ],
     [
       "DList1.dlist_cons_cons",
@@ -1448,7 +1448,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "7505bda1d5dd5e960ad7fd4766468548"
+      "68ed575b7e9ad7ccafb3f7ba51e2f5fe"
     ],
     [
       "DList1.intro_dlist_snoc_cons",
@@ -1484,7 +1484,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "a0c223d8743005a5d23d8bd723b86d10"
+      "ba7c392ddd6d00da350d316264c36db9"
     ],
     [
       "DList1.new_dlist'",

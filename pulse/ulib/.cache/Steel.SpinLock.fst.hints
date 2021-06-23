@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "3b8018d2a2ddc325d405ad3d82473578"
+      "d6e5f9d6f6b68e67f2e22c38c2cdf7eb"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "0f793b9bed39b142ad60b09a8fd40b9b"
+      "abab9267c39ca7e65ce8337dfdce54b9"
     ],
     [
       "Steel.SpinLock.new_lock",
