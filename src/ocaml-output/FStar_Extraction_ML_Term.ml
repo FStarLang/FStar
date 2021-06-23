@@ -2579,24 +2579,34 @@ and (term_as_mlexpr' :
              FStar_Extraction_ML_Syntax.MLTY_Erased)
        | FStar_Syntax_Syntax.Tm_meta
            (t1, FStar_Syntax_Syntax.Meta_desugared
-            (FStar_Syntax_Syntax.Machine_integer (repr, signedness, width)))
+            (FStar_Syntax_Syntax.Machine_integer (signedness, width)))
            ->
-           let uu___1 =
-             let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term uu___2 t1 true in
-           (match uu___1 with
-            | (uu___2, ty, uu___3) ->
-                let ml_ty = term_as_mlty g ty in
-                let ml_const =
-                  FStar_Const.Const_int
-                    (repr,
-                      (FStar_Pervasives_Native.Some (signedness, width))) in
-                let uu___4 =
-                  let uu___5 =
-                    FStar_Extraction_ML_Util.mlexpr_of_const
-                      t1.FStar_Syntax_Syntax.pos ml_const in
-                  FStar_Extraction_ML_Syntax.with_ty ml_ty uu___5 in
-                (uu___4, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
+           let t2 = FStar_Syntax_Subst.compress t1 in
+           (match t2.FStar_Syntax_Syntax.n with
+            | FStar_Syntax_Syntax.Tm_app (hd, (x, uu___1)::[]) ->
+                (match x.FStar_Syntax_Syntax.n with
+                 | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
+                     (repr, uu___2)) ->
+                     let uu___3 =
+                       let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                       FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
+                         uu___4 t2 true in
+                     (match uu___3 with
+                      | (uu___4, ty, uu___5) ->
+                          let ml_ty = term_as_mlty g ty in
+                          let ml_const =
+                            FStar_Const.Const_int
+                              (repr,
+                                (FStar_Pervasives_Native.Some
+                                   (signedness, width))) in
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Extraction_ML_Util.mlexpr_of_const
+                                t2.FStar_Syntax_Syntax.pos ml_const in
+                            FStar_Extraction_ML_Syntax.with_ty ml_ty uu___7 in
+                          (uu___6, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
+                 | uu___2 -> failwith "")
+            | uu___1 -> failwith "")
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->

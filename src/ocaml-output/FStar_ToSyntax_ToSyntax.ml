@@ -2071,7 +2071,7 @@ and (desugar_machine_integer :
                      (app,
                        (FStar_Syntax_Syntax.Meta_desugared
                           (FStar_Syntax_Syntax.Machine_integer
-                             (repr, signedness, width))))) range))
+                             (signedness, width))))) range))
 and (desugar_term_maybe_top :
   Prims.bool ->
     env_t ->
