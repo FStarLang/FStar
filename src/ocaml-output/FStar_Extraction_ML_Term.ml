@@ -2577,6 +2577,26 @@ and (term_as_mlexpr' :
            (FStar_Extraction_ML_Syntax.ml_unit,
              FStar_Extraction_ML_Syntax.E_ERASABLE,
              FStar_Extraction_ML_Syntax.MLTY_Erased)
+       | FStar_Syntax_Syntax.Tm_meta
+           (t1, FStar_Syntax_Syntax.Meta_desugared
+            (FStar_Syntax_Syntax.Machine_integer (repr, signedness, width)))
+           ->
+           let uu___1 =
+             let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term uu___2 t1 true in
+           (match uu___1 with
+            | (uu___2, ty, uu___3) ->
+                let ml_ty = term_as_mlty g ty in
+                let ml_const =
+                  FStar_Const.Const_int
+                    (repr,
+                      (FStar_Pervasives_Native.Some (signedness, width))) in
+                let uu___4 =
+                  let uu___5 =
+                    FStar_Extraction_ML_Util.mlexpr_of_const
+                      t1.FStar_Syntax_Syntax.pos ml_const in
+                  FStar_Extraction_ML_Syntax.with_ty ml_ty uu___5 in
+                (uu___4, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->
