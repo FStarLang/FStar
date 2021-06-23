@@ -1977,7 +1977,7 @@
         "typing_Steel.Reference.ptr", "typing_Steel.Reference.ptr_sel"
       ],
       0,
-      "911c30402b6f9b1d4cf4d8c90565c854"
+      "b1ca411124afce287c8565ca3c7beeac"
     ],
     [
       "CQueue.elim_queue_tail",
@@ -2258,7 +2258,7 @@
         "typing_Steel.Effect.Common.emp_"
       ],
       0,
-      "d4b3bf43c5783ca529a398a787a3d1d0"
+      "f64c06628828a9e098c2c89eb7faff01"
     ],
     [
       "CQueue.elim_llist_fragment_head_nil",
@@ -2296,7 +2296,7 @@
         "typing_Steel.Effect.Common.emp_"
       ],
       0,
-      "9e3733531a492e4ca5e572f72f3b1d33"
+      "f3aa3ec65f6ae131920cfbe58e49a5be"
     ],
     [
       "CQueue.llist_fragment_head_eq_cons",
@@ -3930,7 +3930,7 @@
         "typing_Tm_abs_c05cd7c0f897c926783405115638d07c"
       ],
       0,
-      "7ac0d5abd229f7c75f6e3df37efcbd3d"
+      "4d10c91337c0c85c9c583866214bd9fe"
     ],
     [
       "CQueue.create_queue",
