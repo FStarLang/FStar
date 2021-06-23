@@ -47,8 +47,12 @@ elif my_tag=$(git describe --tags --exact-match) ; then
     # Check that there is only one tag
     [[ $(echo $my_tag | wc -w) -eq 1 ]]
 else
-    # Generate a new tag under the vYYYY.MM.DD format
-    my_tag=$(date '+v%Y.%m.%d')
+    # Read the tag from version.txt, but stripping away the ~dev
+    # marker.  version.txt is assumed to have been updated by
+    # update_version_number in .docker/build/build.sh . Please mind
+    # the 'v' introducing the tag.
+    dev='~dev'
+    my_tag=v$(sed 's!'"$dev"'!!' < version.txt)
 fi
 
 # Check if the commit pointed to by that tag (if any) points to the current commit
