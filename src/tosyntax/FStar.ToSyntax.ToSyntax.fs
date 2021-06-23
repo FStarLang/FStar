@@ -173,7 +173,13 @@ let op_as_term env arity op : option<S.term> =
     | "%" ->
       r C.op_Modulus delta_equational
     | "!" ->
-      r C.read_lid delta_equational
+      r C.read_lid delta_equational 
+    | "@" ->
+      FStar.Errors.log_issue 
+        (range_of_id op)
+        (FStar.Errors.Warning_DeprecatedGeneric,
+         "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'");
+      r C.list_tot_append_lid (Delta_equational_at_level 2)
     | "|>" ->
       r C.pipe_right_lid delta_equational
     | "<|" ->

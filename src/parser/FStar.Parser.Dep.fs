@@ -884,10 +884,7 @@ let collect_one
             ()
         | Const c ->
             collect_constant c
-        | Op (s, ts) ->
-            if Ident.string_of_id s = "@" then
-              (* We use FStar.Compiler.List.Tot.Base instead of FStar.Compiler.List.Tot to prevent FStar.Compiler.List.Tot.Properties from depending on FStar.Compiler.List.Tot *)
-              collect_term' (Name (lid_of_path (path_of_text "FStar.Compiler.List.Tot.Base.append") Range.dummyRange));
+        | Op (_, ts) ->
             List.iter collect_term ts
         | Tvar _
         | AST.Uvar _ ->

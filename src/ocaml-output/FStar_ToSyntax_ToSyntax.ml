@@ -302,6 +302,14 @@ let (op_as_term :
           | "!" ->
               r FStar_Parser_Const.read_lid
                 FStar_Syntax_Syntax.delta_equational
+          | "@" ->
+              ((let uu___3 = FStar_Ident.range_of_id op in
+                FStar_Errors.log_issue uu___3
+                  (FStar_Errors.Warning_DeprecatedGeneric,
+                    "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'"));
+               r FStar_Parser_Const.list_tot_append_lid
+                 (FStar_Syntax_Syntax.Delta_equational_at_level
+                    (Prims.of_int (2))))
           | "|>" ->
               r FStar_Parser_Const.pipe_right_lid
                 FStar_Syntax_Syntax.delta_equational

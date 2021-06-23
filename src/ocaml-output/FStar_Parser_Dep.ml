@@ -1401,22 +1401,8 @@ let (collect_one :
              match uu___2 with
              | FStar_Parser_AST.Wild -> ()
              | FStar_Parser_AST.Const c -> collect_constant c
-             | FStar_Parser_AST.Op (s, ts) ->
-                 ((let uu___4 =
-                     let uu___5 = FStar_Ident.string_of_id s in uu___5 = "@" in
-                   if uu___4
-                   then
-                     let uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           FStar_Ident.path_of_text
-                             "FStar.Compiler.List.Tot.Base.append" in
-                         FStar_Ident.lid_of_path uu___7
-                           FStar_Compiler_Range.dummyRange in
-                       FStar_Parser_AST.Name uu___6 in
-                     collect_term' uu___5
-                   else ());
-                  FStar_Compiler_List.iter collect_term ts)
+             | FStar_Parser_AST.Op (uu___3, ts) ->
+                 FStar_Compiler_List.iter collect_term ts
              | FStar_Parser_AST.Tvar uu___3 -> ()
              | FStar_Parser_AST.Uvar uu___3 -> ()
              | FStar_Parser_AST.Var lid -> add_to_parsing_data (P_lid lid)
