@@ -121,19 +121,19 @@ let normal (#a:Type) (x:a) = norm normal_steps x
 let star = VStar
 
 /// Extracting the underlying separation logic assertion from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec hp_of (p:vprop) = match p with
   | VUnit p -> p.hp
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments[0]]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
@@ -320,7 +320,7 @@ open FStar.Tactics
 [@@ __steel_reduce__; strict_on_arguments [0]]
 let rec frame_equalities'
   (frame:vprop)
-  (h0:rmem frame) (h1:rmem frame) : prop
+  (h0:rmem frame) (h1:rmem frame) : Type0
   = begin match frame with
     | VUnit p -> h0 frame == h1 frame
     | VStar p1 p2 ->
@@ -342,17 +342,23 @@ let rec frame_equalities'
 /// The uncommon formulation with an extra [p] is needed to use in `rewrite_with_tactic`,
 /// where the goal is of the shape `frame_equalities frame h0 h1 == ?u`
 /// The rewriting happens below, in `frame_vc_norm`
-val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:prop)
+val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:Type0)
   : Lemma
     (requires (h0 frame == h1 frame) == p)
     (ensures frame_equalities' frame h0 h1 == p)
+
+/// A Variant of the lemma above, when we have a conjunction of frame_equalities'
+val lemma_frame_equalities2 (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p p1 p1':Type0)
+  : Lemma
+    (requires ((h0 frame == h1 frame) == p /\ p1' == p1))
+    (ensures (frame_equalities' frame h0 h1 /\ p1') == (p /\ p1))
 
 /// Normalization and rewriting step for generating frame equalities.
 /// The frame_equalities function has the strict_on_arguments attribute on the [frame],
 /// ensuring that it is not reduced when the frame is symbolic.
 /// When that happens, we want to replace frame_equalities by an equality on the frame,
 /// mimicking reduction
-unfold
+[@@plugin]
 let frame_vc_norm () : Tac unit =
   // Do not normalize mk_rmem/focus_rmem to simplify application of
   // the reflexivity lemma on frame_equalities'
@@ -362,7 +368,23 @@ let frame_vc_norm () : Tac unit =
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
     iota;zeta;primops; simplify];
-  or_else (fun _ -> apply_lemma (`lemma_frame_equalities); flip ()) (fun _ -> ());
+
+  // After reduction, the term to rewrite might be of the shape
+  // (frame_equalities' ... /\ frame_equalities' .. /\ ...) == ?u
+  // We repeatedly split the clause and extract the term on the left
+  // to generate equalities on atomic subresources
+  ignore (repeat (fun _ ->
+    apply_lemma (`lemma_frame_equalities2);
+    dismiss ();
+    dismiss ();
+    split ();
+    norm normal_steps;
+    trefl ()
+  ));
+  // We do not have conjunctions anymore, we try to apply the frame_equalities rewriting
+  // If it fails, the frame was not symbolic, so there is nothing to do
+  or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
+
   norm normal_steps;
   trefl ()
 
@@ -2164,5 +2186,4 @@ let ite_soundness_tac () : Tac unit =
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
-unfold
 let vc_norm () : Tac unit = norm normal_steps; trefl()

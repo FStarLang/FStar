@@ -21,6 +21,12 @@ open Steel.Effect
 
 /// A collection of small unit tests for the framing tactic
 
+assume val p : vprop
+assume val f (x:int) : SteelT unit p (fun _ -> p)
+
+let test () : SteelT unit (p `star` p `star` p) (fun _ -> p `star` p `star` p)
+  = f 0; ()
+
 assume val ref : Type0
 assume val ptr (_:ref) : vprop
 
