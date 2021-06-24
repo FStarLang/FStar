@@ -312,11 +312,13 @@ val from_list_cell (#a:Type0) (ptr:t a)
 let from_list_cell ptr =
   change_slprop_rel (llist_cell ptr) (llist ptr) (fun x y -> datas x == y) (fun _ -> ())
 
+#push-options "--fuel 2"
 let tail #a ptr =
   to_list_cell ptr;
   let n = tail_cell #a ptr in
   from_list_cell n;
   n
+#pop-options
 
 let ind_llist_sl' (#a:Type0) (r:ref (t a)) (p:t a) : slprop u#1 =
   pts_to_sl r full_perm p `Mem.star` llist_sl p

@@ -20,6 +20,7 @@ open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
+module T = FStar.Tactics
 
 include Steel.Effect.Common
 
@@ -27,6 +28,7 @@ include Steel.Effect.Common
 /// selectors, which will be discharged by SMT
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
+#set-options "--ide_id_info_off"
 
 (* Defining the Steel effect with selectors *)
 
@@ -44,7 +46,8 @@ let return_req (p:vprop) : req_t p = fun _ -> True
 /// and return leaves selectors of all resources in [p] unchanged
 unfold
 let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
-  fun h0 r h1 -> normal (r == x /\ frame_equalities (p x) h0 h1)
+  fun (h0:rmem (p x)) (r:a) (h1:rmem (p r)) ->
+    r == x /\ frame_equalities (p x) h0 (focus_rmem h1 (p x))
 
 /// Monadic return combinator for the Steel effect. It is parametric in the postcondition
 /// The vprop precondition is annotated with the return_pre predicate to enable special handling,
@@ -65,14 +68,14 @@ let bind_req (#a:Type)
   (frame_f:vprop) (frame_g:a -> vprop)
   (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
 : req_t (pre_f `star` frame_f)
-= fun m0 -> normal (
+= fun m0 ->
   req_f (focus_rmem m0 pre_f) /\
   (forall (x:a) (h1:hmem (post_f x `star` frame_f)).
     (ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
       frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f))
     ==> pr x /\
       (can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
-      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)))))
+      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x))))
 
 /// Logical postcondition for the composition (bind) of two Steel computations:
 /// The precondition of the first computation was satisfied in the initial state, and there
@@ -91,7 +94,7 @@ let bind_ens (#a:Type) (#b:Type)
   (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
 : ens_t (pre_f `star` frame_f) b post
-= fun m0 y m2 -> normal (
+= fun m0 y m2 ->
   req_f (focus_rmem m0 pre_f) /\
   (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
     pr x /\
@@ -103,7 +106,7 @@ let bind_ens (#a:Type) (#b:Type)
     frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
     frame_equalities (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
     ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
-    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y)))))
+    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y))))
 
 /// Steel effect combinator to compose two Steel computations
 /// Separation logic VCs are squashed goals passed as implicits, annotated with the framing_implicit
@@ -142,11 +145,15 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= (forall (h0:hmem pre_g). normal (req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f))) /\
-  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). normal (
-      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-    )
+// The call to with_tactic allows us to reduce VCs in a controlled way, once all
+// uvars have been resolved.
+// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
+= T.rewrite_with_tactic vc_norm (squash (
+  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
+     ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   )
+))
 
 /// Subtyping combinator for Steel computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -163,7 +170,7 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
   (f:repr a framed_f pre_f post_f req_f ens_f)
 : Pure (repr a framed_g pre_g post_g req_g ens_g)
-  (requires (subcomp_pre req_f ens_f req_g ens_g p1 p2))
+  (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
 
 /// Logical precondition for the if_then_else combinator
@@ -174,10 +181,9 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> normal (
+= fun h ->
     (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
-  )
 
 /// Logical postcondition for the if_then_else combinator
 unfold
@@ -188,10 +194,9 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> normal (
+= fun h0 x h1 ->
     (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
     ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
-  )
 
 /// If_then_else combinator for Steel computations.
 /// The soundness of this combinator is automatically proven with respect to the subcomp
@@ -213,6 +218,7 @@ let if_then_else (a:Type)
     (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 /// Assembling the combinators defined above into an actual effect
+[@@ite_soundness_by ite_attr]
 reflectable
 effect {
   SteelBase
@@ -240,7 +246,7 @@ unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> normal ((wp (fun x -> (req x) m) /\ as_requires wp))
+= fun m -> (wp (fun x -> (req x) m) /\ as_requires wp)
 
 /// Logical postcondition of a Pure and a Steel composition.
 /// There exists an intermediate value (the output of the Pure computation) such that
@@ -250,7 +256,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
 : ens_t pre b post
-= fun m0 r m1 -> normal ((as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))))
+= fun m0 r m1 -> (as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1)))
 
 /// The composition combinator.
 val bind_pure_steel_ (a:Type) (b:Type)

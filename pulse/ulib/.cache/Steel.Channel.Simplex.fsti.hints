@@ -1,5 +1,5 @@
 [
-  "Í˘Q!\u0007'Ï.\u0005îö¿Z\r,^",
+  "4\u0012 €Ùx2ı†BR∏¨º\u0006d",
   [
     [
       "Steel.Channel.Simplex.send",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "1e8b971a446b25fe4029505b302b87b7"
+      "f42c2391003a4742529c31f8fa490b53"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -17,22 +17,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "c3aa730dbca3f9f13e599d3acf65172a"
-    ],
-    [
-      "Steel.Channel.Simplex.extend_trace",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Channel.Protocol.until",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "6e9dcbdc2aa47546c69a8123ff764f1f"
+      "6a45f3822a5cddcbd120361129ea6b25"
     ]
   ]
 ]
