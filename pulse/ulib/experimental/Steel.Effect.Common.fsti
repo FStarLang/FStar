@@ -262,9 +262,7 @@ type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   rmem pre -> (x:a) -> rmem (post x) -> Type0
 
 (* Empty assertion *)
-val emp' :vprop'
-[@__reduce__]
-unfold let emp = VUnit emp'
+val emp : vprop
 
 /// When needed for proof purposes, the empty assertion is a direct lift of the
 /// empty assertion from Steel.Memory
@@ -347,6 +345,11 @@ val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:Type
     (requires (h0 frame == h1 frame) == p)
     (ensures frame_equalities' frame h0 h1 == p)
 
+/// A special case for frames about emp.
+val lemma_frame_emp (h0:rmem emp) (h1:rmem emp) (p:Type0)
+  : Lemma (requires True == p)
+          (ensures frame_equalities' emp h0 h1 == p)
+
 /// A variant of conjunction elimination, suitable to the equality goals during rewriting
 val elim_conjunction (p1 p1' p2 p2':Type0)
   : Lemma (requires p1 == p1' /\ p2 == p2')
@@ -381,6 +384,8 @@ let frame_vc_norm () : Tac unit =
     dismiss ();
     // The first goal is the left conjunction
     split ();
+    // Removes the frame equality if it is about emp
+    or_else (fun _ -> apply_lemma (`lemma_frame_emp); dismiss()) (fun _ -> ());
     // Rewrites the frame_equalities if it wasn't yet reduced
     or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
     norm normal_steps;
@@ -388,10 +393,12 @@ let frame_vc_norm () : Tac unit =
     trefl ()
   ));
 
+  // Removes the frame equality if it is about emp
+  or_else (fun _ -> apply_lemma (`lemma_frame_emp); dismiss()) (fun _ -> ());
+
   // We do not have conjunctions anymore, we try to apply the frame_equalities rewriting
   // If it fails, the frame was not symbolic, so there is nothing to do
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
-
   norm normal_steps;
   trefl ()
 
