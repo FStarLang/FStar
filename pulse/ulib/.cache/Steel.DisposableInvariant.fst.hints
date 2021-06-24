@@ -24,7 +24,16 @@
         "typing_Tm_abs_7b32cb6840b6bd9badb0fce2b1667d38"
       ],
       0,
-      "66c1c6a8ba930f6193d5b0b254ceb172"
+      "aa3043cdcf1c85a97fe46f288852df87"
+    ],
+    [
+      "Steel.DisposableInvariant.share",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7e7dbf8d584aba6bcca0fd22135e9ba9"
     ],
     [
       "Steel.DisposableInvariant.gather",
@@ -58,7 +67,7 @@
         "true_interp"
       ],
       0,
-      "a69e1819edf3546ac03c566e4f2d49e7"
+      "62b9bdf2011671f521e6fa1c9a6e3490"
     ],
     [
       "Steel.DisposableInvariant.dispose",
@@ -119,7 +128,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "e3e680dbe77f60e9195a4caf853557ea"
+      "18b78ada6c652cbcc37ddda934d4deb6"
     ],
     [
       "Steel.DisposableInvariant.with_invariant",
@@ -159,7 +168,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "89afe6571ec2c6b3ed38c7a578b2d3dc"
+      "0c7c7c4d9e1ce81ebd219ef368cde4e0"
     ],
     [
       "Steel.DisposableInvariant.with_invariant_g",
@@ -199,7 +208,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "301df6327c2e942208bf9839c9701845"
+      "b8f54d84f9beb728d83ff753cd94bb8d"
     ]
   ]
 ]

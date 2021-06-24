@@ -11,7 +11,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "63a7d3ef72cfaa63b95eed965a1d44b0"
+      "ab76058358012ff648851057823ed64a"
     ],
     [
       "CQueue.Cell.elim_ccell_is_lvalue",
@@ -23,7 +23,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "da44546f98d0b8e4e64d8128f96cafed"
+      "f68335568f9496b31f8688932850963b"
     ],
     [
       "CQueue.Cell.intro_ccell",
@@ -40,7 +40,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "57945342048763a6fc0fd42b45fb22ab"
+      "367cb577f03f253e72c4c5d2385f926e"
     ],
     [
       "CQueue.Cell.elim_ccell_ghost",
@@ -60,7 +60,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "bb41e3d9b67e54c1250dd8431e86346f"
+      "74c7e74840504ef5a03171ed18daad36"
     ],
     [
       "CQueue.Cell.elim_ccell",
@@ -79,7 +79,7 @@
         "typing_CQueue.Cell.ccell_ptrvalue", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "8ad2e6fdfec6c71d00142e1ac61e4005"
+      "6db05134870641f0a48482ef0a8027d9"
     ],
     [
       "CQueue.Cell.ccell_not_null",
@@ -92,7 +92,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "3e20ce1427f62724f22734ce2074dc9f"
+      "9fa6f7d8b7edd3ca7d306249009273e4"
     ],
     [
       "CQueue.Cell.alloc_cell",
@@ -107,7 +107,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "b6f6a3fec4c3c68e396c3f671f686da5"
+      "8e76b79a23168420fa3dc23b7d3e8b0c"
     ]
   ]
 ]
