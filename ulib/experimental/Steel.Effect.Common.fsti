@@ -121,19 +121,19 @@ let normal (#a:Type) (x:a) = norm normal_steps x
 let star = VStar
 
 /// Extracting the underlying separation logic assertion from a vprop
-[@@ __steel_reduce__; strict_on_arguments [0]]
+[@@ __steel_reduce__]
 let rec hp_of (p:vprop) = match p with
   | VUnit p -> p.hp
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@@ __steel_reduce__; strict_on_arguments[0]]
+[@@ __steel_reduce__]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@@ __steel_reduce__; strict_on_arguments [0]]
+[@@ __steel_reduce__]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
