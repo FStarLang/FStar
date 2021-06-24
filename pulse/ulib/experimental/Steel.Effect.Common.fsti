@@ -347,11 +347,10 @@ val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:Type
     (requires (h0 frame == h1 frame) == p)
     (ensures frame_equalities' frame h0 h1 == p)
 
-/// A Variant of the lemma above, when we have a conjunction of frame_equalities'
-val lemma_frame_equalities2 (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p p1 p1':Type0)
-  : Lemma
-    (requires ((h0 frame == h1 frame) == p /\ p1' == p1))
-    (ensures (frame_equalities' frame h0 h1 /\ p1') == (p /\ p1))
+/// A variant of conjunction elimination, suitable to the equality goals during rewriting
+val elim_conjunction (p1 p1' p2 p2':Type0)
+  : Lemma (requires p1 == p1' /\ p2 == p2')
+          (ensures (p1 /\ p2) == (p1' /\ p2'))
 
 /// Normalization and rewriting step for generating frame equalities.
 /// The frame_equalities function has the strict_on_arguments attribute on the [frame],
@@ -370,17 +369,25 @@ let frame_vc_norm () : Tac unit =
     iota;zeta;primops; simplify];
 
   // After reduction, the term to rewrite might be of the shape
-  // (frame_equalities' ... /\ frame_equalities' .. /\ ...) == ?u
+  // (frame_equalities' ... /\ frame_equalities' .. /\ ...) == ?u,
+  // with some frame_equalities' possibly already fully reduced
   // We repeatedly split the clause and extract the term on the left
   // to generate equalities on atomic subresources
   ignore (repeat (fun _ ->
-    apply_lemma (`lemma_frame_equalities2);
+    // Try to split the conjunction. If there is no conjunction, we exit the repeat
+    apply_lemma (`elim_conjunction);
+    // Dismiss the two uvars created for the RHS, they'll be solved by unification
     dismiss ();
     dismiss ();
+    // The first goal is the left conjunction
     split ();
+    // Rewrites the frame_equalities if it wasn't yet reduced
+    or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
     norm normal_steps;
+    // Finally solve the uvar, finishing the rewriting for this clause
     trefl ()
   ));
+
   // We do not have conjunctions anymore, we try to apply the frame_equalities rewriting
   // If it fails, the frame was not symbolic, so there is nothing to do
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
