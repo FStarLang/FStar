@@ -22,7 +22,7 @@ open Steel.Effect
 open Steel.Reference
 open Steel.FractionalPermission
 
-#set-options "--ide_id_info_off --fuel 1 --ifuel 1"
+#set-options "--ide_id_info_off --fuel 0 --ifuel 0"
 
 let available = false
 let locked = true
