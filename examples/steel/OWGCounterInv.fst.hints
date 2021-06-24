@@ -29,7 +29,7 @@
         "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "68cd4a22c750bc9683ace9b5a798359c"
+      "0e0df396a4d77719224d6b66e8c7c687"
     ],
     [
       "OWGCounterInv.ghost_share",
@@ -49,7 +49,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "fbc1c27c6305c61fccd1d4930c653190"
+      "f8ad8607853f5e97deb220356428e077"
     ],
     [
       "OWGCounterInv.gather_invariant",
@@ -70,7 +70,7 @@
         "real_inversion", "typing_FStar.Real.one"
       ],
       0,
-      "9edd5228ee4b0f360bd271bac3c67ea9"
+      "29deee9af9087c10e64484c146826651"
     ],
     [
       "OWGCounterInv.with_invariant",
@@ -95,7 +95,7 @@
         "typing_Steel.Effect.Atomic.set_add", "typing_Steel.Memory.iname"
       ],
       0,
-      "bc25ae7d2a062b91e1e221785fddfd78"
+      "4cd8d4802eb8b19a79a7130b841fcfec"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -138,7 +138,7 @@
         "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "cdf2ac816a8ed21b359fd306fe55ca8b"
+      "08e464d45805ded5ff678114920b3cdf"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -178,7 +178,7 @@
         "typing_OWGCounterInv.inv_slprop"
       ],
       0,
-      "16871a434c33d350a5a0ef333f84992b"
+      "dcdf357e447eac1e790b87d65570bfb1"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -218,7 +218,7 @@
         "typing_OWGCounterInv.inv_slprop"
       ],
       0,
-      "4bdfb338ebe56492996a9e42868a115a"
+      "9223d14fe8ddbb4b8b17867e370ad674"
     ],
     [
       "OWGCounterInv.incr_ghost_contrib",
@@ -239,7 +239,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "8a099fa44277f5cbec72ddb34804c227"
+      "517ffa99c6a8ef3a713dad4b7d0e97c6"
     ],
     [
       "OWGCounterInv.incr_with_inv_slprop",
@@ -275,7 +275,16 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "2a2e05872fc176e4d8d56efa33ac6500"
+      "48910683aca0c854f56f3c77c827034c"
+    ],
+    [
+      "OWGCounterInv.incr_with_invariant",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "4525bd10b76514f273cbf3229a429d89"
     ],
     [
       "OWGCounterInv.incr_main",
@@ -315,7 +324,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "3866dfe4c083f4d6b8da3940f9034dbc"
+      "20175bfea8b1fefc397ca10893c9d307"
     ]
   ]
 ]

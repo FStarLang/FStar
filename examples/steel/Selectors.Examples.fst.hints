@@ -1,5 +1,5 @@
 [
-  "å:Q\u0006å¸\u0004_î¦’\n;\u0016|µ",
+  "ŠM÷¨\u000eè\u0017ÿEMZˆ\u0001+«—",
   [
     [
       "Selectors.Examples.swap",
@@ -29,7 +29,7 @@
         "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "6a323d5f54e5784edb5d75a063e6f621"
+      "96041c10604ced8294a3853668934efb"
     ],
     [
       "Selectors.Examples.test0",
@@ -37,12 +37,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "189b00d38b8b6b2eb3ddb2ee4cbaf48a"
+      "023df922f0916f62c2ca7a35cff9bc89"
     ],
     [
       "Selectors.Examples.test1",
@@ -73,7 +74,7 @@
         "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "49a56a98382afed82e78f440e926775f"
+      "af0c29562133ed1074857dbdeb7668c3"
     ],
     [
       "Selectors.Examples.test2",
@@ -104,7 +105,7 @@
         "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "df210daf2fc891babac6fd6d507f2cf7"
+      "bf1075943b9f4673a9468d2782174d35"
     ],
     [
       "Selectors.Examples.test3",
@@ -112,13 +113,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.Effect.Common.star",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ed45473f0fa8ec63c8298973c7e8b0f4"
+      "0dacd80f803e02d068dd489b472aca71"
     ]
   ]
 ]
