@@ -51,6 +51,7 @@ let emp':vprop' =
   { hp = emp;
     t = unit;
     sel = fun _ -> ()}
+let emp = VUnit emp'
 
 let reveal_emp () = ()
 
@@ -79,6 +80,9 @@ let lemma_frame_equalities frame h0 h1 p =
   let p2 : prop = frame_equalities' frame h0 h1 in
   lemma_frame_refl' frame h0 h1;
   FStar.PropositionalExtensionality.apply p1 p2
+
+let lemma_frame_emp h0 h1 p =
+  FStar.PropositionalExtensionality.apply True (h0 (VUnit emp') == h1 (VUnit emp'))
 
 let elim_conjunction p1 p1' p2 p2' = ()
 
