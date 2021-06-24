@@ -1281,7 +1281,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             (match t.n with
              (* Should we check if hd here is [__][u]int_to_t? *)
             | Tm_app(hd, [x, _]) ->
-              (match x.n with
+              (let x = SS.compress x in
+               match x.n with
                | Tm_constant (Const_int (repr, _)) ->
                  (let _, ty, _ =
                    TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in

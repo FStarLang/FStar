@@ -2584,7 +2584,8 @@ and (term_as_mlexpr' :
            let t2 = FStar_Syntax_Subst.compress t1 in
            (match t2.FStar_Syntax_Syntax.n with
             | FStar_Syntax_Syntax.Tm_app (hd, (x, uu___1)::[]) ->
-                (match x.FStar_Syntax_Syntax.n with
+                let x1 = FStar_Syntax_Subst.compress x in
+                (match x1.FStar_Syntax_Syntax.n with
                  | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
                      (repr, uu___2)) ->
                      let uu___3 =
@@ -2605,8 +2606,10 @@ and (term_as_mlexpr' :
                                 t2.FStar_Syntax_Syntax.pos ml_const in
                             FStar_Extraction_ML_Syntax.with_ty ml_ty uu___7 in
                           (uu___6, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
-                 | uu___2 -> failwith "")
-            | uu___1 -> failwith "")
+                 | uu___2 ->
+                     failwith
+                       "Argument in desugared machine int not a Const_int")
+            | uu___1 -> failwith "Desugared machine integer isn't a Tm_app")
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->
