@@ -3,6 +3,9 @@ module AggregateRef
 open FStar.PCM
 module P = FStar.PCM
 
+(* TODO move to FStar.PCM.fst, use in earlier code to avoid P.p.one *)
+let one (p: pcm 'a) = p.P.p.one
+
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
   get: a -> b;
@@ -48,21 +51,12 @@ let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
 
 (** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where
     (1) get is a PCM morphism p -> q
-    (2) put is a PCM morphism p×q -> p, where (×) = Aggregates.tuple_pcm
-    The property get (s * t) = get s * get t is derivable from lens laws and the fact
-    that put is a PCM morphism:
-      get (s * t)
-      = get (put (get s) s * put (get t) t)
-      = get (put (get s * get t) (s * t))
-      = get s * get t
-    So one only needs to prove composable s t ==> composable (get s) (get t) when
-    defining a pcm_lens. If we could find a way to also prove this from the fact that
-    put is a PCM morphism, we could do away with get_op_composable entirely. *)
+    (2) put is a PCM morphism p×q -> p, where (×) = Aggregates.tuple_pcm *)
 noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   l: lens a b;
   get_refine: s:a ->
     Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
-  get_one: unit -> Lemma (l.get p.p.one == q.p.one);
+  get_one: unit -> Lemma (l.get (one p) == one q);
   get_op_composable: s:a -> t:a ->
     Lemma
       (requires composable p s t)
@@ -70,7 +64,7 @@ noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   put_refine: s:a -> v:b ->
     Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
     [SMTPat (p.refine (l.put v s))];
-  put_one: unit -> Lemma (l.put q.p.one p.p.one == p.p.one);
+  put_one: unit -> Lemma (l.put (one q) (one p) == one p);
   put_op: s:a -> t:a -> v:b -> w:b ->
     Lemma
       (requires composable p s t /\ composable q v w)
@@ -82,6 +76,15 @@ let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
 let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
 let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.l f s
 
+(** The property get (s * t) = get s * get t is derivable from lens laws and the fact
+    that put is a PCM morphism:
+      get (s * t)
+      = get (put (get s) s * put (get t) t)
+      = get (put (get s * get t) (s * t))
+      = get s * get t
+    So one only needs to prove composable s t ==> composable (get s) (get t) when
+    defining a pcm_lens. If we could find a way to also prove this from the fact that
+    put is a PCM morphism, we could do away with get_op_composable entirely. *)
 let get_op (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s t: 'a)
 : Lemma
     (requires composable p s t)
@@ -219,7 +222,7 @@ let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
 let trivial_refinement (p: pcm 'a): pcm_refinement p = {
   f = (fun x -> True);
   f_closed_under_op = (fun _ _ -> ());
-  new_one = p.p.one;
+  new_one = one p;
   new_one_is_refined_unit = p.is_unit;
 }
 
@@ -237,7 +240,7 @@ noeq type ref (a: Type u#a) (b: Type u#b) = {
 (** A ref r points to a value v if r's underlying ref points to a chunk of memory
     which contains at least the value v. *)
 let pts_to (r: ref 'a 'b) (v: 'b): Steel.Memory.slprop =
-  Steel.Memory.(r.r `pts_to` put r.pl v (refined_pcm r.re).P.p.one)
+  Steel.Memory.(r.r `pts_to` put r.pl v (one (refined_pcm r.re)))
 
 (** Basic lenses *)
 
@@ -317,30 +320,33 @@ let either_pcm (p: pcm 'a) (q: pcm 'b): pcm (option (either 'a 'b)) = P.({
 let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
   f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
   f_closed_under_op = (fun _ _ -> ());
-  new_one = Some (Inl #_ #'b p.P.p.one);
+  new_one = Some (Inl #_ #'b (one p));
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
 (** A PCM for possibly uninitialized data *)
 
+(*
 type init a =
 | Uninitialized : init a
-| One : init a
 | Initialized : a -> init a
 
 let init_comp (p: pcm 'a): symrel (init 'a) = fun x y -> match x, y with
-  | One, _ | _, One -> True
   | Uninitialized, Uninitialized -> True
+  | Uninitialized, Initialized x | Initialized x, Uninitialized -> x == one p
   | Initialized x, Initialized y -> composable p x y
-  | _, _ -> False
 
-let init_op (p: pcm 'a) (x: init 'a) (y: init 'a{init_comp p x y}): init 'a = match x, y with
-  | One, z | z, One -> z
+let init_op (p: pcm 'a) (one_dec:(x:'a -> b:bool{b <==> x == one p})) (x: init 'a)
+  (y: init 'a{init_comp p x y})
+: init 'a
+= match x, y with
   | Uninitialized, Uninitialized -> Uninitialized
+  | Uninitialized, Initialized x | Initialized x, Uninitialized ->
+    let true = one_dec x in Uninitialized
   | Initialized x, Initialized y -> Initialized (op p x y)
 
-let init_pcm (p: pcm 'a): pcm (init 'a) = P.({
-  p = {composable = init_comp p; op = init_op p; one = One #'a};
+let init_pcm (p: pcm 'a) (one_dec:(x:'a -> b:bool{b <==> x == one p})): pcm (init 'a) = P.({
+  p = {composable = init_comp p; op = init_op p one_dec; one = Initialized (one p)};
   comm = (fun x y -> match x, y with
     | Initialized x, Initialized y -> p.comm x y
     | _, _ -> ());
@@ -355,6 +361,7 @@ let init_pcm (p: pcm 'a): pcm (init 'a) = P.({
     | Initialized x -> p.refine x
     | _ -> True)
 })
+*)
 
 (** A lens for the k-th field of an n-ary product *)
 
@@ -384,8 +391,8 @@ let field (#a:eqtype) #f (p:(k:a -> pcm (f k))) (k:a): pcm_lens (prod_pcm p) (p 
   put_refine = (fun s v -> ());
   put_one = (fun _ ->
     ext
-      (fun_upd k (p k).P.p.one (prod_pcm p).P.p.one)
-      (prod_pcm p).P.p.one
+      (fun_upd k (one (p k)) (one (prod_pcm p)))
+      (one (prod_pcm p))
       (fun k -> ()));
   put_op = (fun s t v w ->
     prod_pcm_composable_intro p (fun_upd k v s) (fun_upd k w t) (fun _ -> ());
@@ -402,7 +409,7 @@ let case_refinement_f (p:(k:'a -> pcm ('b k))) (k:'a): union 'b -> prop =
 
 let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 : refine_t (case_refinement_f p k)
-= Some (|k, (p k).P.p.one|)
+= Some (|k, one (p k)|)
 
 let case_refinement (p:(k:'a -> pcm ('b k))) (k:'a): pcm_refinement (union_pcm p) = {
   f = case_refinement_f p k;
@@ -444,15 +451,16 @@ let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement
 // = l.put (m.put v (l.get one)) one
 // = lm.put v one
 
-open Steel.Effect.M
+open Steel.Effect
 
-let focus (r: ref 'a 'b) (l: pcm_lens 'b 'c) (v: 'c)
-: SteelT (ref 'a 'c) (r `pts_to` put l v l.p.p.one) (fun r -> r `pts_to` v)
-= admit()
+// val focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
+// : SteelT (ref 'a 'c) (r `pts_to` put l x (one r.q)) (fun r' -> r' `pts_to` x `star` pure (r'.pl == lens_comp r.pl l))
 
-(*
+// let focus' r q l = compose r's lens with l
+// val focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
+// : SteelT (ref 'a 'c) (r `pts_to` put l x (one r.q)) (fun r' -> r' `pts_to` x `star` pure (focus' r == r'))
+// 
+// val unfocus (r': ref 'a 'b) (r: Ghost.erased (ref 'a 'b)) (q: pcm 'c) (m: pcm_lens r.p r.q) (l: pcm_lens r.q q) (x: 'c)
+// : SteelT (ref 'a 'c) (r' `pts_to` x `star` pure (r' == focus r))) (fun r'' -> r `pts_to` put l x (one r.q) `star` pure (r'' == r))
 
-TODO:
-- Types of basic Steel operations manipulating pts_to
-
-*)
+// Steel.Effect.Atomic.sladmit()
