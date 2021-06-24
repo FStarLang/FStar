@@ -1,7 +1,6 @@
 module AggregateRef
 
 open FStar.PCM
-module M = Steel.Memory
 module P = FStar.PCM
 
 (** Very well-behaved lenses *)
@@ -167,19 +166,26 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
   (l: pcm_lens p q) (m: pcm_lens q r): pcm_lens p r = 
 {
   l = lens_comp l.l m.l;
-  get_refine = (fun _ -> let _ = l.get_refine in let _ = m.get_refine in ());
-  get_op_composable = (fun s t -> get_op l s t; get_op m (get l s) (get l t));
-  put_refine = (fun s v -> let _ = l.put_refine in let _ = m.put_refine in let _ = l.get_refine in ());
+  get_refine = (fun _ ->
+    let _ = l.get_refine in
+    let _ = m.get_refine in ());
+  get_op_composable = (fun s t ->
+    get_op l s t;
+    get_op m (get l s) (get l t));
+  put_refine = (fun s v ->
+    let _ = l.put_refine in
+    let _ = m.put_refine in
+    let _ = l.get_refine in ());
   put_op = (fun s t v w ->
     get_op l s t;
     m.put_op (get l s) (get l t) v w;
     l.put_op s t (put m v (get l s)) (put m w (get l t)))
 }
 
-(** A refinement of a PCM p *)
-
+(** A refinement of a PCM (p: pcm a) consists of:
+    (1) A set of elements f:(a -> prop) closed under (op p)
+    (2) An element new_unit which satisfies the unit laws on the subset f *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
-
 noeq type pcm_refinement #a (p: pcm a) = {
   f: a -> prop;
   f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
@@ -187,14 +193,16 @@ noeq type pcm_refinement #a (p: pcm a) = {
   new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
 
-let pcm_refine_comp (p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
+let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
 
-let pcm_refine_op (p: pcm 'a) (r: pcm_refinement p)
+let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
   (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
 = r.f_closed_under_op x y; op p x y
 
-let pcm_refine (p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
-  p = {composable = pcm_refine_comp p r; op = pcm_refine_op p r; one = r.new_one};
+(** Any refinement r for p can be used to construct a refined PCM with the same product
+    and composability predicate, but restricted to elements in r.f *)
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
+  p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
   assoc_r = (fun x y z -> p.assoc_r x y z);
@@ -210,20 +218,20 @@ let trivial_refinement (p: pcm 'a): pcm_refinement p = {
 }
 
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
-    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re. *)
+    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
+    This allows the reference to point to substructures of unions with known case. *)
 noeq type ref (a: Type u#a) (b: Type u#b) = {
   p: pcm a;
   re: pcm_refinement p;
   q: pcm b;
-  pl: pcm_lens (pcm_refine p re) q;
-  r: M.ref a p;
+  pl: pcm_lens (refined_pcm re) q;
+  r: Steel.Memory.ref a p;
 }
 
-(** A ref r points to a value v if r `Steel.Memory.pts_to` put v one, where
-    - put comes from r's pcm_lens
-    - one is the unit of r's refined PCM for the source type *)
-let pts_to (r: ref 'a 'b) (v: 'b): M.slprop =
-  M.pts_to r.r (put r.pl v (pcm_refine r.p r.re).P.p.one)
+(** A ref r points to a value v if r's underlying ref points to a chunk of memory
+    which contains at least the value v. *)
+let pts_to (r: ref 'a 'b) (v: 'b): Steel.Memory.slprop =
+  Steel.Memory.(r.r `pts_to` put r.pl v (refined_pcm r.re).P.p.one)
 
 (** Basic lenses *)
 
@@ -353,7 +361,7 @@ let lens_field (#a:eqtype) f (k:a): lens (restricted_t a f) (f k) = {
   put_put = (fun s v w -> ext (fun_upd k v (fun_upd k w s)) (fun_upd k v s) (fun _ -> ()));
 }
 
-(** lens_field is a pcm_lens for the n-ary product PCM *)
+(** lens_field is a pcm_lens *)
 
 (* TODO move to Aggregates.fst *)
 let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
@@ -405,9 +413,8 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
   put_put = (fun s v w -> ());
 }
 
-(** lens_case is a pcm_lens for the k-th case of an n-ary union *)
-
-let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (pcm_refine (union_pcm p) (case_refinement p k)) (p k) = {
+(** lens_case is a pcm_lens *)
+let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
   l = lens_case p k;
   get_refine = (fun s -> ());
   get_op_composable = (fun s t -> ());
