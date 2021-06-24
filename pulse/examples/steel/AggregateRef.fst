@@ -70,7 +70,9 @@ noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
       (requires composable p s t /\ composable q v w)
       (ensures composable p (l.put v s) (l.put w t) /\
                l.put (op q v w) (op p s t) == op p (l.put v s) (l.put w t))
-    [SMTPat (l.put (op q v w) (op p s t)); SMTPat (composable p (l.put v s) (l.put w t))];
+    [SMTPatOr [
+      [SMTPat (l.put (op q v w) (op p s t))];
+      [SMTPat (composable p (l.put v s) (l.put w t))]]];
 }
 let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
 let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
@@ -89,7 +91,7 @@ let get_op (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s t: 'a)
 : Lemma
     (requires composable p s t)
     (ensures composable q (get l s) (get l t) /\ get l (op p s t) == op q (get l s) (get l t))
-    [SMTPat (composable p s t); SMTPat (get l (op p s t))]
+    [SMTPat (get l (op p s t))]
 = l.get_op_composable s t; l.put_op s t (get l s) (get l t)
 
 (** The upd function of a pcm_lens lifts frame-preserving updates on the target to
@@ -447,20 +449,85 @@ let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement
 
 (* Basic operations *)
 
-// l.put (m.put v one) one
-// = l.put (m.put v (l.get one)) one
-// = lm.put v one
-
 open Steel.Effect
+module M = Steel.Memory
+module A = Steel.Effect.Atomic
 
-// val focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
-// : SteelT (ref 'a 'c) (r `pts_to` put l x (one r.q)) (fun r' -> r' `pts_to` x `star` pure (r'.pl == lens_comp r.pl l))
+let focus' (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
+  {p = r.p; re = r.re; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
-// let focus' r q l = compose r's lens with l
-// val focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
-// : SteelT (ref 'a 'c) (r `pts_to` put l x (one r.q)) (fun r' -> r' `pts_to` x `star` pure (focus' r == r'))
-// 
-// val unfocus (r': ref 'a 'b) (r: Ghost.erased (ref 'a 'b)) (q: pcm 'c) (m: pcm_lens r.p r.q) (l: pcm_lens r.q q) (x: 'c)
-// : SteelT (ref 'a 'c) (r' `pts_to` x `star` pure (r' == focus r))) (fun r'' -> r `pts_to` put l x (one r.q) `star` pure (r'' == r))
+let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
+: Steel (ref 'a 'c)
+    (to_vprop (r `pts_to` put l x (one r.q)))
+    (fun r' -> to_vprop (r' `pts_to` x))
+    (fun _ -> True)
+    (fun _ r' _ -> r' == focus' r q l)
+= let r' = focus' r q l in
+  A.change_slprop_rel  
+    (to_vprop (r `pts_to` put l x (one r.q)))
+    (to_vprop (r' `pts_to` x))
+    (fun _ _ -> True)
+    (fun m -> r.pl.get_one ());
+  A.return r'
 
-// Steel.Effect.Atomic.sladmit()
+let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: pcm 'c) (l: pcm_lens r'.q q) (x: 'c)
+: A.SteelGhost unit inames
+    (to_vprop (r `pts_to` x))
+    (fun _ -> to_vprop (r' `pts_to` put l x (one r'.q)))
+    (fun _ -> r == focus' r' q l)
+    (fun _ _ _ -> True)
+= A.change_slprop_rel  
+    (to_vprop (r `pts_to` x))
+    (to_vprop (r' `pts_to` put l x (one r'.q)))
+    (fun _ _ -> True)
+    (fun m -> r'.pl.get_one ())
+
+let change_equal_vprop #inames (p q: M.slprop)
+: A.SteelGhost unit inames (to_vprop p) (fun _ -> to_vprop q) (fun _ -> p == q) (fun _ _ _ -> True)
+= A.change_equal_slprop (to_vprop p) (to_vprop q)
+// TODO rename
+
+let split (r: ref 'a 'c) (xy x y: Ghost.erased 'c)
+: Steel unit
+    (to_vprop (r `pts_to` xy))
+    (fun _ -> to_vprop (r `pts_to` x) `star` to_vprop (r `pts_to` y))
+    (fun _ -> composable r.q x y /\ xy == Ghost.hide (op r.q x y))
+    (fun _ _ _ -> True)
+= A.change_equal_slprop
+    (to_vprop (r `pts_to` xy))
+    (to_vprop (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl xy (one (refined_pcm r.re))))));
+  (refined_pcm r.re).is_unit (one (refined_pcm r.re));
+  r.pl.put_op (one (refined_pcm r.re)) (one (refined_pcm r.re)) x y;
+  Steel.PCMReference.split r.r
+    (put r.pl xy (one (refined_pcm r.re)))
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)));
+  change_equal_vprop
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))))
+    (r `pts_to` x);
+  change_equal_vprop
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))))
+    (r `pts_to` y)
+  // TODO: post on slack about
+  // cannot prove to_vprop p == to_vprop q given p == q because
+  // to_vprop is unfold, unflods to term with lambda expression
+
+let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
+: SteelT (_:unit{composable r.q x y})
+    (to_vprop (r `pts_to` x) `star` to_vprop (r `pts_to` y))
+    (fun _ -> to_vprop (r `pts_to` op r.q x y))
+= change_equal_vprop
+    (r `pts_to` x)
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))));
+  change_equal_vprop
+    (r `pts_to` y)
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))));
+  Steel.PCMReference.gather r.r
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)));
+  get_op r.pl (put r.pl x (one (refined_pcm r.re))) (put r.pl y (one (refined_pcm r.re)));
+  (refined_pcm r.re).is_unit (one (refined_pcm r.re));
+  r.pl.put_op (one (refined_pcm r.re)) (one (refined_pcm r.re)) x y;
+  change_equal_vprop _ (r `pts_to` op r.q x y)
+
+// TODO split/gather (in struct case) a single field out of a restricted_t 'a f
