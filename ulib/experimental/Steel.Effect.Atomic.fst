@@ -273,11 +273,11 @@ let bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_
 let norm_repr (#a:Type) (#framed:bool) (#opened:inames) (#obs:observability)
  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
  (f:repr a framed opened obs pre post req ens)
- : repr a framed opened obs pre post (fun h -> normal (req h)) (fun h0 x h1 -> normal (ens h0 x h1))
+ : repr a framed opened obs pre post (fun h -> norm_opaque (req h)) (fun h0 x h1 -> norm_opaque (ens h0 x h1))
  = f
 
 let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g
-  = norm_repr (bind_opaque a b opened o1 o2 f g)
+  = norm_repr (bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g)
 
 let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
   fun frame ->
