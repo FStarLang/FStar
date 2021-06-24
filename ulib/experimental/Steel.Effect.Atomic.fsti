@@ -67,7 +67,7 @@ let return_req (p:vprop) : req_t p = fun _ -> True
 /// and return leaves selectors of all resources in [p] unchanged
 unfold
 let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
-  fun h0 r h1 -> r == x /\ frame_equalities (p x) h0 h1
+  fun h0 r h1 -> r == x /\ frame_equalities (p x) h0 (focus_rmem h1 (p x))
 
 /// Monadic return combinator for the Steel effect. It is parametric in the postcondition
 /// The vprop precondition is annotated with the return_pre predicate to enable special handling,
