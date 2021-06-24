@@ -80,8 +80,7 @@ let lemma_frame_equalities frame h0 h1 p =
   lemma_frame_refl' frame h0 h1;
   FStar.PropositionalExtensionality.apply p1 p2
 
-let lemma_frame_equalities2 frame h0 h1 p p1 p1' =
-  lemma_frame_equalities frame h0 h1 p
+let elim_conjunction p1 p1' p2 p2' = ()
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()
