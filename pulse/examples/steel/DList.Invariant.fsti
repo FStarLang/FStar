@@ -22,7 +22,7 @@ open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
 
-let (=.=) #a (x y: a) : slprop = pure (x == y)
+let (=.=) #a (x y: a) : vprop = pure (x == y)
 
 val cell (a:Type0) : Type0
 let t a = ref (cell a)
@@ -60,7 +60,7 @@ val ptr_eq (#a:Type) (x y:t a)
 
 /// Main abstract invariant
 ///    A doubly linked list segment at ptr from from left to right
-val dlist (#a:Type) (left ptr right:t a) (l:list (cell a)) : slprop u#1
+val dlist (#a:Type) (left ptr right:t a) (l:list (cell a)) : vprop
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,7 +47,7 @@ val ptr_eq (#a:Type) (x y:t a)
 
 /// Main abstract invariant
 /// A linked list segment starting at ptr, containing cells l
-val llist (#a:Type) (ptr:t a) (l:list (cell a)) : slprop u#1
+val llist (#a:Type) (ptr:t a) (l:list (cell a)) : vprop
 
 (* Helper lemmas/rewritings *)
 

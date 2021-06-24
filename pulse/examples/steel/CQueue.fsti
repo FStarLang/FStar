@@ -26,7 +26,7 @@ val v (a: Type0) : Tot Type0
 noextract
 val datas (#a: Type0) (l: v a) : Tot (list a)
 
-val queue (#a: Type) (x: t a) (l: Ghost.erased (v a)) : Tot (slprop u#1)
+val queue (#a: Type) (x: t a) (l: Ghost.erased (v a)) : Tot vprop
 
 val create_queue (a: Type) : Steel (t a & Ghost.erased (v a)) emp (fun x -> queue (fst x) (snd x))
   (requires (fun _ -> True))

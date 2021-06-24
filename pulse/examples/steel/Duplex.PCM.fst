@@ -138,12 +138,14 @@ open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.PCMReference
 module Mem = Steel.Memory
+module PR = Steel.PCMReference
 
 let chan (p:dprot) = ref (t p) (pcm p)
 
-val pts_to (#p:dprot) (r:chan p) (v:t p) : slprop u#1
-let pts_to r v = Mem.pts_to r v
+val pts_to (#p:dprot) (r:chan p) (v:t p) : vprop
+let pts_to r v = PR.pts_to r v
 
 let ep_a (#p:dprot) (next:dprot) (tr:trace p next) =
    if is_send next
@@ -178,8 +180,8 @@ let select_refine' (#p:dprot)
                      -> GTot (y:t p{compatible (pcm p) y v /\
                                  frame_compatible x v y})))
     : SteelT  (v:t p{compatible (pcm p) x v /\ refine v})
-              (Mem.pts_to r x)
-              (fun v -> Mem.pts_to r (f v))
+              (PR.pts_to r x)
+              (fun v -> PR.pts_to r (f v))
     = select_refine r x f
 
 val select_refine (#p:dprot)
@@ -194,7 +196,7 @@ val select_refine (#p:dprot)
 
 let select_refine #p r x f =
   let v = select_refine' r x f in
-  change_slprop (Mem.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
+  rewrite_slprop (PR.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
   return v
 
 let rec is_trace_prefix
@@ -606,10 +608,10 @@ val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
            (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
 
 let get_a_r #p c q tr =
-  change_slprop (pts_to c (A_R q tr)) (pts_to c (reveal (hide (A_R q tr)))) (fun _ -> ());
+  rewrite_slprop (pts_to c (A_R q tr)) (pts_to c (reveal (hide (A_R q tr)))) (fun _ -> ());
   let v = select_refine c (A_R q tr) (f_a_r q tr) in
   let (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')}) = V?._0 v in
-  change_slprop
+  rewrite_slprop
     (pts_to c (f_a_r q tr v))
     (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
     (fun _ -> ());
@@ -621,10 +623,10 @@ val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
            (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
 
 let get_b_r #p c q tr =
-  change_slprop (pts_to c (B_R q tr)) (pts_to c (reveal (hide (B_R q tr)))) (fun _ -> ());
+  rewrite_slprop (pts_to c (B_R q tr)) (pts_to c (reveal (hide (B_R q tr)))) (fun _ -> ());
   let v = select_refine c (B_R q tr) (f_b_r q tr) in
   let (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')}) = V?._0 v in
-  change_slprop
+  rewrite_slprop
     (pts_to c (f_b_r q tr v))
     (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
     (fun _ -> ());
@@ -637,9 +639,9 @@ val upd_gen_action (#p:dprot)
     : SteelT unit (pts_to r x) (fun _ -> pts_to r y)
 
 let upd_gen_action #p r x y f =
-  change_slprop (pts_to r x) (pts_to r (reveal (hide x))) (fun _ -> ());
+  rewrite_slprop (pts_to r x) (pts_to r (reveal (hide x))) (fun _ -> ());
   upd_gen r x y f;
-  change_slprop (pts_to r (reveal (hide y))) (pts_to r y) (fun _ -> ())
+  rewrite_slprop (pts_to r (reveal (hide y))) (pts_to r y) (fun _ -> ())
 
 
 #push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1"
@@ -915,17 +917,17 @@ val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
 
 let alloc x =
   let r = alloc x in
-  change_slprop (Mem.pts_to r x) (pts_to r x) (fun _ -> ());
+  rewrite_slprop (PR.pts_to r x) (pts_to r x) (fun _ -> ());
   return r
 
 val split (#p:dprot) (r:chan p) (v_full v0 v1:t p) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
   : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
 
 let split r v v0 v1 u1 u2 =
-  change_slprop (pts_to r v) (pts_to r (reveal (hide v))) (fun _ -> ());
+  rewrite_slprop (pts_to r v) (pts_to r (reveal (hide v))) (fun _ -> ());
   split r v v0 v1;
-  change_slprop (pts_to r (reveal (hide v0))) (pts_to r v0) (fun _ -> ());
-  change_slprop (pts_to r (reveal (hide v1))) (pts_to r v1) (fun _ -> ())
+  rewrite_slprop (pts_to r (reveal (hide v0))) (pts_to r v0) (fun _ -> ());
+  rewrite_slprop (pts_to r (reveal (hide v1))) (pts_to r v1) (fun _ -> ())
 
 val new_chan (p:dprot)
   : SteelT (chan p) emp
@@ -964,7 +966,7 @@ val send_a
            (fun _ -> endpoint_a c (step next x) (extend tr x))
 
 let send_a #p c #next x tr =
-  change_slprop (endpoint_a c next tr) (pts_to c (A_W next tr)) (fun _ -> ());
+  rewrite_slprop (endpoint_a c next tr) (pts_to c (A_W next tr)) (fun _ -> ());
   write_a c tr x
 
 val send_b
@@ -978,7 +980,7 @@ val send_b
            (fun _ -> endpoint_b c (step next x) (extend tr x))
 
 let send_b #p c #next x tr =
-  change_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
+  rewrite_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
   write_b c tr x
 
 let rec recv_a (#p:dprot)
@@ -989,16 +991,16 @@ let rec recv_a (#p:dprot)
            (endpoint_a c next tr)
            (fun x -> endpoint_a c (step next x) (extend tr x))
   =
-  change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
+  rewrite_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
   let tr' = get_a_r c next tr in
   if trace_length tr >= trace_length tr'.tr then (
-     change_slprop (pts_to c _) (endpoint_a c next tr) (fun _ -> ());
+     rewrite_slprop (pts_to c _) (endpoint_a c next tr) (fun _ -> ());
      recv_a c next tr
   )
   else (
       compatible_a_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
-      change_slprop
+      rewrite_slprop
         (pts_to c _)
         (endpoint_a c (step next x) (extend tr x))
         (fun _ -> ());
@@ -1014,10 +1016,10 @@ let rec recv_b
            (endpoint_b c next tr)
            (fun x -> endpoint_b c (step next x) (extend tr x))
   =
-  change_slprop (endpoint_b c next tr) (pts_to c (B_R next tr)) (fun _ -> ());
+  rewrite_slprop (endpoint_b c next tr) (pts_to c (B_R next tr)) (fun _ -> ());
   let tr' = get_b_r c next tr in
   if trace_length tr >= trace_length tr'.tr then (
-    change_slprop
+    rewrite_slprop
       (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
       (endpoint_b c next tr)
       (fun _ -> ());
@@ -1026,7 +1028,7 @@ let rec recv_b
       compatible_b_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
       noop ();
-      change_slprop
+      rewrite_slprop
         (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
         (endpoint_b c (step next x) (extend tr x))
         (fun _ -> ());
@@ -1039,7 +1041,7 @@ let rec recv_b
 #reset-options "--print_implicits --using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 1 --ifuel 1"
 
 let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
-  : slprop
+  : vprop
   = match name with
     | A -> endpoint_a c next t
     | B -> endpoint_b c next t
@@ -1053,17 +1055,17 @@ let send_aux (#p:dprot) (name:party) (c:chan p)
       (endpoint name c next t)
       (fun _ -> endpoint name c (step next x) (extend t x))
   = if name = A then begin
-      change_slprop (endpoint _ _ _ _ )
+      rewrite_slprop (endpoint _ _ _ _ )
                     (endpoint_a c next t) (fun _ -> ());
       send_a c x t;
-      change_slprop (endpoint_a c (step next x) (extend t x))
+      rewrite_slprop (endpoint_a c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ())
     end
     else begin
-      change_slprop (endpoint _ _ _ _ )
+      rewrite_slprop (endpoint _ _ _ _ )
                     (endpoint_b c next t) (fun _ -> ());
       send_b c x t;
-      change_slprop (endpoint_b c (step next x) (extend t x))
+      rewrite_slprop (endpoint_b c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ())
     end
 
@@ -1073,18 +1075,18 @@ let recv_aux (#p:dprot) (name:party) (c:chan p)
       (endpoint name c next t)
       (fun x -> endpoint name c (step next x) (extend t x))
   = if name = A then begin
-      change_slprop (endpoint _ _ _ _ )
+      rewrite_slprop (endpoint _ _ _ _ )
                     (endpoint_a c next t) (fun _ -> ());
       let x = recv_a c next t in
-      change_slprop (endpoint_a c (step next x) (extend t x))
+      rewrite_slprop (endpoint_a c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ());
       return x
     end
     else begin
-      change_slprop (endpoint _ _ _ _ )
+      rewrite_slprop (endpoint _ _ _ _ )
                     (endpoint_b c next t) (fun _ -> ());
       let x = recv_b c next t in
-      change_slprop (endpoint_b c (step next x) (extend t x))
+      rewrite_slprop (endpoint_b c (step next x) (extend t x))
                     (endpoint _ _ _ _) (fun _ -> ());
       return x
     end
@@ -1124,7 +1126,7 @@ let read_trace_ref (#p:dprot)
       (fun _ t _ -> dfst w == next /\ t == dsnd w)
   = let x = HR.read r in
     let tr : trace p next = dsnd x in
-    change_slprop (HR.pts_to r _ _)
+    rewrite_slprop (HR.pts_to r _ _)
                   (HR.pts_to r _ _) (fun _ -> ());
     return tr
 
@@ -1134,14 +1136,14 @@ let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
       (endpt name c next)
       (fun tr -> endpoint name (fst c) next tr `star`
               HR.pts_to (snd c) Perm.full_perm (| next, tr |))
-  = let w : erased (next:dprot & trace p next) = witness_h_exists () in
-    Steel.Utils.elim_pure (eq2_prop (dfst w) next);
+  = let w : erased (next:dprot & trace p next) = witness_exists () in
+    elim_pure (eq2_prop (dfst w) next);
     let tr = read_trace_ref (snd c) next in
 
-    change_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))
+    rewrite_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))
                   (HR.pts_to (snd c) Perm.full_perm (| next, tr |)) (fun _ -> ());
 
-    change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
+    rewrite_slprop (endpoint name (fst c) (dfst w) (dsnd w))
                   (endpoint name (fst c) next tr) (fun _ -> ());
     return tr
 
@@ -1160,7 +1162,7 @@ let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
 
     intro_pure (eq2_prop #dprot (dfst w') (step next x));
 
-    change_slprop (endpoint name (fst c) (step next x) (extend tr x))
+    rewrite_slprop (endpoint name (fst c) (step next x) (extend tr x))
                   (endpoint name (fst c) (dfst w') (dsnd w'))
                   (fun _ -> ());
 
@@ -1173,6 +1175,8 @@ let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
 let ch : Type u#1 = (p:dprot & channel p)
 
 let ep (name:party) (c:ch) (next:dprot) = endpt name (dsnd c) next
+
+#push-options "--fuel 2 --ifuel 2"
 
 let new_channel' (p:dprot)
   : SteelT (channel p & channel p) emp
@@ -1192,7 +1196,7 @@ let new_channel' (p:dprot)
              endpoint B c p (empty_trace p)));
   let cA : channel p = (c, rA) in
   let cB : channel p = (c, rB) in
-  change_slprop ((HR.pts_to rA Perm.full_perm (hide v) `star`
+  rewrite_slprop ((HR.pts_to rA Perm.full_perm (hide v) `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint A c p (empty_trace p)) `star`
                 (HR.pts_to rB Perm.full_perm (hide v) `star`
@@ -1200,17 +1204,26 @@ let new_channel' (p:dprot)
                  endpoint B c p (empty_trace p)))
                 (endpt_pred A cA p v `star`
                  endpt_pred B cB p v)
-                (fun _ -> ());
+                (fun _ -> reveal_equiv ((HR.pts_to rA Perm.full_perm (hide v) `star`
+                 pure (eq2_prop #dprot (dfst v) p) `star`
+                 endpoint A c p (empty_trace p)) `star`
+                (HR.pts_to rB Perm.full_perm (hide v) `star`
+                 pure (eq2_prop #dprot (dfst v) p) `star`
+                 endpoint B c p (empty_trace p)))
+                                 (endpt_pred A cA p v `star`
+                 endpt_pred B cB p v)
+                 );
   slassert (endpt_pred A cA p v `star`
             endpt_pred B cB p v);
   intro_exists v (endpt_pred A cA p);
   intro_exists v (endpt_pred B cB p);
   return (cA, cB)
+#pop-options
 
 let channel_as_ch (#p:dprot) party (c:channel p) prot
   : SteelT unit (endpt party c prot)
                 (fun _ -> ep party (| p, c |) prot)
-  = change_slprop (endpt party c prot)
+  = rewrite_slprop (endpt party c prot)
                   (ep party (|p, c|) prot)
                   (fun _ -> ()); ()
 
@@ -1239,7 +1252,7 @@ let ch_as_channel party (c:ch) prot
   : SteelT unit
            (ep party c prot)
            (fun _ -> endpt party (dsnd c) prot)
-  = change_slprop (ep party c prot)
+  = rewrite_slprop (ep party c prot)
                   (endpt party (dsnd c) prot)
                   (fun _ -> ())
 
@@ -1253,7 +1266,7 @@ let channel_send (#name:party)
   = ch_as_channel _ _ _;
     channel_send' (dsnd c) x;
     channel_as_ch _ _ _;
-    change_slprop (ep name (| dfst c, dsnd c |) (step next x))
+    rewrite_slprop (ep name (| dfst c, dsnd c |) (step next x))
                   (ep name c (step next x))
                   (fun _ -> ())
 
@@ -1278,7 +1291,7 @@ let channel_recv (#name:party)
   = ch_as_channel _ _ _;
     let x = channel_recv' (dsnd c) in
     channel_as_ch _ _ _;
-    change_slprop (ep name (| dfst c, dsnd c |) (step next x))
+    rewrite_slprop (ep name (| dfst c, dsnd c |) (step next x))
                   (ep name c (step next x))
                   (fun _ -> ());
     return x

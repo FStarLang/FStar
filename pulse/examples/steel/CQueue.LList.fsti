@@ -1,14 +1,14 @@
 module CQueue.LList
 include CQueue.Cell
 open Steel.Memory
-open Steel.Effect
 open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
 
 (* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content)
 
-   See CQueue.c: cllist_* 
+   See CQueue.c: cllist_*
 *)
 
 val cllist_ptrvalue (a: Type0) : Tot Type0 (* "cllist *" seen as a rvalue *)
@@ -41,16 +41,104 @@ type vllist (a: Type0) = {
   vllist_tail : ref (ccell_ptrvalue a);
 }
 
-[@__reduce__] // to avoid manual unfoldings through change_slprop 
-let cllist (#a: Type0) (c: cllist_lvalue a) (p: perm) (v: Ghost.erased (vllist a)) : Tot slprop =
-  pts_to (cllist_head c) p v.vllist_head `star` pts_to (cllist_tail c) p v.vllist_tail
+val cllist_hp
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: Tot (slprop u#1)
 
-val alloc_cllist
+val cllist_sel
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: GTot (selector (vllist a) (cllist_hp c))
+
+[@__steel_reduce__]
+let cllist'
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: GTot vprop'
+= {
+  hp = cllist_hp c;
+  t = vllist a;
+  sel = cllist_sel c;
+}
+
+[@__steel_reduce__]
+let cllist (#a: Type0) (c: cllist_ptrvalue a) : Tot vprop =
+  VUnit (cllist' c)
+
+val intro_cllist
+  (#opened: _)
+  (#a: Type0)
+  (c: cllist_lvalue a)
+: SteelGhost unit opened
+    (vptr (cllist_head c) `star` vptr (cllist_tail c))
+    (fun _ -> cllist c)
+    (fun _ -> True)
+    (fun h res h' ->
+      h' (cllist c) == ({ vllist_head = h (vptr (cllist_head c)); vllist_tail = h (vptr (cllist_tail c))})
+    )
+
+// TODO: cllist_head and cllist_tail should not be freeable
+val elim_cllist_ghost
+  (#opened: _)
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: SteelGhost (Ghost.erased (cllist_lvalue a)) opened
+    (cllist c)
+    (fun c' -> vptr (cllist_head c') `star` vptr (cllist_tail c'))
+    (fun _ -> True)
+    (fun h c' h' ->
+      cllist_ptrvalue_is_null c == false /\
+      (c' <: cllist_ptrvalue a) == c /\
+      h (cllist c) == { vllist_head = h' (vptr (cllist_head c')); vllist_tail = h' (vptr (cllist_tail c')) }
+    )
+
+val elim_cllist
+  (#opened: _)
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: SteelAtomic (cllist_lvalue a) opened
+    (cllist c)
+    (fun c' -> vptr (cllist_head c') `star` vptr (cllist_tail c'))
+    (fun _ -> True)
+    (fun h c' h' ->
+      cllist_ptrvalue_is_null c == false /\
+      (c' <: cllist_ptrvalue a) == c /\
+      h (cllist c) == { vllist_head = h' (vptr (cllist_head c')); vllist_tail = h' (vptr (cllist_tail c')) }
+    )
+
+val cllist_not_null
+  (#opened: _)
+  (#a: Type0)
+  (c: cllist_ptrvalue a)
+: SteelGhost (squash (cllist_ptrvalue_is_null c == false)) opened
+    (cllist c)
+    (fun _ -> cllist c)
+    (fun _ -> True)
+    (fun h _ h' ->
+      h' (cllist c) == h (cllist c)
+    )
+
+val freeable (#a: Type0) (c: cllist_ptrvalue a) : Tot prop
+
+val alloc_llist
   (#a: Type0)
   (head: ccell_ptrvalue a)
   (tail: ref (ccell_ptrvalue a))
-: Steel (cllist_lvalue a & Ghost.erased (vllist a))
+: Steel (cllist_lvalue a)
     emp
-    (fun res -> cllist (fst res) full_perm (snd res))
+    (fun res -> cllist res)
     (requires (fun _ -> True))
-    (ensures (fun _ res _ -> Ghost.reveal (snd res) == ({ vllist_head = head; vllist_tail = tail })))
+    (ensures (fun _ res h' ->
+      h' (cllist res) == ({ vllist_head = head; vllist_tail = tail; }) /\
+      freeable res
+    ))
+
+val free_llist
+  (#a: Type0)
+  (c: cllist_ptrvalue a) // could be cllist_lvalue, but cllist gives the right refinement
+: Steel unit
+    (cllist c)
+    (fun _ -> emp)
+    (fun _ -> freeable c)
+    (fun _ _ _ -> True)
