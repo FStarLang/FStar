@@ -162,13 +162,13 @@ let test_if11 () : SteelT ref emp ptr =
 
 // Test for refinement types in return values. cf PR 2227
 assume
-val f (p:prop) :
+val f_ref (p:prop) :
   SteelT (u:unit{p}) emp (fun _ -> emp)
 
 let g (p:prop)
   : Steel unit emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> p) =
   let f2 (p:prop)
     : SteelT (u:unit{p}) emp (fun _ -> emp)
-    = f p
+    = f_ref p
   in
   let x = f2 p in x
