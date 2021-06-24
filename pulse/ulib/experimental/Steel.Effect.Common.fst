@@ -58,8 +58,7 @@ let lemma_valid_focus_rmem #r h r0 =
   Classical.forall_intro (Classical.move_requires (can_be_split_trans r r0))
 
 let rec lemma_frame_refl' (frame:vprop) (h0:rmem frame) (h1:rmem frame)
-  : Lemma (requires h0 frame == h1 frame)
-          (ensures frame_equalities' frame h0 h1)
+  : Lemma ((h0 frame == h1 frame) <==> frame_equalities' frame h0 h1)
   = match frame with
     | VUnit _ -> ()
     | VStar p1 p2 ->
@@ -78,9 +77,8 @@ let rec lemma_frame_refl' (frame:vprop) (h0:rmem frame) (h1:rmem frame)
 let lemma_frame_equalities frame h0 h1 p =
   let p1 : prop = h0 frame == h1 frame in
   let p2 : prop = frame_equalities' frame h0 h1 in
-  Classical.move_requires (lemma_frame_refl' frame h0) h1;
-  assert (p1 <==> p2);
-  FStar.PropositionalExtensionality.apply (h0 frame == h1 frame) (frame_equalities' frame h0 h1)
+  lemma_frame_refl' frame h0 h1;
+  FStar.PropositionalExtensionality.apply p1 p2
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()

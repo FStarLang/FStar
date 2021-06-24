@@ -311,35 +311,18 @@ let focus_rmem_refl (r:vprop) (h:rmem r)
 
 open FStar.Tactics
 
-(* AF 04/27/2021: The linear equality generation, where equalities are only
-   generated for leaf, VUnit nodes, works well for concrete code, but does
-   not allow to propagate information when handling abstract vprops.
-   While defining generic combinators on vprops such as vrefine and vdep,
-   Tahina encountered issues with this. For instance, elim_vdep returns
-   a v `star` q, where v and q are abstract vprops. As such, equalities
-   on the selectors of v and q are not propagated: Normalization gets stuck
-   on both v and q, since they are neither a VUnit nor a VStar.
-   An earlier fix was creating a "top-level" equality on the full vprop
-   to handle most generic vprops cases. Unfortunately, this does not
-   help when we have atomic, abstract vprops as in v `star` q.
-   For now, I'm reenabling quadratic equality generation. But we need
-   to find a better way to handle generic vprops selectors while avoiding
-   a context blowup; furthermore, equalities on composite resources are mostly
-   irrelevant because of AC-rewriting, and because we do not provide patterns
-   on lemmas relating sel (p * q) with (sel p, sel q), or sel (p * q) with
-   sel (q * p) for instance.
-   We should instead have a better way to define atomic vprops, which encapsulates
-   atomic, abstract vprops
-*)
-
-/// State that all "atomic" subresources have the same selectors on both views
+/// State that all "atomic" subresources have the same selectors on both views.
+/// The predicate has the __steel_reduce__ attribute, ensuring that VC normalization
+/// will reduce it to a conjunction of equalities on atomic subresources
+/// This predicate is also marked as `strict_on_arguments` on [frame], ensuring that
+/// it will not be reduced when the frame is symbolic
+/// Instead, the predicate will be rewritten to an equality using `lemma_frame_equalities` below
 [@@ __steel_reduce__; strict_on_arguments [0]]
 let rec frame_equalities'
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
-  = h0 frame == h1 frame /\
-    begin match frame with
-    | VUnit p -> True
+  = begin match frame with
+    | VUnit p -> h0 frame == h1 frame
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -355,6 +338,10 @@ let rec frame_equalities'
         frame_equalities' p2 h02 h12
     end
 
+/// This lemma states that frame_equalities is the same as an equality on the top-level frame.
+/// The uncommon formulation with an extra [p] is needed to use in `rewrite_with_tactic`,
+/// where the goal is of the shape `frame_equalities frame h0 h1 == ?u`
+/// The rewriting happens below, in `frame_vc_norm`
 val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:prop)
   : Lemma
     (requires (h0 frame == h1 frame) == p)
