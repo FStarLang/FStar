@@ -62,6 +62,7 @@ noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   l: lens a b;
   get_refine: s:a ->
     Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
+  get_one: unit -> Lemma (l.get p.p.one == q.p.one);
   get_op_composable: s:a -> t:a ->
     Lemma
       (requires composable p s t)
@@ -69,6 +70,7 @@ noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   put_refine: s:a -> v:b ->
     Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
     [SMTPat (p.refine (l.put v s))];
+  put_one: unit -> Lemma (l.put q.p.one p.p.one == p.p.one);
   put_op: s:a -> t:a -> v:b -> w:b ->
     Lemma
       (requires composable p s t /\ composable q v w)
@@ -156,8 +158,10 @@ let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b
 let pcm_lens_id (#p: pcm 'a): pcm_lens p p = {
   l = lens_id; 
   get_refine = (fun _ -> ());
+  get_one = (fun _ -> ());
   get_op_composable = (fun _ _ -> ());
   put_refine = (fun _ _ -> ());
+  put_one = (fun _ -> ());
   put_op = (fun _ _ _ _ -> ());
 }
 
@@ -169,6 +173,7 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
   get_refine = (fun _ ->
     let _ = l.get_refine in
     let _ = m.get_refine in ());
+  get_one = (fun _ -> l.get_one (); m.get_one ());
   get_op_composable = (fun s t ->
     get_op l s t;
     get_op m (get l s) (get l t));
@@ -176,6 +181,7 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
     let _ = l.put_refine in
     let _ = m.put_refine in
     let _ = l.get_refine in ());
+  put_one = (fun _ -> l.put_one (); m.put_one ());
   put_op = (fun s t v w ->
     get_op l s t;
     m.put_op (get l s) (get l t) v w;
@@ -249,8 +255,10 @@ let lens_fst #a #b : lens (a & b) a = {
 let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
   l = lens_fst;
   get_refine = (fun _ -> ());
+  get_one = (fun _ -> ());
   get_op_composable = (fun _ _ -> ());
   put_refine = (fun _ _ -> ());
+  put_one = (fun _ -> ());
   put_op = (fun _ _ _ _ -> ());
 }
 
@@ -371,8 +379,14 @@ let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
 let field (#a:eqtype) #f (p:(k:a -> pcm (f k))) (k:a): pcm_lens (prod_pcm p) (p k) = {
   l = lens_field f k;
   get_refine = (fun s -> ());
+  get_one = (fun _ -> ());
   get_op_composable = (fun s t -> ());
   put_refine = (fun s v -> ());
+  put_one = (fun _ ->
+    ext
+      (fun_upd k (p k).P.p.one (prod_pcm p).P.p.one)
+      (prod_pcm p).P.p.one
+      (fun k -> ()));
   put_op = (fun s t v w ->
     prod_pcm_composable_intro p (fun_upd k v s) (fun_upd k w t) (fun _ -> ());
     ext
@@ -417,10 +431,24 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
 let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
   l = lens_case p k;
   get_refine = (fun s -> ());
+  get_one = (fun _ -> ());
   get_op_composable = (fun s t -> ());
   put_refine = (fun s v -> ());
+  put_one = (fun _ -> ());
   put_op = (fun s t v w -> ());
 }
+
+(* Basic operations *)
+
+// l.put (m.put v one) one
+// = l.put (m.put v (l.get one)) one
+// = lm.put v one
+
+open Steel.Effect.M
+
+let focus (r: ref 'a 'b) (l: pcm_lens 'b 'c) (v: 'c)
+: SteelT (ref 'a 'c) (r `pts_to` put l v l.p.p.one) (fun r -> r `pts_to` v)
+= admit()
 
 (*
 
