@@ -47,6 +47,56 @@ let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
   put_put = (fun _ _ _ -> ());
 }
 
+(** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where
+    (1) get is a PCM morphism p -> q
+    (2) put is a PCM morphism p×q -> p, where (×) = Aggregates.tuple_pcm
+    The property get (s * t) = get s * get t is derivable from lens laws and the fact
+    that put is a PCM morphism:
+      get (s * t)
+      = get (put (get s) s * put (get t) t)
+      = get (put (get s * get t) (s * t))
+      = get s * get t
+    So one only needs to prove composable s t ==> composable (get s) (get t) when
+    defining a pcm_lens. If we could find a way to also prove this from the fact that
+    put is a PCM morphism, we could do away with get_op_composable entirely. *)
+noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
+  l: lens a b;
+  get_refine: s:a ->
+    Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
+  get_op_composable: s:a -> t:a ->
+    Lemma
+      (requires composable p s t)
+      (ensures composable q (l.get s) (l.get t));
+  put_refine: s:a -> v:b ->
+    Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
+    [SMTPat (p.refine (l.put v s))];
+  put_op: s:a -> t:a -> v:b -> w:b ->
+    Lemma
+      (requires composable p s t /\ composable q v w)
+      (ensures composable p (l.put v s) (l.put w t) /\
+               l.put (op q v w) (op p s t) == op p (l.put v s) (l.put w t))
+    [SMTPat (l.put (op q v w) (op p s t)); SMTPat (composable p (l.put v s) (l.put w t))];
+}
+let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
+let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
+let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.l f s
+
+let get_op (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s t: 'a)
+: Lemma
+    (requires composable p s t)
+    (ensures composable q (get l s) (get l t) /\ get l (op p s t) == op q (get l s) (get l t))
+    [SMTPat (composable p s t); SMTPat (get l (op p s t))]
+= l.get_op_composable s t; l.put_op s t (get l s) (get l t)
+
+(** The upd function of a pcm_lens lifts frame-preserving updates on the target to
+    frame-preserving updates on the source *)
+
+let pcm_lens_compatible_get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (x y: 'a)
+: Lemma (requires compatible p x y) (ensures compatible q (get l x) (get l y))
+= compatible_elim p x y (compatible q (get l x) (get l y)) (fun frame_x ->
+  let _ = get_op l frame_x x in
+  compatible_intro q (get l x) (get l y) (get l frame_x))
+    
 (** The non-computational part of frame_preserving_upd
     TODO: move this and lemmas about this to FStar.PCM.fst *)
 let frame_pres_on (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
@@ -77,46 +127,7 @@ let frame_pres_intro (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
      [SMTPat (compatible p x v)]))
 : Lemma (frame_pres p f x y) =
   let _ = g in ()
-
-(** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b)
-    with the extra requirement that get and put be PCM morphisms. *)
-noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
-  l: lens a b;
-  get_refine: s:a ->
-    Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
-  get_op: s:a -> t:a ->
-    Lemma
-      (requires composable p s t)
-      (ensures composable q (l.get s) (l.get t) /\ 
-               l.get (op p s t) == op q (l.get s) (l.get t))
-               (* Technically, this distributivity law is derivable from the one for put:
-                    get (s * t)
-                    = get (put (get s) s * put (get t) t)
-                    = get (put (get s * get t) (s * t))
-                    = get s * get t *)
-    [SMTPat (composable p s t); SMTPat (l.get (op p s t))];
-  put_refine: s:a -> v:b ->
-    Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
-    [SMTPat (p.refine (l.put v s))];
-  put_op: s:a -> t:a -> v:b -> w:b ->
-    Lemma
-      (requires composable p s t /\ composable q v w)
-      (ensures composable p (l.put v s) (l.put w t) /\
-               l.put (op q v w) (op p s t) == op p (l.put v s) (l.put w t))
-    [SMTPat (l.put (op q v w) (op p s t)); SMTPat (composable p (l.put v s) (l.put w t))];
-}
-let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
-let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
-let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.l f s
-
-let pcm_lens_compatible_get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (x y: 'a)
-: Lemma (requires compatible p x y) (ensures compatible q (get l x) (get l y))
-= compatible_elim p x y (compatible q (get l x) (get l y)) (fun frame_x ->
-  let _ = l.get_op frame_x x in
-  compatible_intro q (get l x) (get l y) (get l frame_x))
-
-(** The upd function of a pcm_lens lifts frame-preserving updates on the target to
-    frame-preserving updates on the source *)
+    
 let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
 : Lemma
     (requires frame_pres q f (get l s) v)
@@ -138,7 +149,7 @@ let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b
     let aux (frame:'a{composable p s frame})
     : Lemma (composable p (put l v s) frame /\
              (op p s frame == full ==> op p (put l v s) frame == upd l f full))
-    = l.get_op s frame;
+    = get_op l s frame;
       l.put_op s frame v (get l frame)
     in FStar.Classical.forall_intro aux)))
 
@@ -146,7 +157,7 @@ let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b
 let pcm_lens_id (#p: pcm 'a): pcm_lens p p = {
   l = lens_id; 
   get_refine = (fun _ -> ());
-  get_op = (fun _ _ -> ());
+  get_op_composable = (fun _ _ -> ());
   put_refine = (fun _ _ -> ());
   put_op = (fun _ _ _ _ -> ());
 }
@@ -157,10 +168,10 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
 {
   l = lens_comp l.l m.l;
   get_refine = (fun _ -> let _ = l.get_refine in let _ = m.get_refine in ());
-  get_op = (fun s t -> l.get_op s t; m.get_op (get l s) (get l t));
+  get_op_composable = (fun s t -> get_op l s t; get_op m (get l s) (get l t));
   put_refine = (fun s v -> let _ = l.put_refine in let _ = m.put_refine in let _ = l.get_refine in ());
   put_op = (fun s t v w ->
-    l.get_op s t;
+    get_op l s t;
     m.put_op (get l s) (get l t) v w;
     l.put_op s t (put m v (get l s)) (put m w (get l t)))
 }
@@ -214,16 +225,6 @@ noeq type ref (a: Type u#a) (b: Type u#b) = {
 let pts_to (r: ref 'a 'b) (v: 'b): M.slprop =
   M.pts_to r.r (put r.pl v (pcm_refine r.p r.re).P.p.one)
 
-(*
-
-TODO:
-- Lens for a field of a prod_pcm
-- Refinement for a case of a union_pcm
-- Lens (with corresponding refinement) for a case of a union_pcm
-- Types of basic Steel operations manipulating pts_to
-
-*)
-
 (** Basic lenses *)
 
 open Aggregates
@@ -240,7 +241,7 @@ let lens_fst #a #b : lens (a & b) a = {
 let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
   l = lens_fst;
   get_refine = (fun _ -> ());
-  get_op = (fun _ _ -> ());
+  get_op_composable = (fun _ _ -> ());
   put_refine = (fun _ _ -> ());
   put_op = (fun _ _ _ _ -> ());
 }
@@ -338,3 +339,85 @@ let init_pcm (p: pcm 'a): pcm (init 'a) = P.({
     | Initialized x -> p.refine x
     | _ -> True)
 })
+
+(** A lens for the k-th field of an n-ary product *)
+
+open FStar.FunctionalExtensionality
+
+let lens_field_get (#a:eqtype) f (k:a) (s:restricted_t a f): f k = s k
+let lens_field (#a:eqtype) f (k:a): lens (restricted_t a f) (f k) = {
+  get = lens_field_get f k;
+  put = fun_upd k;
+  get_put = (fun s v -> ());
+  put_get = (fun s -> ext (fun_upd k (lens_field_get f k s) s) s (fun _ -> ()));
+  put_put = (fun s v w -> ext (fun_upd k v (fun_upd k w s)) (fun_upd k v s) (fun _ -> ()));
+}
+
+(** lens_field is a pcm_lens for the n-ary product PCM *)
+
+(* TODO move to Aggregates.fst *)
+let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
+  (h:(k:'a -> Lemma (composable (p k) (x k) (y k))))
+: Lemma (composable (prod_pcm p) x y) = FStar.Classical.forall_intro h
+
+let field (#a:eqtype) #f (p:(k:a -> pcm (f k))) (k:a): pcm_lens (prod_pcm p) (p k) = {
+  l = lens_field f k;
+  get_refine = (fun s -> ());
+  get_op_composable = (fun s t -> ());
+  put_refine = (fun s v -> ());
+  put_op = (fun s t v w ->
+    prod_pcm_composable_intro p (fun_upd k v s) (fun_upd k w t) (fun _ -> ());
+    ext
+      (fun_upd k (op (p k) v w) (op (prod_pcm p) s t))
+      (op (prod_pcm p) (fun_upd k v s) (fun_upd k w t))
+      (fun _ -> ()));
+}
+
+(** The refinement of an n-ary union PCM to the k-th case *)
+
+let case_refinement_f (p:(k:'a -> pcm ('b k))) (k:'a): union 'b -> prop =
+  fun kx -> match kx with Some (|k', _|) -> k == k' | None -> False
+
+let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
+: refine_t (case_refinement_f p k)
+= Some (|k, (p k).P.p.one|)
+
+let case_refinement (p:(k:'a -> pcm ('b k))) (k:'a): pcm_refinement (union_pcm p) = {
+  f = case_refinement_f p k;
+  f_closed_under_op = (fun x y -> ());
+  new_one = case_refinement_new_one p k;
+  new_one_is_refined_unit = (fun (Some (|k', x|)) -> (p k).is_unit x)
+}
+
+(** A lens for the k-th case of an n-ary union *)
+
+let lens_case_get (p:(k:'a -> pcm ('b k))) (k:'a): refine_t (case_refinement_f p k) -> 'b k =
+  fun (Some (|_, v|)) -> v
+let lens_case_put (p:(k:'a -> pcm ('b k))) (k:'a) (v:'b k)
+: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k)
+= fun _ -> Some (|k, v|)
+  
+let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f p k)) ('b k) = {
+  get = lens_case_get p k;
+  put = lens_case_put p k;
+  get_put = (fun s v -> ());
+  put_get = (fun s -> ());
+  put_put = (fun s v w -> ());
+}
+
+(** lens_case is a pcm_lens for the k-th case of an n-ary union *)
+
+let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (pcm_refine (union_pcm p) (case_refinement p k)) (p k) = {
+  l = lens_case p k;
+  get_refine = (fun s -> ());
+  get_op_composable = (fun s t -> ());
+  put_refine = (fun s v -> ());
+  put_op = (fun s t v w -> ());
+}
+
+(*
+
+TODO:
+- Types of basic Steel operations manipulating pts_to
+
+*)
