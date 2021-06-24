@@ -84,7 +84,7 @@ let intro_lock_inv #a #u (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a))
   : SteelGhostT unit u
     (h_exists (fun v -> pts_to ptr full v `star` ghost_pts_to ghost half v))
     (fun _ -> lock_inv ptr ghost)
-  = rewrite_slprop _ _ (fun _ -> ())
+  = rewrite_slprop _ _ (fun _ -> assert_norm (lock_inv ptr ghost == h_exists (fun v -> pts_to ptr full v `star` ghost_pts_to ghost half v)))
 
 /// The type of a queue pointer.
 /// Contains the concrete pointer [ptr], the pointer to ghost state [ghost],

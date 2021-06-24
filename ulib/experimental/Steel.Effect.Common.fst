@@ -27,6 +27,8 @@ let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 
 let reveal_can_be_split () = ()
 
+let can_be_split_interp r r' h = ()
+
 let can_be_split_trans p q r = ()
 let can_be_split_star_l p q = ()
 let can_be_split_star_r p q = ()
@@ -35,13 +37,11 @@ let can_be_split_refl p = ()
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
 let reveal_equiv p q = ()
 
-unfold
-let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
+let valid_rmem (#frame:vprop) (h:rmem' frame) : prop =
+  forall (p p1 p2:vprop). can_be_split frame p /\ p == VStar p1 p2 ==>
+     (h p1, h p2) == h (VStar p1 p2)
 
-let mk_rmem r h =
-   FExt.on_dom_g
-     (r0:vprop{r `can_be_split` r0})
-     (unrestricted_mk_rmem r h)
+let lemma_valid_mk_rmem (r:vprop) (h:hmem r) = ()
 
 let reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma ((mk_rmem r h) r0 == sel_of r0 h)
@@ -53,6 +53,34 @@ let emp':vprop' =
     sel = fun _ -> ()}
 
 let reveal_emp () = ()
+
+let lemma_valid_focus_rmem #r h r0 =
+  Classical.forall_intro (Classical.move_requires (can_be_split_trans r r0))
+
+let rec lemma_frame_refl' (frame:vprop) (h0:rmem frame) (h1:rmem frame)
+  : Lemma ((h0 frame == h1 frame) <==> frame_equalities' frame h0 h1)
+  = match frame with
+    | VUnit _ -> ()
+    | VStar p1 p2 ->
+      can_be_split_star_l p1 p2;
+      can_be_split_star_r p1 p2;
+
+      let h01 : rmem p1 = focus_rmem h0 p1 in
+      let h11 : rmem p1 = focus_rmem h1 p1 in
+      let h02 = focus_rmem h0 p2 in
+      let h12 = focus_rmem h1 p2 in
+
+
+      lemma_frame_refl' p1 h01 h11;
+      lemma_frame_refl' p2 h02 h12
+
+let lemma_frame_equalities frame h0 h1 p =
+  let p1 : prop = h0 frame == h1 frame in
+  let p2 : prop = frame_equalities' frame h0 h1 in
+  lemma_frame_refl' frame h0 h1;
+  FStar.PropositionalExtensionality.apply p1 p2
+
+let elim_conjunction p1 p1' p2 p2' = ()
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()

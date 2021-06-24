@@ -1,5 +1,5 @@
 [
-  " è\u0016i◊Ym9í∏4å9T]+",
+  "HÕ\u0007\fR\u0003°7 í\u0000◊VœL.",
   [
     [
       "Steel.FramingTestSuite.test0",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b942cc871b85882d1a2201fb6cf76675"
+      "d69e6a77a372bfd4bd8b5a1f9155dcb4"
     ],
     [
       "Steel.FramingTestSuite.test1",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3411b23f7d8260cb7666984a77598219"
+      "cf13c779ae6d53a6c8b02b242d0567a8"
     ],
     [
       "Steel.FramingTestSuite.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a1fee4c361a3d1e7a015fe1ba6ec77f4"
+      "0e4d829f79a72d2480621d1cff451b59"
     ],
     [
       "Steel.FramingTestSuite.test3",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "63f6b9cf8208a7ad9913066c3a792495"
+      "9ec56967b570fc52c97cf613c04d22f3"
     ],
     [
       "Steel.FramingTestSuite.test4",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "2f7c487a1e73c4353b15731591a30508"
+      "64b5afa6935a75fca98ee86c7bc46b12"
     ],
     [
       "Steel.FramingTestSuite.test5",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "2b2116c008ab412d69090eb11c82d65a"
+      "80dc6eeafdc0bfe729c73baa1207b31b"
     ],
     [
       "Steel.FramingTestSuite.test6",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b455adca37cde7eca6b27d425392848c"
+      "41bd5d52d455bef2e6420a283624775e"
     ],
     [
       "Steel.FramingTestSuite.test7",
@@ -71,7 +71,25 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "44b55547ef9c7603175a65dae1fb9763"
+      "8df1b64a1661caf128f67e800b02eb85"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b3eb9d380449056f60f615e12b47bd19"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cb8a016f38ff07d5b52fab47efa3c110"
     ],
     [
       "Steel.FramingTestSuite.test_if3",
@@ -80,7 +98,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "df8589c55f7b6ffbc08c0354f8ef1848"
+      "39996882eded4f2ab54b24e6f1aacbfb"
     ],
     [
       "Steel.FramingTestSuite.test_if4",
@@ -89,7 +107,16 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "2555832f05926f99e9006175eb9a5fde"
+      "cbcad7caab043e982f28fbfe5a8b0ec3"
+    ],
+    [
+      "Steel.FramingTestSuite.test_if5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6b9df24da3d4ff3880fc6f0e179cd058"
     ],
     [
       "Steel.FramingTestSuite.test_if6",
@@ -98,7 +125,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3c345f34bdb783dc9c06bd159c2e78b8"
+      "03f6dbb7ad6fade928a8d866b9bfe935"
     ],
     [
       "Steel.FramingTestSuite.test_if7",
@@ -107,7 +134,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3708fba8a5b90c7907c43ec3292d431f"
+      "790e2fcade95f529a857c2fc0ef2450d"
     ],
     [
       "Steel.FramingTestSuite.test_if8",
@@ -116,7 +143,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a073d2ed15e9c7c5dc79cbe15a4d998e"
+      "a1ed22c15c277fd9e3b6f859d4331085"
     ],
     [
       "Steel.FramingTestSuite.test_if9",
@@ -125,7 +152,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "77f78ff9b378e1d89e5c9e7a1182d724"
+      "f7b4309ea98ea7e79f99c43293b188a2"
     ],
     [
       "Steel.FramingTestSuite.test_if10",
@@ -134,7 +161,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "88e520eaef9e406824a0a73fd1ffdf6f"
+      "8092693fad06023c287f1a34bd066b89"
     ],
     [
       "Steel.FramingTestSuite.test_if11",
@@ -143,7 +170,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "98dfb32813f319f1c0a6626869e8813b"
+      "9c36a4c385b161799e7b5f3da91ea809"
     ],
     [
       "Steel.FramingTestSuite.g",
@@ -163,7 +190,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1ee16ee67f72b5a46a215660d9cf1fc6"
+      "ce9765750f1d185e9c5102b4dbff5018"
     ]
   ]
 ]
