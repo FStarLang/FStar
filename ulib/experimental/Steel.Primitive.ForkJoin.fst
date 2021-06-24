@@ -25,55 +25,55 @@ open Steel.Reference
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let maybe_p (p:slprop) (v:bool) = if v then p else emp
+let maybe_p (p:vprop) (v:bool) = if v then p else emp
 
 [@@__reduce__]
-let lock_inv_pred (r:ref bool) (p:slprop) (v:bool) : slprop =
+let lock_inv_pred (r:ref bool) (p:vprop) (v:bool) : vprop =
   pts_to r full_perm v `star` maybe_p p v
 
-let lock_inv (r:ref bool) (p:slprop)
-  : slprop
+let lock_inv (r:ref bool) (p:vprop)
+  : vprop
   = h_exists (lock_inv_pred r p)
 
 noeq
-type thread (p:slprop u#1) = {
+type thread (p:vprop) = {
   r:ref bool;
   l:L.lock (lock_inv r p)
 }
 
-let intro_maybe_p_false (p:slprop)
+let intro_maybe_p_false (p:vprop)
   : SteelT unit emp (fun _ -> maybe_p p false)
-  = change_slprop emp (maybe_p p false) (fun _ -> ())
+  = rewrite_slprop emp (maybe_p p false) (fun _ -> ())
 
-let intro_maybe_p_true (p:slprop)
+let intro_maybe_p_true (p:vprop)
   : SteelT unit p (fun _ -> maybe_p p true)
-  = change_slprop p (maybe_p p true) (fun _ -> ())
+  = rewrite_slprop p (maybe_p p true) (fun _ -> ())
 
-let new_thread (p:slprop)
+let new_thread (p:vprop)
   : SteelT (thread p) emp (fun _ -> emp)
-  = let r = alloc false in
+  = let r = alloc_pt false in
     intro_maybe_p_false p;
     intro_exists false (lock_inv_pred r p);
     let l = L.new_lock (lock_inv r p) in
     let t = {r = r; l = l} in
     t
 
-let finish (#p:slprop) (t:thread p) (v:bool)
+let finish (#p:vprop) (t:thread p) (v:bool)
   : SteelT unit (pts_to t.r full_perm v `star` p) (fun _ -> emp)
-  = write t.r true;
+  = write_pt t.r true;
     intro_maybe_p_true p;
     intro_exists true (lock_inv_pred t.r p);
     L.release t.l
 
 
-let acquire (#p:slprop) (t:thread p)
+let acquire (#p:vprop) (t:thread p)
   : SteelT bool emp (fun b -> pts_to t.r full_perm b)
   = L.acquire t.l;
-    let b = read_refine #_ #full_perm (maybe_p p) t.r in
+    let b = read_refine_pt #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
     return b
 
-let spawn (#p #q:slprop)
+let spawn (#p #q:vprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))
           (t:thread q)
           (_:unit)
@@ -82,7 +82,7 @@ let spawn (#p #q:slprop)
     f ();
     finish t b
 
-let fork (#p #q #r #s:slprop)
+let fork (#p #q #r #s:vprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
@@ -90,14 +90,14 @@ let fork (#p #q #r #s:slprop)
     let _ = par (spawn f t) (g t) in
     ()
 
-let rec join (#p:slprop) (t:thread p)
+let rec join (#p:vprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
   = let _ = L.acquire t.l in
-    let b = read_refine (maybe_p p) t.r in
+    let b = read_refine_pt (maybe_p p) t.r in
     if b then
-      (change_slprop (lock_inv_pred t.r p b) p (fun _ -> ()); noop ())
+      (rewrite_slprop (lock_inv_pred t.r p b) p (fun _ -> ()); noop ())
     else
-      (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p false) (fun _ -> ());
+      (rewrite_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p false) (fun _ -> ());
       intro_exists false (lock_inv_pred t.r p);
       L.release t.l;
       join t)
