@@ -581,21 +581,21 @@ let rec vshare
     let g_hd : Ghost.erased t = gget (vptrp (GPair?.fst hd_tl) p) in
     let g_tl : Ghost.erased (Seq.lseq t (Seq.length (GPair?.snd hd_tl))) = gget (varray2 (GPair?.snd hd_tl) p) in
     assert (Ghost.reveal g == Seq.cons (Ghost.reveal g_hd) g_tl);
-    let h_hd = share (GPair?.fst hd_tl) p in
-    let g_hd_1 : Ghost.erased t = gget (vptrp (GPair?.fst hd_tl) h_hd) in
+    share (GPair?.fst hd_tl);
+    let g_hd_1 : Ghost.erased t = gget (vptrp (GPair?.fst hd_tl) _) in
     assert (Ghost.reveal g_hd_1 == Ghost.reveal g_hd);
     let h = vshare (GPair?.snd hd_tl) p in
     let g_tl_1 : Ghost.erased (Seq.lseq t (Seq.length (GPair?.snd hd_tl))) = gget (varray2 (GPair?.snd hd_tl) h) in
     assert (Ghost.reveal g_tl_1 == Ghost.reveal g_tl);
     change_equal_slprop
-      (vptrp (GPair?.fst hd_tl) h_hd)
+      (vptrp (GPair?.fst hd_tl) _)
       (vptrp (GPair?.fst hd_tl) h);
     let a1 = intro_vcons h (GPair?.fst hd_tl) (GPair?.snd hd_tl) in
     change_equal_slprop
       (varray2 a1 h)
       (varray2 a h);
     change_equal_slprop
-      (vptrp (GPair?.fst hd_tl) h_hd)
+      (vptrp (GPair?.fst hd_tl) _)
       (vptrp (GPair?.fst hd_tl) h);
     let a2 = intro_vcons h (GPair?.fst hd_tl) (GPair?.snd hd_tl) in
     change_equal_slprop
@@ -642,7 +642,7 @@ let rec vgather
       (vptrp (GPair?.fst hd_tl_2) p2)
       (vptrp (GPair?.fst hd_tl_1) p2);
     let g_hd_2 : Ghost.erased t = gget (vptrp (GPair?.fst hd_tl_1) p2) in
-    let p = gather (GPair?.fst hd_tl_1) p1 p2 in
+    let p = gather_gen (GPair?.fst hd_tl_1) p1 p2 in
     let g_hd : Ghost.erased t = gget (vptrp (GPair?.fst hd_tl_1) p) in
     assert (Ghost.reveal g_hd == Ghost.reveal g_hd_1);
     assert (Ghost.reveal g_hd == Ghost.reveal g_hd_2);
