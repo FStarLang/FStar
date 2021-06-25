@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "3a2ae4b8c7718517e945ad08e7115fd1"
+      "e01d794921ffab094392932e54ed8675"
     ],
     [
       "Steel.Utils.change_slprop_ens",
@@ -40,7 +40,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "423844b17a10924ecee5d4c0ddb8189d"
+      "0d7be45a6bb7ab3cae1a89fbfd3be4ed"
     ],
     [
       "Steel.Utils.pure_as_ens",
@@ -60,7 +60,7 @@
         "typing_Steel.Effect.Common.to_vprop_", "typing_Steel.Memory.pure"
       ],
       0,
-      "0f5d6d161bbbec040c4451570c736cbb"
+      "0c34f2a2c9336b6298f594629d10980b"
     ],
     [
       "Steel.Utils.rewrite",
@@ -80,7 +80,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "9680c37716980fec63542dd29410945f"
+      "44a01654dd14ab5a98ac3d8272267daf"
     ],
     [
       "Steel.Utils.extract_pure",
@@ -100,7 +100,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "d46dc3f4fe0c5e965f11d80de2d7b9f4"
+      "cea0e09898e9c0bbc6f94a55029eda02"
     ],
     [
       "Steel.Utils.dup_pure",
@@ -109,7 +109,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "5f23737003dac6f81994adc1709386f8"
+      "8caffde93eb287d0574b05adacedc299"
     ],
     [
       "Steel.Utils.emp_unit",
@@ -117,25 +117,21 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@MaxFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Steel.Effect.Common.VStar",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "equation_Steel.Effect.Common.star",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "lemma_Steel.Memory.reveal_equiv",
         "projection_inverse_Steel.Effect.Common.VStar__0",
         "projection_inverse_Steel.Effect.Common.VStar__1",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_Steel.Effect.Common.emp_",
-        "typing_Steel.Effect.Common.hp_of",
+        "typing_Steel.Effect.Common.emp", "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.star", "typing_Steel.Memory.emp",
         "typing_Steel.Memory.star"
       ],
       0,
-      "bed8342225278308cb4058178119ed16"
+      "b214a0a9f49521ef5b4d93c0809231f8"
     ]
   ]
 ]
