@@ -930,7 +930,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
   let app = S.mk (Tm_app (lid, [repr', as_implicit false])) range in
   S.mk (Tm_meta (app, Meta_desugared
-                 (Machine_integer (repr, signedness, width)))) range
+                 (Machine_integer (signedness, width)))) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
   let mk e = S.mk e top.range in

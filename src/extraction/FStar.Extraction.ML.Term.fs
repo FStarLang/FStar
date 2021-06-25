@@ -1275,11 +1275,22 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
            *)
           ml_unit, E_ERASABLE, MLTY_Erased
 
-        | Tm_meta(t, Meta_desugared (Machine_integer (repr, signedness, width))) ->
-            let _, ty, _ = TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in
-            let ml_ty = term_as_mlty g ty in
-            let ml_const = Const_int (repr, Some (signedness, width)) in
-            with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty
+        | Tm_meta(t, Meta_desugared (Machine_integer (signedness, width))) ->
+
+            let t = SS.compress t in
+            (match t.n with
+             (* Should we check if hd here is [__][u]int_to_t? *)
+            | Tm_app(hd, [x, _]) ->
+              (let x = SS.compress x in
+               match x.n with
+               | Tm_constant (Const_int (repr, _)) ->
+                 (let _, ty, _ =
+                   TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in
+                 let ml_ty = term_as_mlty g ty in
+                 let ml_const = Const_int (repr, Some (signedness, width)) in
+                 with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty)
+               |_ -> failwith "Argument in desugared machine int not a Const_int")
+            | _ -> failwith "Desugared machine integer isn't a Tm_app")
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->

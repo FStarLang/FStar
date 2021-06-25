@@ -1573,7 +1573,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
-                      | Meta_desugared (Machine_integer (_,_,_)) ->
+                      | Meta_desugared (Machine_integer (_,_)) ->
                         (* meta doesn't block reduction,
                            but we need to put the label back *)
                         norm cfg env (Meta(env,m,t.pos)::stack) head

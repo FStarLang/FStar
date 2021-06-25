@@ -4596,7 +4596,7 @@ let rec (norm :
                                    stack1) head
                              | FStar_Syntax_Syntax.Meta_desugared
                                  (FStar_Syntax_Syntax.Machine_integer
-                                 (uu___7, uu___8, uu___9)) ->
+                                 (uu___7, uu___8)) ->
                                  norm cfg env1
                                    ((Meta
                                        (env1, m,
