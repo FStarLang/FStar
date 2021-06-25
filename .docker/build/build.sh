@@ -166,7 +166,8 @@ function update_version_number () {
     # Read the latest version number
     last_version_number=$(sed 's!'"$dev"'!!' < version.txt)
 
-    # If the only diffs are the snapshot hints, then we don't need to
+    # If the only diffs are the snapshot hints and/or CI scripts,
+    # then we don't need to
     # update the version number.  This check will fail if the version
     # number does not correspond to any existing release.  This is
     # sound, since if the version number is not a tag, it means that
@@ -174,7 +175,8 @@ function update_version_number () {
     # were more than just *.hints diffs, so we can update the version
     # number again.  Please mind the initial 'v' introducing the
     # version tag
-    if git diff --exit-code v$last_version_number..HEAD -- ':(exclude)*.hints' ; then
+    if git diff --exit-code v$last_version_number..HEAD -- ':(exclude)*.hints' ':(exclude).docker' ':(exclude).ci' ':(exclude).scripts' ; then
+	echo "No diffs since latest release other than hints and/or CI scripts"
 	return 0
     fi
 
@@ -234,6 +236,8 @@ function refresh_hints() {
     # From: https://stackoverflow.com/a/2659808
     if ! git diff-index --quiet --cached HEAD -- ; then
 	git commit -m "[CI] $msg"
+    else
+	echo "Hints/snapshot update: no diff"
     fi
 
     # Update the version number in version.txt and fstar.opam, and if
@@ -247,6 +251,7 @@ function refresh_hints() {
 
     # If nothing has been committed (neither hints nor version number), then exit.
     if [[ $commit = $last_commit ]] ; then
+       echo "Nothing has been committed"
        return 0
     fi
 
