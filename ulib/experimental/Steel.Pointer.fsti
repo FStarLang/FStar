@@ -747,14 +747,13 @@ val split
     (fun res -> vptr_range p (GPair?.fst res) `star` vptr_range p (GPair?.snd res))
     (fun _ -> True)
     (fun h res h' ->
-      let GPair r1 r2 = res in
       let s = h (vptr_range p r) in
       let s1 = h' (vptr_range p (GPair?.fst res)) in
       let s2 = h' (vptr_range p (GPair?.snd res)) in
       g_is_null p == false /\
       res == g_split p r /\
-      s1 == Seq.slice s 0 (r1.range_to - r1.range_from) /\
-      s2 == Seq.slice s (r1.range_to - r1.range_from) (Seq.length s) /\
+      s1 == Seq.slice s 0 ((GPair?.fst res).range_to - (GPair?.fst res).range_from) /\
+      s2 == Seq.slice s ((GPair?.fst res).range_to - (GPair?.fst res).range_from) (Seq.length s) /\
       s == s1 `Seq.append` s2
     )
 
