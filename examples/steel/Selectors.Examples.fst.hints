@@ -1,5 +1,5 @@
 [
-  "ŠM÷¨\u000eè\u0017ÿEMZˆ\u0001+«—",
+  "\u001bÙ\"r¯-ƒ¢‰1‡š5T)»",
   [
     [
       "Selectors.Examples.swap",
@@ -29,7 +29,7 @@
         "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "96041c10604ced8294a3853668934efb"
+      "059ac176acaba195a8c00a3a7e25275a"
     ],
     [
       "Selectors.Examples.test0",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "023df922f0916f62c2ca7a35cff9bc89"
+      "bb707816ae04f326df3965128ff3bbb4"
     ],
     [
       "Selectors.Examples.test1",
@@ -74,7 +74,7 @@
         "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "af0c29562133ed1074857dbdeb7668c3"
+      "be4ebb5881310e904b71526174d3cd31"
     ],
     [
       "Selectors.Examples.test2",
@@ -105,7 +105,7 @@
         "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "bf1075943b9f4673a9468d2782174d35"
+      "aeb0310441aee7db218a9a32a82c774a"
     ],
     [
       "Selectors.Examples.test3",
@@ -119,7 +119,30 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0dacd80f803e02d068dd489b472aca71"
+      "b0efae2f5089f7b1c3e973e34fcf9b45"
+    ],
+    [
+      "Selectors.Examples.test4",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "20b6bbaf5075e26ade4ff3d5733fd794"
+    ],
+    [
+      "Selectors.Examples.test5",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "6dad87d563ec0e4642acde8516f63e9f"
     ]
   ]
 ]
