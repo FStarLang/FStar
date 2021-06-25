@@ -174,7 +174,7 @@ function update_version_number () {
     # were more than just *.hints diffs, so we can update the version
     # number again.  Please mind the initial 'v' introducing the
     # version tag
-    if git diff v$last_version_number..HEAD -- ':(exclude)*.hints' ; then
+    if git diff --exit-code v$last_version_number..HEAD -- ':(exclude)*.hints' ; then
 	return 0
     fi
 
