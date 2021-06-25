@@ -1,4 +1,4 @@
-.PHONY: all package clean boot 0 1 2 3 hints bench libs output install uninstall
+.PHONY: all package clean boot 0 1 2 3 hints bench libs output install uninstall package_unknown_platform no-ulib-checked
 
 include .common.mk
 
@@ -25,8 +25,11 @@ uninstall:
 	  $(PREFIX)/bin/fstar.exe \
 	  $(PREFIX)/share/fstar
 
-package:
+package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
+
+package_unknown_platform: all
+	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
 
 clean:
 	$(Q)+$(MAKE) -C ulib clean

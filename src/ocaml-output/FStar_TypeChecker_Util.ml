@@ -1901,24 +1901,17 @@ let (mk_wp_bind :
                               FStar_Parser_Const.effect_Tot_lid
                               FStar_Pervasives_Native.None
                               [FStar_Syntax_Syntax.TOTAL])) in
-                    let r11 =
-                      FStar_Syntax_Syntax.mk
-                        (FStar_Syntax_Syntax.Tm_constant
-                           (FStar_Const.Const_range r1)) r1 in
                     let wp_args =
-                      let uu___1 = FStar_Syntax_Syntax.as_arg r11 in
+                      let uu___1 = FStar_Syntax_Syntax.as_arg t1 in
                       let uu___2 =
-                        let uu___3 = FStar_Syntax_Syntax.as_arg t1 in
+                        let uu___3 = FStar_Syntax_Syntax.as_arg t2 in
                         let uu___4 =
-                          let uu___5 = FStar_Syntax_Syntax.as_arg t2 in
+                          let uu___5 = FStar_Syntax_Syntax.as_arg wp1 in
                           let uu___6 =
-                            let uu___7 = FStar_Syntax_Syntax.as_arg wp1 in
-                            let uu___8 =
-                              let uu___9 =
-                                let uu___10 = mk_lam wp2 in
-                                FStar_Syntax_Syntax.as_arg uu___10 in
-                              [uu___9] in
-                            uu___7 :: uu___8 in
+                            let uu___7 =
+                              let uu___8 = mk_lam wp2 in
+                              FStar_Syntax_Syntax.as_arg uu___8 in
+                            [uu___7] in
                           uu___5 :: uu___6 in
                         uu___3 :: uu___4 in
                       uu___1 :: uu___2 in

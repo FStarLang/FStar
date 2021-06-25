@@ -3343,26 +3343,21 @@ let (tc_non_layered_eff_decl :
                                              let k =
                                                let uu___11 =
                                                  let uu___12 =
-                                                   FStar_Syntax_Syntax.null_binder
-                                                     FStar_Syntax_Syntax.t_range in
+                                                   FStar_Syntax_Syntax.mk_binder
+                                                     a in
                                                  let uu___13 =
                                                    let uu___14 =
                                                      FStar_Syntax_Syntax.mk_binder
-                                                       a in
+                                                       b in
                                                    let uu___15 =
                                                      let uu___16 =
-                                                       FStar_Syntax_Syntax.mk_binder
-                                                         b in
+                                                       FStar_Syntax_Syntax.null_binder
+                                                         wp_sort_a in
                                                      let uu___17 =
                                                        let uu___18 =
                                                          FStar_Syntax_Syntax.null_binder
-                                                           wp_sort_a in
-                                                       let uu___19 =
-                                                         let uu___20 =
-                                                           FStar_Syntax_Syntax.null_binder
-                                                             wp_sort_a_b in
-                                                         [uu___20] in
-                                                       uu___18 :: uu___19 in
+                                                           wp_sort_a_b in
+                                                       [uu___18] in
                                                      uu___16 :: uu___17 in
                                                    uu___14 :: uu___15 in
                                                  uu___12 :: uu___13 in
@@ -3817,15 +3812,6 @@ let (tc_non_layered_eff_decl :
                                                         FStar_Syntax_Util.get_bind_repr in
                                                     FStar_All.pipe_right
                                                       uu___19 FStar_Util.must in
-                                                  let r =
-                                                    let uu___19 =
-                                                      FStar_Syntax_Syntax.lid_as_fv
-                                                        FStar_Parser_Const.range_0
-                                                        FStar_Syntax_Syntax.delta_constant
-                                                        FStar_Pervasives_Native.None in
-                                                    FStar_All.pipe_right
-                                                      uu___19
-                                                      FStar_Syntax_Syntax.fv_to_tm in
                                                   let uu___19 =
                                                     fresh_a_and_wp () in
                                                   match uu___19 with
@@ -3901,40 +3887,35 @@ let (tc_non_layered_eff_decl :
                                                                    =
                                                                    let uu___24
                                                                     =
-                                                                    let uu___25
-                                                                    =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     a in
-                                                                    let uu___26
+                                                                   let uu___25
                                                                     =
-                                                                    let uu___27
+                                                                    let uu___26
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     b in
-                                                                    let uu___28
+                                                                    let uu___27
                                                                     =
-                                                                    let uu___29
+                                                                    let uu___28
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     wp_f in
-                                                                    let uu___30
+                                                                    let uu___29
                                                                     =
-                                                                    let uu___31
+                                                                    let uu___30
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     wp_g in
-                                                                    [uu___31] in
-                                                                    uu___29
+                                                                    [uu___30] in
+                                                                    uu___28
                                                                     ::
-                                                                    uu___30 in
-                                                                    uu___27
+                                                                    uu___29 in
+                                                                    uu___26
                                                                     ::
-                                                                    uu___28 in
-                                                                    uu___25
-                                                                    ::
-                                                                    uu___26 in
-                                                                   r ::
-                                                                    uu___24 in
+                                                                    uu___27 in
+                                                                   uu___24 ::
+                                                                    uu___25 in
                                                                  FStar_List.map
                                                                    FStar_Syntax_Syntax.as_arg
                                                                    uu___23 in

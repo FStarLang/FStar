@@ -37,7 +37,7 @@ let gmst_return (s:Type) (a:Type) (x:a) (s0:s) (p:gmst_post s a s0)
   = forall v. v == x ==> p (fun s0 s1 -> s0 == s1) v s0
 
 unfold
-let gmst_bind (s:Type) (r:range) (a:Type) (b:Type)
+let gmst_bind (s:Type) (a:Type) (b:Type)
               (wp1:gmst_wp s a) (wp2: (a -> GTot (gmst_wp s b)))
               (s0:s) (p:gmst_post s b s0) 
   = wp1 s0 (fun rel1 x s1 -> wp2 x s1 (fun rel2 -> p (rel2 @ rel1)))

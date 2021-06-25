@@ -17,6 +17,7 @@
 module Steel.Effect.Atomic
 
 open Steel.Memory
+module T = FStar.Tactics
 include Steel.Effect.Common
 
 /// This module defines atomic and ghost variants of the Steel effect
@@ -66,7 +67,7 @@ let return_req (p:vprop) : req_t p = fun _ -> True
 /// and return leaves selectors of all resources in [p] unchanged
 unfold
 let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
-  fun h0 r h1 -> normal (r == x /\ frame_equalities (p x) h0 h1)
+  fun h0 r h1 -> r == x /\ frame_equalities (p x) h0 (focus_rmem h1 (p x))
 
 /// Monadic return combinator for the Steel effect. It is parametric in the postcondition
 /// The vprop precondition is annotated with the return_pre predicate to enable special handling,
@@ -92,14 +93,14 @@ let bind_req (#a:Type)
   (frame_f:vprop) (frame_g:a -> vprop)
   (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
 : req_t (pre_f `star` frame_f)
-= fun m0 -> normal (
+= fun m0 ->
   req_f (focus_rmem m0 pre_f) /\
   (forall (x:a) (h1:hmem (post_f x `star` frame_f)).
     (ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
       frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f))
     ==> pr x /\
       (can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
-      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)))))
+      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x))))
 
 /// Logical postcondition for the composition (bind) of two Steel computations:
 /// The precondition of the first computation was satisfied in the initial state, and there
@@ -118,7 +119,7 @@ let bind_ens (#a:Type) (#b:Type)
   (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
 : ens_t (pre_f `star` frame_f) b post
-= fun m0 y m2 -> normal (
+= fun m0 y m2 ->
   req_f (focus_rmem m0 pre_f) /\
   (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
     pr x /\
@@ -130,7 +131,7 @@ let bind_ens (#a:Type) (#b:Type)
     frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
     frame_equalities (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
     ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
-    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y)))))
+    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y))))
 
 /// Steel atomic effect combinator to compose two Steel atomic computations
 /// Separation logic VCs are squashed goals passed as implicits, annotated with the framing_implicit
@@ -175,11 +176,15 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g pre_f))
   (_:squash (equiv_forall post_f post_g))
 : pure_pre
-= (forall (h0:hmem pre_g). normal (req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f))) /\
-  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). normal (
+// The call to rewrite_with_tactic allows us to reduce VCs in a controlled way, once all
+// uvars have been resolved.
+// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
+= T.rewrite_with_tactic vc_norm (squash (
+  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f)) /\
+  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-    )
   )
+ ))
 
 /// Subtyping combinator for Steel atomic computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -213,10 +218,9 @@ let if_then_else_req
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> normal (
+= fun h ->
     (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
-  )
 
 /// Logical postcondition for the if_then_else combinator
 unfold
@@ -227,10 +231,9 @@ let if_then_else_ens (#a:Type)
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> normal (
+= fun h0 x h1 ->
     (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
     ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
-  )
 
 /// If_then_else combinator for Steel computations.
 /// The soundness of this combinator is automatically proven with respect to the subcomp
@@ -314,7 +317,7 @@ unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> normal ((wp (fun x -> (req x) m) /\ as_requires wp))
+= fun m -> wp (fun x -> (req x) m) /\ as_requires wp
 
 /// Logical postcondition of a Pure and a SteelAtomic composition.
 /// There exists an intermediate value (the output of the Pure computation) such that
@@ -324,7 +327,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
 : ens_t pre b post
-= fun m0 r m1 -> normal ((as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))))
+= fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))
 
 /// The composition combinator
 val bind_pure_steela_ (a:Type) (b:Type)
@@ -450,21 +453,12 @@ val as_atomic_action_ghost (#a:Type u#a)
 
 open FStar.Ghost
 
-/// Only used to implement get below. Using reflection to define get inside the fst
-/// leads to verification issues because the repr is not abstract
-private
-val get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
-  true opened Unobservable p (fun _ -> p)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
-
 /// Returning the current global selector in the context
-let get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
+val get (#p:vprop) (#opened:inames) (_:unit) : SteelGhostF (erased (rmem p))
   opened
   p (fun _ -> p)
   (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
-  = SteelGhost?.reflect (get0 ())
+  (ensures fun h0 r h1 -> frame_equalities p h0 h1 /\ frame_equalities p r h1)
 
 /// Returning the current value of the selector of vprop [p], as long as [p] is in the context
 let gget (#opened:inames) (p: vprop) : SteelGhost (erased (t_of p))
@@ -528,43 +522,21 @@ val change_slprop_rel_with_cond (#opened:inames)
 
 (* Inferring the validity of a pure proposition from the validity of a vprop in the current context *)
 
-/// Same issue as for get above
-private
-val extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-    (ensures fact)
-  ) : repr unit false opened Unobservable p (fun _ -> p)
-      (fun h -> h p == reveal vp)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-
-
-let extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+val extract_info (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> h p == reveal vp)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-  = SteelGhost?.reflect (extract_info0 p vp fact l)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
 
-private
-val extract_info_raw0 (#opened:inames) (p:vprop) (fact:prop)
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m)
-    (ensures fact)
-  ) : repr unit false opened Unobservable p (fun _ -> p)
-      (fun h -> True)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-
-let extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
+val extract_info_raw (#opened:inames) (p:vprop) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m)
     (ensures fact)
   ) : SteelGhost unit opened p (fun _ -> p)
       (fun h -> True)
-      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
-  = SteelGhost?.reflect (extract_info_raw0 p fact l)
+      (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
 
 /// A noop operator, occasionally useful for forcing framing of a subsequent computation
 val noop (#opened:inames) (_:unit)
@@ -582,19 +554,11 @@ val sladmit (#a:Type)
             (_:unit)
   : SteelGhostF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
-/// Same issue as get above
-private
-val slassert0 (#opened:inames) (p:vprop) : repr unit
-  false opened Unobservable p (fun _ -> p)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1))
-
 /// Asserts the validity of vprop [p] in the current context
-let slassert (#opened_invariants:_) (p:vprop)
+val slassert (#opened_invariants:_) (p:vprop)
   : SteelGhost unit opened_invariants p (fun _ -> p)
                   (requires fun _ -> True)
-                  (ensures fun h0 _ h1 -> normal (frame_equalities p h0 h1))
-  = SteelGhost?.reflect (slassert0 p)
+                  (ensures fun h0 _ h1 -> frame_equalities p h0 h1)
 
 /// Drops vprop [p] from the context. Although our separation logic is affine,
 /// the frame inference tactic treats it as linear.
@@ -642,18 +606,18 @@ val elim_pure (#uses:_) (p:prop)
 /// with an informative type, but the previous computation was ghost.
 /// Else, the returned value will be given type SteelGhost, and F* will fail to typecheck
 /// the program as it will try to lift a SteelGhost computation with an informative return type
-let return (#a:Type u#a)
+val return (#a:Type u#a)
   (#opened_invariants:inames)
   (#p:a -> vprop)
   (x:a)
   : SteelAtomicBase a true opened_invariants Unobservable
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
-  = SteelAtomicBase?.reflect (return_ a x opened_invariants #p)
 
 (* Lifting the separation logic exists combinator to vprop *)
 
 /// The exists separation logic combinator
+let h_exists_sl' (#a:Type u#b) (p: (a -> vprop)) : a -> slprop = fun x -> hp_of (p x)
 let h_exists_sl (#a:Type u#b) (p: (a -> vprop)) : slprop = h_exists (fun x -> hp_of (p x))
 [@@__steel_reduce__]
 unfold let h_exists #a (p:a -> vprop) : vprop = to_vprop (h_exists_sl p)
@@ -741,16 +705,16 @@ val with_invariant_g (#a:Type)
 val intro_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelGhost unit opened v (fun _ -> vrefine v p)
-  (requires (fun h -> p (h v)))
-  (ensures (fun h _ h' -> normal (h' (vrefine v p) == h v)))
+  (requires fun h -> p (h v))
+  (ensures fun h _ h' -> h' (vrefine v p) == h v)
 
 /// We can transform back vprop [v] refined with predicate [p] to the underlying [v],
 /// where [p] holds on the selector of [v]
 val elim_vrefine (#opened:inames)
   (v: vprop) (p: (normal (t_of v) -> Tot prop))
 : SteelGhost unit opened (vrefine v p) (fun _ -> v)
-  (requires (fun _ -> True))
-  (ensures (fun h _ h' -> normal (h' v == h (vrefine v p)) /\ p (h' v)))
+  (requires fun _ -> True)
+  (ensures fun h _ h' -> h' v == h (vrefine v p) /\ p (h' v))
 
 /// Introducing a dependent star for [v] and [q]
 val intro_vdep (#opened:inames)

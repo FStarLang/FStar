@@ -85,8 +85,8 @@ let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
-let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp"
-let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp"
+let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
+let (pure_assume_wp_lid : FStar_Ident.lident) = pconst "pure_assume_wp0"
 let (assert_norm_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assert_norm"]
 let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
@@ -438,6 +438,8 @@ let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
 let (by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "with_tactic"]
+let (rewrite_by_tactic_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Effect"; "rewrite_with_tactic"]
 let (synth_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let (assert_by_tactic_lid : FStar_Ident.lid) =

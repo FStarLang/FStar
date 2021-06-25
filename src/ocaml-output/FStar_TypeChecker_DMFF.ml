@@ -3905,25 +3905,7 @@ let (cps_and_elaborate :
                                            match uu___14 with
                                            | FStar_Syntax_Syntax.Tm_abs
                                                (binders, body, what) ->
-                                               let r =
-                                                 FStar_Syntax_Syntax.lid_as_fv
-                                                   FStar_Parser_Const.range_lid
-                                                   (FStar_Syntax_Syntax.Delta_constant_at_level
-                                                      Prims.int_one)
-                                                   FStar_Pervasives_Native.None in
-                                               let uu___15 =
-                                                 let uu___16 =
-                                                   let uu___17 =
-                                                     let uu___18 =
-                                                       mk
-                                                         (FStar_Syntax_Syntax.Tm_fvar
-                                                            r) in
-                                                     FStar_Syntax_Syntax.null_binder
-                                                       uu___18 in
-                                                   [uu___17] in
-                                                 FStar_List.append uu___16
-                                                   binders in
-                                               FStar_Syntax_Util.abs uu___15
+                                               FStar_Syntax_Util.abs binders
                                                  body what
                                            | uu___15 ->
                                                raise_error

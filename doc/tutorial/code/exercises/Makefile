@@ -53,10 +53,15 @@ include $(FSTAR_ULIB)/ml/Makefile.include
 out:
 	mkdir -p out
 
+
+HAS_OCAMLFIND := $(shell which ocamlfind 2>/dev/null)
+
 Ex01a-ocaml: out Ex01a.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
+ifdef HAS_OCAMLFIND
 	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
 	-./Ex01a.exe
+endif
 
 # # Parameter for interactive mode
 # %.fst-in: 

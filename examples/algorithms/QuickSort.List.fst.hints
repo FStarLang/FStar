@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d7aa90835309a3bdb20eaca3688ef827"
+      "2629c1c38d49a85003c01b9795d942e2"
     ],
     [
       "QuickSort.List.count",
@@ -32,7 +32,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "af81dc6fc6e1707f630d4d6c332b7b8f"
+      "465ed9d2f383169d7534d613d20a2588"
     ],
     [
       "QuickSort.List.mem_count",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "cdb8a60aab9eccea2e20f0e56bc14dcf"
+      "b80f084713b20bb00d68075659cbc920"
     ],
     [
       "QuickSort.List.partition",
@@ -78,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "48cdadf4aec818a9d40f55f91164a55b"
+      "89655146c7b8f693c37f9e97a717c126"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -133,7 +133,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "e77abe1e3edbfe130c7cf11771073569"
+      "c6641bd2b5248263fad6f901d7e24cdb"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -180,7 +180,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "7315bdaa8aeba1f5b913d0ac1d33135e"
+      "edfa489ec97f3d8c9fea43d7db544309"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -194,7 +194,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41a071566ef3cee6d538d5d8c155c1a9"
+      "3f05fef34e1f25ce3d9e85c4a7ab6094"
     ],
     [
       "QuickSort.List.append_count",
@@ -230,7 +230,7 @@
         "typing_FStar.List.Tot.Base.append", "typing_QuickSort.List.count"
       ],
       0,
-      "19ab47695c86cc5ed61fab75628ab45a"
+      "a407bb9d85c06d698cb98a598a2a2880"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -260,7 +260,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "1be4d5bfdc672757fd30818283d24662"
+      "c8693e729682aae4cb54c0929b0491c1"
     ],
     [
       "QuickSort.List.quicksort",
@@ -315,7 +315,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "80554e8305ee0eb6f276396f9cc85376"
+      "50fc5ac0deb85fa9af01eb73c460a559"
     ]
   ]
 ]
