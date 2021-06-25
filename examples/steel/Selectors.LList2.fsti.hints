@@ -12,11 +12,11 @@
         "equation_Prims.squash",
         "function_token_typing_Steel.Effect.Common.selector_tactic",
         "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_e44fed059093baa0f6da59d6205221f3",
+        "refinement_interpretation_Tm_refine_13b6088eb7985d6ce1200dc46f7ae42b",
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "452c33305ec9c166f826a121cc6d3470"
+      "92ba538540137571f46b88373b7cc35e"
     ],
     [
       "Selectors.LList2.tail",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "f7999153150c28bbeccf52e1d6d0a351"
+      "217fd0e60f1260807765ca5fb11ab847"
     ]
   ]
 ]

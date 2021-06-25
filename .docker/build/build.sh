@@ -157,6 +157,49 @@ function fetch_mitls() {
     export_home MITLS "$(pwd)/mitls-fstar"
 }
 
+# Update the version number in version.txt and fstar.opam
+
+function update_version_number () {
+    # version suffix string
+    local dev='~dev'
+
+    # Read the latest version number
+    last_version_number=$(sed 's!'"$dev"'!!' < version.txt)
+
+    # If the only diffs are the snapshot hints and/or CI scripts,
+    # then we don't need to
+    # update the version number.  This check will fail if the version
+    # number does not correspond to any existing release.  This is
+    # sound, since if the version number is not a tag, it means that
+    # it has already been updated since the latest release, so there
+    # were more than just *.hints diffs, so we can update the version
+    # number again.  Please mind the initial 'v' introducing the
+    # version tag
+    if git diff --exit-code v$last_version_number..HEAD -- ':(exclude)*.hints' ':(exclude).docker' ':(exclude).ci' ':(exclude).scripts' ; then
+	echo "No diffs since latest release other than hints and/or CI scripts"
+	return 0
+    fi
+
+    # Create a new version number.  Fail if it is identical to the
+    # last version number. In other words, this task should be run at
+    # most once a day.
+    this_date=$(date '+%Y.%m.%d')
+    version_number="$this_date""$dev"
+    [[ $version_number != $last_version_number ]]
+
+    # Update it in version.txt
+    echo $version_number > version.txt
+
+    # Update it in fstar.opam
+    sed -i 's!^version:.*$!version: "'$version_number'"!' fstar.opam
+
+    # Commit the new version number. This is guaranteed to be a
+    # nonempty change, since version numbers were tested to be
+    # different
+    git add -u version.txt fstar.opam
+    git commit -m "[CI] bump version number to $version_number"
+}
+
 function refresh_fstar_hints() {
     refresh_hints "git@github.com:FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
 }
@@ -176,6 +219,9 @@ function refresh_hints() {
     CI_BRANCH=${branchname##refs/heads/}
     echo "Current branch_name=$CI_BRANCH"
 
+    # Record the latest commit
+    last_commit=$(git rev-parse HEAD)
+    
     # Add all the hints, even those not under version control
     find $hints_dir/doc -iname '*.hints' | xargs git add
     find $hints_dir/examples -iname '*.hints' | xargs git add
@@ -186,17 +232,29 @@ function refresh_hints() {
     # outputting the list of files to stdout
     eval "$extra"
 
-    # If no changes were staged, then exit.
+    # Commit only if changes were staged.
     # From: https://stackoverflow.com/a/2659808
-    if git diff-index --quiet --cached HEAD -- ; then
-        return 0
+    if ! git diff-index --quiet --cached HEAD -- ; then
+	git commit -m "[CI] $msg"
+    else
+	echo "Hints/snapshot update: no diff"
     fi
 
-    # Commit. This will fail if the commit is empty,
-    # but that scenario should be ruled out by the test above.
-    git commit -m "[CI] $msg"
-    # Memorize that commit
+    # Update the version number in version.txt and fstar.opam, and if
+    # so, commit. Do this only for the master branch.
+    if [[ $CI_BRANCH = master ]] ; then
+	update_version_number
+    fi
+
+    # Memorize the latest commit (which might have been a version number update)
     commit=$(git rev-parse HEAD)
+
+    # If nothing has been committed (neither hints nor version number), then exit.
+    if [[ $commit = $last_commit ]] ; then
+       echo "Nothing has been committed"
+       return 0
+    fi
+
     # Drop any other files that were modified as part of the build (e.g.
     # parse.fsi)
     git reset --hard HEAD
@@ -210,7 +268,7 @@ function refresh_hints() {
     git merge $commit -Xtheirs
 
     # Check if build hints branch exist on remote and remove it if it exists
-    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-master' | wc -l)
+    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-'$CI_BRANCH | wc -l)
     if [ $exist == 1 ]; then
         git push $remote :BuildHints-$CI_BRANCH
     fi
