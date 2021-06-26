@@ -227,7 +227,7 @@
         "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41"
       ],
       0,
-      "f316ba41ab1fe67871f2c3b6a2136997"
+      "74137059fb7326d11d35dbd1de17f681"
     ],
     [
       "Steel.Effect.Common.mk_rmem",
@@ -286,7 +286,7 @@
       1,
       [ "@query" ],
       0,
-      "7288a372a8776b733b5986458fb10b32"
+      "3f2483d3632a997bea1c7267e84f1b1f"
     ],
     [
       "Steel.Effect.Common.focus_rmem_refl",
@@ -317,7 +317,7 @@
         "typing_Tm_abs_b4b0eb0a30c8752636aec539d6e3910e"
       ],
       0,
-      "e23f82190297fcdb39fc9f13bb4d38eb"
+      "2d05445de363b006e194fba27bf7ca16"
     ],
     [
       "Steel.Effect.Common.frame_equalities'",
@@ -337,7 +337,7 @@
         "subterm_ordering_Steel.Effect.Common.VStar"
       ],
       0,
-      "812e951c9d07873262427121ea11c50c"
+      "7e65e90f4c443cbe1272fd5d8ff75e19"
     ],
     [
       "Steel.Effect.Common.lemma_frame_equalities",
@@ -346,7 +346,7 @@
       1,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "34d6c15c5768ca2ad9844b9558254fa1"
+      "18e8175eeafbf0d741488c011435663c"
     ],
     [
       "Steel.Effect.Common.frame_equalities",
