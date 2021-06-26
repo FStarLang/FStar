@@ -47,7 +47,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "d8e7c6803811afcd139d1c889922ebf6"
+      "411b7e94374683005d4e0fc798e7ed72"
     ],
     [
       "Queue.next_last",
@@ -390,7 +390,7 @@
         "typing_Steel.Reference.null"
       ],
       0,
-      "40ab2fd7f5fb3e0cd2c2ee658e637e76"
+      "5f00bfe847510789cbc95978d23e840b"
     ],
     [
       "Queue.witness_h_exists_erased",
