@@ -20,7 +20,7 @@ depends: [
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
-  "z3" {= "4.8.5"}
+  "z3" {= "4.8.11"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [
