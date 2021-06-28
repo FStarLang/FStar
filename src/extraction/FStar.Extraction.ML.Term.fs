@@ -1289,8 +1289,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                  let ml_ty = term_as_mlty g ty in
                  let ml_const = Const_int (repr, Some (signedness, width)) in
                  with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty)
-               |_ -> failwith "Argument in desugared machine int not a Const_int")
-            | _ -> failwith "Desugared machine integer isn't a Tm_app")
+               | _ -> failwith (BU.format2 "Argument in desugared machine int not a Const_int: Got (%s) %s"
+                                          (Print.tag_of_term x)
+                                          (Print.term_to_string x)))
+            | _ -> failwith (BU.format2 "Desugared machine integer isn't a Tm_app : Got (%s) %s"
+                                          (Print.tag_of_term t)
+                                          (Print.term_to_string t)))
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->

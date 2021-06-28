@@ -2607,9 +2607,21 @@ and (term_as_mlexpr' :
                             FStar_Extraction_ML_Syntax.with_ty ml_ty uu___7 in
                           (uu___6, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
                  | uu___2 ->
-                     failwith
-                       "Argument in desugared machine int not a Const_int")
-            | uu___1 -> failwith "Desugared machine integer isn't a Tm_app")
+                     let uu___3 =
+                       let uu___4 = FStar_Syntax_Print.tag_of_term x1 in
+                       let uu___5 = FStar_Syntax_Print.term_to_string x1 in
+                       FStar_Util.format2
+                         "Argument in desugared machine int not a Const_int: Got (%s) %s"
+                         uu___4 uu___5 in
+                     failwith uu___3)
+            | uu___1 ->
+                let uu___2 =
+                  let uu___3 = FStar_Syntax_Print.tag_of_term t2 in
+                  let uu___4 = FStar_Syntax_Print.term_to_string t2 in
+                  FStar_Util.format2
+                    "Desugared machine integer isn't a Tm_app : Got (%s) %s"
+                    uu___3 uu___4 in
+                failwith uu___2)
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->
