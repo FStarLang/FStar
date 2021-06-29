@@ -241,7 +241,7 @@ noeq type ref (a: Type u#a) (b: Type u#b) = {
 
 (** A ref r points to a value v if r's underlying ref points to a chunk of memory
     which contains at least the value v. *)
-let pts_to (r: ref 'a 'b) (v: 'b): Steel.Memory.slprop =
+let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): Steel.Memory.slprop =
   Steel.Memory.(r.r `pts_to` put r.pl v (one (refined_pcm r.re)))
 
 (** Basic lenses *)
@@ -453,16 +453,16 @@ open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
-let focus' (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
+let ref_focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
   {p = r.p; re = r.re; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
-let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
+let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'c)
 : Steel (ref 'a 'c)
     (to_vprop (r `pts_to` put l x (one r.q)))
     (fun r' -> to_vprop (r' `pts_to` x))
     (fun _ -> True)
-    (fun _ r' _ -> r' == focus' r q l)
-= let r' = focus' r q l in
+    (fun _ r' _ -> r' == ref_focus r q l)
+= let r' = ref_focus r q l in
   A.change_slprop_rel  
     (to_vprop (r `pts_to` put l x (one r.q)))
     (to_vprop (r' `pts_to` x))
@@ -470,11 +470,12 @@ let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: 'c)
     (fun m -> r.pl.get_one ());
   A.return r'
 
-let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: pcm 'c) (l: pcm_lens r'.q q) (x: 'c)
+let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: pcm 'c)
+  (l: pcm_lens r'.q q) (x: Ghost.erased 'c)
 : A.SteelGhost unit inames
     (to_vprop (r `pts_to` x))
     (fun _ -> to_vprop (r' `pts_to` put l x (one r'.q)))
-    (fun _ -> r == focus' r' q l)
+    (fun _ -> r == ref_focus r' q l)
     (fun _ _ _ -> True)
 = A.change_slprop_rel  
     (to_vprop (r `pts_to` x))
@@ -508,9 +509,6 @@ let split (r: ref 'a 'c) (xy x y: Ghost.erased 'c)
   change_equal_vprop
     (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))))
     (r `pts_to` y)
-  // TODO: post on slack about
-  // cannot prove to_vprop p == to_vprop q given p == q because
-  // to_vprop is unfold, unflods to term with lambda expression
 
 let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
 : SteelT (_:unit{composable r.q x y})
