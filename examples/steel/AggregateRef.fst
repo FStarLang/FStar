@@ -228,25 +228,24 @@ let trivial_refinement (p: pcm 'a): pcm_refinement p = {
   new_one_is_refined_unit = p.is_unit;
 }
 
-(** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
-    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
-    This allows the reference to point to substructures of unions with known case. *)
-noeq type ref (a: Type u#a) (b: Type u#b) = {
-  p: pcm a;
-  re: pcm_refinement p;
+open FStar.FunctionalExtensionality
+open Aggregates
+
+noeq type ref (#ix: Type) (a: ix -> Type) (b: Type): Type = {
+  p: i:ix -> pcm (a i);
+  re: pcm_refinement (prod_pcm p);
   q: pcm b;
   pl: pcm_lens (refined_pcm re) q;
-  r: Steel.Memory.ref a p;
+  r: i:ix -> Steel.Memory.ref (a i) (p i)
 }
 
-(** A ref r points to a value v if r's underlying ref points to a chunk of memory
-    which contains at least the value v. *)
+let pts_to_at (r: ref 'a 'b) (v: Ghost.erased 'b) i: Steel.Memory.slprop =
+  r.r i `Steel.Memory.pts_to` put r.pl v (one (refined_pcm r.re)) i
+  
 let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): Steel.Memory.slprop =
-  Steel.Memory.(r.r `pts_to` put r.pl v (one (refined_pcm r.re)))
+  Steel.Memory.(h_forall (fun i -> r.r i `pts_to` put r.pl v (one (refined_pcm r.re)) i))
 
 (** Basic lenses *)
-
-open Aggregates
 
 let lens_fst_put (x:'a) (xy: 'a & 'b): 'a & 'b = (x, snd xy)
 let lens_fst #a #b : lens (a & b) a = {
@@ -367,8 +366,6 @@ let init_pcm (p: pcm 'a) (one_dec:(x:'a -> b:bool{b <==> x == one p})): pcm (ini
 
 (** A lens for the k-th field of an n-ary product *)
 
-open FStar.FunctionalExtensionality
-
 let lens_field_get (#a:eqtype) f (k:a) (s:restricted_t a f): f k = s k
 let lens_field (#a:eqtype) f (k:a): lens (restricted_t a f) (f k) = {
   get = lens_field_get f k;
@@ -453,13 +450,12 @@ open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
+(*
 let ref_focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
   {p = r.p; re = r.re; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
-(* TODO Technically don't need to modify the state; could it be
-   SteelGhostT unit (r `pts_to` put l x one) (ref_focus r q l `pts_to` x)? *)
-let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'c)
-: Steel (ref 'a 'c)
+let focus (r: ref 'a 'b) (q: pcm 'd) (l: pcm_lens r.q q) (x: Ghost.erased 'd)
+: Steel (ref 'a 'b)
     (to_vprop (r `pts_to` put l x (one r.q)))
     (fun r' -> to_vprop (r' `pts_to` x))
     (fun _ -> True)
@@ -541,3 +537,4 @@ let peel (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
   q.comm (get l x) (one q);
   l.put_op x (one r.q) (one q) (get l x);
   split r x (put l (one q) x) (put l (get l x) (one r.q))
+*)
