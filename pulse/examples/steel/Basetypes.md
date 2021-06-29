@@ -123,6 +123,7 @@ Then:
     For example, if I have two references `p: ref ('a1 * .. * 'am) 'c`
     and `q: ref ('b1 * .. * 'bn) 'c` then an array containing `p` and `q`
     could be represented by
+
       ```fstar
       let base_type is_p =
         if is_p then 'a1*..*'am else 'b1*..*'bn
