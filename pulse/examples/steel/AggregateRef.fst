@@ -456,6 +456,8 @@ module A = Steel.Effect.Atomic
 let ref_focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
   {p = r.p; re = r.re; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
+(* TODO Technically don't need to modify the state; could it be
+   SteelGhostT unit (r `pts_to` put l x one) (ref_focus r q l `pts_to` x)? *)
 let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'c)
 : Steel (ref 'a 'c)
     (to_vprop (r `pts_to` put l x (one r.q)))
@@ -528,4 +530,14 @@ let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
   r.pl.put_op (one (refined_pcm r.re)) (one (refined_pcm r.re)) x y;
   change_equal_vprop _ (r `pts_to` op r.q x y)
 
-// TODO split/gather (in struct case) a single field out of a restricted_t 'a f
+let peel (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
+: SteelT unit
+    (to_vprop (r `pts_to` x))
+    (fun _ ->
+      to_vprop (r `pts_to` put l (one q) x) `star` 
+      to_vprop (r `pts_to` put l (get l x) (one r.q)))
+= q.is_unit (get l x);
+  r.q.is_unit x;
+  q.comm (get l x) (one q);
+  l.put_op x (one r.q) (one q) (get l x);
+  split r x (put l (one q) x) (put l (get l x) (one r.q))
