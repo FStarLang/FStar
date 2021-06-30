@@ -6,74 +6,84 @@ module P = FStar.PCM
 (* TODO move to FStar.PCM.fst, use in earlier code to avoid P.p.one *)
 let one (p: pcm 'a) = p.P.p.one
 
-(** Very well-behaved lenses *)
-noeq type lens (a: Type u#a) (b: Type u#b) = {
-  get: a -> b;
-  put: b -> a -> a;
-  get_put: s: a -> v: b -> Lemma (get (put v s) == v);
-  put_get: s: a -> Lemma (put (get s) s == s);
-  put_put: s: a -> v: b -> w: b -> Lemma (put v (put w s) == put v s);
+(** Very well-behaved polymorphic lenses *)
+noeq type lens #ix (a: ix -> Type u#a) (b: ix -> Type u#b) = {
+  get: #i:ix -> a i -> b i;
+  put: #i:ix -> #j:ix -> b j -> a i -> a j;
+  get_put: #i:ix -> #j:ix -> s: a i -> v: b j -> Lemma (get (put v s) == v);
+  put_get: #i:ix -> s: a i -> Lemma (put (get s) s == s);
+  put_put: #i:ix -> #j:ix -> s: a i -> v: b j -> w: b j -> Lemma (put v (put w s) == put v s);
 }
-let get_put' (l: lens 'a 'b) (s: 'a) (v: 'b)
+let get_put' (l: lens 'a 'b) (s: 'a 'i) (v: 'b 'j)
   : Lemma (l.get (l.put v s) == v) [SMTPat (l.get (l.put v s))]
   = l.get_put s v
-let put_get' (l: lens 'a 'b) (s: 'a)
-  : Lemma (l.put (l.get s) s == s) [SMTPat (l.put (l.get s))]
+let put_get' (l: lens 'a 'b) (s: 'a 'i)
+  : Lemma (l.put (l.get s) s == s) [SMTPat (l.put (l.get s) s)]
   = l.put_get s
-let put_put' (l: lens 'a 'b) (s: 'a) (v w: 'b)
+let put_put' (l: lens 'a 'b) (s: 'a 'i) (v w: 'b 'j)
   : Lemma (l.put v (l.put w s) == l.put v s) [SMTPat (l.put v (l.put w s))]
   = l.put_put s v w
 
 (** Updating the target of a lens *)
-let lens_upd (l: lens 'a 'b) (f: 'b -> 'b) (s: 'a): 'a = l.put (f (l.get s)) s
+let lens_upd (l: lens 'a 'b) (f: 'b 'i -> 'b 'j) (s: 'a 'i): 'a 'j = l.put (f (l.get s)) s
 
 (** The identity lens *)
-let const (x: 'a) (b: 'b): 'a = x
-let lens_id #a : lens a a = {
-  get = id;
-  put = const;
+let lens_id_get (x: 'a 'i): 'a 'i = x
+let lens_id_put #i #j (x: 'a j) (y: 'a i): 'a j = x
+let lens_id (a: 'i -> Type) : lens a a = {
+  get = lens_id_get;
+  put = lens_id_put;
   get_put = (fun _ _ -> ());
   put_get = (fun _ -> ());
   put_put = (fun _ _ _ -> ());
 }
 
 (** Lens composition *)
-let get_comp (l: lens 'a 'b) (m: lens 'b 'c) (s: 'a): 'c = m.get (l.get s)
-let put_comp (l: lens 'a 'b) (m: lens 'b 'c) (v: 'c) (s: 'a): 'a =
+let get_comp (l: lens 'a 'b) (m: lens 'b 'c) #i (s: 'a i): 'c i = m.get (l.get s)
+let put_comp (l: lens 'a 'b) (m: lens 'b 'c) #i #j (v: 'c j) (s: 'a i): 'a j =
   lens_upd l (m.put v) s
-let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
-  get = get_comp l m;
+let lens_comp (a b c: 'i -> Type) (l: lens a b) (m: lens b c): lens a c = {
+  get = (fun #i -> get_comp l m #i);
   put = put_comp l m;
   get_put = (fun _ _ -> ());
   put_get = (fun _ -> ());
-  put_put = (fun _ _ _ -> ());
+  put_put = (fun s v w -> ());
 }
+
+let pcms (f: 'i -> Type) = i:'i -> pcm (f i)
 
 (** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where
     (1) get is a PCM morphism p -> q
     (2) put is a PCM morphism p×q -> p, where (×) = Aggregates.tuple_pcm *)
-noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
+noeq type pcm_lens #ix #a #b (p: pcms a) (q: pcms b) = {
   l: lens a b;
-  get_refine: s:a ->
-    Lemma (requires p.refine s) (ensures q.refine (l.get s)) [SMTPat (p.refine s)];
-  get_one: unit -> Lemma (l.get (one p) == one q);
-  get_op_composable: s:a -> t:a ->
+  get_refine: #i:ix -> s:a i ->
+    Lemma 
+      (requires (p i).refine s) 
+      (ensures (q i).refine (l.get s))
+    [SMTPat ((p i).refine s)];
+  get_one: #i:ix -> Lemma (l.get (one (p i)) == one (q i));
+  get_op_composable: #i:ix -> s:a i -> t:a i ->
     Lemma
-      (requires composable p s t)
-      (ensures composable q (l.get s) (l.get t));
-  put_refine: s:a -> v:b ->
-    Lemma (requires p.refine s /\ q.refine v) (ensures p.refine (l.put v s))
-    [SMTPat (p.refine (l.put v s))];
-  put_one: unit -> Lemma (l.put (one q) (one p) == one p);
-  put_op: s:a -> t:a -> v:b -> w:b ->
+      (requires composable (p i) s t)
+      (ensures composable (q i) (l.get s) (l.get t));
+  put_refine: #i:ix -> #j:ix -> s:a i -> v:b j ->
+    Lemma 
+      (requires (p i).refine s /\ (q j).refine v)
+      (ensures (p j).refine (l.put v s))
+    [SMTPat ((p i).refine (l.put v s))];
+  put_one: #i:ix -> #j:ix -> Lemma (l.put (one (q j)) (one (p i)) == one (p j));
+  put_op: #i:ix -> #j:ix -> s:a i -> t:a i -> v:b j -> w:b j ->
     Lemma
-      (requires composable p s t /\ composable q v w)
-      (ensures composable p (l.put v s) (l.put w t) /\
-               l.put (op q v w) (op p s t) == op p (l.put v s) (l.put w t))
+      (requires composable (p i) s t /\ composable (q j) v w)
+      (ensures composable (p j) (l.put v s) (l.put w t) /\
+               l.put (op (q j) v w) (op (p i) s t) == op (p j) (l.put v s) (l.put w t))
     [SMTPatOr [
-      [SMTPat (l.put (op q v w) (op p s t))];
-      [SMTPat (composable p (l.put v s) (l.put w t))]]];
+      [SMTPat (l.put (op (q j) v w) (op (p i) s t))];
+      [SMTPat (composable (p j) (l.put v s) (l.put w t))]]];
 }
+
+(*
 let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
 let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
 let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = lens_upd l.l f s
@@ -537,4 +547,6 @@ let peel (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
   q.comm (get l x) (one q);
   l.put_op x (one r.q) (one q) (get l x);
   split r x (put l (one q) x) (put l (get l x) (one r.q))
+*)
+
 *)
