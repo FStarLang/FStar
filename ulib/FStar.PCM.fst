@@ -81,6 +81,9 @@ type pcm (a:Type u#a) = {
 (** Returns the composable predicate of the PCM *)
 let composable (#a: Type u#a) (p:pcm a) (x y:a) = p.p.composable x y
 
+(** Returns the unit of the PCM *)
+let one (p: pcm 'a) = p.p.one
+
 (** Calls the operation of the PCM *)
 let op (#a: Type u#a) (p:pcm a) (x:a) (y:a{composable p x y}) = p.p.op x y
 
