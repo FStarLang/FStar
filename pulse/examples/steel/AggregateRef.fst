@@ -3,8 +3,11 @@ module AggregateRef
 open FStar.PCM
 module P = FStar.PCM
 
-(* TODO move to FStar.PCM.fst, use in earlier code to avoid P.p.one *)
-let one (p: pcm 'a) = p.P.p.one
+(** Misc. combinators *)
+let compose (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
+let both (f: 'a -> 'c) (g: 'b -> 'd) ((x, y): 'a & 'b): 'c & 'd = (f x, g y)
+let uncurry (f: 'a -> 'b -> 'c) ((x, y): 'a & 'b): 'c = f x y
+let conj (f: 'a -> prop) (g:(x:'a{f x} -> prop)) (x: 'a): prop = f x /\ g x
 
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
@@ -49,9 +52,7 @@ let lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c = {
   put_put = (fun _ _ _ -> ());
 }
 
-(** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where
-    (1) get is a PCM morphism p -> q
-    (2) put is a PCM morphism q×p -> p, where (×) = Aggregates.tuple_pcm *)
+(** PCM morphisms *)
 
 let morphism_refine (p: pcm 'a) (q: pcm 'b) (f: 'a -> 'b) =
   x:'a -> Lemma (requires p.refine x) (ensures q.refine (f x)) [SMTPat (p.refine x)]
@@ -64,7 +65,7 @@ let morphism_op (p: pcm 'a) (q: pcm 'b) (f: 'a -> 'b) =
       (ensures composable q (f x) (f y) /\ f (op p x y) == op q (f x) (f y))
       [SMTPat (composable p x y)]
 
-noeq type pcm_morphism #a #b (p: pcm a) (q: pcm b) (f: a -> b) = {
+noeq type pcm_morphism #a #b (f: a -> b) (p: pcm a) (q: pcm b) = {
   f_refine: x:a -> Lemma (requires p.refine x) (ensures q.refine (f x)) [SMTPat (p.refine x)];
   f_one: morphism_one p q f;
   f_op: x:a -> y:a ->
@@ -74,42 +75,37 @@ noeq type pcm_morphism #a #b (p: pcm a) (q: pcm b) (f: a -> b) = {
       [SMTPat (composable p x y)]
 }
 
-let pcm_morphism_id (#p: pcm 'a): pcm_morphism p p id = {
+let pcm_morphism_id (#p: pcm 'a): pcm_morphism id p p = {
   f_refine = (fun _ -> ());
   f_one = (fun _ -> ());
   f_op = (fun _ _ -> ());
 }
 
-(* TODO is this in stdlib somewhere? *)
-let compose (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
-
 let pcm_morphism_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#f: 'b -> 'c) (#g: 'a -> 'b)
-  (mf: pcm_morphism q r f) (mg: pcm_morphism p q g)
-: pcm_morphism p r (f `compose` g) = {
+  (mf: pcm_morphism f q r) (mg: pcm_morphism g p q)
+: pcm_morphism (f `compose` g) p r = {
   f_refine = (fun x -> mg.f_refine x; mf.f_refine (g x));
   f_one = (fun () -> mg.f_one (); mf.f_one ());
   f_op = (fun x y -> mg.f_op x y; mf.f_op (g x) (g y));
 }
 
-(* TODO in stdlib? *)
-let both (f: 'a -> 'c) (g: 'b -> 'd) ((x, y): 'a & 'b): 'c & 'd = (f x, g y)
-
 open Aggregates
 let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: 'a -> 'c) (#g: 'b -> 'd)
-  (mf: pcm_morphism p r f) (mg: pcm_morphism q s g)
-: pcm_morphism (tuple_pcm p q) (tuple_pcm r s) (both f g) = {
+  (mf: pcm_morphism f p r) (mg: pcm_morphism g q s)
+: pcm_morphism (both f g) (p `pcm_times` q) (r `pcm_times` s) = {
   f_refine = (fun (x, y) -> mf.f_refine x; mg.f_refine y);
   f_one = (fun () -> mg.f_one (); mf.f_one ());
   f_op = (fun (x, y) (z, w) -> mf.f_op x z; mg.f_op y w);
 }
 
-(* TODO in stdlib? *)
-let uncurry (f: 'a -> 'b -> 'c) ((x, y): 'a & 'b): 'c = f x y
+(** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where
+    (1) get is a PCM morphism p -> q
+    (2) put is a PCM morphism q×p -> p *)
 
 noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   l: lens a b;
-  get_morphism: pcm_morphism p q l.get;
-  put_morphism: pcm_morphism (tuple_pcm q p) p (uncurry l.put);
+  get_morphism: pcm_morphism l.get p q;
+  put_morphism: pcm_morphism (uncurry l.put) (q `pcm_times` p) p;
 }
 let get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s: 'a): 'b = l.l.get s
 let put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (v: 'b) (s: 'a): 'a = l.l.put v s
@@ -160,52 +156,28 @@ let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b
     (requires frame_pres q f (get l s) v)
     (ensures frame_pres p (upd l f) s (put l v s))
     [SMTPat (frame_pres q f (get l s) v)]
-= frame_pres_intro p (lens_upd l.l f) s (l.l.put v s) (fun full ->
-    assert (p.refine full);
-    assert (compatible p s full);
-    assert (lens_upd l.l f full == l.l.put (f (l.l.get full)) full);
+= frame_pres_intro p (upd l f) s (put l v s) (fun full ->
     let _ = l.get_morphism.f_refine in
-    assert (q.refine (l.l.get full));
     pcm_lens_compatible_get l s full;
-    assert (compatible q (l.l.get s) (l.l.get full));
-    assert (q.refine (f (l.l.get full)));
-    l.put_morphism.f_refine (f (l.l.get full), full);
-    assert (q.refine (f (l.l.get full)));
-    assert (p.refine (l.l.put (f (l.l.get full)) full));
-    assert (p.refine (lens_upd l.l f full));
-    assert (compatible q v (f (l.l.get full)));
-    let goal = frame_pres_on p (lens_upd l.l f) s (l.l.put v s) full in
+    l.put_morphism.f_refine (f (get l full), full);
+    let goal = frame_pres_on p (upd l f) s (put l v s) full in
     compatible_elim p s full goal (fun frame_s ->
-    compatible_elim q v (f (l.l.get full)) goal (fun frame_v ->
-    assert (composable q v frame_v /\ op q frame_v v == f (l.l.get full));
-    let frame_vs: 'a = l.l.put frame_v frame_s in
+    compatible_elim q v (f (get l full)) goal (fun frame_v ->
+    let frame_vs: 'a = put l frame_v frame_s in
     l.put_morphism.f_op (v, s) (frame_v, frame_s);
-    assert (composable p (l.l.put v s) frame_vs);
-    p.comm frame_vs (l.l.put v s);
+    p.comm frame_vs (put l v s);
     q.comm v frame_v;
     p.comm s frame_s;
-    assert (op p frame_vs (l.l.put v s) == op p (l.l.put v s) frame_vs);
-    assert (op p frame_vs (l.l.put v s) == l.l.put (op q v frame_v) (op p s frame_s));
-    assert (op p frame_vs (l.l.put v s) == l.l.put (op q v frame_v) (op p s frame_s));
-    assert (op p frame_vs (l.l.put v s) == lens_upd l.l f full);
-    compatible_intro p (l.l.put v s) (lens_upd l.l f full) frame_vs;
+    compatible_intro p (put l v s) (upd l f full) frame_vs;
     let aux (frame:'a{composable p s frame})
-    : Lemma (composable p (l.l.put v s) frame /\
-             (op p s frame == full ==> op p (l.l.put v s) frame == lens_upd l.l f full))
+    : Lemma (composable p (put l v s) frame /\
+             (op p s frame == full ==> op p (put l v s) frame == upd l f full))
     = l.get_morphism.f_op s frame;
-      assert (composable q (l.l.get s) (l.l.get frame));
-      assert (composable q v (l.l.get frame));
-      assert (composable p s frame);
-      l.put_morphism.f_op (v, s) (l.l.get frame, frame);
+      l.put_morphism.f_op (v, s) (get l frame, frame);
       let aux ()
       : Lemma (requires op p s frame == full) 
-              (ensures op p (l.l.put v s) frame == lens_upd l.l f full)
-      = assert (composable p (l.l.put v s) (l.l.put (l.l.get frame) frame));
-        assert (op p (l.l.put v s) frame == op p (l.l.put v s) (l.l.put (l.l.get frame) frame));
-        assert (op p (l.l.put v s) frame == l.l.put (op q v (l.l.get frame)) (op p s frame));
-        assert (op p (l.l.put v s) frame == l.l.put (op q v (l.l.get frame)) full);
-        ()
-      in ()
+              (ensures op p (put l v s) frame == upd l f full)
+      = () in ()
     in FStar.Classical.forall_intro aux)))
 
 (** The identity lens is a pcm_lens *)
@@ -279,6 +251,9 @@ let trivial_refinement (p: pcm 'a): pcm_refinement p = {
 
 open FStar.FunctionalExtensionality
 
+(** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
+    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
+    This allows the reference to point to substructures of unions with known case. *)
 noeq type ref (a:Type) (b:Type): Type = {
   p: pcm a;
   re: pcm_refinement p;
@@ -301,7 +276,7 @@ let lens_fst #a #b : lens (a & b) a = {
   put_put = (fun _ _ _ -> ());
 }
 
-let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (tuple_pcm p q) p = {
+let pcm_lens_fst #a #b (p: pcm a) (q: pcm b): pcm_lens (p `pcm_times` q) p = {
   l = lens_fst;
   get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
@@ -366,47 +341,12 @@ let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
-(** A PCM for possibly uninitialized data *)
-
-(*
-type init a =
-| Uninitialized : init a
-| Initialized : a -> init a
-
-let init_comp (p: pcm 'a): symrel (init 'a) = fun x y -> match x, y with
-  | Uninitialized, Uninitialized -> True
-  | Uninitialized, Initialized x | Initialized x, Uninitialized -> x == one p
-  | Initialized x, Initialized y -> composable p x y
-
-let init_op (p: pcm 'a) (one_dec:(x:'a -> b:bool{b <==> x == one p})) (x: init 'a)
-  (y: init 'a{init_comp p x y})
-: init 'a
-= match x, y with
-  | Uninitialized, Uninitialized -> Uninitialized
-  | Uninitialized, Initialized x | Initialized x, Uninitialized ->
-    let true = one_dec x in Uninitialized
-  | Initialized x, Initialized y -> Initialized (op p x y)
-
-let init_pcm (p: pcm 'a) (one_dec:(x:'a -> b:bool{b <==> x == one p})): pcm (init 'a) = P.({
-  p = {composable = init_comp p; op = init_op p one_dec; one = Initialized (one p)};
-  comm = (fun x y -> match x, y with
-    | Initialized x, Initialized y -> p.comm x y
-    | _, _ -> ());
-  assoc = (fun x y z -> match x, y, z with
-    | Initialized x, Initialized y, Initialized z -> p.assoc x y z
-    | _, _, _ -> ());
-  assoc_r = (fun x y z -> match x, y, z with
-    | Initialized x, Initialized y, Initialized z -> p.assoc_r x y z
-    | _, _, _ -> ());
-  is_unit = (fun _ -> ());
-  refine = (fun x -> match x with
-    | Initialized x -> p.refine x
-    | _ -> True)
-})
-*)
-
 (** A lens for the k-th field of an n-ary product *)
 
+let fun_upd (#a:eqtype) #f_ty (k:a) (x':f_ty k)
+  (f: restricted_t a f_ty)
+: restricted_t a f_ty
+= on_domain a (fun k' -> if k = k' then x' else f k')
 let lens_field_get (#a:eqtype) f (k:a) (s:restricted_t a f): f k = s k
 let lens_field (#a:eqtype) f (k:a): lens (restricted_t a f) (f k) = {
   get = lens_field_get f k;
@@ -481,7 +421,273 @@ let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
 }
 
-(* Basic operations *)
+(** Refining a lens *)
+
+let lens_refine_get (l: lens 'a 'b) f
+  (s: refine_t (f `compose` l.get)): refine_t f
+= l.get s
+let lens_refine_put (l: lens 'a 'b) f
+  (v: refine_t f) (s: refine_t (f `compose` l.get)): refine_t (f `compose` l.get)
+= l.put v s
+
+let lens_refine (l: lens 'a 'b) (f: 'b -> prop)
+: lens (refine_t (f `compose` l.get)) (refine_t f) = {
+  get = lens_refine_get l f;
+  put = lens_refine_put l f;
+  get_put = (fun _ _ -> ());
+  put_get = (fun _ -> ());
+  put_put = (fun _ _ _ -> ());
+}
+
+(** Refining a pcm_lens *)
+
+let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q): 'a -> prop = re.f `compose` get l
+
+let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
+  (y: refine_t (extend_refinement_f l re){composable p x y})
+: Lemma (extend_refinement_f l re (op p x y))
+= l.get_morphism.f_op x y;
+  re.f_closed_under_op (get l x) (get l y)
+
+let extend_refinement_new_one (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q): refine_t (extend_refinement_f l re)
+= put l re.new_one (one p)
+
+let extend_refinement_new_one_is_refined_unit
+  (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
+: Lemma (composable p x (extend_refinement_new_one l re) /\
+         op p x (extend_refinement_new_one l re) == x)
+= re.new_one_is_refined_unit (get l x);
+  p.is_unit x;
+  l.put_morphism.f_op (get l x, x) (re.new_one, one p)
+
+let extend_refinement (l: pcm_lens 'p 'q) (re: pcm_refinement 'q) : pcm_refinement 'p = {
+  f = extend_refinement_f l re;
+  f_closed_under_op = extend_refinement_f_closed l re;
+  new_one = extend_refinement_new_one l re;
+  new_one_is_refined_unit = extend_refinement_new_one_is_refined_unit l re;
+}
+
+let pcm_lens_refine_get_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_refine
+    (refined_pcm (extend_refinement l re))
+    (refined_pcm re)
+    (lens_refine l.l re.f).get
+= l.get_morphism.f_refine
+
+let pcm_lens_refine_get_morphism_one (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_one
+    (refined_pcm (extend_refinement l re))
+    (refined_pcm re)
+    (lens_refine l.l re.f).get
+= l.get_morphism.f_one
+
+let pcm_lens_refine_get_morphism_op (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_op
+    (refined_pcm (extend_refinement l re))
+    (refined_pcm re)
+    (lens_refine l.l re.f).get
+= l.get_morphism.f_op
+
+let pcm_lens_refine_put_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_refine
+    (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
+    (refined_pcm (extend_refinement l re))
+    (uncurry (lens_refine l.l re.f).put)
+= fun (v, s) -> l.put_morphism.f_refine (v, s)
+
+let pcm_lens_refine_put_morphism_one (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_one
+    (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
+    (refined_pcm (extend_refinement l re))
+    (uncurry (lens_refine l.l re.f).put)
+= l.put_morphism.f_one
+
+let pcm_lens_refine_put_morphism_op (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: morphism_op
+    (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
+    (refined_pcm (extend_refinement l re))
+    (uncurry (lens_refine l.l re.f).put)
+= fun (v, s) (w, t) -> l.put_morphism.f_op (v, s) (w, t)
+
+let pcm_lens_refine (#p: pcm 'a) (#q: pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: pcm_lens (refined_pcm (extend_refinement l re)) (refined_pcm re) = {
+  l = lens_refine l.l re.f;
+  get_morphism = {
+    f_refine = pcm_lens_refine_get_morphism_refine l re;
+    f_one = pcm_lens_refine_get_morphism_one l re;
+    f_op = pcm_lens_refine_get_morphism_op l re;
+  };
+  put_morphism = {
+    f_refine = pcm_lens_refine_put_morphism_refine l re;
+    f_one = pcm_lens_refine_put_morphism_one l re;
+    f_op = pcm_lens_refine_put_morphism_op l re;
+  };
+}
+
+(** The conjunction of two refinements *)
+
+let conj_refinement_f (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+: 'a -> prop = conj #'a re1.f re2.f
+
+let conj_refinement_f_closed (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+  (x: refine_t (conj_refinement_f re1 re2))
+  (y: refine_t (conj_refinement_f re1 re2){composable p x y})
+: Lemma (conj_refinement_f re1 re2 (op p x y))
+= re1.f_closed_under_op x y;
+  re2.f_closed_under_op x y
+
+(* re1.new_one and re2.new_one both work; we go with re2 *)
+let conj_refinement_new_one (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+: refine_t (conj_refinement_f re1 re2)
+= re2.new_one
+
+let conj_refinement_new_one_is_refined_unit (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+  (x: refine_t (conj_refinement_f re1 re2))
+: Lemma (composable p x (conj_refinement_new_one re1 re2) /\
+         op p x (conj_refinement_new_one re1 re2) == x)
+= re2.new_one_is_refined_unit x
+
+let conj_refinement (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+: pcm_refinement p = {
+  f = conj_refinement_f re1 re2;
+  f_closed_under_op = conj_refinement_f_closed re1 re2;
+  new_one = conj_refinement_new_one re1 re2;
+  new_one_is_refined_unit = conj_refinement_new_one_is_refined_unit re1 re2;
+}
+
+(** Isomorphisms *)
+
+noeq type iso a b = {
+  fwd: a -> b;
+  bwd: b -> a;
+  fwd_bwd: x:b -> Lemma (fwd (bwd x) == x);
+  bwd_fwd: x:a -> Lemma (bwd (fwd x) == x);
+}
+let fwd_bwd' (i: iso 'a 'b) (x: 'b): Lemma (i.fwd (i.bwd x) == x) [SMTPat (i.fwd (i.bwd x))] = i.fwd_bwd x
+let bwd_fwd' (i: iso 'a 'b) (x: 'a): Lemma (i.bwd (i.fwd x) == x) [SMTPat (i.bwd (i.fwd x))] = i.bwd_fwd x
+
+let iso_lens_comp_get (i: iso 'a 'b) (l: lens 'b 'c): 'a -> 'c = l.get `compose` i.fwd
+let iso_lens_comp_put (i: iso 'a 'b) (l: lens 'b 'c) (v: 'c) (s: 'a): 'a = i.bwd (l.put v (i.fwd s))
+let iso_lens_comp (i: iso 'a 'b) (l: lens 'b 'c): lens 'a 'c = {
+  get = iso_lens_comp_get i l;
+  put = iso_lens_comp_put i l;
+  get_put = (fun _ _ -> ());
+  put_get = (fun _ -> ());
+  put_put = (fun _ _ _ -> ());
+}
+
+(** A refinement f of a refinement g of 'a is isomorphic to a refinement by conj f g *)
+
+let refine_conj_iso_fwd (f: 'a -> prop) (g:(x:'a{f x} -> prop))
+  (x: refine_t (conj f g))
+: refine_t g
+= x
+
+let refine_conj_iso_bwd (f: 'a -> prop) (g:(x:'a{f x} -> prop))
+  (x: refine_t g)
+: refine_t (conj f g)
+= x
+
+let refine_conj_iso (f: 'a -> prop) (g:(x:'a{f x} -> prop))
+: iso (refine_t #'a (conj #'a f g)) (refine_t #(x:'a{f x}) g) = {
+  fwd = refine_conj_iso_fwd f g;
+  bwd = refine_conj_iso_bwd f g;
+  fwd_bwd = (fun _ -> ());
+  bwd_fwd = (fun _ -> ());
+}
+
+(** PCM isomorphisms *)
+
+noeq type pcm_iso #a #b (p: pcm a) (q: pcm b) = {
+  i: iso a b;
+  fwd_morphism: pcm_morphism i.fwd p q;
+  bwd_morphism: pcm_morphism i.bwd q p;
+}
+
+let pcm_refinement_conj_iso_i (p: pcm 'a)
+  (re1: pcm_refinement p)
+  (re2: pcm_refinement (refined_pcm re1))
+: iso (refine_t #'a (conj #'a re1.f re2.f)) (refine_t #(x:'a{re1.f x}) re2.f) =
+  refine_conj_iso re1.f re2.f
+
+let pcm_refinement_conj_iso_fwd_morphism_op (p: pcm 'a)
+  (re1: pcm_refinement p)
+  (re2: pcm_refinement (refined_pcm re1))
+: morphism_op
+    (refined_pcm re2) (refined_pcm (conj_refinement re1 re2))
+    (pcm_refinement_conj_iso_i p re1 re2).fwd
+= fun x y -> ()
+
+(** A refinement re1 of a refinement re2 of a PCM is isomorphic to a
+    refinement by the conjunction of re1 and re2 *)
+let pcm_refinement_conj_iso (p: pcm 'a)
+  (re1: pcm_refinement p)
+  (re2: pcm_refinement (refined_pcm re1))
+: pcm_iso (refined_pcm (conj_refinement re1 re2)) (refined_pcm re2) = {
+  i = pcm_refinement_conj_iso_i p re1 re2;
+  fwd_morphism = {
+    f_refine = (fun _ -> ());
+    f_one = (fun _ -> ());
+    f_op = pcm_refinement_conj_iso_fwd_morphism_op p re1 re2;
+  };
+  bwd_morphism = {
+    f_refine = (fun _ -> ());
+    f_one = (fun _ -> ());
+    f_op = (fun _ _ -> ());
+  };
+}
+
+let pcm_iso_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
+  (i: pcm_iso p q) (l: pcm_lens q r)
+: pcm_lens p r = {
+  l = iso_lens_comp i.i l.l;
+  get_morphism = pcm_morphism_comp l.get_morphism i.fwd_morphism;
+  put_morphism = {
+    f_refine = (fun (v, s) ->
+      i.fwd_morphism.f_refine s; 
+      l.put_morphism.f_refine (v, i.i.fwd s);
+      i.bwd_morphism.f_refine (l.l.put v (i.i.fwd s)));
+    f_one = (fun () ->
+      i.fwd_morphism.f_one (); 
+      l.put_morphism.f_one ();
+      i.bwd_morphism.f_one ());
+    f_op = (fun (v, s) (w, t) -> 
+     i.fwd_morphism.f_op s t;
+     l.put_morphism.f_op (v, i.i.fwd s) (w, i.i.fwd t);
+     i.bwd_morphism.f_op (l.l.put v (i.i.fwd s)) (l.l.put w (i.i.fwd t)));
+  }
+}
+
+(** The refinement of a ref *)
+
+let ref_refine (r: ref 'a 'b) (new_re: pcm_refinement r.q) : ref 'a (refine_t new_re.f) = {
+  p = r.p;
+  re = conj_refinement r.re (extend_refinement r.pl new_re);
+  q = refined_pcm new_re;
+  pl =
+    pcm_iso_lens_comp
+      (pcm_refinement_conj_iso r.p r.re (extend_refinement r.pl new_re))
+      (pcm_lens_refine r.pl new_re);
+  r = r.r
+}
+
+(** Fundamental operations on references *)
 
 open Steel.Effect
 module M = Steel.Memory
@@ -589,267 +795,6 @@ let addr_of_lens (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased
 = peel r q l x;
   focus r q l (put l (get l x) (one r.q)) (get l x)
 
-(** Refining a pcm_ref  *)
-
-let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q): 'a -> prop = re.f `compose` get l
-
-let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
-  (y: refine_t (extend_refinement_f l re){composable p x y})
-: Lemma (extend_refinement_f l re (op p x y))
-= l.get_morphism.f_op x y;
-  re.f_closed_under_op (get l x) (get l y)
-
-let extend_refinement_new_one (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q): refine_t (extend_refinement_f l re)
-= put l re.new_one (one p)
-
-let extend_refinement_new_one_is_refined_unit
-  (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
-: Lemma (composable p x (extend_refinement_new_one l re) /\
-         op p x (extend_refinement_new_one l re) == x)
-= re.new_one_is_refined_unit (get l x);
-  p.is_unit x;
-  l.put_morphism.f_op (get l x, x) (re.new_one, one p)
-
-let extend_refinement (l: pcm_lens 'p 'q) (re: pcm_refinement 'q) : pcm_refinement 'p = {
-  f = extend_refinement_f l re;
-  f_closed_under_op = extend_refinement_f_closed l re;
-  new_one = extend_refinement_new_one l re;
-  new_one_is_refined_unit = extend_refinement_new_one_is_refined_unit l re;
-}
-
-let lens_refine_get (l: lens 'a 'b) f
-  (s: refine_t (f `compose` l.get)): refine_t f
-= l.get s
-let lens_refine_put (l: lens 'a 'b) f
-  (v: refine_t f) (s: refine_t (f `compose` l.get)): refine_t (f `compose` l.get)
-= l.put v s
-
-let lens_refine (l: lens 'a 'b) (f: 'b -> prop)
-: lens (refine_t (f `compose` l.get)) (refine_t f) = {
-  get = lens_refine_get l f;
-  put = lens_refine_put l f;
-  get_put = (fun _ _ -> ());
-  put_get = (fun _ -> ());
-  put_put = (fun _ _ _ -> ());
-}
-
-let pcm_lens_refine_get_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_refine
-    (refined_pcm (extend_refinement l re))
-    (refined_pcm re)
-    (lens_refine l.l re.f).get
-= l.get_morphism.f_refine
-
-let pcm_lens_refine_get_morphism_one (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_one
-    (refined_pcm (extend_refinement l re))
-    (refined_pcm re)
-    (lens_refine l.l re.f).get
-= l.get_morphism.f_one
-
-let pcm_lens_refine_get_morphism_op (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_op
-    (refined_pcm (extend_refinement l re))
-    (refined_pcm re)
-    (lens_refine l.l re.f).get
-= l.get_morphism.f_op
-
-let pcm_lens_refine_put_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_refine
-    (tuple_pcm (refined_pcm re) (refined_pcm (extend_refinement l re)))
-    (refined_pcm (extend_refinement l re))
-    (uncurry (lens_refine l.l re.f).put)
-= fun (v, s) -> l.put_morphism.f_refine (v, s)
-
-let pcm_lens_refine_put_morphism_one (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_one
-    (tuple_pcm (refined_pcm re) (refined_pcm (extend_refinement l re)))
-    (refined_pcm (extend_refinement l re))
-    (uncurry (lens_refine l.l re.f).put)
-= l.put_morphism.f_one
-
-let pcm_lens_refine_put_morphism_op (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: morphism_op
-    (tuple_pcm (refined_pcm re) (refined_pcm (extend_refinement l re)))
-    (refined_pcm (extend_refinement l re))
-    (uncurry (lens_refine l.l re.f).put)
-= fun (v, s) (w, t) -> l.put_morphism.f_op (v, s) (w, t)
-
-let pcm_lens_refine (#p: pcm 'a) (#q: pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: pcm_lens (refined_pcm (extend_refinement l re)) (refined_pcm re) = {
-  l = lens_refine l.l re.f;
-  get_morphism = {
-    f_refine = pcm_lens_refine_get_morphism_refine l re;
-    f_one = pcm_lens_refine_get_morphism_one l re;
-    f_op = pcm_lens_refine_get_morphism_op l re;
-  };
-  put_morphism = {
-    f_refine = pcm_lens_refine_put_morphism_refine l re;
-    f_one = pcm_lens_refine_put_morphism_one l re;
-    f_op = pcm_lens_refine_put_morphism_op l re;
-  };
-}
-
-(* TODO is this in stdlib somewhere? *)
-let conj (f: 'a -> prop) (g:(x:'a{f x} -> prop)) (x: 'a): prop = f x /\ g x
-
-let conj_refinement_f (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-: 'a -> prop = conj #'a re1.f re2.f
-
-let conj_refinement_f_closed (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-  (x: refine_t (conj_refinement_f re1 re2))
-  (y: refine_t (conj_refinement_f re1 re2){composable p x y})
-: Lemma (conj_refinement_f re1 re2 (op p x y))
-= re1.f_closed_under_op x y;
-  re2.f_closed_under_op x y
-
-(* re1.new_one and re2.new_one both work; we go with re2 *)
-let conj_refinement_new_one (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-: refine_t (conj_refinement_f re1 re2)
-= re2.new_one
-
-let conj_refinement_new_one_is_refined_unit (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-  (x: refine_t (conj_refinement_f re1 re2))
-: Lemma (composable p x (conj_refinement_new_one re1 re2) /\
-         op p x (conj_refinement_new_one re1 re2) == x)
-= re2.new_one_is_refined_unit x
-
-let conj_refinement (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-: pcm_refinement p = {
-  f = conj_refinement_f re1 re2;
-  f_closed_under_op = conj_refinement_f_closed re1 re2;
-  new_one = conj_refinement_new_one re1 re2;
-  new_one_is_refined_unit = conj_refinement_new_one_is_refined_unit re1 re2;
-}
-
-noeq type iso a b = {
-  fwd: a -> b;
-  bwd: b -> a;
-  fwd_bwd: x:b -> Lemma (fwd (bwd x) == x);
-  bwd_fwd: x:a -> Lemma (bwd (fwd x) == x);
-}
-let fwd_bwd' (i: iso 'a 'b) (x: 'b): Lemma (i.fwd (i.bwd x) == x) [SMTPat (i.fwd (i.bwd x))] = i.fwd_bwd x
-let bwd_fwd' (i: iso 'a 'b) (x: 'a): Lemma (i.bwd (i.fwd x) == x) [SMTPat (i.bwd (i.fwd x))] = i.bwd_fwd x
-
-let iso_lens_comp_get (i: iso 'a 'b) (l: lens 'b 'c): 'a -> 'c = l.get `compose` i.fwd
-let iso_lens_comp_put (i: iso 'a 'b) (l: lens 'b 'c) (v: 'c) (s: 'a): 'a = i.bwd (l.put v (i.fwd s))
-let iso_lens_comp (i: iso 'a 'b) (l: lens 'b 'c): lens 'a 'c = {
-  get = iso_lens_comp_get i l;
-  put = iso_lens_comp_put i l;
-  get_put = (fun _ _ -> ());
-  put_get = (fun _ -> ());
-  put_put = (fun _ _ _ -> ());
-}
-
-noeq type pcm_iso #a #b (p: pcm a) (q: pcm b) = {
-  i: iso a b;
-  fwd_morphism: pcm_morphism p q i.fwd;
-  bwd_morphism: pcm_morphism q p i.bwd;
-}
-
-let refine_conj_iso_fwd (f: 'a -> prop) (g:(x:'a{f x} -> prop))
-  (x: refine_t (conj f g))
-: refine_t g
-= x
-
-let refine_conj_iso_bwd (f: 'a -> prop) (g:(x:'a{f x} -> prop))
-  (x: refine_t g)
-: refine_t (conj f g)
-= x
-
-let refine_conj_iso (f: 'a -> prop) (g:(x:'a{f x} -> prop))
-: iso (refine_t #'a (conj #'a f g)) (refine_t #(x:'a{f x}) g) = {
-  fwd = refine_conj_iso_fwd f g;
-  bwd = refine_conj_iso_bwd f g;
-  fwd_bwd = (fun _ -> ());
-  bwd_fwd = (fun _ -> ());
-}
-
-let pcm_refinement_conj_iso_i (p: pcm 'a)
-  (re1: pcm_refinement p)
-  (re2: pcm_refinement (refined_pcm re1))
-: iso (refine_t #'a (conj #'a re1.f re2.f)) (refine_t #(x:'a{re1.f x}) re2.f) =
-  refine_conj_iso re1.f re2.f
-
-let pcm_refinement_conj_iso_fwd_morphism_op (p: pcm 'a)
-  (re1: pcm_refinement p)
-  (re2: pcm_refinement (refined_pcm re1))
-: morphism_op
-    (refined_pcm re2) (refined_pcm (conj_refinement re1 re2))
-    (pcm_refinement_conj_iso_i p re1 re2).fwd
-= fun x y -> ()
-
-let pcm_refinement_conj_iso (p: pcm 'a)
-  (re1: pcm_refinement p)
-  (re2: pcm_refinement (refined_pcm re1))
-: pcm_iso (refined_pcm (conj_refinement re1 re2)) (refined_pcm re2) = {
-  i = pcm_refinement_conj_iso_i p re1 re2;
-  fwd_morphism = {
-    f_refine = (fun _ -> ());
-    f_one = (fun _ -> ());
-    f_op = pcm_refinement_conj_iso_fwd_morphism_op p re1 re2;
-  };
-  bwd_morphism = {
-    f_refine = (fun _ -> ());
-    f_one = (fun _ -> ());
-    f_op = (fun _ _ -> ());
-  };
-}
-
-let pcm_iso_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
-  (i: pcm_iso p q) (l: pcm_lens q r)
-: pcm_lens p r = {
-  l = iso_lens_comp i.i l.l;
-  get_morphism = pcm_morphism_comp l.get_morphism i.fwd_morphism;
-  put_morphism = {
-    f_refine = (fun (v, s) ->
-      i.fwd_morphism.f_refine s; 
-      l.put_morphism.f_refine (v, i.i.fwd s);
-      i.bwd_morphism.f_refine (l.l.put v (i.i.fwd s)));
-    f_one = (fun () ->
-      i.fwd_morphism.f_one (); 
-      l.put_morphism.f_one ();
-      i.bwd_morphism.f_one ());
-    f_op = (fun (v, s) (w, t) -> 
-     i.fwd_morphism.f_op s t;
-     l.put_morphism.f_op (v, i.i.fwd s) (w, i.i.fwd t);
-     i.bwd_morphism.f_op (l.l.put v (i.i.fwd s)) (l.l.put w (i.i.fwd t)));
-  }
-}
-
-let ref_refine (r: ref 'a 'b) (new_re: pcm_refinement r.q) : ref 'a (refine_t new_re.f) = {
-  p = r.p;
-  re = conj_refinement r.re (extend_refinement r.pl new_re);
-  q = refined_pcm new_re;
-  pl =
-    pcm_iso_lens_comp
-      (pcm_refinement_conj_iso r.p r.re (extend_refinement r.pl new_re))
-      (pcm_lens_refine r.pl new_re);
-  r = r.r
-}
-
-(* Not needed, but nice to confirm *)
-let ref_refine_put_eq (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
-: Lemma (put r.pl x (one (refined_pcm r.re)) ==
-         put (ref_refine r re).pl x (one (refined_pcm (ref_refine r re).re)))
-= ()
-
 let refine (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
 : Steel (ref 'a (refine_t re.f))
     (to_vprop (r `pts_to` x))
@@ -857,7 +802,7 @@ let refine (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
     (fun _ -> True)
     (fun _ r' _ -> r' == ref_refine r re)
 = let r' = ref_refine r re in
-  change_equal_vprop (r `pts_to` x) (r' `pts_to` Ghost.hide (Ghost.reveal x));
+  change_equal_vprop (r `pts_to` x) (r' `pts_to` Ghost.reveal x);
   A.return r'
 
 let unrefine #inames (r': ref 'a 'b) (re: pcm_refinement r'.q)
@@ -867,6 +812,4 @@ let unrefine #inames (r': ref 'a 'b) (re: pcm_refinement r'.q)
     (fun _ -> to_vprop (r' `pts_to` x))
     (fun _ -> r == ref_refine r' re)
     (fun _ _ _ -> True)
-= change_equal_vprop
-    (r `pts_to` Ghost.reveal x)
-    (r' `pts_to` x)
+= change_equal_vprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)

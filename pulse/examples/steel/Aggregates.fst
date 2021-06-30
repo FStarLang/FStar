@@ -6,14 +6,14 @@ open FStar.PCM
 /// a PCM for tuples (a & b) in terms of (potentially user-defined)
 /// PCMs for a and b.
 
-let tuple_comp (p: pcm 'a) (q: pcm 'b) (x y: 'a & 'b) : prop =
+let pcm_times_comp (p: pcm 'a) (q: pcm 'b) (x y: 'a & 'b) : prop =
   composable p (fst x) (fst y) /\ composable q (snd x) (snd y)
 
-let tuple_op (p: pcm 'a) (q: pcm 'b) (x: 'a & 'b) (y: ('a & 'b){tuple_comp p q x y}) : 'a & 'b =
+let pcm_times_op (p: pcm 'a) (q: pcm 'b) (x: 'a & 'b) (y: ('a & 'b){pcm_times_comp p q x y}) : 'a & 'b =
   (op p (fst x) (fst y), op q (snd x) (snd y))
 
-let tuple_pcm (p: pcm 'a) (q: pcm 'b): pcm ('a & 'b) = {
-  p = {composable = tuple_comp p q; op = tuple_op p q; one = (p.p.one, q.p.one)};
+let pcm_times (p: pcm 'a) (q: pcm 'b): pcm ('a & 'b) = {
+  p = {composable = pcm_times_comp p q; op = pcm_times_op p q; one = (p.p.one, q.p.one)};
   comm = (fun (xa, xb) (ya, yb) -> p.comm xa ya; q.comm xb yb);
   assoc = (fun (xa, xb) (ya, yb) (za, zb) -> p.assoc xa ya za; q.assoc xb yb zb);
   assoc_r = (fun (xa, xb) (ya, yb) (za, zb) -> p.assoc_r xa ya za; q.assoc_r xb yb zb);
