@@ -844,12 +844,21 @@ let ref_refine (r: ref 'a 'b) (new_re: pcm_refinement r.q) : ref 'a (refine_t ne
   r = r.r
 }
 
-assume val refine (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
+(* Not needed, but nice to confirm *)
+let ref_refine_put_eq (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
+: Lemma (put r.pl x (one (refined_pcm r.re)) ==
+         put (ref_refine r re).pl x (one (refined_pcm (ref_refine r re).re)))
+= ()
+
+let refine (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
 : Steel (ref 'a (refine_t re.f))
     (to_vprop (r `pts_to` x))
     (fun r' -> to_vprop (r' `pts_to` Ghost.reveal x))
     (fun _ -> True)
     (fun _ r' _ -> r' == ref_refine r re)
+= let r' = ref_refine r re in
+  change_equal_vprop (r `pts_to` x) (r' `pts_to` Ghost.hide (Ghost.reveal x));
+  A.return r'
 
 let unrefine #inames (r': ref 'a 'b) (re: pcm_refinement r'.q)
   (r: ref 'a (refine_t re.f)) (x: Ghost.erased 'b{re.f x})
@@ -858,4 +867,6 @@ let unrefine #inames (r': ref 'a 'b) (re: pcm_refinement r'.q)
     (fun _ -> to_vprop (r' `pts_to` x))
     (fun _ -> r == ref_refine r' re)
     (fun _ _ _ -> True)
-= A.sladmit()
+= change_equal_vprop
+    (r `pts_to` Ghost.reveal x)
+    (r' `pts_to` x)
