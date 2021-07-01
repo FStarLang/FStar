@@ -123,18 +123,24 @@ let trivial_refinement (p: pcm 'a): pcm_refinement p = {
   new_one_is_refined_unit = p.is_unit;
 }
 
-(** A PCM refinement is well-formed if frame-preserving updates on the
-    refined PCM can be lifted to frame-preserving updates on the
-    unrefined PCM *)
+(** A PCM refinement is well-formed if the refinement predicate is decidable
+    and frame-preserving updates on the refined PCM can be lifted to
+    frame-preserving updates on the unrefined PCM *)
+
+let unrefine (#p: pcm 'a) (r: pcm_refinement p)
+  (is_refined:(x:'a -> b:bool{b <==> r.f x})) (f: refine_t r.f -> refine_t r.f)
+  (x: 'a): 'a
+= if is_refined x then f x else one p
+
 noeq type pcm_refinement_ok #a (#p: pcm a) (r: pcm_refinement p) = {
-  unrefine: (refine_t r.f -> refine_t r.f) -> a -> a;
+  is_refined: x:a -> b:bool{b <==> r.f x};
   frame_pres_unrefine:
     f:(refine_t r.f -> refine_t r.f) ->
     x:Ghost.erased (refine_t r.f) ->
     y:Ghost.erased (refine_t r.f) ->
     Lemma
       (requires frame_pres (refined_pcm r) f x y)
-      (ensures frame_pres p (unrefine f) (Ghost.reveal x) (Ghost.reveal y))
+      (ensures frame_pres p (unrefine r is_refined f) (Ghost.reveal x) (Ghost.reveal y))
 }
 
 (** Very well-behaved lenses *)
@@ -422,9 +428,13 @@ let case_refinement_ok_unrefine (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   | Some (|k', _|) -> if k = k' then f kx else None
   | _ -> None
 
+let case_refinement_is_refined (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a) (kx: union b)
+: b:bool{b <==> case_refinement_f p k kx}
+= match kx with Some (|k', _|) -> k = k' | None -> false
+
 let case_refinement_ok (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
 : pcm_refinement_ok (case_refinement p k) = {
-  unrefine = case_refinement_ok_unrefine p k;
+  is_refined = case_refinement_is_refined p k;
   frame_pres_unrefine = (fun f kx ky ->
     let Some (|_, x|) = Ghost.reveal kx in
     let Some (|_, y|) = Ghost.reveal ky in
@@ -652,6 +662,22 @@ let conj_refinement (#p: pcm 'a)
   new_one_is_refined_unit = conj_refinement_new_one_is_refined_unit re1 re2;
 }
 
+let conj_refinement_ok (#p: pcm 'a)
+  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+  (h1: pcm_refinement_ok re1) (h2: pcm_refinement_ok re2)
+: pcm_refinement_ok (conj_refinement re1 re2) = {
+  unrefine = (fun f v -> admit());
+  frame_pres_unrefine = (fun f x y -> admit());
+// unrefine: (refine_t r.f -> refine_t r.f) -> a -> a;
+// frame_pres_unrefine:
+//   f:(refine_t r.f -> refine_t r.f) ->
+//   x:Ghost.erased (refine_t r.f) ->
+//   y:Ghost.erased (refine_t r.f) ->
+//   Lemma
+//     (requires frame_pres (refined_pcm r) f x y)
+//     (ensures frame_pres p (unrefine f) (Ghost.reveal x) (Ghost.reveal y))
+}
+  
 (** Isomorphisms *)
 
 noeq type iso a b = {
