@@ -57,40 +57,61 @@ let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: '
   f_op = (fun (x, y) (z, w) -> mf.f_op x z; mg.f_op y w);
 }
 
-(** A refinement of a PCM (p: pcm a) consists of:
-    (1) A set of elements f:(a -> prop) closed under (op p)
-    (2) An element new_unit which satisfies the unit laws on the subset f *)
+(** A refinement of a PCM (p: pcm a) consists of an element new_unit such that:
+    (1) new_one is a unit for every element compatible with it
+    (2) Composability with new_unit is closed under (op p) *)
+
 let refine_t (f: 'a -> prop) = x:'a{f x}
+
 noeq type pcm_refinement #a (p: pcm a) = {
-  f: a -> prop;
-  f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
-  new_one: refine_t f;
-  new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
+  new_one: a;
+  new_one_is_unit: x:a{compatible p new_one x} ->
+    Lemma (composable p x new_one /\ op p x new_one == x);
+  new_one_comp_closed:
+    x:a{compatible p new_one x} ->
+    y:a{compatible p new_one y /\ composable p x y} ->
+    Lemma (composable p y new_one /\ composable p (op p x y) new_one)
 }
 
-let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
+let pcm_refine_t (#p: pcm 'a) (re: pcm_refinement p) = x:'a{composable p x re.new_one}
 
+let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (pcm_refine_t r) = composable p
+
+(*
 let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
-  (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
-= r.f_closed_under_op x y; op p x y
+  (x: pcm_refine_t r) (y: pcm_refine_t r{composable p x y}): pcm_refine_t r
+= r.new_one_comp_closed x y; op p x y
 
 (** Any refinement r for p can be used to construct a refined PCM with the same product
     and composability predicate, but restricted to elements in r.f *)
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (pcm_refine_t r) = {
   p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
   assoc_r = (fun x y z -> p.assoc_r x y z);
-  is_unit = (fun x -> r.new_one_is_refined_unit x);
+  is_unit = (fun x -> r.new_one_is_unit x);
   refine = p.refine;
 }
 
+type pcm_refinement_ok p (re: pcm_refinement p) =
+  forall (x y: refine_t re.f).
+  frame_pres f x y ->
+  frame_pres (unrefine f) x y
+
+p: pcm a
+re1: refinement p
+_: pcm_refinement_ok p re1
+re2: refinement (refined_pcm re1)
+_: pcm_refinement_ok (refined_pcm re1) re2
+--------------------------------------------------
+_: pcm_refinement_ok p (conj_refinement re1 re2)
+
 let trivial_refinement (p: pcm 'a): pcm_refinement p = {
-  f = (fun x -> True);
-  f_closed_under_op = (fun _ _ -> ());
-  new_one = one p;
-  new_one_is_refined_unit = p.is_unit;
+  new_one = (p.is_unit (one p); one p);
+  new_one_is_unit = (fun x -> p.is_unit x);
+  new_one_comp_closed = (fun x y -> p.is_unit y; p.is_unit (op p x y));
 }
+*)
 
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
@@ -259,6 +280,7 @@ open FStar.FunctionalExtensionality
 noeq type ref (a:Type) (b:Type): Type = {
   p: pcm a;
   re: pcm_refinement p;
+  hre: pcm_refinement_ok p re;
   q: pcm b;
   pl: pcm_lens (refined_pcm re) q;
   r: Steel.Memory.ref a p;
@@ -336,11 +358,43 @@ let either_pcm (p: pcm 'a) (q: pcm 'b): pcm (option (either 'a 'b)) = P.({
     | Some (Inr x) -> q.refine x);
 })
 
+// put new_one one <= x
+// x composable y
+// ----------------------
+// put new_one one <= y
+// 
+// put new_one one <= x
+// x composable y
+// put new_one one * put frame_v frame_s = put (get x) x
+// new_one * frame_v = get x
+// (get x) composable (get y)
+// new_one <= get y
+// one <= y
+// put new_one one <= put (get y) y = y
+// ----------------------
+// put new_one one <= y
+
+//  new_one: x:a{composable p x x};
+//  new_one_is_unit: x:a{composable p x new_one} -> Lemma (op p x new_one == x);
+//  new_one_comp_closed:
+//    x:a{composable p x new_one} -> 
+//    y:a{composable p x new_one /\ composable p x y} ->
+//    Lemma (composable p (op p x y) new_one)
 let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
-  f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
-  f_closed_under_op = (fun _ _ -> ());
-  new_one = Some (Inl #_ #'b (one p));
-  new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
+  //f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
+  //f_closed_under_op = (fun _ _ -> ());
+  //new_one = Some (Inl #_ #'b (one p));
+  //new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
+  new_one = (p.is_unit (one p); Some (Inl (one p)));
+  new_one_is_unit = (fun x -> match x with
+    | Some (Inl x) -> p.is_unit x
+    | None -> admit());
+  new_one_comp_closed = (fun _ _ -> admit());
+  //new_one_is_unit: x:'a{composable p x new_one} -> Lemma (op p x new_one == x);
+  //new_one_comp_closed:
+  //  x:a{composable p x new_one} -> 
+  //  y:a{composable p x y} ->
+  //  Lemma (composable p y new_one /\ composable p (op p x y) new_one)
 }
 
 (** A lens for the k-th field of an n-ary product *)
@@ -393,12 +447,14 @@ let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 : refine_t (case_refinement_f p k)
 = Some (|k, one (p k)|)
 
+(* TODO
 let case_refinement (p:(k:'a -> pcm ('b k))) (k:'a): pcm_refinement (union_pcm p) = {
   f = case_refinement_f p k;
   f_closed_under_op = (fun x y -> ());
   new_one = case_refinement_new_one p k;
   new_one_is_refined_unit = (fun (Some (|k', x|)) -> (p k).is_unit x)
 }
+*)
 
 (** A lens for the k-th case of an n-ary union *)
 
@@ -416,12 +472,14 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
   put_put = (fun s v w -> ());
 }
 
+(* TODO
 (** lens_case is a pcm_lens *)
 let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
   l = lens_case p k;
   get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
 }
+*)
 
 (** Refining a lens *)
 
