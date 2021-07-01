@@ -843,9 +843,6 @@ let extend_refinement_ok_unrefine (r: ref 'a 'b)
   refine_t r.re.f -> refine_t r.re.f
 = admit()
 
-// let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-//   (re: pcm_refinement q): 'a -> prop = re.f `compose` get l
-
 let extend_refinement_ok (r: ref 'a 'b)
   (re: pcm_refinement r.q) (re_ok: pcm_refinement_ok re)
 : pcm_refinement_ok (extend_refinement r.pl re)
@@ -855,13 +852,16 @@ let extend_refinement_ok (r: ref 'a 'b)
     frame_pres_unrefine = (fun f x y -> admit());
   }
 
-(*
 (** The refinement of a ref *)
 
-let ref_refine (r: ref 'a 'b) (new_re: pcm_refinement r.q) (new_re_ok: pcm_refinement_ok new_re): ref 'a (refine_t new_re.f) = {
+let ref_refine (r: ref 'a 'b)
+  (new_re: pcm_refinement r.q) (new_re_ok: pcm_refinement_ok new_re)
+: ref 'a (refine_t new_re.f) = {
   p = r.p;
   re = conj_refinement r.re (extend_refinement r.pl new_re);
-  re_ok = conj_refinement_ok r.re (extend_refinement r.pl new_re) r.re_ok new_re_ok;
+  re_ok =
+    conj_refinement_ok r.re (extend_refinement r.pl new_re) r.re_ok
+      (extend_refinement_ok r new_re new_re_ok);
   q = refined_pcm new_re;
   pl =
     pcm_iso_lens_comp
@@ -877,7 +877,7 @@ module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
 let ref_focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
-  {p = r.p; re = r.re; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
+  {p = r.p; re = r.re; re_ok = r.re_ok; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
 let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
 : Steel (ref 'a 'c)
@@ -978,22 +978,26 @@ let addr_of_lens (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased
 = peel r q l x;
   focus r q l (put l (get l x) (one r.q)) (get l x)
 
-let refine (r: ref 'a 'b) (re: pcm_refinement r.q) (x: Ghost.erased 'b{re.f x})
+let refine (r: ref 'a 'b)
+  (re: pcm_refinement r.q)
+  (re_ok: pcm_refinement_ok re)
+  (x: Ghost.erased 'b{re.f x})
 : Steel (ref 'a (refine_t re.f))
     (to_vprop (r `pts_to` x))
     (fun r' -> to_vprop (r' `pts_to` Ghost.reveal x))
     (fun _ -> True)
-    (fun _ r' _ -> r' == ref_refine r re)
-= let r' = ref_refine r re in
+    (fun _ r' _ -> r' == ref_refine r re re_ok)
+= let r' = ref_refine r re re_ok in
   change_equal_vprop (r `pts_to` x) (r' `pts_to` Ghost.reveal x);
   A.return r'
 
-let unrefine #inames (r': ref 'a 'b) (re: pcm_refinement r'.q)
+let unrefine #inames (r': ref 'a 'b)
+  (re: pcm_refinement r'.q) (re_ok: pcm_refinement_ok re)
   (r: ref 'a (refine_t re.f)) (x: Ghost.erased 'b{re.f x})
 : A.SteelGhost unit inames
     (to_vprop (r `pts_to` Ghost.reveal x))
     (fun _ -> to_vprop (r' `pts_to` x))
-    (fun _ -> r == ref_refine r' re)
+    (fun _ -> r == ref_refine r' re re_ok)
     (fun _ _ _ -> True)
 = change_equal_vprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
@@ -1169,4 +1173,3 @@ let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: 'b -> 'b) (hf: frame_pres 
   f' hf') in
   as_action act
   *)
-*)
