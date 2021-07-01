@@ -8,6 +8,37 @@ let compose (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
 let both (f: 'a -> 'c) (g: 'b -> 'd) ((x, y): 'a & 'b): 'c & 'd = (f x, g y)
 let uncurry (f: 'a -> 'b -> 'c) ((x, y): 'a & 'b): 'c = f x y
 let conj (f: 'a -> prop) (g:(x:'a{f x} -> prop)) (x: 'a): prop = f x /\ g x
+    
+(** The non-computational part of frame_preserving_upd
+    TODO: move this and lemmas about this to FStar.PCM.fst *)
+let frame_pres_on (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
+  (v:'a{p.refine v /\ compatible p x v})
+= p.refine (f v) /\
+  compatible p y (f v) /\
+  (forall (frame:'a{composable p x frame}).{:pattern composable p x frame}
+     composable p y frame /\
+     (op p x frame == v ==> op p y frame == f v))
+let frame_pres (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a) =
+  forall (v:'a{p.refine v /\ compatible p x v}).{:pattern compatible p x v}
+  frame_pres_on p f x y v
+
+(** Every function satisfying frame_pres is a frame_preserving_upd *)
+let frame_pres_mk_upd (p: pcm 'a) (x y: Ghost.erased 'a)
+  (f:('a -> 'a){frame_pres p f x y})
+  : frame_preserving_upd p x y
+  = fun v -> f v
+(** The converse is not true, because a frame_preserving_upd's domain
+    is restricted to v:a{p.refine v /\ compatible p x v}. *)
+
+let frame_pres_intro (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
+  (g:(v:'a{p.refine v /\ compatible p x v} -> 
+     Lemma (p.refine (f v) /\ compatible p y (f v) /\
+            (forall (frame:'a{composable p x frame}).
+              composable p y frame /\
+              (op p x frame == v ==> op p y frame == f v)))
+     [SMTPat (compatible p x v)]))
+: Lemma (frame_pres p f x y) =
+  let _ = g in ()
 
 (** TODO move PCM morphisms and refinements to FStar.PCM.fst? *)
 
@@ -57,61 +88,54 @@ let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: '
   f_op = (fun (x, y) (z, w) -> mf.f_op x z; mg.f_op y w);
 }
 
-(** A refinement of a PCM (p: pcm a) consists of an element new_unit such that:
-    (1) new_one is a unit for every element compatible with it
-    (2) Composability with new_unit is closed under (op p) *)
-
+(** A refinement of a PCM (p: pcm a) consists of:
+    (1) A set of elements f:(a -> prop) closed under (op p)
+    (2) An element new_unit which satisfies the unit laws on the subset f *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
-
 noeq type pcm_refinement #a (p: pcm a) = {
-  new_one: a;
-  new_one_is_unit: x:a{compatible p new_one x} ->
-    Lemma (composable p x new_one /\ op p x new_one == x);
-  new_one_comp_closed:
-    x:a{compatible p new_one x} ->
-    y:a{compatible p new_one y /\ composable p x y} ->
-    Lemma (composable p y new_one /\ composable p (op p x y) new_one)
+  f: a -> prop;
+  f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
+  new_one: refine_t f;
+  new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
 
-let pcm_refine_t (#p: pcm 'a) (re: pcm_refinement p) = x:'a{composable p x re.new_one}
+let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
 
-let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (pcm_refine_t r) = composable p
-
-(*
 let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
-  (x: pcm_refine_t r) (y: pcm_refine_t r{composable p x y}): pcm_refine_t r
-= r.new_one_comp_closed x y; op p x y
+  (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
+= r.f_closed_under_op x y; op p x y
 
 (** Any refinement r for p can be used to construct a refined PCM with the same product
     and composability predicate, but restricted to elements in r.f *)
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (pcm_refine_t r) = {
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
   p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
   assoc_r = (fun x y z -> p.assoc_r x y z);
-  is_unit = (fun x -> r.new_one_is_unit x);
+  is_unit = (fun x -> r.new_one_is_refined_unit x);
   refine = p.refine;
 }
 
-type pcm_refinement_ok p (re: pcm_refinement p) =
-  forall (x y: refine_t re.f).
-  frame_pres f x y ->
-  frame_pres (unrefine f) x y
-
-p: pcm a
-re1: refinement p
-_: pcm_refinement_ok p re1
-re2: refinement (refined_pcm re1)
-_: pcm_refinement_ok (refined_pcm re1) re2
---------------------------------------------------
-_: pcm_refinement_ok p (conj_refinement re1 re2)
-
 let trivial_refinement (p: pcm 'a): pcm_refinement p = {
-  new_one = (p.is_unit (one p); one p);
-  new_one_is_unit = (fun x -> p.is_unit x);
-  new_one_comp_closed = (fun x y -> p.is_unit y; p.is_unit (op p x y));
+  f = (fun x -> True);
+  f_closed_under_op = (fun _ _ -> ());
+  new_one = one p;
+  new_one_is_refined_unit = p.is_unit;
 }
-*)
+
+(** A PCM refinement is well-formed if frame-preserving updates on the
+    refined PCM can be lifted to frame-preserving updates on the
+    unrefined PCM *)
+noeq type pcm_refinement_ok #a (#p: pcm a) (r: pcm_refinement p) = {
+  unrefine: (refine_t r.f -> refine_t r.f) -> a -> a;
+  frame_pres_unrefine:
+    f:(refine_t r.f -> refine_t r.f) ->
+    x:Ghost.erased (refine_t r.f) ->
+    y:Ghost.erased (refine_t r.f) ->
+    Lemma
+      (requires frame_pres (refined_pcm r) f x y)
+      (ensures frame_pres p (unrefine f) (Ghost.reveal x) (Ghost.reveal y))
+}
 
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
@@ -177,37 +201,6 @@ let pcm_lens_compatible_get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (x y: 'a
 = compatible_elim p x y (compatible q (get l x) (get l y)) (fun frame_x ->
   let _ = l.get_morphism.f_op frame_x x in
   compatible_intro q (get l x) (get l y) (get l frame_x))
-    
-(** The non-computational part of frame_preserving_upd
-    TODO: move this and lemmas about this to FStar.PCM.fst *)
-let frame_pres_on (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
-  (v:'a{p.refine v /\ compatible p x v})
-= p.refine (f v) /\
-  compatible p y (f v) /\
-  (forall (frame:'a{composable p x frame}).{:pattern composable p x frame}
-     composable p y frame /\
-     (op p x frame == v ==> op p y frame == f v))
-let frame_pres (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a) =
-  forall (v:'a{p.refine v /\ compatible p x v}).{:pattern compatible p x v}
-  frame_pres_on p f x y v
-
-(** Every function satisfying frame_pres is a frame_preserving_upd *)
-let frame_pres_mk_upd (p: pcm 'a) (x y: Ghost.erased 'a)
-  (f:('a -> 'a){frame_pres p f x y})
-  : frame_preserving_upd p x y
-  = fun v -> f v
-(** The converse is not true, because a frame_preserving_upd's domain
-    is restricted to v:a{p.refine v /\ compatible p x v}. *)
-
-let frame_pres_intro (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
-  (g:(v:'a{p.refine v /\ compatible p x v} -> 
-     Lemma (p.refine (f v) /\ compatible p y (f v) /\
-            (forall (frame:'a{composable p x frame}).
-              composable p y frame /\
-              (op p x frame == v ==> op p y frame == f v)))
-     [SMTPat (compatible p x v)]))
-: Lemma (frame_pres p f x y) =
-  let _ = g in ()
     
 let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
 : Lemma
@@ -280,7 +273,7 @@ open FStar.FunctionalExtensionality
 noeq type ref (a:Type) (b:Type): Type = {
   p: pcm a;
   re: pcm_refinement p;
-  hre: pcm_refinement_ok p re;
+  hre: pcm_refinement_ok re;
   q: pcm b;
   pl: pcm_lens (refined_pcm re) q;
   r: Steel.Memory.ref a p;
@@ -358,43 +351,11 @@ let either_pcm (p: pcm 'a) (q: pcm 'b): pcm (option (either 'a 'b)) = P.({
     | Some (Inr x) -> q.refine x);
 })
 
-// put new_one one <= x
-// x composable y
-// ----------------------
-// put new_one one <= y
-// 
-// put new_one one <= x
-// x composable y
-// put new_one one * put frame_v frame_s = put (get x) x
-// new_one * frame_v = get x
-// (get x) composable (get y)
-// new_one <= get y
-// one <= y
-// put new_one one <= put (get y) y = y
-// ----------------------
-// put new_one one <= y
-
-//  new_one: x:a{composable p x x};
-//  new_one_is_unit: x:a{composable p x new_one} -> Lemma (op p x new_one == x);
-//  new_one_comp_closed:
-//    x:a{composable p x new_one} -> 
-//    y:a{composable p x new_one /\ composable p x y} ->
-//    Lemma (composable p (op p x y) new_one)
 let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
-  //f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
-  //f_closed_under_op = (fun _ _ -> ());
-  //new_one = Some (Inl #_ #'b (one p));
-  //new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
-  new_one = (p.is_unit (one p); Some (Inl (one p)));
-  new_one_is_unit = (fun x -> match x with
-    | Some (Inl x) -> p.is_unit x
-    | None -> admit());
-  new_one_comp_closed = (fun _ _ -> admit());
-  //new_one_is_unit: x:'a{composable p x new_one} -> Lemma (op p x new_one == x);
-  //new_one_comp_closed:
-  //  x:a{composable p x new_one} -> 
-  //  y:a{composable p x y} ->
-  //  Lemma (composable p y new_one /\ composable p (op p x y) new_one)
+  f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
+  f_closed_under_op = (fun _ _ -> ());
+  new_one = Some (Inl #_ #'b (one p));
+  new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
 (** A lens for the k-th field of an n-ary product *)
@@ -447,19 +408,81 @@ let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 : refine_t (case_refinement_f p k)
 = Some (|k, one (p k)|)
 
-(* TODO
 let case_refinement (p:(k:'a -> pcm ('b k))) (k:'a): pcm_refinement (union_pcm p) = {
   f = case_refinement_f p k;
   f_closed_under_op = (fun x y -> ());
   new_one = case_refinement_new_one p k;
   new_one_is_refined_unit = (fun (Some (|k', x|)) -> (p k).is_unit x)
 }
-*)
+
+let case_refinement_ok_unrefine (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (f: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k))
+  (kx: union b): union b
+= match kx with
+  | Some (|k', _|) -> if k = k' then f kx else None
+  | _ -> None
+
+let case_refinement_ok (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+: pcm_refinement_ok (case_refinement p k) = {
+  unrefine = case_refinement_ok_unrefine p k;
+  frame_pres_unrefine = (fun f kx ky ->
+    let Some (|_, x|) = Ghost.reveal kx in
+    let Some (|_, y|) = Ghost.reveal ky in
+    let p' = refined_pcm (case_refinement p k) in
+    frame_pres_intro (union_pcm p) (case_refinement_ok_unrefine p k f)
+      (Ghost.reveal kx) (Ghost.reveal ky)
+      (fun kv -> match kv with
+        | Some (|k', v|) -> 
+          if k = k' then begin
+            compatible_elim (union_pcm p) (Ghost.reveal kx) kv
+              (compatible (refined_pcm (case_refinement p k)) kx kv)
+              (fun frame_kx -> match frame_kx with
+                | Some (|_, frame_x|) -> compatible_intro p' kx kv (Some (|k, frame_x|))
+                | None -> compatible_refl p' kx);
+            let aux (frame:union b{composable (union_pcm p) kx frame})
+            : Lemma (composable (union_pcm p) ky frame /\
+                     (op (union_pcm p) kx frame == Some (|k, v|) ==>
+                      op (union_pcm p) ky frame == f (Some (|k, v|))))
+            = let Some (|_, w|) = f (Some (|k, v|)) in
+              match frame with
+              | Some (|frame_k, frame_v|) ->
+                assert (k == frame_k);
+                //assert (forall (frame:refine_t (case_refinement_f p k) {composable p' kx frame}).{:pattern composable p' kx frame}
+                //  composable p' ky frame /\
+                //  (op p' kx frame == kv ==> op p' ky frame == f kv));
+                assert (composable p' kx frame);
+                assert (composable (p k) y frame_v);
+                assert (op (p k) x frame_v == v ==> op (p k) y frame_v == w)
+              | None ->
+                p'.is_unit kx;
+                //assert (forall (frame:refine_t (case_refinement_f p k) {composable p' kx frame}).{:pattern composable p' kx frame}
+                //  composable p' ky frame /\
+                //  (op p' kx frame == kv ==> op p' ky frame == f kv));
+                assert (composable p' kx (one p'));
+                assert (composable p' ky (one p') /\ (op p' kx (one p') == kv ==> op p' ky (one p') == f kv));
+                p'.is_unit ky;
+                assert (composable p' ky (one p') /\ (Ghost.reveal kx == kv ==> Ghost.reveal ky == f kv));
+                assert (composable p' ky (one p') /\ (Some (|k, x|) == Some (|k, v|) ==> Ghost.reveal ky == f (Some (|k, v|))));
+                assert (x == v ==> Ghost.reveal ky == Some (|k, w|));
+                let Some (|k', y|) = Ghost.reveal ky in
+                assert (x == v ==> Some (|k', y|) == Some (|k, w|));
+                assert (x == v ==> y == w)
+            in FStar.Classical.forall_intro aux
+          end else ()
+        | None -> ()));
+}
 
 (** A lens for the k-th case of an n-ary union *)
 
 let lens_case_get (p:(k:'a -> pcm ('b k))) (k:'a): refine_t (case_refinement_f p k) -> 'b k =
   fun (Some (|_, v|)) -> v
+  //frame_pres_unrefine:
+  //  f:(refine_t r.f -> refine_t r.f) ->
+  //  x:erased (refine_t r.f) ->
+  //  y:erased (refine_t r.f) ->
+  //  Lemma
+  //    (requires frame_pres (refined_pcm r) f x y)
+  //    (ensures frame_pres p (unrefine f) (reveal x) (reveal y))
 let lens_case_put (p:(k:'a -> pcm ('b k))) (k:'a) (v:'b k)
 : refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k)
 = fun _ -> Some (|k, v|)
@@ -472,14 +495,12 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
   put_put = (fun s v w -> ());
 }
 
-(* TODO
 (** lens_case is a pcm_lens *)
 let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
   l = lens_case p k;
   get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
 }
-*)
 
 (** Refining a lens *)
 
@@ -1046,4 +1067,3 @@ let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: 'b -> 'b) (hf: frame_pres 
   f' hf') in
   as_action act
   *)
-
