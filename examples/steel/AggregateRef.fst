@@ -90,12 +90,13 @@ let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: '
 
 (** A refinement of a PCM (p: pcm a) consists of:
     (1) A set of elements f:(a -> prop) closed under (op p)
-    (2) An element new_unit which satisfies the unit laws on the subset f *)
+    (2) An element new_unit which satisfies the unit laws on the subset f
+        and p.refine *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
 noeq type pcm_refinement #a (p: pcm a) = {
   f: a -> prop;
   f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
-  new_one: refine_t f;
+  new_one: (new_one:refine_t f{p.refine new_one});
   new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
 
@@ -107,20 +108,14 @@ let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
 
 (** Any refinement r for p can be used to construct a refined PCM with the same product
     and composability predicate, but restricted to elements in r.f *)
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
+let refined_one_pcm a = p:pcm a{p.refine (one p)}
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): refined_one_pcm (refine_t r.f) = {
   p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
   assoc_r = (fun x y z -> p.assoc_r x y z);
   is_unit = (fun x -> r.new_one_is_refined_unit x);
   refine = p.refine;
-}
-
-let trivial_refinement (p: pcm 'a): pcm_refinement p = {
-  f = (fun x -> True);
-  f_closed_under_op = (fun _ _ -> ());
-  new_one = one p;
-  new_one_is_refined_unit = p.is_unit;
 }
 
 (** A PCM refinement is well-formed if frame-preserving updates on the
@@ -131,21 +126,6 @@ let frame_pres_lift (p: pcm 'a) (x y: Ghost.erased 'a) (q: pcm 'b) (x' y': Ghost
   f:('a -> 'a){frame_pres p f x y} -> 
   g:('b -> 'b){frame_pres q g x' y'}
 
-(* admit() delete
-let 
-(* todo: can combine these two into a dependently typed function
-   which takes frame-preserving fs to frame-presrving gs *)
-let unrefine_t (#p: pcm 'a) (r: pcm_refinement p) =
-  (refine_t r.f -> refine_t r.f) -> 'a -> 'a
-let frame_pres_unrefine_t (#p: pcm 'a) (r: pcm_refinement p) (unrefine: unrefine_t r) =
-  f:(refine_t r.f -> refine_t r.f) ->
-  x:Ghost.erased (refine_t r.f) ->
-  y:Ghost.erased (refine_t r.f) ->
-  Lemma
-    (requires frame_pres (refined_pcm r) f x y)
-    (ensures frame_pres p (unrefine f) (Ghost.reveal x) (Ghost.reveal y))
-    *)
-  
 let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement p) =
   x: Ghost.erased (refine_t r.f) ->
   y: Ghost.erased (refine_t r.f) ->
@@ -286,14 +266,15 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
 
 open FStar.FunctionalExtensionality
 
+(* admit() update comment *)
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
     This allows the reference to point to substructures of unions with known case. *)
 noeq type ref (a:Type) (b:Type): Type = {
-  p: pcm a;
+  p: refined_one_pcm a;
   re: pcm_refinement p;
   u: pcm_unrefinement re;
-  q: pcm b;
+  q: refined_one_pcm b;
   pl: pcm_lens (refined_pcm re) q;
   r: Steel.Memory.ref a p;
 }
@@ -370,7 +351,7 @@ let either_pcm (p: pcm 'a) (q: pcm 'b): pcm (option (either 'a 'b)) = P.({
     | Some (Inr x) -> q.refine x);
 })
 
-let inl_refinement (p: pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
+let inl_refinement (p: refined_one_pcm 'a) (q: pcm 'b): pcm_refinement (either_pcm p q) = {
   f = (fun (x: option (either 'a 'b)) -> Some? x /\ Inl? (Some?.v x));
   f_closed_under_op = (fun _ _ -> ());
   new_one = Some (Inl #_ #'b (one p));
@@ -427,7 +408,8 @@ let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 : refine_t (case_refinement_f p k)
 = Some (|k, one (p k)|)
 
-let case_refinement (p:(k:'a -> pcm ('b k))) (k:'a): pcm_refinement (union_pcm p) = {
+let case_refinement (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
+: pcm_refinement (union_pcm p) = {
   f = case_refinement_f p k;
   f_closed_under_op = (fun x y -> ());
   new_one = case_refinement_new_one p k;
@@ -442,7 +424,7 @@ let case_unrefinement_unrefine (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   | _ -> None
 
 (* admit() tidy,then combine with above defn *)
-let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   (f: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k))
   (kx ky: Ghost.erased (refine_t (case_refinement_f p k)))
 : Lemma
@@ -493,7 +475,7 @@ let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
         end else ()
       | None -> ())
     
-let case_unrefinement (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
 : pcm_unrefinement (case_refinement p k)
 = fun kx ky f ->
   case_unrefinement_unrefine_ok p k f kx ky; 
@@ -516,7 +498,8 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
 }
 
 (** lens_case is a pcm_lens *)
-let case (p:(k:'a -> pcm ('b k))) (k:'a): pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
+let case (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
+: pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
   l = lens_case p k;
   get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
@@ -557,12 +540,13 @@ let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
   assume (op p x y == put l (get l (op p x y)) (one p))
   (* get put morphism plus the fact that (one p = one p * one p) *)
 
-let extend_refinement_new_one (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q): refine_t (extend_refinement_f l re)
-= put l re.new_one (one p)
+let extend_refinement_new_one (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: new_one:refine_t (extend_refinement_f l re){p.refine new_one}
+= l.put_morphism.f_refine (re.new_one, one p); put l re.new_one (one p)
 
 let extend_refinement_new_one_is_refined_unit
-  (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b) (l: pcm_lens p q)
   (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
 : Lemma (composable p x (extend_refinement_new_one l re) /\
          op p x (extend_refinement_new_one l re) == x)
@@ -570,14 +554,17 @@ let extend_refinement_new_one_is_refined_unit
   p.is_unit x;
   l.put_morphism.f_op (get l x, x) (re.new_one, one p)
   
-let extend_refinement (l: pcm_lens 'p 'q) (re: pcm_refinement 'q) : pcm_refinement 'p = {
+let extend_refinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: pcm_refinement p = {
   f = extend_refinement_f l re;
   f_closed_under_op = extend_refinement_f_closed l re;
   new_one = extend_refinement_new_one l re;
   new_one_is_refined_unit = extend_refinement_new_one_is_refined_unit l re;
 }
 
-let pcm_lens_refine_get_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_get_morphism_refine
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_refine
     (refined_pcm (extend_refinement l re))
@@ -585,7 +572,8 @@ let pcm_lens_refine_get_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
     (lens_refine l re).get
 = l.get_morphism.f_refine
 
-let pcm_lens_refine_get_morphism_one (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_get_morphism_one
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_one
     (refined_pcm (extend_refinement l re))
@@ -593,7 +581,8 @@ let pcm_lens_refine_get_morphism_one (#p: pcm 'a) (#q: pcm 'b)
     (lens_refine l re).get
 = l.get_morphism.f_one
 
-let pcm_lens_refine_get_morphism_op (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_get_morphism_op
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_op
     (refined_pcm (extend_refinement l re))
@@ -601,7 +590,8 @@ let pcm_lens_refine_get_morphism_op (#p: pcm 'a) (#q: pcm 'b)
     (lens_refine l re).get
 = l.get_morphism.f_op
 
-let pcm_lens_refine_put_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_put_morphism_refine
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_refine
     (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
@@ -609,7 +599,8 @@ let pcm_lens_refine_put_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
     (uncurry (lens_refine l re).put)
 = fun (v, s) -> l.put_morphism.f_refine (v, s)
 
-let pcm_lens_refine_put_morphism_one (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_put_morphism_one
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_one
     (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
@@ -617,7 +608,8 @@ let pcm_lens_refine_put_morphism_one (#p: pcm 'a) (#q: pcm 'b)
     (uncurry (lens_refine l re).put)
 = l.put_morphism.f_one
 
-let pcm_lens_refine_put_morphism_op (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine_put_morphism_op
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : morphism_op
     (refined_pcm re `pcm_times` refined_pcm (extend_refinement l re))
@@ -625,7 +617,8 @@ let pcm_lens_refine_put_morphism_op (#p: pcm 'a) (#q: pcm 'b)
     (uncurry (lens_refine l re).put)
 = fun (v, s) (w, t) -> l.put_morphism.f_op (v, s) (w, t)
 
-let pcm_lens_refine (#p: pcm 'a) (#q: pcm 'b)
+let pcm_lens_refine
+  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
 : pcm_lens (refined_pcm (extend_refinement l re)) (refined_pcm re) = {
   l = lens_refine l re;
@@ -848,22 +841,55 @@ let conj_unrefinement (#p: pcm 'a)
   h2 (Ghost.reveal x) (Ghost.reveal y) `compose`
   upd_across_pcm_iso (pcm_refinement_conj_iso p re1 re2) x y
 
-let extend_unrefinement (#p: pcm 'a) (#q: pcm 'b)
+let extend_refinement_iso (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+: pcm_iso (refined_pcm (extend_refinement l re)) (refined_pcm re)
+= let a' = refine_t (extend_refinement_f l re) in
+  let b' = refine_t re.f in
+  let p' = refined_pcm (extend_refinement l re) in
+  let q' = refined_pcm re in
+  let fwd (x: a'): b' = get l x in
+  let bwd (x: b'): a' = put l x (one p) in
+  let i: iso a' b' = {fwd = fwd; bwd = bwd; fwd_bwd = (fun x -> ()); bwd_fwd = (fun x -> ())} in
+  let fwd_morphism: pcm_morphism i.fwd p' q' =
+    let f_refine: morphism_refine p' q' i.fwd = fun x -> l.get_morphism.f_refine x in
+    let f_one: morphism_one p' q' i.fwd = fun x -> l.get_morphism.f_one x in
+    let f_op: morphism_op p' q' i.fwd = fun x y -> l.get_morphism.f_op x y in
+    {f_refine = f_refine; f_one = f_one; f_op = f_op}
+  in
+  let bwd_morphism: pcm_morphism i.bwd q' p' = 
+    let f_refine: morphism_refine q' p' i.bwd = fun x -> l.put_morphism.f_refine (x, one p) in
+    let f_one: morphism_one q' p' i.bwd = fun _ -> () in
+    let f_op: morphism_op q' p' i.bwd = fun x y ->
+      p.is_unit (one p);
+      l.put_morphism.f_op (x, one p) (y, one p)
+    in
+    {f_refine = f_refine; f_one = f_one; f_op = f_op}
+  in
+  {i = i; fwd_morphism = fwd_morphism; bwd_morphism = bwd_morphism}
+
+let extend_refinement_lift (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement q)
+  (x y: Ghost.erased (refine_t (extend_refinement_f l re)))
+: frame_pres_lift
+    (refined_pcm (extend_refinement l re)) x y
+    (refined_pcm re) (get l x) (get l y)
+= upd_across_pcm_iso (extend_refinement_iso l re) x y 
+
+let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q) (u: pcm_unrefinement re)
 : pcm_unrefinement (extend_refinement l re)
-= admit()
+= fun x y f ->
+  assert (Ghost.reveal x == put l (get l x) (one p));
+  assert (Ghost.reveal y == put l (get l y) (one p));
+  let f = extend_refinement_lift l re x y f in
+  assert (frame_pres (refined_pcm re) f (get l x) (get l y));
+  let f = u (get l x) (get l y) f in
+  assert (frame_pres q f (get l x) (get l y));
+  let f = pcm_lens_lift l (Ghost.reveal x) (get l y) f in
+  assert (frame_pres p f (Ghost.reveal x) (put l (get l y) x));
+  f
 (*
-
-need lemma:
-  l: pcm_lens p q
-  re: pcm_refinement q ->
-  frame_pres_lift (refined_pcm (extend_refinement l re)) x y
-    (refined_pcm re) (get l x) (get l y)
-  
-  or could just write
-    pcm_iso (refined_pcm (extend_refinement l re)) (refined_pcm re)
-  and use upd_across_iso
-
 goal: construct
   (frame_pres p _ x y)
 given
@@ -912,10 +938,11 @@ open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
-let ref_focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
+let ref_focus (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q): ref 'a 'c =
   {p = r.p; re = r.re; u = r.u; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
-let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
+let focus (r: ref 'a 'b) (q: refined_one_pcm 'c)
+  (l: pcm_lens r.q q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
 : Steel (ref 'a 'c)
     (to_vprop (r `pts_to` s))
     (fun r' -> to_vprop (r' `pts_to` x))
@@ -929,7 +956,7 @@ let focus (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (s: Ghost.erased 'b) (x
     (fun m -> r.pl.get_morphism.f_one ());
   A.return r'
 
-let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: pcm 'c)
+let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: refined_one_pcm 'c)
   (l: pcm_lens r'.q q) (x: Ghost.erased 'c)
 : A.SteelGhost unit inames
     (to_vprop (r `pts_to` x))
@@ -993,7 +1020,7 @@ let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
     (Ghost.reveal y, one (refined_pcm r.re));
   change_equal_vprop _ (r `pts_to` op r.q x y)
 
-let peel (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
+let peel (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
 : SteelT unit
     (to_vprop (r `pts_to` x))
     (fun _ ->
@@ -1005,7 +1032,7 @@ let peel (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
   l.put_morphism.f_op (one q, Ghost.reveal x) (get l (Ghost.reveal x), one r.q);
   split r x (put l (one q) x) (put l (get l x) (one r.q))
 
-let addr_of_lens (r: ref 'a 'b) (q: pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
+let addr_of_lens (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
 : SteelT (ref 'a 'c)
     (to_vprop (r `pts_to` x))
     (fun s ->
