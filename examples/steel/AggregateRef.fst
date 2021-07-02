@@ -190,11 +190,16 @@ let upd (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (f: 'b -> 'b) (s: 'a): 'a = 
 (** The upd function of a pcm_lens lifts frame-preserving updates on the target to
     frame-preserving updates on the source *)
 
+let compatible_pcm_morphism (#p: pcm 'a) (#q: pcm 'b)
+  (f: 'a -> 'b) (m: pcm_morphism f p q) (x y: Ghost.erased 'a)
+: Lemma (requires compatible p x y) (ensures compatible q (f x) (f y))
+= compatible_elim p x y (compatible q (f x) (f y)) (fun frame_x ->
+  let _ = m.f_op frame_x x in
+  compatible_intro q (f x) (f y) (f frame_x))
+
 let pcm_lens_compatible_get (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (x y: 'a)
 : Lemma (requires compatible p x y) (ensures compatible q (get l x) (get l y))
-= compatible_elim p x y (compatible q (get l x) (get l y)) (fun frame_x ->
-  let _ = l.get_morphism.f_op frame_x x in
-  compatible_intro q (get l x) (get l y) (get l frame_x))
+= compatible_pcm_morphism l.l.get l.get_morphism x y
     
 let pcm_lens_frame_pres (p: pcm 'a) (q: pcm 'b) (l: pcm_lens p q) (s: 'a) (v: 'b) (f: 'b -> 'b)
 : Lemma
@@ -266,7 +271,7 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
 
 open FStar.FunctionalExtensionality
 
-(* admit() update comment *)
+(* TODO() update comment *)
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
     This allows the reference to point to substructures of unions with known case. *)
@@ -423,7 +428,7 @@ let case_unrefinement_unrefine (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   | Some (|k', _|) -> if k = k' then f kx else None
   | _ -> None
 
-(* admit() tidy,then combine with above defn *)
+(* TODO() tidy,then combine with above defn *)
 let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   (f: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k))
   (kx ky: Ghost.erased (refine_t (case_refinement_f p k)))
@@ -537,7 +542,12 @@ let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
 : Lemma (extend_refinement_f l re (op p x y))
 = l.get_morphism.f_op x y;
   re.f_closed_under_op (get l x) (get l y);
-  assume (op p x y == put l (get l (op p x y)) (one p))
+  p.is_unit (one p);
+  l.put_morphism.f_op (get l x, one p) (get l y, one p);
+  assert (op p x y == op p (put l (get l x) (one p)) (put l (get l y) (one p)));
+  assert (op p x y == put l (op q (get l x) (get l y)) (op p (one p) (one p)));
+  assert (op p x y == put l (op q (get l x) (get l y)) (one p));
+  assert (op p x y == put l (get l (op p x y)) (one p))
   (* get put morphism plus the fact that (one p = one p * one p) *)
 
 let extend_refinement_new_one (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
@@ -777,7 +787,7 @@ let upd_across_pcm_iso' (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q)
   (f: 'a -> 'a): 'b -> 'b
 = i.i.fwd `compose` f `compose` i.i.bwd
 
-(* admit() tidy and combine with upd_across_pcm_iso' *)
+(* TODO() tidy and combine with upd_across_pcm_iso' *)
 let frame_pres_upd_across_pcm_iso (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q)
   (f: 'a -> 'a) (x y: Ghost.erased 'a)
 : Lemma
@@ -785,46 +795,41 @@ let frame_pres_upd_across_pcm_iso (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q)
     (ensures frame_pres q (upd_across_pcm_iso' i f) (i.i.fwd x) (i.i.fwd y))
 = frame_pres_intro q (upd_across_pcm_iso' i f) (i.i.fwd x) (i.i.fwd y) (fun v ->
     assert (compatible q (i.i.fwd x) v);
-    assume (q.refine ((upd_across_pcm_iso' i f) v));
-    assume (compatible q (i.i.fwd y) ((upd_across_pcm_iso' i f) v));
-    assume (
-        (forall (frame:'b{composable q (i.i.fwd x) frame}).
-          composable q (i.i.fwd y) frame /\
-          (op q (i.i.fwd x) frame == v ==> op q (i.i.fwd y) frame == (upd_across_pcm_iso' i f) v))))
-(*
-suppose compatible q (i.i.fwd x) v
-and q.refine v.
-suppose
-  frame_pres p f x y
-to show q.refine (f' v):
-  f' v = fwd (f (bwd v))
-  q.refine v by assumption
-  p.refine (bwd v) b/c bwd is morphism
-  q.refine (f (bwd v)) b/c f frame preserving
-    need show compatible p x (bwd v)
-    easy: compatible p (fwd x) v ==> compatible p (bwd (fwd x)) (bwd v) b/c bwd is pcm morphism
-  p.refine (fwd (f (bwd v))) b/c fwd is morphism
-to show compatible q (fwd y) (f' v):
-  f'v = fwd (f (bwd v))
-  so need show compatible q (fwd y) (fwd (f (bwd v)))
-  suff. to show compatible q y (f (bwd v)) b/c fwd is pcm morphism
-  since we have refine (bwd v) /\ compatible p x (bwd v) (proof is same as in previous subcase),
-    we know compatible q y (f (bwd v)) b/c f is frame-preserving
-fix frame where composable q (fwd x) frame.
-to show composable q (fwd y) frame /\ (op q (fwd x) frame == v ==> op q (fwd y) frame == f' v == fwd (f (bwd v))):
-  we have composable q (bwd (fwd x)) (bwd frame) <==> composable q x (bwd frame) b/c bwd is morphism
-  since we have refine (bwd v) /\ compatible p x (bwd v),
-  and composable q x (bwd frame),
-  instantiate hyp about f frame-preserving from x to y to get
-    composable q y (bwd frame) /\ (op p x (bwd frame) == bwd v ==> op p y (bwd frame) == f (bwd v))
-  now,
-    composable q y (bwd frame) ==> composable q (fwd y) frame b/c fwd morphism
-  and
-    (op p x (bwd frame) == bwd v ==> op p y (bwd frame) == f (bwd v))
-    <==> (op p (fwd x) frame == v ==> op p (fwd y) frame == fwd (f (bwd v)))
-    b/c fwd morphism
-qed
-*)
+    let fwd = i.i.fwd in
+    let bwd = i.i.bwd in
+    let f' = upd_across_pcm_iso' i f in
+    assert (f' v == fwd (f (bwd v)));
+    assert (q.refine v);
+    i.bwd_morphism.f_refine v;
+    assert (p.refine (bwd v));
+    compatible_pcm_morphism bwd i.bwd_morphism (fwd x) v;
+    assert (compatible p (bwd (fwd x)) (bwd v));
+    assert (compatible p x (bwd v));
+    assert (p.refine (f (bwd v)));
+    i.fwd_morphism.f_refine (f (bwd v));
+    assert (q.refine (fwd (f (bwd v))));
+    assert (q.refine ((upd_across_pcm_iso' i f) v));
+    assert (compatible p y (f (bwd v)));
+    compatible_pcm_morphism fwd i.fwd_morphism y (f (bwd v));
+    assert (compatible q (i.i.fwd y) ((upd_across_pcm_iso' i f) v));
+    let aux (frame:'b{composable q (i.i.fwd x) frame})
+    : Lemma (composable q (i.i.fwd y) frame /\
+             (op q (i.i.fwd x) frame == v ==>
+              op q (i.i.fwd y) frame == (upd_across_pcm_iso' i f) v))
+    = i.bwd_morphism.f_op (fwd x) frame;
+      assert (composable p (bwd (fwd x)) (bwd frame));
+      assert (composable p x (bwd frame));
+      assert (p.refine (bwd v));
+      assert (compatible p x (bwd v));
+      assert (composable p y (bwd frame) /\
+              (op p x (bwd frame) == bwd v ==> op p y (bwd frame) == f (bwd v)));
+      i.fwd_morphism.f_op y (bwd frame);
+      assert (composable q (fwd y) frame);
+      i.fwd_morphism.f_op x (bwd frame);
+      assert (op p x (bwd frame) == bwd v <==> op q (fwd x) frame == v);
+      assert (fwd (op p y (bwd frame)) == op q (fwd y) frame);
+      ()
+    in FStar.Classical.forall_intro aux)
 
 let upd_across_pcm_iso (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q) (x y: Ghost.erased 'a)
 : frame_pres_lift p x y q (i.i.fwd x) (i.i.fwd y)
