@@ -976,7 +976,7 @@ let unrefine #inames (r': ref 'a 'b)
 = change_equal_vprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
 let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
-  (f: 'b -> 'b) (hf: frame_pres r.q f x y)
+  (f: ('b -> 'b){frame_pres r.q f x y})
 : frame_preserving_upd r.p
     (put r.pl x (one (refined_pcm r.re)))
     (put r.pl y (one (refined_pcm r.re)))
@@ -986,33 +986,13 @@ let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
     (r.u (Ghost.reveal x') (Ghost.reveal y')
       (pcm_lens_lift r.pl (Ghost.reveal x') y f))
 
-(*
-let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: 'b -> 'b) (hf: frame_pres r.q f x y)
+let ref_upd_act (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
 : M.action_except unit Set.empty (r `pts_to` x) (fun _ -> r `pts_to` y)
-= let f': refine_t r.re.f -> refine_t r.re.f = upd r.pl f in
-  let hf'
-  : squash (frame_pres (refined_pcm r.re) f'
-      (put r.pl x (one (refined_pcm r.re)))
-      (put r.pl y (one (refined_pcm r.re))))
-  = pcm_lens_frame_pres (refined_pcm r.re) r.q r.pl (put r.pl x (one (refined_pcm r.re))) y f in
-  M.upd_gen Set.empty r.r x y (frame_pres_mk_upd (refined_pcm r.re)
-      (put r.pl x (one (refined_pcm r.re)))
-      (put r.pl y (one (refined_pcm r.re)))
-  f' hf')
-let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: 'b -> 'b) (hf: frame_pres r.q f x y)
+= M.upd_gen Set.empty r.r _ _ (ref_frame_preserving_upd r x y f)
+
+let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
 : SteelT unit (to_vprop (r `pts_to` x)) (fun _ -> to_vprop (r `pts_to` y))
-= let f': 'a -> 'a = upd r.pl f in
-  let hf'
-  : frame_pres r.p f'
-      (put x (one (refined_pcm r.re)))
-      (put y (one (refined_pcm r.re)))
-  = pcm_lens_frame_pres r.p r.q r.pl (put x (one (refined_pcm r.re))) y f' in
-  let act : M.action_except unit Set.empty _ _ = M.upd_gen Set.empty r.r x y (frame_pres_mk_upd r.p
-      (put x (one (refined_pcm r.re)))
-      (put y (one (refined_pcm r.re)))
-  f' hf') in
-  as_action act
-  *)
+= as_action (ref_upd_act r x y f)
 
 (** Example: a model for a tagged union representing colors in RGB or HSV
       type color =
