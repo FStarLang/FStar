@@ -99,6 +99,17 @@ noeq type pcm_refinement #a (p: pcm a) = {
   new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
 
+(*
+noeq type pcm_refinement #a (p: pcm a) = {
+  new_one: a;
+  new_one_is_unit:
+    x:a{compatible p new_one x} -> Lemma (composable x new_one /\ op p x new_one == x);
+  compose_resp_compat:
+    x:a{composable p x new_one} ->
+    Lemma (op p x new_one == new_one \/ compatible p new_one x)
+}
+*)
+
 let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
 
 let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
@@ -846,6 +857,21 @@ let conj_refinement_ok (#p: pcm 'a)
 
 (** The refinement of a ref *)
 
+
+//  l: pcm_lens p q
+//  pcm_lens_supports_extend l
+//  re_l: pcm_refinement p
+//  re: pcm_refinement q
+//  re_ok: pcm_refinement_ok re
+//  ---------------------------------------------------
+//  pcm_refinement_ok (extend_refinement (pcm_lens_refine l re_l) re)
+//    f = re.f `compose` get (pcm_lens_refine l re_l)
+//      = re.f `compose` get l restricted to (re_l `compose` get l)
+//  want:
+//    unrefine: Endo (refine_t (re.f `compose` get l restricted to (re_l `compose` get l))) ->
+//              Endo (refine_t (re_l `compose` get l))
+
+
 (* TODO
 l: pcm_lens p q
 l_ext: pcm_lens_supports_extend l
@@ -878,6 +904,7 @@ pcm_refinement_ok (extend_refinement (pcm_iso_lens_comp i l) re)
 l: pcm_lens p q
 l_ext: pcm_lens_supports_extend l
 re: pcm_refinement q
+re_ok: pcm_refinement_ok re
 ------------------------------------------------
 pcm_lens_supports_extend (pcm_lens_refine l re)
 
@@ -930,6 +957,28 @@ is there a way to get from
 to
   pcm_refinement_ok (extend_refinement (pcm_lens_refine l re) re')
 ?
+
+from pcm_refinement_ok (extend_refinement l (conj_refinement re re')) we have
+  unrefine: Endo (refine_t (conj_refinement_f re.f re'.f ○ get l)) -> Endo a
+  frame_pres_unrefine:
+    frame_pres (refined_pcm (conj_refinement re re')) f x y ->
+    frame_pres p (unrefine f) x y
+
+need:
+  unrefine: Endo (refine_t (re'.f ○ get l)) -> Endo (refine_t (re.f ○ get l))
+  frame_pres_unrefine:
+    frame_pres (refined_pcm re') f x y ->
+    frame_pres (refined_pcm re) (unrefine f) x y
+
+from re'_ok we have
+  unrefine: Endo (refined_pcm re') -> Endo (refined_pcm re)
+
+how about
+  extend_refinement l (conj_refinement re re')
+  ~= extend_refinement (pcm_lens_refine l re) re'
+
+extend_refinement l (conj_refinement re re'):
+  take conjunction of re and re', and then 
 
 ==================================================
 
