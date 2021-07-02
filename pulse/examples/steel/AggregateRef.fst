@@ -271,13 +271,15 @@ let pcm_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
 
 open FStar.FunctionalExtensionality
 
-(* TODO() update comment *)
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
     This allows the reference to point to substructures of unions with known case. *)
 noeq type ref (a:Type) (b:Type): Type = {
   p: refined_one_pcm a;
   re: pcm_refinement p;
+  (** Needed to turn frame-preserving updates on (refined_pcm re) into
+      frame-preserving updates on p. To do so, also requires that p and q
+      be `refined_one_pcm`s *)
   u: pcm_unrefinement re;
   q: refined_one_pcm b;
   pl: pcm_lens (refined_pcm re) q;
@@ -428,13 +430,14 @@ let case_unrefinement_unrefine (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   | Some (|k', _|) -> if k = k' then f kx else None
   | _ -> None
 
-(* TODO() tidy,then combine with above defn *)
 let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   (f: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k))
   (kx ky: Ghost.erased (refine_t (case_refinement_f p k)))
 : Lemma
     (requires frame_pres (refined_pcm (case_refinement p k)) f kx ky)
-    (ensures frame_pres (union_pcm p) (case_unrefinement_unrefine p k f) (Ghost.reveal kx) (Ghost.reveal ky))
+    (ensures frame_pres (union_pcm p)
+               (case_unrefinement_unrefine p k f)
+               (Ghost.reveal kx) (Ghost.reveal ky))
 = let Some (|_, x|) = Ghost.reveal kx in
   let Some (|_, y|) = Ghost.reveal ky in
   let p' = refined_pcm (case_refinement p k) in
@@ -454,28 +457,11 @@ let case_unrefinement_unrefine_ok (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k
                     op (union_pcm p) ky frame == f (Some (|k, v|))))
           = let Some (|_, w|) = f (Some (|k, v|)) in
             match frame with
-            | Some (|frame_k, frame_v|) ->
-              assert (k == frame_k);
-              //assert (forall (frame:refine_t (case_refinement_f p k) {composable p' kx frame}).{:pattern composable p' kx frame}
-              //  composable p' ky frame /\
-              //  (op p' kx frame == kv ==> op p' ky frame == f kv));
-              assert (composable p' kx frame);
-              assert (composable (p k) y frame_v);
-              assert (op (p k) x frame_v == v ==> op (p k) y frame_v == w)
+            | Some (|frame_k, frame_v|) -> assert (composable p' kx frame)
             | None ->
               p'.is_unit kx;
-              //assert (forall (frame:refine_t (case_refinement_f p k) {composable p' kx frame}).{:pattern composable p' kx frame}
-              //  composable p' ky frame /\
-              //  (op p' kx frame == kv ==> op p' ky frame == f kv));
               assert (composable p' kx (one p'));
-              assert (composable p' ky (one p') /\ (op p' kx (one p') == kv ==> op p' ky (one p') == f kv));
-              p'.is_unit ky;
-              assert (composable p' ky (one p') /\ (Ghost.reveal kx == kv ==> Ghost.reveal ky == f kv));
-              assert (composable p' ky (one p') /\ (Some (|k, x|) == Some (|k, v|) ==> Ghost.reveal ky == f (Some (|k, v|))));
-              assert (x == v ==> Ghost.reveal ky == Some (|k, w|));
-              let Some (|k', y|) = Ghost.reveal ky in
-              assert (x == v ==> Some (|k', y|) == Some (|k, w|));
-              assert (x == v ==> y == w)
+              p'.is_unit ky
           in FStar.Classical.forall_intro aux
         end else ()
       | None -> ())
@@ -543,12 +529,7 @@ let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
 = l.get_morphism.f_op x y;
   re.f_closed_under_op (get l x) (get l y);
   p.is_unit (one p);
-  l.put_morphism.f_op (get l x, one p) (get l y, one p);
-  assert (op p x y == op p (put l (get l x) (one p)) (put l (get l y) (one p)));
-  assert (op p x y == put l (op q (get l x) (get l y)) (op p (one p) (one p)));
-  assert (op p x y == put l (op q (get l x) (get l y)) (one p));
-  assert (op p x y == put l (get l (op p x y)) (one p))
-  (* get put morphism plus the fact that (one p = one p * one p) *)
+  l.put_morphism.f_op (get l x, one p) (get l y, one p)
 
 let extend_refinement_new_one (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q)
@@ -756,14 +737,6 @@ let conj_refinement (#p: pcm 'a)
   new_one_is_refined_unit = conj_refinement_new_one_is_refined_unit re1 re2;
 }
 
-let pcm_refinement_conj_iso_fwd_morphism_op (p: pcm 'a)
-  (re1: pcm_refinement p)
-  (re2: pcm_refinement (refined_pcm re1))
-: morphism_op
-    (refined_pcm re2) (refined_pcm (conj_refinement re1 re2))
-    (pcm_refinement_conj_iso_i p re1 re2).fwd
-= fun x y -> ()
-
 (** A refinement re1 of a refinement re2 of a PCM is isomorphic to a
     refinement by the conjunction of re1 and re2 *)
 let pcm_refinement_conj_iso (p: pcm 'a)
@@ -771,71 +744,33 @@ let pcm_refinement_conj_iso (p: pcm 'a)
   (re2: pcm_refinement (refined_pcm re1))
 : pcm_iso (refined_pcm (conj_refinement re1 re2)) (refined_pcm re2) = {
   i = pcm_refinement_conj_iso_i p re1 re2;
-  fwd_morphism = {
-    f_refine = (fun _ -> ());
-    f_one = (fun _ -> ());
-    f_op = pcm_refinement_conj_iso_fwd_morphism_op p re1 re2;
-  };
-  bwd_morphism = {
-    f_refine = (fun _ -> ());
-    f_one = (fun _ -> ());
-    f_op = (fun _ _ -> ());
-  };
+  fwd_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
+  bwd_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
 }
-
-let upd_across_pcm_iso' (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q)
-  (f: 'a -> 'a): 'b -> 'b
-= i.i.fwd `compose` f `compose` i.i.bwd
-
-(* TODO() tidy and combine with upd_across_pcm_iso' *)
-let frame_pres_upd_across_pcm_iso (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q)
-  (f: 'a -> 'a) (x y: Ghost.erased 'a)
-: Lemma
-    (requires frame_pres p f x y)
-    (ensures frame_pres q (upd_across_pcm_iso' i f) (i.i.fwd x) (i.i.fwd y))
-= frame_pres_intro q (upd_across_pcm_iso' i f) (i.i.fwd x) (i.i.fwd y) (fun v ->
-    assert (compatible q (i.i.fwd x) v);
-    let fwd = i.i.fwd in
-    let bwd = i.i.bwd in
-    let f' = upd_across_pcm_iso' i f in
-    assert (f' v == fwd (f (bwd v)));
-    assert (q.refine v);
-    i.bwd_morphism.f_refine v;
-    assert (p.refine (bwd v));
-    compatible_pcm_morphism bwd i.bwd_morphism (fwd x) v;
-    assert (compatible p (bwd (fwd x)) (bwd v));
-    assert (compatible p x (bwd v));
-    assert (p.refine (f (bwd v)));
-    i.fwd_morphism.f_refine (f (bwd v));
-    assert (q.refine (fwd (f (bwd v))));
-    assert (q.refine ((upd_across_pcm_iso' i f) v));
-    assert (compatible p y (f (bwd v)));
-    compatible_pcm_morphism fwd i.fwd_morphism y (f (bwd v));
-    assert (compatible q (i.i.fwd y) ((upd_across_pcm_iso' i f) v));
-    let aux (frame:'b{composable q (i.i.fwd x) frame})
-    : Lemma (composable q (i.i.fwd y) frame /\
-             (op q (i.i.fwd x) frame == v ==>
-              op q (i.i.fwd y) frame == (upd_across_pcm_iso' i f) v))
-    = i.bwd_morphism.f_op (fwd x) frame;
-      assert (composable p (bwd (fwd x)) (bwd frame));
-      assert (composable p x (bwd frame));
-      assert (p.refine (bwd v));
-      assert (compatible p x (bwd v));
-      assert (composable p y (bwd frame) /\
-              (op p x (bwd frame) == bwd v ==> op p y (bwd frame) == f (bwd v)));
-      i.fwd_morphism.f_op y (bwd frame);
-      assert (composable q (fwd y) frame);
-      i.fwd_morphism.f_op x (bwd frame);
-      assert (op p x (bwd frame) == bwd v <==> op q (fwd x) frame == v);
-      assert (fwd (op p y (bwd frame)) == op q (fwd y) frame);
-      ()
-    in FStar.Classical.forall_intro aux)
 
 let upd_across_pcm_iso (#p: pcm 'a) (#q: pcm 'b) (i: pcm_iso p q) (x y: Ghost.erased 'a)
 : frame_pres_lift p x y q (i.i.fwd x) (i.i.fwd y)
 = fun f ->
-  frame_pres_upd_across_pcm_iso i f x y;
-  upd_across_pcm_iso' i f
+  let f' = i.i.fwd `compose` f `compose` i.i.bwd in
+  let aux ()
+  : Lemma
+      (requires frame_pres p f x y)
+      (ensures frame_pres q f' (i.i.fwd x) (i.i.fwd y))
+  = frame_pres_intro q f' (i.i.fwd x) (i.i.fwd y) (fun v ->
+      i.bwd_morphism.f_refine v;
+      compatible_pcm_morphism i.i.bwd i.bwd_morphism (i.i.fwd x) v;
+      i.fwd_morphism.f_refine (f (i.i.bwd v));
+      compatible_pcm_morphism i.i.fwd i.fwd_morphism y (f (i.i.bwd v));
+      let aux (frame:'b{composable q (i.i.fwd x) frame})
+      : Lemma (composable q (i.i.fwd y) frame /\
+               (op q (i.i.fwd x) frame == v ==>
+                op q (i.i.fwd y) frame == f' v))
+      = i.bwd_morphism.f_op (i.i.fwd x) frame;
+        i.fwd_morphism.f_op y (i.i.bwd frame);
+        i.fwd_morphism.f_op x (i.i.bwd frame)
+      in FStar.Classical.forall_intro aux)
+  in aux ();
+  f'
 
 let conj_unrefinement (#p: pcm 'a)
   (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
@@ -885,39 +820,10 @@ let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement q) (u: pcm_unrefinement re)
 : pcm_unrefinement (extend_refinement l re)
 = fun x y f ->
-  assert (Ghost.reveal x == put l (get l x) (one p));
-  assert (Ghost.reveal y == put l (get l y) (one p));
   let f = extend_refinement_lift l re x y f in
-  assert (frame_pres (refined_pcm re) f (get l x) (get l y));
   let f = u (get l x) (get l y) f in
-  assert (frame_pres q f (get l x) (get l y));
   let f = pcm_lens_lift l (Ghost.reveal x) (get l y) f in
-  assert (frame_pres p f (Ghost.reveal x) (put l (get l y) x));
   f
-(*
-goal: construct
-  (frame_pres p _ x y)
-given
-  (frame_pres (refined_pcm (extend_refinement l re)) _ x y
-
-frame_pres (refined_pcm (extend_refinement l re)) _ x y
-==> frame_pres (refined_pcm re) _ (get l x) (get l y) by lemma
-==> frame_pres q _ (get l x) (get l y) via u
-==> frame_pres p _ x (put (get l y) x) via pcm_lens_lift l
-now, by definition of extend_refinement l re, we know
-  x = put x' one
-and
-  y = put y' one
-for some x' and y', so
-  put (get l y) x
-  = put (get l (put y' one)) (put x' one)
-  = put y' (put x' one)
-  = put y' one
-  = y
-so we have
-  frame_pres p _ x y
-as desired
-*)
 
 (** The refinement of a ref *)
 
