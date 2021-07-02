@@ -95,7 +95,7 @@ let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: '
 let refine_t (f: 'a -> prop) = x:'a{f x}
 noeq type pcm_refinement #a (p: pcm a) = {
   f: a -> prop;
-  f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
+  f_closed_under_op: x: refine_t f -> y: a{composable p x y} -> Lemma (f (op p x y));
   new_one: (new_one:refine_t f{p.refine new_one});
   new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
@@ -993,6 +993,203 @@ let ref_upd_act (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres 
 let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
 : SteelT unit (to_vprop (r `pts_to` x)) (fun _ -> to_vprop (r `pts_to` y))
 = as_action (ref_upd_act r x y f)
+
+let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
+: Steel 'a
+    (to_vprop (r `pts_to` x)) 
+    (fun _ -> to_vprop (r `pts_to` x))
+    (requires fun _ -> True)
+    (ensures fun _ x' _ -> compatible r.p (put r.pl x (one (refined_pcm r.re))) x')
+= change_equal_vprop (r `pts_to` x)
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))));
+  let v = Steel.PCMReference.read r.r (put r.pl x (one (refined_pcm r.re))) in
+  change_equal_vprop
+    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))))
+    (r `pts_to` x);
+  A.return v
+
+(*
+
+TODO
+ - write everything in terms of frame_preserving_upd instead of frame_pres
+ - strengthen the f_closed_under_op law
+     f x
+     composable x y
+     -----------------
+     f (x * y)
+
+*)
+(*
+extend_refinement (l: pcm_lens p q) (re: refinement q): refinement p
+restricts p to elements of the form put x (one p)
+restricts p to elements y where get y satisfies re
+
+endo a = a -> a
+
+endo (extend_refinement_f l re) on x y
+     -------------------------- values of the form put x (one p) where x satisfies re
+                                carrier of the PCM (refined_pcm (extend_refinement l re))
+                                this PCM is isomorphic to (refined_pcm re)
+endo re.f on (get l x) (get l y)
+endo q on (get l x) (get l y)
+endo p on x (put (get l y) x)
+
+we know exist x', y'
+  x = put x' one
+  y = put y' one
+
+endo p on (put x' one) (put (get l (put y' one)) (put x' one))
+endo p on (put x' one) (put y' (put x' one))
+endo p on (put x' one) (put y' one)
+endo p on x y
+
+id
+id . l satisfies some property
+id . l . m
+pcm_lens_refine (id . l . m) re
+pcm_lens_refine (id . l . m) re . p
+
+unrefine re -> unrefine (extend l re)
+unrefine re -> unrefine (extend (refine l re') re)
+
+unrefine re -> unrefine (re.f . get)
+unrefine re -> unrefine (re.f . get refined by re')
+
+pcm_refinement: pcm 'a -> Type
+
+(p: pcm 'a)
+(re: pcm_refinement p)
+--------------------------
+re.f: 'a -> prop
+
+refined_pcm: (p: pcm 'a) -> pcm_refinement p -> pcm (refine_t re.f)
+
+For writes:  a property P (re, pcm_refine, ..)
+  re: pcm_refinement (p: pcm 'a)
+  --------------------------------------
+  (refine_t re.f -> refine_t re.f)(frame-preserving x to y) ->
+  ('a -> 'a)(frame-preserving x to y)
+
+For writes:  a property P (re, pcm_refine, ..)
+  re: pcm_refinement (p: pcm 'a)
+  --------------------------------------
+  frame_preserving_upd x to y on (refine_t re.f) values ->
+  frame_preserving_upd x to y on 'a values
+
+For reads:  a property Q (re, pcm_refine, ..)
+  supp. r `pts_to` x
+  PCMReference.read r.r will give v where
+    compatible r.p (put r.pl x (one (refined_pcm r.re))) v
+  Need to use (get r.pl) to extract v' compatible with x
+  Want (compatible r.q x v')
+  Intuitively,
+    re: pcm_refinement p
+    re.f x 
+    compatible p x v
+    ----------------------
+    re.f v
+
+extend_refinement: pcm_lens p q -> pcm_refinement q -> pcm_refinement p
+conj_refinement:
+  re: pcm_refinement p ->
+  pcm_refinement (refined_pcm re) ->
+  pcm_refinement p
+
+// focus: composes a lens (r.pl becomes r.pl ○ some new lens)
+refine: adds a refinement re
+  r.pl becomes pcm_lens_refine r.pl re
+  r.re becomes conj_refinement r.re (extend_refinement r.pl re)
+
+Want impl s.t.
+  some precondition ==>
+  (P /\ Q) (r.pl, ..) ==>
+  (P /\ Q) (r.pl ○ new lens, ..)
+  P and Q don't mention r.pl
+and
+  some precondition ==>
+  (P /\ Q) (r.pl, r.re, ..) ==>
+  (P /\ Q) (pcm_lens_refine r.pl re, conj_refinement r.re (extend_refinement r.pl re), ..)
+  - P r.re ==> P (conj_refinement r.re (extend_refinement r.pl re))
+    (forall x y, (endo r.re.f -> endo a)(frame-pres x y)) ->
+    (forall x y, (endo (refine_t (fun x -> r.re.f x /\ re.f (get r.pl x))) -> endo a)(frame-pres x y))
+    
+    (forall x y, (endo (refine_t (fun x -> r.re.f x /\ re.f (get r.pl x))) ->
+             endo r.re.f)(frame-pres x y))
+             
+    (forall x y, (endo (refine_t (fun (x: refine_t r.re.f) -> re.f (get r.pl x))) ->
+             endo r.re.f)(frame-pres x y))
+             
+    (forall x y, (endo (refine_t (fun x -> re.f (get r.pl x))) ->
+             endo r.re.f)(frame-pres x y)) // "how to unrefine" re.f ○ get r.pl
+
+    f:(refine_t (re.f ○ get r.pl) -> refine_t (re.f ○ get r.pl))
+      {frame_pres (extend_refinement r.pl re) f x y}
+    --
+    g:(refine_t r.re.f -> refine_t r.re.f){frame_pres (refined_pcm r.re) f x y}
+    fun (v: refine_t r.re.f) ->
+      ? (re.f (get r.pl v))
+      _ : refine_t r.re.f
+
+    f:frame_preserving_upd (extend_refinement r.pl re) f x y
+    ----------------------------------------
+    g:frame_preserving_upd (refined_pcm r.re) f x y
+    fun (v: refine_t r.re.f) ->
+      compatible (refined_pcm r.re) x v
+      (refined_pcm r.re).refine v
+      re.f (get r.pl x)
+      re.f (get r.pl v)
+      f v
+  - 
+    forall x v,
+    r.re.f x 
+    compatible p x v
+    ----------------------
+    r.re.f v
+
+    forall x v,
+    r.re.f x /\ re.f (get r.pl x)
+    compatible p x v = exists frame, x * frame = v
+    ----------------------
+    r.re.f v /\ re.f (get r.pl v)
+
+
+    f x
+    composable x y
+    -----------------
+    f (x * y)
+    
+    (conj_refinement r.re (extend_refinement r.pl re)): pcm_refinement p
+    conj_refinement_f r.re (extend_refinement_f r.pl re) x
+    compatible p x v
+    ----------------------
+    conj_refinement_f r.re (extend_refinement_f r.pl re) v
+
+let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  // (l: pcm_lens p q)
+  (l: pcm_lens_description p q)
+  (re: pcm_refinement q) (u: pcm_unrefinement re)
+: pcm_unrefinement (extend_refinement (lens_denote l) re)
+= fun x y f ->
+  let f = extend_refinement_lift l re x y f in
+  let f = u (get l x) (get l y) f in
+  let f = pcm_lens_lift l (Ghost.reveal x) (get l y) f in
+  f
+
+where x satisfies re
+
+
+suppose
+  x satisfies (extend l re) <==> x = (x', one) where x' satisfies re
+  exists frame, x * frame = v
+    (x', one) * frame = v
+  -------------------------
+  exists v'. v satisfies (extend l re) <==> v = (v', one) where v' satisfies re
+
+x refined
+compatible r.p x v
+------------------
+v refined
+*)
 
 (** Example: a model for a tagged union representing colors in RGB or HSV
       type color =
