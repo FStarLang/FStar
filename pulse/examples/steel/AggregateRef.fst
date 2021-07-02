@@ -88,70 +88,103 @@ let pcm_morphism_both (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd) (#f: '
   f_op = (fun (x, y) (z, w) -> mf.f_op x z; mg.f_op y w);
 }
 
-(** A refinement of a PCM (p: pcm a) consists of:
-    (1) A set of elements f:(a -> prop) closed under (op p)
-    (2) An element new_unit which satisfies the unit laws on the subset f *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
 noeq type pcm_refinement #a (p: pcm a) = {
-  f: a -> prop;
-  f_closed_under_op: x: refine_t f -> y: refine_t f{composable p x y} -> Lemma (f (op p x y));
-  new_one: refine_t f;
-  new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
-}
-
-(*
-noeq type pcm_refinement #a (p: pcm a) = {
+  (** Choose an element new_one and let S be the set of elements compatible with it. *)
   new_one: a;
+  (** new_one must be a unit for S *)
   new_one_is_unit:
-    x:a{compatible p new_one x} -> Lemma (composable x new_one /\ op p x new_one == x);
-  compose_resp_compat:
+    x:a{compatible p new_one x} ->
+    Lemma (composable p x new_one /\ op p x new_one == x) [SMTPat (compatible p new_one x)];
+  (** S is closed under (op p) *)
+  closed_under_op:
+    x:a{compatible p new_one x} ->
+    y:a{compatible p new_one y /\ composable p x y} ->
+    Lemma (compatible p new_one (op p x y)) [SMTPat (composable p x y)];
+  (** Every element composable with new_one is either in S or a unit for S *)
+  comp_compat_new_one:
     x:a{composable p x new_one} ->
-    Lemma (op p x new_one == new_one \/ compatible p new_one x)
+    Lemma (
+      compatible p new_one x \/
+      (forall (y:a{compatible p new_one y}).{:pattern compatible p new_one y}
+       composable p y x /\ op p y x == y))
+      [SMTPat (composable p x new_one)];
+  (** S is decidable *)
+  compat_new_one: x:a -> b:bool{b <==> compatible p new_one x}
 }
-*)
 
-let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
-
+let pcm_refine_t (#p: pcm 'a) (r: pcm_refinement p) = x:'a{compatible p r.new_one x}
+let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (pcm_refine_t r) = composable p
 let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
-  (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
-= r.f_closed_under_op x y; op p x y
+  (x: pcm_refine_t r) (y: pcm_refine_t r{composable p x y}): pcm_refine_t r
+= let _ = r.closed_under_op in op p x y
 
 (** Any refinement r for p can be used to construct a refined PCM with the same product
     and composability predicate, but restricted to elements in r.f *)
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (refine_t r.f) = {
-  p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): pcm (pcm_refine_t r) = {
+  p = {
+    composable = pcm_refine_comp r;
+    op = pcm_refine_op r;
+    one = (compatible_refl p r.new_one; r.new_one)
+  };
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
   assoc_r = (fun x y z -> p.assoc_r x y z);
-  is_unit = (fun x -> r.new_one_is_refined_unit x);
+  is_unit = (fun x -> r.new_one_is_unit x);
   refine = p.refine;
 }
 
-let trivial_refinement (p: pcm 'a): pcm_refinement p = {
-  f = (fun x -> True);
-  f_closed_under_op = (fun _ _ -> ());
-  new_one = one p;
-  new_one_is_refined_unit = p.is_unit;
-}
-
-(** A PCM refinement is well-formed if the refinement predicate is decidable
-    and frame-preserving updates on the refined PCM can be lifted to
+(** Frame-preserving updates on a refined PCM can be "unrefined" into
     frame-preserving updates on the unrefined PCM *)
 
-let unrefine_t (#p: pcm 'a) (r: pcm_refinement p) =
-  (refine_t r.f -> refine_t r.f) -> 'a -> 'a
-let frame_pres_unrefine_t (#p: pcm 'a) (r: pcm_refinement p) (unrefine: unrefine_t r) =
-  f:(refine_t r.f -> refine_t r.f) ->
-  x:Ghost.erased (refine_t r.f) ->
-  y:Ghost.erased (refine_t r.f) ->
-  Lemma
-    (requires frame_pres (refined_pcm r) f x y)
-    (ensures frame_pres p (unrefine f) (Ghost.reveal x) (Ghost.reveal y))
-  
-noeq type pcm_refinement_ok #a (#p: pcm a) (r: pcm_refinement p) = {
-  unrefine: (refine_t r.f -> refine_t r.f) -> a -> a;
-  frame_pres_unrefine: frame_pres_unrefine_t r unrefine;
-}
+let unrefine_upd (#p: pcm 'a) (r: pcm_refinement p)
+  (x y: Ghost.erased (pcm_refine_t r))
+  (f:(pcm_refine_t r -> pcm_refine_t r){frame_pres (refined_pcm r) f x y})
+: g:('a -> 'a){frame_pres p g (Ghost.reveal x) (Ghost.reveal y)}
+= let g (v:'a): 'a = if r.compat_new_one v then f v else one p in
+  frame_pres_intro p g (Ghost.reveal x) (Ghost.reveal y) (fun v ->
+    assert (p.refine v);
+    assert (compatible p x v);
+    assume (compatible p r.new_one v);
+    (* by compatible p x v, exists frame s.t. v = x * frame.
+       since compatible p new_one x,
+         v = x * frame
+           = new_one * x * frame     (new_one unit for x)
+       thus compatible p new_one v. *)
+    assert ((refined_pcm r).refine v);
+    assume (compatible (refined_pcm r) x v);
+    (* v = new_one * x * frame       (as above)
+         = x * (new_one * frame_x)
+       so frame_x composable with new_one wrt p.
+       so either frame_x in S or frame_x unit for S.
+       - if in S, then (new_one * frame_x) in S
+         so v = x * something in S
+         so compatible (refined_pcm r) x v.
+       - if unit for S, then (new_one * frame_x) = new_one
+         so v = x * new_one = x * something in S
+         so compatible (refined_pcm r) x v. *)
+    (* now have enough to instantiate frame_pres f *)
+    assert (p.refine (g v));
+    assert (compatible p y (g v));
+    let aux (frame:'a{composable p x frame})
+    : Lemma (composable p y frame /\ (op p x frame == v ==> op p y frame == g v))
+    = assert (composable p x frame);
+      (* x = new_one * x so can form the product
+           new_one * x * frame
+         by commutativity and associativity, can form
+           x * (new_one * frame)
+         so new_one is composable with frame.
+         so either frame in S or frame unit for S.
+         if frame in S, then can apply hypothesis about f: *)
+      assert (compatible p r.new_one frame ==> composable (refined_pcm r) x frame);
+      assume (compatible p r.new_one frame)
+      (* otherwise, frame unit for S and need to show
+           composable p y frame /\ (op p x frame == v ==> op p y frame == g v))
+         since frame unit for S, this equivalent to
+           composable p y new_unit /\ (op p x new_unit == v ==> op p y new_unit == g v))
+         which we can get from hypothesis about f. *)
+    in FStar.Classical.forall_intro aux);
+  g
 
 (** Very well-behaved lenses *)
 noeq type lens (a: Type u#a) (b: Type u#b) = {
@@ -301,34 +334,94 @@ let lens_refine (l: lens 'a 'b) (f: 'b -> prop)
 
 (** Refining a pcm_lens *)
 
-let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q): 'a -> prop = re.f `compose` get l
-
-let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
-  (y: refine_t (extend_refinement_f l re){composable p x y})
-: Lemma (extend_refinement_f l re (op p x y))
-= l.get_morphism.f_op x y;
-  re.f_closed_under_op (get l x) (get l y)
-
 let extend_refinement_new_one (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q): refine_t (extend_refinement_f l re)
+  (re: pcm_refinement q): 'a
 = put l re.new_one (one p)
 
-let extend_refinement_new_one_is_refined_unit
+let pcm_lens_compatible_put (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (s t: 'a) (v w: 'b)
+: Lemma
+    (requires compatible p s t /\ compatible q v w)
+    (ensures compatible p (put l v s) (put l w t))
+= let goal = compatible p (put l v s) (put l w t) in
+  compatible_elim p s t goal (fun frame_s ->
+  compatible_elim q v w goal (fun frame_v ->
+  l.put_morphism.f_op (frame_v, frame_s) (v, s);
+  compatible_intro p (put l v s) (put l w t) (put l frame_v frame_s)))
+
+(* TODO tidy *)
+let extend_refinement_new_one_is_unit
   (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement q) (x: refine_t (extend_refinement_f l re))
+  (re: pcm_refinement q) (x:'a{compatible p (extend_refinement_new_one l re) x})
 : Lemma (composable p x (extend_refinement_new_one l re) /\
          op p x (extend_refinement_new_one l re) == x)
-= re.new_one_is_refined_unit (get l x);
+= assert (x == put l (get l x) x);
+  pcm_lens_compatible_get l (extend_refinement_new_one l re) x;
+  re.new_one_is_unit (get l x); assert (composable q re.new_one (get l x));
+  p.is_unit x; assert (composable p (one p) x);
+  l.put_morphism.f_op (re.new_one, one p) (get l x, x);
+  l.get_morphism.f_op (extend_refinement_new_one l re) x;
+  re.new_one_is_unit (get l x);
   p.is_unit x;
   l.put_morphism.f_op (get l x, x) (re.new_one, one p)
+
+let extend_refinement_closed_under_op
+  (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q)
+  (x:'a{compatible p (extend_refinement_new_one l re) x})
+  (y:'a{compatible p (extend_refinement_new_one l re) y /\ composable p x y})
+: Lemma (compatible p (extend_refinement_new_one l re) (op p x y))
+= let goal = compatible p (extend_refinement_new_one l re) (op p x y) in
+  compatible_elim p (extend_refinement_new_one l re) x goal (fun frame_x ->
+  compatible_elim p (extend_refinement_new_one l re) y goal (fun frame_y ->
+  (* put new_one one * frame_x = x
+     put new_one one * frame_y = y
+     ==> x * y
+       = (put new_one one * frame_x) * (put new_one one * frame_y)
+       = (put new_one one * put new_one one) * (frame_x * frame_y)
+       = put (new_one * new_one) (one * one) * (frame_x * frame_y)
+       = put new_one one * (frame_x * frame_y)
+     thus (frame_x * frame_y) witnesses (compatible p (put new_one one) (x * y)) *)
+  compatible_intro p (extend_refinement_new_one l re) (op p x y) (admit())))
+
+let extend_refinement_comp_compat_new_one
+  (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
+  (re: pcm_refinement q)
+  (x:'a{composable p x (extend_refinement_new_one l re)})
+: Lemma (
+    compatible p (extend_refinement_new_one l re) x \/
+    (forall (y:'a{compatible p (extend_refinement_new_one l re) y}).
+      composable p y x /\ op p y x == y))
+= admit()
+(*
+  suppose x composable with put new_one one
+  then get x composable with new_one.
+  then either compatible q new_one (get x)
+  or (get x) is a unit for elements compatible with new_one
+
+  if compatible q new_one (get x),
+  then
+    compatible q (put new_one one) (put (get x) x)
+    (because put morphism and compatible p one x for all x)
+    so compatible q (put new_one one) x.
+
+  if (get x) is a unit for elements compatible with new_one,
   
+*)
+
+  // (** Every element composable with new_one is either in S or a unit for S *)
+  // comp_compat_new_one:
+  //   x:a{composable p x new_one} ->
+  //   Lemma (
+  //     compatible p new_one x \/
+  //     (forall (y:a{compatible p new_one y}).{:pattern compatible p new_one y}
+  //      composable p y x /\ op p y x == y))
+  //     [SMTPat (composable p x new_one)];
 let extend_refinement (l: pcm_lens 'p 'q) (re: pcm_refinement 'q) : pcm_refinement 'p = {
-  f = extend_refinement_f l re;
-  f_closed_under_op = extend_refinement_f_closed l re;
   new_one = extend_refinement_new_one l re;
-  new_one_is_refined_unit = extend_refinement_new_one_is_refined_unit l re;
+  new_one_is_unit = extend_refinement_new_one_is_unit l re;
+  closed_under_op = extend_refinement_closed_under_op l re;
+  comp_compat_new_one = admit();
+  compat_new_one = (fun s -> re.compat_new_one (get l s));
 }
 
 let pcm_lens_refine_get_morphism_refine (#p: pcm 'a) (#q: pcm 'b)
