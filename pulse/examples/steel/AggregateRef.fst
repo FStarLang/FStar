@@ -844,13 +844,13 @@ let focus (r: ref 'a 'b) (q: refined_one_pcm 'c)
     (fun m -> r.pl.get_morphism.f_one ());
   A.return r'
 
-let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (q: refined_one_pcm 'c)
-  (l: pcm_lens r'.q q) (x: Ghost.erased 'c)
+let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (#r'q: pcm 'b) (#q: refined_one_pcm 'c)
+  (l: pcm_lens r'q q) (x: Ghost.erased 'c)
 : A.SteelGhost unit inames
     (to_vprop (r `pts_to` x))
     (fun _ -> to_vprop (r' `pts_to` put l x (one r'.q)))
-    (fun _ -> r == ref_focus r' q l)
-    (fun _ _ _ -> True)
+    (requires fun _ -> r'.q == r'q /\ r == ref_focus r' q l)
+    (ensures fun _ _ _ -> True)
 = A.change_slprop_rel  
     (to_vprop (r `pts_to` x))
     (to_vprop (r' `pts_to` put l x (one r'.q)))
@@ -921,11 +921,13 @@ let peel (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.er
   split r x (put l (one q) x) (put l (get l x) (one r.q))
 
 let addr_of_lens (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
-: SteelT (ref 'a 'c)
+: Steel (ref 'a 'c)
     (to_vprop (r `pts_to` x))
     (fun s ->
       to_vprop (r `pts_to` put l (one q) x) `star` 
       to_vprop (s `pts_to` get l x))
+    (requires fun _ -> True)
+    (ensures fun _ r' _ -> r' == ref_focus r q l)
 = peel r q l x;
   focus r q l (put l (get l x) (one r.q)) (get l x)
 
@@ -970,6 +972,11 @@ let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q 
 : SteelT unit (to_vprop (r `pts_to` x)) (fun _ -> to_vprop (r `pts_to` y))
 = as_action (ref_upd_act r x y f)
 
+let ref_write (r: ref 'a (option 'b){r.q == opt_pcm #'b}) (x: Ghost.erased 'b) (y: 'b)
+: SteelT unit (to_vprop (r `pts_to` Some (Ghost.reveal x))) (fun _ -> to_vprop (r `pts_to` Some y))
+= ref_upd r (Some (Ghost.reveal x)) (Some y)
+    (fun v -> match v with None -> None | Some _ -> Some y)
+
 let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
 : Steel 'b
     (to_vprop (r `pts_to` x)) 
@@ -983,58 +990,3 @@ let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
   pcm_lens_compatible_get r.pl x' v;
   change_equal_vprop (r.r `M.pts_to` x') (r `pts_to` x);
   A.return (get r.pl v)
-
-(** Example: a model for a tagged union representing colors in RGB or HSV
-      type color =
-        | RGB : r:int -> g:int -> b:int -> color
-        | HSV : h:int -> s:int -> v:int -> color *)
-
-type rgb_field = | R | G | B
-type hsv_field = | H | S | V
-type color_tag = | RGB | HSV
-
-(* Carrier of all-or-none PCM for integers *)
-let int_pcm_t = option int
-
-(* Type families for fields of RGB and HSV structs *)
-let rgb_fields k = match k with
-  | R -> int_pcm_t
-  | G -> int_pcm_t
-  | B -> int_pcm_t
-let hsv_fields k = match k with
-  | H -> int_pcm_t
-  | S -> int_pcm_t
-  | V -> int_pcm_t
-  
-(** Carriers of PCMs for RGB and HSV structs *)
-let rgb_t = restricted_t rgb_field rgb_fields
-let hsv_t = restricted_t hsv_field hsv_fields
-
-(** Type family for union of RGB and HSV *)
-let color_cases t = match t with
-  | RGB -> rgb_t
-  | HSV -> hsv_t
-
-(** Carrier of PCM for color *)
-let color_t = union color_cases
-
-(** All-or-none PCM for integers *)
-let int_pcm : pcm int_pcm_t = opt_pcm
-
-(** PCMs for RGB and HSV structs *)
-let rgb_pcm : pcm (restricted_t rgb_field rgb_fields) =
-  prod_pcm #_ #rgb_fields (fun k -> match k with
-    | R -> int_pcm
-    | G -> int_pcm
-    | B -> int_pcm)
-let hsv_pcm : pcm (restricted_t hsv_field hsv_fields) =
-  prod_pcm #_ #hsv_fields (fun k -> match k with
-    | H -> int_pcm
-    | S -> int_pcm
-    | V -> int_pcm)
-
-(** PCM for color *)
-let color_pcm_cases k : pcm (color_cases k) = match k with
-  | RGB -> rgb_pcm
-  | HSV -> hsv_pcm
-let color_pcm : pcm color_t = union_pcm color_pcm_cases
