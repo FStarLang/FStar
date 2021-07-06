@@ -134,23 +134,13 @@ let pcm_refinement_compatible_closed (#p: pcm 'a)
 = let p' = refined_pcm re in
   compatible_elim p x y (re.f y) (fun frame ->
    re.f_closed_comp x frame; p.comm frame x);
-  assert (re.f y);
   compatible_elim p x y (compatible p' x y) (fun frame_x ->
-    assert (composable p x frame_x);
     pcm_refinement_comp_new_one re x frame_x;
-    assert (composable p re.new_one frame_x);
     let frame = op p re.new_one frame_x in
-    assert (re.f frame);
     re.new_one_is_refined_unit x;
     p.comm x frame_x;
-    assert (op p x frame_x == y);
-    assert (op p (op p x re.new_one) frame_x == y);
     p.assoc x re.new_one frame_x;
-    assert (op p x (op p re.new_one frame_x) == y);
     p.comm x (op p re.new_one frame_x);
-    assert (op p (op p re.new_one frame_x) x == y);
-    assert (op p frame x == y);
-    assert (composable p x frame);
     compatible_intro p' x y (op p re.new_one frame_x))
 
 (** A PCM refinement is well-formed if frame-preserving updates on the
@@ -461,9 +451,6 @@ let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   match kv with
   | Some (|k', v|) ->
     if k = k' then begin
-      assert (p.refine kv);
-      assert (p'.refine kv);
-      assert (compatible p kx kv);
       let _ = Ghost.hide (
         let Some (|k, x|) = Ghost.reveal kx in
         let goal = compatible p' kx kv in
@@ -471,7 +458,6 @@ let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
           | Some (|_, frame_x|) -> compatible_intro p' kx kv (Some (|k, frame_x|))
           | None -> compatible_refl p' kx))
       in
-      assert (compatible p' kx kv);
       let kw = f kv in
       let aux (frame:union b{composable p kx frame})
       : Lemma (composable p ky frame /\
@@ -802,74 +788,17 @@ let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
 = fun x y f v ->
   let re' = extend_refinement l re in
   let p' = refined_pcm re' in
-  assert (p.refine v);
-  assert (compatible p x v);
-  assert (re.f (get l x));
+  pcm_refinement_compatible_closed re' x v;
   pcm_lens_compatible_get l x v;
-  assert (compatible q (get l x) (get l v));
-  compatible_elim q (get l x) (get l v) (re.f (get l v)) (fun frame_x ->
-    re.f_closed_comp (get l x) frame_x;
-    q.comm (get l x) frame_x);
-  compatible_elim p x v (compatible p' x v) (fun frame_x ->
-    l.get_morphism.f_op x frame_x;
-    assert (composable q (get l x) (get l frame_x));
-    pcm_refinement_comp_new_one re (get l x) (get l frame_x);
-    assert (composable q re.new_one (get l frame_x));
-    p.is_unit frame_x;
-    assert (composable p (one p) frame_x);
-    l.put_morphism.f_op (re.new_one, one p) (get l frame_x, frame_x);
-    assert (composable p re'.new_one (put l (get l frame_x) frame_x));
-    let frame = op p re'.new_one frame_x in
-    assert (re.f (get l frame));
-    assert (re.f (get l (op p re'.new_one frame_x)));
-    re'.new_one_is_refined_unit x;
-    assert (composable p (op p x re'.new_one) frame_x);
-    p.assoc_r x re'.new_one frame_x;
-    assert (composable p x (op p re'.new_one frame_x));
-    assert (composable p' x (op p re'.new_one frame_x));
-    assert (composable p' x frame);
-    assert (op p frame_x x == v);
-    re.new_one_is_refined_unit (get l x);
-    p.is_unit x;
-    l.put_morphism.f_op (re.new_one, one p) (get l x, Ghost.reveal x);
-    assert (composable p re'.new_one x);
-    p.comm re'.new_one frame_x;
-    p.assoc_r frame_x re'.new_one x;
-    assert (composable p frame_x (op p re'.new_one x));
-    assert (put l (get l x) x == Ghost.reveal x);
-    p.comm (one p) x;
-    q.comm re.new_one (get l x);
-    assert (put l (op q re.new_one (get l x)) (op p (one p) x) == Ghost.reveal x);
-    assert (op p re'.new_one x == Ghost.reveal x);
-    assert (op p frame_x (op p re'.new_one x) == v);
-    p.assoc frame_x re'.new_one x;
-    assert (op p (op p frame_x re'.new_one) x == v);
-    assert (op p (op p re'.new_one frame_x) x == v);
-    assert (op p' frame x == v);
-    compatible_intro p' x v (op p (put l re.new_one (one p)) frame_x));
-  assert (re.f (get l v));
   let w = f v in
-  assert (re.f (get l w));
-  assert (compatible p' y w);
   let aux (frame:'a{composable p x frame})
   : Lemma (composable p y frame /\ (op p x frame == v ==> op p y frame == w))
   = pcm_refinement_comp_new_one re' x frame;
     let frame' = op p re'.new_one frame in
-    assert (re.f (get l frame'));
-    assert (forall (frame':refine_t re'.f{composable p' x frame'}).{:pattern (composable p' x frame')}
-      composable p' y frame' /\ 
-      (op p' x frame' == v ==> op p' y frame' == w));
-    assert (composable p' x frame');
-    assert (composable p' y frame' /\ (op p' x frame' == v ==> op p' y frame' == w));
     p.assoc y re'.new_one frame;
-    assert (composable p (op p y re'.new_one) frame);
     re'.new_one_is_refined_unit y;
-    assert (composable p y frame);
     p.assoc x re'.new_one frame;
-    re'.new_one_is_refined_unit x;
-    assert (op p x frame' == v ==> op p y frame' == w);
-    assert (op p x frame == v ==> op p y frame' == w);
-    assert (op p x frame == v ==> op p y frame == w)
+    re'.new_one_is_refined_unit x
   in FStar.Classical.forall_intro aux;
   w
 
@@ -1051,9 +980,8 @@ let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
   change_equal_vprop (r `pts_to` x) (r.r `M.pts_to` x');
   let v = Steel.PCMReference.read r.r x' in
   pcm_refinement_compatible_closed r.re x' v;
-  assert (r.re.f v /\ compatible (refined_pcm r.re) x' v);
   pcm_lens_compatible_get r.pl x' v;
-  change_equal_vprop (r.r `M.pts_to` Ghost.reveal x') (r `pts_to` x);
+  change_equal_vprop (r.r `M.pts_to` x') (r `pts_to` x);
   A.return (get r.pl v)
 
 (** Example: a model for a tagged union representing colors in RGB or HSV
