@@ -309,7 +309,7 @@ noeq type ref (a:Type) (b:Type): Type = {
 open Steel.Effect
 
 let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
-let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): vprop =
+let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): vprop = (* TODO unerase v, try [@@@smt_fallback] *)
   r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
 
 (** Basic lenses *)
@@ -920,28 +920,60 @@ let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
     (Ghost.reveal y, one (refined_pcm r.re));
   A.change_equal_slprop _ (r `pts_to` op r.q x y)
 
-let peel (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
-: SteelT unit
+let rewrite_context #inames (p q: vprop)
+: Steel.Effect.Atomic.SteelAtomicF unit inames
+    (p)
+    (fun _ -> q)
+    (requires fun _ -> p == q)
+    (ensures fun _ _ _ -> True)
+= A.change_equal_slprop p q
+
+let peel (r: ref 'a 'b) (#rq: pcm 'b) (#q: refined_one_pcm 'c)
+  (l: pcm_lens rq q) (x: Ghost.erased 'b)
+: Steel unit
     (r `pts_to` x)
     (fun _ ->
       (r `pts_to` put l (one q) x) `star` 
       (r `pts_to` put l (get l x) (one r.q)))
+    (requires fun _ -> rq == r.q)
+    (ensures fun _ _ _ -> True)
 = q.is_unit (get l x);
   r.q.is_unit x;
   q.comm (get l x) (one q);
   l.put_morphism.f_op (one q, Ghost.reveal x) (get l (Ghost.reveal x), one r.q);
-  split r x (put l (one q) x) (put l (get l x) (one r.q))
+  split r x (put l (one q) x) (put l (get l x) (one r.q));
+  A.sladmit()
+  //A.rewrite_context
+  //A.change_equal_slprop ((r `pts_to` (Ghost.reveal (Ghost.hide (put l (one q) (Ghost.reveal x))))) `star` (r `pts_to` _)) ((r `pts_to` _) `star` (r `pts_to` _))
 
-let addr_of_lens (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
+let addr_of_lens (r: ref 'a 'b) (#rq: pcm 'b) (#q: refined_one_pcm 'c)
+  (l: pcm_lens rq q) (x: Ghost.erased 'b)
 : Steel (ref 'a 'c)
     (r `pts_to` x)
     (fun s ->
       (r `pts_to` put l (one q) x) `star` 
       (s `pts_to` get l x))
-    (requires fun _ -> True)
-    (ensures fun _ r' _ -> r' == ref_focus r q l)
-= peel r q l x;
+    (requires fun _ -> rq == r.q)
+    (ensures fun _ r' _ -> rq == r.q /\ r' == ref_focus r q l)
+= peel r l x;
   focus r q l (put l (get l x) (one r.q)) (get l x)
+
+let un_addr_of_lens
+  (r': ref 'a 'c) (r: ref 'a 'b) (#rq: pcm 'b) (#q: refined_one_pcm 'c) (l: pcm_lens rq q)
+  (x: Ghost.erased 'b) (y: Ghost.erased 'c)
+: Steel unit
+    ((r `pts_to` x) `star` (r' `pts_to` y))
+    (fun s -> r `pts_to` put l y x)
+    (requires fun _ -> rq == r.q /\ r' == ref_focus r q l /\ get l x == one q)
+    (ensures fun _ _ _ -> True)
+= unfocus r' r l y;
+  gather r x (put l y (one r.q));
+  q.is_unit (Ghost.reveal y);
+  r.q.is_unit (Ghost.reveal x);
+  q.comm (get l x) y;
+  l.put_morphism.f_op (get l x, Ghost.reveal x) (Ghost.reveal y, one r.q);
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  A.return ()
 
 let refine (r: ref 'a 'b)
   (re: pcm_refinement r.q)
@@ -965,6 +997,61 @@ let unrefine #inames (r': ref 'a 'b)
     (fun _ -> r == ref_refine r' re u)
     (fun _ _ _ -> True)
 = A.change_equal_slprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
+
+
+(*
+
+describe this situation:
+
+  thread 1: pointer to p.x
+  
+  thread 2: pointer to p but with permissions {None, y}
+  
+  *p a value compatible with {None, y}
+  i.e., any {x, y} for any x
+  x could be:
+    Some z for a garbage z, or
+    None
+
+  but, impossible to work with p->x:
+    *p = {x, y}
+    ( *p).x == 0
+    need {x, y}.x is Some v
+    if (( *p).x == 0) { .. } else { .. }
+    
+  {None, y} compatible with {vx, vy} 
+  let vx = ref_read &p->x in
+  match vx with None -> .. | Some x -> ..
+
+  {None, y} compatible with {vx, vy} 
+  let vx = ref_read &p->x in
+  let bad = (f : option int -> option int) vx in
+
+  could prevent pattern matching if option int were an abstract type
+
+*)
+
+let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
+: Steel 'b
+    (r `pts_to` x)
+    (fun _ -> r `pts_to` x)
+    (requires fun _ -> ~ (Ghost.reveal x == one r.q))
+    (ensures fun _ x' _ -> compatible r.q x x')
+= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
+  A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
+  let v = Steel.PCMReference.read r.r x' in
+  pcm_refinement_compatible_closed r.re x' v;
+  pcm_lens_compatible_get r.pl x' v;
+  A.change_equal_slprop (r.r `mpts_to` x') (r `pts_to` x);
+  A.return (get r.pl v)
+
+let whole_value (p: pcm 'a) (x: 'a) =
+  p.refine x /\
+  (forall (y:'a{composable p x y}).{:pattern op p y x} op p y x == x)
+
+let valid_write (p:pcm 'a) x y =
+  whole_value p x /\ whole_value p y /\
+  (forall (frame:'a). composable p x frame ==> composable p y frame)
 
 let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
   (f: ('b -> 'b){frame_pres r.q f x y})
@@ -993,21 +1080,28 @@ let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q 
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
 = as_action (ref_upd_act r x y f)
 
-let ref_write (r: ref 'a (option 'b){r.q == opt_pcm #'b}) (x: Ghost.erased 'b) (y: 'b)
-: SteelT unit (r `pts_to` Some (Ghost.reveal x)) (fun _ -> r `pts_to` Some y)
-= ref_upd r (Some (Ghost.reveal x)) (Some y)
-    (fun v -> match v with None -> None | Some _ -> Some y)
+let frame_preserving_upd_valid_write (p: pcm 'a)
+  (x:Ghost.erased 'a) (y:'a{valid_write p x y})
+: f:('a -> 'a){frame_pres p f x y}
+= let f = fun v -> y in
+  frame_pres_intro p f x y (fun v ->
+    compatible_refl p y;
+    let aux (frame:'a{composable p x frame})
+    : Lemma (
+       composable p y frame /\
+       (op p x frame == v ==> op p y frame == y))
+    = assert (op p frame x == Ghost.reveal x);
+      assert (op p frame y == y);
+      p.comm frame x; p.comm frame y
+    in FStar.Classical.forall_intro aux);
+  f
 
-let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
-: Steel 'b
-    (r `pts_to` x)
-    (fun _ -> r `pts_to` x)
-    (requires fun _ -> True)
-    (ensures fun _ x' _ -> compatible r.q x x')
-= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
-  A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
-  let v = Steel.PCMReference.read r.r x' in
-  pcm_refinement_compatible_closed r.re x' v;
-  pcm_lens_compatible_get r.pl x' v;
-  A.change_equal_slprop (r.r `mpts_to` x') (r `pts_to` x);
-  A.return (get r.pl v)
+let ref_write (r: ref 'a 'b) (x: Ghost.erased 'b) (y: 'b{valid_write r.q x y})
+: SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
+= ref_upd r x y (frame_preserving_upd_valid_write r.q x y)
+
+let ref_write_opt_pcm (r: ref 'a (option 'b){r.q == opt_pcm #'b}) (x: Ghost.erased 'b) (y: 'b)
+: SteelT unit (r `pts_to` Some (Ghost.reveal x)) (fun _ -> r `pts_to` Some y)
+= ref_write r (Some (Ghost.reveal x)) (Some y)
+
+
