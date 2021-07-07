@@ -42,70 +42,74 @@ let mk_point_f (x y: option int) (k: point_field): point_fields k = match k with
 let mk_point (x y: option int): point = on_domain point_field (mk_point_f x y)
 
 let put_x x' x y
-: Lemma (put (field point_fields_pcm X) x' (mk_point x y) == mk_point x' y)
+: Lemma (feq (put (field point_fields_pcm X) x' (mk_point x y)) (mk_point x' y))
   [SMTPat (put (field point_fields_pcm X) x' (mk_point x y))]
-= admit()
+= ()
 
 let get_x x y
 : Lemma (get (field point_fields_pcm X) (mk_point x y) == x)
   [SMTPat (get (field point_fields_pcm X) (mk_point x y))]
-= admit()
+= ()
 
 let put_y y' x y
-: Lemma (put (field point_fields_pcm Y) y' (mk_point x y) == mk_point x y')
+: Lemma (feq (put (field point_fields_pcm Y) y' (mk_point x y)) (mk_point x y'))
   [SMTPat (put (field point_fields_pcm Y) y' (mk_point x y))]
-= admit()
+= ()
 
 let get_y x y
 : Lemma (get (field point_fields_pcm Y) (mk_point x y) == y)
   [SMTPat (get (field point_fields_pcm Y) (mk_point x y))]
-= admit()
+= ()
 
 let merge_xy x y x' y'
-: Lemma (op (prod_pcm point_fields_pcm) (mk_point x y) (mk_point x' y') ==
-         mk_point (op (point_fields_pcm X) x x') (op (point_fields_pcm Y) y y'))
+: Lemma (feq (op (prod_pcm point_fields_pcm) (mk_point x y) (mk_point x' y'))
+             (mk_point (op (point_fields_pcm X) x x') (op (point_fields_pcm Y) y y')))
   [SMTPat (op (prod_pcm point_fields_pcm) (mk_point x y) (mk_point x' y'))]
-= admit()
+= ()
 
 let addr_of_x (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int))
 : SteelT (q:ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm X)})
-    (to_vprop (p `pts_to` mk_point x y))
+    (p `pts_to` mk_point x y)
     (fun q ->
-       to_vprop (p `pts_to` mk_point None y) `star`
-       to_vprop (q `pts_to` x))
+       (p `pts_to` mk_point None y) `star`
+       (q `pts_to` x))
 = let q = addr_of_lens p int_pcm (field point_fields_pcm X) (mk_point x y) in
-  change_equal_vprop (p `pts_to` _) (p `pts_to` mk_point None y);
-  change_equal_vprop (q `pts_to` _) (q `pts_to` x);
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point None y);
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` x);
   A.return q
 
 let addr_of_y (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int))
 : SteelT (q:ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm Y)})
-    (to_vprop (p `pts_to` mk_point x y))
+    (p `pts_to` mk_point x y)
     (fun q ->
-       to_vprop (p `pts_to` mk_point x None) `star`
-       to_vprop (q `pts_to` y))
+       (p `pts_to` mk_point x None) `star`
+       (q `pts_to` y))
 = let q = addr_of_lens p int_pcm (field point_fields_pcm Y) (mk_point x y) in
-  change_equal_vprop (p `pts_to` _) (p `pts_to` mk_point x None);
-  change_equal_vprop (q `pts_to` _) (q `pts_to` y);
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x None);
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
   A.return q
 
-#push-options "--z3rlimit 20 --print_implicits"
+let one_xy : squash (feq (one (prod_pcm point_fields_pcm)) (mk_point None None))
+= ()
+
 let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (to_vprop (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y))))
-    (fun _ -> to_vprop (p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x))))
-= (* int *q = &p.x; *)
-  change_equal_vprop
     (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
-    (p `pts_to` mk_point
-      (Ghost.reveal (Ghost.hide (Some (Ghost.reveal x))))
-      (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
+    (fun _ -> p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x)))
+= (* int *q = &p.x; *)
+  //A.change_equal_slprop
+  //  (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
+  //  (p `pts_to` mk_point
+  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal x))))
+  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let q = addr_of_x p (Some (Ghost.reveal x)) (Some (Ghost.reveal y)) in
   (* int *r = &p.y; *)
-  change_equal_vprop
-    (p `pts_to` mk_point None (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))))
-    (p `pts_to` mk_point (Ghost.reveal (Ghost.hide None))
-      (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
+  //A.change_equal_slprop
+  //  (p `pts_to` mk_point None (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))))
+  //  (p `pts_to` mk_point (Ghost.reveal (Ghost.hide None))
+  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let r = addr_of_y p None (Some (Ghost.reveal y)) in
   (* tmp = *q; *)
   let Some tmp = ref_read q (Some (Ghost.reveal x)) in
@@ -117,20 +121,26 @@ let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
   (* *r = tmp; *)
   ref_write r y tmp;
   (* Gather *)
-  change_equal_vprop (q `pts_to` _) (q `pts_to` Some vy);
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   unfocus q p (field point_fields_pcm X) (Some vy);
   unfocus r p (field point_fields_pcm Y) (Some tmp);
-  gather p _ _;
-  //gather p (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
-  //change_equal_vprop
-  //  (p `pts_to` put (field point_fields_pcm X) (Ghost.reveal (Ghost.hide (Some vy))) (one p.q))
-  //  (p `pts_to` mk_point (Some vy) None);
-  //change_equal_vprop
-  //  (p `pts_to` put (field point_fields_pcm Y) (Ghost.reveal (Ghost.hide (Some tmp))) (one p.q))
-  //  (p `pts_to` mk_point None (Some tmp));
-  A.sladmit ();
-  A.return ()
-#pop-options
+  A.change_equal_slprop
+    (p `pts_to` put (field point_fields_pcm X) _ _)
+    (p `pts_to` mk_point (Some vy) None);
+  A.change_equal_slprop
+    (p `pts_to` put (field point_fields_pcm Y) _ _)
+    (p `pts_to` mk_point None (Some tmp));
+  gather p (mk_point (Some vy) None) (mk_point None (Some tmp));
+  gather p (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
+  //gather p _ _; // Ask
+  A.change_equal_slprop (p `pts_to` _) _
+
+(*
+to print proof state, try:
+
+val fake : vprop
+let f unit : Steel unit fake (fun _ -> _)
+*)
 
 (*
 // let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
