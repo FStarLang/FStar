@@ -306,8 +306,11 @@ noeq type ref (a:Type) (b:Type): Type = {
   r: Steel.Memory.ref a p;
 }
 
-let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): Steel.Memory.slprop =
-  Steel.Memory.(r.r `pts_to` put r.pl v (one (refined_pcm r.re)))
+open Steel.Effect
+
+let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
+let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): vprop =
+  r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
 
 (** Basic lenses *)
 
@@ -822,7 +825,6 @@ let ref_refine (r: ref 'a 'b)
 
 (** Fundamental operations on references *)
 
-open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
@@ -832,14 +834,14 @@ let ref_focus (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q): ref 'a
 let focus (r: ref 'a 'b) (q: refined_one_pcm 'c)
   (l: pcm_lens r.q q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
 : Steel (ref 'a 'c)
-    (to_vprop (r `pts_to` s))
-    (fun r' -> to_vprop (r' `pts_to` x))
+    (r `pts_to` s)
+    (fun r' -> r' `pts_to` x)
     (fun _ -> Ghost.reveal s == put l x (one r.q))
     (fun _ r' _ -> r' == ref_focus r q l)
 = let r' = ref_focus r q l in
   A.change_slprop_rel  
-    (to_vprop (r `pts_to` s))
-    (to_vprop (r' `pts_to` x))
+    (r `pts_to` s)
+    (r' `pts_to` x)
     (fun _ _ -> True)
     (fun m -> r.pl.get_morphism.f_one ());
   A.return r'
@@ -847,13 +849,13 @@ let focus (r: ref 'a 'b) (q: refined_one_pcm 'c)
 let unfocus #inames (r: ref 'a 'c) (r': ref 'a 'b) (#r'q: pcm 'b) (#q: refined_one_pcm 'c)
   (l: pcm_lens r'q q) (x: Ghost.erased 'c)
 : A.SteelGhost unit inames
-    (to_vprop (r `pts_to` x))
-    (fun _ -> to_vprop (r' `pts_to` put l x (one r'.q)))
+    (r `pts_to` x)
+    (fun _ -> r' `pts_to` put l x (one r'.q))
     (requires fun _ -> r'.q == r'q /\ r == ref_focus r' q l)
     (ensures fun _ _ _ -> True)
 = A.change_slprop_rel  
-    (to_vprop (r `pts_to` x))
-    (to_vprop (r' `pts_to` put l x (one r'.q)))
+    (r `pts_to` x)
+    (r' `pts_to` put l x (one r'.q))
     (fun _ _ -> True)
     (fun m -> r'.pl.get_morphism.f_one ())
 
@@ -864,13 +866,13 @@ let change_equal_vprop #inames (p q: M.slprop)
 
 let split (r: ref 'a 'c) (xy x y: Ghost.erased 'c)
 : Steel unit
-    (to_vprop (r `pts_to` xy))
-    (fun _ -> to_vprop (r `pts_to` x) `star` to_vprop (r `pts_to` y))
+    (r `pts_to` xy)
+    (fun _ -> (r `pts_to` x) `star` (r `pts_to` y))
     (fun _ -> composable r.q x y /\ xy == Ghost.hide (op r.q x y))
     (fun _ _ _ -> True)
 = A.change_equal_slprop
-    (to_vprop (r `pts_to` xy))
-    (to_vprop (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl xy (one (refined_pcm r.re))))));
+    (r `pts_to` xy)
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl xy (one (refined_pcm r.re)))));
   (refined_pcm r.re).is_unit (one (refined_pcm r.re));
   r.pl.put_morphism.f_op
     (Ghost.reveal x, one (refined_pcm r.re))
@@ -879,24 +881,34 @@ let split (r: ref 'a 'c) (xy x y: Ghost.erased 'c)
     (put r.pl xy (one (refined_pcm r.re)))
     (put r.pl x (one (refined_pcm r.re)))
     (put r.pl y (one (refined_pcm r.re)));
-  change_equal_vprop
-    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))))
+  A.change_equal_slprop
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))))
     (r `pts_to` x);
-  change_equal_vprop
-    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))))
+  A.change_equal_slprop
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))))
     (r `pts_to` y)
+
+let mgather (#a:Type)
+            (#p:FStar.PCM.pcm a)
+            (r:Steel.Memory.ref a p)
+            (v0:Ghost.erased a)
+            (v1:Ghost.erased a)
+: SteelT (_:unit{composable p v0 v1})
+    (mpts_to r v0 `star` mpts_to r v1)
+    (fun _ -> mpts_to r (op p v0 v1))
+= Steel.PCMReference.gather r v0 v1
 
 let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
 : SteelT (_:unit{composable r.q x y})
-    (to_vprop (r `pts_to` x) `star` to_vprop (r `pts_to` y))
-    (fun _ -> to_vprop (r `pts_to` op r.q x y))
-= change_equal_vprop
+    ((r `pts_to` x) `star` (r `pts_to` y))
+    (fun _ -> r `pts_to` op r.q x y)
+= A.change_equal_slprop
     (r `pts_to` x)
-    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))));
-  change_equal_vprop
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))));
+  A.change_equal_slprop
     (r `pts_to` y)
-    (r.r `M.pts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))));
-  Steel.PCMReference.gather r.r
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))));
+  mgather r.r
     (put r.pl x (one (refined_pcm r.re)))
     (put r.pl y (one (refined_pcm r.re)));
   r.pl.get_morphism.f_op
@@ -906,14 +918,14 @@ let gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
   r.pl.put_morphism.f_op
     (Ghost.reveal x, one (refined_pcm r.re))
     (Ghost.reveal y, one (refined_pcm r.re));
-  change_equal_vprop _ (r `pts_to` op r.q x y)
+  A.change_equal_slprop _ (r `pts_to` op r.q x y)
 
 let peel (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
 : SteelT unit
-    (to_vprop (r `pts_to` x))
+    (r `pts_to` x)
     (fun _ ->
-      to_vprop (r `pts_to` put l (one q) x) `star` 
-      to_vprop (r `pts_to` put l (get l x) (one r.q)))
+      (r `pts_to` put l (one q) x) `star` 
+      (r `pts_to` put l (get l x) (one r.q)))
 = q.is_unit (get l x);
   r.q.is_unit x;
   q.comm (get l x) (one q);
@@ -922,10 +934,10 @@ let peel (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.er
 
 let addr_of_lens (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q) (x: Ghost.erased 'b)
 : Steel (ref 'a 'c)
-    (to_vprop (r `pts_to` x))
+    (r `pts_to` x)
     (fun s ->
-      to_vprop (r `pts_to` put l (one q) x) `star` 
-      to_vprop (s `pts_to` get l x))
+      (r `pts_to` put l (one q) x) `star` 
+      (s `pts_to` get l x))
     (requires fun _ -> True)
     (ensures fun _ r' _ -> r' == ref_focus r q l)
 = peel r q l x;
@@ -936,23 +948,23 @@ let refine (r: ref 'a 'b)
   (u: pcm_unrefinement re)
   (x: Ghost.erased 'b{re.f x})
 : Steel (ref 'a (refine_t re.f))
-    (to_vprop (r `pts_to` x))
-    (fun r' -> to_vprop (r' `pts_to` Ghost.reveal x))
+    (r `pts_to` x)
+    (fun r' -> r' `pts_to` Ghost.reveal x)
     (fun _ -> True)
     (fun _ r' _ -> r' == ref_refine r re u)
 = let r' = ref_refine r re u in
-  change_equal_vprop (r `pts_to` x) (r' `pts_to` Ghost.reveal x);
+  A.change_equal_slprop (r `pts_to` x) (r' `pts_to` Ghost.reveal x);
   A.return r'
 
 let unrefine #inames (r': ref 'a 'b)
   (re: pcm_refinement r'.q) (u: pcm_unrefinement re)
   (r: ref 'a (refine_t re.f)) (x: Ghost.erased 'b{re.f x})
 : A.SteelGhost unit inames
-    (to_vprop (r `pts_to` Ghost.reveal x))
-    (fun _ -> to_vprop (r' `pts_to` x))
+    (r `pts_to` Ghost.reveal x)
+    (fun _ -> r' `pts_to` x)
     (fun _ -> r == ref_refine r' re u)
     (fun _ _ _ -> True)
-= change_equal_vprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
+= A.change_equal_slprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
 let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
   (f: ('b -> 'b){frame_pres r.q f x y})
@@ -965,28 +977,37 @@ let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
   r.u x' y' (frame_pres_mk_upd (refined_pcm r.re) x' y' (upd r.pl f))
 
 let ref_upd_act (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
-: M.action_except unit Set.empty (r `pts_to` x) (fun _ -> r `pts_to` y)
+: M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y))
 = M.upd_gen Set.empty r.r _ _ (ref_frame_preserving_upd r x y f)
 
+let as_action (#p:vprop)
+              (#q:vprop)
+              (f:M.action_except unit Set.empty (hp_of p) (fun _ -> hp_of q))
+: SteelT unit p (fun x -> q)
+= A.change_slprop_rel p (to_vprop (hp_of p)) (fun _ _ -> True) (fun m -> ());
+  let x = Steel.Effect.as_action f in
+  A.change_slprop_rel (to_vprop (hp_of q)) q (fun _ _ -> True) (fun m -> ());
+  A.return x
+
 let ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
-: SteelT unit (to_vprop (r `pts_to` x)) (fun _ -> to_vprop (r `pts_to` y))
+: SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
 = as_action (ref_upd_act r x y f)
 
 let ref_write (r: ref 'a (option 'b){r.q == opt_pcm #'b}) (x: Ghost.erased 'b) (y: 'b)
-: SteelT unit (to_vprop (r `pts_to` Some (Ghost.reveal x))) (fun _ -> to_vprop (r `pts_to` Some y))
+: SteelT unit (r `pts_to` Some (Ghost.reveal x)) (fun _ -> r `pts_to` Some y)
 = ref_upd r (Some (Ghost.reveal x)) (Some y)
     (fun v -> match v with None -> None | Some _ -> Some y)
 
 let ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
 : Steel 'b
-    (to_vprop (r `pts_to` x)) 
-    (fun _ -> to_vprop (r `pts_to` x))
+    (r `pts_to` x)
+    (fun _ -> r `pts_to` x)
     (requires fun _ -> True)
     (ensures fun _ x' _ -> compatible r.q x x')
 = let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
-  change_equal_vprop (r `pts_to` x) (r.r `M.pts_to` x');
+  A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
   let v = Steel.PCMReference.read r.r x' in
   pcm_refinement_compatible_closed r.re x' v;
   pcm_lens_compatible_get r.pl x' v;
-  change_equal_vprop (r.r `M.pts_to` x') (r `pts_to` x);
+  A.change_equal_slprop (r.r `mpts_to` x') (r `pts_to` x);
   A.return (get r.pl v)
