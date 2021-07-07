@@ -10,16 +10,9 @@ module A = Steel.Effect.Atomic
 
 /// Example 1: swapping the coordinates of a 2d point
 ///
-/// struct point { int x, y; };
+/// Suppose we have the following struct representing 2d points:
+///   struct point { int x, y; };
 ///
-/// void swap(struct point *p) {
-///   int *q = &p.x;
-///   int *r = &p.y;
-///   int tmp = *q;
-///   *q = *r;
-///   *r = tmp;
-/// }
-
 /// Carrier of PCM for struct point:
 
 type point_field = | X | Y
@@ -36,10 +29,14 @@ let point_fields_pcm k : pcm (point_fields k) = match k with
   | Y -> int_pcm
 let point_pcm = prod_pcm point_fields_pcm
 
+/// (mk_point x y) represents (struct point){.x = x, .y = y}
+
 let mk_point_f (x y: option int) (k: point_field): point_fields k = match k with
   | X -> x
   | Y -> y
 let mk_point (x y: option int): point = on_domain point_field (mk_point_f x y)
+
+/// Laws about putting/getting the x and y fields of a (mk_point x y)
 
 let put_x x' x y
 : Lemma (feq (put (field point_fields_pcm X) x' (mk_point x y)) (mk_point x' y))
@@ -61,11 +58,18 @@ let get_y x y
   [SMTPat (get (field point_fields_pcm Y) (mk_point x y))]
 = ()
 
+/// Laws relating mk_point to PCM operations
+
+let one_xy : squash (feq (one (prod_pcm point_fields_pcm)) (mk_point None None))
+= ()
+
 let merge_xy x y x' y'
 : Lemma (feq (op (prod_pcm point_fields_pcm) (mk_point x y) (mk_point x' y'))
              (mk_point (op (point_fields_pcm X) x x') (op (point_fields_pcm Y) y y')))
   [SMTPat (op (prod_pcm point_fields_pcm) (mk_point x y) (mk_point x' y'))]
 = ()
+
+/// Taking pointers to the x and y fields of a point
 
 let addr_of_x (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int))
 : SteelT (q:ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm X)})
@@ -89,26 +93,24 @@ let addr_of_y (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
   A.return q
 
-let one_xy : squash (feq (one (prod_pcm point_fields_pcm)) (mk_point None None))
-= ()
+/// With the above, we can write the following function that swaps the x and y fields of a given point:
+/// 
+/// void point_swap(struct point *p) {
+///   int *q = &p.x;
+///   int *r = &p.y;
+///   int tmp = *q;
+///   *q = *r;
+///   *r = tmp;
+/// }
 
-let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
+let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
     (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
     (fun _ -> p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x)))
 = (* int *q = &p.x; *)
-  //A.change_equal_slprop
-  //  (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
-  //  (p `pts_to` mk_point
-  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal x))))
-  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let q = addr_of_x p (Some (Ghost.reveal x)) (Some (Ghost.reveal y)) in
   (* int *r = &p.y; *)
-  //A.change_equal_slprop
-  //  (p `pts_to` mk_point None (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))))
-  //  (p `pts_to` mk_point (Ghost.reveal (Ghost.hide None))
-  //    (Ghost.reveal (Ghost.hide (Some (Ghost.reveal y)))));
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let r = addr_of_y p None (Some (Ghost.reveal y)) in
   (* tmp = *q; *)
@@ -117,9 +119,9 @@ let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
   (* *q = *r; *)
   let Some vy = ref_read r (Some (Ghost.reveal y)) in
   assert (vy = Ghost.reveal y);
-  ref_write q x vy;
+  ref_write q _ vy;
   (* *r = tmp; *)
-  ref_write r y tmp;
+  ref_write r _ tmp;
   (* Gather *)
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   unfocus q p (field point_fields_pcm X) (Some vy);
@@ -133,6 +135,72 @@ let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
   gather p (mk_point (Some vy) None) (mk_point None (Some tmp));
   gather p (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
   //gather p _ _; // Ask
+  A.change_equal_slprop (p `pts_to` _) _
+
+/// Here's a generic swap:
+///
+/// void generic_swap<A>(A *p, A *q) {
+///   A tmp = *p;
+///   *p = *q;
+///   *q = tmp;
+/// }
+
+let generic_swap
+  (p:ref 'a (option 'c){p.q == opt_pcm #'c})
+  (q:ref 'b (option 'c){q.q == opt_pcm #'c})
+  (x y: Ghost.erased 'c)
+: SteelT unit
+    ((p `pts_to` Some (Ghost.reveal x)) `star`
+     (q `pts_to` Some (Ghost.reveal y)))
+    (fun _ ->
+     (p `pts_to` Some (Ghost.reveal y)) `star`
+     (q `pts_to` Some (Ghost.reveal x)))
+= (* A tmp = *p; *)
+  let Some tmp = ref_read p (Some (Ghost.reveal x)) in
+  (* *p = *q; *)
+  let Some vy = ref_read q (Some (Ghost.reveal y)) in
+  ref_write p _ vy;
+  (* *q = tmp *)
+  ref_write q _ tmp;
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _)
+
+/// Now, here's point_swap written using generic_swap:
+///
+/// void point_swap_generically(struct point *p) {
+///   int *q = &p.x;
+///   int *r = &p.y;
+///   generic_swap(q, r);
+/// }
+
+let point_swap_generically
+  (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
+: SteelT unit
+    (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
+    (fun _ -> p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x)))
+= (* int *q = &p.x; *)
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
+  let q = addr_of_x p (Some (Ghost.reveal x)) (Some (Ghost.reveal y)) in
+  (* int *r = &p.y; *)
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
+  let r = addr_of_y p None (Some (Ghost.reveal y)) in
+  (* generic_swap(q, r); *)
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  generic_swap q r (Ghost.reveal x) (Ghost.reveal y);
+  (* Gather *)
+  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  unfocus q p (field point_fields_pcm X) (Some (Ghost.reveal y));
+  unfocus r p (field point_fields_pcm Y) (Some (Ghost.reveal x));
+  A.change_equal_slprop
+    (p `pts_to` put (field point_fields_pcm X) _ _)
+    (p `pts_to` mk_point (Some (Ghost.reveal y)) None);
+  A.change_equal_slprop
+    (p `pts_to` put (field point_fields_pcm Y) _ _)
+    (p `pts_to` mk_point None (Some (Ghost.reveal x)));
+  gather p (mk_point (Some (Ghost.reveal y)) None) (mk_point None (Some (Ghost.reveal x)));
+  gather p (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
   A.change_equal_slprop (p `pts_to` _) _
 
 (*
