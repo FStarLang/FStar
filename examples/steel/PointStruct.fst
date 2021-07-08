@@ -32,19 +32,9 @@ let put_x x' x y
   [SMTPat (put _x x' (mk_point x y))]
 = ()
 
-let get_x x y
-: Lemma (get _x (mk_point x y) == x)
-  [SMTPat (get _x (mk_point x y))]
-= ()
-
 let put_y y' x y
 : Lemma (feq (put _y y' (mk_point x y)) (mk_point x y'))
   [SMTPat (put _y y' (mk_point x y))]
-= ()
-
-let get_y x y
-: Lemma (get _y (mk_point x y) == y)
-  [SMTPat (get _y (mk_point x y))]
 = ()
 
 /// Laws relating mk_point to PCM operations
