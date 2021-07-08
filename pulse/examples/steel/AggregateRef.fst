@@ -215,120 +215,6 @@ let inl_refinement (p: refined_one_pcm 'a) (q: pcm 'b): pcm_refinement (either_p
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
-(** A lens for the k-th field of an n-ary product *)
-
-let fun_upd (#a:eqtype) #f_ty (k:a) (x':f_ty k)
-  (f: restricted_t a f_ty)
-: restricted_t a f_ty
-= on_domain a (fun k' -> if k = k' then x' else f k')
-let lens_field_get (#a:eqtype) f (k:a) (s:restricted_t a f): f k = s k
-let lens_field (#a:eqtype) f (k:a): lens (restricted_t a f) (f k) = {
-  get = lens_field_get f k;
-  put = fun_upd k;
-  get_put = (fun s v -> ());
-  put_get = (fun s -> ext (fun_upd k (lens_field_get f k s) s) s (fun _ -> ()));
-  put_put = (fun s v w -> ext (fun_upd k v (fun_upd k w s)) (fun_upd k v s) (fun _ -> ()));
-}
-
-(** lens_field is a pcm_lens *)
-
-(* TODO move to Aggregates.fst *)
-let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
-  (h:(k:'a -> Lemma (composable (p k) (x k) (y k))))
-: Lemma (composable (prod_pcm p) x y) = FStar.Classical.forall_intro h
-
-let field (#a:eqtype) #f (p:(k:a -> pcm (f k))) (k:a): pcm_lens (prod_pcm p) (p k) = {
-  l = lens_field f k;
-  get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
-  put_morphism = {
-    f_refine = (fun _ -> ());
-    f_one = (fun _ ->
-      ext
-        (fun_upd k (one (p k)) (one (prod_pcm p)))
-        (one (prod_pcm p))
-        (fun k -> ()));
-    f_op = (fun (v, s) (w, t) ->
-      prod_pcm_composable_intro p (fun_upd k v s) (fun_upd k w t) (fun _ -> ());
-      ext
-        (fun_upd k (op (p k) v w) (op (prod_pcm p) s t))
-        (op (prod_pcm p) (fun_upd k v s) (fun_upd k w t))
-        (fun _ -> ()));
-  }
-}
-
-(** The refinement of an n-ary union PCM to the k-th case *)
-
-let case_refinement_f (p:(k:'a -> pcm ('b k))) (k:'a): union 'b -> prop =
-  fun kx -> match kx with Some (|k', _|) -> k == k' | None -> False
-
-let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
-: refine_t (case_refinement_f p k)
-= Some (|k, one (p k)|)
-
-let case_refinement (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
-: pcm_refinement (union_pcm p) = {
-  f = case_refinement_f p k;
-  f_closed_comp = (fun x y -> ());
-  new_one = case_refinement_new_one p k;
-  new_one_is_refined_unit = (fun (Some (|k', x|)) -> (p k).is_unit x)
-}
-
-let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
-: pcm_unrefinement (case_refinement p k)
-= fun kx ky f kv ->
-  let p' = refined_pcm (case_refinement p k) in
-  let p = union_pcm p in
-  match kv with
-  | Some (|k', v|) ->
-    if k = k' then begin
-      let _ = Ghost.hide (
-        let Some (|k, x|) = Ghost.reveal kx in
-        let goal = compatible p' kx kv in
-        compatible_elim p kx kv goal (fun kx_frame -> match kx_frame with
-          | Some (|_, frame_x|) -> compatible_intro p' kx kv (Some (|k, frame_x|))
-          | None -> compatible_refl p' kx))
-      in
-      let kw = f kv in
-      let aux (frame:union b{composable p kx frame})
-      : Lemma (composable p ky frame /\
-               (op p kx frame == Some (|k, v|) ==>
-                op p ky frame == f (Some (|k, v|))))
-      = let Some (|_, w|) = f (Some (|k, v|)) in
-        match frame with
-        | Some (|frame_k, frame_v|) -> assert (composable p' kx frame)
-        | None ->
-          p'.is_unit kx;
-          assert (composable p' kx (one p'));
-          p'.is_unit ky
-      in FStar.Classical.forall_intro aux;
-      kw
-    end else None
-  | _ -> None
-
-(** A lens for the k-th case of an n-ary union *)
-
-let lens_case_get (p:(k:'a -> pcm ('b k))) (k:'a): refine_t (case_refinement_f p k) -> 'b k =
-  fun (Some (|_, v|)) -> v
-let lens_case_put (p:(k:'a -> pcm ('b k))) (k:'a) (v:'b k)
-: refine_t (case_refinement_f p k) -> refine_t (case_refinement_f p k)
-= fun _ -> Some (|k, v|)
-  
-let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f p k)) ('b k) = {
-  get = lens_case_get p k;
-  put = lens_case_put p k;
-  get_put = (fun s v -> ());
-  put_get = (fun s -> ());
-  put_put = (fun s v w -> ());
-}
-
-(** lens_case is a pcm_lens *)
-let case (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
-: pcm_lens (refined_pcm (case_refinement p k)) (p k) = {
-  l = lens_case p k;
-  get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
-  put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
-}
-
 (** Refining a pcm_lens *)
 
 let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
@@ -639,9 +525,6 @@ let ref_refine (r: ref 'a 'b)
 
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
-
-let ref_focus r q l =
-  {p = r.p; re = r.re; u = r.u; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
 
 let focus (r: ref 'a 'b)
   (#q: refined_one_pcm 'c)
