@@ -9,111 +9,11 @@ open Steel.Effect
 module A = Steel.Effect.Atomic
 
 /// Example 1: swapping the coordinates of a 2d point
-///
-/// Suppose we have the following struct representing 2d points:
-///   struct point { int x, y; };
-///
-/// Carrier of PCM for struct point:
 
-type point_field = | X | Y
-let point_fields k = match k with
-  | X -> option int
-  | Y -> option int
-let point = restricted_t point_field point_fields
+open PointStruct
+open PCM.POD
 
-/// PCM for struct point:
-
-let int_pcm = opt_pcm #int
-let point_fields_pcm k : pcm (point_fields k) = match k with
-  | X -> int_pcm
-  | Y -> int_pcm
-let point_pcm = prod_pcm point_fields_pcm
-
-/// (mk_point x y) represents (struct point){.x = x, .y = y}
-
-let mk_point_f (x y: option int) (k: point_field): point_fields k = match k with
-  | X -> x
-  | Y -> y
-let mk_point (x y: option int): point = on_domain point_field (mk_point_f x y)
-
-/// Laws about putting/getting the x and y fields of a (mk_point x y)
-
-let put_x x' x y
-: Lemma (feq (put (field point_fields_pcm X) x' (mk_point x y)) (mk_point x' y))
-  [SMTPat (put (field point_fields_pcm X) x' (mk_point x y))]
-= ()
-
-let get_x x y
-: Lemma (get (field point_fields_pcm X) (mk_point x y) == x)
-  [SMTPat (get (field point_fields_pcm X) (mk_point x y))]
-= ()
-
-let put_y y' x y
-: Lemma (feq (put (field point_fields_pcm Y) y' (mk_point x y)) (mk_point x y'))
-  [SMTPat (put (field point_fields_pcm Y) y' (mk_point x y))]
-= ()
-
-let get_y x y
-: Lemma (get (field point_fields_pcm Y) (mk_point x y) == y)
-  [SMTPat (get (field point_fields_pcm Y) (mk_point x y))]
-= ()
-
-/// Laws relating mk_point to PCM operations
-
-let one_xy : squash (feq (one point_pcm) (mk_point None None))
-= ()
-
-let merge_xy x y x' y'
-: Lemma (feq (op point_pcm (mk_point x y) (mk_point x' y'))
-             (mk_point (op (point_fields_pcm X) x x') (op (point_fields_pcm Y) y y')))
-  [SMTPat (op point_pcm (mk_point x y) (mk_point x' y'))]
-= ()
-
-/// Taking pointers to the x and y fields of a point
-
-let addr_of_x (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int))
-: SteelT (q:ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm X)})
-    (p `pts_to` mk_point x y)
-    (fun q ->
-       (p `pts_to` mk_point None y) `star`
-       (q `pts_to` x))
-= let q = addr_of_lens p (field point_fields_pcm X) (mk_point x y) in
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point None y);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` x);
-  A.return q
-
-let un_addr_of_x
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm X)})
-  (x y: Ghost.erased (option int))
-: SteelT unit
-    ((p `pts_to` mk_point None y) `star` (q `pts_to` x))
-    (fun q -> p `pts_to` mk_point x y)
-= un_addr_of_lens q p (field point_fields_pcm X) (mk_point None y) x;
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
-
-let addr_of_y (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (option int))
-: SteelT (q:ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm Y)})
-    (p `pts_to` mk_point x y)
-    (fun q ->
-       (p `pts_to` mk_point x None) `star`
-       (q `pts_to` y))
-= let q = addr_of_lens p (field point_fields_pcm Y) (mk_point x y) in
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x None);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
-  A.return q
-
-let un_addr_of_y
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (option int){q == ref_focus p int_pcm (field point_fields_pcm Y)})
-  (x y: Ghost.erased (option int))
-: SteelT unit
-    ((p `pts_to` mk_point x None) `star` (q `pts_to` y))
-    (fun q -> p `pts_to` mk_point x y)
-= un_addr_of_lens q p (field point_fields_pcm Y) (mk_point x None) y;
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
-
-/// With the above, we can write the following function that swaps the x and y fields of a given point:
+/// We can write the following function that swaps the x and y fields of a given point:
 /// 
 /// void point_swap(struct point *p) {
 ///   int *q = &p.x;
@@ -125,31 +25,31 @@ let un_addr_of_y
 
 let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
-    (fun _ -> p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x)))
+    (p `pts_to` mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y)))
+    (fun _ -> p `pts_to` mk_point (some (Ghost.reveal y)) (some (Ghost.reveal x)))
 = (* int *q = &p.x; *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let q = addr_of_x p (Some (Ghost.reveal x)) (Some (Ghost.reveal y)) in
+  let q = addr_of_x p (some (Ghost.reveal x)) (some (Ghost.reveal y)) in
   (* int *r = &p.y; *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let r = addr_of_y p None (Some (Ghost.reveal y)) in
+  let r = addr_of_y p none (some (Ghost.reveal y)) in
   (* tmp = *q; *)
-  let Some tmp = ref_read q (Some (Ghost.reveal x)) in
+  let tmp = ref_read q (some (Ghost.reveal x)) in
   (* *q = *r; *)
-  let Some vy = ref_read r (Some (Ghost.reveal y)) in
+  let vy = ref_read r (some (Ghost.reveal y)) in
   ref_write q _ vy;
   (* *r = tmp; *)
   ref_write r _ tmp;
   (* Gather *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  un_addr_of_x p q (Some vy) None;
+  un_addr_of_x p q vy none;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  un_addr_of_y p r (Some vy) (Some tmp);
+  un_addr_of_y p r vy tmp;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
-/// Here's a generic swap:
+/// We can also implement swap generically:
 ///
 /// void generic_swap<A>(A *p, A *q) {
 ///   A tmp = *p;
@@ -158,26 +58,26 @@ let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 /// }
 
 let generic_swap
-  (p:ref 'a (option 'c){p.q == opt_pcm #'c})
-  (q:ref 'b (option 'c){q.q == opt_pcm #'c})
+  (p:ref 'a (pod 'c){p.q == pod_pcm 'c})
+  (q:ref 'b (pod 'c){q.q == pod_pcm 'c})
   (x y: Ghost.erased 'c)
 : SteelT unit
-    ((p `pts_to` Some (Ghost.reveal x)) `star`
-     (q `pts_to` Some (Ghost.reveal y)))
+    ((p `pts_to` some (Ghost.reveal x)) `star`
+     (q `pts_to` some (Ghost.reveal y)))
     (fun _ ->
-     (p `pts_to` Some (Ghost.reveal y)) `star`
-     (q `pts_to` Some (Ghost.reveal x)))
+     (p `pts_to` some (Ghost.reveal y)) `star`
+     (q `pts_to` some (Ghost.reveal x)))
 = (* A tmp = *p; *)
-  let Some tmp = ref_read p (Some (Ghost.reveal x)) in
+  let tmp = ref_read p (some (Ghost.reveal x)) in
   (* *p = *q; *)
-  let Some vy = ref_read q (Some (Ghost.reveal y)) in
+  let vy = ref_read q (some (Ghost.reveal y)) in
   ref_write p _ vy;
   (* *q = tmp *)
   ref_write q _ tmp;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _)
 
-/// Now, here's point_swap written using generic_swap:
+/// Now, point_swap written using generic_swap:
 ///
 /// void point_swap_generically(struct point *p) {
 ///   int *q = &p.x;
@@ -188,14 +88,14 @@ let generic_swap
 let point_swap_generically
   (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y)))
-    (fun _ -> p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x)))
+    (p `pts_to` mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y)))
+    (fun _ -> p `pts_to` mk_point (some (Ghost.reveal y)) (some (Ghost.reveal x)))
 = (* int *q = &p.x; *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let q = addr_of_x p (Some (Ghost.reveal x)) (Some (Ghost.reveal y)) in
+  let q = addr_of_x p (some (Ghost.reveal x)) (some (Ghost.reveal y)) in
   (* int *r = &p.y; *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let r = addr_of_y p None (Some (Ghost.reveal y)) in
+  let r = addr_of_y p none (some (Ghost.reveal y)) in
   (* generic_swap(q, r); *)
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
@@ -203,12 +103,13 @@ let point_swap_generically
   (* Gather *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  un_addr_of_x p q (Some (Ghost.reveal y)) None;
+  un_addr_of_x p q (some (Ghost.reveal y)) none;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  un_addr_of_y p r (Some (Ghost.reveal y)) (Some (Ghost.reveal x));
+  un_addr_of_y p r (some (Ghost.reveal y)) (some (Ghost.reveal x));
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
+(*
 /// Example 2: pointers to nested fields
 ///
 /// Here's a struct representing a line segment by its two endpoints:
@@ -326,38 +227,38 @@ let reflect_and_reverse
 : SteelT unit
     (p `pts_to`
       mk_line
-        (mk_point (Some (Ghost.reveal x1)) (Some (Ghost.reveal y1)))
-        (mk_point (Some (Ghost.reveal x2)) (Some (Ghost.reveal y2))))
+        (mk_point (some (Ghost.reveal x1)) (some (Ghost.reveal y1)))
+        (mk_point (some (Ghost.reveal x2)) (some (Ghost.reveal y2))))
     (fun _ ->
       p `pts_to`
         mk_line
-          (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2)))
-          (mk_point (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1))))
+          (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2)))
+          (mk_point (some (Ghost.reveal y1)) (some (Ghost.reveal x1))))
 = (* Take all the requisite pointers *)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let pp1 =
     addr_of_p1 p
-      (mk_point (Some (Ghost.reveal x1)) (Some (Ghost.reveal y1)))
-      (mk_point (Some (Ghost.reveal x2)) (Some (Ghost.reveal y2)))
+      (mk_point (some (Ghost.reveal x1)) (some (Ghost.reveal y1)))
+      (mk_point (some (Ghost.reveal x2)) (some (Ghost.reveal y2)))
   in
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   let pp2 =
     addr_of_p2 p
       (one point_pcm)
-      (mk_point (Some (Ghost.reveal x2)) (Some (Ghost.reveal y2)))
+      (mk_point (some (Ghost.reveal x2)) (some (Ghost.reveal y2)))
   in
   (* &p.p1.x *)
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
-  let pp1x = addr_of_x pp1 (Some (Ghost.reveal x1)) (Some (Ghost.reveal y1)) in
+  let pp1x = addr_of_x pp1 (some (Ghost.reveal x1)) (some (Ghost.reveal y1)) in
   (* &p.p1.y *)
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
-  let pp1y = addr_of_y pp1 None (Some (Ghost.reveal y1)) in
+  let pp1y = addr_of_y pp1 none (some (Ghost.reveal y1)) in
   (* &p.p2.x *)
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
-  let pp2x = addr_of_x pp2 (Some (Ghost.reveal x2)) (Some (Ghost.reveal y2)) in
+  let pp2x = addr_of_x pp2 (some (Ghost.reveal x2)) (some (Ghost.reveal y2)) in
   (* &p.p2.y *)
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
-  let pp2y = addr_of_y pp2 None (Some (Ghost.reveal y2)) in
+  let pp2y = addr_of_y pp2 none (some (Ghost.reveal y2)) in
   (* generic_swap(&p.p1.x, &p.p2.y); *)
   generic_swap pp1x pp2y x1 y2;
   (* generic_swap(&p.p1.y, &p.p2.x); *)
@@ -365,26 +266,26 @@ let reflect_and_reverse
   (* Gather p1 *)
   A.change_equal_slprop (pp1x `pts_to` _) (pp1x `pts_to` _);
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
-  un_addr_of_x pp1 pp1x (Some (Ghost.reveal y2)) None;
+  un_addr_of_x pp1 pp1x (some (Ghost.reveal y2)) none;
   A.change_equal_slprop (pp1y `pts_to` _) (pp1y `pts_to` _);
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
-  un_addr_of_y pp1 pp1y (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2));
+  un_addr_of_y pp1 pp1y (some (Ghost.reveal y2)) (some (Ghost.reveal x2));
   (* Gather p2 *)
   A.change_equal_slprop (pp2x `pts_to` _) (pp2x `pts_to` _);
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
-  un_addr_of_x pp2 pp2x (Some (Ghost.reveal y1)) None;
+  un_addr_of_x pp2 pp2x (some (Ghost.reveal y1)) none;
   A.change_equal_slprop (pp2y `pts_to` _) (pp2y `pts_to` _);
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
-  un_addr_of_y pp2 pp2y (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1));
+  un_addr_of_y pp2 pp2y (some (Ghost.reveal y1)) (some (Ghost.reveal x1));
   (* Gather p *)
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  un_addr_of_p1 p pp1 (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2))) (one point_pcm);
+  un_addr_of_p1 p pp1 (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2))) (one point_pcm);
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   un_addr_of_p2 p pp2
-    (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2)))
-    (mk_point (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1)));
+    (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2)))
+    (mk_point (some (Ghost.reveal y1)) (some (Ghost.reveal x1)));
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 #pop-options
 
@@ -402,55 +303,55 @@ addr_of
 
   A.change_equal_slprop (pp1x `pts_to` _) (pp1x `pts_to` _);
   A.change_equal_slprop (pp1y `pts_to` _) (pp1y `pts_to` _);
-  unfocus pp1x pp1 (field point_fields_pcm X) (Some (Ghost.reveal y2));
-  unfocus pp1y pp1 (field point_fields_pcm Y) (Some (Ghost.reveal x2));
+  unfocus pp1x pp1 (field point_fields_pcm X) (some (Ghost.reveal y2));
+  unfocus pp1y pp1 (field point_fields_pcm Y) (some (Ghost.reveal x2));
   A.change_equal_slprop
     (pp1 `pts_to` put (field point_fields_pcm X) _ _)
-    (pp1 `pts_to` mk_point (Some (Ghost.reveal y2)) None);
+    (pp1 `pts_to` mk_point (some (Ghost.reveal y2)) none);
   A.change_equal_slprop
     (pp1 `pts_to` put (field point_fields_pcm Y) _ _)
-    (pp1 `pts_to` mk_point None (Some (Ghost.reveal x2)));
-  gather pp1 (mk_point (Some (Ghost.reveal y2)) None) (mk_point None (Some (Ghost.reveal x2)));
-  gather pp1 (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
+    (pp1 `pts_to` mk_point none (some (Ghost.reveal x2)));
+  gather pp1 (mk_point (some (Ghost.reveal y2)) none) (mk_point none (some (Ghost.reveal x2)));
+  gather pp1 (mk_point (Ghost.reveal (Ghost.hide none)) none) _;
   (* Gather p2 *)
   A.change_equal_slprop (pp2x `pts_to` _) (pp2x `pts_to` _);
   A.change_equal_slprop (pp2y `pts_to` _) (pp2y `pts_to` _);
-  unfocus pp2x pp2 (field point_fields_pcm X) (Some (Ghost.reveal y1));
-  unfocus pp2y pp2 (field point_fields_pcm Y) (Some (Ghost.reveal x1));
+  unfocus pp2x pp2 (field point_fields_pcm X) (some (Ghost.reveal y1));
+  unfocus pp2y pp2 (field point_fields_pcm Y) (some (Ghost.reveal x1));
   A.change_equal_slprop
     (pp2 `pts_to` put (field point_fields_pcm X) _ _)
-    (pp2 `pts_to` mk_point (Some (Ghost.reveal y1)) None);
+    (pp2 `pts_to` mk_point (some (Ghost.reveal y1)) none);
   A.change_equal_slprop
     (pp2 `pts_to` put (field point_fields_pcm Y) _ _)
-    (pp2 `pts_to` mk_point None (Some (Ghost.reveal x1)));
-  gather pp2 (mk_point (Some (Ghost.reveal y1)) None) (mk_point None (Some (Ghost.reveal x1)));
-  gather pp2 (mk_point (Ghost.reveal (Ghost.hide None)) None) _;
+    (pp2 `pts_to` mk_point none (some (Ghost.reveal x1)));
+  gather pp2 (mk_point (some (Ghost.reveal y1)) none) (mk_point none (some (Ghost.reveal x1)));
+  gather pp2 (mk_point (Ghost.reveal (Ghost.hide none)) none) _;
   (* Gather p *)
   A.change_equal_slprop (pp1 `pts_to` _) (pp1 `pts_to` _);
   A.change_equal_slprop (pp2 `pts_to` _) (pp2 `pts_to` _);
   unfocus pp1 p (field line_fields_pcm P1)
-    (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2)));
+    (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2)));
   unfocus pp2 p (field line_fields_pcm P2)
-    (mk_point (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1)));
+    (mk_point (some (Ghost.reveal y1)) (some (Ghost.reveal x1)));
   A.change_equal_slprop
     (p `pts_to` put (field line_fields_pcm P1) _ _)
     (p `pts_to`
       mk_line
-        (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2)))
+        (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2)))
         (one point_pcm));
   A.change_equal_slprop
     (p `pts_to` put (field line_fields_pcm P2) _ _)
     (p `pts_to`
       mk_line
         (one point_pcm)
-        (mk_point (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1))));
+        (mk_point (some (Ghost.reveal y1)) (some (Ghost.reveal x1))));
   gather p
     (mk_line
-      (mk_point (Some (Ghost.reveal y2)) (Some (Ghost.reveal x2)))
+      (mk_point (some (Ghost.reveal y2)) (some (Ghost.reveal x2)))
       (one point_pcm))
     (mk_line
        (one point_pcm)
-       (mk_point (Some (Ghost.reveal y1)) (Some (Ghost.reveal x1))));
+       (mk_point (some (Ghost.reveal y1)) (some (Ghost.reveal x1))));
   gather p (mk_line (Ghost.reveal (Ghost.hide (one point_pcm))) (one point_pcm)) _;
   //A.change_equal_slprop (pp2 `pts_to` _) _;
   (* int *r = &p.p1.y; *)
@@ -526,14 +427,14 @@ let swap (p: ref 'a point{p.q == point_pcm}) (xy: Ghost.erased int)
 
 let swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (to_vprop (p `pts_to` mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y))))
-    (fun _ -> to_vprop (p `pts_to` mk_point (Some (Ghost.reveal y)) (Some (Ghost.reveal x))))
+    (to_vprop (p `pts_to` mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y))))
+    (fun _ -> to_vprop (p `pts_to` mk_point (some (Ghost.reveal y)) (some (Ghost.reveal x))))
 = let q =
     addr_of_lens p int_pcm (field point_fields_pcm X)
-      (mk_point (Some (Ghost.reveal x)) (Some (Ghost.reveal y))) in
+      (mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y))) in
   A.slassert (
-    to_vprop (p `pts_to` mk_point None (Some (Ghost.reveal y))) `star`
-    to_vprop (q `pts_to` Some (Ghost.reveal x)));
+    to_vprop (p `pts_to` mk_point none (some (Ghost.reveal y))) `star`
+    to_vprop (q `pts_to` some (Ghost.reveal x)));
   A.sladmit ();
   A.return ()
 *)
@@ -614,3 +515,5 @@ let color_pcm_cases k : pcm (color_cases k) = match k with
   | RGB -> rgb_pcm
   | HSV -> hsv_pcm
 let color_pcm : pcm color_t = union_pcm color_pcm_cases
+
+*)
