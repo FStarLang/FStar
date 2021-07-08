@@ -215,6 +215,8 @@ let inl_refinement (p: refined_one_pcm 'a) (q: pcm 'b): pcm_refinement (either_p
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
+let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
+
 let pts_to r v = (* TODO unerase v, try [@@@smt_fallback] *)
   r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
 
@@ -640,15 +642,20 @@ let refine r re u x =
 let unrefine #inames r' re u r x =
   A.change_equal_slprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
-let ref_read #x r =
-  A.return (admit())
-  //let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
-  //A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
-  //let v = Steel.PCMReference.read r.r x' in
-  //pcm_refinement_compatible_closed r.re x' v;
-  //pcm_lens_compatible_get r.pl x' v;
-  //A.change_equal_slprop (r.r `mpts_to` x') (r `pts_to` x);
-  //A.return (get r.pl v)
+let ref_read' (#x: Ghost.erased 'b) (r: ref 'a 'b)
+: Steel 'b
+    (r `pts_to` x)
+    (fun _ -> r `pts_to` x)
+    (requires fun _ -> ~ (Ghost.reveal x == one r.q))
+    (ensures fun _ x' _ -> compatible r.q x x')
+= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
+  A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
+  let v = Steel.PCMReference.read r.r x' in
+  pcm_refinement_compatible_closed r.re x' v;
+  pcm_lens_compatible_get r.pl x' v;
+  A.change_equal_slprop (r.r `mpts_to` x') (r `pts_to` x);
+  A.return (get r.pl v)
+let ref_read #x r = ref_read' #x r // TODO interestingly, i can't inline ref_read'
 
 let ref_frame_preserving_upd (r: ref 'a 'b) (x y: Ghost.erased 'b)
   (f: ('b -> 'b){frame_pres r.q f x y})

@@ -15,7 +15,7 @@ val point : Type0
 
 /// PCM for struct point:
 
-val point_pcm : pcm point
+val point_pcm : refined_one_pcm point
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
 

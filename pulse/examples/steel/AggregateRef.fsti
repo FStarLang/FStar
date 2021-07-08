@@ -221,9 +221,10 @@ noeq type ref (a:Type u#a) (b:Type u#b): Type = {
 
 open Steel.Effect
 
-let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
-
-val pts_to (#a: Type u#1) (#b: Type u#b) (r: ref a b) (v: Ghost.erased b): vprop
+val pts_to
+  (#a: Type u#1) (#b: Type u#b)
+  (r: ref a b) ([@@@smt_fallback] v: Ghost.erased b)
+: vprop
 
 (** A lens for the k-th field of an n-ary product *)
 
