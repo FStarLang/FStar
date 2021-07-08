@@ -478,37 +478,42 @@ val unrefine
     (fun _ -> r == ref_refine r' re u)
     (fun _ _ _ -> True)
 
-(*
+(** Generic read.
 
-describe this situation:
+    Without the precondition ~ (x == one), it would be possible to read
+    a completely uninformative value from a reference. This is safe
+    from the model's standpoint (we can't learn anything from this value),
+    but would extract to a potentially unsafe pointer dereference in C.
 
-  thread 1: pointer to p.x
-  
-  thread 2: pointer to p but with permissions {None, y}
-  
-  *p a value compatible with {None, y}
-  i.e., any {x, y} for any x
-  x could be:
-    Some z for a garbage z, or
-    None
+    For example, here's a use-after-free:
+        {p `pts_to` x}
+      split
+        {(p `pts_to` x) `star` (p `pts_to` one)}
+      free p
+        {p `pts_to` one}
+      read p
 
-  but, impossible to work with p->x:
-    *p = {x, y}
-    ( *p).x == 0
-    need {x, y}.x is Some v
-    if (( *p).x == 0) { .. } else { .. }
+    Even with ~ (x == one), it's possible that x represents partial information
+    about the value at r (for example, a tuple (one, z) representing a struct
+    with permission to read/write from the second field only). But we should be
+    safe as long as the carrier types of the PCMs involved are abstract.
     
-  {None, y} compatible with {vx, vy} 
-  let vx = ref_read &p->x in
-  match vx with None -> .. | Some x -> ..
+    For example, suppose
+      thread 1 has (p `pts_to` (y, one))
+      thread 2 has (p `pts_to` (one, z))
+    and thread 1 writes to p->fst while thread 2 performs the read (v, w) = *p.
+    
+    In this situation, we can't allow thread 2 to dereference (&q.fst),
+    as then it'd be reading from a location while thread 1 is writing to it.
 
-  {None, y} compatible with {vx, vy} 
-  let vx = ref_read &p->x in
-  let bad = (f : option int -> option int) vx in
-
-  could prevent pattern matching if option int were an abstract type
-
-*)
+    Thread 2 can construct the pointer (&q.fst) just fine, but in
+    order to dereference it, it needs to call ref_read, and ref_read
+    requires that (&q.fst) point to a non-unit value (i.e., that ~ (v == one)).
+    
+    If v's type is suitably abstract, so that it's not possible to
+    test v against the unit of its corresponding PCM, then there's no
+    way to prove this precondition and we are safe from reading v
+    as thread 1 is writing to it. *)
 val ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
 : Steel 'b
     (r `pts_to` x)
