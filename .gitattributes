@@ -1,4 +1,5 @@
 # Linguist
+*.fs linguist-language=FSharp
 *.fst linguist-language=FStar
 *.fst linguist-documentation=false
 *.fsti linguist-language=FStar
