@@ -19,8 +19,8 @@ open FStar.Ghost
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
-open FStar.Real
 open FStar.PCM
+open FStar.Real
 open Steel.FractionalPermission
 module RP = Steel.PCMReference
 
