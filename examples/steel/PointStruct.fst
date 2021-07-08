@@ -59,7 +59,7 @@ let merge_xy (x y: Ghost.erased (pod int)) x' y'
 
 /// Taking pointers to the x and y fields of a point
 
-let addr_of_x (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (pod int))
+let addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
 : SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
     (p `pts_to` mk_point x y)
     (fun q ->
@@ -71,16 +71,16 @@ let addr_of_x (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (pod int))
   A.return q
 
 let un_addr_of_x
+  (#x #y: Ghost.erased (pod int))
   (p: ref 'a point{p.q == point_pcm})
   (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
-  (x y: Ghost.erased (pod int))
 : SteelT unit
     ((p `pts_to` mk_point none y) `star` (q `pts_to` x))
     (fun q -> p `pts_to` mk_point x y)
 = un_addr_of_lens q p _x (mk_point none y) x;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
-let addr_of_y (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (pod int))
+let addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
 : SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
     (p `pts_to` mk_point x y)
     (fun q ->
@@ -92,9 +92,9 @@ let addr_of_y (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased (pod int))
   A.return q
 
 let un_addr_of_y
+  (#x #y: Ghost.erased (pod int))
   (p: ref 'a point{p.q == point_pcm})
   (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
-  (x y: Ghost.erased (pod int))
 : SteelT unit
     ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
     (fun q -> p `pts_to` mk_point x y)

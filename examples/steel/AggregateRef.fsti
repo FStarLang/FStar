@@ -512,7 +512,7 @@ val unrefine
     test v against the unit of its corresponding PCM, then there's no
     way to prove this precondition and we are safe from reading v
     as thread 1 is writing to it. *)
-val ref_read (r: ref 'a 'b) (x: Ghost.erased 'b)
+val ref_read (#x: Ghost.erased 'b) (r: ref 'a 'b)
 : Steel 'b
     (r `pts_to` x)
     (fun _ -> r `pts_to` x)
@@ -531,5 +531,5 @@ let valid_write (p:pcm 'a) x y =
   whole_value p x /\ whole_value p y /\
   (forall (frame:'a). composable p x frame ==> composable p y frame)
 
-val ref_write (r: ref 'a 'b) (x: Ghost.erased 'b) (y: 'b{valid_write r.q x y})
+val ref_write (r: ref 'a 'b) (#x: Ghost.erased 'b) (y: 'b{valid_write r.q x y})
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)

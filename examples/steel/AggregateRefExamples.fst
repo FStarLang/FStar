@@ -28,19 +28,19 @@ let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
     (p `pts_to` mk_point (some x) (some y))
     (fun _ -> p `pts_to` mk_point (some y) (some x))
 = (* int *q = &p.x; *)
-  let q = addr_of_x p (some x) (some y) in
+  let q = addr_of_x p in
   (* int *r = &p.y; *)
-  let r = addr_of_y p none (some y) in
+  let r = addr_of_y p in
   (* tmp = *q; *)
-  let tmp = ref_read q (some x) in
+  let tmp = ref_read q in
   (* *q = *r; *)
-  let vy = ref_read r (some y) in
-  ref_write q _ vy;
+  let vy = ref_read r in
+  ref_write q vy;
   (* *r = tmp; *)
-  ref_write r _ tmp;
+  ref_write r tmp;
   (* Gather *)
-  un_addr_of_x p q (Ghost.hide vy) none;
-  un_addr_of_y p r (Ghost.hide vy) (Ghost.hide tmp);
+  un_addr_of_x p q;
+  un_addr_of_y p r;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 /// We can also implement swap generically:
@@ -52,18 +52,18 @@ let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 /// }
 
 let generic_swap
+  (#x #y: Ghost.erased 'c)
   (p:ref 'a (pod 'c){p.q == pod_pcm 'c})
   (q:ref 'b (pod 'c){q.q == pod_pcm 'c})
-  (x y: Ghost.erased 'c)
 : SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
     (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
 = (* A tmp = *p; *)
-  let tmp = ref_read p (some x) in
+  let tmp = ref_read p in
   (* *p = *q; *)
-  let vy = ref_read q (some y) in
-  ref_write p _ vy;
+  let vy = ref_read q in
+  ref_write p vy;
   (* *q = tmp *)
-  ref_write q _ tmp;
+  ref_write q tmp;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` _)
 
@@ -76,19 +76,20 @@ let generic_swap
 /// }
 
 let point_swap_generically
-  (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
+  (#x #y: Ghost.erased int)
+  (p: ref 'a point{p.q == point_pcm})
 : SteelT unit
     (p `pts_to` mk_point (some x) (some y))
     (fun _ -> p `pts_to` mk_point (some y) (some x))
 = (* int *q = &p.x; *)
-  let q = addr_of_x p (some x) (some y) in
+  let q = addr_of_x p in
   (* int *r = &p.y; *)
-  let r = addr_of_y p none (some y) in
+  let r = addr_of_y p in
   (* generic_swap(q, r); *)
-  generic_swap q r x y;
+  generic_swap q r;
   (* Gather *)
-  un_addr_of_x p q (some y) none;
-  un_addr_of_y p r (some y) (some x);
+  un_addr_of_x p q;
+  un_addr_of_y p r;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 (*
