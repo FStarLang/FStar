@@ -25,28 +25,22 @@ open PCM.POD
 
 let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (p `pts_to` mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y)))
-    (fun _ -> p `pts_to` mk_point (some (Ghost.reveal y)) (some (Ghost.reveal x)))
+    (p `pts_to` mk_point (some x) (some y))
+    (fun _ -> p `pts_to` mk_point (some y) (some x))
 = (* int *q = &p.x; *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let q = addr_of_x p (some (Ghost.reveal x)) (some (Ghost.reveal y)) in
+  let q = addr_of_x p (some x) (some y) in
   (* int *r = &p.y; *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let r = addr_of_y p none (some (Ghost.reveal y)) in
+  let r = addr_of_y p none (some y) in
   (* tmp = *q; *)
-  let tmp = ref_read q (some (Ghost.reveal x)) in
+  let tmp = ref_read q (some x) in
   (* *q = *r; *)
-  let vy = ref_read r (some (Ghost.reveal y)) in
+  let vy = ref_read r (some y) in
   ref_write q _ vy;
   (* *r = tmp; *)
   ref_write r _ tmp;
   (* Gather *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  un_addr_of_x p q vy none;
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  un_addr_of_y p r vy tmp;
+  un_addr_of_x p q (Ghost.hide vy) none;
+  un_addr_of_y p r (Ghost.hide vy) (Ghost.hide tmp);
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 /// We can also implement swap generically:
@@ -61,16 +55,12 @@ let generic_swap
   (p:ref 'a (pod 'c){p.q == pod_pcm 'c})
   (q:ref 'b (pod 'c){q.q == pod_pcm 'c})
   (x y: Ghost.erased 'c)
-: SteelT unit
-    ((p `pts_to` some (Ghost.reveal x)) `star`
-     (q `pts_to` some (Ghost.reveal y)))
-    (fun _ ->
-     (p `pts_to` some (Ghost.reveal y)) `star`
-     (q `pts_to` some (Ghost.reveal x)))
+: SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
+    (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
 = (* A tmp = *p; *)
-  let tmp = ref_read p (some (Ghost.reveal x)) in
+  let tmp = ref_read p (some x) in
   (* *p = *q; *)
-  let vy = ref_read q (some (Ghost.reveal y)) in
+  let vy = ref_read q (some y) in
   ref_write p _ vy;
   (* *q = tmp *)
   ref_write q _ tmp;
@@ -88,25 +78,17 @@ let generic_swap
 let point_swap_generically
   (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 : SteelT unit
-    (p `pts_to` mk_point (some (Ghost.reveal x)) (some (Ghost.reveal y)))
-    (fun _ -> p `pts_to` mk_point (some (Ghost.reveal y)) (some (Ghost.reveal x)))
+    (p `pts_to` mk_point (some x) (some y))
+    (fun _ -> p `pts_to` mk_point (some y) (some x))
 = (* int *q = &p.x; *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let q = addr_of_x p (some (Ghost.reveal x)) (some (Ghost.reveal y)) in
+  let q = addr_of_x p (some x) (some y) in
   (* int *r = &p.y; *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  let r = addr_of_y p none (some (Ghost.reveal y)) in
+  let r = addr_of_y p none (some y) in
   (* generic_swap(q, r); *)
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  generic_swap q r (Ghost.reveal x) (Ghost.reveal y);
+  generic_swap q r x y;
   (* Gather *)
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  un_addr_of_x p q (some (Ghost.reveal y)) none;
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _);
-  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
-  un_addr_of_y p r (some (Ghost.reveal y)) (some (Ghost.reveal x));
+  un_addr_of_x p q (some y) none;
+  un_addr_of_y p r (some y) (some x);
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 (*

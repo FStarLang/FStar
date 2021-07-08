@@ -215,6 +215,9 @@ let inl_refinement (p: refined_one_pcm 'a) (q: pcm 'b): pcm_refinement (either_p
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
 }
 
+let pts_to r v = (* TODO unerase v, try [@@@smt_fallback] *)
+  r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
+
 (** Refining a pcm_lens *)
 
 let extend_refinement_f (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
