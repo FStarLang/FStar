@@ -19,7 +19,7 @@ val point_pcm : pcm point
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
 
-val mk_point (x y: pod int): point
+val mk_point (x y: Ghost.erased (pod int)): Ghost.erased point
 
 /// PCM lenses for the fields of a point
 

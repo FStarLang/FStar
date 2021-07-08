@@ -207,7 +207,7 @@ let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement p) =
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
     This allows the reference to point to substructures of unions with known case. *)
-noeq type ref (a:Type) (b:Type): Type = {
+noeq type ref (a:Type u#a) (b:Type u#b): Type = {
   p: refined_one_pcm a;
   re: pcm_refinement p;
   (** Needed to turn frame-preserving updates on (refined_pcm re) into
@@ -223,9 +223,7 @@ open Steel.Effect
 
 let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
 
-(* TODO for some reason, run into universe issues if make this abstract *)
-let pts_to (r: ref 'a 'b) (v: Ghost.erased 'b): vprop = (* TODO unerase v, try [@@@smt_fallback] *)
-  r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
+val pts_to (#a: Type u#1) (#b: Type u#b) (r: ref a b) (v: Ghost.erased b): vprop
 
 (** A lens for the k-th field of an n-ary product *)
 

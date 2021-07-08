@@ -22,18 +22,20 @@ let point_pcm = prod_pcm point_fields_pcm
 let mk_point_f (x y: pod int) (k: point_field): point_fields k = match k with
   | X -> x
   | Y -> y
-let mk_point (x y: pod int): point = on_domain point_field (mk_point_f x y)
+  
+let mk_point (x y: Ghost.erased (pod int)): GTot point =
+  on_domain point_field (mk_point_f (Ghost.reveal x) (Ghost.reveal y))
 
 let _x = field point_fields_pcm X
 let _y = field point_fields_pcm Y
 
 let put_x x' x y
-: Lemma (feq (put _x x' (mk_point x y)) (mk_point x' y))
+: Lemma (feq (put _x x' (mk_point x y)) (mk_point (Ghost.hide x') y))
   [SMTPat (put _x x' (mk_point x y))]
 = ()
 
 let put_y y' x y
-: Lemma (feq (put _y y' (mk_point x y)) (mk_point x y'))
+: Lemma (feq (put _y y' (mk_point x y)) (mk_point x (Ghost.hide y')))
   [SMTPat (put _y y' (mk_point x y))]
 = ()
 
@@ -42,10 +44,17 @@ let put_y y' x y
 let one_xy : squash (feq (one point_pcm) (mk_point none none))
 = ()
 
-let merge_xy x y x' y'
-: Lemma (feq (op point_pcm (mk_point x y) (mk_point x' y'))
-             (mk_point (op (point_fields_pcm X) x x') (op (point_fields_pcm Y) y y')))
-  [SMTPat (op point_pcm (mk_point x y) (mk_point x' y'))]
+// TODO
+let merge_xy (x y: Ghost.erased (pod int)) x' y'
+: Lemma
+    (requires composable point_pcm
+       (Ghost.reveal (mk_point x y))
+       (Ghost.reveal (mk_point x' y')))
+    (ensures
+     feq (op point_pcm (Ghost.reveal (mk_point x y)) (Ghost.reveal (mk_point x' y')))
+         (mk_point (op (point_fields_pcm X) (Ghost.reveal x) (Ghost.reveal x'))
+                   (op (point_fields_pcm Y) (Ghost.reveal y) (Ghost.reveal y'))))
+  [SMTPat (op point_pcm (Ghost.reveal (mk_point x y)) (Ghost.reveal (mk_point x' y')))]
 = ()
 
 /// Taking pointers to the x and y fields of a point

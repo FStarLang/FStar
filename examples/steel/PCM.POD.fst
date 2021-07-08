@@ -1,11 +1,11 @@
 module PCM.POD
 
-let pod a = option a
+let pod a = Ghost.erased (option a)
 
-let none = None
-let some = Some
-let is_some v = match v with Some _ -> True | None -> False
-let some_v (Some v) = v
+let none #a = Ghost.hide (None #a)
+let some x = Ghost.hide (Some x)
+let is_some v = match Ghost.reveal v with Some _ -> True | None -> False
+let some_v x = match x with Some v -> v
 
 let pod_pcm a = Aggregates.opt_pcm #a
 
