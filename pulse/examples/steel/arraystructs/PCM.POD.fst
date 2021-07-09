@@ -7,7 +7,7 @@ let some x = Some (Ghost.reveal x)
 let is_some v = match Ghost.reveal v with Some _ -> True | None -> False
 let some_v x = match x with Some v -> v
 
-let pod_pcm a = Aggregates.opt_pcm #a
+let pod_pcm a = FStar.PCM.Extras.opt_pcm #a
 
 let none_is_unit a = ()
 let is_some_some v = ()
