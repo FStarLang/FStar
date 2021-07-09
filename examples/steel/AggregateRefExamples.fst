@@ -20,7 +20,7 @@ open PointStruct
 ///   *r = tmp;
 /// }
 
-let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
+let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
 : SteelT unit
     (p `pts_to` mk_point (some x) (some y))
     (fun _ -> p `pts_to` mk_point (some y) (some x))
@@ -47,10 +47,7 @@ let point_swap (p: ref 'a point{p.q == point_pcm}) (x y: Ghost.erased int)
 ///   *q = tmp;
 /// }
 
-let generic_swap
-  (#x #y: Ghost.erased 'c)
-  (p:ref 'a (pod 'c){p.q == pod_pcm 'c})
-  (q:ref 'b (pod 'c){q.q == pod_pcm 'c})
+let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (pod_pcm 'c)) (q:ref 'b (pod_pcm 'c))
 : SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
     (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
 = (* A tmp = *p; *)
@@ -71,9 +68,7 @@ let generic_swap
 ///   generic_swap(q, r);
 /// }
 
-let point_swap_generically
-  (#x #y: Ghost.erased int)
-  (p: ref 'a point{p.q == point_pcm})
+let point_swap_generically (#x #y: Ghost.erased int) (p: ref 'a point_pcm)
 : SteelT unit
     (p `pts_to` mk_point (some x) (some y))
     (fun _ -> p `pts_to` mk_point (some y) (some x))
@@ -96,8 +91,7 @@ let point_swap_generically
 
 open LineStruct
 
-let reflect_and_reverse
-  (p: ref 'a line{p.q == line_pcm}) (x1 y1 x2 y2: Ghost.erased int)
+let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
 : SteelT unit
     (p `pts_to` mk_line (mk_point (some x1) (some y1)) (mk_point (some x2) (some y2)))
     (fun _ -> p `pts_to` mk_line (mk_point (some y2) (some x2)) (mk_point (some y1) (some x1)))

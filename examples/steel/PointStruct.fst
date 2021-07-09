@@ -59,44 +59,22 @@ let merge_xy (x y: Ghost.erased (pod int)) x' y'
 
 /// Taking pointers to the x and y fields of a point
 
-let addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
-: SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
-    (p `pts_to` mk_point x y)
-    (fun q ->
-       (p `pts_to` mk_point none y) `star`
-       (q `pts_to` x))
-= let q = addr_of_lens p _x (mk_point x y) in
+let addr_of_x #a #x #y p =
+  let q = addr_of_lens p _x (mk_point x y) in
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point none y);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` x);
   A.return q
 
-let un_addr_of_x
-  (#x #y: Ghost.erased (pod int))
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
-: SteelT unit
-    ((p `pts_to` mk_point none y) `star` (q `pts_to` x))
-    (fun q -> p `pts_to` mk_point x y)
-= un_addr_of_lens q p _x (mk_point none y) x;
+let un_addr_of_x #a #x #y p q =
+  un_addr_of_lens q p _x (mk_point none y) x;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
-let addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
-: SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
-    (p `pts_to` mk_point x y)
-    (fun q ->
-       (p `pts_to` mk_point x none) `star`
-       (q `pts_to` y))
-= let q = addr_of_lens p _y (mk_point x y) in
+let addr_of_y #a #x #y p =
+  let q = addr_of_lens p _y (mk_point x y) in
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x none);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
   A.return q
 
-let un_addr_of_y
-  (#x #y: Ghost.erased (pod int))
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
-: SteelT unit
-    ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
-    (fun q -> p `pts_to` mk_point x y)
-= un_addr_of_lens q p _y (mk_point x none) y;
+let un_addr_of_y #a #x #y p q =
+  un_addr_of_lens q p _y (mk_point x none) y;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
