@@ -184,33 +184,14 @@ val unrefine
 let unrefine #inames r' re r x =
   A.change_equal_slprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
-val addr_of_union_lens
-  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
-  (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
-  (x: Ghost.erased b{refinement_f re x})
-: Steel (ref a q)
-    (r `pts_to` x)
-    (fun r' -> r' `pts_to` get l x)
-    (requires fun _ -> Ghost.reveal x == put l (get l x) (one (refined_pcm re)))
-    (ensures fun _ r' _ -> r' == ref_focus (ref_refine r re) l)
 let addr_of_union_lens #a #b #c #p #q r #re l x =
   let refined_r = refine r re x in
   focus refined_r l (Ghost.reveal x) (get l x)
 
-(*
-val unaddr_of_union_lens
-  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
-  (r': ref a q) (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
-  (y: Ghost.erased c)
-: Steel (ref a p)
-    (r' `pts_to` y)
-    (fun r -> r `pts_to` put l y (one (refined_pcm re)))
-    (requires fun _ -> r' == ref_focus (ref_refine r re) l)
-    (ensures fun _ _ _ -> True)
 let unaddr_of_union_lens #a #b #c #p #q r' r #re l y =
-  let r' = refine r re x in
-  focus r' l (Ghost.reveal x) (get l x)
-  *)
+  let refined_r = ref_refine r re in // TODO interestingly if i inline this definition, F* hangs
+  unfocus r' refined_r l y;
+  unrefine r re refined_r (Ghost.hide (put l (Ghost.reveal y) (one (refined_pcm re))))
 
 let ref_read (#p: refined_one_pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
 : Steel 'b

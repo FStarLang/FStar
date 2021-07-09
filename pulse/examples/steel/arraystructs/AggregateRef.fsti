@@ -62,6 +62,27 @@ val unaddr_of_lens
     (fun s -> r `pts_to` put l y x)
     (requires fun _ -> r' == ref_focus r l /\ get l x == one q)
     (ensures fun _ _ _ -> True)
+    
+val addr_of_union_lens
+  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
+  (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
+  (x: Ghost.erased b{refinement_f re x})
+: Steel (ref a q)
+    (r `pts_to` x)
+    (fun r' -> r' `pts_to` get l x)
+    (requires fun _ -> Ghost.reveal x == put l (get l x) (one (refined_pcm re)))
+    (ensures fun _ r' _ -> r' == ref_focus (ref_refine r re) l)
+    
+val unaddr_of_union_lens
+  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
+  (#opened: Steel.Memory.inames)
+  (r': ref a q) (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
+  (y: Ghost.erased c)
+: A.SteelGhost unit opened
+    (r' `pts_to` y)
+    (fun _ -> r `pts_to` put l y (one (refined_pcm re)))
+    (requires fun _ -> r' == ref_focus (ref_refine r re) l)
+    (ensures fun _ _ _ -> True)
 
 (** Generic read.
 

@@ -36,8 +36,8 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
   (* *r = tmp; *)
   ref_write r tmp;
   (* Gather *)
-  un_addr_of_x p q;
-  un_addr_of_y p r
+  unaddr_of_x p q;
+  unaddr_of_y p r
 
 /// We can also implement swap generically:
 ///
@@ -79,8 +79,8 @@ let point_swap_generically (#x #y: Ghost.erased int) (p: ref 'a point_pcm)
   (* generic_swap(q, r); *)
   generic_swap q r;
   (* Gather *)
-  un_addr_of_x p q;
-  un_addr_of_y p r
+  unaddr_of_x p q;
+  unaddr_of_y p r
 
 /// Reflect a line segment across the line y=x and reverse its direction
 ///
@@ -106,14 +106,14 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
   let pp2x = addr_of_x pp2 in
   generic_swap pp1y pp2x;
   (* Gather p1 *)
-  un_addr_of_x pp1 pp1x;
-  un_addr_of_y pp1 pp1y;
+  unaddr_of_x pp1 pp1x;
+  unaddr_of_y pp1 pp1y;
   (* Gather p2 *)
-  un_addr_of_x pp2 pp2x;
-  un_addr_of_y pp2 pp2y;
+  unaddr_of_x pp2 pp2x;
+  unaddr_of_y pp2 pp2y;
   (* Gather p *)
-  un_addr_of_p1 p pp1;
-  un_addr_of_p2 p pp2
+  unaddr_of_p1 p pp1;
+  unaddr_of_p2 p pp2
 
 (*
 addr_of
