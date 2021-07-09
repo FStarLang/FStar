@@ -1,9 +1,9 @@
 module PCM.POD
 
-let pod a = Ghost.erased (option a)
+let pod a = option a
 
-let none #a = Ghost.hide (None #a)
-let some x = Ghost.hide (Some x)
+let none #a = None #a
+let some x = Some (Ghost.reveal x)
 let is_some v = match Ghost.reveal v with Some _ -> True | None -> False
 let some_v x = match x with Some v -> v
 
