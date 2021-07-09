@@ -53,7 +53,7 @@ val addr_of_lens
     (requires fun _ -> True)
     (ensures fun _ r' _ -> r' == ref_focus r l)
 
-val un_addr_of_lens
+val unaddr_of_lens
   (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
   (r': ref a q) (r: ref a p) (l: pcm_lens p q)
   (x: Ghost.erased b) (y: Ghost.erased c)

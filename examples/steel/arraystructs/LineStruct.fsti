@@ -37,7 +37,7 @@ val addr_of_p1 (#p1 #p2: Ghost.erased point) (p: ref 'a line_pcm)
        (p `pts_to` mk_line (one point_pcm) p2) `star`
        (q `pts_to` p1))
 
-val un_addr_of_p1 (#p1 #p2: Ghost.erased point)
+val unaddr_of_p1 (#p1 #p2: Ghost.erased point)
   (p: ref 'a line_pcm)
   (q: ref 'a point_pcm{q == ref_focus p _p1})
 : SteelT unit
@@ -51,7 +51,7 @@ val addr_of_p2 (#p1 #p2: Ghost.erased point) (p: ref 'a line_pcm)
        (p `pts_to` mk_line p1 (one point_pcm)) `star`
        (q `pts_to` p2))
 
-val un_addr_of_p2 (#p1 #p2: Ghost.erased point)
+val unaddr_of_p2 (#p1 #p2: Ghost.erased point)
   (p: ref 'a line_pcm)
   (q: ref 'a point_pcm{q == ref_focus p _p2})
 : SteelT unit
