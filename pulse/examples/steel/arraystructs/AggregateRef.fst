@@ -145,7 +145,7 @@ let addr_of_lens #a #b #c #p r l x =
   peel r l x;
   focus r l (put l (get l x) (one p)) (get l x)
 
-let un_addr_of_lens #a #b #c #p #q r' r l x y =
+let unaddr_of_lens #a #b #c #p #q r' r l x y =
   unfocus r' r l y;
   gather r x (put l y (one p));
   q.is_unit (Ghost.reveal y);
@@ -184,29 +184,33 @@ val unrefine
 let unrefine #inames r' re r x =
   A.change_equal_slprop (r `pts_to` Ghost.reveal x) (r' `pts_to` x)
 
-(*
 val addr_of_union_lens
   (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
   (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
   (x: Ghost.erased b{refinement_f re x})
 : Steel (ref a q)
     (r `pts_to` x)
-    (fun s ->
-      (r `pts_to` put l (one q) x) `star` 
-      (s `pts_to` get l x))
-    (requires fun _ -> True)
-    (ensures fun _ r' _ -> r' == ref_focus r l)
+    (fun r' -> r' `pts_to` get l x)
+    (requires fun _ -> Ghost.reveal x == put l (get l x) (one (refined_pcm re)))
+    (ensures fun _ r' _ -> r' == ref_focus (ref_refine r re) l)
+let addr_of_union_lens #a #b #c #p #q r #re l x =
+  let refined_r = refine r re x in
+  focus refined_r l (Ghost.reveal x) (get l x)
 
-val un_addr_of_union_lens
+(*
+val unaddr_of_union_lens
   (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
-  (r': ref a q) (r: ref a p) (l: pcm_lens p q)
-  (x: Ghost.erased b) (y: Ghost.erased c)
-: Steel unit
-    ((r `pts_to` x) `star` (r' `pts_to` y))
-    (fun s -> r `pts_to` put l y x)
-    (requires fun _ -> r' == ref_focus r l /\ get l x == one q)
+  (r': ref a q) (r: ref a p) (#re: pcm_refinement p) (l: pcm_lens (refined_pcm re) q)
+  (y: Ghost.erased c)
+: Steel (ref a p)
+    (r' `pts_to` y)
+    (fun r -> r `pts_to` put l y (one (refined_pcm re)))
+    (requires fun _ -> r' == ref_focus (ref_refine r re) l)
     (ensures fun _ _ _ -> True)
-*)
+let unaddr_of_union_lens #a #b #c #p #q r' r #re l y =
+  let r' = refine r re x in
+  focus r' l (Ghost.reveal x) (get l x)
+  *)
 
 let ref_read (#p: refined_one_pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
 : Steel 'b

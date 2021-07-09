@@ -35,7 +35,7 @@ val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
        (p `pts_to` mk_point none y) `star`
        (q `pts_to` x))
 
-val un_addr_of_x
+val unaddr_of_x
   (#x #y: Ghost.erased (pod int))
   (p: ref 'a point_pcm)
   (q: ref 'a (pod_pcm int){q == ref_focus p _x})
@@ -50,7 +50,7 @@ val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
        (p `pts_to` mk_point x none) `star`
        (q `pts_to` y))
 
-val un_addr_of_y
+val unaddr_of_y
   (#x #y: Ghost.erased (pod int))
   (p: ref 'a point_pcm)
   (q: ref 'a (pod_pcm int){q == ref_focus p _y})

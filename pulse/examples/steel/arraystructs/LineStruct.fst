@@ -67,8 +67,8 @@ let addr_of_p1 #a #p1 #p2 p =
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` p1);
   A.return q
 
-let un_addr_of_p1 #a #p1 #p2 p q =
-  un_addr_of_lens q p _p1 (mk_line (one point_pcm) p2) p1;
+let unaddr_of_p1 #a #p1 #p2 p q =
+  unaddr_of_lens q p _p1 (mk_line (one point_pcm) p2) p1;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_p2 #a #p1 #p2 p =
@@ -77,6 +77,6 @@ let addr_of_p2 #a #p1 #p2 p =
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` p2);
   A.return q
 
-let un_addr_of_p2 #a #p1 #p2 p q =
-  un_addr_of_lens q p _p2 (mk_line p1 (one point_pcm)) p2;
+let unaddr_of_p2 #a #p1 #p2 p q =
+  unaddr_of_lens q p _p2 (mk_line p1 (one point_pcm)) p2;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
