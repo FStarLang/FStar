@@ -14,20 +14,20 @@ open Steel.Effect
 noeq type ref a #b (q: refined_one_pcm b): Type = {
   p: refined_one_pcm a;
   re: pcm_refinement p;
-  pl: pcm_lens (refined_pcm re.refi) q;
+  pl: pcm_lens (refined_pcm re) q;
   r: Steel.Memory.ref a p;
 }
 
 let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
 
 let pts_to r v = (* TODO unerase v, try [@@@smt_fallback] *)
-  r.r `mpts_to` put r.pl v (one (refined_pcm r.re.refi))
+  r.r `mpts_to` put r.pl v (one (refined_pcm r.re))
 
 (** The refinement of a ref *)
 
 let ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
   (r: ref a p) (new_re: pcm_refinement p)
-: ref a (refined_pcm new_re.refi) = {
+: ref a (refined_pcm new_re) = {
   p = r.p;
   re = {
     refi = conj_refinement r.re.refi (extend_refinement r.pl new_re.refi);
@@ -85,20 +85,20 @@ let unfocus #inames
 let split r xy x y =
   A.change_equal_slprop
     (r `pts_to` xy)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl xy (one (refined_pcm r.re.refi)))));
-  (refined_pcm r.re.refi).is_unit (one (refined_pcm r.re.refi));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl xy (one (refined_pcm r.re)))));
+  (refined_pcm r.re).is_unit (one (refined_pcm r.re));
   r.pl.put_morphism.f_op
-    (Ghost.reveal x, one (refined_pcm r.re.refi))
-    (Ghost.reveal y, one (refined_pcm r.re.refi));
+    (Ghost.reveal x, one (refined_pcm r.re))
+    (Ghost.reveal y, one (refined_pcm r.re));
   Steel.PCMReference.split r.r
-    (put r.pl xy (one (refined_pcm r.re.refi)))
-    (put r.pl x (one (refined_pcm r.re.refi)))
-    (put r.pl y (one (refined_pcm r.re.refi)));
+    (put r.pl xy (one (refined_pcm r.re)))
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)));
   A.change_equal_slprop
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re.refi)))))
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))))
     (r `pts_to` x);
   A.change_equal_slprop
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re.refi)))))
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))))
     (r `pts_to` y)
 
 let mgather
@@ -112,20 +112,20 @@ let mgather
 let gather #a #b #p r x y =
   A.change_equal_slprop
     (r `pts_to` x)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re.refi)))));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl x (one (refined_pcm r.re)))));
   A.change_equal_slprop
     (r `pts_to` y)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re.refi)))));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (put r.pl y (one (refined_pcm r.re)))));
   mgather r.r
-    (put r.pl x (one (refined_pcm r.re.refi)))
-    (put r.pl y (one (refined_pcm r.re.refi)));
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)));
   r.pl.get_morphism.f_op
-    (put r.pl x (one (refined_pcm r.re.refi)))
-    (put r.pl y (one (refined_pcm r.re.refi)));
-  (refined_pcm r.re.refi).is_unit (one (refined_pcm r.re.refi));
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)));
+  (refined_pcm r.re).is_unit (one (refined_pcm r.re));
   r.pl.put_morphism.f_op
-    (Ghost.reveal x, one (refined_pcm r.re.refi))
-    (Ghost.reveal y, one (refined_pcm r.re.refi));
+    (Ghost.reveal x, one (refined_pcm r.re))
+    (Ghost.reveal y, one (refined_pcm r.re));
   A.change_equal_slprop _ (r `pts_to` op p x y)
 
 let peel (#p: refined_one_pcm 'b) (r: ref 'a p) (#q: refined_one_pcm 'c)
@@ -168,7 +168,7 @@ let ref_read (#p: refined_one_pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
     (fun _ -> r `pts_to` x)
     (requires fun _ -> ~ (Ghost.reveal x == one p))
     (ensures fun _ x' _ -> compatible p x x')
-= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re.refi))) in
+= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
   A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` x');
   let v = Steel.PCMReference.read r.r x' in
   pcm_refinement'_compatible_closed r.re.refi x' v;
@@ -180,12 +180,12 @@ let ref_frame_preserving_upd #a #b
   (#p: refined_one_pcm b) (r: ref a p) (x y: Ghost.erased b)
   (f: (b -> b){frame_pres p f x y})
 : frame_preserving_upd r.p
-    (put r.pl x (one (refined_pcm r.re.refi)))
-    (put r.pl y (one (refined_pcm r.re.refi)))
-= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re.refi))) in
-  let y' = Ghost.hide (put r.pl y (one (refined_pcm r.re.refi))) in
+    (put r.pl x (one (refined_pcm r.re)))
+    (put r.pl y (one (refined_pcm r.re)))
+= let x' = Ghost.hide (put r.pl x (one (refined_pcm r.re))) in
+  let y' = Ghost.hide (put r.pl y (one (refined_pcm r.re))) in
   pcm_lens_frame_pres r.pl x' y f;
-  r.re.u x' y' (frame_pres_mk_upd (refined_pcm r.re.refi) x' y' (upd r.pl f))
+  r.re.u x' y' (frame_pres_mk_upd (refined_pcm r.re) x' y' (upd r.pl f))
 
 let ref_upd_act (r: ref 'a 'p) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres 'p f x y})
 : M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y))
