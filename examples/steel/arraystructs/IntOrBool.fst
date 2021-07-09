@@ -9,6 +9,7 @@ module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
 type int_or_bool_case = | I | B
+
 let int_or_bool_cases k = match k with
   | I -> pod int
   | B -> pod bool

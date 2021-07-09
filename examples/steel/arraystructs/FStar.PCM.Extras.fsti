@@ -717,3 +717,38 @@ val conj_unrefinement (#p: pcm 'a)
 val extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement' q) (u: pcm_unrefinement re)
 : pcm_unrefinement (extend_refinement l re)
+
+(** A PCM for possibly-uninitialized data *)
+
+type init a =
+| One : init a
+| Uninitialized : init a
+| Initialized : a -> init a
+
+let init_comp (p: pcm 'a): symrel (init 'a) = fun x y -> match x, y with
+  | One, _ | _, One -> True
+  | Uninitialized, Uninitialized -> True
+  | Initialized x, Initialized y -> composable p x y
+  | _, _ -> False
+
+let init_op (p: pcm 'a) (x: init 'a) (y: init 'a{init_comp p x y}): init 'a = match x, y with
+  | One, z | z, One -> z
+  | Uninitialized, Uninitialized -> Uninitialized
+  | Initialized x, Initialized y -> Initialized (op p x y)
+
+let init_pcm (p: pcm 'a): pcm (init 'a) = {
+  p = {composable = init_comp p; op = init_op p; one = One #'a};
+  comm = (fun x y -> match x, y with
+    | Initialized x, Initialized y -> p.comm x y
+    | _, _ -> ());
+  assoc = (fun x y z -> match x, y, z with
+    | Initialized x, Initialized y, Initialized z -> p.assoc x y z
+    | _, _, _ -> ());
+  assoc_r = (fun x y z -> match x, y, z with
+    | Initialized x, Initialized y, Initialized z -> p.assoc_r x y z
+    | _, _, _ -> ());
+  is_unit = (fun _ -> ());
+  refine = (fun x -> match x with
+    | Initialized x -> p.refine x
+    | _ -> True)
+}
