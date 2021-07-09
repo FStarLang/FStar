@@ -1,4 +1,4 @@
-module PCM.POD
+module FStar.PCM.POD
 
 open FStar.PCM
 open FStar.PCM.Extras

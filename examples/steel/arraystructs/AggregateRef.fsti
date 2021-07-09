@@ -63,30 +63,6 @@ val un_addr_of_lens
     (requires fun _ -> r' == ref_focus r l /\ get l x == one q)
     (ensures fun _ _ _ -> True)
 
-val refine
-  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
-  (r: ref a p)
-  (re: pcm_refinement p)
-  (x: Ghost.erased b{re.refi.f x})
-: Steel (ref a (refined_pcm re))
-    (r `pts_to` x)
-    (fun r' -> r' `pts_to` Ghost.reveal x)
-    (fun _ -> True)
-    (fun _ r' _ -> r' == ref_refine r re)
-
-val unrefine
-  (#opened:Steel.Memory.inames)
-  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
-  (r': ref a p)
-  (re: pcm_refinement p)
-  (r: ref a (refined_pcm re))
-  (x: Ghost.erased b{re.refi.f x})
-: A.SteelGhost unit opened
-    (r `pts_to` Ghost.reveal x)
-    (fun _ -> r' `pts_to` x)
-    (fun _ -> r == ref_refine r' re)
-    (fun _ _ _ -> True)
-
 (** Generic read.
 
     Without the precondition ~ (x == one), it would be possible to read
