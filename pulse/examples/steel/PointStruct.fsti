@@ -28,8 +28,8 @@ val _y : pcm_lens point_pcm (pod_pcm int)
 
 /// Taking pointers to the x and y fields of a point
 
-val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
-: SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
+val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
+: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _x})
     (p `pts_to` mk_point x y)
     (fun q ->
        (p `pts_to` mk_point none y) `star`
@@ -37,14 +37,14 @@ val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm}
 
 val un_addr_of_x
   (#x #y: Ghost.erased (pod int))
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _x})
+  (p: ref 'a point_pcm)
+  (q: ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _x})
 : SteelT unit
     ((p `pts_to` mk_point none y) `star` (q `pts_to` x))
     (fun q -> p `pts_to` mk_point x y)
 
-val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm})
-: SteelT (q:ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
+val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
+: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _y})
     (p `pts_to` mk_point x y)
     (fun q ->
        (p `pts_to` mk_point x none) `star`
@@ -52,8 +52,8 @@ val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point{p.q == point_pcm}
 
 val un_addr_of_y
   (#x #y: Ghost.erased (pod int))
-  (p: ref 'a point{p.q == point_pcm})
-  (q: ref 'a (pod int){q == ref_focus p (pod_pcm int) _y})
+  (p: ref 'a point_pcm)
+  (q: ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _y})
 : SteelT unit
     ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
     (fun q -> p `pts_to` mk_point x y)

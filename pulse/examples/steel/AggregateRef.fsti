@@ -207,14 +207,13 @@ let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement p) =
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
     This allows the reference to point to substructures of unions with known case. *)
-noeq type ref (a:Type u#a) (b:Type u#b): Type = {
+noeq type ref a #b (q: refined_one_pcm b): Type = {
   p: refined_one_pcm a;
   re: pcm_refinement p;
   (** Needed to turn frame-preserving updates on (refined_pcm re) into
       frame-preserving updates on p. To do so, also requires that p and q
       be `refined_one_pcm`s *)
   u: pcm_unrefinement re;
-  q: refined_one_pcm b;
   pl: pcm_lens (refined_pcm re) q;
   r: Steel.Memory.ref a p;
 }
@@ -222,8 +221,8 @@ noeq type ref (a:Type u#a) (b:Type u#b): Type = {
 open Steel.Effect
 
 val pts_to
-  (#a: Type u#1) (#b: Type u#b)
-  (r: ref a b) ([@@@smt_fallback] v: Ghost.erased b)
+  (#a: Type u#1) (#b: Type u#b) (#p: refined_one_pcm b)
+  (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
 : vprop
 
 (** A lens for the k-th field of an n-ary product *)
@@ -411,56 +410,57 @@ val extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
 
 (** The refinement of a ref *)
 
-val ref_refine
-  (r: ref 'a 'b) (new_re: pcm_refinement r.q) (new_u: pcm_unrefinement new_re)
-: ref 'a (refine_t new_re.f)
+val ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
+  (r: ref a p) (new_re: pcm_refinement p) (new_u: pcm_unrefinement new_re)
+: ref a (refined_pcm new_re)
 
 (** Fundamental operations on references *)
 
 module A = Steel.Effect.Atomic
 
-let ref_focus (r: ref 'a 'b) (q: refined_one_pcm 'c) (l: pcm_lens r.q q): ref 'a 'c = {p = r.p; re = r.re; u = r.u; q = q; pl = pcm_lens_comp r.pl l; r = r.r}
+let ref_focus (r: ref 'a 'p) (q: refined_one_pcm 'c) (l: pcm_lens 'p q): ref 'a q =
+  {p = r.p; re = r.re; u = r.u; pl = pcm_lens_comp r.pl l; r = r.r}
 
-val split (r: ref 'a 'c) (xy x y: Ghost.erased 'c)
+val split (#a:Type) (#b:Type) (#p: refined_one_pcm b) (r: ref a p) (xy x y: Ghost.erased b)
 : Steel unit
     (r `pts_to` xy)
     (fun _ -> (r `pts_to` x) `star` (r `pts_to` y))
-    (fun _ -> composable r.q x y /\ xy == Ghost.hide (op r.q x y))
+    (fun _ -> composable p x y /\ xy == Ghost.hide (op p x y))
     (fun _ _ _ -> True)
 
-val gather (r: ref 'a 'c) (x y: Ghost.erased 'c)
-: SteelT (_:unit{composable r.q x y})
+val gather (#a:Type) (#b:Type) (#p: refined_one_pcm b) (r: ref a p) (x y: Ghost.erased b)
+: SteelT (_:unit{composable p x y})
     ((r `pts_to` x) `star` (r `pts_to` y))
-    (fun _ -> r `pts_to` op r.q x y)
+    (fun _ -> r `pts_to` op p x y)
 
 val addr_of_lens
-  (r: ref 'a 'b)
-  (#rq: pcm 'b) (#q: refined_one_pcm 'c) (l: pcm_lens rq q)
-  (x: Ghost.erased 'b)
-: Steel (ref 'a 'c)
+  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
+  (r: ref a p) (l: pcm_lens p q)
+  (x: Ghost.erased b)
+: Steel (ref a q)
     (r `pts_to` x)
     (fun s ->
       (r `pts_to` put l (one q) x) `star` 
       (s `pts_to` get l x))
-    (requires fun _ -> rq == r.q)
-    (ensures fun _ r' _ -> rq == r.q /\ r' == ref_focus r q l)
+    (requires fun _ -> True)
+    (ensures fun _ r' _ -> r' == ref_focus r q l)
 
 val un_addr_of_lens
-  (r': ref 'a 'c) (r: ref 'a 'b)
-  (#rq: pcm 'b) (#q: refined_one_pcm 'c) (l: pcm_lens rq q)
-  (x: Ghost.erased 'b) (y: Ghost.erased 'c)
+  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b) (#q: refined_one_pcm c)
+  (r': ref a q) (r: ref a p) (l: pcm_lens p q)
+  (x: Ghost.erased b) (y: Ghost.erased c)
 : Steel unit
     ((r `pts_to` x) `star` (r' `pts_to` y))
     (fun s -> r `pts_to` put l y x)
-    (requires fun _ -> rq == r.q /\ r' == ref_focus r q l /\ get l x == one q)
+    (requires fun _ -> r' == ref_focus r q l /\ get l x == one q)
     (ensures fun _ _ _ -> True)
 
 val refine
-  (r: ref 'a 'b)
-  (re: pcm_refinement r.q)
-  (u: pcm_unrefinement re)
-  (x: Ghost.erased 'b{re.f x})
-: Steel (ref 'a (refine_t re.f))
+  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
+  (r: ref a p)
+  (re: pcm_refinement p) (u: pcm_unrefinement re)
+  (x: Ghost.erased b{re.f x})
+: Steel (ref a (refined_pcm re))
     (r `pts_to` x)
     (fun r' -> r' `pts_to` Ghost.reveal x)
     (fun _ -> True)
@@ -468,9 +468,10 @@ val refine
 
 val unrefine
   (#opened:Steel.Memory.inames)
-  (r': ref 'a 'b)
-  (re: pcm_refinement r'.q) (u: pcm_unrefinement re)
-  (r: ref 'a (refine_t re.f)) (x: Ghost.erased 'b{re.f x})
+  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
+  (r': ref a p)
+  (re: pcm_refinement p) (u: pcm_unrefinement re)
+  (r: ref a (refined_pcm re)) (x: Ghost.erased b{re.f x})
 : A.SteelGhost unit opened
     (r `pts_to` Ghost.reveal x)
     (fun _ -> r' `pts_to` x)
@@ -513,14 +514,17 @@ val unrefine
     test v against the unit of its corresponding PCM, then there's no
     way to prove this precondition and we are safe from reading v
     as thread 1 is writing to it. *)
-val ref_read (#x: Ghost.erased 'b) (r: ref 'a 'b)
-: Steel 'b
+val ref_read
+  (#a:Type) (#b:Type) (#p: refined_one_pcm b) (#x: Ghost.erased b) (r: ref a p)
+: Steel b
     (r `pts_to` x)
     (fun _ -> r `pts_to` x)
-    (requires fun _ -> ~ (Ghost.reveal x == one r.q))
-    (ensures fun _ x' _ -> compatible r.q x x')
+    (requires fun _ -> ~ (Ghost.reveal x == one p))
+    (ensures fun _ x' _ -> compatible p x x')
 
-val ref_upd (r: ref 'a 'b) (x y: Ghost.erased 'b) (f: ('b -> 'b){frame_pres r.q f x y})
+val ref_upd
+  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
+  (r: ref a p) (x y: Ghost.erased b) (f: (b -> b){frame_pres p f x y})
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
 
 (* TODO move to FStar.PCM.fst? *)
@@ -532,5 +536,7 @@ let valid_write (p:pcm 'a) x y =
   whole_value p x /\ whole_value p y /\
   (forall (frame:'a). composable p x frame ==> composable p y frame)
 
-val ref_write (r: ref 'a 'b) (#x: Ghost.erased 'b) (y: 'b{valid_write r.q x y})
+val ref_write
+  (#a:Type) (#b:Type) (#p: refined_one_pcm b)
+  (r: ref a p) (#x: Ghost.erased b) (y: b{valid_write p x y})
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)

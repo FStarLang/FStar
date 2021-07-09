@@ -30,30 +30,30 @@ val _p2 : pcm_lens line_pcm point_pcm
 
 /// Taking pointers to the p1 and p2 fields of a line
 
-val addr_of_p1 (#p1 #p2: Ghost.erased point) (p: ref 'a line{p.q == line_pcm})
-: SteelT (q:ref 'a point{q == ref_focus p point_pcm _p1})
+val addr_of_p1 (#p1 #p2: Ghost.erased point) (p: ref 'a line_pcm)
+: SteelT (q:ref 'a point_pcm{q == ref_focus p point_pcm _p1})
     (p `pts_to` mk_line p1 p2)
     (fun q ->
        (p `pts_to` mk_line (one point_pcm) p2) `star`
        (q `pts_to` p1))
 
 val un_addr_of_p1 (#p1 #p2: Ghost.erased point)
-  (p: ref 'a line{p.q == line_pcm})
-  (q: ref 'a point{q == ref_focus p point_pcm _p1})
+  (p: ref 'a line_pcm)
+  (q: ref 'a point_pcm{q == ref_focus p point_pcm _p1})
 : SteelT unit
     ((p `pts_to` mk_line (one point_pcm) p2) `star` (q `pts_to` p1))
     (fun q -> p `pts_to` mk_line p1 p2)
 
-val addr_of_p2 (#p1 #p2: Ghost.erased point) (p: ref 'a line{p.q == line_pcm})
-: SteelT (q:ref 'a point{q == ref_focus p point_pcm _p2})
+val addr_of_p2 (#p1 #p2: Ghost.erased point) (p: ref 'a line_pcm)
+: SteelT (q:ref 'a point_pcm{q == ref_focus p point_pcm _p2})
     (p `pts_to` mk_line p1 p2)
     (fun q ->
        (p `pts_to` mk_line p1 (one point_pcm)) `star`
        (q `pts_to` p2))
 
 val un_addr_of_p2 (#p1 #p2: Ghost.erased point)
-  (p: ref 'a line{p.q == line_pcm})
-  (q: ref 'a point{q == ref_focus p point_pcm _p2})
+  (p: ref 'a line_pcm)
+  (q: ref 'a point_pcm{q == ref_focus p point_pcm _p2})
 : SteelT unit
     ((p `pts_to` mk_line p1 (one point_pcm)) `star` (q `pts_to` p2))
     (fun q -> p `pts_to` mk_line p1 p2)
