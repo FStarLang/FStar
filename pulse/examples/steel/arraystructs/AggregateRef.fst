@@ -532,6 +532,9 @@ let ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
+let ref_focus r q l =
+  {p = r.p; re = r.re; pl = pcm_lens_comp r.pl l; r = r.r}
+
 let focus (r: ref 'a 'p)
   (#q: refined_one_pcm 'c)
   (l: pcm_lens 'p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
