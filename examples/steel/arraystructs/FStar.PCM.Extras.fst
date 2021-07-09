@@ -32,7 +32,7 @@ let pcm_refinement'_comp_new_one #a #p re x y =
   re.f_closed_comp re.new_one y
 
 let pcm_refinement'_compatible_closed #a #p re x y =
-  let p' = refined_pcm re in
+  let p' = refined_pcm' re in
   compatible_elim p x y (re.f y) (fun frame ->
    re.f_closed_comp x frame; p.comm frame x);
   compatible_elim p x y (compatible p' x y) (fun frame_x ->
@@ -79,7 +79,7 @@ let pcm_lens_frame_pres #a #b #p #q l s v f =
 let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
 : pcm_unrefinement (case_refinement p k)
 = fun kx ky f kv ->
-  let p' = refined_pcm (case_refinement p k) in
+  let p' = refined_pcm' (case_refinement p k) in
   let p = union_pcm p in
   match kv with
   | Some (|k', v|) ->
@@ -109,7 +109,7 @@ let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   | _ -> None
 
 let conj_unrefinement (#p: pcm 'a)
-  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm re1))
+  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
   (h1: pcm_unrefinement re1) (h2: pcm_unrefinement re2)
 : pcm_unrefinement (conj_refinement #'a re1 re2)
 = fun x y ->
@@ -122,7 +122,7 @@ let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
 : pcm_unrefinement (extend_refinement l re)
 = fun x y f v ->
   let re' = extend_refinement l re in
-  let p' = refined_pcm re' in
+  let p' = refined_pcm' re' in
   pcm_refinement'_compatible_closed re' x v;
   pcm_lens_compatible_get l x v;
   let w = f v in

@@ -19,7 +19,7 @@ val pts_to
     if r points to x and x satisfies refinement re *)
 val ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
   (r: ref a p) (new_re: pcm_refinement p)
-: ref a (refined_pcm new_re.refi)
+: ref a (refined_pcm new_re)
 
 (** (ref_focus r l) points to x if r points to (put l x one) *)
 val ref_focus
@@ -68,7 +68,7 @@ val refine
   (r: ref a p)
   (re: pcm_refinement p)
   (x: Ghost.erased b{re.refi.f x})
-: Steel (ref a (refined_pcm re.refi))
+: Steel (ref a (refined_pcm re))
     (r `pts_to` x)
     (fun r' -> r' `pts_to` Ghost.reveal x)
     (fun _ -> True)
@@ -79,7 +79,7 @@ val unrefine
   (#a:Type) (#b:Type) (#p: refined_one_pcm b)
   (r': ref a p)
   (re: pcm_refinement p)
-  (r: ref a (refined_pcm re.refi))
+  (r: ref a (refined_pcm re))
   (x: Ghost.erased b{re.refi.f x})
 : A.SteelGhost unit opened
     (r `pts_to` Ghost.reveal x)
