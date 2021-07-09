@@ -422,8 +422,10 @@ val ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
 
 module A = Steel.Effect.Atomic
 
-let ref_focus (r: ref 'a 'p) (q: refined_one_pcm 'c) (l: pcm_lens 'p q): ref 'a q =
-  {p = r.p; re = r.re; pl = pcm_lens_comp r.pl l; r = r.r}
+val ref_focus
+  (#a:Type) (#b:Type) (#c:Type) (#p: refined_one_pcm b)
+  (r: ref a p) (q: refined_one_pcm c) (l: pcm_lens p q)
+: ref a q
 
 val split (#a:Type) (#b:Type) (#p: refined_one_pcm b) (r: ref a p) (xy x y: Ghost.erased b)
 : Steel unit
