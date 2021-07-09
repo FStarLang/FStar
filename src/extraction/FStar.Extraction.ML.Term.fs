@@ -1278,10 +1278,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_meta(t, Meta_desugared (Machine_integer (signedness, width))) ->
 
             let t = SS.compress t in
+            let t = U.unascribe t in
             (match t.n with
              (* Should we check if hd here is [__][u]int_to_t? *)
             | Tm_app(hd, [x, _]) ->
               (let x = SS.compress x in
+               let x = U.unascribe x in
                match x.n with
                | Tm_constant (Const_int (repr, _)) ->
                  (let _, ty, _ =
@@ -1289,8 +1291,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                  let ml_ty = term_as_mlty g ty in
                  let ml_const = Const_int (repr, Some (signedness, width)) in
                  with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty)
-               |_ -> failwith "Argument in desugared machine int not a Const_int")
-            | _ -> failwith "Desugared machine integer isn't a Tm_app")
+               |_ -> term_as_mlexpr g t)
+            | _ -> term_as_mlexpr g t)
 
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->

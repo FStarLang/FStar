@@ -2813,9 +2813,12 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
         let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
         EApp (char_of_int, [c2])
     | FStar_Extraction_ML_Syntax.MLC_Int
-        (s, FStar_Pervasives_Native.Some uu___) ->
-        failwith
-          "impossible: machine integer not desugared to a function call"
+        (s, FStar_Pervasives_Native.Some (sg, wd)) ->
+        let uu___ =
+          let uu___1 =
+            translate_width (FStar_Pervasives_Native.Some (sg, wd)) in
+          (uu___1, s) in
+        EConstant uu___
     | FStar_Extraction_ML_Syntax.MLC_Float uu___ ->
         failwith "todo: translate_expr [MLC_Float]"
     | FStar_Extraction_ML_Syntax.MLC_Bytes uu___ ->
