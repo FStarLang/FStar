@@ -37,7 +37,8 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
   ref_write r tmp;
   (* Gather *)
   unaddr_of_x p q;
-  unaddr_of_y p r
+  unaddr_of_y p r;
+  A.return ()
 
 /// We can also implement swap generically:
 ///
@@ -57,8 +58,7 @@ let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (pod_pcm 'c)) (q:ref 'b (pod
   ref_write p vy;
   (* *q = tmp *)
   ref_write q tmp;
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
-  // seems can't get rid of final change_equal_slprop, even with smt_fallback
+  A.return ()
 
 /// Now, point_swap written using generic_swap:
 ///
@@ -80,7 +80,8 @@ let point_swap_generically (#x #y: Ghost.erased int) (p: ref 'a point_pcm)
   generic_swap q r;
   (* Gather *)
   unaddr_of_x p q;
-  unaddr_of_y p r
+  unaddr_of_y p r;
+  A.return ()
 
 /// Reflect a line segment across the line y=x and reverse its direction
 ///
@@ -115,10 +116,148 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
   unaddr_of_p1 p pp1;
   unaddr_of_p2 p pp2
 
+/// Struct with potentially uninitialized values
+///
+/// Unions of scalars with tag type (e.g. int_or_bool)
+/// "Functional" model of struct data
+///
+/// Examples (linked list w/ mutable elements)?
+///   noeq type cell : Type0 = {
+///     value: int;
+///     next: ref (FStar.Universe.raise_t cell) cell
+///   }
+///
+/// Can also define bounded-lists
+///   let rec bounded_list (n: Ghost.erased nat): Tot Type0 (decreases (Ghost.reveal n)) =
+///   if Ghost.reveal n = 0 then False
+///   else (int & option (ref (FStar.Universe.raise_t (bounded_list (n - 1))) (bounded_list (n - 1))))
+///
+/// Unions with these structs in them
+///   May need particular functional style for unions because can't reason by unification on result of if-then-else
+/// 
+///   p: pcm a
+///   a is the carrier
+///   secretly: a type b of values that we actually care about
+///   extract: a -> option (b * other things)
+///
+///   read:
+///     p `pts_to` (x: a)
+///    extract x = Some (v, _)
+
+/// Swap two ints inside two (union int_or_bool)s using generic_swap
+///
+/// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
+/// { generic_swap(&p.i, &q.i); }
+
+open IntOrBool
+
+let int_or_bool_int_swap
+  (p: ref 'a int_or_bool_pcm) (q: ref 'b int_or_bool_pcm)
+  (i j: Ghost.erased int)
+: SteelT unit
+    ((p `pts_to` mk_int (some i)) `star` (q `pts_to` mk_int (some j)))
+    (fun _ -> (p `pts_to` mk_int (some j)) `star` (q `pts_to` mk_int (some i)))
+= (* &p.i *)
+  let pi = addr_of_i p in
+  (* &q.i *)
+  let qi = addr_of_i q in
+  (* generic_swap(&p.i, &q.i); *)
+  generic_swap pi qi;
+  (* Give permissions back to p and q *)
+  unaddr_of_i p pi;
+  unaddr_of_i q qi
+
+/// Convert an int_or_bool + runtime tag into an int
+///
+/// int int_or_bool_to_int(bool *is_int, union int_or_bool *p) {
+///   if (*is_int) return p->i;
+///   else return p->b ? 1 : 0;
+/// }
+
+let int_or_bool_to_int
+  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
+  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
+: Steel (pod int)
+    ((is_int `pts_to` some b) `star` (p `pts_to` u))
+    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
+    (requires fun _ -> if b then case u == I else case u == B)
+    (ensures fun _ _ _ -> True)
+= let b = ref_read is_int in
+  if some_v b then begin
+    (* return p->i *)
+    let pi = addr_of_i p in
+    let i = ref_read pi in
+    unaddr_of_i p pi;
+    A.return i
+  end else begin
+    (* return p->b ? 1 : 0 *)
+    let pb = addr_of_b p in
+    let b = ref_read pb in
+    unaddr_of_b p pb;
+    let b = some_v b in
+    if b then some' 1 else some' 0
+  end
+
+let int_or_bool_to_int
+  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
+  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
+: Steel (pod int)
+    ((is_int `pts_to` some b) `star` (p `pts_to` u))
+    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
+    (requires fun _ -> if b then (exists i. u == mk_int i) else (exists b. u == mk_bool b))
+    (ensures fun _ _ _ -> True)
+= let b = ref_read is_int in
+  if some_v b then begin
+    (* return p->i *)
+    let pi = addr_of_i p in
+    let i = ref_read pi in
+    unaddr_of_i p pi;
+    A.return i
+  end else begin
+    (* return p->b ? 1 : 0 *)
+    let pb = addr_of_b p in
+    let b = ref_read pb in
+    unaddr_of_b p pb;
+    let b = some_v b in
+    if b then some' 1 else some' 0
+  end
+    
+
 (*
 addr_of
   (r `pts_to` xs)
   (r `pts_to` xs \ k `star` s `pts_to` xs k)
+  
+
+let point_swap_generically (#q: Ghost.erased int) (p: ref 'a point_pcm)
+: SteelT unit
+    (p `pts_to` q)
+    (fun _ -> p `pts_to` q[.y = q.x][.x = q.y])
+= (* int *q = &p.x; *)
+  let q = addr_of_x p in
+  (* int *r = &p.y; *)
+  let r = addr_of_y p in
+  (* generic_swap(q, r); *)
+  generic_swap q r;
+  (* Gather *)
+  unaddr_of_x p q;
+  unaddr_of_y p r;
+  A.return ()
+
+p\{x, y} `pts_to` (v, w)
+
+p.x `pts_to` v === p `pts_to` mk_point v one
+p.y `pts_to` w === p `pts_to` mk_point one w
+
+give p.x's share back to p
+
+p' `pts_to` v_x
+p' == ghost_addr_of p y
+
+ghost_addr_of  = ref_focus .. 
+
+ghost_addr_of p y `pts_to` v_y
+
   
 addr_of
   (r `pts_to` xs `star` s `pts_to` y)
