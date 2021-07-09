@@ -391,7 +391,7 @@ let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 : refine_t (case_refinement_f p k)
 = Some (|k, one (p k)|)
 
-let case_refinement (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
+let case_refinement' (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
 : pcm_refinement' (union_pcm p) = {
   f = case_refinement_f p k;
   f_closed_comp = (fun x y -> ());
@@ -400,7 +400,13 @@ let case_refinement (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
 }
 
 val case_unrefinement (#a:eqtype) (#b:a->Type) (p:(k:a -> refined_one_pcm (b k))) (k:a)
-: pcm_unrefinement (case_refinement p k)
+: pcm_unrefinement (case_refinement' p k)
+
+let case_refinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
+: pcm_refinement (union_pcm p) = {
+  refi = case_refinement' p k;
+  u = case_unrefinement p k;
+}
 
 (** A lens for the k-th case of an n-ary union *)
 
@@ -420,7 +426,7 @@ let lens_case (p:(k:'a -> pcm ('b k))) (k:'a): lens (refine_t (case_refinement_f
 
 (** lens_case is a pcm_lens *)
 let case (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
-: pcm_lens (refined_pcm' (case_refinement p k)) (p k) = {
+: pcm_lens (refined_pcm' (case_refinement' p k)) (p k) = {
   l = lens_case p k;
   get_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};
   put_morphism = {f_refine = (fun _ -> ()); f_one = (fun _ -> ()); f_op = (fun _ _ -> ())};

@@ -77,9 +77,9 @@ let pcm_lens_frame_pres #a #b #p #q l s v f =
 (** Refinement of union to the kth case *)
 
 let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
-: pcm_unrefinement (case_refinement p k)
+: pcm_unrefinement (case_refinement' p k)
 = fun kx ky f kv ->
-  let p' = refined_pcm' (case_refinement p k) in
+  let p' = refined_pcm' (case_refinement' p k) in
   let p = union_pcm p in
   match kv with
   | Some (|k', v|) ->
