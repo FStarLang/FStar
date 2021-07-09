@@ -3,12 +3,8 @@ module AggregateRef
 open FStar.PCM
 module P = FStar.PCM
 
-(** Misc. combinators *)
-let compose (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
-let both (f: 'a -> 'c) (g: 'b -> 'd) ((x, y): 'a & 'b): 'c & 'd = (f x, g y)
-let uncurry (f: 'a -> 'b -> 'c) ((x, y): 'a & 'b): 'c = f x y
-let conj (f: 'a -> prop) (g:(x:'a{f x} -> prop)) (x: 'a): prop = f x /\ g x
-    
+open Aggregates
+
 (** The non-computational part of frame_preserving_upd
     TODO: move this and lemmas about this to FStar.PCM.fst *)
 let frame_pres_on (p: pcm 'a) (f: 'a -> 'a) (x y: Ghost.erased 'a)
@@ -63,21 +59,6 @@ noeq type pcm_morphism #a #b (f: a -> b) (p: pcm a) (q: pcm b) = {
       (ensures composable q (f x) (f y) /\ f (op p x y) == op q (f x) (f y))
       [SMTPat (composable p x y)]
 }
-
-val pcm_morphism_id (#p: pcm 'a): pcm_morphism id p p
-
-val pcm_morphism_comp
-  (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
-  (#f: 'b -> 'c) (#g: 'a -> 'b)
-  (mf: pcm_morphism f q r) (mg: pcm_morphism g p q)
-: pcm_morphism (f `compose` g) p r
-
-open Aggregates
-val pcm_morphism_both
-  (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c) (#s: pcm 'd)
-  (#f: 'a -> 'c) (#g: 'b -> 'd)
-  (mf: pcm_morphism f p r) (mg: pcm_morphism g q s)
-: pcm_morphism (both f g) (p `pcm_times` q) (r `pcm_times` s)
 
 (** A refinement of a PCM (p: pcm a) consists of:
     (1) A set of elements f:(a -> prop) closed under (op p)
@@ -155,6 +136,7 @@ val lens_comp (l: lens 'a 'b) (m: lens 'b 'c): lens 'a 'c
     (1) get is a PCM morphism p -> q
     (2) put is a PCM morphism q×p -> p *)
 
+let uncurry (f: 'a -> 'b -> 'c) ((x, y): 'a & 'b): 'c = f x y
 noeq type pcm_lens #a #b (p: pcm a) (q: pcm b) = {
   l: lens a b;
   get_morphism: pcm_morphism l.get p q;
@@ -193,8 +175,6 @@ val pcm_lens_comp
   (l: pcm_lens p q) (m: pcm_lens q r)
 : pcm_lens p r
 
-open FStar.FunctionalExtensionality
-
 let frame_pres_lift (p: pcm 'a) (x y: Ghost.erased 'a) (q: pcm 'b) (x' y': Ghost.erased 'b) =
   frame_preserving_upd p x y ->
   frame_preserving_upd q x' y'
@@ -212,17 +192,9 @@ noeq type pcm_refinement #a (p: pcm a) = {
   u: pcm_unrefinement refi;
 }
 
-(** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
-    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
-    This allows the reference to point to substructures of unions with known case. *)
-noeq type ref a #b (q: refined_one_pcm b): Type = {
-  p: refined_one_pcm a;
-  re: pcm_refinement p;
-  pl: pcm_lens (refined_pcm re.refi) q;
-  r: Steel.Memory.ref a p;
-}
-
 open Steel.Effect
+
+val ref (a:Type u#1) (#b:Type) (q: refined_one_pcm b): Type
 
 val pts_to
   (#a: Type u#1) (#b: Type u#b) (#p: refined_one_pcm b)
@@ -231,6 +203,7 @@ val pts_to
 
 (** A lens for the k-th field of an n-ary product *)
 
+open FStar.FunctionalExtensionality
 let fun_upd (#a:eqtype) #f_ty (k:a) (x':f_ty k)
   (f: restricted_t a f_ty)
 : restricted_t a f_ty
@@ -371,6 +344,7 @@ val iso_lens_comp (i: iso 'a 'b) (l: lens 'b 'c): lens 'a 'c
 
 (** A refinement f of a refinement g of 'a is isomorphic to a refinement by conj f g *)
 
+let conj (f: 'a -> prop) (g:(x:'a{f x} -> prop)) (x: 'a): prop = f x /\ g x
 val refine_conj_iso (f: 'a -> prop) (g:(x:'a{f x} -> prop))
 : iso (refine_t #'a (conj #'a f g)) (refine_t #(x:'a{f x}) g)
 

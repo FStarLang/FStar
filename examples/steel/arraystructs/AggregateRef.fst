@@ -3,28 +3,29 @@ module AggregateRef
 open FStar.PCM
 module P = FStar.PCM
 
+let compose (f: 'b -> 'c) (g: 'a -> 'b) (x: 'a): 'c = f (g x)
+
 let frame_pres_intro p f x y g =
   let _ = g in ()
 
 (** PCM morphisms *)
 
+val pcm_morphism_id (#p: pcm 'a): pcm_morphism id p p
 let pcm_morphism_id #a #p = {
   f_refine = (fun _ -> ());
   f_one = (fun _ -> ());
   f_op = (fun _ _ -> ());
 }
 
+val pcm_morphism_comp
+  (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
+  (#f: 'b -> 'c) (#g: 'a -> 'b)
+  (mf: pcm_morphism f q r) (mg: pcm_morphism g p q)
+: pcm_morphism (f `compose` g) p r
 let pcm_morphism_comp #a #b #c #p #q #r #f #g mf mg = {
   f_refine = (fun x -> mg.f_refine x; mf.f_refine (g x));
   f_one = (fun () -> mg.f_one (); mf.f_one ());
   f_op = (fun x y -> mg.f_op x y; mf.f_op (g x) (g y));
-}
-
-open Aggregates
-let pcm_morphism_both #a #b #c #p #q #r #s #f #g mf mg = {
-  f_refine = (fun (x, y) -> mf.f_refine x; mg.f_refine y);
-  f_one = (fun () -> mg.f_one (); mf.f_one ());
-  f_op = (fun (x, y) (z, w) -> mf.f_op x z; mg.f_op y w);
 }
 
 let pcm_refinement'_comp_new_one #a #p re x y =
@@ -213,6 +214,16 @@ let inl_refinement (p: refined_one_pcm 'a) (q: pcm 'b): pcm_refinement' (either_
   f_closed_comp = (fun _ _ -> ());
   new_one = Some (Inl #_ #'b (one p));
   new_one_is_refined_unit = (fun (Some (Inl x)) -> p.is_unit x);
+}
+
+(** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
+    The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
+    This allows the reference to point to substructures of unions with known case. *)
+noeq type ref a #b (q: refined_one_pcm b): Type = {
+  p: refined_one_pcm a;
+  re: pcm_refinement p;
+  pl: pcm_lens (refined_pcm re.refi) q;
+  r: Steel.Memory.ref a p;
 }
 
 let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
