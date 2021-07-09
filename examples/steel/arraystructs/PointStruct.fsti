@@ -1,9 +1,9 @@
 module PointStruct
 
-open Aggregates
 open AggregateRef
 open PCM.POD
 open FStar.PCM
+open FStar.PCM.Extras
 open Steel.Effect
 
 /// Suppose we have the following struct representing 2d points:
@@ -29,7 +29,7 @@ val _y : pcm_lens point_pcm (pod_pcm int)
 /// Taking pointers to the x and y fields of a point
 
 val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
-: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _x})
+: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p _x})
     (p `pts_to` mk_point x y)
     (fun q ->
        (p `pts_to` mk_point none y) `star`
@@ -38,13 +38,13 @@ val addr_of_x (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
 val un_addr_of_x
   (#x #y: Ghost.erased (pod int))
   (p: ref 'a point_pcm)
-  (q: ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _x})
+  (q: ref 'a (pod_pcm int){q == ref_focus p _x})
 : SteelT unit
     ((p `pts_to` mk_point none y) `star` (q `pts_to` x))
     (fun q -> p `pts_to` mk_point x y)
 
 val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
-: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _y})
+: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p _y})
     (p `pts_to` mk_point x y)
     (fun q ->
        (p `pts_to` mk_point x none) `star`
@@ -53,7 +53,7 @@ val addr_of_y (#x #y: Ghost.erased (pod int)) (p: ref 'a point_pcm)
 val un_addr_of_y
   (#x #y: Ghost.erased (pod int))
   (p: ref 'a point_pcm)
-  (q: ref 'a (pod_pcm int){q == ref_focus p (pod_pcm int) _y})
+  (q: ref 'a (pod_pcm int){q == ref_focus p _y})
 : SteelT unit
     ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
     (fun q -> p `pts_to` mk_point x y)

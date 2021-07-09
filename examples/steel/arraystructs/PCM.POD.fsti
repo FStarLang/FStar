@@ -1,6 +1,7 @@
 module PCM.POD
 
 open FStar.PCM
+open FStar.PCM.Extras
 
 val pod: Type u#a -> Type u#a
 
@@ -10,7 +11,7 @@ val some: Ghost.erased 'a -> Ghost.erased (pod 'a)
 val is_some: Ghost.erased (pod 'a) -> prop
 val some_v: x:pod 'a{is_some x} -> GTot (y:'a{x == Ghost.reveal (some y)})
 
-val pod_pcm (a:Type): AggregateRef.refined_one_pcm (pod a)
+val pod_pcm (a:Type): refined_one_pcm (pod a)
 
 val none_is_unit (a:Type): Lemma (Ghost.reveal none == one (pod_pcm a)) [SMTPat (one (pod_pcm a))]
 

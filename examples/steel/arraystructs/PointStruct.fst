@@ -1,9 +1,9 @@
 module PointStruct
 
-open Aggregates
 open AggregateRef
 open PCM.POD
 open FStar.PCM
+open FStar.PCM.Extras
 open FStar.FunctionalExtensionality
 open Steel.Effect
 module A = Steel.Effect.Atomic
