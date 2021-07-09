@@ -84,23 +84,23 @@ val pcm_morphism_both
     (2) An element new_unit which satisfies the unit laws on the subset f
         and p.refine *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
-noeq type pcm_refinement #a (p: pcm a) = {
+noeq type pcm_refinement' #a (p: pcm a) = {
   f: a -> prop;
   f_closed_comp: x: refine_t f -> y: a{composable p x y} -> Lemma (f (op p x y));
   new_one: (new_one:refine_t f{p.refine new_one});
   new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x)
 }
 
-let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement p): symrel (refine_t r.f) = composable p
+let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement' p): symrel (refine_t r.f) = composable p
 
-let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement p)
+let pcm_refine_op (#p: pcm 'a) (r: pcm_refinement' p)
   (x: refine_t r.f) (y: refine_t r.f{composable p x y}): refine_t r.f
 = r.f_closed_comp x y; op p x y
 
 (** Any refinement r for p can be used to construct a refined PCM with the same product
     and composability predicate, but restricted to elements in r.f *)
 let refined_one_pcm a = p:pcm a{p.refine (one p)}
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): refined_one_pcm (refine_t r.f) = {
+let refined_pcm (#p: pcm 'a) (r: pcm_refinement' p): refined_one_pcm (refine_t r.f) = {
   p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
   comm = (fun x y -> p.comm x y);
   assoc = (fun x y z -> p.assoc x y z);
@@ -109,14 +109,14 @@ let refined_pcm (#p: pcm 'a) (r: pcm_refinement p): refined_one_pcm (refine_t r.
   refine = p.refine;
 }
 
-val pcm_refinement_comp_new_one
-  (#p: pcm 'a) (re: pcm_refinement p)
+val pcm_refinement'_comp_new_one
+  (#p: pcm 'a) (re: pcm_refinement' p)
   (x: refine_t re.f) (y: 'a{composable p x y})
 : Lemma (composable p re.new_one y /\ re.f (op p re.new_one y) /\
          composable (refined_pcm re) x (op p re.new_one y))
 
-val pcm_refinement_compatible_closed
-  (#p: pcm 'a) (re: pcm_refinement p)
+val pcm_refinement'_compatible_closed
+  (#p: pcm 'a) (re: pcm_refinement' p)
   (x: refine_t re.f) (y: 'a{compatible p x y})
 : Lemma (re.f y /\ compatible (refined_pcm re) x y)
 
@@ -199,10 +199,18 @@ let frame_pres_lift (p: pcm 'a) (x y: Ghost.erased 'a) (q: pcm 'b) (x' y': Ghost
   frame_preserving_upd p x y ->
   frame_preserving_upd q x' y'
 
-let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement p) =
+let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement' p) =
   x: Ghost.erased (refine_t r.f) ->
   y: Ghost.erased (refine_t r.f) ->
   frame_pres_lift (refined_pcm r) x y p (Ghost.reveal x) (Ghost.reveal y)
+
+noeq type pcm_refinement #a (p: pcm a) = {
+  refi: pcm_refinement' p;
+  (** Needed to turn frame-preserving updates on (refined_pcm re) into
+      frame-preserving updates on p. To do so, also requires that p and q
+      be `refined_one_pcm`s *)
+  u: pcm_unrefinement refi;
+}
 
 (** A ref is a pcm_lens combined with a Steel.Memory.ref for the base type 'a.
     The base type of the lens, unlike the Steel.Memory.ref, is refined by a refinement re.
@@ -210,11 +218,7 @@ let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement p) =
 noeq type ref a #b (q: refined_one_pcm b): Type = {
   p: refined_one_pcm a;
   re: pcm_refinement p;
-  (** Needed to turn frame-preserving updates on (refined_pcm re) into
-      frame-preserving updates on p. To do so, also requires that p and q
-      be `refined_one_pcm`s *)
-  u: pcm_unrefinement re;
-  pl: pcm_lens (refined_pcm re) q;
+  pl: pcm_lens (refined_pcm re.refi) q;
   r: Steel.Memory.ref a p;
 }
 
@@ -276,7 +280,7 @@ let case_refinement_new_one (p:(k:'a -> pcm ('b k))) (k:'a)
 = Some (|k, one (p k)|)
 
 let case_refinement (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
-: pcm_refinement (union_pcm p) = {
+: pcm_refinement' (union_pcm p) = {
   f = case_refinement_f p k;
   f_closed_comp = (fun x y -> ());
   new_one = case_refinement_new_one p k;
@@ -344,12 +348,12 @@ let case (p:(k:'a -> refined_one_pcm ('b k))) (k:'a)
 
 val extend_refinement
   (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
-: pcm_refinement p
+  (l: pcm_lens p q) (re: pcm_refinement' q)
+: pcm_refinement' p
 
 val pcm_lens_refine
   (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q)
+  (l: pcm_lens p q) (re: pcm_refinement' q)
 : pcm_lens (refined_pcm (extend_refinement l re)) (refined_pcm re)
 
 (** Isomorphisms *)
@@ -386,13 +390,13 @@ val pcm_iso_lens_comp
 (** The conjunction of two refinements *)
 
 val conj_refinement
-  (#p: pcm 'a) (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
-: pcm_refinement p
+  (#p: pcm 'a) (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm re1))
+: pcm_refinement' p
 
 (** A refinement re1 of a refinement re2 of a PCM is isomorphic to a
     refinement by the conjunction of re1 and re2 *)
-val pcm_refinement_conj_iso
-  (p: pcm 'a) (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+val pcm_refinement'_conj_iso
+  (p: pcm 'a) (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm re1))
 : pcm_iso (refined_pcm (conj_refinement re1 re2)) (refined_pcm re2)
 
 val upd_across_pcm_iso
@@ -400,26 +404,26 @@ val upd_across_pcm_iso
 : frame_pres_lift p x y q (i.i.fwd x) (i.i.fwd y)
 
 val conj_unrefinement (#p: pcm 'a)
-  (re1: pcm_refinement p) (re2: pcm_refinement (refined_pcm re1))
+  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm re1))
   (h1: pcm_unrefinement re1) (h2: pcm_unrefinement re2)
 : pcm_unrefinement (conj_refinement #'a re1 re2)
 
 val extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement q) (u: pcm_unrefinement re)
+  (l: pcm_lens p q) (re: pcm_refinement' q) (u: pcm_unrefinement re)
 : pcm_unrefinement (extend_refinement l re)
 
 (** The refinement of a ref *)
 
 val ref_refine (#a:Type) (#b:Type) (#p:refined_one_pcm b)
-  (r: ref a p) (new_re: pcm_refinement p) (new_u: pcm_unrefinement new_re)
-: ref a (refined_pcm new_re)
+  (r: ref a p) (new_re: pcm_refinement p)
+: ref a (refined_pcm new_re.refi)
 
 (** Fundamental operations on references *)
 
 module A = Steel.Effect.Atomic
 
 let ref_focus (r: ref 'a 'p) (q: refined_one_pcm 'c) (l: pcm_lens 'p q): ref 'a q =
-  {p = r.p; re = r.re; u = r.u; pl = pcm_lens_comp r.pl l; r = r.r}
+  {p = r.p; re = r.re; pl = pcm_lens_comp r.pl l; r = r.r}
 
 val split (#a:Type) (#b:Type) (#p: refined_one_pcm b) (r: ref a p) (xy x y: Ghost.erased b)
 : Steel unit
@@ -458,24 +462,25 @@ val un_addr_of_lens
 val refine
   (#a:Type) (#b:Type) (#p: refined_one_pcm b)
   (r: ref a p)
-  (re: pcm_refinement p) (u: pcm_unrefinement re)
-  (x: Ghost.erased b{re.f x})
-: Steel (ref a (refined_pcm re))
+  (re: pcm_refinement p)
+  (x: Ghost.erased b{re.refi.f x})
+: Steel (ref a (refined_pcm re.refi))
     (r `pts_to` x)
     (fun r' -> r' `pts_to` Ghost.reveal x)
     (fun _ -> True)
-    (fun _ r' _ -> r' == ref_refine r re u)
+    (fun _ r' _ -> r' == ref_refine r re)
 
 val unrefine
   (#opened:Steel.Memory.inames)
   (#a:Type) (#b:Type) (#p: refined_one_pcm b)
   (r': ref a p)
-  (re: pcm_refinement p) (u: pcm_unrefinement re)
-  (r: ref a (refined_pcm re)) (x: Ghost.erased b{re.f x})
+  (re: pcm_refinement p)
+  (r: ref a (refined_pcm re.refi))
+  (x: Ghost.erased b{re.refi.f x})
 : A.SteelGhost unit opened
     (r `pts_to` Ghost.reveal x)
     (fun _ -> r' `pts_to` x)
-    (fun _ -> r == ref_refine r' re u)
+    (fun _ -> r == ref_refine r' re)
     (fun _ _ _ -> True)
 
 (** Generic read.
