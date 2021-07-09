@@ -7,7 +7,7 @@ module A = Steel.Effect.Atomic
 
 /// Example 1: swapping the coordinates of a 2d point
 
-open PCM.POD
+open FStar.PCM.POD
 open PointStruct
 
 /// We can write the following function that swaps the x and y fields of a given point:

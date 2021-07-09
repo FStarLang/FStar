@@ -276,8 +276,10 @@ noeq type pcm_refinement #a (p: pcm a) = {
   u: pcm_unrefinement refi;
 }
 
+let refinement_f (#p: pcm 'a) (r: pcm_refinement p) = r.refi.f
+
 let refined_pcm (#p: pcm 'a) (r: pcm_refinement p)
-: refined_one_pcm (refine_t r.refi.f)
+: refined_one_pcm (refine_t (refinement_f r))
 = refined_pcm' r.refi
 
 (** Given PCMs (p: pcm a) and (q: pcm b), a (pcm_lens p q) is a (lens a b) where

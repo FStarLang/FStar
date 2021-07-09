@@ -1,7 +1,7 @@
 module PointStruct
 
 open AggregateRef
-open PCM.POD
+open FStar.PCM.POD
 open FStar.PCM
 open FStar.PCM.Extras
 open FStar.FunctionalExtensionality
