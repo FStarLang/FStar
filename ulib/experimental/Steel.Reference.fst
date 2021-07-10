@@ -373,7 +373,7 @@ let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
-  = H.ghost_pts_to_injective_eq r (raise_erased v0) (raise_erased v1)
+  = H.ghost_pts_to_injective_eq #_ #_ #p #q r (raise_erased v0) (raise_erased v1)
 
 let ghost_read_pt #a #u #p #v r =
   let x = H.ghost_read r in
