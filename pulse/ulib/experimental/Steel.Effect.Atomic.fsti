@@ -173,18 +173,22 @@ unfold
 let subcomp_pre (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (_:squash (can_be_split pre_g pre_f))
-  (_:squash (equiv_forall post_f post_g))
-: pure_pre
-// The call to rewrite_with_tactic allows us to reduce VCs in a controlled way, once all
+  (#frame:vprop)
+  (_:squash (can_be_split pre_g (pre_f `star` frame)))
+  (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
+  : pure_pre
+// The call to with_tactic allows us to reduce VCs in a controlled way, once all
 // uvars have been resolved.
 // To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
 = T.rewrite_with_tactic vc_norm (squash (
-  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0)  pre_f)) /\
-  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)).
-      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-  )
- ))
+  can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+  (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+     can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
+     ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+  ))
+))
+
 
 /// Subtyping combinator for Steel atomic computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -202,8 +206,10 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
-  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
-  (#[@@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
+  (#[@@@ framing_implicit] frame:vprop)
+  (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
+  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#[@@@ framing_implicit] p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   (f:repr a framed_f opened_invariants o1 pre_f post_f req_f ens_f)
 : Pure (repr a framed_g opened_invariants o2 pre_g post_g req_g ens_g)
        (requires (o1 = Unobservable || o2 = Observable) /\
@@ -213,12 +219,13 @@ val subcomp (a:Type)
 /// Logical precondition for the if_then_else combinator
 unfold
 let if_then_else_req
-  (#pre_f:pre_t) (#pre_g:pre_t)
-  (s: squash (can_be_split pre_f pre_g))
+  (#pre_f:pre_t) (#pre_g:pre_t) (#frame_f #frame_g:vprop)
+  (s_pre: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
-: req_t pre_f
+: req_t (pre_f `star` frame_f)
 = fun h ->
+    can_be_split_trans (pre_f `star` frame_f) (pre_g `star` frame_g) pre_g;
     (p ==> req_then (focus_rmem h pre_f)) /\
     ((~ p) ==> req_else (focus_rmem h pre_g))
 
@@ -226,12 +233,15 @@ let if_then_else_req
 unfold
 let if_then_else_ens (#a:Type)
   (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
-  (s1 : squash (can_be_split pre_f pre_g))
-  (s2 : squash (equiv_forall post_f post_g))
+  (#frame_f #frame_g:vprop)
+  (s1: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
+  (s2: squash (equiv_forall (fun x -> post_f x `star` frame_f) (fun x -> post_g x `star` frame_g)))
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
-: ens_t pre_f a post_f
+: ens_t (pre_f `star` frame_f) a (fun x -> post_f x `star` frame_f)
 = fun h0 x h1 ->
+    can_be_split_trans (pre_f `star` frame_f) (pre_g `star` frame_g) pre_g;
+    can_be_split_trans (post_f x `star` frame_f) (post_g x `star` frame_g) (post_g x);
     (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
     ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
 
@@ -243,23 +253,30 @@ let if_then_else_ens (#a:Type)
 /// the resulting computation therefore is [Unobservable]
 let if_then_else (a:Type)
   (o:inames)
-  (#framed:eqtype_as_type bool)
+  (#framed_f:eqtype_as_type bool)
+  (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
-  (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
-  (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
-  (f:repr a framed o Unobservable pre_f post_f req_then ens_then)
-  (g:repr a framed o Unobservable pre_g post_g req_else ens_else)
+  (#[@@@ framing_implicit] frame_f : vprop)
+  (#[@@@ framing_implicit] frame_g : vprop)
+  (#[@@@ framing_implicit] me1 : squash (maybe_emp framed_f frame_f))
+  (#[@@@ framing_implicit] me2 : squash (maybe_emp framed_g frame_g))
+  (#[@@@ framing_implicit] s_pre: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
+  (#[@@@ framing_implicit] s_post: squash (equiv_forall (fun x -> post_f x `star` frame_f) (fun x -> post_g x `star` frame_g)))
+  (f:repr a framed_f o Unobservable pre_f post_f req_then ens_then)
+  (g:repr a framed_g o Unobservable pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a framed o Unobservable pre_f post_f
+= repr a true o Unobservable
+       (pre_f `star` frame_f) (fun x -> post_f x `star` frame_f)
        (if_then_else_req s_pre req_then req_else p)
        (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 /// Assembling the combinators defined above into an actual effect
 /// The total keyword ensures that all ghost and atomic computations terminate.
+[@@ ite_soundness_by ite_attr]
 total
 reflectable
 effect {
@@ -283,6 +300,7 @@ effect {
 /// that SteelAtomic computations are distinct from any computation with the
 /// SteelAGCommon effect, while allowing this effect to directly inherit
 /// the SteelAGCommon combinators
+[@@ ite_soundness_by ite_attr]
 total
 reflectable
 new_effect SteelAtomicBase = SteelAGCommon
@@ -365,7 +383,7 @@ effect SteelAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
 /// Using any SteelGhost computation in a computationally relevant context will require the
 /// computation to have a non-informative (erasable) return value to ensure the soundness
 /// of the extraction. If this is not the case, the F* typechecker will raise an error
-[@@ erasable]
+[@@ erasable; ite_soundness_by ite_attr]
 total
 reflectable
 new_effect SteelGhostBase = SteelAGCommon

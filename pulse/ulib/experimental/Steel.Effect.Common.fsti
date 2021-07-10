@@ -423,6 +423,9 @@ val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
   : Lemma (requires (forall (x:a) (y:b). t1 x y `equiv` t2 y))
           (ensures t1 `can_be_split_post` t2)
 
+val equiv_forall_refl (#a:Type) (t:post_t a)
+  : Lemma (t `equiv_forall` t)
+
 val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
   : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
           (ensures t1 `equiv_forall` t2)
@@ -2175,12 +2178,11 @@ let ite_soundness_tac () : Tac unit =
   match goals () with
   | [] -> fail "should not happen"
   | _::tl -> set_goals tl;
-  // These two goals are the separation logic equiv_forall and can_be_split.
-  // For the if branch, they can be solve by reflexivity.
-  // For the else branch, they need to call hypotheses in the context.
-  // These proofs are very simple, and can be handled by SMT, so we avoid
-  // writing tactics for it
-  smt ();
+
+  or_else (fun _ -> apply_lemma (`equiv_forall_refl)) assumption;
+  or_else (fun _ -> apply_lemma (`can_be_split_refl)) assumption;
+
+  // Discharging the maybe_emp by SMT
   smt ();
   // Now propagating all equalities for the requires/ensures
   set_goals loggoals;
