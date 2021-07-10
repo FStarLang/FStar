@@ -89,6 +89,7 @@ let elim_conjunction p1 p1' p2 p2' = ()
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()
 let can_be_split_post_elim t1 t2 = ()
+let equiv_forall_refl t = ()
 let equiv_forall_elim t1 t2 = ()
 
 let equiv_refl x = ()
