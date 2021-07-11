@@ -199,7 +199,7 @@ let intro_pure #a #p #f
   : SteelT unit
            (PR.pts_to r h)
            (fun _ -> pts_to_body r f v h)
-  = rewrite_slprop _ _ (fun m ->
+  = rewrite_slprop (PR.pts_to r h) (pts_to_body _ _ _ _) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m)
 
