@@ -305,9 +305,10 @@ val arg_as_bool : arg -> option<bool>
 val arg_as_char : arg -> option<FStar.Char.char>
 val arg_as_string : arg -> option<string>
 val arg_as_list : embedding<'a> -> arg -> option<list<'a>>
-val arg_as_bounded_int : arg -> option<(fv * Z.t)>
+val arg_as_bounded_int : arg -> option<(fv * Z.t * option<S.meta_source_info>)>
 
 val int_as_bounded : fv -> Z.t -> t
+val with_meta_ds : t -> option<meta_source_info> -> t
 
 val unary_int_op : (Z.t -> Z.t) -> (args -> option<t>)
 val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option<t>)

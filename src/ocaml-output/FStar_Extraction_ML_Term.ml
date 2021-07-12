@@ -2577,6 +2577,39 @@ and (term_as_mlexpr' :
            (FStar_Extraction_ML_Syntax.ml_unit,
              FStar_Extraction_ML_Syntax.E_ERASABLE,
              FStar_Extraction_ML_Syntax.MLTY_Erased)
+       | FStar_Syntax_Syntax.Tm_meta
+           (t1, FStar_Syntax_Syntax.Meta_desugared
+            (FStar_Syntax_Syntax.Machine_integer (signedness, width)))
+           ->
+           let t2 = FStar_Syntax_Subst.compress t1 in
+           let t3 = FStar_Syntax_Util.unascribe t2 in
+           (match t3.FStar_Syntax_Syntax.n with
+            | FStar_Syntax_Syntax.Tm_app (hd, (x, uu___1)::[]) ->
+                let x1 = FStar_Syntax_Subst.compress x in
+                let x2 = FStar_Syntax_Util.unascribe x1 in
+                (match x2.FStar_Syntax_Syntax.n with
+                 | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
+                     (repr, uu___2)) ->
+                     let uu___3 =
+                       let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                       FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
+                         uu___4 t3 true in
+                     (match uu___3 with
+                      | (uu___4, ty, uu___5) ->
+                          let ml_ty = term_as_mlty g ty in
+                          let ml_const =
+                            FStar_Const.Const_int
+                              (repr,
+                                (FStar_Pervasives_Native.Some
+                                   (signedness, width))) in
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Extraction_ML_Util.mlexpr_of_const
+                                t3.FStar_Syntax_Syntax.pos ml_const in
+                            FStar_Extraction_ML_Syntax.with_ty ml_ty uu___7 in
+                          (uu___6, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
+                 | uu___2 -> term_as_mlexpr g t3)
+            | uu___1 -> term_as_mlexpr g t3)
        | FStar_Syntax_Syntax.Tm_meta (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->

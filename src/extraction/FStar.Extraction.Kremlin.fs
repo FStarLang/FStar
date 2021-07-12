@@ -1136,8 +1136,8 @@ and translate_constant c: expr =
       let c = EConstant (UInt32, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])
-  | MLC_Int (s, Some _) ->
-      failwith "impossible: machine integer not desugared to a function call"
+  | MLC_Int (s, Some (sg, wd)) ->
+      EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
   | MLC_Bytes _ ->

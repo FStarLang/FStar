@@ -246,7 +246,7 @@ and free_type_vars env t = match (unparen t).tm with
   | LexList l -> List.collect (free_type_vars env) l
   | WFOrder (rel, e) ->
     (free_type_vars env rel) @ (free_type_vars env e)
-  
+
   | Paren t -> failwith "impossible"
 
   | Ascribed(t, t', tacopt) ->
@@ -927,8 +927,10 @@ and desugar_machine_integer env repr (signedness, width) range =
       end
     | None ->
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
-  let repr = S.mk (Tm_constant (Const_int (repr, None))) range in
-  S.mk (Tm_app (lid, [repr, as_implicit false])) range
+  let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
+  let app = S.mk (Tm_app (lid, [repr', as_implicit false])) range in
+  S.mk (Tm_meta (app, Meta_desugared
+                 (Machine_integer (signedness, width)))) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
   let mk e = S.mk e top.range in
@@ -2647,7 +2649,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           ite_wp = dummy_tscheme;
           close_wp = dummy_tscheme;
           trivial = dummy_tscheme;
-          
+
           repr = Some (lookup "repr");
           return_repr = Some (lookup "return");
           bind_repr = Some (lookup "bind");
@@ -2672,7 +2674,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
             else dummy_tscheme, dummy_tscheme;
           l_if_then_else =
             if has_if_then_else then lookup "if_then_else" |> to_comb
-            else dummy_tscheme, dummy_tscheme;            
+            else dummy_tscheme, dummy_tscheme;
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
@@ -2684,7 +2686,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           ite_wp = lookup "ite_wp";
           close_wp = lookup "close_wp";
           trivial = lookup "trivial";
-          
+
           repr = if rr then Some (lookup "repr") else None;
           return_repr = if rr then Some (lookup "return") else None;
           bind_repr = if rr then Some (lookup "bind") else None
@@ -2785,8 +2787,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     in
     let monad_env = env in
     let env = push_sigelt env0 se in
-    let env = 
-      ed.actions |> List.fold_left 
+    let env =
+      ed.actions |> List.fold_left
         (fun env a -> push_sigelt env (U.action_as_lb mname a a.action_defn.pos))
         env
     in

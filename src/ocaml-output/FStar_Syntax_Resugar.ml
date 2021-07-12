@@ -1388,6 +1388,8 @@ let rec (resugar_term' :
                       mk uu___2
                   | uu___2 -> t1 in
                 resugar_seq term
+            | FStar_Syntax_Syntax.Machine_integer (uu___2, uu___3) ->
+                resugar_term' env e
             | FStar_Syntax_Syntax.Primop -> resugar_term' env e
             | FStar_Syntax_Syntax.Masked_effect -> resugar_term' env e
             | FStar_Syntax_Syntax.Meta_smt_pat -> resugar_term' env e in

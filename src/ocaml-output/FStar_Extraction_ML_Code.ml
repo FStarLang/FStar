@@ -395,6 +395,29 @@ let (string_of_mlconstant :
         (s, FStar_Pervasives_Native.Some (uu___, FStar_Const.Int8)) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some (uu___, FStar_Const.Int16)) -> s
+    | FStar_Extraction_ML_Syntax.MLC_Int
+        (v, FStar_Pervasives_Native.Some (s, w)) ->
+        let sign =
+          match s with
+          | FStar_Const.Signed -> "Int"
+          | FStar_Const.Unsigned -> "UInt" in
+        let ws =
+          match w with
+          | FStar_Const.Int8 -> "8"
+          | FStar_Const.Int16 -> "16"
+          | FStar_Const.Int32 -> "32"
+          | FStar_Const.Int64 -> "64" in
+        let z = Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat v "\")") in
+        let u =
+          match s with
+          | FStar_Const.Signed -> ""
+          | FStar_Const.Unsigned -> "u" in
+        Prims.op_Hat "(FStar_"
+          (Prims.op_Hat sign
+             (Prims.op_Hat ws
+                (Prims.op_Hat "."
+                   (Prims.op_Hat u
+                      (Prims.op_Hat "int_to_t (" (Prims.op_Hat z "))"))))))
     | FStar_Extraction_ML_Syntax.MLC_Int (s, FStar_Pervasives_Native.None) ->
         Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat s "\")")
     | FStar_Extraction_ML_Syntax.MLC_Float d -> FStar_Util.string_of_float d
