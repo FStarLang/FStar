@@ -1656,6 +1656,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     let t = norm cfg env [] t in
     let cfg, stack =
       if cfg.steps.pure_subterms_within_computations
+      && false
       then
         let new_steps = [PureSubtermsWithinComputations;
                          Primops;

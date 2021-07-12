@@ -4739,6 +4739,7 @@ and (reduce_impure_comp :
               let uu___ =
                 if
                   (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.pure_subterms_within_computations
+                    && false
                 then
                   let new_steps =
                     [FStar_TypeChecker_Env.PureSubtermsWithinComputations;
