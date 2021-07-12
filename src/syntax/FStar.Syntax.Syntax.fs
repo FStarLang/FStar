@@ -229,6 +229,7 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -404,7 +405,7 @@ type eff_decl = {
   mname       : lident;
 
   cattributes : list<cflag>;
-  
+
   univs       : univ_names;
   binders     : binders;
 
@@ -466,7 +467,7 @@ type sigelt' =
   | Sig_fail              of list<int>         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
                           * list<sigelt>       (* The sigelts to be checked *)
-  
+
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;

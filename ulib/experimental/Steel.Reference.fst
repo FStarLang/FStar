@@ -209,101 +209,116 @@ let cas_pt #t #uses r v v_old v_new =
                  (fun _ -> ());
   return b
 
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
+(* Library for references with fractional permissions.
+   Permissions need to be an index of the vprop ptr.
    It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
    Using the value of the ref as a selector is ok because refs with fractional permissions
    all share the same value.
    Refs on PCM are more complicated, and likely not usable with selectors
 *)
 
-let ptr r = Mem.h_exists (pts_to_sl r full_perm)
+let ptrp r p = Mem.h_exists (pts_to_sl r p)
 
-val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
-let ptr_sel' #a r = fun h ->
-  let x = id_elim_exists #(erased a) (pts_to_sl r full_perm) h in
+val ptr_sel' (#a:Type0) (r: ref a) (p: perm) : selector' a (ptrp r p)
+let ptr_sel' #a r p = fun h ->
+  let x = id_elim_exists #(erased a) (pts_to_sl r p) h in
   reveal (reveal x)
 
 let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
-  (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
-  : Lemma (ptr_sel' r m0 == ptr_sel' r (Mem.join m0 m1))
-  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r full_perm) (Mem.join m0 m1)) in
-    pts_to_witinv r full_perm;
-    elim_wi (pts_to_sl r full_perm) x y (Mem.join m0 m1)
+  (p: perm)
+  (m0:Mem.hmem (ptrp r p)) (m1:mem{disjoint m0 m1})
+  : Lemma (ptr_sel' r p m0 == ptr_sel' r p (Mem.join m0 m1))
+  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r p) (Mem.join m0 m1)) in
+    pts_to_witinv r p;
+    elim_wi (pts_to_sl r p) x y (Mem.join m0 m1)
 
 let ptr_sel_depends_only_on_core (#a:Type0) (r:ref a)
-  (m0:Mem.hmem (ptr r))
-  : Lemma (ptr_sel' r m0 == ptr_sel' r (core_mem m0))
-  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r full_perm) (core_mem m0)) in
-    pts_to_witinv r full_perm;
-    elim_wi (pts_to_sl r full_perm) x y (core_mem m0)
+  (p: perm) (m0:Mem.hmem (ptrp r p))
+  : Lemma (ptr_sel' r p m0 == ptr_sel' r p (core_mem m0))
+  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r p) (core_mem m0)) in
+    pts_to_witinv r p;
+    elim_wi (pts_to_sl r p) x y (core_mem m0)
 
-let ptr_sel r =
-  Classical.forall_intro_2 (ptr_sel_depends_only_on r);
-  Classical.forall_intro (ptr_sel_depends_only_on_core r);
-  ptr_sel' r
+let ptrp_sel r p =
+  Classical.forall_intro_2 (ptr_sel_depends_only_on r p);
+  Classical.forall_intro (ptr_sel_depends_only_on_core r p);
+  ptr_sel' r p
 
-let ptr_sel_interp #a r m = pts_to_witinv r full_perm
+let ptrp_sel_interp #a r p m = pts_to_witinv r p
 
-let intro_ptr_interp r v m = intro_h_exists v (pts_to_sl r full_perm) m
+let intro_ptrp_interp r p v m = intro_h_exists v (pts_to_sl r p) m
 
-let intro_vptr_lemma (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (pts_to_sl r full_perm v) m)
-  (ensures interp (ptr r) m /\ ptr_sel r m == reveal v)
-  = Mem.intro_h_exists v (pts_to_sl r full_perm) m;
-    pts_to_witinv r full_perm
+let intro_vptr_lemma (#a:Type) (r:ref a) (p: perm) (v:erased a) (m:mem) : Lemma
+  (requires interp (pts_to_sl r p v) m)
+  (ensures interp (ptrp r p) m /\ ptrp_sel r p m == reveal v)
+  = Mem.intro_h_exists v (pts_to_sl r p) m;
+    pts_to_witinv r p
 
-let elim_vptr_lemma (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (ptr r) m /\ ptr_sel r m == reveal v)
-  (ensures interp (pts_to_sl r full_perm v) m)
-  = Mem.elim_h_exists (pts_to_sl r full_perm) m;
-    pts_to_witinv r full_perm
+let elim_vptr_lemma (#a:Type) (r:ref a) (p: perm) (v:erased a) (m:mem) : Lemma
+  (requires interp (ptrp r p) m /\ ptrp_sel r p m == reveal v)
+  (ensures interp (pts_to_sl r p v) m)
+  = Mem.elim_h_exists (pts_to_sl r p) m;
+    pts_to_witinv r p
 
-let intro_vptr (#a:Type) (#opened:inames) (r:ref a) (v:erased a)
-  : SteelGhost unit opened (pts_to r full_perm v) (fun _ -> vptr r)
+let intro_vptr (#a:Type) (#opened:inames) (r:ref a) (p: perm) (v:erased a)
+  : SteelGhost unit opened (pts_to r p v) (fun _ -> vptrp r p)
                        (requires fun _ -> True)
-                       (ensures fun _ _ h1 -> sel r h1 == reveal v)
-  = change_slprop_2 (pts_to r full_perm v) (vptr r) v (intro_vptr_lemma r v)
+                       (ensures fun _ _ h1 -> h1 (vptrp r p)  == reveal v)
+  = change_slprop_2 (pts_to r p v) (vptrp r p) v (intro_vptr_lemma r p v)
 
-let elim_vptr (#a:Type) (#opened:inames) (r:ref a)
-  : SteelGhost (erased a) opened (vptr r) (fun v -> pts_to r full_perm v)
+let elim_vptr (#a:Type) (#opened:inames) (r:ref a) (p: perm)
+  : SteelGhost (erased a) opened (vptrp r p) (fun v -> pts_to r p v)
                        (requires fun _ -> True)
-                       (ensures fun h0 v _ -> reveal v == sel r h0)
-  = let v = gget (vptr r) in
-    change_slprop (vptr r) (pts_to r full_perm v) v () (elim_vptr_lemma r v);
+                       (ensures fun h0 v _ -> reveal v == h0 (vptrp r p))
+  = let v = gget (vptrp r p) in
+    change_slprop (vptrp r p) (pts_to r p v) v () (elim_vptr_lemma r p v);
     v
 
 let malloc x =
   let r = alloc_pt x in
-  intro_vptr r (hide x);
+  intro_vptr r _ (hide x);
   return r
 
 let free r =
-  let _ = elim_vptr r in
+  let _ = elim_vptr r _ in
   free_pt r
 
-let read r =
-  let _ = elim_vptr r in
+let readp r _ =
+  let _ = elim_vptr r _ in
   let x = read_pt r in
-  intro_vptr r x;
+  intro_vptr r _ x;
   return x
 
 let write r x =
-  let _ = elim_vptr r in
+  let _ = elim_vptr r _ in
   write_pt r x;
-  intro_vptr r x
+  intro_vptr r _ x
+
+let share #a #_ #p r =
+  let x = elim_vptr r p in
+  share_pt r;
+  intro_vptr r _ x;
+  intro_vptr r _ x
+
+let gather_gen #a #_ r p0 p1 =
+  let x1 = elim_vptr r p1 in
+  let x0 = elim_vptr r p0 in
+  gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
+  intro_vptr r (sum_perm p0 p1) x0;
+  sum_perm p0 p1
 
 (*** Lemmas on references *)
 
-let vptr_not_null
+let vptrp_not_null
   #opened #a r
+  p
 = change_slprop_rel
-    (vptr r)
-    (vptr r)
+    (vptrp r p)
+    (vptrp r p)
     (fun x y -> x == y /\ is_null r == false)
-    (fun m -> pts_to_not_null r full_perm (ptr_sel r m) m)
+    (fun m -> pts_to_not_null r p (ptrp_sel r p m) m)
 
 (*** Ghost pointers *)
 
@@ -358,7 +373,7 @@ let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
     (requires fun _ -> True)
     (ensures fun _ _ _ -> v0 == v1)
-  = H.ghost_pts_to_injective_eq r (raise_erased v0) (raise_erased v1)
+  = H.ghost_pts_to_injective_eq #_ #_ #p #q r (raise_erased v0) (raise_erased v1)
 
 let ghost_read_pt #a #u #p #v r =
   let x = H.ghost_read r in
@@ -374,79 +389,94 @@ let ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
 
 (* Selector version of ghost pointers *)
 
-let ghost_ptr r = Mem.h_exists (ghost_pts_to_sl r full_perm)
+let ghost_ptrp r p = Mem.h_exists (ghost_pts_to_sl r p)
 
-val ghost_ptr_sel' (#a:Type0) (r: ghost_ref a) : selector' a (ghost_ptr r)
-let ghost_ptr_sel' #a r = fun h ->
-  let x = id_elim_exists #(erased a) (ghost_pts_to_sl r full_perm) h in
+val ghost_ptr_sel' (#a:Type0) (r: ghost_ref a) (p: perm) : selector' a (ghost_ptrp r p)
+let ghost_ptr_sel' #a r p = fun h ->
+  let x = id_elim_exists #(erased a) (ghost_pts_to_sl r p) h in
   reveal (reveal x)
 
 let ghost_ptr_sel_depends_only_on (#a:Type0) (r:ghost_ref a)
-  (m0:Mem.hmem (ghost_ptr r)) (m1:mem{disjoint m0 m1})
-  : Lemma (ghost_ptr_sel' r m0 == ghost_ptr_sel' r (Mem.join m0 m1))
-  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r full_perm) (Mem.join m0 m1)) in
-    ghost_pts_to_witinv r full_perm;
-    elim_wi (ghost_pts_to_sl r full_perm) x y (Mem.join m0 m1)
+  (p: perm)
+  (m0:Mem.hmem (ghost_ptrp r p)) (m1:mem{disjoint m0 m1})
+  : Lemma (ghost_ptr_sel' r p m0 == ghost_ptr_sel' r p (Mem.join m0 m1))
+  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) (Mem.join m0 m1)) in
+    ghost_pts_to_witinv r p;
+    elim_wi (ghost_pts_to_sl r p) x y (Mem.join m0 m1)
 
 let ghost_ptr_sel_depends_only_on_core (#a:Type0) (r:ghost_ref a)
-  (m0:Mem.hmem (ghost_ptr r))
-  : Lemma (ghost_ptr_sel' r m0 == ghost_ptr_sel' r (core_mem m0))
-  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r full_perm) (core_mem m0)) in
-    ghost_pts_to_witinv r full_perm;
-    elim_wi (ghost_pts_to_sl r full_perm) x y (core_mem m0)
+  (p: perm) (m0:Mem.hmem (ghost_ptrp r p))
+  : Lemma (ghost_ptr_sel' r p m0 == ghost_ptr_sel' r p (core_mem m0))
+  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) (core_mem m0)) in
+    ghost_pts_to_witinv r p;
+    elim_wi (ghost_pts_to_sl r p) x y (core_mem m0)
 
-let ghost_ptr_sel r =
-  Classical.forall_intro_2 (ghost_ptr_sel_depends_only_on r);
-  Classical.forall_intro (ghost_ptr_sel_depends_only_on_core r);
-  ghost_ptr_sel' r
+let ghost_ptrp_sel r p =
+  Classical.forall_intro_2 (ghost_ptr_sel_depends_only_on r p);
+  Classical.forall_intro (ghost_ptr_sel_depends_only_on_core r p);
+  ghost_ptr_sel' r p
 
-let ghost_ptr_sel_interp #a r m = ghost_pts_to_witinv r full_perm
+let ghost_ptrp_sel_interp #a r p m = ghost_pts_to_witinv r p
 
 
-let intro_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (ghost_pts_to_sl r full_perm v) m)
-  (ensures interp (ghost_ptr r) m /\ ghost_ptr_sel r m == reveal v)
-  = Mem.intro_h_exists v (ghost_pts_to_sl r full_perm) m;
-    ghost_pts_to_witinv r full_perm
+let intro_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (p: perm) (v:erased a) (m:mem) : Lemma
+  (requires interp (ghost_pts_to_sl r p v) m)
+  (ensures interp (ghost_ptrp r p) m /\ ghost_ptrp_sel r p m == reveal v)
+  = Mem.intro_h_exists v (ghost_pts_to_sl r p) m;
+    ghost_pts_to_witinv r p
 
-let elim_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (ghost_ptr r) m /\ ghost_ptr_sel r m == reveal v)
-  (ensures interp (ghost_pts_to_sl r full_perm v) m)
-  = Mem.elim_h_exists (ghost_pts_to_sl r full_perm) m;
-    ghost_pts_to_witinv r full_perm
+let elim_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (p: perm) (v:erased a) (m:mem) : Lemma
+  (requires interp (ghost_ptrp r p) m /\ ghost_ptrp_sel r p m == reveal v)
+  (ensures interp (ghost_pts_to_sl r p v) m)
+  = Mem.elim_h_exists (ghost_pts_to_sl r p) m;
+    ghost_pts_to_witinv r p
 
-let intro_ghost_vptr (#a:Type) (#opened:inames) (r:ghost_ref a) (v:erased a)
-  : SteelGhost unit opened (ghost_pts_to r full_perm v) (fun _ -> ghost_vptr r)
+let intro_ghost_vptr (#a:Type) (#opened:inames) (r:ghost_ref a) (p: perm) (v:erased a)
+  : SteelGhost unit opened (ghost_pts_to r p v) (fun _ -> ghost_vptrp r p)
                        (requires fun _ -> True)
-                       (ensures fun _ _ h1 -> ghost_sel r h1 == reveal v)
-  = change_slprop_2 (ghost_pts_to r full_perm v) (ghost_vptr r) v (intro_ghost_vptr_lemma r v)
+                       (ensures fun _ _ h1 -> h1 (ghost_vptrp r p) == reveal v)
+  = change_slprop_2 (ghost_pts_to r p v) (ghost_vptrp r p) v (intro_ghost_vptr_lemma r p v)
 
 let elim_ghost_vptr (#a:Type) (#opened:inames) (r:ghost_ref a)
-  : SteelGhost (erased a) opened (ghost_vptr r) (fun v -> ghost_pts_to r full_perm v)
+  (p: perm)
+  : SteelGhost (erased a) opened (ghost_vptrp r p) (fun v -> ghost_pts_to r p v)
                        (requires fun _ -> True)
-                       (ensures fun h0 v _ -> reveal v == ghost_sel r h0)
-  = let v = gget (ghost_vptr r) in
-    change_slprop (ghost_vptr r) (ghost_pts_to r full_perm v) v () (elim_ghost_vptr_lemma r v);
+                       (ensures fun h0 v _ -> reveal v == h0 (ghost_vptrp r p))
+  = let v = gget (ghost_vptrp r p) in
+    change_slprop (ghost_vptrp r p) (ghost_pts_to r p v) v () (elim_ghost_vptr_lemma r p v);
     v
 
 let ghost_alloc x =
   let r = ghost_alloc_pt x in
-  intro_ghost_vptr r x;
+  intro_ghost_vptr r _ x;
   r
 
 let ghost_free r =
-  let _ = elim_ghost_vptr r in
+  let _ = elim_ghost_vptr r _ in
   ghost_free_pt r
 
-let ghost_read r =
-  let _ = elim_ghost_vptr r in
+let ghost_readp r _ =
+  let _ = elim_ghost_vptr r _ in
   let x = ghost_read_pt r in
-  intro_ghost_vptr r x;
+  intro_ghost_vptr r _ x;
   x
 
 let ghost_write r x =
-  let _ = elim_ghost_vptr r in
+  let _ = elim_ghost_vptr r _ in
   ghost_write_pt r x;
-  intro_ghost_vptr r x
+  intro_ghost_vptr r _ x
+
+let ghost_share #a #_ #p r =
+  let x = elim_ghost_vptr r p in
+  ghost_share_pt r;
+  intro_ghost_vptr r _ x;
+  intro_ghost_vptr r _ x
+
+let ghost_gather_gen #a #_ r p0 p1 =
+  let x1 = elim_ghost_vptr r p1 in
+  let x0 = elim_ghost_vptr r p0 in
+  ghost_gather_pt #_ #_ #p0 #p1 #x0 #x1 r;
+  intro_ghost_vptr r (sum_perm p0 p1) x0;
+  sum_perm p0 p1
