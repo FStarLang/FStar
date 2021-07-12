@@ -80,7 +80,7 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 
-let rec sum (l : list int) : IdT int
- = match l with
-   | _ -> 0
-   | x::xs -> x + sum xs
+let rec sum (l : list int) : IdT int =
+  match l with
+  | [] -> 0
+  | x::xs -> x + sum xs
