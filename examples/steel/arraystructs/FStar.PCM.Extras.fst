@@ -74,6 +74,7 @@ let pcm_lens_frame_pres #a #b #p #q l s v f =
       = () in ()
     in FStar.Classical.forall_intro aux)))
 
+(*
 (** Refinement of union to the kth case *)
 
 let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
@@ -107,6 +108,7 @@ let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
       kw
     end else None
   | _ -> None
+*)
 
 let conj_unrefinement (#p: pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
