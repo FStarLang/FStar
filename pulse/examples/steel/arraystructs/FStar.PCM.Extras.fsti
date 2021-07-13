@@ -187,18 +187,13 @@ val compatible_pcm_morphism
   (x y: Ghost.erased 'a)
 : Lemma (requires compatible p x y) (ensures compatible q (f x) (f y))
 
-(** A refinement of a PCM (p: pcm a) consists of:
-    (1) A set of elements f:(a -> prop) closed under (op p)
-    (2) An element new_unit which satisfies the unit laws on the subset f
-        and p.refine *)
+(** A refinement of a PCM (p: pcm a) consists of a set of elements
+    f:(a -> prop) closed under (op p) *)
 let refine_t (f: 'a -> prop) = x:'a{f x}
 noeq type pcm_refinement' #a (p: pcm a) = {
   f: a -> prop;
+  f_closed_one: squash (f (one p));
   f_closed_comp: x: refine_t f -> y: a{composable p x y} -> Lemma (f (op p x y));
-  new_one: (new_one:refine_t f{p.refine new_one});
-  new_one_is_refined_unit: x: refine_t f -> Lemma (composable p x new_one /\ op p x new_one == x);
-  new_one_comp: x: refine_t f -> y: refine_t f{composable p x y} ->
-    Lemma (requires op p x y == new_one) (ensures x == new_one /\ y == new_one);
 }
 
 let pcm_refine_comp (#p: pcm 'a) (r: pcm_refinement' p): symrel (refine_t r.f) = composable p
@@ -214,29 +209,23 @@ let refined_one_pcm a = p:pcm a{
   (forall (x:a) (y:a{composable p x y}).{:pattern (composable p x y)}
    op p x y == one p ==> x == one p /\ y == one p)}
 
-let refined_pcm' (#p: pcm 'a) (r: pcm_refinement' p): refined_one_pcm (refine_t r.f) =
-  let p' = {
-    p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = r.new_one};
-    comm = (fun x y -> p.comm x y);
-    assoc = (fun x y z -> p.assoc x y z);
-    assoc_r = (fun x y z -> p.assoc_r x y z);
-    is_unit = (fun x -> r.new_one_is_refined_unit x);
-    refine = p.refine;
-  } in
-  let aux (x:refine_t r.f) (y:_{composable p' x y})
-  : Lemma (requires op p' x y == one p') (ensures x == one p' /\ y == one p')
-    [SMTPat (op p' x y)]
-  = r.new_one_comp x y
-  in p'
+let refined_pcm' (#p: refined_one_pcm 'a) (r: pcm_refinement' p): refined_one_pcm (refine_t r.f) = {
+  p = {composable = pcm_refine_comp r; op = pcm_refine_op r; one = p.p.one};
+  comm = (fun x y -> p.comm x y);
+  assoc = (fun x y z -> p.assoc x y z);
+  assoc_r = (fun x y z -> p.assoc_r x y z);
+  is_unit = (fun x -> p.is_unit x);
+  refine = p.refine;
+}
 
-val pcm_refinement'_comp_new_one
-  (#p: pcm 'a) (re: pcm_refinement' p)
+val pcm_refinement'_comp_one
+  (#p: refined_one_pcm 'a) (re: pcm_refinement' p)
   (x: refine_t re.f) (y: 'a{composable p x y})
-: Lemma (composable p re.new_one y /\ re.f (op p re.new_one y) /\
-         composable (refined_pcm' re) x (op p re.new_one y))
+: Lemma (composable p (one p) y /\ re.f (op p (one p) y) /\
+         composable (refined_pcm' re) x (op p (one p) y))
 
 val pcm_refinement'_compatible_closed
-  (#p: pcm 'a) (re: pcm_refinement' p)
+  (#p: refined_one_pcm 'a) (re: pcm_refinement' p)
   (x: refine_t re.f) (y: 'a{compatible p x y})
 : Lemma (re.f y /\ compatible (refined_pcm' re) x y)
 
@@ -248,19 +237,19 @@ let frame_pres_lift (p: pcm 'a) (x y: Ghost.erased 'a) (q: pcm 'b) (x' y': Ghost
   frame_preserving_upd p x y ->
   frame_preserving_upd q x' y'
 
-let pcm_unrefinement (#p: pcm 'a) (r: pcm_refinement' p) =
+let pcm_unrefinement (#p: refined_one_pcm 'a) (r: pcm_refinement' p) =
   x: Ghost.erased (refine_t r.f) ->
   y: Ghost.erased (refine_t r.f) ->
   frame_pres_lift (refined_pcm' r) x y p (Ghost.reveal x) (Ghost.reveal y)
 
-noeq type pcm_refinement #a (p: pcm a) = {
+noeq type pcm_refinement #a (p: refined_one_pcm a) = {
   refi: pcm_refinement' p;
   u: pcm_unrefinement refi;
 }
 
-let refinement_f (#p: pcm 'a) (r: pcm_refinement p) = r.refi.f
+let refinement_f (#p: refined_one_pcm 'a) (r: pcm_refinement p) = r.refi.f
 
-let refined_pcm (#p: pcm 'a) (r: pcm_refinement p)
+let refined_pcm (#p: refined_one_pcm 'a) (r: pcm_refinement p)
 : refined_one_pcm (refine_t (refinement_f r))
 = refined_pcm' r.refi
 
@@ -629,53 +618,24 @@ let lens_refine (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q) (re: pcm_refinement'
   put_put = (fun _ _ _ -> ());
 }
 
+let extend_refinement_f_closed_one (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
+  (l: pcm_lens p q) (re: pcm_refinement' q)
+: squash (extend_refinement_f l re (one p))
+= l.get_morphism.f_one ()
+
 let extend_refinement_f_closed (#p: pcm 'a) (#q: pcm 'b) (l: pcm_lens p q)
   (re: pcm_refinement' q) (x: refine_t (extend_refinement_f l re))
   (y: 'a{composable p x y})
 : Lemma (extend_refinement_f l re (op p x y))
 = l.get_morphism.f_op x y;
   re.f_closed_comp (get l x) (get l y)
-
-let extend_refinement_new_one (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement' q)
-: new_one:refine_t (extend_refinement_f l re){p.refine new_one}
-= l.put_morphism.f_refine (re.new_one, one p); put l re.new_one (one p)
-
-let extend_refinement_new_one_is_refined_unit
-  (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b) (l: pcm_lens p q)
-  (re: pcm_refinement' q) (x: refine_t (extend_refinement_f l re))
-: Lemma (composable p x (extend_refinement_new_one l re) /\
-         op p x (extend_refinement_new_one l re) == x)
-= re.new_one_is_refined_unit (get l x);
-  p.is_unit x;
-  l.put_morphism.f_op (get l x, x) (re.new_one, one p)
-
-let extend_refinement_new_one_comp (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
-  (l: pcm_lens p q) (re: pcm_refinement' q)
-  (x: refine_t (extend_refinement_f l re))
-  (y: refine_t (extend_refinement_f l re){composable p x y})
-: Lemma
-    (requires op p x y == extend_refinement_new_one l re)
-    (ensures
-      x == extend_refinement_new_one l re /\ 
-      y == extend_refinement_new_one l re)
-= assert (re.f (get l x));
-  assert (re.f (get l y));
-  assert (op p x y == put l re.new_one (one p));
-  l.get_morphism.f_op x y;
-  re.new_one_comp (get l x) (get l y);
-  assert (get l x == re.new_one);
-  assert (get l y == re.new_one);
-  admit()
   
 let extend_refinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   (l: pcm_lens p q) (re: pcm_refinement' q)
 : pcm_refinement' p = {
   f = extend_refinement_f l re;
+  f_closed_one = extend_refinement_f_closed_one l re;
   f_closed_comp = extend_refinement_f_closed l re;
-  new_one = extend_refinement_new_one l re;
-  new_one_is_refined_unit = extend_refinement_new_one_is_refined_unit l re;
-  new_one_comp = extend_refinement_new_one_comp l re;
 }
 
 let pcm_lens_refine_get_morphism_refine
@@ -823,57 +783,34 @@ let pcm_iso_lens_comp (#p: pcm 'a) (#q: pcm 'b) (#r: pcm 'c)
 
 (** The conjunction of two refinements *)
 
-let conj_refinement_f (#p: pcm 'a)
+let conj_refinement_f (#p: refined_one_pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
 : 'a -> prop = conj #'a re1.f re2.f
 
-let conj_refinement_f_closed (#p: pcm 'a)
+let conj_refinement_f_closed_one (#p: refined_one_pcm 'a)
+  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
+: squash (conj_refinement_f re1 re2 (one p))
+= ()
+
+let conj_refinement_f_closed (#p: refined_one_pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
   (x: refine_t (conj_refinement_f re1 re2))
   (y: 'a{composable p x y})
 : Lemma (conj_refinement_f re1 re2 (op p x y))
-= pcm_refinement'_comp_new_one re1 x y;
-  re1.f_closed_comp x (op p re1.new_one y);
-  pcm_refinement'_comp_new_one re2 x (op p re1.new_one y);
-  re2.f_closed_comp x (op p re2.new_one (op p re1.new_one y));
-  p.assoc x re2.new_one (op p re1.new_one y);
-  re2.new_one_is_refined_unit x;
-  p.assoc x re1.new_one y;
-  re1.new_one_is_refined_unit x
+= p.is_unit y;
+  re1.f_closed_comp (one p) y;
+  p.comm (one p) y;
+  re2.f_closed_comp x y
 
-(* re1.new_one and re2.new_one both work; we go with re2 *)
-let conj_refinement_new_one (#p: pcm 'a)
-  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
-: refine_t (conj_refinement_f re1 re2)
-= re2.new_one
-
-let conj_refinement_new_one_is_refined_unit (#p: pcm 'a)
-  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
-  (x: refine_t (conj_refinement_f re1 re2))
-: Lemma (composable p x (conj_refinement_new_one re1 re2) /\
-         op p x (conj_refinement_new_one re1 re2) == x)
-= re2.new_one_is_refined_unit x
-
-let conj_refinement_new_one_comp (#p: pcm 'a)
-  (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
-  (x: refine_t (conj_refinement_f re1 re2))
-  (y: refine_t (conj_refinement_f re1 re2){composable p x y})
-: Lemma 
-    (requires op p x y == conj_refinement_new_one re1 re2)
-    (ensures x == conj_refinement_new_one re1 re2 /\ y == conj_refinement_new_one re1 re2)
-= admit()
-
-let conj_refinement (#p: pcm 'a)
+let conj_refinement (#p: refined_one_pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
 : pcm_refinement' p = {
   f = conj_refinement_f re1 re2;
+  f_closed_one = conj_refinement_f_closed_one re1 re2;
   f_closed_comp = conj_refinement_f_closed re1 re2;
-  new_one = conj_refinement_new_one re1 re2;
-  new_one_is_refined_unit = conj_refinement_new_one_is_refined_unit re1 re2;
-  new_one_comp = conj_refinement_new_one_comp re1 re2;
 }
 
-let pcm_refinement'_conj_iso_i (p: pcm 'a)
+let pcm_refinement'_conj_iso_i (p: refined_one_pcm 'a)
   (re1: pcm_refinement' p)
   (re2: pcm_refinement' (refined_pcm' re1))
 : iso (refine_t #'a (conj #'a re1.f re2.f)) (refine_t #(x:'a{re1.f x}) re2.f) =
@@ -881,7 +818,7 @@ let pcm_refinement'_conj_iso_i (p: pcm 'a)
   
 (** A refinement re1 of a refinement re2 of a PCM is isomorphic to a
     refinement by the conjunction of re1 and re2 *)
-let pcm_refinement'_conj_iso (p: pcm 'a)
+let pcm_refinement'_conj_iso (p: refined_one_pcm 'a)
   (re1: pcm_refinement' p)
   (re2: pcm_refinement' (refined_pcm' re1))
 : pcm_iso (refined_pcm' (conj_refinement re1 re2)) (refined_pcm' re2) = {
@@ -909,7 +846,7 @@ let upd_across_pcm_iso
   in FStar.Classical.forall_intro aux;
   w
 
-val conj_unrefinement (#p: pcm 'a)
+val conj_unrefinement (#p: refined_one_pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
   (h1: pcm_unrefinement re1) (h2: pcm_unrefinement re2)
 : pcm_unrefinement (conj_refinement #'a re1 re2)
