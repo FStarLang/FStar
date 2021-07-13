@@ -12,26 +12,28 @@ module A = Steel.Effect.Atomic
 ///
 /// Carrier of PCM for int_or_bool:
 
-[@@erasable]
-noeq type tag = | I' | B'
+type int_or_bool_case = | I | B
 
-val int_or_bool : Type0
+let int_or_bool_cases k = match k with
+  | I -> pod int
+  | B -> pod bool
+let int_or_bool = union int_or_bool_cases
 
 /// PCM for int_or_bool:
 
-val int_or_bool_pcm : refined_one_pcm int_or_bool
+let int_or_bool_cases_pcm k: refined_one_pcm (int_or_bool_cases k) = match k with
+  | I -> pod_pcm int
+  | B -> pod_pcm bool
+  
+let int_or_bool_pcm: refined_one_pcm int_or_bool = union_pcm int_or_bool_cases_pcm
 
 /// (mk_int i) represents (union int_or_bool){.i = i}
 /// (mk_bool b) represents (union int_or_bool){.b = b}
 
-let int_or_bool_cases k : Type = match k with
-  | I' -> pod int
-  | B' -> pod bool
+//val mk: tag -> Ghost.erased (int_or_bool_cases tag) -> Ghost.erased int_or_bool
 
-val mk: tag -> Ghost.erased (int_or_bool_cases tag) -> Ghost.erased int_or_bool
-
-//val mk_int (i: Ghost.erased (pod int)): Ghost.erased int_or_bool
-//val mk_bool (i: Ghost.erased (pod bool)): Ghost.erased int_or_bool
+val mk_int (i: Ghost.erased (pod int)): Ghost.erased int_or_bool
+val mk_bool (i: Ghost.erased (pod bool)): Ghost.erased int_or_bool
 
 /// Refinements for cases
 
@@ -70,42 +72,12 @@ val unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
   (q: ref 'a (pod_pcm bool){q == ref_focus (ref_refine p re_b) _b})
 : A.SteelGhostT unit opened (q `pts_to` b) (fun _ -> p `pts_to` mk_bool b)
 
-/// Laws (compare with FStar.PCM.POD.fsti)
+/// Switching the case
 
-val case: Ghost.erased int_or_bool -> GTot (option tag)
-val case_ok1: u:Ghost.erased int_or_bool -> t:tag -> x:typeof_pcm t ->
-  Lemma (case (mk t i) == Some t) [SMTPat (case (mk t i))]
-val case_ok2: u -> Lemma (case u == None <==> u = one _) [SMTPat (case u)]
-val case_ok3: u: _ ->
-  Lemma
-    (requires Some? (case u))
-    (ensures exists i. u == mk (Some?.v (case u)) i) [SMTPat (case u)]
+val switch_to_bool (#i: Ghost.erased int)
+  (p: ref 'a int_or_bool_pcm) (b: bool)
+: SteelT unit (p `pts_to` mk_int (some i)) (fun _ -> p `pts_to` mk_bool (some b))
 
-// let is_int_int (i:Ghost.erased (pod int)): Lemma (is_int (mk_int i)) = ()
-// let is_bool_bool (b:Ghost.erased (pod bool)): Lemma (is_bool (mk_bool b)) = ()
-// 
-// let int_not_bool (u: Ghost.erased int_or_bool)
-// : Lemma (requires is_int u) (ensures ~ (is_bool u)) 
-// = ()
-// 
-// let bool_not_int (u: Ghost.erased int_or_bool)
-// : Lemma (requires is_bool u) (ensures ~ (is_int u)) 
-// = ()
-// 
-// val int_compatible (v w: Ghost.erased int_or_bool)
-// : Lemma (requires compatible int_or_bool_pcm v w /\ is_int v) (ensures is_int w)
-//   [SMTPat (compatible int_or_bool_pcm v w); SMTPat (is_int v)]
-// 
-// val bool_compatible (v w: Ghost.erased int_or_bool)
-// : Lemma (requires compatible int_or_bool_pcm v w /\ is_bool v) (ensures is_bool w)
-//   [SMTPat (compatible int_or_bool_pcm v w); SMTPat (is_bool v)]
-//   
-// val int_valid_write (v w: Ghost.erased (pod int))
-// : Lemma
-//     (requires AggregateRef.valid_write (pod_pcm int) v w)
-//     (ensures AggregateRef.valid_write int_or_bool_pcm (mk_int v) (mk_int w))
-//   [SMTPat (AggregateRef.valid_write (pod_pcm int) v w)]
-// 
-// v, w whole
-// I != J
-// valid_write (mk I v) (mk J w) 
+val switch_to_int (#b: Ghost.erased bool)
+  (p: ref 'a int_or_bool_pcm) (i: int)
+: SteelT unit (p `pts_to` mk_bool (some b)) (fun _ -> p `pts_to` mk_int (some i))

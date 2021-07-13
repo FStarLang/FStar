@@ -1,16 +1,19 @@
 module FStar.PCM.POD
 
+open AggregateRef
+module A = Steel.Effect.Atomic
+
 let pod a = option a
 
 let none #a = None #a
 let some x = Some (Ghost.reveal x)
-let is_some v = match Ghost.reveal v with Some _ -> True | None -> False
-let some_v x = match x with Some v -> v
 
 let pod_pcm a = FStar.PCM.Extras.opt_pcm #a
 
-let none_is_unit a = ()
-let is_some_some v = ()
-let some_none_distinct v = ()
-let some_compatible v w = ()
-let some_valid_write v w = ()
+let pod_read r =
+  let Some x = ref_read r in
+  x
+
+let pod_write r y =
+  ref_write r (Some y);
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _)
