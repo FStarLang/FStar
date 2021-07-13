@@ -26,17 +26,24 @@ let compatible_pcm_morphism #a #b #p #q f m x y =
 
 (** Refinements *)
 
-let pcm_refinement'_comp_one #a #p re x y =
-  p.is_unit x;
-  p.assoc_r x (one p) y;
-  re.f_closed_comp (one p) y
+//val pcm_refinement'_compatible_closed
+//  (#p: refined_one_pcm 'a) (re: pcm_refinement' p)
+//  (x: refine_t re.f{~ (x == one p)}) (y: 'a{compatible p x y})
+//: Lemma (re.f y /\ compatible (refined_pcm' re) x y)
+//
+//val pcm_refinement'_comp_new_one
+//  (#p: pcm 'a) (re: pcm_refinement' p)
+//  (x: refine_t re.f) (y: 'a{composable p x y})
+//: Lemma (re.f_comp p (one p) y /\ re.f (op p (one p) y) /\
+//         re.f_comp (refined_pcm' re) x (op p (one p) y))
 
 let pcm_refinement'_compatible_closed #a #p re x y =
   let p' = refined_pcm' re in
   compatible_elim p x y (re.f y) (fun frame ->
    re.f_closed_comp x frame; p.comm frame x);
   compatible_elim p x y (compatible p' x y) (fun frame_x ->
-    pcm_refinement'_comp_one re x frame_x;
+    //pcm_refinement'_comp_one re x frame_x;
+    assume (composable pcm x frame /\ op pcm frame x == y);
     let frame = op p (one p) frame_x in
     p.is_unit x;
     p.comm x frame_x;
