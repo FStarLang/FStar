@@ -2,32 +2,29 @@ module FStar.PCM.POD
 
 open FStar.PCM
 open FStar.PCM.Extras
+open AggregateRef
+open Steel.Effect
 
-val pod: Type u#a -> Type u#a
+let pod: Type u#a -> Type u#a = option
 
-val none: Ghost.erased (pod 'a)
-val some: Ghost.erased 'a -> Ghost.erased (pod 'a)
+let none #a: Ghost.erased (pod a) = None
 
-val is_some: Ghost.erased (pod 'a) -> prop
-val some_v: x:pod 'a{is_some x} -> GTot (y:'a{x == Ghost.reveal (some y)})
+let some (x: Ghost.erased 'a): Ghost.erased (pod 'a) = Some (Ghost.reveal x)
 
-val some': x:'a -> y:pod 'a{y == Ghost.reveal (some x)}
+let pod_pcm (a:Type): refined_one_pcm (pod a) = opt_pcm #a
 
-val pod_pcm (a:Type): refined_one_pcm (pod a)
+val pod_read
+  (#a:Type) (#b:Type) (#x: Ghost.erased b)
+  (r: ref a (pod_pcm b))
+: Steel b
+    (r `pts_to` some x)
+    (fun _ -> r `pts_to` some x)
+    (requires fun _ -> True)
+    (ensures fun _ x' _ -> Ghost.reveal x == x')
 
-val none_is_unit (a:Type): Lemma (Ghost.reveal none == one (pod_pcm a)) [SMTPat (one (pod_pcm a))]
-
-val is_some_some (v:Ghost.erased 'a): Lemma (is_some (some v)) [SMTPat (some v)]
-
-val some_none_distinct (v:pod 'a)
-: Lemma (requires is_some v) (ensures ~ (v == Ghost.reveal none)) [SMTPat (is_some v)]
-
-val some_compatible (v w:pod 'a)
-: Lemma (requires compatible (pod_pcm 'a) v w /\ is_some v) (ensures is_some w)
-  [SMTPat (compatible (pod_pcm 'a) v w); SMTPat (is_some v)]
-  
-val some_valid_write (v w: pod 'a)
-: Lemma
-    (requires is_some v /\ is_some w)
-    (ensures AggregateRef.valid_write (pod_pcm 'a) v w)
-  [SMTPat (is_some v); SMTPat (is_some w)]
+val pod_write
+  (#a:Type) (#b:Type) (#x: Ghost.erased b)
+  (r: ref a (pod_pcm b)) (y: b)
+: SteelT unit
+    (r `pts_to` some x)
+    (fun _ -> r `pts_to` some (Ghost.hide y))

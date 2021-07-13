@@ -124,7 +124,8 @@ let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
 /// - None is the unit of the PCM
 /// - Some (k, x) is a union with tag k and content x
 
-let union (f:'a -> Type) = option (k:'a & f k)
+open FStar.Real
+let union (f:'a -> Type) = option (real & dtuple2 'a f)
 
 let union_comp (p:(k:'a -> pcm ('b k))): symrel (union 'b) = fun x y -> match x, y with
   | None, z | z, None -> True
@@ -727,13 +728,11 @@ type init a =
 
 let init_comp (p: pcm 'a): symrel (init 'a) = fun x y -> match x, y with
   | One, _ | _, One -> True
-  | Uninitialized, Uninitialized -> True
   | Initialized x, Initialized y -> composable p x y
   | _, _ -> False
 
 let init_op (p: pcm 'a) (x: init 'a) (y: init 'a{init_comp p x y}): init 'a = match x, y with
   | One, z | z, One -> z
-  | Uninitialized, Uninitialized -> Uninitialized
   | Initialized x, Initialized y -> Initialized (op p x y)
 
 let init_pcm (p: pcm 'a): pcm (init 'a) = {

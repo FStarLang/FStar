@@ -8,18 +8,6 @@ open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
-type int_or_bool_case = | I | B
-
-let int_or_bool_cases k = match k with
-  | I -> pod int
-  | B -> pod bool
-let int_or_bool = union int_or_bool_cases
-
-let int_or_bool_cases_pcm k : refined_one_pcm (int_or_bool_cases k) = match k with
-  | I -> pod_pcm int
-  | B -> pod_pcm bool
-let int_or_bool_pcm = union_pcm int_or_bool_cases_pcm
-
 let mk_int i = Some (|I, Ghost.reveal i|)
 let mk_bool b = Some (|B, Ghost.reveal b|)
 
@@ -60,3 +48,40 @@ let unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
   (q: ref 'a (pod_pcm bool){q == ref_focus (ref_refine p re_b) _b})
 : A.SteelGhostT unit opened (q `pts_to` b) (fun _ -> p `pts_to` mk_bool b)
 = unaddr_of_union_lens q p _b b
+
+/// Switching the case
+
+let switch_to_bool (#i: Ghost.erased int)
+  (p: ref 'a int_or_bool_pcm) (b: bool)
+: SteelT unit (p `pts_to` mk_int (some i)) (fun _ -> p `pts_to` mk_bool (some b))
+= let u: int_or_bool = Some (|B, Some b|) in
+  assume (forall frame.
+    composable int_or_bool_pcm (mk_int (some i)) frame ==> 
+    composable int_or_bool_pcm u frame);
+  assert (valid_write int_or_bool_pcm (mk_int (some i)) u);
+  ref_write p u;
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
+
+mk_int i = (i, one)
+mk_bool b = (one, b)
+
+thread 1:
+  u.case1 = v1
+  p = &u.case1
+  p `pts_to` case1 (1 v1)
+  (p `pts_to` case1 (0.5 v1) `star`
+  (q `pts_to` case1 (0.5 v1))
+  fork()
+  (p `pts_to` case1 (0.5 v1))
+  (focus (refine p .) . `pts_to` v1)
+
+thread 2:
+  (q `pts_to` case1 (0.5 v1))
+
+let switch_to_int (#b: Ghost.erased bool)
+  (p: ref 'a int_or_bool_pcm) (i: int)
+: SteelT unit (p `pts_to` mk_bool (some b)) (fun _ -> p `pts_to` mk_int (some i))
+= let u: int_or_bool = Some (|I, Some i|) in
+  assume (valid_write int_or_bool_pcm (mk_bool (some b)) u);
+  ref_write p u;
+  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)

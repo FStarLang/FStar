@@ -29,12 +29,12 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
   (* int *r = &p.y; *)
   let r = addr_of_y p in
   (* tmp = *q; *)
-  let tmp = ref_read q in
+  let tmp : int = pod_read q in
   (* *q = *r; *)
-  let vy = ref_read r in
-  ref_write q vy;
+  let vy : int = pod_read r in
+  pod_write q vy;
   (* *r = tmp; *)
-  ref_write r tmp;
+  pod_write r tmp;
   (* Gather *)
   unaddr_of_x p q;
   unaddr_of_y p r;
@@ -52,12 +52,12 @@ let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (pod_pcm 'c)) (q:ref 'b (pod
 : SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
     (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
 = (* A tmp = *p; *)
-  let tmp = ref_read p in
+  let tmp = pod_read p in
   (* *p = *q; *)
-  let vy = ref_read q in
-  ref_write p vy;
+  let vy = pod_read q in
+  pod_write p vy;
   (* *q = tmp *)
-  ref_write q tmp;
+  pod_write q tmp;
   A.return ()
 
 /// Now, point_swap written using generic_swap:
@@ -114,7 +114,8 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
   unaddr_of_y pp2 pp2y;
   (* Gather p *)
   unaddr_of_p1 p pp1;
-  unaddr_of_p2 p pp2
+  unaddr_of_p2 p pp2;
+  A.return ()
 
 /// Struct with potentially uninitialized values
 ///
@@ -135,10 +136,13 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
 /// Unions with these structs in them
 ///   May need particular functional style for unions because can't reason by unification on result of if-then-else
 /// 
+/// Specialized read and write
+/// 
 ///   p: pcm a
 ///   a is the carrier
 ///   secretly: a type b of values that we actually care about
-///   extract: a -> option (b * other things)
+///   lens a (option b)?
+///   pcm_lens a (opt_pcm b)?
 ///
 ///   read:
 ///     p `pts_to` (x: a)
@@ -174,54 +178,56 @@ let int_or_bool_int_swap
 ///   else return p->b ? 1 : 0;
 /// }
 
-let int_or_bool_to_int
+val int_or_bool_to_int
   (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
   (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
-: Steel (pod int)
-    ((is_int `pts_to` some b) `star` (p `pts_to` u))
-    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
-    (requires fun _ -> if b then case u == I else case u == B)
-    (ensures fun _ _ _ -> True)
-= let b = ref_read is_int in
-  if some_v b then begin
-    (* return p->i *)
-    let pi = addr_of_i p in
-    let i = ref_read pi in
-    unaddr_of_i p pi;
-    A.return i
-  end else begin
-    (* return p->b ? 1 : 0 *)
-    let pb = addr_of_b p in
-    let b = ref_read pb in
-    unaddr_of_b p pb;
-    let b = some_v b in
-    if b then some' 1 else some' 0
-  end
-
-let int_or_bool_to_int
-  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
-  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
-: Steel (pod int)
+: Steel int
     ((is_int `pts_to` some b) `star` (p `pts_to` u))
     (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
     (requires fun _ -> if b then (exists i. u == mk_int i) else (exists b. u == mk_bool b))
     (ensures fun _ _ _ -> True)
-= let b = ref_read is_int in
-  if some_v b then begin
+(*= let b = pod_read is_int in
+  if b then begin
     (* return p->i *)
     let pi = addr_of_i p in
-    let i = ref_read pi in
-    unaddr_of_i p pi;
-    A.return i
+    A.sladmit(); A.return (admit())
+    //let i = pod_read pi in
+    //unaddr_of_i p pi;
+    //A.return i
   end else begin
-    (* return p->b ? 1 : 0 *)
-    let pb = addr_of_b p in
-    let b = ref_read pb in
-    unaddr_of_b p pb;
-    let b = some_v b in
-    if b then some' 1 else some' 0
+    A.sladmit(); A.return (admit())
+    //(* return p->b ? 1 : 0 *)
+    //let pb = addr_of_b p in
+    //let b = pod_read pb in
+    //unaddr_of_b p pb;
+    //let b = b in
+    //A.return (if b then 1 else 0)
   end
-    
+*)
+
+//let int_or_bool_to_int
+//  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
+//  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
+//: Steel (pod int)
+//    ((is_int `pts_to` some b) `star` (p `pts_to` u))
+//    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
+//    (requires fun _ -> if b then case u == I else case u == B)
+//    (ensures fun _ _ _ -> True)
+//= let b = pod_read is_int in
+//  if some_v b then begin
+//    (* return p->i *)
+//    let pi = addr_of_i p in
+//    let i = pod_read pi in
+//    unaddr_of_i p pi;
+//    A.return i
+//  end else begin
+//    (* return p->b ? 1 : 0 *)
+//    let pb = addr_of_b p in
+//    let b = pod_read pb in
+//    unaddr_of_b p pb;
+//    let b = some_v b in
+//    if b then some' 1 else some' 0
+//  end
 
 (*
 addr_of
