@@ -1,0 +1,54 @@
+module ListNode
+
+open FStar.PCM.POD
+open FStar.PCM
+open Steel.Effect
+open PointStruct
+open Steel.C.PCM
+
+/// struct node { int i; struct node *next; };
+
+val node : Type u#1
+
+/// PCM for node:
+
+val node_pcm : pcm node
+
+/// (mk_node i next) represents (struct node){.i = i, .next = next}
+
+val mk_node (i: Ghost.erased (pod int)) (next: Ghost.erased (uninit_t (pod (ref node node_pcm)))): Ghost.erased node
+
+/// Lenses for fields
+
+val _i : connection node_pcm (pod_pcm int)
+val _next : connection node_pcm (pcm_uninit (pod_pcm (ref node node_pcm)))
+
+/// Taking pointers to the fields of a node
+
+val addr_of_p1 (#i:_) (#next:_) (p: ref 'a node_pcm)
+: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p _i})
+    (p `pts_to` mk_node i next)
+    (fun q ->
+       (p `pts_to` mk_node (one (pod_pcm int)) next) `star`
+       (q `pts_to` i))
+
+val unaddr_of_p1 (#i:_) (#next:_)
+  (p: ref 'a node_pcm)
+  (q: ref 'a (pod_pcm int){q == ref_focus p _i})
+: SteelT unit
+    ((p `pts_to` mk_node (one (pod_pcm int)) next) `star` (q `pts_to` i))
+    (fun q -> p `pts_to` mk_node i next)
+
+val addr_of_p2 (#i:_) (#next:_) (p: ref 'a node_pcm)
+: SteelT (q:ref 'a (pcm_uninit (pod_pcm (ref node node_pcm))){q == ref_focus p _next})
+    (p `pts_to` mk_node i next)
+    (fun q ->
+       (p `pts_to` mk_node i (one (pcm_uninit (pod_pcm (ref node node_pcm))))) `star`
+       (q `pts_to` next))
+
+val unaddr_of_p2 (#i:_) (#next:_)
+  (p: ref 'a node_pcm)
+  (q: ref 'a (pcm_uninit (pod_pcm (ref node node_pcm))){q == ref_focus p _next})
+: SteelT unit
+    ((p `pts_to` mk_node i (one (pcm_uninit (pod_pcm (ref node node_pcm))))) `star` (q `pts_to` next))
+    (fun q -> p `pts_to` mk_node i next)
