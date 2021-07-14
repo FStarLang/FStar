@@ -34,6 +34,9 @@ val mk_bool (i: Ghost.erased (pod bool)): Ghost.erased int_or_bool
 val _i : connection int_or_bool_pcm (pod_pcm int)
 val _b : connection int_or_bool_pcm (pod_pcm bool)
 
+// Construct using strong_excluded_middle
+//val case_of : int_or_bool -> GTot (option int_or_bool_case)
+
 /// Taking pointers to the i and b cases of an int_or_bool
 
 val addr_of_i (#i: Ghost.erased (pod int)) (p: ref 'a int_or_bool_pcm)
@@ -65,3 +68,8 @@ val switch_to_bool (#i: Ghost.erased int)
 val switch_to_int (#b: Ghost.erased bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
 : SteelT unit (p `pts_to` mk_bool (some b)) (fun _ -> p `pts_to` mk_int (some i))
+
+/// Laws about unions
+
+//compatible p (mk_int i) v
+//==> exists j. v = mk_int j
