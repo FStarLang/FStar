@@ -280,6 +280,7 @@ and meta_source_info =
   | Primop 
   | Masked_effect 
   | Meta_smt_pat 
+  | Machine_integer of (FStar_Const.signedness * FStar_Const.width) 
 and fv_qual =
   | Data_ctor 
   | Record_projector of (FStar_Ident.lident * FStar_Ident.ident) 
@@ -716,6 +717,12 @@ let (uu___is_Masked_effect : meta_source_info -> Prims.bool) =
 let (uu___is_Meta_smt_pat : meta_source_info -> Prims.bool) =
   fun projectee ->
     match projectee with | Meta_smt_pat -> true | uu___ -> false
+let (uu___is_Machine_integer : meta_source_info -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Machine_integer _0 -> true | uu___ -> false
+let (__proj__Machine_integer__item___0 :
+  meta_source_info -> (FStar_Const.signedness * FStar_Const.width)) =
+  fun projectee -> match projectee with | Machine_integer _0 -> _0
 let (uu___is_Data_ctor : fv_qual -> Prims.bool) =
   fun projectee -> match projectee with | Data_ctor -> true | uu___ -> false
 let (uu___is_Record_projector : fv_qual -> Prims.bool) =

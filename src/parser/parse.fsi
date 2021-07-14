@@ -94,6 +94,7 @@ type token =
   | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
+  | LBRACE_COLON_WELL_FOUNDED
   | LBRACE_COLON_PATTERN
   | LBRACE_BAR
   | LBRACE
@@ -160,6 +161,7 @@ type token =
   | ATTRIBUTES
   | ASSUME
   | ASSERT
+  | AS
   | AND
   | AMP
 type tokenId = 
@@ -255,6 +257,7 @@ type tokenId =
     | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
+    | TOKEN_LBRACE_COLON_WELL_FOUNDED
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_LBRACE_BAR
     | TOKEN_LBRACE

@@ -2050,21 +2050,28 @@ and (desugar_machine_integer :
                             tnm in
                         (FStar_Errors.Fatal_UnexpectedNumericLiteral, uu___4) in
                       FStar_Errors.raise_error uu___3 range in
-                let repr1 =
+                let repr' =
                   FStar_Syntax_Syntax.mk
                     (FStar_Syntax_Syntax.Tm_constant
                        (FStar_Const.Const_int
                           (repr, FStar_Pervasives_Native.None))) range in
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 = FStar_Syntax_Syntax.as_implicit false in
-                        (repr1, uu___6) in
-                      [uu___5] in
-                    (lid1, uu___4) in
-                  FStar_Syntax_Syntax.Tm_app uu___3 in
-                FStar_Syntax_Syntax.mk uu___2 range))
+                let app =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 = FStar_Syntax_Syntax.as_implicit false in
+                          (repr', uu___6) in
+                        [uu___5] in
+                      (lid1, uu___4) in
+                    FStar_Syntax_Syntax.Tm_app uu___3 in
+                  FStar_Syntax_Syntax.mk uu___2 range in
+                FStar_Syntax_Syntax.mk
+                  (FStar_Syntax_Syntax.Tm_meta
+                     (app,
+                       (FStar_Syntax_Syntax.Meta_desugared
+                          (FStar_Syntax_Syntax.Machine_integer
+                             (signedness, width))))) range))
 and (desugar_term_maybe_top :
   Prims.bool ->
     env_t ->
