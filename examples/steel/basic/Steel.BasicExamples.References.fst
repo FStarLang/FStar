@@ -25,9 +25,9 @@ let swap (#a:Type) (#x #y:erased a)
     write_pt r0 tmp1;
     write_pt r1 tmp0;
     ()
-
+    
 (* Allocating and copying a reference *)
-let copy #a (#v:erased a) (#p:perm) (x:ref a) ()
+let copy #a (#v:erased a) (#p:perm) (x:ref a)
   : SteelT (ref a)
     (pts_to x p v)
     (fun y -> pts_to y full_perm v `star` pts_to x p v)
@@ -40,18 +40,9 @@ let copy_and_free #a (#v:erased a) (x:ref a)
   : SteelT (ref a)
     (pts_to x full_perm v)
     (fun y -> pts_to y full_perm v)
-  = let y = copy x () in
+  = let y = copy x in
     free_pt x;
     y
-
-let gather_halves #a #p (#v:erased a) (r:ref a)
-  : SteelT unit 
-    (pts_to r (half_perm p) v `star` 
-     pts_to r (half_perm p) v)
-    (fun _ -> pts_to r p v)
-  = assume (sum_perm (half_perm p) (half_perm p) == p);
-    gather_pt r;
-    ()
 
 (* Sharing a reference, copying it twice in two separate threads *)
 let share_and_copy_twice #a #p #v (x:ref a)
@@ -61,8 +52,8 @@ let share_and_copy_twice #a #p #v (x:ref a)
             pts_to (fst rs) full_perm v `star`
             pts_to (snd rs) full_perm v)
   = share_pt x;
-    let r = par (copy x) (copy x) in
-    gather_halves x;
+    let r = par (fun () -> copy x) (fun () -> copy x) in
+    gather_pt x;
     A.return r
 
 (* With mutable *)
@@ -133,22 +124,3 @@ let make_and_use_counter ()
 
                               
                  
-.
-// (* A swap function specified using selectors.
-
-//    A `vptrp r p` is a "value ptr with permission"
-
-//    Rather than being indexed by erased witnesses, the witnesses can be
-//    "selected" from the heap.
-// *)
-// let swap_selector (#a:Type) (r0 r1:ref a)
-//   : Steel unit
-//     (vptrp r0 full_perm `star` vptrp r1 full_perm)
-//     (fun _ -> vptrp r0 full_perm `star` vptrp r1 full_perm)
-//     (requires fun _ -> True)
-//     (ensures fun s0 _ s1 ->
-//       sel r0 s1 == sel r1 s0 /\
-//       sel r1 s1 == sel r0 s0)
-//   = let tmp = read r0 in
-//     write r0 (read r1);
-//     write r1 tmp
