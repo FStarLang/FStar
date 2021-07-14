@@ -110,7 +110,7 @@ let rec last_step_of (#from #to:protocol unit)
 
    : Tot (q:protocol unit &
           x:next_msg_t q &
-          _:squash (more_msgs q /\to == step q x))
+          squash (more_msgs q /\to == step q x))
          (decreases t)
    = match t with
      | Message _ x _ (Waiting _) -> (| from , x, () |)

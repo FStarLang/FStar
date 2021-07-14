@@ -53,7 +53,7 @@ val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
 /// The permission [p] and the value [v] are annotated with the smt_fallback attribute,
 /// enabling SMT rewriting on them during frame inference
 [@@ __steel_reduce__]
-let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a)
+unfold let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a)
   = to_vprop (pts_to_sl r p v)
 
 /// If two pts_to predicates on the same reference [r] are valid in the memory [m],
@@ -316,6 +316,7 @@ val ghost_ref (a:Type u#0) : Type u#0
 val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:erased a) : slprop u#1
 
 [@@ __steel_reduce__]
+unfold
 let ghost_pts_to (#a:Type0)
   (r:ghost_ref a)
   ([@@@smt_fallback] p:perm)
