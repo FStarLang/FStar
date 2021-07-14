@@ -90,32 +90,32 @@ let point_swap_generically (#x #y: Ghost.erased int) (p: ref 'a point_pcm)
 ///   generic_swap(&p.p1.y, &p.p2.x);
 /// }
 
-//open LineStruct
-//
-//let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
-//: SteelT unit
-//    (p `pts_to` mk_line (mk_point (some x1) (some y1)) (mk_point (some x2) (some y2)))
-//    (fun _ -> p `pts_to` mk_line (mk_point (some y2) (some x2)) (mk_point (some y1) (some x1)))
-//= (* generic_swap(&p.p1.x, &p.p2.y); *)
-//  let pp1 = addr_of_p1 p in
-//  let pp1x = addr_of_x pp1 in
-//  let pp2 = addr_of_p2 p in
-//  let pp2y = addr_of_y pp2 in
-//  generic_swap pp1x pp2y;
-//  (* generic_swap(&p.p1.y, &p.p2.x); *)
-//  let pp1y = addr_of_y pp1 in
-//  let pp2x = addr_of_x pp2 in
-//  generic_swap pp1y pp2x;
-//  (* Gather p1 *)
-//  unaddr_of_x pp1 pp1x;
-//  unaddr_of_y pp1 pp1y;
-//  (* Gather p2 *)
-//  unaddr_of_x pp2 pp2x;
-//  unaddr_of_y pp2 pp2y;
-//  (* Gather p *)
-//  unaddr_of_p1 p pp1;
-//  unaddr_of_p2 p pp2;
-//  A.return ()
+open LineStruct
+
+let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
+: SteelT unit
+    (p `pts_to` mk_line (mk_point (some x1) (some y1)) (mk_point (some x2) (some y2)))
+    (fun _ -> p `pts_to` mk_line (mk_point (some y2) (some x2)) (mk_point (some y1) (some x1)))
+= (* generic_swap(&p.p1.x, &p.p2.y); *)
+  let pp1 = addr_of_p1 p in
+  let pp1x = addr_of_x pp1 in
+  let pp2 = addr_of_p2 p in
+  let pp2y = addr_of_y pp2 in
+  generic_swap pp1x pp2y;
+  (* generic_swap(&p.p1.y, &p.p2.x); *)
+  let pp1y = addr_of_y pp1 in
+  let pp2x = addr_of_x pp2 in
+  generic_swap pp1y pp2x;
+  (* Gather p1 *)
+  unaddr_of_x pp1 pp1x;
+  unaddr_of_y pp1 pp1y;
+  (* Gather p2 *)
+  unaddr_of_x pp2 pp2x;
+  unaddr_of_y pp2 pp2y;
+  (* Gather p *)
+  unaddr_of_p1 p pp1;
+  unaddr_of_p2 p pp2;
+  A.return ()
 
 /// Struct with potentially uninitialized values
 ///
