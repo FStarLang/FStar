@@ -7,9 +7,9 @@ let one (#a: Type) (p: pcm a) = p.p.one
 let pcm (a: Type) : Tot Type =
   (p: FStar.PCM.pcm a {
     (forall (x:a) (y:a{composable p x y}).{:pattern (composable p x y)}
-      op p x y == one p ==> x == one p /\ y == one p) /\ // necessary to lift frame-preserving updates to unions
-    (forall (x:a) . {:pattern (p.refine x)} p.refine x ==> exclusive p x) /\ // nice to have, but not used yet
-    (~ (p.refine (one p))) // necessary to maintain (refine ==> exclusive) for uninit
+      op p x y == one p ==> x == one p /\ y == one p) // /\ // necessary to lift frame-preserving updates to unions
+    //(forall (x:a) . {:pattern (p.refine x)} p.refine x ==> exclusive p x) /\ // nice to have, but not used yet
+    //(~ (p.refine (one p))) // necessary to maintain (refine ==> exclusive) for uninit
   })
 
 noeq
@@ -91,6 +91,11 @@ noeq type ref a #b (q: pcm b): Type = {
 let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
 
 open Steel.Effect
+
+//val pts_to
+//  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+//  (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
+//: vprop
 
 val pts_to
   (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
@@ -327,7 +332,7 @@ let prod_pcm (p:(k:'a -> pcm ('b k))): pcm (restricted_t 'a 'b) =
   assert (forall x y . (composable p' x y /\ op p' x y == one p') ==> (
     x `feq` one p' /\ y `feq` one p'
   ));
-  assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
+  //assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
   p'
 
 let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
@@ -469,6 +474,84 @@ let struct_field
   conn_small_to_large_inv = ();
   conn_lift_frame_preserving_upd = struct_field_lift_fpu p k;
 }
+
+let struct_without_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (xs: restricted_t a b)
+: restricted_t a b
+= on_dom a (fun k' -> if k' = k then one (p k) else xs k')
+
+#push-options "--print_universes"
+
+let struct_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (xs: restricted_t a b)
+: Lemma (
+    composable (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) /\
+    xs == op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
+= prod_pcm_composable_intro p
+    (struct_without_field p k xs)
+    (field_to_struct_f p k (xs k))
+    (fun k' -> (p k').is_unit (xs k'));
+  let aux (k':a)
+  : Lemma (xs k' == op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) k')
+    [SMTPat (xs k')]
+  = (p k').is_unit (xs k'); if k' = k then (p k).comm (one (p k)) (xs k) else ()
+  in assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
+
+let addr_of_struct_field
+  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
+  (r: ref base (prod_pcm p)) (k:a)
+  (xs: Ghost.erased (restricted_t a b))
+: Steel (ref base (p k))
+    (r `pts_to` xs)
+    (fun s ->
+      (r `pts_to` struct_without_field p k xs) `star` 
+      (s `pts_to` Ghost.reveal xs k))
+    (requires fun _ -> True)
+    (ensures fun _ r' _ -> r' == ref_focus r (struct_field p k))
+= struct_peel p k xs;
+  split r xs (struct_without_field p k xs) (field_to_struct_f p k (Ghost.reveal xs k));
+  let r = focus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
+  A.return r
+
+let struct_with_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (x:b k) (xs: restricted_t a b)
+: restricted_t a b
+= on_dom a (fun k' -> if k' = k then x else xs k')
+
+let struct_unpeel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (x: b k) (xs: restricted_t a b)
+: Lemma
+    (requires xs k == one (p k))
+    (ensures
+      composable (prod_pcm p) xs (field_to_struct_f p k x) /\
+      struct_with_field p k x xs == op (prod_pcm p) xs (field_to_struct_f p k x))
+= prod_pcm_composable_intro p xs (field_to_struct_f p k x)
+    (fun k' -> (p k).is_unit x; (p k').is_unit (xs k'));
+  let aux (k':a)
+  : Lemma (struct_with_field p k x xs k' == op (prod_pcm p) xs (field_to_struct_f p k x) k')
+    [SMTPat (struct_with_field p k x xs k')]
+  = if k' = k then begin
+      (p k).is_unit x; (p k).comm (one (p k)) x; assert (x == op (p k) (one (p k)) x)
+    end else begin
+      (p k').is_unit (xs k'); assert (xs k' == op (p k') (xs k') (one (p k')))
+    end
+  in
+  assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
+
+let unaddr_of_struct_field
+  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
+  (r': ref base (p k)) (r: ref base (prod_pcm p))
+  (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
+: Steel unit
+    ((r `pts_to` xs) `star` (r' `pts_to` x))
+    (fun s -> r `pts_to` struct_with_field p k x xs)
+    (requires fun _ -> r' == ref_focus r (struct_field p k) /\ Ghost.reveal xs k == one (p k))
+    (ensures fun _ _ _ -> True)
+= unfocus r' r (struct_field p k) x;
+  gather r xs (field_to_struct_f p k x);
+  struct_unpeel p k x xs;
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
+  A.return ()
 
 (** A PCM for unions TODO move to proper place *)
 
@@ -615,7 +698,7 @@ let union_pcm (p:(k:'a -> pcm ('b k))): pcm (union p) =
   = ext x (one p') (fun k -> let _ = p k in ());
     ext y (one p') (fun k -> let _ = p k in ())
   in
-  assert (forall x frame . (union_refine p x /\ union_comp p x frame) ==> frame `feq` union_one p);
+  //assert (forall x frame . (union_refine p x /\ union_comp p x frame) ==> frame `feq` union_one p);
   p'
 
 let field_to_union_f

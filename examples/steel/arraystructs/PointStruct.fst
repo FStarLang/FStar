@@ -1,9 +1,7 @@
 module PointStruct
 
-open AggregateRef
 open FStar.PCM.POD
-open FStar.PCM
-open FStar.PCM.Extras
+open Steel.C.PCM
 open FStar.FunctionalExtensionality
 open Steel.Effect
 module A = Steel.Effect.Atomic
@@ -26,55 +24,49 @@ let mk_point_f (x y: pod int) (k: point_field): point_fields k = match k with
 let mk_point (x y: Ghost.erased (pod int)): GTot point =
   on_domain point_field (mk_point_f (Ghost.reveal x) (Ghost.reveal y))
 
-let _x = field point_fields_pcm X
-let _y = field point_fields_pcm Y
-
-let put_x x' x y
-: Lemma (feq (put _x x' (mk_point x y)) (mk_point (Ghost.hide x') y))
-  [SMTPat (put _x x' (mk_point x y))]
-= ()
-
-let put_y y' x y
-: Lemma (feq (put _y y' (mk_point x y)) (mk_point x (Ghost.hide y')))
-  [SMTPat (put _y y' (mk_point x y))]
-= ()
-
-/// Laws relating mk_point to PCM operations
-
-let one_xy : squash (feq (one point_pcm) (mk_point none none))
-= ()
-
-// TODO
-let merge_xy (x y: Ghost.erased (pod int)) x' y'
-: Lemma
-    (requires composable point_pcm
-       (Ghost.reveal (mk_point x y))
-       (Ghost.reveal (mk_point x' y')))
-    (ensures
-     feq (op point_pcm (Ghost.reveal (mk_point x y)) (Ghost.reveal (mk_point x' y')))
-         (mk_point (op (point_fields_pcm X) (Ghost.reveal x) (Ghost.reveal x'))
-                   (op (point_fields_pcm Y) (Ghost.reveal y) (Ghost.reveal y'))))
-  [SMTPat (op point_pcm (Ghost.reveal (mk_point x y)) (Ghost.reveal (mk_point x' y')))]
-= ()
+let _x = struct_field point_fields_pcm X
+let _y = struct_field point_fields_pcm Y
 
 /// Taking pointers to the x and y fields of a point
 
+let point_without_x x y
+: Lemma (struct_without_field point_fields_pcm X (mk_point x y) `feq` Ghost.reveal (mk_point none y))
+  [SMTPat (mk_point x y)]
+= ()
+
+let point_with_x x y
+: Lemma (struct_with_field point_fields_pcm X (Ghost.reveal x) (mk_point none y) `feq`
+         Ghost.reveal (mk_point x y))
+  [SMTPat (mk_point x y)]
+= ()
+
+let point_without_y x y
+: Lemma (struct_without_field point_fields_pcm Y (mk_point x y) `feq` Ghost.reveal (mk_point x none))
+  [SMTPat (mk_point x y)]
+= ()
+
+let point_with_y x y
+: Lemma (struct_with_field point_fields_pcm Y (Ghost.reveal y) (mk_point x none) `feq`
+         Ghost.reveal (mk_point x y))
+  [SMTPat (mk_point x y)]
+= ()
+
 let addr_of_x #a #x #y p =
-  let q = addr_of_lens p _x (mk_point x y) in
+  let q = addr_of_struct_field p X (mk_point x y) in
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point none y);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` x);
   A.return q
-
+  
 let unaddr_of_x #a #x #y p q =
-  unaddr_of_lens q p _x (mk_point none y) x;
+  unaddr_of_struct_field X q p (mk_point none y) x;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_y #a #x #y p =
-  let q = addr_of_lens p _y (mk_point x y) in
+  let q = addr_of_struct_field p Y (mk_point x y) in
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x none);
   A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
   A.return q
 
 let unaddr_of_y #a #x #y p q =
-  unaddr_of_lens q p _y (mk_point x none) y;
+  unaddr_of_struct_field Y q p (mk_point x none) y;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
