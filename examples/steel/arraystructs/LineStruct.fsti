@@ -1,10 +1,10 @@
 module LineStruct
 
-open AggregateRef
+open FStar.PCM.POD
 open FStar.PCM
-open FStar.PCM.Extras
 open Steel.Effect
 open PointStruct
+open Steel.C.PCM
 
 /// Example 2: pointers to nested fields
 ///
@@ -17,7 +17,7 @@ val line : Type0
 
 /// PCM for line:
 
-val line_pcm : refined_one_pcm line
+val line_pcm : pcm line
 
 /// (mk_line p1 p2) represents (struct line){.p1 = p1, .p2 = p2}
 
@@ -25,8 +25,10 @@ val mk_line (x y: Ghost.erased point): Ghost.erased line
 
 /// Lenses for fields
 
-val _p1 : pcm_lens line_pcm point_pcm
-val _p2 : pcm_lens line_pcm point_pcm
+#push-options "--print_universes"
+
+val _p1 : connection line_pcm point_pcm
+val _p2 : connection line_pcm point_pcm
 
 /// Taking pointers to the p1 and p2 fields of a line
 

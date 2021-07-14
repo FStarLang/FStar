@@ -62,22 +62,6 @@ let switch_to_bool (#i: Ghost.erased int)
   ref_write p u;
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
-mk_int i = (i, one)
-mk_bool b = (one, b)
-
-thread 1:
-  u.case1 = v1
-  p = &u.case1
-  p `pts_to` case1 (1 v1)
-  (p `pts_to` case1 (0.5 v1) `star`
-  (q `pts_to` case1 (0.5 v1))
-  fork()
-  (p `pts_to` case1 (0.5 v1))
-  (focus (refine p .) . `pts_to` v1)
-
-thread 2:
-  (q `pts_to` case1 (0.5 v1))
-
 let switch_to_int (#b: Ghost.erased bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
 : SteelT unit (p `pts_to` mk_bool (some b)) (fun _ -> p `pts_to` mk_int (some i))

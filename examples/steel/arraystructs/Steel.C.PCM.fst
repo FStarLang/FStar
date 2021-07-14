@@ -480,23 +480,15 @@ let struct_without_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
 : restricted_t a b
 = on_dom a (fun k' -> if k' = k then one (p k) else xs k')
 
-#push-options "--print_universes"
-
 let struct_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   (xs: restricted_t a b)
 : Lemma (
     composable (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) /\
     xs == op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
-= prod_pcm_composable_intro p
-    (struct_without_field p k xs)
-    (field_to_struct_f p k (xs k))
-    (fun k' -> (p k').is_unit (xs k'));
-  let aux (k':a)
-  : Lemma (xs k' == op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) k')
-    [SMTPat (xs k')]
-  = (p k').is_unit (xs k'); if k' = k then (p k).comm (one (p k)) (xs k) else ()
-  in assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
-
+= Classical.forall_intro_2 (fun k -> is_unit (p k));
+  Classical.forall_intro_3 (fun k -> (p k).comm);
+  assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
+  
 let addr_of_struct_field
   #base (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
   (r: ref base (prod_pcm p)) (k:a)
@@ -525,17 +517,8 @@ let struct_unpeel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
     (ensures
       composable (prod_pcm p) xs (field_to_struct_f p k x) /\
       struct_with_field p k x xs == op (prod_pcm p) xs (field_to_struct_f p k x))
-= prod_pcm_composable_intro p xs (field_to_struct_f p k x)
-    (fun k' -> (p k).is_unit x; (p k').is_unit (xs k'));
-  let aux (k':a)
-  : Lemma (struct_with_field p k x xs k' == op (prod_pcm p) xs (field_to_struct_f p k x) k')
-    [SMTPat (struct_with_field p k x xs k')]
-  = if k' = k then begin
-      (p k).is_unit x; (p k).comm (one (p k)) x; assert (x == op (p k) (one (p k)) x)
-    end else begin
-      (p k').is_unit (xs k'); assert (xs k' == op (p k') (xs k') (one (p k')))
-    end
-  in
+= Classical.forall_intro_2 (fun k -> is_unit (p k));
+  Classical.forall_intro_3 (fun k -> (p k).comm);
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
@@ -552,7 +535,7 @@ let unaddr_of_struct_field
   struct_unpeel p k x xs;
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   A.return ()
-
+  
 (** A PCM for unions TODO move to proper place *)
 
 open FStar.FunctionalExtensionality
@@ -858,6 +841,63 @@ let union_field
   conn_small_to_large_inv = ();
   conn_lift_frame_preserving_upd = union_field_lift_fpu p k;
 }
+
+let union_without_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (xs: union p)
+: union p
+= on_dom a (fun k' -> if k' = k then one (p k) else xs k')
+
+let union_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (xs: union p)
+: Lemma (
+    composable (prod_pcm p) (union_without_field p k xs) (field_to_union_f p k (xs k)) /\
+    xs == op (prod_pcm p) (union_without_field p k xs) (field_to_union_f p k (xs k)))
+= Classical.forall_intro_2 (fun k -> is_unit (p k));
+  Classical.forall_intro_3 (fun k -> (p k).comm);
+  assert (xs `feq` op (prod_pcm p) (union_without_field p k xs) (field_to_union_f p k (xs k)))
+
+let addr_of_union_field
+  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
+  (r: ref base (union_pcm p)) (k:a)
+  (xs: Ghost.erased (union p))
+: Steel (ref base (p k))
+    (r `pts_to` xs)
+    (fun s ->
+      (r `pts_to` union_without_field p k xs) `star` 
+      (s `pts_to` Ghost.reveal xs k))
+    (requires fun _ -> True)
+    (ensures fun _ r' _ -> r' == ref_focus r (union_field p k))
+= union_peel p k xs;
+  split r xs (union_without_field p k xs) (field_to_union_f p k (Ghost.reveal xs k));
+  let r = focus r (union_field p k) (field_to_union_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
+  A.return r
+
+let union_with_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (x:b k) (xs: union p{xs == one (union_pcm p)})
+: union p
+= on_dom a (fun k' -> if k' = k then x else xs k')
+
+let union_unpeel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+  (x: b k) (xs: union p{xs == one (union_pcm p)})
+: Lemma
+    (requires xs k == one (p k))
+    (ensures
+      composable (union_pcm p) xs (field_to_union_f p k x) /\
+      union_with_field p k x xs == op (union_pcm p) xs (field_to_union_f p k x))
+= Classical.forall_intro_2 (fun k -> is_unit (p k));
+  Classical.forall_intro_3 (fun k -> (p k).comm);
+  assert (union_with_field p k x xs `feq` op (union_pcm p) xs (field_to_union_f p k x))
+
+let unaddr_of_union_field
+  (#opened:M.inames) #base (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
+  (r': ref base (p k)) (r: ref base (union_pcm p))
+  (x: Ghost.erased (b k))
+: A.SteelGhost unit opened
+    (r' `pts_to` x)
+    (fun s -> r `pts_to` field_to_union_f p k x)
+    (requires fun _ -> r' == ref_focus r (union_field p k))
+    (ensures fun _ _ _ -> True)
+= unfocus r' r (union_field p k) x
 
 let base_fpu
   (#a: Type)
