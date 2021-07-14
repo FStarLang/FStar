@@ -1,9 +1,8 @@
 module PointStruct
 
-open AggregateRef
 open FStar.PCM.POD
 open FStar.PCM
-open FStar.PCM.Extras
+open Steel.C.PCM
 open Steel.Effect
 
 /// Suppose we have the following struct representing 2d points:
@@ -15,16 +14,16 @@ val point : Type0
 
 /// PCM for struct point:
 
-val point_pcm : refined_one_pcm point
+val point_pcm : pcm point
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
 
 val mk_point (x y: Ghost.erased (pod int)): Ghost.erased point
 
-/// PCM lenses for the fields of a point
+/// Connections for the fields of a point
 
-val _x : pcm_lens point_pcm (pod_pcm int)
-val _y : pcm_lens point_pcm (pod_pcm int)
+val _x : connection point_pcm (pod_pcm int)
+val _y : connection point_pcm (pod_pcm int)
 
 /// Taking pointers to the x and y fields of a point
 
