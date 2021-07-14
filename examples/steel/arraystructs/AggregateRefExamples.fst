@@ -153,7 +153,6 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
 /// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
 /// { generic_swap(&p.i, &q.i); }
 
-(*
 open IntOrBool
 
 let int_or_bool_int_swap
@@ -204,7 +203,6 @@ val int_or_bool_to_int
     //let b = b in
     //A.return (if b then 1 else 0)
   end
-*)
 *)
 
 //let int_or_bool_to_int
