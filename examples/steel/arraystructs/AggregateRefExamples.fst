@@ -153,8 +153,8 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
 /// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
 /// { generic_swap(&p.i, &q.i); }
 
+(*
 open IntOrBool
-
 let int_or_bool_int_swap
   (p: ref 'a int_or_bool_pcm) (q: ref 'b int_or_bool_pcm)
   (i j: Ghost.erased int)
@@ -170,14 +170,12 @@ let int_or_bool_int_swap
   (* Give permissions back to p and q *)
   unaddr_of_i p pi;
   unaddr_of_i q qi
-
 /// Convert an int_or_bool + runtime tag into an int
 ///
 /// int int_or_bool_to_int(bool *is_int, union int_or_bool *p) {
 ///   if (*is_int) return p->i;
 ///   else return p->b ? 1 : 0;
 /// }
-
 val int_or_bool_to_int
   (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
   (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
@@ -204,7 +202,7 @@ val int_or_bool_to_int
     //A.return (if b then 1 else 0)
   end
 *)
-
+*)
 //let int_or_bool_to_int
 //  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
 //  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
@@ -228,13 +226,11 @@ val int_or_bool_to_int
 //    let b = some_v b in
 //    if b then some' 1 else some' 0
 //  end
-
 (*
 addr_of
   (r `pts_to` xs)
   (r `pts_to` xs \ k `star` s `pts_to` xs k)
   
-
 let point_swap_generically (#q: Ghost.erased int) (p: ref 'a point_pcm)
 : SteelT unit
     (p `pts_to` q)
@@ -249,65 +245,48 @@ let point_swap_generically (#q: Ghost.erased int) (p: ref 'a point_pcm)
   unaddr_of_x p q;
   unaddr_of_y p r;
   A.return ()
-
 p\{x, y} `pts_to` (v, w)
-
 p.x `pts_to` v === p `pts_to` mk_point v one
 p.y `pts_to` w === p `pts_to` mk_point one w
-
 give p.x's share back to p
-
 p' `pts_to` v_x
 p' == ghost_addr_of p y
-
 ghost_addr_of  = ref_focus .. 
-
 ghost_addr_of p y `pts_to` v_y
-
   
 addr_of
   (r `pts_to` xs `star` s `pts_to` y)
   (r `pts_to` xs [k `mapsto` y])
   *)
-
 (*
 pts_to r x
 (fun r' -> pts_to r' x')
 (requires (fun _ -> x is in case A))
 (ensures (fun _ r' _ -> x == A x'))
 A x' = (|TagA, x'|)
-
 (q:ref .) (t: erased tag)
 pts_to q (t, u)
 (requires (fun _ -> u is in case (tag_denote t)))
-
 (q:ref .) (t: erased tag)
 (r:ref . = the union inside q)
 pts_to q (t, one) `star` pts_to r x
-
 (requires (fun _ -> x is in case (tag_denote t)))
 *)
-
 (*
 to print proof state, try:
-
 val fake : vprop
 let f unit : Steel unit fake (fun _ -> _)
 *)
-
 (*
 (** Example: a model for a tagged union representing colors in RGB or HSV
       type color =
         | RGB : r:int -> g:int -> b:int -> color
         | HSV : h:int -> s:int -> v:int -> color *)
-
 type rgb_field = | R | G | B
 type hsv_field = | H | S | V
 type color_tag = | RGB | HSV
-
 (* Carrier of all-or-none PCM for integers *)
 let int_pcm_t = option int
-
 (* Type families for fields of RGB and HSV structs *)
 let rgb_fields k = match k with
   | R -> int_pcm_t
@@ -321,18 +300,14 @@ let hsv_fields k = match k with
 (** Carriers of PCMs for RGB and HSV structs *)
 let rgb_t = restricted_t rgb_field rgb_fields
 let hsv_t = restricted_t hsv_field hsv_fields
-
 (** Type family for union of RGB and HSV *)
 let color_cases t = match t with
   | RGB -> rgb_t
   | HSV -> hsv_t
-
 (** Carrier of PCM for color *)
 let color_t = union color_cases
-
 (** All-or-none PCM for integers *)
 let int_pcm : pcm int_pcm_t = opt_pcm
-
 (** PCMs for RGB and HSV structs *)
 let rgb_pcm : pcm (restricted_t rgb_field rgb_fields) =
   prod_pcm #_ #rgb_fields (fun k -> match k with
@@ -344,10 +319,9 @@ let hsv_pcm : pcm (restricted_t hsv_field hsv_fields) =
     | H -> int_pcm
     | S -> int_pcm
     | V -> int_pcm)
-
 (** PCM for color *)
 let color_pcm_cases k : pcm (color_cases k) = match k with
   | RGB -> rgb_pcm
   | HSV -> hsv_pcm
-let color_pcm : pcm color_t = union_pcm color_pcm_cases
+let color_pcm : pcm color_t 
 *)
