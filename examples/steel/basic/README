@@ -1,0 +1,27 @@
+References:
+
+ With indexed pts_to predicates:
+      * Allocating, reading, writing, sharing, gathering, freeing,
+      * Some higher order stuff:
+          - with_local
+          - capturing state in closures
+
+ With selectors and vptr
+   * ...
+
+Arrays:
+
+ * Allocating, reading, writing, sharing, gathering, freeing + splitting, joining
+ * Something a bit less synthetic: a ring buffer implemented over an array
+
+A simple non-inductive abstract data type:
+ * A simple thing like 2d/3d points
+ * E.g., something like the "fly robot" example from the existing tutorial, demonstrating encapsulation of an object hierarchy
+
+ADTs with inductive invariants:
+ * Linked lists of various flavors, trees, etc.
+
+Basic concurrency:
+ * Producer/consumer with a queue protected by a lock; queue implemented with a ring buffer or a linked list
+
+My hope is that this set of examples should be enough for someone to reach a basic level of proficiency / productivity with Steel
