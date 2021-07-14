@@ -26,30 +26,23 @@ let compatible_pcm_morphism #a #b #p #q f m x y =
 
 (** Refinements *)
 
-//val pcm_refinement'_compatible_closed
-//  (#p: refined_one_pcm 'a) (re: pcm_refinement' p)
-//  (x: refine_t re.f{~ (x == one p)}) (y: 'a{compatible p x y})
-//: Lemma (re.f y /\ compatible (refined_pcm' re) x y)
-//
-//val pcm_refinement'_comp_new_one
-//  (#p: pcm 'a) (re: pcm_refinement' p)
-//  (x: refine_t re.f) (y: 'a{composable p x y})
-//: Lemma (re.f_comp p (one p) y /\ re.f (op p (one p) y) /\
-//         re.f_comp (refined_pcm' re) x (op p (one p) y))
+let pcm_refinement'_comp_new_one #a #p re x y =
+  re.new_one_is_refined_unit x;
+  p.assoc_r x re.new_one y;
+  re.f_closed_comp re.new_one y
 
 let pcm_refinement'_compatible_closed #a #p re x y =
   let p' = refined_pcm' re in
   compatible_elim p x y (re.f y) (fun frame ->
    re.f_closed_comp x frame; p.comm frame x);
   compatible_elim p x y (compatible p' x y) (fun frame_x ->
-    //pcm_refinement'_comp_one re x frame_x;
-    assume (composable pcm x frame /\ op pcm frame x == y);
-    let frame = op p (one p) frame_x in
-    p.is_unit x;
+    pcm_refinement'_comp_new_one re x frame_x;
+    let frame = op p re.new_one frame_x in
+    re.new_one_is_refined_unit x;
     p.comm x frame_x;
-    p.assoc x (one p) frame_x;
-    p.comm x (op p (one p) frame_x);
-    compatible_intro p' x y (op p (one p) frame_x))
+    p.assoc x re.new_one frame_x;
+    p.comm x (op p re.new_one frame_x);
+    compatible_intro p' x y (op p re.new_one frame_x))
 
 (** PCM lenses *)
 
@@ -117,7 +110,7 @@ let case_unrefinement (#a:eqtype) #b (p:(k:a -> refined_one_pcm (b k))) (k:a)
   | _ -> None
 *)
 
-let conj_unrefinement (#p: refined_one_pcm 'a)
+let conj_unrefinement (#p: pcm 'a)
   (re1: pcm_refinement' p) (re2: pcm_refinement' (refined_pcm' re1))
   (h1: pcm_unrefinement re1) (h2: pcm_unrefinement re2)
 : pcm_unrefinement (conj_refinement #'a re1 re2)
@@ -137,11 +130,11 @@ let extend_unrefinement (#p: refined_one_pcm 'a) (#q: refined_one_pcm 'b)
   let w = f v in
   let aux (frame:'a{composable p x frame})
   : Lemma (composable p y frame /\ (op p x frame == v ==> op p y frame == w))
-  = pcm_refinement'_comp_one re' x frame;
-    let frame' = op p (one p) frame in
-    p.assoc y (one p) frame;
-    p.is_unit y;
-    p.assoc x (one p) frame;
-    p.is_unit x
+  = pcm_refinement'_comp_new_one re' x frame;
+    let frame' = op p re'.new_one frame in
+    p.assoc y re'.new_one frame;
+    re'.new_one_is_refined_unit y;
+    p.assoc x re'.new_one frame;
+    re'.new_one_is_refined_unit x
   in FStar.Classical.forall_intro aux;
   w
