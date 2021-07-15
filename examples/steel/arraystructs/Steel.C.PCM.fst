@@ -1420,7 +1420,8 @@ let exclusive_uninit
       in
       ()
 
-let not_one #t (p: pcm t) : Tot Type = (x: t { ~ (x == one p) })
+let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
+  (x: a { p x })
 
 noeq
 type sel_view
@@ -1428,14 +1429,19 @@ type sel_view
   (p: pcm carrier)
   (view: Type u#b)
 = {
-  to_view: (not_one p -> GTot view);
-  to_carrier: (view -> GTot (not_one p));
+  to_view_prop: (carrier -> Tot prop);
+  to_view: (refine carrier to_view_prop -> GTot view);
+  to_carrier: (view -> GTot (refine carrier to_view_prop));
+  to_carrier_not_one:
+    (x: view) ->
+    Lemma
+    (~ (to_carrier x == one p));
   to_view_frame:
     (x: view) ->
     (frame: carrier) ->
     Lemma
     (requires (composable p (to_carrier x) frame))
-    (ensures (to_view (op p (to_carrier x) frame) == x));
+    (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
 
 let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
@@ -1575,12 +1581,123 @@ let pts_to_view
 : Tot vprop
 = VUnit (pts_to_view' r vw)
 
+let pts_to_view_intro_lemma
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (x: Ghost.erased b)
+  (#c: Type0)
+  (vw: sel_view p c)
+  (y: Ghost.erased c) // necessary because to_view may erase information from x
+  (m: M.mem)
+: Lemma
+  (requires (M.interp (hp_of (pts_to r x)) m) /\ vw.to_carrier y == Ghost.reveal x)
+  (ensures (
+    M.interp (pts_to_view_sl r vw) m /\
+    pts_to_view_sel r vw m == Ghost.reveal y
+  )) 
+=
+  M.intro_h_exists y (pts_to_view_explicit r vw) m;
+  pts_to_view_explicit_witinv r vw
+
+let pts_to_view_intro
+  (#invs: _)
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (x: Ghost.erased b)
+  (#c: Type0)
+  (vw: sel_view p c)
+  (y: Ghost.erased c) // necessary because to_view may erase information from x
+: A.SteelGhost unit invs
+    (pts_to r x)
+    (fun _ -> pts_to_view r vw)
+    (fun _ -> vw.to_carrier y == Ghost.reveal x)
+    (fun _ _ h' ->
+      h' (pts_to_view r vw) == Ghost.reveal y
+    )
+= A.change_slprop_2
+    (pts_to r x)
+    (pts_to_view r vw)
+    y
+    (fun m ->
+      pts_to_view_intro_lemma r x vw y m
+    )
+
+let pts_to_view_elim_lemma
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+  (m: M.mem)
+: Lemma
+  (requires (M.interp (pts_to_view_sl r vw) m))
+  (ensures (
+    M.interp (hp_of (pts_to r (vw.to_carrier (pts_to_view_sel r vw m)))) m
+  ))
+=
+  M.elim_h_exists (pts_to_view_explicit r vw) m;
+  pts_to_view_explicit_witinv r vw
+
+/// Introducing a dependent star for [v] and [q]
+let intro_vdep2 (#opened:_)
+  (v: vprop)
+  (q: vprop)
+  (p: (t_of v -> Tot vprop))
+  (x: t_of v)
+: A.SteelGhost unit opened
+    (v `star` q)
+    (fun _ -> vdep v p)
+    (requires (fun h -> h v == x /\ q == p x))
+    (ensures (fun h _ h' ->
+      let x2 = h' (vdep v p) in
+      q == p (h v) /\
+      dfst x2 == (h v) /\
+      dsnd x2 == (h q)
+    ))
+=
+  A.intro_vdep v q p
+
+let pts_to_view_elim
+  (#invs: _)
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: A.SteelGhost (Ghost.erased b) invs
+    (pts_to_view r vw)
+    (fun res -> pts_to r res)
+    (fun _ -> True)
+    (fun h res _ ->
+      Ghost.reveal res == vw.to_carrier (h (pts_to_view r vw))
+    )
+=
+  let g : Ghost.erased c = A.gget (pts_to_view r vw) in
+  let res : Ghost.erased b = Ghost.hide (vw.to_carrier g) in
+  A.intro_pure (vw.to_carrier (Ghost.reveal g) == Ghost.reveal res);
+  let f (x: t_of (pts_to_view r vw)) : Tot vprop = pure (vw.to_carrier x == Ghost.reveal res) in
+  intro_vdep2
+    (pts_to_view r vw)
+    (pure (vw.to_carrier (Ghost.reveal g) == Ghost.reveal res))
+    f
+    (Ghost.reveal g);
+  A.rewrite_slprop
+    (vdep (pts_to_view r vw) f)
+    (pts_to r res)
+    (fun m ->
+      interp_vdep_hp (pts_to_view r vw) f m;
+      M.interp_star (hp_of (pts_to_view r vw)) (hp_of (f (sel_of (pts_to_view r vw) m))) m;
+      M.pure_interp (vw.to_carrier (sel_of (pts_to_view r vw) m) == Ghost.reveal res) m;
+      pts_to_view_elim_lemma r vw m
+    );
+  res
+
 let opt_view
   (a: Type)
 : Tot (sel_view (opt_pcm #a) a)
 = {
-  to_view = Some?.v;
-  to_carrier = (fun z -> Some z);
+  to_view_prop = (fun x -> Some? x == true);
+  to_view = (fun x -> Some?.v x);
+  to_carrier = (fun z  -> Some z);
+  to_carrier_not_one = (fun _ -> ());
   to_view_frame = (fun x frame -> ());
 }
 
@@ -1589,8 +1706,10 @@ let frac_view
   (p: perm)
 : Tot (sel_view (pcm_frac #a) a)
 = {
+  to_view_prop = (fun x -> Some? x == true);
   to_view = (fun x -> let Some (v, _) = x in v);
   to_carrier = (fun v -> Some (v, p));
+  to_carrier_not_one = (fun _ -> ());
   to_view_frame = (fun v frame -> ());
 }
 
@@ -1601,16 +1720,45 @@ let uninit_view
   (w: sel_view p b)
 : Tot (sel_view #(uninit_t a) (pcm_uninit p) (uninit_t b))
 = {
-  to_view = (fun (x: not_one (pcm_uninit p)) -> match x with
+  to_view_prop = (fun x -> match x with
+  | Uninitialized -> True
+  | InitOrUnit x' -> w.to_view_prop x'
+  );
+  to_view = (fun x -> match x with
   | Uninitialized -> Uninitialized
   | InitOrUnit x' -> InitOrUnit (w.to_view x')
   );
   to_carrier = (fun v -> match v with
   | Uninitialized -> Uninitialized
-  | InitOrUnit v' -> InitOrUnit (w.to_carrier v')
+  | InitOrUnit v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v')
+  );
+  to_carrier_not_one = (fun v -> match v with
+  | Uninitialized -> ()
+  | InitOrUnit v' -> w.to_carrier_not_one v'
   );
   to_view_frame = (fun v frame -> match v with
   | Uninitialized -> ()
-  | InitOrUnit v' -> let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  | InitOrUnit v' -> w.to_carrier_not_one v'; let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  );
+}
+
+let uninit_view_initialized
+  (#a: Type)
+  (#p: pcm a)
+  (#b: Type)
+  (w: sel_view p b)
+: Tot (sel_view #(uninit_t a) (pcm_uninit p) b)
+= {
+  to_view_prop = (fun x -> match x with
+  | Uninitialized -> False
+  | InitOrUnit x' -> w.to_view_prop x'
+  );
+  to_view = (fun x -> match x with
+  | InitOrUnit x' -> w.to_view x'
+  );
+  to_carrier = (fun v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v'));
+  to_carrier_not_one = (fun v -> w.to_carrier_not_one v);
+  to_view_frame = (fun v frame ->
+    w.to_carrier_not_one v; let InitOrUnit frame' = frame in w.to_view_frame v frame'
   );
 }
