@@ -1,4 +1,4 @@
-module Steel.C.PCMA
+module Steel.C.PCM
 open FStar.PCM
 open FStar.FunctionalExtensionality
 
