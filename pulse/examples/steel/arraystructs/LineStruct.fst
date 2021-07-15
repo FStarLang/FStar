@@ -28,7 +28,8 @@ let line_pcm = prod_pcm line_fields_pcm
 let mk_line_f (p1 p2: point) (k: line_field): line_fields k = match k with
   | P1 -> p1
   | P2 -> p2
-let mk_line p1 p2 = on_domain line_field (mk_line_f (Ghost.reveal p1) (Ghost.reveal p2))
+let mk_line p1 p2 =
+  Ghost.hide (on_domain line_field (mk_line_f (Ghost.reveal p1) (Ghost.reveal p2)))
 
 let _p1 = struct_field line_fields_pcm P1
 let _p2 = struct_field line_fields_pcm P2
