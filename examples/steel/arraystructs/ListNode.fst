@@ -13,9 +13,13 @@ type node_field = | Value | Next
 
 let ref' a b = pb: Ghost.erased (pcm b) & ref a pb
 
-let node_fields node k = match k with
-  | Value -> pod (FStar.Universe.raise_t int)
-  | Next -> pod (option (ref' (FStar.Universe.raise_t node) node))
+//let node_fields node k = match k with
+//  | Value -> pod (FStar.Universe.raise_t int)
+//  | Next -> pod (option (ref' (FStar.Universe.raise_t node) node))
+
+let node_fields (node:Type) k = match k with
+  | Value -> pod (Universe.raise_t int)
+  | Next -> pod (option (ref' node node))
 
 #push-options "--__no_positivity"
 noeq type node =
@@ -24,7 +28,7 @@ noeq type node =
 
 let node_fields_pcm k: pcm (node_fields node k) = match k with
   | Value -> pod_pcm (FStar.Universe.raise_t int)
-  | Next -> pod_pcm (option (ref' (FStar.Universe.raise_t node) node))
+  | Next -> pod_pcm (option (ref' node node))
 
 let node_pcm' = prod_pcm node_fields_pcm
 
@@ -140,14 +144,20 @@ let mk_node' (value: Ghost.erased _) (next: Ghost.erased _): Ghost.erased _ =
 let mk_node (value: Ghost.erased _) (next: Ghost.erased _): Ghost.erased _ =
   Ghost.hide (mk_node' (Ghost.reveal value) (Ghost.reveal next))
 
-assume val _value : connection node_pcm (pod_pcm (FStar.Universe.raise_t int))
+let _value
+: node_pcm `connection` pod_pcm (FStar.Universe.raise_t int)
+= unroll_conn `connection_compose` struct_field node_fields_pcm Value
+
+let _next
+: node_pcm `connection` pod_pcm (option (ref' node node))
+= unroll_conn `connection_compose` struct_field node_fields_pcm Next
 
 let one_next : Ghost.erased (pod (Universe.raise_t int)) =
   Ghost.hide (one (pod_pcm (FStar.Universe.raise_t int)))
 
 let addr_of_next
   (#value:Ghost.erased (pod (Universe.raise_t int)))
-  (#next:Ghost.erased _)
+  (#next:Ghost.erased (pod (option (ref' node node))))
   (p: ref 'a node_pcm)
 : SteelT (q:ref 'a (pod_pcm (FStar.Universe.raise_t int)){q == ref_focus p _value})
     (p `pts_to` mk_node value next)
