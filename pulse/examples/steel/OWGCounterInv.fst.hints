@@ -106,7 +106,6 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_OWGCounterInv.half_perm",
@@ -132,13 +131,12 @@
         "typing_OWGCounterInv.half_perm", "typing_OWGCounterInv.inv_slprop",
         "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.star",
-        "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.Reference.ghost_pts_to_sl",
-        "typing_Steel.Reference.pts_to_sl"
+        "typing_Steel.Reference.ghost_pts_to",
+        "typing_Steel.Reference.pts_to"
       ],
       0,
-      "f01ee8d9ce17a5f3ddacb5f43157542e"
+      "d84371b23d76cef6c7b3003a94878a88"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",

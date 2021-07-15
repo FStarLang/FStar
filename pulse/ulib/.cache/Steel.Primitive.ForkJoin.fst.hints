@@ -106,15 +106,16 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "bool_inversion",
+        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_Steel.Effect.Common.VStar",
         "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "equation_Prims.eqtype", "equation_Steel.Effect.Common.star",
-        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.FractionalPermission.full_perm",
         "equation_Steel.Primitive.ForkJoin.lock_inv",
         "equation_Steel.Primitive.ForkJoin.lock_inv_pred",
         "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "equation_Steel.Reference.pts_to",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
@@ -124,17 +125,15 @@
         "projection_inverse_Steel.Effect.Common.VStar__0",
         "projection_inverse_Steel.Effect.Common.VStar__1",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "true_interp", "typing_FStar.Ghost.hide",
-        "typing_Steel.Effect.Common.hp_of",
-        "typing_Steel.Effect.Common.to_vprop_",
+        "typing_FStar.Ghost.hide", "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.FractionalPermission.full_perm",
         "typing_Steel.Primitive.ForkJoin.__proj__Mkthread__item__r",
         "typing_Steel.Primitive.ForkJoin.lock_inv_pred",
         "typing_Steel.Primitive.ForkJoin.maybe_p",
-        "typing_Steel.Reference.pts_to_sl"
+        "typing_Steel.Reference.pts_to"
       ],
       0,
-      "ce77bec496a35b142629081450a6d3b6"
+      "22d574a7525fcfe2143198bc5bdd7ab7"
     ]
   ]
 ]
