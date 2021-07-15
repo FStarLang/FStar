@@ -1,4 +1,4 @@
-module Steel.C.PCM
+module Steel.C.PCMA
 open FStar.PCM
 open FStar.FunctionalExtensionality
 
@@ -15,24 +15,72 @@ let pcm (a: Type) : Tot Type =
     //(~ (p.refine (one p))) // necessary to maintain (refine ==> exclusive) for uninit
   })
 
-let morphism (#a #b: Type) (pa: pcm a) (pb: pcm b) =
-  f:(a ^-> b){
-    f pa.p.one == pb.p.one /\
-    (forall (x1: a) (x2: a{composable pa x1 x2}).
-    composable pb (f x1) (f x2) /\
-    f (x1 `pa.p.op` x2) == f x1 `pb.p.op` f x2)}
+let morph_compose2 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b)
+  (x1: 'a) (x2: 'a{composable pa x1 x2})
+= squash (
+    composable pb (morph x1) (morph x2) /\
+    morph (x1 `pa.p.op` x2) == morph x1 `pb.p.op` morph x2)
+    
+let morph_compose1 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b) (x1: 'a) =
+  restricted_t (x2:'a{composable pa x1 x2}) (morph_compose2 pa pb morph x1)
 
-let morphism_intro (#pa: pcm 'a) (#pb: pcm 'b) (f: 'a -> 'b)
-  (f_unit: squash (f pa.p.one == pb.p.one))
-  (f_compose: (x1:'a -> x2:'a{composable pa x1 x2} ->
-    Lemma (
-      composable pb (f x1) (f x2) /\
-      f (x1 `pa.p.op` x2) == f x1 `pb.p.op` f x2)))
-: pa `morphism` pb
-= Classical.forall_intro_2 f_compose; on_dom _ f
+noeq
+type morphism (#a #b: Type) (pa: pcm a) (pb: pcm b) = {
+  morph: (a ^-> b);
+  morph_unit: squash (morph pa.p.one == pb.p.one);
+  morph_compose: restricted_t a (morph_compose1 pa pb morph);
+}
 
-let morphism_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: morphism pa pb) (fbc: morphism pb pc) : Tot (morphism pa pc)
-= on_dom _ (fun x -> fbc (fab x))
+let mkmorphism (#pa: pcm 'a) (#pb: pcm 'b) (morph: 'a -> 'b)
+  (morph_unit: squash (morph pa.p.one == pb.p.one))
+  (morph_compose: (x1:'a -> x2:'a{composable pa x1 x2} -> morph_compose2 pa pb (on_dom 'a morph) x1 x2))
+: pa `morphism` pb = {
+  morph = on_dom 'a morph;
+  morph_unit = morph_unit;
+  morph_compose = on_dom 'a (fun x1 -> on_dom (x2:'a{composable pa x1 x2}) (fun x2 -> morph_compose x1 x2));
+}
+
+let morph_compose2_irrelevant (pa: pcm 'a) (pb: pcm 'b) (morph: 'a ^-> 'b)
+  (x1: 'a) (x2: 'a{composable pa x1 x2})
+  (prf1 prf2: morph_compose2 pa pb morph x1 x2)
+: Lemma (prf1 == prf2)
+= ()
+
+let morph_compose1_irrelevant (pa: pcm 'a) (pb: pcm 'b) (morph: 'a ^-> 'b) (x1: 'a)
+  (prf1 prf2: morph_compose1 pa pb morph x1)
+: Lemma (prf1 == prf2)
+= assert (prf1 `feq` prf2)
+
+let morph_compose_irrelevant (pa: pcm 'a) (pb: pcm 'b) (morph: 'a ^-> 'b)
+  (prf1 prf2: restricted_t 'a (morph_compose1 pa pb morph))
+: Lemma (prf1 == prf2)
+= let aux (x: 'a): Lemma (prf1 x == prf2 x) [SMTPat (prf1 x)] =
+    morph_compose1_irrelevant pa pb morph x (prf1 x) (prf2 x)
+  in assert (prf1 `feq` prf2)
+
+let morph_eq (f g: 'p `morphism` 'q)
+: Lemma (requires f.morph `feq` g.morph) (ensures f == g)
+  [SMTPat (f.morph `feq` g.morph)]
+= assert (f.morph == g.morph);
+  morph_compose_irrelevant 'p 'q f.morph f.morph_compose g.morph_compose
+
+let morphism_morph_compose
+  (#a #b: Type) (#pa: pcm a) (#pb: pcm b) (m: morphism pa pb)
+  (x1: a)
+  (x2: a)
+: Lemma
+  (requires (composable pa x1 x2))
+  (ensures (composable pb (m.morph x1) (m.morph x2) /\ m.morph (x1 `pa.p.op` x2) == m.morph x1 `pb.p.op` m.morph x2))
+  [SMTPat (composable pb (m.morph x1) (m.morph x2))]
+= m.morph_compose x1 x2
+
+let morphism_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: morphism pa pb) (fbc: morphism pb pc) : Tot (morphism pa pc) =
+  mkmorphism
+    (fun x -> fbc.morph (fab.morph x))
+    ()
+    (fun x1 x2 ->
+      fab.morph_compose x1 x2;
+      fbc.morph_compose (fab.morph x1) (fab.morph x2))
 
 let compatible_intro
   (#a: Type u#a)
@@ -65,12 +113,12 @@ val compatible_morphism
   (x y: Ghost.erased 'a)
 : Lemma
     (requires compatible p x y)
-    (ensures compatible q (f x) (f y))
+    (ensures compatible q (f.morph x) (f.morph y))
 
 let compatible_morphism #a #b #p #q f x y =
   let frame_x = compatible_elim p x y in
-  assert (composable p frame_x x);
-  compatible_intro q (f x) (f y) (f frame_x)
+  f.morph_compose frame_x x;
+  compatible_intro q (f.morph x) (f.morph y) (f.morph frame_x)
 
 let injective (#a #b: Type) (f: (a -> Tot b)) : Tot prop =
   (forall x1 x2 . {:pattern f x1; f x2} f x1 == f x2 ==> x1 == x2)
@@ -90,12 +138,12 @@ noeq
 type connection (#t_large #t_small: Type) (p_large: pcm t_large) (p_small: pcm t_small) = {
   conn_small_to_large: morphism p_small p_large;
   conn_large_to_small: morphism p_large p_small;
-  conn_small_to_large_inv: squash (conn_large_to_small `is_inverse_of` conn_small_to_large);
+  conn_small_to_large_inv: squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph);
   conn_lift_frame_preserving_upd:
     (x: Ghost.erased t_small { ~ (Ghost.reveal x == p_small.p.one) }) -> // validity condition, e.g. union cases
     (y: Ghost.erased t_small) ->
     (f: frame_preserving_upd p_small x y) ->
-    Tot (frame_preserving_upd p_large (conn_small_to_large x) (conn_small_to_large y));
+    Tot (frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y));
 }
 
 let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: connection pa pb) (fbc: connection pb pc) : Tot (connection pa pc) = {
@@ -103,10 +151,10 @@ let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (
   conn_large_to_small = fab.conn_large_to_small `morphism_compose` fbc.conn_large_to_small;
   conn_small_to_large_inv = ();
   conn_lift_frame_preserving_upd = begin fun xc yc f ->
-    let xb = Ghost.hide (fbc.conn_small_to_large xc) in
-    let yb = Ghost.hide (fbc.conn_small_to_large yc) in
-    let xa = Ghost.hide (fab.conn_small_to_large xb) in
-    let ya = Ghost.hide (fab.conn_small_to_large yb) in
+    let xb = Ghost.hide (fbc.conn_small_to_large.morph xc) in
+    let yb = Ghost.hide (fbc.conn_small_to_large.morph yc) in
+    let xa = Ghost.hide (fab.conn_small_to_large.morph xb) in
+    let ya = Ghost.hide (fab.conn_small_to_large.morph yb) in
     fab.conn_lift_frame_preserving_upd _ _ (fbc.conn_lift_frame_preserving_upd _ _ f)
   end;
 }
@@ -127,7 +175,7 @@ val pts_to
 : vprop
 
 let pts_to r v =
-  r.r `mpts_to` r.pl.conn_small_to_large v
+  r.r `mpts_to` r.pl.conn_small_to_large.morph v
 
 val ref_focus
   (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
@@ -153,7 +201,7 @@ let focus (r: ref 'a 'p)
 : Steel (ref 'a q)
     (r `pts_to` s)
     (fun r' -> r' `pts_to` x)
-    (fun _ -> Ghost.reveal s == l.conn_small_to_large x)
+    (fun _ -> Ghost.reveal s == l.conn_small_to_large.morph x)
     (fun _ r' _ -> r' == ref_focus r l)
 = let r' = ref_focus r l in
   A.change_slprop_rel  
@@ -170,12 +218,12 @@ let unfocus #inames
   (l: connection p q) (x: Ghost.erased 'c)
 : A.SteelGhost unit inames
     (r `pts_to` x)
-    (fun _ -> r' `pts_to` l.conn_small_to_large x)
+    (fun _ -> r' `pts_to` l.conn_small_to_large.morph x)
     (requires fun _ -> r == ref_focus r' l)
     (ensures fun _ _ _ -> True)
 = A.change_slprop_rel  
     (r `pts_to` x)
-    (r' `pts_to` l.conn_small_to_large x)
+    (r' `pts_to` l.conn_small_to_large.morph x)
     (fun _ _ -> True)
     (fun m -> ())
 
@@ -189,16 +237,16 @@ val split (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (xy x y: Ghost.erased b)
 let split r xy x y =
   A.change_equal_slprop
     (r `pts_to` xy)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large xy)));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph xy)));
   Steel.PCMReference.split r.r
-    (r.pl.conn_small_to_large xy)
-    (r.pl.conn_small_to_large x)
-    (r.pl.conn_small_to_large y);
+    (r.pl.conn_small_to_large.morph xy)
+    (r.pl.conn_small_to_large.morph x)
+    (r.pl.conn_small_to_large.morph y);
   A.change_equal_slprop
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large x)))
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph x)))
     (r `pts_to` x);
   A.change_equal_slprop
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large y)))
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph y)))
     (r `pts_to` y)
 
 let mgather
@@ -217,18 +265,18 @@ val gather (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (x y: Ghost.erased b)
 let gather #a #b #p r x y =
   A.change_equal_slprop
     (r `pts_to` x)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large x)));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph x)));
   A.change_equal_slprop
     (r `pts_to` y)
-    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large y)));
+    (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph y)));
   mgather r.r
-    (r.pl.conn_small_to_large x)
-    (r.pl.conn_small_to_large y);
+    (r.pl.conn_small_to_large.morph x)
+    (r.pl.conn_small_to_large.morph y);
   assert (
-    let x1 = r.pl.conn_small_to_large x in
-    let y1 = r.pl.conn_small_to_large y in
-    let x2 = r.pl.conn_large_to_small x1 in
-    let y2 = r.pl.conn_large_to_small y1 in
+    let x1 = r.pl.conn_small_to_large.morph x in
+    let y1 = r.pl.conn_small_to_large.morph y in
+    let x2 = r.pl.conn_large_to_small.morph x1 in
+    let y2 = r.pl.conn_large_to_small.morph y1 in
     Ghost.reveal x == x2 /\ Ghost.reveal y == y2
   );
   A.change_equal_slprop _ (r `pts_to` op p x y)
@@ -247,15 +295,15 @@ let ref_read (#p: pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
     (fun _ -> r `pts_to` x)
     (requires fun _ -> True)
     (ensures fun _ x' _ -> compatible p x x')
-= let w = Ghost.hide (r.pl.conn_small_to_large x) in
+= let w = Ghost.hide (r.pl.conn_small_to_large.morph x) in
   A.change_equal_slprop (r `pts_to` x) (r.r `mpts_to` w);
   let w' = Steel.PCMReference.read r.r w in
   A.change_equal_slprop (r.r `mpts_to` w) (r `pts_to` x);
-  let x' = r.pl.conn_large_to_small w' in
+  let x' = r.pl.conn_large_to_small.morph w' in
   assert (forall frame . (composable r.p w frame /\ op r.p frame w == w') ==> (
-    let sw = r.pl.conn_large_to_small w in
-    let sw' = r.pl.conn_large_to_small w' in
-    let sframe = r.pl.conn_large_to_small frame in
+    let sw = r.pl.conn_large_to_small.morph w in
+    let sw' = r.pl.conn_large_to_small.morph w' in
+    let sframe = r.pl.conn_large_to_small.morph frame in
     (composable p sw sframe /\ op p sframe sw == sw')
   ));
   A.return x'
@@ -264,7 +312,7 @@ module M = Steel.Memory
 
 let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p) }) (y: Ghost.erased 'b) (f: frame_preserving_upd 'p x y)
 : Tot (M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y)))
-= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large x)) (Ghost.hide (r.pl.conn_small_to_large y)) (r.pl.conn_lift_frame_preserving_upd x y f)
+= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large.morph x)) (Ghost.hide (r.pl.conn_small_to_large.morph y)) (r.pl.conn_lift_frame_preserving_upd x y f)
 
 let as_action (#p:vprop)
               (#q:vprop)
@@ -394,7 +442,7 @@ let field_to_struct
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (p k) (prod_pcm p))
-= morphism_intro
+= mkmorphism
     (field_to_struct_f p k)
     (assert (field_to_struct_f p k (one (p k)) `feq` one (prod_pcm p)))
     (fun x1 x2 ->
@@ -417,7 +465,7 @@ let struct_to_field
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (prod_pcm p) (p k))
-= morphism_intro
+= mkmorphism
     (struct_to_field_f p k) ()
     (fun x1 x2 -> ())
 
@@ -431,7 +479,7 @@ let struct_field_lift_fpu'
   (f: frame_preserving_upd (p k) x y)
   (v: restricted_t a b {
     (prod_pcm p).refine v /\
-    compatible (prod_pcm p) ((field_to_struct p k) x) v
+    compatible (prod_pcm p) ((field_to_struct p k).morph x) v
   })
 : Tot (restricted_t a b)
 = 
@@ -440,8 +488,6 @@ let struct_field_lift_fpu'
       then f (v k) <: b k'
       else v k'
     )
-
-#push-options "--query_stats --z3rlimit 32"
 
 let struct_field_lift_fpu_prf
   (#a: eqtype)
@@ -453,18 +499,18 @@ let struct_field_lift_fpu_prf
   (f: frame_preserving_upd (p k) x y)
   (v: restricted_t a b {
     (prod_pcm p).refine v /\
-    compatible (prod_pcm p) ((field_to_struct p k) x) v
+    compatible (prod_pcm p) ((field_to_struct p k).morph x) v
   })
 : Lemma
   (let v_new = struct_field_lift_fpu' p k x y f v in
     (prod_pcm p).refine v_new /\
-    compatible (prod_pcm p) ((field_to_struct p k) y) v_new /\
-    (forall (frame:_{composable (prod_pcm p) ((field_to_struct p k) x) frame}).
-       composable (prod_pcm p) ((field_to_struct p k) y) frame /\
-       (op (prod_pcm p) ((field_to_struct p k) x) frame == v ==> op (prod_pcm p) ((field_to_struct p k) y) frame == v_new))
+    compatible (prod_pcm p) ((field_to_struct p k).morph y) v_new /\
+    (forall (frame:_{composable (prod_pcm p) ((field_to_struct p k).morph x) frame}).
+       composable (prod_pcm p) ((field_to_struct p k).morph y) frame /\
+       (op (prod_pcm p) ((field_to_struct p k).morph x) frame == v ==> op (prod_pcm p) ((field_to_struct p k).morph y) frame == v_new))
   )
 =
-  let y' = (field_to_struct p k) y in
+  let y' = (field_to_struct p k).morph y in
   let v_new = struct_field_lift_fpu' p k x y f v in
   Classical.forall_intro_2 (fun k -> is_unit (p k));
   assert (forall (frame: b k) .
@@ -474,12 +520,10 @@ let struct_field_lift_fpu_prf
     op (prod_pcm p) frame' y' `feq` v_new
   ));
   assert (compatible (prod_pcm p) y' v_new);
-  assert (forall (frame:_{composable (prod_pcm p) ((field_to_struct p k) x) frame}).
-       composable (prod_pcm p) ((field_to_struct p k) y) frame /\
-       (op (prod_pcm p) ((field_to_struct p k) x) frame == v ==> op (prod_pcm p) ((field_to_struct p k) y) frame `feq` v_new));
+  assert (forall (frame:_{composable (prod_pcm p) ((field_to_struct p k).morph x) frame}).
+       composable (prod_pcm p) ((field_to_struct p k).morph y) frame /\
+       (op (prod_pcm p) ((field_to_struct p k).morph x) frame == v ==> op (prod_pcm p) ((field_to_struct p k).morph y) frame `feq` v_new));
   ()
-
-#pop-options
 
 let struct_field_lift_fpu
   (#a: eqtype)
@@ -489,7 +533,7 @@ let struct_field_lift_fpu
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
-: Tot (frame_preserving_upd (prod_pcm p) ((field_to_struct p k) x) ((field_to_struct p k) y))
+: Tot (frame_preserving_upd (prod_pcm p) ((field_to_struct p k).morph x) ((field_to_struct p k).morph y))
 = fun v ->
     struct_field_lift_fpu_prf p k x y f v;
     struct_field_lift_fpu' p k x y f v
@@ -780,7 +824,7 @@ let field_to_union
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (p k) (union_pcm p))
-= morphism_intro
+= mkmorphism
     (field_to_union_f p k)
     (assert (field_to_union_f p k (one (p k)) `feq` one (union_pcm p)))
     (fun x1 x2 ->
@@ -803,7 +847,7 @@ let union_to_field
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (union_pcm p) (p k))
-= morphism_intro
+= mkmorphism
     (union_to_field_f p k) ()
     (fun x1 x2 -> ())
 
@@ -817,7 +861,7 @@ let union_field_lift_fpu'
   (f: frame_preserving_upd (p k) x y)
   (v: union p {
     (union_pcm p).refine v /\
-    compatible (union_pcm p) ((field_to_struct p k) x) v
+    compatible (union_pcm p) ((field_to_struct p k).morph x) v
   })
 : Tot (union p)
 = 
@@ -840,18 +884,18 @@ let union_field_lift_fpu_prf
   (f: frame_preserving_upd (p k) x y)
   (v: union p {
     (union_pcm p).refine v /\
-    compatible (union_pcm p) ((field_to_union p k) x) v
+    compatible (union_pcm p) ((field_to_union p k).morph x) v
   })
 : Lemma
   (let v_new = union_field_lift_fpu' p k x y f v in
     (union_pcm p).refine v_new /\
-    compatible (union_pcm p) ((field_to_union p k) y) v_new /\
-    (forall (frame:_{composable (union_pcm p) ((field_to_union p k) x) frame}).
-       composable (union_pcm p) ((field_to_union p k) y) frame /\
-       (op (union_pcm p) ((field_to_union p k) x) frame == v ==> op (union_pcm p) ((field_to_union p k) y) frame == v_new))
+    compatible (union_pcm p) ((field_to_union p k).morph y) v_new /\
+    (forall (frame:_{composable (union_pcm p) ((field_to_union p k).morph x) frame}).
+       composable (union_pcm p) ((field_to_union p k).morph y) frame /\
+       (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==> op (union_pcm p) ((field_to_union p k).morph y) frame == v_new))
   )
 =
-  let y' = (field_to_union p k) y in
+  let y' = (field_to_union p k).morph y in
   let v_new = union_field_lift_fpu' p k x y f v in
   Classical.forall_intro_2 (fun k -> is_unit (p k));
   let frame : b k = compatible_elim (p k) y (f (v k)) in
@@ -860,20 +904,17 @@ let union_field_lift_fpu_prf
   assert (op (union_pcm p) frame' y' `feq` v_new);
   compatible_intro (union_pcm p) y' v_new frame';
   let x = Ghost.reveal x in
-  assert (compatible (union_pcm p) ((field_to_union p k) y) v_new);
-  let aux (frame:_{composable (union_pcm p) ((field_to_union p k) x) frame})
+  let aux (frame:_{composable (union_pcm p) ((field_to_union p k).morph x) frame})
   : Lemma (
-      composable (union_pcm p) ((field_to_union p k) y) frame /\
-      (op (union_pcm p) ((field_to_union p k) x) frame == v ==>
-       op (union_pcm p) ((field_to_union p k) y) frame `feq` v_new))
-  = assert (composable (union_pcm p) ((field_to_union p k) y) frame);
-    assert_norm (
-     op (union_pcm p) ((field_to_union p k) x) frame k ==
+      composable (union_pcm p) ((field_to_union p k).morph y) frame /\
+      (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
+       op (union_pcm p) ((field_to_union p k).morph y) frame `feq` v_new))
+  = assert_norm (
+     op (union_pcm p) ((field_to_union p k).morph x) frame k ==
      op (p k) x (frame k));
-    assume (op (union_pcm p) ((field_to_union p k) x) frame == v ==>
-       op (p k) x (frame k) == v k);
-       admit()
-  in forall_intro aux
+    assert (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
+       op (p k) x (frame k) == v k)
+  in forall_intro aux; ()
 
 #pop-options
 
@@ -885,7 +926,7 @@ let union_field_lift_fpu
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
-: Tot (frame_preserving_upd (union_pcm p) ((field_to_union p k) x) ((field_to_union p k) y))
+: Tot (frame_preserving_upd (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y))
 = fun v ->
     union_field_lift_fpu_prf p k x y f v;
     union_field_lift_fpu' p k x y f v
@@ -1225,7 +1266,7 @@ let value_to_uninit
   (#a: Type)
   (p: pcm a)
 : Tot (morphism p (pcm_uninit p))
-= morphism_intro
+= mkmorphism
     (fun x -> InitOrUnit x)
     ()
     (fun _ _ -> ())
@@ -1234,7 +1275,7 @@ let uninit_to_value
   (#a: Type)
   (p: pcm a)
 : Tot (morphism (pcm_uninit p) p)
-= morphism_intro
+= mkmorphism
     (fun x -> match x with InitOrUnit y -> y | _ -> one p)
     ()
     (fun _ _ -> Classical.forall_intro (is_unit p))
@@ -1247,7 +1288,7 @@ let uninit_conn_fpu'
   (f: frame_preserving_upd p x y)
   (v: uninit_t a {
     (pcm_uninit p).refine v /\
-    compatible (pcm_uninit p) ((value_to_uninit p) x) v
+    compatible (pcm_uninit p) ((value_to_uninit p).morph x) v
   })
 : Tot (uninit_t a)
 =
@@ -1262,18 +1303,18 @@ let uninit_conn_fpu_prop
   (f: frame_preserving_upd p x y)
   (v: uninit_t a {
     (pcm_uninit p).refine v /\
-    compatible (pcm_uninit p) ((value_to_uninit p) x) v
+    compatible (pcm_uninit p) ((value_to_uninit p).morph x) v
   })
 : Lemma
   (let v_new = uninit_conn_fpu' p x y f v in
     (pcm_uninit p).refine v_new /\
-    compatible (pcm_uninit p) ((value_to_uninit p) y) v_new /\
-    (forall (frame:_{composable (pcm_uninit p) ((value_to_uninit p) x) frame}).
-       composable (pcm_uninit p) ((value_to_uninit p) y) frame /\
-       (op (pcm_uninit p) ((value_to_uninit p) x) frame == v ==> op (pcm_uninit p) ((value_to_uninit p) y) frame == v_new))
+    compatible (pcm_uninit p) ((value_to_uninit p).morph y) v_new /\
+    (forall (frame:_{composable (pcm_uninit p) ((value_to_uninit p).morph x) frame}).
+       composable (pcm_uninit p) ((value_to_uninit p).morph y) frame /\
+       (op (pcm_uninit p) ((value_to_uninit p).morph x) frame == v ==> op (pcm_uninit p) ((value_to_uninit p).morph y) frame == v_new))
   )
 = Classical.forall_intro (is_unit p);
-  let y' = (value_to_uninit p) y in
+  let y' = (value_to_uninit p).morph y in
   let InitOrUnit x' = v in
   let v_new = uninit_conn_fpu' p x y f v in
   let frame : a = compatible_elim p y (f x') in
@@ -1281,9 +1322,9 @@ let uninit_conn_fpu_prop
   assert (composable (pcm_uninit p) y' frame');
   assert (op (pcm_uninit p) frame' y' == v_new);
   compatible_intro (pcm_uninit p) y' v_new frame';
-  assert (forall (frame:_{composable (pcm_uninit p) ((value_to_uninit p) x) frame}).
-       composable (pcm_uninit p) ((value_to_uninit p) y) frame /\
-       (op (pcm_uninit p) ((value_to_uninit p) x) frame == v ==> op (pcm_uninit p) ((value_to_uninit p) y) frame == v_new));
+  assert (forall (frame:_{composable (pcm_uninit p) ((value_to_uninit p).morph x) frame}).
+       composable (pcm_uninit p) ((value_to_uninit p).morph y) frame /\
+       (op (pcm_uninit p) ((value_to_uninit p).morph x) frame == v ==> op (pcm_uninit p) ((value_to_uninit p).morph y) frame == v_new));
   ()
 
 let uninit_conn_fpu
@@ -1292,7 +1333,7 @@ let uninit_conn_fpu
   (x: Ghost.erased a { ~ (Ghost.reveal x == one p) })
   (y: Ghost.erased a)
   (f: frame_preserving_upd p x y)
-: Tot (frame_preserving_upd (pcm_uninit p) ((value_to_uninit p) x) ((value_to_uninit p) y))
+: Tot (frame_preserving_upd (pcm_uninit p) ((value_to_uninit p).morph x) ((value_to_uninit p).morph y))
 =
   fun v ->
     uninit_conn_fpu_prop p x y f v;
@@ -1398,20 +1439,20 @@ let pts_to_view_explicit_witinv
   =
     let x_ = vw.to_carrier x in
     let y_ = vw.to_carrier y in
-    let x' = r.pl.conn_small_to_large x_ in
-    let y' = r.pl.conn_small_to_large y_ in
+    let x' = r.pl.conn_small_to_large.morph x_ in
+    let y' = r.pl.conn_small_to_large.morph y_ in
     M.pts_to_join r.r x' y' m;
     let z' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun z' -> compatible r.p x' z' /\ compatible r.p y' z') in
     let frame_x' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun frame_x' -> composable r.p x' frame_x' /\ op r.p frame_x' x' == z') in
     let frame_y' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun frame_y' -> composable r.p y' frame_y' /\ op r.p frame_y' y' == z') in
-    let frame_x_ = r.pl.conn_large_to_small frame_x' in
-    let frame_y_ = r.pl.conn_large_to_small frame_y' in
+    let frame_x_ = r.pl.conn_large_to_small.morph frame_x' in
+    let frame_y_ = r.pl.conn_large_to_small.morph frame_y' in
     r.p.comm x' frame_x';
-    r.pl.conn_large_to_small_compose x' frame_x';
-    vw.to_view_frame x (r.pl.conn_large_to_small frame_x');
+    r.pl.conn_large_to_small.morph_compose x' frame_x';
+    vw.to_view_frame x (r.pl.conn_large_to_small.morph frame_x');
     r.p.comm y' frame_y';
-    r.pl.conn_large_to_small_compose y' frame_y';
-    vw.to_view_frame y (r.pl.conn_large_to_small frame_y');
+    r.pl.conn_large_to_small.morph_compose y' frame_y';
+    vw.to_view_frame y (r.pl.conn_large_to_small.morph frame_y');
     ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
