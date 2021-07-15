@@ -1352,3 +1352,198 @@ let exclusive_uninit
       = assert (composable (pcm_uninit p) x (InitOrUnit frame))
       in
       ()
+
+let not_one #t (p: pcm t) : Tot Type = (x: t { ~ (x == one p) })
+
+noeq
+type sel_view
+  (#carrier: Type u#a)
+  (p: pcm carrier)
+  (view: Type u#b)
+= {
+  to_view: (not_one p -> GTot view);
+  to_carrier: (view -> GTot (not_one p));
+  to_view_frame:
+    (x: view) ->
+    (frame: carrier) ->
+    Lemma
+    (requires (composable p (to_carrier x) frame))
+    (ensures (to_view (op p (to_carrier x) frame) == x));
+}
+
+let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
+  (forall x . {:pattern (g (f x))} g (f x) == x)
+
+let sel_view_inv
+  (#carrier: Type u#a)
+  (#p: pcm carrier)
+  (#view: Type u#b)
+  (vw: sel_view p view)
+: Lemma
+  (vw.to_view `g_is_inverse_of` vw.to_carrier)
+  [SMTPat (has_type vw (sel_view p view))]
+= let aux
+    (x: view)
+  : Lemma
+    (vw.to_view (vw.to_carrier x) == x)
+    [SMTPat (vw.to_view (vw.to_carrier x))]
+  = is_unit p (vw.to_carrier x);
+    vw.to_view_frame x (one p)
+  in
+  ()
+
+let pts_to_view_explicit
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type u#c)
+  (vw: sel_view p c)
+  (v: Ghost.erased c)
+: Tot M.slprop
+= hp_of (pts_to r (vw.to_carrier v))
+
+let pts_to_view_explicit_witinv
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type u#c)
+  (vw: sel_view p c)
+: Lemma
+  (M.is_witness_invariant (pts_to_view_explicit r vw))
+= 
+  let aux (x y : Ghost.erased c) (m:M.mem)
+  : Lemma
+    (requires (M.interp (pts_to_view_explicit r vw x) m /\ M.interp (pts_to_view_explicit r vw y) m))
+    (ensures  (x == y))
+  =
+    let x_ = vw.to_carrier x in
+    let y_ = vw.to_carrier y in
+    let x' = r.pl.conn_small_to_large.morph x_ in
+    let y' = r.pl.conn_small_to_large.morph y_ in
+    M.pts_to_join r.r x' y' m;
+    let z' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun z' -> compatible r.p x' z' /\ compatible r.p y' z') in
+    let frame_x' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun frame_x' -> composable r.p x' frame_x' /\ op r.p frame_x' x' == z') in
+    let frame_y' = FStar.IndefiniteDescription.indefinite_description_ghost a (fun frame_y' -> composable r.p y' frame_y' /\ op r.p frame_y' y' == z') in
+    let frame_x_ = r.pl.conn_large_to_small.morph frame_x' in
+    let frame_y_ = r.pl.conn_large_to_small.morph frame_y' in
+    r.p.comm x' frame_x';
+    r.pl.conn_large_to_small.morph_compose x' frame_x';
+    vw.to_view_frame x (r.pl.conn_large_to_small.morph frame_x');
+    r.p.comm y' frame_y';
+    r.pl.conn_large_to_small.morph_compose y' frame_y';
+    vw.to_view_frame y (r.pl.conn_large_to_small.morph frame_y');
+    ()
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+let pts_to_view_sl
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type u#c)
+  (vw: sel_view p c)
+: Tot M.slprop
+= M.h_exists (pts_to_view_explicit r vw)
+
+let pts_to_view_sel'
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: Tot (selector' c (pts_to_view_sl r vw))
+= fun h ->
+  let x = M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) h in
+  Ghost.reveal (Ghost.reveal x)
+
+let pts_to_view_depends_only_on
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+  (m0:M.hmem (pts_to_view_sl r vw)) (m1:M.mem{M.disjoint m0 m1})
+: Lemma (pts_to_view_sel' r vw m0 == pts_to_view_sel' r vw (M.join m0 m1))
+= let x = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) m0) in
+  let y = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) (M.join m0 m1)) in
+  pts_to_view_explicit_witinv r vw;
+  M.elim_wi (pts_to_view_explicit r vw) x y (M.join m0 m1)
+
+let pts_to_view_depends_only_on_core
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+  (m0:M.hmem (pts_to_view_sl r vw))
+: Lemma (pts_to_view_sel' r vw m0 == pts_to_view_sel' r vw (M.core_mem m0))
+= let x = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) m0) in
+  let y = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) (M.core_mem m0)) in
+  pts_to_view_explicit_witinv r vw;
+  M.elim_wi (pts_to_view_explicit r vw) x y (M.core_mem m0)
+
+let pts_to_view_sel
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: Tot (selector c (pts_to_view_sl r vw))
+= Classical.forall_intro_2 (pts_to_view_depends_only_on r vw);
+  Classical.forall_intro (pts_to_view_depends_only_on_core r vw);
+  pts_to_view_sel' r vw
+
+[@@__steel_reduce__]
+let pts_to_view'
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: Tot vprop'
+= {
+  hp = pts_to_view_sl r vw;
+  t = c;
+  sel = pts_to_view_sel r vw;
+}
+
+[@@__steel_reduce__]
+let pts_to_view 
+  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: Tot vprop
+= VUnit (pts_to_view' r vw)
+
+let opt_view
+  (a: Type)
+: Tot (sel_view (opt_pcm #a) a)
+= {
+  to_view = Some?.v;
+  to_carrier = (fun z -> Some z);
+  to_view_frame = (fun x frame -> ());
+}
+
+let frac_view
+  (a: Type)
+  (p: perm)
+: Tot (sel_view (pcm_frac #a) a)
+= {
+  to_view = (fun x -> let Some (v, _) = x in v);
+  to_carrier = (fun v -> Some (v, p));
+  to_view_frame = (fun v frame -> ());
+}
+
+let uninit_view
+  (#a: Type)
+  (#p: pcm a)
+  (#b: Type)
+  (w: sel_view p b)
+: Tot (sel_view #(uninit_t a) (pcm_uninit p) (uninit_t b))
+= {
+  to_view = (fun (x: not_one (pcm_uninit p)) -> match x with
+  | Uninitialized -> Uninitialized
+  | InitOrUnit x' -> InitOrUnit (w.to_view x')
+  );
+  to_carrier = (fun v -> match v with
+  | Uninitialized -> Uninitialized
+  | InitOrUnit v' -> InitOrUnit (w.to_carrier v')
+  );
+  to_view_frame = (fun v frame -> match v with
+  | Uninitialized -> ()
+  | InitOrUnit v' -> let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  );
+}
