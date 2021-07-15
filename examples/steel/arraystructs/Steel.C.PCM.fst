@@ -134,30 +134,76 @@ let is_inverse_of_injective (#a #b: Type) (g: (b -> Tot a)) (f: (a -> Tot b))
   [SMTPat (g `is_inverse_of` f); SMTPat (f x1); SMTPat (f x2)]
 = assert (g (f x1) == g (f x2))
 
+#push-options "--print_universes"
+
+let fpu_lift_dom (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
+  (conn_small_to_large: morphism p_small p_large)
+= (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == p_small.p.one)}) &
+   y:Ghost.erased t_small &
+   frame_preserving_upd p_small x y)
+
+let fpu_lift_cod (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
+  (conn_small_to_large: morphism p_small p_large)
+: fpu_lift_dom conn_small_to_large -> Type
+= fun (|x, y, f|) ->
+  frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)
+     
+let fpu_lift (#t_large:Type) (#t_small: Type) (p_large: pcm t_large) (p_small: pcm t_small)
+  (conn_small_to_large: morphism p_small p_large)
+: Type
+= restricted_t
+    (fpu_lift_dom conn_small_to_large)
+    (fpu_lift_cod conn_small_to_large)
+
 noeq
 type connection (#t_large #t_small: Type) (p_large: pcm t_large) (p_small: pcm t_small) = {
   conn_small_to_large: morphism p_small p_large;
   conn_large_to_small: morphism p_large p_small;
   conn_small_to_large_inv: squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph);
-  conn_lift_frame_preserving_upd:
-    (x: Ghost.erased t_small { ~ (Ghost.reveal x == p_small.p.one) }) -> // validity condition, e.g. union cases
-    (y: Ghost.erased t_small) ->
-    (f: frame_preserving_upd p_small x y) ->
-    Tot (frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y));
+  conn_lift_frame_preserving_upd: fpu_lift p_large p_small conn_small_to_large;
 }
 
-let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: connection pa pb) (fbc: connection pb pc) : Tot (connection pa pc) = {
-  conn_small_to_large = fbc.conn_small_to_large `morphism_compose` fab.conn_small_to_large;
-  conn_large_to_small = fab.conn_large_to_small `morphism_compose` fbc.conn_large_to_small;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = begin fun xc yc f ->
+let mkconnection (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
+  (conn_small_to_large: morphism p_small p_large)
+  (conn_large_to_small: morphism p_large p_small)
+  (conn_small_to_large_inv:
+    squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph))
+  (conn_lift_frame_preserving_upd:
+    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == p_small.p.one)}) ->
+     y:Ghost.erased t_small ->
+     frame_preserving_upd p_small x y ->
+     frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)))
+: connection p_large p_small = {
+  conn_small_to_large = conn_small_to_large;
+  conn_large_to_small = conn_large_to_small;
+  conn_small_to_large_inv = conn_small_to_large_inv;
+  conn_lift_frame_preserving_upd =
+    on_domain
+      (fpu_lift_dom conn_small_to_large)
+      (fun (z: fpu_lift_dom conn_small_to_large) ->
+        let (|x, y, f|) = z in
+	conn_lift_frame_preserving_upd x y f <: fpu_lift_cod conn_small_to_large z)
+}
+
+let connection_eq (l m: 'p `connection` 'q)
+: Lemma
+    (requires l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph /\
+              l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph /\
+              l.conn_lift_frame_preserving_upd `feq` m.conn_lift_frame_preserving_upd)
+    (ensures l == m)
+= ()
+
+let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: connection pa pb) (fbc: connection pb pc) : Tot (connection pa pc) =
+  mkconnection
+    (fbc.conn_small_to_large `morphism_compose` fab.conn_small_to_large)
+    (fab.conn_large_to_small `morphism_compose` fbc.conn_large_to_small)
+    ()
+    (fun xc yc f ->
     let xb = Ghost.hide (fbc.conn_small_to_large.morph xc) in
     let yb = Ghost.hide (fbc.conn_small_to_large.morph yc) in
     let xa = Ghost.hide (fab.conn_small_to_large.morph xb) in
     let ya = Ghost.hide (fab.conn_small_to_large.morph yb) in
-    fab.conn_lift_frame_preserving_upd _ _ (fbc.conn_lift_frame_preserving_upd _ _ f)
-  end;
-}
+    fab.conn_lift_frame_preserving_upd (|xb, yb, fbc.conn_lift_frame_preserving_upd (|xc, yc, f|)|))
 
 noeq type ref (a: Type u#1) #b (q: pcm b): Type = {
   p: pcm a;
@@ -190,8 +236,9 @@ let ref_focus_comp (r: ref 'a 'p) (l: connection 'p 'q) (m: connection 'q 'r)
   [SMTPatOr [
     [SMTPat (ref_focus (ref_focus r l) m)]; 
     [SMTPat (ref_focus r (l `connection_compose` m))]]]
-= assume ((r.pl `connection_compose` l) `connection_compose` m ==
-          r.pl `connection_compose` (l `connection_compose` m))
+= connection_eq
+    ((r.pl `connection_compose` l) `connection_compose` m)
+    (r.pl `connection_compose` (l `connection_compose` m))
 
 module A = Steel.Effect.Atomic
 
@@ -312,7 +359,7 @@ module M = Steel.Memory
 
 let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p) }) (y: Ghost.erased 'b) (f: frame_preserving_upd 'p x y)
 : Tot (M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y)))
-= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large.morph x)) (Ghost.hide (r.pl.conn_small_to_large.morph y)) (r.pl.conn_lift_frame_preserving_upd x y f)
+= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large.morph x)) (Ghost.hide (r.pl.conn_small_to_large.morph y)) (r.pl.conn_lift_frame_preserving_upd (|x, y, f|))
 
 let as_action (#p:vprop)
               (#q:vprop)
@@ -544,12 +591,11 @@ let struct_field
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (connection (prod_pcm p) (p k))
-= {
-  conn_small_to_large = field_to_struct p k;
-  conn_large_to_small = struct_to_field p k;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = struct_field_lift_fpu p k;
-}
+= mkconnection
+    (field_to_struct p k)
+    (struct_to_field p k)
+    ()
+    (struct_field_lift_fpu p k)
 
 let struct_without_field (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (xs: restricted_t a b)
@@ -937,12 +983,11 @@ let union_field
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (connection (union_pcm p) (p k))
-= {
-  conn_small_to_large = field_to_union p k;
-  conn_large_to_small = union_to_field p k;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = union_field_lift_fpu p k;
-}
+= mkconnection
+    (field_to_union p k)
+    (union_to_field p k)
+    ()
+    (union_field_lift_fpu p k)
 
 let union_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   (xs: union p{~ (xs k == one (p k))})
@@ -1343,12 +1388,11 @@ let uninit_conn
   (#a: Type)
   (p: pcm a)
 : Tot (connection (pcm_uninit p) p)
-= {
-  conn_small_to_large = value_to_uninit p;
-  conn_large_to_small = uninit_to_value p;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = uninit_conn_fpu p;
-}
+= mkconnection
+    (value_to_uninit p)
+    (uninit_to_value p)
+    ()
+    (uninit_conn_fpu p)
 
 let exclusive_uninit
   (#a: Type)
