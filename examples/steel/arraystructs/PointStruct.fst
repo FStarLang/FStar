@@ -21,8 +21,8 @@ let mk_point_f (x y: pod int) (k: point_field): point_fields k = match k with
   | X -> x
   | Y -> y
   
-let mk_point (x y: Ghost.erased (pod int)): GTot point =
-  on_domain point_field (mk_point_f (Ghost.reveal x) (Ghost.reveal y))
+let mk_point (x y: Ghost.erased (pod int)): Ghost.erased point =
+  Ghost.hide (on_domain point_field (mk_point_f (Ghost.reveal x) (Ghost.reveal y)))
 
 let _x = struct_field point_fields_pcm X
 let _y = struct_field point_fields_pcm Y

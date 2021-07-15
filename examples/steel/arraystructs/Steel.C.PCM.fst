@@ -44,6 +44,44 @@ let morphism_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fa
     fbc.morph_compose (fab.morph x1) (fab.morph x2)
   end;
 }
+let compatible_intro
+  (#a: Type u#a)
+  (pcm: pcm a)
+  (x y: a)
+  (frame: a)
+: Lemma
+  (requires (composable pcm x frame /\ op pcm frame x == y))
+  (ensures (compatible pcm x y))
+= ()
+
+let compatible_elim
+  (#a: Type u#a)
+  (pcm: pcm a)
+  (x y: a)
+: Ghost a
+  (requires (compatible pcm x y))
+  (ensures (fun frame ->
+    composable pcm x frame /\
+    op pcm frame x == y
+  ))
+= FStar.IndefiniteDescription.indefinite_description_ghost _ (fun frame -> 
+    composable pcm x frame /\
+    op pcm frame x == y
+  )
+
+val compatible_morphism
+  (#p: pcm 'a) (#q: pcm 'b)
+  (f: p `morphism` q)
+  (x y: Ghost.erased 'a)
+: Lemma
+    (requires compatible p x y)
+    (ensures compatible q (f.morph x) (f.morph y))
+
+let compatible_morphism #a #b #p #q f x y =
+  let frame_x = compatible_elim p x y in
+  f.morph_compose frame_x x;
+  compatible_intro q (f.morph x) (f.morph y) (f.morph frame_x)
+
 
 let injective (#a #b: Type) (f: (a -> Tot b)) : Tot prop =
   (forall x1 x2 . {:pattern f x1; f x2} f x1 == f x2 ==> x1 == x2)
@@ -94,11 +132,6 @@ let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to 
 
 open Steel.Effect
 
-//val pts_to
-//  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
-//  (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
-//: vprop
-
 val pts_to
   (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
   (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
@@ -114,6 +147,14 @@ val ref_focus
 
 let ref_focus #a #b #c #p r #q l =
   {p = r.p; pl = connection_compose r.pl l; r = r.r}
+
+let ref_focus_comp (r: ref 'a 'p) (l: connection 'p 'q) (m: connection 'q 'r)
+: Lemma (ref_focus (ref_focus r l) m == ref_focus r (l `connection_compose` m))
+  [SMTPatOr [
+    [SMTPat (ref_focus (ref_focus r l) m)]; 
+    [SMTPat (ref_focus r (l `connection_compose` m))]]]
+= assume ((r.pl `connection_compose` l) `connection_compose` m ==
+          r.pl `connection_compose` (l `connection_compose` m))
 
 module A = Steel.Effect.Atomic
 
@@ -477,12 +518,12 @@ let struct_field
   conn_lift_frame_preserving_upd = struct_field_lift_fpu p k;
 }
 
-let struct_without_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let struct_without_field (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (xs: restricted_t a b)
 : restricted_t a b
 = on_dom a (fun k' -> if k' = k then one (p k) else xs k')
 
-let struct_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (xs: restricted_t a b)
 : Lemma (
     composable (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) /\
@@ -492,7 +533,7 @@ let struct_peel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
   
 let addr_of_struct_field
-  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k)))
+  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
   (r: ref base (prod_pcm p)) (k:a)
   (xs: Ghost.erased (restricted_t a b))
 : Steel (ref base (p k))
@@ -507,12 +548,12 @@ let addr_of_struct_field
   let r = focus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
   A.return r
 
-let struct_with_field (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let struct_with_field (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (x:b k) (xs: restricted_t a b)
 : restricted_t a b
 = on_dom a (fun k' -> if k' = k then x else xs k')
 
-let struct_unpeel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
+let struct_unpeel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (x: b k) (xs: restricted_t a b)
 : Lemma
     (requires xs k == one (p k))
@@ -524,7 +565,7 @@ let struct_unpeel (#a:eqtype) #b (p:(k:a -> pcm (b k))) (k:a)
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
-  #base (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
+  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
   (r': ref base (p k)) (r: ref base (prod_pcm p))
   (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
 : Steel unit
@@ -540,7 +581,7 @@ let unaddr_of_struct_field
 
 let exclusive_struct_intro
   (#a: Type)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (x: restricted_t a b)
 : Lemma
@@ -556,7 +597,7 @@ let exclusive_struct_intro
 
 let exclusive_struct_elim
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (x: restricted_t a b)
   (k: a)
@@ -800,31 +841,6 @@ let union_field_lift_fpu'
       then f (v k) <: b k'
       else one (p k')
     )
-
-let compatible_intro
-  (#a: Type u#a)
-  (pcm: pcm a)
-  (x y: a)
-  (frame: a)
-: Lemma
-  (requires (composable pcm x frame /\ op pcm frame x == y))
-  (ensures (compatible pcm x y))
-= ()
-
-let compatible_elim
-  (#a: Type u#a)
-  (pcm: pcm a)
-  (x y: a)
-: Ghost a
-  (requires (compatible pcm x y))
-  (ensures (fun frame ->
-    composable pcm x frame /\
-    op pcm frame x == y
-  ))
-= FStar.IndefiniteDescription.indefinite_description_ghost _ (fun frame -> 
-    composable pcm x frame /\
-    op pcm frame x == y
-  )
 
 #restart-solver
 #push-options "--z3rlimit 32 --query_stats"
