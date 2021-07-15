@@ -1394,16 +1394,9 @@ let (tc_layered_eff_decl :
                                                          guard_wp;
                                                          guard_eq];
                                                        (let k1 =
-                                                          let uu___18 =
-                                                            FStar_All.pipe_right
-                                                              k
-                                                              (FStar_TypeChecker_Normalize.remove_uvar_solutions
-                                                                 env) in
                                                           FStar_All.pipe_right
-                                                            uu___18
-                                                            (FStar_TypeChecker_Normalize.normalize
-                                                               [FStar_TypeChecker_Env.Beta;
-                                                               FStar_TypeChecker_Env.Eager_unfolding]
+                                                            k
+                                                            (FStar_TypeChecker_Normalize.remove_uvar_solutions
                                                                env) in
                                                         (let uu___18 =
                                                            let uu___19 =

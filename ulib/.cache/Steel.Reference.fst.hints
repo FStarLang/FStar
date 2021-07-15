@@ -297,14 +297,14 @@
       [
         "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
         "equation_Steel.Effect.Common.to_vprop_",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.pts_to_sl",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Reference.pts_to",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_Steel.Effect.Common.VUnit__0", "true_interp"
+        "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "c051cc2b9f0ce10a719168b3a8d224d1"
+      "dd243ed535a9822d5eb9d7ef923f83c3"
     ],
     [
       "Steel.Reference.ptr_sel'",
@@ -513,7 +513,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "3987501a93a047a6574c177f6dc80f71"
+      "e0a0d5df5e936225c65b11efaeb91f4b"
     ],
     [
       "Steel.Reference.elim_vptr",
@@ -531,7 +531,7 @@
         "typing_Steel.Reference.vptr_", "unit_typing"
       ],
       0,
-      "f3280998674f764df073a227f34476ca"
+      "092876e66cce6fa6f5cb61b545154029"
     ],
     [
       "Steel.Reference.malloc",
@@ -724,7 +724,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "b5d07b5dae649092f2b4d8140a63001e"
+      "03a48426f6a3374d0db030ba856af33d"
     ],
     [
       "Steel.Reference.vptrp_not_null",
@@ -1115,7 +1115,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "b82487b8486e2458cd44c7b18cec29f7"
+      "5ddaa863507470668415076abf65dcf5"
     ],
     [
       "Steel.Reference.elim_ghost_vptr",
@@ -1133,7 +1133,7 @@
         "typing_Steel.Reference.ghost_vptr_", "unit_typing"
       ],
       0,
-      "3a3a79dcc685286d2efd289e0590edd0"
+      "dd5e0427148005b683351328c7ef66fb"
     ],
     [
       "Steel.Reference.ghost_alloc",
@@ -1326,7 +1326,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "6749fbadd4f55a7112a54219e9d30c3f"
+      "e7185fdfd33a86b8cc7d41c61172e3ad"
     ]
   ]
 ]

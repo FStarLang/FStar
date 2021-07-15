@@ -307,7 +307,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "197250f30a84275c571fbe88d3177057"
+      "9221ff0d6533c809a6abf47f666caf83"
     ],
     [
       "Queue.new_queue",
@@ -345,6 +345,7 @@
         "equation_Steel.Effect.Common.star",
         "equation_Steel.Effect.Common.to_vprop_",
         "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Reference.pts_to",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.map.fuel_instrumented",
         "equation_with_fuel_Queue.fragment.fuel_instrumented",
@@ -390,7 +391,7 @@
         "typing_Steel.Reference.null"
       ],
       0,
-      "67285fb6420f2dec4662b807a6d410fa"
+      "502ac34864c1aa9e21aab4320407a0be"
     ],
     [
       "Queue.witness_h_exists_erased",
@@ -704,7 +705,7 @@
         "unit_inversion"
       ],
       0,
-      "db88f5ff61c9aa0cf55cc201c490acd8"
+      "ebb02c844f8b244014d55abe63a68182"
     ],
     [
       "Queue.dequeue_post_success",
@@ -920,7 +921,7 @@
         "typing_Steel.Memory.pure", "typing_Steel.Reference.is_null"
       ],
       0,
-      "277c51f8022bb815770a41222d43e7fa"
+      "70fb0d674aa90f33c7750fab68bfe299"
     ]
   ]
 ]
