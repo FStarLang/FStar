@@ -125,8 +125,8 @@ let subcomp (a:Type)
   (f:steelK a framed_f pre_f post_f)
 : Tot (steelK a framed_g pre_g post_g)
 = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post_g x) (fun _ -> postf))) ->
-    change_slprop_imp pre_g pre_f (); f
-      ((fun x -> change_slprop_imp (frame `star` post_f x) (frame `star` post_g x)
+    change_slprop_imp pre_g pre_f ();
+    f #frame #postf ((fun x -> change_slprop_imp (frame `star` post_f x) (frame `star` post_g x)
                             (can_be_split_forall_frame post_f post_g frame x);
                k x) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> postf)))
 
@@ -173,7 +173,7 @@ let bind_tot_steelK_ (a:Type) (b:Type)
     post
   = fun #frame #postf (k:(x:b -> SteelT unit (frame `star` post x) (fun _ -> postf))) ->
       let x = f () in
-      g x k
+      g x #frame #postf k
 
 polymonadic_bind (PURE, SteelKBase) |> SteelKBase = bind_tot_steelK_
 

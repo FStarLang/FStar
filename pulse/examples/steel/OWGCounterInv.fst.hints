@@ -29,7 +29,7 @@
         "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c65f071b3490e041d7991e0da1e3e532"
+      "a45f200851c42213e4ad991787bd22ec"
     ],
     [
       "OWGCounterInv.ghost_share",
@@ -49,7 +49,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "52751c7cd0102ad5e2c6ebb843cdbd06"
+      "b51373f3203241ee008252b625564710"
     ],
     [
       "OWGCounterInv.gather_invariant",
@@ -70,7 +70,7 @@
         "real_inversion", "typing_FStar.Real.one"
       ],
       0,
-      "2902844b7f9e993210eef328d727b258"
+      "4934fad0e1fdedec05a5414242ee30a3"
     ],
     [
       "OWGCounterInv.with_invariant",
@@ -95,7 +95,7 @@
         "typing_Steel.Effect.Atomic.set_add", "typing_Steel.Memory.iname"
       ],
       0,
-      "c7875c96b22dceab19c2c5c96b441464"
+      "044d6139b2d348f40f04208d39cb36f9"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -106,7 +106,6 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_OWGCounterInv.half_perm",
@@ -132,13 +131,12 @@
         "typing_OWGCounterInv.half_perm", "typing_OWGCounterInv.inv_slprop",
         "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.star",
-        "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.Reference.ghost_pts_to_sl",
-        "typing_Steel.Reference.pts_to_sl"
+        "typing_Steel.Reference.ghost_pts_to",
+        "typing_Steel.Reference.pts_to"
       ],
       0,
-      "12ebdfddfe9c39a727e5ee6601e1c45c"
+      "d84371b23d76cef6c7b3003a94878a88"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -178,7 +176,7 @@
         "typing_OWGCounterInv.inv_slprop"
       ],
       0,
-      "aff6f6223c58d46c69a4efc1c6642a59"
+      "31eb9ba612377904f27316a928d91be2"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -218,7 +216,7 @@
         "typing_OWGCounterInv.inv_slprop"
       ],
       0,
-      "7ee159ced9fed6f3ccb8b33732dc7b94"
+      "45726d8db4fa207fe978cb72c8f99022"
     ],
     [
       "OWGCounterInv.incr_ghost_contrib",
@@ -239,7 +237,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "7ca71164a5d51d6708b996e1acf9bc36"
+      "8fe00bdede39405973c5aeb3c100ce41"
     ],
     [
       "OWGCounterInv.incr_with_inv_slprop",
@@ -275,7 +273,16 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "137bcf4eace194c4e57576210d2eacd4"
+      "0a6ad84056ea7b4757ba4fa0c37fb0eb"
+    ],
+    [
+      "OWGCounterInv.incr_with_invariant",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "9703ea44805e391ea4bf07313ffe5a11"
     ],
     [
       "OWGCounterInv.incr_main",
@@ -315,7 +322,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "bc57faaef308888662e66567041ceaa3"
+      "7dbb49e1f5f7f17d2de57c557789d548"
     ]
   ]
 ]
