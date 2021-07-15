@@ -1,6 +1,8 @@
 module Steel.C.PCM
 open FStar.PCM
 
+#push-options "--print_universes"
+
 unfold
 let one (#a: Type) (p: pcm a) = p.p.one
 
@@ -82,7 +84,7 @@ let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (
   end;
 }
 
-noeq type ref a #b (q: pcm b): Type = {
+noeq type ref (a: Type u#1) #b (q: pcm b): Type = {
   p: pcm a;
   pl: connection p q;
   r: Steel.Memory.ref a p;
@@ -341,7 +343,7 @@ let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
 
 let field_to_struct_f
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: b k)
@@ -358,7 +360,7 @@ let is_unit (#a: Type u#a) (p:pcm a)
 
 let field_to_struct
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (p k) (prod_pcm p))
@@ -374,7 +376,7 @@ let field_to_struct
 
 let struct_to_field_f
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: restricted_t a b)
@@ -383,7 +385,7 @@ let struct_to_field_f
 
 let struct_to_field
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (prod_pcm p) (p k))
@@ -395,7 +397,7 @@ let struct_to_field
 
 let struct_field_lift_fpu'
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -415,7 +417,7 @@ let struct_field_lift_fpu'
 
 let struct_field_lift_fpu_prf
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -451,7 +453,7 @@ let struct_field_lift_fpu_prf
 
 let struct_field_lift_fpu
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -464,7 +466,7 @@ let struct_field_lift_fpu
 
 let struct_field
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type u#b)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (connection (prod_pcm p) (p k))
@@ -686,7 +688,7 @@ let union_pcm (p:(k:'a -> pcm ('b k))): pcm (union p) =
 
 let field_to_union_f
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: b k)
@@ -697,7 +699,7 @@ let field_to_union_f
 
 let field_to_union
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (p k) (union_pcm p))
@@ -713,7 +715,7 @@ let field_to_union
 
 let union_to_field_f
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: union p)
@@ -722,7 +724,7 @@ let union_to_field_f
 
 let union_to_field
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (morphism (union_pcm p) (p k))
@@ -734,7 +736,7 @@ let union_to_field
 
 let union_field_lift_fpu'
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -782,7 +784,7 @@ let compatible_elim
 
 let union_field_lift_fpu_prf
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -818,7 +820,7 @@ let union_field_lift_fpu_prf
 
 let union_field_lift_fpu
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
@@ -831,7 +833,7 @@ let union_field_lift_fpu
 
 let union_field
   (#a: eqtype)
-  (#b: _)
+  (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
 : Tot (connection (union_pcm p) (p k))
