@@ -1353,7 +1353,8 @@ let exclusive_uninit
       in
       ()
 
-let not_one #t (p: pcm t) : Tot Type = (x: t { ~ (x == one p) })
+let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
+  (x: a { p x })
 
 noeq
 type sel_view
@@ -1361,14 +1362,19 @@ type sel_view
   (p: pcm carrier)
   (view: Type u#b)
 = {
-  to_view: (not_one p -> GTot view);
-  to_carrier: (view -> GTot (not_one p));
+  to_view_prop: (carrier -> Tot prop);
+  to_view: (refine carrier to_view_prop -> GTot view);
+  to_carrier: (view -> GTot (refine carrier to_view_prop));
+  to_carrier_not_one:
+    (x: view) ->
+    Lemma
+    (~ (to_carrier x == one p));
   to_view_frame:
     (x: view) ->
     (frame: carrier) ->
     Lemma
     (requires (composable p (to_carrier x) frame))
-    (ensures (to_view (op p (to_carrier x) frame) == x));
+    (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
 
 let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
@@ -1512,8 +1518,10 @@ let opt_view
   (a: Type)
 : Tot (sel_view (opt_pcm #a) a)
 = {
-  to_view = Some?.v;
-  to_carrier = (fun z -> Some z);
+  to_view_prop = (fun x -> Some? x == true);
+  to_view = (fun x -> Some?.v x);
+  to_carrier = (fun z  -> Some z);
+  to_carrier_not_one = (fun _ -> ());
   to_view_frame = (fun x frame -> ());
 }
 
@@ -1522,8 +1530,10 @@ let frac_view
   (p: perm)
 : Tot (sel_view (pcm_frac #a) a)
 = {
+  to_view_prop = (fun x -> Some? x == true);
   to_view = (fun x -> let Some (v, _) = x in v);
   to_carrier = (fun v -> Some (v, p));
+  to_carrier_not_one = (fun _ -> ());
   to_view_frame = (fun v frame -> ());
 }
 
@@ -1534,16 +1544,45 @@ let uninit_view
   (w: sel_view p b)
 : Tot (sel_view #(uninit_t a) (pcm_uninit p) (uninit_t b))
 = {
-  to_view = (fun (x: not_one (pcm_uninit p)) -> match x with
+  to_view_prop = (fun x -> match x with
+  | Uninitialized -> True
+  | InitOrUnit x' -> w.to_view_prop x'
+  );
+  to_view = (fun x -> match x with
   | Uninitialized -> Uninitialized
   | InitOrUnit x' -> InitOrUnit (w.to_view x')
   );
   to_carrier = (fun v -> match v with
   | Uninitialized -> Uninitialized
-  | InitOrUnit v' -> InitOrUnit (w.to_carrier v')
+  | InitOrUnit v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v')
+  );
+  to_carrier_not_one = (fun v -> match v with
+  | Uninitialized -> ()
+  | InitOrUnit v' -> w.to_carrier_not_one v'
   );
   to_view_frame = (fun v frame -> match v with
   | Uninitialized -> ()
-  | InitOrUnit v' -> let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  | InitOrUnit v' -> w.to_carrier_not_one v'; let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  );
+}
+
+let uninit_view_initialized
+  (#a: Type)
+  (#p: pcm a)
+  (#b: Type)
+  (w: sel_view p b)
+: Tot (sel_view #(uninit_t a) (pcm_uninit p) b)
+= {
+  to_view_prop = (fun x -> match x with
+  | Uninitialized -> False
+  | InitOrUnit x' -> w.to_view_prop x'
+  );
+  to_view = (fun x -> match x with
+  | InitOrUnit x' -> w.to_view x'
+  );
+  to_carrier = (fun v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v'));
+  to_carrier_not_one = (fun v -> w.to_carrier_not_one v);
+  to_view_frame = (fun v frame ->
+    w.to_carrier_not_one v; let InitOrUnit frame' = frame in w.to_view_frame v frame'
   );
 }
