@@ -375,7 +375,7 @@ let field_to_struct
 }
 
 let struct_to_field_f
-  (#a: eqtype)
+  (#a: Type)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
@@ -384,7 +384,7 @@ let struct_to_field_f
 = x k
 
 let struct_to_field
-  (#a: eqtype)
+  (#a: Type)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
@@ -537,7 +537,54 @@ let unaddr_of_struct_field
   struct_unpeel p k x xs;
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   A.return ()
-  
+
+let exclusive_struct_intro
+  (#a: Type)
+  (#b: _)
+  (p:(k: a -> pcm (b k)))
+  (x: restricted_t a b)
+: Lemma
+  (requires (
+    forall k . exclusive (p k) (struct_to_field_f p k x)
+  ))
+  (ensures (
+    exclusive (prod_pcm p) x
+  ))
+  [SMTPat (exclusive (prod_pcm p) x)]
+=
+  assert (forall frame . prod_comp p x frame ==> frame `feq` prod_one p)
+
+let exclusive_struct_elim
+  (#a: eqtype)
+  (#b: _)
+  (p:(k: a -> pcm (b k)))
+  (x: restricted_t a b)
+  (k: a)
+: Lemma
+  (requires (exclusive (prod_pcm p) x))
+  (ensures (exclusive (p k) (struct_to_field_f p k x)))
+=
+  let phi
+    frame
+  : Lemma
+    (requires (composable (p k) (struct_to_field_f p k x) frame))
+    (ensures (composable (prod_pcm p) x (field_to_struct_f p k frame)))
+    [SMTPat (composable (p k) (struct_to_field_f p k x) frame)]
+  = let x' = struct_to_field_f p k x in
+    let f' = field_to_struct_f p k frame in
+    let psi
+      k'
+    : Lemma
+      (composable (p k') (x k') (f' k'))
+      [SMTPat (composable (p k') (x k') (f' k'))]
+    = if k' = k
+      then ()
+      else is_unit (p k') (x k')
+    in
+    ()
+  in
+  ()
+
 (** A PCM for unions TODO move to proper place *)
 
 open FStar.FunctionalExtensionality
@@ -714,7 +761,7 @@ let field_to_union
 }
 
 let union_to_field_f
-  (#a: eqtype)
+  (#a: Type)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
@@ -723,7 +770,7 @@ let union_to_field_f
 = x k
 
 let union_to_field
-  (#a: eqtype)
+  (#a: Type)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
   (k: a)
@@ -901,6 +948,48 @@ let unaddr_of_union_field
     (ensures fun _ _ _ -> True)
 = unfocus r' r (union_field p k) x
 
+let exclusive_union_intro
+  (#a: Type)
+  (#b: _)
+  (p:(k: a -> pcm (b k)))
+  (x: union p)
+  (k: a)
+: Lemma
+  (requires (exclusive (p k) (x k) /\ (~ (x k == one (p k)))))
+  (ensures (exclusive (union_pcm p) x))
+= let phi
+    (frame: union p)
+  : Lemma
+    (requires (composable (union_pcm p) x frame))
+    (ensures (frame `feq` union_one p))
+    [SMTPat (composable (union_pcm p) x frame)]
+  = ()
+  in
+  ()
+
+let exclusive_union_elim
+  (#a: eqtype)
+  (#b: _)
+  (p: (k: a -> pcm (b k)))
+  (x: union p)
+  (k: a)
+: Lemma
+  (requires (exclusive (union_pcm p) x))
+  (ensures (x k == one (p k) \/ exclusive (p k) (x k)))
+= if FStar.StrongExcludedMiddle.strong_excluded_middle (x k == one (p k))
+  then ()
+  else
+    let phi
+      (frame: b k)
+    : Lemma
+      (requires (composable (p k) (x k) frame))
+      (ensures (frame == one (p k)))
+      [SMTPat (composable (p k) (x k) frame)]
+    = let frame' = field_to_union_f p k frame in
+      ()
+    in
+    ()
+
 let base_fpu
   (#a: Type)
   (p: pcm a)
@@ -931,6 +1020,31 @@ let opt_pcm #a : pcm (option a) = {
   is_unit = (fun _ -> ());
   refine = (fun x -> Some? x == true);
 }
+
+let exclusive_opt
+  (#a: Type)
+  (x: option a)
+: Lemma
+  (exclusive opt_pcm x <==> ((exists (y: a) . True) ==> Some? x))
+=
+  match x with
+  | None ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (exists (y: a). True)
+    then begin
+      let y = FStar.IndefiniteDescription.indefinite_description_ghost a (fun _ -> True) in
+      assert (composable opt_pcm x (Some y))
+    end else begin
+      let phi
+        (frame: option a)
+      : Lemma
+        (frame == None)
+      = match frame with
+        | None -> ()
+        | Some z -> assert (exists (y: a) . True)
+      in
+      Classical.forall_intro phi
+    end
+  | Some _ -> ()
 
 let opt_pcm_fpu
   (#a: Type)
@@ -1024,6 +1138,40 @@ let frac_pcm_read
 = let y' = ref_read r in
   assert (Some? y' /\ fst (Some?.v (Ghost.reveal x)) == fst (Some?.v y'));
   fst (Some?.v y')
+
+let exclusive_frac
+  (#a: Type)
+  (x: option (a & perm))
+: Lemma
+  (exclusive pcm_frac x <==> ((exists (y: a) . True) ==> (Some? x /\ full_perm `lesser_equal_perm` snd (Some?.v x))))
+= match x with
+  | None ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (exists (y: a). True)
+    then begin
+      let y = FStar.IndefiniteDescription.indefinite_description_ghost a (fun _ -> True) in
+      let frame = Some (y, full_perm) in
+      assert (~ (frame == one pcm_frac));
+      assert (composable pcm_frac x frame)
+    end else begin
+      let phi
+        (frame: option (a & perm))
+      : Lemma
+        (frame == None)
+      = match frame with
+        | None -> ()
+        | Some (z, _) -> assert (exists (y: a) . True)
+      in
+      Classical.forall_intro phi
+    end
+  | Some (y, p) ->
+    assert (exists (z: a) . True);
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (full_perm `lesser_equal_perm` p)
+    then ()
+    else begin
+      let frame = Some (y, MkPerm (let open FStar.Real in one -. p.v)) in
+      assert (composable pcm_frac x frame);
+      assert (~ (frame == one pcm_frac))
+    end
 
 
 /// Uninitialized
@@ -1178,3 +1326,29 @@ let uninit_conn
   conn_small_to_large_inv = ();
   conn_lift_frame_preserving_upd = uninit_conn_fpu p;
 }
+
+let exclusive_uninit
+  (#a: Type)
+  (p: pcm a)
+  (x: uninit_t a)
+: Lemma
+  (exclusive (pcm_uninit p) x <==> begin match x with
+  | Uninitialized -> True
+  | InitOrUnit z -> exclusive p z /\ (~ (z == one p))
+  end)
+= match x with
+  | Uninitialized -> ()
+  | InitOrUnit z ->
+    if FStar.StrongExcludedMiddle.strong_excluded_middle (z == one p)
+    then begin
+      assert (composable (pcm_uninit p) x Uninitialized)
+    end else
+      let phi2
+        frame
+      : Lemma
+        (requires (exclusive (pcm_uninit p) x /\ composable p z frame))
+        (ensures (frame == one p))
+        [SMTPat (composable p z frame)]
+      = assert (composable (pcm_uninit p) x (InitOrUnit frame))
+      in
+      ()
