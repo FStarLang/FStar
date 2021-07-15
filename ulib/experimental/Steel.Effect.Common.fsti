@@ -31,10 +31,14 @@ open FStar.Ghost
 
 irreducible let framing_implicit : unit = ()
 irreducible let __steel_reduce__ : unit = ()
+/// An internal attribute for finer-grained normalization in framing equalities
+irreducible let __inner_steel_reduce__ : unit = ()
 irreducible let __reduce__ : unit = ()
 irreducible let smt_fallback : unit = ()
+irreducible let ite_attr : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
+[@@__steel_reduce__]
 let true_p : prop = True
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
@@ -95,39 +99,41 @@ let to_vprop' (p:slprop) = {hp = p; t = unit; sel = fun _ -> ()}
 unfold
 let to_vprop (p:slprop) = VUnit (to_vprop' p)
 
-/// The core normalization primitive used to simplify Verification Conditions before encoding
-/// them to an SMT solver.
+/// Normalization steps for norm below.
 /// All functions marked as `unfold`, or with the `__steel_reduce__` attribute will be reduced,
 /// as well as some functions internal to the selector framework
 unfold
-let normal (#a:Type) (x:a) =
-  norm [
-    delta_attr [`%__steel_reduce__];
+let normal_steps =
+   [delta_attr [`%__steel_reduce__; `%__inner_steel_reduce__];
     delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
       `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
-    iota;zeta;primops]
-  x
+    iota;zeta;primops; simplify]
+
+/// The core normalization primitive used to simplify Verification Conditions before encoding
+/// them to an SMT solver.
+unfold
+let normal (#a:Type) (x:a) = norm normal_steps x
 
 /// An abbreviation for the VStar constructor, allowing to use it with infix notation
 [@@ __steel_reduce__; __reduce__]
 let star = VStar
 
 /// Extracting the underlying separation logic assertion from a vprop
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let rec hp_of (p:vprop) = match p with
   | VUnit p -> p.hp
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
@@ -144,11 +150,21 @@ type post_t (a:Type) = a -> vprop
 /// the context shrinks from all local variables in the computation to variables available at the toplevel
 let return_pre (p:vprop) : vprop = p
 
+noextract
+let hmem (p:vprop) = hmem (hp_of p)
+
 /// Abstract predicate for vprop implication. Currently implemented as an implication on the underlying slprop
 val can_be_split (p q:pre_t) : Type0
+
 /// Exposing the implementation of `can_be_split` when needed for proof purposes
 val reveal_can_be_split (_:unit) : Lemma
   (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q))
+
+/// A targeted version of the above
+val can_be_split_interp (r r':vprop) (h:hmem r)
+  : Lemma (requires can_be_split r r')
+          (ensures interp (hp_of r') h)
+
 
 /// A dependent version of can_be_split, to be applied to dependent postconditions
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
@@ -204,16 +220,37 @@ val reveal_equiv (p q:vprop) : Lemma (p `equiv` q <==> hp_of p `Mem.equiv` hp_of
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
 
-let rmem (pre:vprop) =
+let rmem' (pre:vprop) =
   FExt.restricted_g_t
   (r0:vprop{can_be_split pre r0})
   (fun r0 -> normal (t_of r0))
 
-noextract
-let hmem (p:vprop) = hmem (hp_of p)
+/// Ensuring that rmems encapsulate the structure induced by the separation logic star
+val valid_rmem (#frame:vprop) (h:rmem' frame) : prop
 
+unfold
+let rmem (pre:vprop) = h:rmem' pre{valid_rmem h}
+
+/// Exposing the definition of mk_rmem to better normalize Steel VCs
+unfold noextract
+let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) ->
+  can_be_split_interp r r0 h;
+  sel_of r0 h
+
+[@@ __inner_steel_reduce__]
 noextract
-val mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r)
+let mk_rmem' (r:vprop) (h:hmem r) : Tot (rmem' r) =
+   FExt.on_dom_g
+     (r0:vprop{r `can_be_split` r0})
+     (unrestricted_mk_rmem r h)
+
+val lemma_valid_mk_rmem (r:vprop) (h:hmem r) : Lemma (valid_rmem (mk_rmem' r h))
+
+[@@ __inner_steel_reduce__]
+noextract
+let mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r) =
+  lemma_valid_mk_rmem r h;
+  mk_rmem' r h
 
 val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma (ensures reveal_can_be_split(); (mk_rmem r h) r0 == sel_of r0 h)
@@ -225,9 +262,7 @@ type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   rmem pre -> (x:a) -> rmem (post x) -> Type0
 
 (* Empty assertion *)
-val emp' :vprop'
-[@__reduce__]
-unfold let emp = VUnit emp'
+val emp : vprop
 
 /// When needed for proof purposes, the empty assertion is a direct lift of the
 /// empty assertion from Steel.Memory
@@ -253,46 +288,39 @@ unfold
 let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
   = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
 
-[@@ __steel_reduce__]
-let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
+[@@ __inner_steel_reduce__]
+let focus_rmem' (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem' r0)
  = FExt.on_dom_g
    (r':vprop{can_be_split r0 r'})
    (unrestricted_focus_rmem h r0)
+
+val lemma_valid_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
+  : Lemma (valid_rmem (focus_rmem' h r0))
+
+[@@ __inner_steel_reduce__]
+let focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0}) : Tot (rmem r0) =
+  lemma_valid_focus_rmem h r0;
+  focus_rmem' h r0
 
 /// Exposing that calling focus_rmem on the current context corresponds to an equality
 let focus_rmem_refl (r:vprop) (h:rmem r)
   : Lemma (focus_rmem #r h r == h)
   = FStar.FunctionalExtensionality.extensionality_g _ _ (focus_rmem #r h r) h
 
-(* AF 04/27/2021: The linear equality generation, where equalities are only
-   generated for leaf, VUnit nodes, works well for concrete code, but does
-   not allow to propagate information when handling abstract vprops.
-   While defining generic combinators on vprops such as vrefine and vdep,
-   Tahina encountered issues with this. For instance, elim_vdep returns
-   a v `star` q, where v and q are abstract vprops. As such, equalities
-   on the selectors of v and q are not propagated: Normalization gets stuck
-   on both v and q, since they are neither a VUnit nor a VStar.
-   An earlier fix was creating a "top-level" equality on the full vprop
-   to handle most generic vprops cases. Unfortunately, this does not
-   help when we have atomic, abstract vprops as in v `star` q.
-   For now, I'm reenabling quadratic equality generation. But we need
-   to find a better way to handle generic vprops selectors while avoiding
-   a context blowup; furthermore, equalities on composite resources are mostly
-   irrelevant because of AC-rewriting, and because we do not provide patterns
-   on lemmas relating sel (p * q) with (sel p, sel q), or sel (p * q) with
-   sel (q * p) for instance.
-   We should instead have a better way to define atomic vprops, which encapsulates
-   atomic, abstract vprops
-*)
+open FStar.Tactics
 
-/// State that all "atomic" subresources have the same selectors on both views
-[@@ __steel_reduce__]
-let rec frame_equalities
+/// State that all "atomic" subresources have the same selectors on both views.
+/// The predicate has the __steel_reduce__ attribute, ensuring that VC normalization
+/// will reduce it to a conjunction of equalities on atomic subresources
+/// This predicate is also marked as `strict_on_arguments` on [frame], ensuring that
+/// it will not be reduced when the frame is symbolic
+/// Instead, the predicate will be rewritten to an equality using `lemma_frame_equalities` below
+[@@ __steel_reduce__; strict_on_arguments [0]]
+let rec frame_equalities'
   (frame:vprop)
-  (h0:rmem frame) (h1:rmem frame) : prop
-  = h0 frame == h1 frame /\
-    begin match frame with
-    | VUnit p -> True
+  (h0:rmem frame) (h1:rmem frame) : Type0
+  = begin match frame with
+    | VUnit p -> h0 frame == h1 frame
     | VStar p1 p2 ->
         can_be_split_star_l p1 p2;
         can_be_split_star_r p1 p2;
@@ -304,10 +332,82 @@ let rec frame_equalities
         let h12 = focus_rmem h1 p2 in
 
 
-        frame_equalities p1 h01 h11 /\
-        frame_equalities p2 h02 h12
+        frame_equalities' p1 h01 h11 /\
+        frame_equalities' p2 h02 h12
     end
 
+/// This lemma states that frame_equalities is the same as an equality on the top-level frame.
+/// The uncommon formulation with an extra [p] is needed to use in `rewrite_with_tactic`,
+/// where the goal is of the shape `frame_equalities frame h0 h1 == ?u`
+/// The rewriting happens below, in `frame_vc_norm`
+val lemma_frame_equalities (frame:vprop) (h0:rmem frame) (h1:rmem frame) (p:Type0)
+  : Lemma
+    (requires (h0 frame == h1 frame) == p)
+    (ensures frame_equalities' frame h0 h1 == p)
+
+/// A special case for frames about emp.
+val lemma_frame_emp (h0:rmem emp) (h1:rmem emp) (p:Type0)
+  : Lemma (requires True == p)
+          (ensures frame_equalities' emp h0 h1 == p)
+
+/// A variant of conjunction elimination, suitable to the equality goals during rewriting
+val elim_conjunction (p1 p1' p2 p2':Type0)
+  : Lemma (requires p1 == p1' /\ p2 == p2')
+          (ensures (p1 /\ p2) == (p1' /\ p2'))
+
+/// Normalization and rewriting step for generating frame equalities.
+/// The frame_equalities function has the strict_on_arguments attribute on the [frame],
+/// ensuring that it is not reduced when the frame is symbolic.
+/// When that happens, we want to replace frame_equalities by an equality on the frame,
+/// mimicking reduction
+[@@plugin]
+let frame_vc_norm () : Tac unit =
+  // Do not normalize mk_rmem/focus_rmem to simplify application of
+  // the reflexivity lemma on frame_equalities'
+  norm [delta_attr [`%__steel_reduce__];
+    delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel;
+      `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
+      `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
+    delta_qualifier ["unfold"];
+    iota;zeta;primops; simplify];
+
+  // After reduction, the term to rewrite might be of the shape
+  // (frame_equalities' ... /\ frame_equalities' .. /\ ...) == ?u,
+  // with some frame_equalities' possibly already fully reduced
+  // We repeatedly split the clause and extract the term on the left
+  // to generate equalities on atomic subresources
+  ignore (repeat (fun _ ->
+    // Try to split the conjunction. If there is no conjunction, we exit the repeat
+    apply_lemma (`elim_conjunction);
+    // Dismiss the two uvars created for the RHS, they'll be solved by unification
+    dismiss ();
+    dismiss ();
+    // The first goal is the left conjunction
+    split ();
+    // Removes the frame equality if it is about emp
+    or_else (fun _ -> apply_lemma (`lemma_frame_emp); dismiss()) (fun _ -> ());
+    // Rewrites the frame_equalities if it wasn't yet reduced
+    or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
+    norm normal_steps;
+    // Finally solve the uvar, finishing the rewriting for this clause
+    trefl ()
+  ));
+
+  // Removes the frame equality if it is about emp
+  or_else (fun _ -> apply_lemma (`lemma_frame_emp); dismiss()) (fun _ -> ());
+
+  // We do not have conjunctions anymore, we try to apply the frame_equalities rewriting
+  // If it fails, the frame was not symbolic, so there is nothing to do
+  or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
+  norm normal_steps;
+  trefl ()
+
+[@@ __steel_reduce__]
+unfold
+let frame_equalities
+  (frame:vprop)
+  (h0:rmem frame) (h1:rmem frame) : prop
+  = rewrite_with_tactic frame_vc_norm (frame_equalities' frame h0 h1)
 
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below
@@ -323,11 +423,12 @@ val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
   : Lemma (requires (forall (x:a) (y:b). t1 x y `equiv` t2 y))
           (ensures t1 `can_be_split_post` t2)
 
+val equiv_forall_refl (#a:Type) (t:post_t a)
+  : Lemma (t `equiv_forall` t)
+
 val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
   : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
           (ensures t1 `equiv_forall` t2)
-
-open FStar.Tactics
 
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
 
@@ -1423,7 +1524,7 @@ let rec quote_atoms (l:list atom) = match l with
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
 /// In particular, all the sorting/list functions are entirely reduced
-let normal_steps = [primops; iota; zeta; delta_only [
+let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
           `%flatten; `%sort;
           `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
@@ -1435,7 +1536,7 @@ let normal_steps = [primops; iota; zeta; delta_only [
           `%rm]]
 
 /// The normalization function, using the above normalization steps
-let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_steps x
+let normal_tac (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_tac_steps x
 
 /// Helper lemma to establish relation between normalized and initial values
 let normal_elim (x:Type0) : Lemma
@@ -2062,3 +2163,43 @@ let selector_tactic () : Tac unit =
        delta_attr [`%__reduce__];
        primops; iota; zeta];
   canon' false (`true_p) (`true_p)
+
+/// Specific tactic used during the SteelAtomicBase and SteelBase effect definitions:
+/// This allows us to write more complex if_then_else combinators, while proving them
+/// sound with respect to subcomp
+[@@ resolve_implicits; ite_attr]
+let ite_soundness_tac () : Tac unit =
+  let slgs, loggoals = filter_goals (goals ()) in
+  set_goals slgs;
+  solve_indirection_eqs slgs;
+  // This is the actual subcomp goal. We can only solve it
+  // once all uvars are solved
+  let subcomp_goal = _cur_goal () in
+  match goals () with
+  | [] -> fail "should not happen"
+  | _::tl -> set_goals tl;
+
+  or_else (fun _ -> apply_lemma (`equiv_forall_refl)) assumption;
+  or_else (fun _ -> apply_lemma (`can_be_split_refl)) assumption;
+
+  // Discharging the maybe_emp by SMT
+  smt ();
+  // Now propagating all equalities for the requires/ensures
+  set_goals loggoals;
+  resolve_tac_logical ();
+  // Now taking care of the actual subcomp VC
+  set_goals [subcomp_goal];
+  norm [];
+  // We remove the with_tactic call with executing the tactic before calling the SMT.
+  split ();
+  // Remove the `rewrite_by_tactic` nodes
+  pointwise' (fun _ -> or_else
+    (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
+    trefl);
+  smt ()
+
+
+/// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
+/// This tactic is executed after frame inference, and just before sending the query to the SMT
+/// As such, it is a good place to add debugging features to inspect SMT queries when needed
+let vc_norm () : Tac unit = norm normal_steps; trefl()

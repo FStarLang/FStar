@@ -1,5 +1,5 @@
 [
-  "ß‡åÂ€ã\u001cóÐ©\"\u001f˜î\bj",
+  "\u0015~\u000e\u0001[¿Uñ“}-åa 7¢",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d1ff735073bae34eff9f7196ad6c6e34"
+      "8332b138b79ab5a992d1a8b870f2640b"
     ],
     [
       "FStar.Tactics.Effect.unfold_with_tactic",
@@ -91,7 +91,16 @@
       1,
       [ "@query", "equation_FStar.Tactics.Effect.with_tactic" ],
       0,
-      "bfb890d2c67be6d058e8f2e3d1c58f9e"
+      "d21d6dd7f02168b0b07e33ba22a5148b"
+    ],
+    [
+      "FStar.Tactics.Effect.unfold_rewrite_with_tactic",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Tactics.Effect.rewrite_with_tactic" ],
+      0,
+      "0ca8aa3738ba264bb92afd7846e6bd3f"
     ]
   ]
 ]

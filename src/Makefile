@@ -121,7 +121,7 @@ rebuild:
 	+$(MAKE) ocaml
 	+$(MAKE) -C ../ulib clean_ocaml
 	+$(MAKE) -C ocaml-output
-	+$(MAKE) -C ../ulib install-fstarlib install-fstar-tactics
+	+$(MAKE) -C ../ulib rebuild
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------

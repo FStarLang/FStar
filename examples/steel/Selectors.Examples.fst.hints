@@ -1,5 +1,5 @@
 [
-  "å:Q\u0006å¸\u0004_î¦’\n;\u0016|µ",
+  "\u001bÙ\"r¯-ƒ¢‰1‡š5T)»",
   [
     [
       "Selectors.Examples.swap",
@@ -29,7 +29,7 @@
         "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "7a3aea98fb8a6f23321bf4bddf4cbd2c"
+      "3473916429e3d4126c0285780b1d024d"
     ],
     [
       "Selectors.Examples.test0",
@@ -37,12 +37,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0a3a0a4213e99e8a44722884d37c292a"
+      "6cbb846ab1e8dd98f86d4fc05c2bd7bb"
     ],
     [
       "Selectors.Examples.test1",
@@ -73,7 +74,7 @@
         "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "9b47233417663033b95f693eadadfb1b"
+      "5e34890dde6c773fc75f6ee72376a999"
     ],
     [
       "Selectors.Examples.test2",
@@ -104,7 +105,7 @@
         "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "eb0e2b27ab0eb34e4baf7714d33a36af"
+      "65307e47576b546758e0756e0cc4ee98"
     ],
     [
       "Selectors.Examples.test3",
@@ -112,13 +113,36 @@
       0,
       0,
       [
-        "@query", "equation_Steel.Effect.Common.star",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.sel", "equation_Steel.Reference.vptr_",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_typing",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0f5be2c585cf2926f64bf1bf4dfc8bf5"
+      "1fbd59451b5dd300ed650b2d7f5ca31a"
+    ],
+    [
+      "Selectors.Examples.test4",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "8065235b7d6e9bdce2341b9445edc87d"
+    ],
+    [
+      "Selectors.Examples.test5",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "021d02db96745899bdae302fe5b0de54"
     ]
   ]
 ]

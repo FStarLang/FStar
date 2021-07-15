@@ -406,7 +406,8 @@ let ghost_free #a #u #v r =
 let ghost_share r = share (reveal r)
 let ghost_gather r = gather (reveal r)
 
-let ghost_pts_to_injective_eq r v0 v1 = higher_ref_pts_to_injective_eq (reveal r)
+let ghost_pts_to_injective_eq #_ #_ #p0 #p1 r v0 v1 =
+  higher_ref_pts_to_injective_eq #_ #_ #p0 #p1 #v0 #v1 (reveal r)
 
 let ghost_read #a #u #p #v r
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in

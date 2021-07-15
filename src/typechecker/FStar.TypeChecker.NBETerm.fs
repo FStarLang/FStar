@@ -731,18 +731,30 @@ let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
 
 let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
 
-let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
+let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t * option<S.meta_source_info>)> =
+    let (a, m) =
+      (match a.nbe_t with
+       | Meta(t, tm) ->
+         (match Thunk.force tm with
+          | Meta_desugared m -> (t, Some m)
+          | _ -> (a, None))
+       | _ -> (a, None)) in
     match a.nbe_t with
     | FV (fv1, [], [({nbe_t=Constant (Int i)}, _)])
       when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
                         "int_to_t" ->
-      Some (fv1, i)
+      Some (fv1, i, m)
     | _ -> None
 
 let int_as_bounded int_to_t n =
     let c = embed e_int bogus_cbs n in
     let int_to_t args = mk_t <| FV(int_to_t, [], args) in
     int_to_t [as_arg c]
+
+let with_meta_ds t (m:option<meta_source_info>) =
+      match m with
+      | None -> t
+      | Some m -> mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)

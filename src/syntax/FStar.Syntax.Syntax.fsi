@@ -27,6 +27,7 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Dyn
+open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
 
@@ -212,6 +213,7 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -398,7 +400,7 @@ type wp_eff_combinators = {
 
 (*
  * Layered effects combinators
- * 
+ *
  * All of these are pairs of type schemes,
  *   where the first component is the term ts and the second component is the type ts
  *
@@ -427,7 +429,7 @@ type eff_decl = {
   mname       : lident;      //STATE_h
 
   cattributes : list<cflag>;
-  
+
   univs       : univ_names;  //u#heap
   binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 

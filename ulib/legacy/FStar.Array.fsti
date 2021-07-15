@@ -73,7 +73,7 @@ val to_seq (#a:Type0) (s:array a)
 val of_list (#a:Type0) (l:list a)
 : ST (array a)
   (requires fun _ -> True)
-  (ensures create_post (of_list l))
+  (ensures create_post (seq_of_list l))
 
 val create (#a:Type0) (n:nat) (init:a)
   : ST (array a)

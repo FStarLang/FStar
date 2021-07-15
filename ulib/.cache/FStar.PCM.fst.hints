@@ -1,5 +1,5 @@
 [
-  "`õ˜ùV‰˚Y¶\u000b\u0019Zs©]ù",
+  "ﬂê¸ãr ‡é[≥¢Â\u001cñ",
   [
     [
       "FStar.PCM.__proj__Mkpcm'__item__op",
@@ -221,6 +221,24 @@
       "4fbb7cd6b8e819b039237f0f16fe8bea"
     ],
     [
+      "FStar.PCM.compatible_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.symrel", "fuel_guarded_inversion_FStar.PCM.pcm",
+        "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "edad3be338e028506c51a94d32fa9c1c"
+    ],
+    [
       "FStar.PCM.joinable",
       1,
       2,
@@ -232,7 +250,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c82570384f6408d75883d7291597638d"
+      "a4544bf3d360ac3c4af0861fae4f300a"
     ],
     [
       "FStar.PCM.frame_compatible",
@@ -241,7 +259,7 @@
       1,
       [ "@query" ],
       0,
-      "8cccfe8265838a1f530902a70d28dd27"
+      "e8e1bb118332d1972c83011a6237cd3c"
     ],
     [
       "FStar.PCM.frame_preserving_upd",
@@ -250,7 +268,7 @@
       1,
       [ "@query" ],
       0,
-      "6122f7e4e9984989ef397494dd47ee8a"
+      "8beecda4134e1b8dc5a175c45e0abd8c"
     ],
     [
       "FStar.PCM.frame_preserving",
@@ -259,7 +277,7 @@
       1,
       [ "@query" ],
       0,
-      "286f25b6b83a403e1a6217f296803175"
+      "977b982accc142fc57c00567309a243b"
     ],
     [
       "FStar.PCM.frame_preserving_val_to_fp_upd",
@@ -285,7 +303,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "57180097b1fbb6846d4e9aba5c7c3748"
+      "3e1615f518862e9ca69a84b8f31ec706"
     ],
     [
       "FStar.PCM.exclusive_is_frame_preserving",
@@ -308,7 +326,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "b74720b8d83c6a6b3e9569c691cc5abb"
+      "6dded073a9082c243cf5d996d7fca1a3"
     ],
     [
       "FStar.PCM.no_op_is_frame_preserving",
@@ -320,7 +338,7 @@
         "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000"
       ],
       0,
-      "8066ed02aa2bc1dc987bb8d8a31a3088"
+      "753d3b0ff02bb0ed8549cff3ce2e7e9b"
     ],
     [
       "FStar.PCM.compose_frame_preserving_updates",
@@ -336,7 +354,36 @@
         "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000"
       ],
       0,
-      "a0cda640d94055f62c3d40cb79535202"
+      "20b1563eb0807f56d9667fe701b91208"
+    ],
+    [
+      "FStar.PCM.frame_preserving_subframe",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
+        "FStar.PCM_interpretation_Tm_arrow_677363292cfea4bd15c69c7af2b6e247",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_4fa30da5d5cb0360d6008d9d611bce85",
+        "refinement_interpretation_Tm_refine_73945f40dfe32b19b13cc583f17c4ca4",
+        "refinement_interpretation_Tm_refine_7eebd600d891f49b54ed679633298cb6",
+        "refinement_interpretation_Tm_refine_8db84027c62c17e11c50c7fbf9531388",
+        "refinement_interpretation_Tm_refine_a51243d57364b241a0e239efdfa2fe88",
+        "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_e46526a995ec86069ab3699ffa611149",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
+        "typing_FStar.PCM.__proj__Mkpcm___item__op",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "d40bde404ad62e13049b974101dc51e3"
     ]
   ]
 ]

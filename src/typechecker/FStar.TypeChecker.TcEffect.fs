@@ -524,7 +524,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
 
-    let k = k |> N.remove_uvar_solutions env |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
+    let k = k |> N.remove_uvar_solutions env in
 
     let _check_valid_binders =
       match (SS.compress k).n with
@@ -669,7 +669,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   we create for subcomp are tagged with the argument of ite_soundness_by,
    *   and the smt guard is also put in a implicit tagged with this implicit
    *
-   * Through the usual tactics dispatching, Rel dispatched these to the tactic
+   * Through the usual tactics dispatching, Rel dispatches these to the tactic
    *   if one is in scope
    *)
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
