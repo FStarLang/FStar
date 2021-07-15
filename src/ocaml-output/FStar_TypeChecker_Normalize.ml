@@ -4744,57 +4744,15 @@ and (reduce_impure_comp :
           fun m ->
             fun t ->
               let t1 = norm cfg env1 [] t in
-              let uu___ =
-                if
-                  (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.pure_subterms_within_computations
-                then
-                  let new_steps =
-                    [FStar_TypeChecker_Env.PureSubtermsWithinComputations;
-                    FStar_TypeChecker_Env.Primops;
-                    FStar_TypeChecker_Env.AllowUnboundUniverses;
-                    FStar_TypeChecker_Env.EraseUniverses;
-                    FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
-                    FStar_TypeChecker_Env.Inlining] in
-                  let cfg' =
-                    let uu___1 = cfg in
-                    let uu___2 =
-                      FStar_List.fold_right
-                        FStar_TypeChecker_Cfg.fstep_add_one new_steps
-                        cfg.FStar_TypeChecker_Cfg.steps in
-                    {
-                      FStar_TypeChecker_Cfg.steps = uu___2;
-                      FStar_TypeChecker_Cfg.tcenv =
-                        (uu___1.FStar_TypeChecker_Cfg.tcenv);
-                      FStar_TypeChecker_Cfg.debug =
-                        (uu___1.FStar_TypeChecker_Cfg.debug);
-                      FStar_TypeChecker_Cfg.delta_level =
-                        [FStar_TypeChecker_Env.InliningDelta;
-                        FStar_TypeChecker_Env.Eager_unfolding_only];
-                      FStar_TypeChecker_Cfg.primitive_steps =
-                        (uu___1.FStar_TypeChecker_Cfg.primitive_steps);
-                      FStar_TypeChecker_Cfg.strong =
-                        (uu___1.FStar_TypeChecker_Cfg.strong);
-                      FStar_TypeChecker_Cfg.memoize_lazy =
-                        (uu___1.FStar_TypeChecker_Cfg.memoize_lazy);
-                      FStar_TypeChecker_Cfg.normalize_pure_lets =
-                        (uu___1.FStar_TypeChecker_Cfg.normalize_pure_lets);
-                      FStar_TypeChecker_Cfg.reifying =
-                        (uu___1.FStar_TypeChecker_Cfg.reifying)
-                    } in
-                  (cfg', ((Cfg (cfg, FStar_Pervasives_Native.None)) ::
-                    stack1))
-                else (cfg, stack1) in
-              match uu___ with
-              | (cfg1, stack2) ->
-                  let metadata =
-                    match m with
-                    | FStar_Pervasives.Inl m1 ->
-                        FStar_Syntax_Syntax.Meta_monadic (m1, t1)
-                    | FStar_Pervasives.Inr (m1, m') ->
-                        FStar_Syntax_Syntax.Meta_monadic_lift (m1, m', t1) in
-                  norm cfg1 env1
-                    ((Meta (env1, metadata, (head.FStar_Syntax_Syntax.pos)))
-                    :: stack2) head
+              let metadata =
+                match m with
+                | FStar_Pervasives.Inl m1 ->
+                    FStar_Syntax_Syntax.Meta_monadic (m1, t1)
+                | FStar_Pervasives.Inr (m1, m') ->
+                    FStar_Syntax_Syntax.Meta_monadic_lift (m1, m', t1) in
+              norm cfg env1
+                ((Meta (env1, metadata, (head.FStar_Syntax_Syntax.pos))) ::
+                stack1) head
 and (do_reify_monadic :
   (unit -> FStar_Syntax_Syntax.term) ->
     FStar_TypeChecker_Cfg.cfg ->

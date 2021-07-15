@@ -170,7 +170,11 @@ let fstep_add_one s fs =
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
-    | UnfoldQual  strs -> { fs with unfold_qual  = Some strs }
+    | UnfoldQual  strs ->
+      let fs = { fs with unfold_qual  = Some strs } in
+      if List.contains "pure_subterms_within_computations" strs
+      then {fs with pure_subterms_within_computations = true}
+      else fs
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
