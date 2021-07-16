@@ -35,13 +35,14 @@ val _b : int_or_bool_pcm `connection` opt_pcm #bool
 /// Getting the case of a union in GTot
 
 val case_of_int_or_bool (u: Ghost.erased int_or_bool):
-  GTot (k:option int_or_bool_case{
-    match k with
-    | Some I -> exists i. u == mk_int i
-    | Some B -> exists b. u == mk_bool b
-    | None -> Ghost.reveal u == one int_or_bool_pcm
-  })
-
+  Ghost (option int_or_bool_case)
+    (requires True)
+    (ensures fun k ->
+      match k with
+      | Some I -> exists i. u == mk_int i /\ ~ (Ghost.reveal i == one (opt_pcm #int))
+      | Some B -> exists b. u == mk_bool b /\ ~ (Ghost.reveal b == one (opt_pcm #bool))
+      | None -> Ghost.reveal u == one int_or_bool_pcm)
+      
 val case_of_int_or_bool_int (i: Ghost.erased (option int))
 : Lemma
     (requires ~ (i == none))

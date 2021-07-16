@@ -91,12 +91,8 @@ let roll_conn_lift_fpu
   in FStar.Classical.forall_intro aux;
   w
 
-let roll_conn: node_pcm' `connection` node_pcm = {
-  conn_small_to_large = unroll;
-  conn_large_to_small = roll;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = roll_conn_lift_fpu;
-}
+let roll_conn: node_pcm' `connection` node_pcm =
+  mkconnection unroll roll () roll_conn_lift_fpu
 
 let unroll_conn_lift_fpu
   (x: Ghost.erased _ {~ (Ghost.reveal x == one node_pcm') })
@@ -113,12 +109,8 @@ let unroll_conn_lift_fpu
   in FStar.Classical.forall_intro aux;
   w
 
-let unroll_conn: node_pcm `connection` node_pcm' = {
-  conn_small_to_large = roll;
-  conn_large_to_small = unroll;
-  conn_small_to_large_inv = ();
-  conn_lift_frame_preserving_upd = unroll_conn_lift_fpu;
-}
+let unroll_conn: node_pcm `connection` node_pcm' =
+  mkconnection roll unroll () unroll_conn_lift_fpu
 
 let mk_node'_f (value: option int') (next: option (option (ref' node node)))
   (k: node_field)
