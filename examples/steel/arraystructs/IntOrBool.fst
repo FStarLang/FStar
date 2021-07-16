@@ -55,39 +55,30 @@ let mk_int_exclusive i = exclusive_union_intro int_or_bool_cases_pcm (mk_int i) 
 
 let mk_bool_exclusive b = exclusive_union_intro int_or_bool_cases_pcm (mk_bool b) B
 
-let addr_of_i (#i: Ghost.erased (nonunit (pod_pcm int))) (p: ref 'a int_or_bool_pcm)
-: SteelT (q:ref 'a (pod_pcm int){q == ref_focus p _i})
+let addr_of_i (#i: Ghost.erased (pod int)) (p: ref 'a int_or_bool_pcm)
+: Steel (q:ref 'a (pod_pcm int){q == ref_focus p _i})
     (p `pts_to` mk_int i)
-    (fun q -> q `pts_to` Ghost.reveal i)
-= let q = addr_of_union_field p I (mk_int i) in
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  A.return q
+    (fun q -> q `pts_to` i)
+    (requires fun _ -> ~ (i == none))
+    (ensures fun _ _ _ -> True)
+= addr_of_union_field p I (mk_int i)
 
-let unaddr_of_i (#i: Ghost.erased (nonunit (pod_pcm int))) (#opened: M.inames)
+let unaddr_of_i (#i: Ghost.erased (pod int)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
   (q: ref 'a (pod_pcm int){q == ref_focus p _i})
-: A.SteelGhostT unit opened (q `pts_to` Ghost.reveal i) (fun _ -> p `pts_to` mk_int i)
-= unaddr_of_union_field I q p (Ghost.reveal i);
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
+= unaddr_of_union_field I q p i
 
-let addr_of_b (#b: Ghost.erased (nonunit (pod_pcm bool))) (p: ref 'a int_or_bool_pcm)
-: SteelT (q:ref 'a (pod_pcm bool){q == ref_focus p _b})
-    (p `pts_to` mk_bool b)
-    (fun q -> q `pts_to` Ghost.reveal b)
-= let q = addr_of_union_field p B (mk_bool b) in
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` _);
-  A.return q
+let addr_of_b (#b: Ghost.erased (pod bool)) (p: ref 'a int_or_bool_pcm)
+= addr_of_union_field p B (mk_bool b)
 
-let unaddr_of_b (#b: Ghost.erased (nonunit (pod_pcm bool))) (#opened: M.inames)
+let unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
   (q: ref 'a (pod_pcm bool){q == ref_focus p _b})
-: A.SteelGhostT unit opened (q `pts_to` Ghost.reveal b) (fun _ -> p `pts_to` mk_bool b)
-= unaddr_of_union_field B q p (Ghost.reveal b);
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
+= unaddr_of_union_field B q p b
 
 let switch_to_int_fpu (#u: Ghost.erased int_or_bool{exclusive int_or_bool_pcm (Ghost.reveal u)})
   (p: ref 'a int_or_bool_pcm) (i: int)
-: frame_preserving_upd int_or_bool_pcm u (mk_int (Ghost.hide (Ghost.reveal (some (Ghost.hide i)))))
+: frame_preserving_upd int_or_bool_pcm u (mk_int (some (Ghost.hide i)))
 = base_fpu int_or_bool_pcm u (field_to_union_f int_or_bool_cases_pcm I (Some i))
 
 let exclusive_not_unit (#u: Ghost.erased int_or_bool)
@@ -102,7 +93,7 @@ let switch_to_int (#u: Ghost.erased int_or_bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
 : Steel unit
     (p `pts_to` u)
-    (fun _ -> p `pts_to` mk_int (Ghost.hide (Ghost.reveal (some i))))
+    (fun _ -> p `pts_to` mk_int (some i))
     (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
 = ref_upd p _ _ (switch_to_int_fpu p i)
@@ -111,8 +102,8 @@ let switch_to_bool (#u: Ghost.erased int_or_bool)
   (p: ref 'a int_or_bool_pcm) (b: bool)
 : Steel unit
     (p `pts_to` u)
-    (fun _ -> p `pts_to` mk_bool (Ghost.hide (Ghost.reveal (some b))))
+    (fun _ -> p `pts_to` mk_bool (some (Ghost.hide b)))
     (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
-= ref_upd p u (mk_bool (Ghost.hide (Ghost.reveal (some (Ghost.hide b)))))
+= ref_upd p u (mk_bool (some (Ghost.hide b)))
     (base_fpu int_or_bool_pcm u (field_to_union_f int_or_bool_cases_pcm B (Some b)))
