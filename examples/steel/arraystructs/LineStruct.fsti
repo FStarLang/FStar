@@ -1,6 +1,5 @@
 module LineStruct
 
-open FStar.PCM.POD
 open FStar.PCM
 open Steel.Effect
 open PointStruct

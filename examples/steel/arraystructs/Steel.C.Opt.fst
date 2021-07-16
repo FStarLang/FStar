@@ -1,4 +1,4 @@
-module FStar.PCM.Opt
+module Steel.C.Opt
 
 open Steel.C.PCM
 module A = Steel.Effect.Atomic

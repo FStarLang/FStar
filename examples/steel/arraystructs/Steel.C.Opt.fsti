@@ -1,4 +1,4 @@
-module FStar.PCM.Opt
+module Steel.C.Opt
 
 open FStar.PCM
 open Steel.C.PCM

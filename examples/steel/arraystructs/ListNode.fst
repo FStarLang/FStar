@@ -6,7 +6,7 @@ open FStar.FunctionalExtensionality
 module A = Steel.Effect.Atomic
 open Steel.Effect
 open FStar.PCM
-open FStar.PCM.POD
+open Steel.C.Opt
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.C.Connection
@@ -16,8 +16,8 @@ module U = FStar.Universe
 type node_field = | Value | Next
 
 let node_fields (node:Type u#1) k : Type u#1 = match k with
-  | Value -> pod int'
-  | Next -> pod (option (ref' node node))
+  | Value -> option int'
+  | Next -> option (option (ref' node node))
 
 #push-options "--__no_positivity"
 noeq type node: Type u#1 =
@@ -27,8 +27,8 @@ noeq type node: Type u#1 =
 let node': Type u#1 = restricted_t node_field (node_fields node)
 
 let node_fields_pcm k: pcm (node_fields node k) = match k with
-  | Value -> pod_pcm int'
-  | Next -> pod_pcm (option (ref' node node))
+  | Value -> opt_pcm #int'
+  | Next -> opt_pcm #(option (ref' node node))
 
 let node_pcm': pcm node' = prod_pcm node_fields_pcm
 
@@ -120,7 +120,7 @@ let unroll_conn: node_pcm `connection` node_pcm' = {
   conn_lift_frame_preserving_upd = unroll_conn_lift_fpu;
 }
 
-let mk_node'_f (value: pod int') (next: pod (option (ref' node node)))
+let mk_node'_f (value: option int') (next: option (option (ref' node node)))
   (k: node_field)
 : node_fields node k
 = match k with
@@ -128,23 +128,23 @@ let mk_node'_f (value: pod int') (next: pod (option (ref' node node)))
   | Next -> next
   
 let mk_node'
-  (value: Ghost.erased (pod int'))
-  (next: Ghost.erased (pod (option (ref' node node))))
+  (value: Ghost.erased (option int'))
+  (next: Ghost.erased (option (option (ref' node node))))
 : Ghost.erased node'
 = Ghost.hide (on_domain node_field (mk_node'_f (Ghost.reveal value) (Ghost.reveal next)))
 
 let mk_node value next = Ghost.hide (Mknode (mk_node' (Ghost.reveal value) (Ghost.reveal next)))
 
 let _value
-: node_pcm `connection` pod_pcm int'
+: node_pcm `connection` opt_pcm #int'
 = unroll_conn `connection_compose` struct_field node_fields_pcm Value
 
 let _next
-: node_pcm `connection` pod_pcm (option (ref' node node))
+: node_pcm `connection` opt_pcm #(option (ref' node node))
 = unroll_conn `connection_compose` struct_field node_fields_pcm Next
 
-let one_next : Ghost.erased (pod int') =
-  Ghost.hide (one (pod_pcm int'))
+let one_next : Ghost.erased (option int') =
+  Ghost.hide (one (opt_pcm #int'))
 
 let node'_without_value value next
 : Lemma (struct_without_field node_fields_pcm Value (mk_node' value next) `feq`
@@ -177,8 +177,8 @@ let mk_node_mk_node' value next
 = ()
 
 let unroll_ref 
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
 : SteelT (p':ref 'a node_pcm'{p' == ref_focus p unroll_conn})
     (p `pts_to` mk_node value next)
@@ -187,8 +187,8 @@ let unroll_ref
   A.return p'
 
 let roll_ref 
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm) (p': ref 'a node_pcm')
 : Steel unit
     (p' `pts_to` mk_node' value next)
@@ -199,10 +199,10 @@ let roll_ref
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_value
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-: SteelT (q:ref 'a (pod_pcm int'){q == ref_focus p _value})
+: SteelT (q:ref 'a (opt_pcm #int'){q == ref_focus p _value})
     (p `pts_to` mk_node value next)
     (fun q ->
        (p `pts_to` mk_node none next) `star`
@@ -215,10 +215,10 @@ let addr_of_value
   A.return q
 
 let unaddr_of_value
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-  (q: ref 'a (pod_pcm int'){q == ref_focus p _value})
+  (q: ref 'a (opt_pcm #int'){q == ref_focus p _value})
 : SteelT unit
     ((p `pts_to` mk_node none next) `star` (q `pts_to` value))
     (fun _ -> p `pts_to` mk_node value next)
@@ -229,10 +229,10 @@ let unaddr_of_value
   A.return ()
 
 let addr_of_next
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-: SteelT (q:ref 'a (pod_pcm (option (ref' node node))){q == ref_focus p _next})
+: SteelT (q:ref 'a (opt_pcm #(option (ref' node node))){q == ref_focus p _next})
     (p `pts_to` mk_node value next)
     (fun q ->
        (p `pts_to` mk_node value none) `star`
@@ -245,10 +245,10 @@ let addr_of_next
   A.return q
 
 let unaddr_of_next
-  (#value:Ghost.erased (pod int'))
-  (#next:Ghost.erased (pod (option (ref' node node))))
+  (#value:Ghost.erased (option int'))
+  (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-  (q: ref 'a (pod_pcm (option (ref' node node))){q == ref_focus p _next})
+  (q: ref 'a (opt_pcm #(option (ref' node node))){q == ref_focus p _next})
 : SteelT unit
     ((p `pts_to` mk_node value none) `star` (q `pts_to` next))
     (fun q -> p `pts_to` mk_node value next)

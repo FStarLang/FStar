@@ -4,8 +4,23 @@ open FStar.FunctionalExtensionality
 
 #push-options "--print_universes"
 
+noeq type ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type = {
+  p: pcm a;
+  pl: connection p q;
+  r: Steel.Memory.ref a p;
+}
+
+let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
+
 let pts_to r v =
   r.r `mpts_to` r.pl.conn_small_to_large.morph v
+  
+let ref_focus r l = {p = r.p; pl = connection_compose r.pl l; r = r.r}
+
+let ref_focus_comp r l m
+= connection_eq
+    ((r.pl `connection_compose` l) `connection_compose` m)
+    (r.pl `connection_compose` (l `connection_compose` m))
 
 let focus r l s x =
   let r' = ref_focus r l in
@@ -98,6 +113,12 @@ let as_action (#p:vprop)
   A.return x
 
 let ref_upd r x y f = as_action (ref_upd_act r x y f)
+
+let base_fpu p x y =
+  fun _ ->
+  Classical.forall_intro (is_unit p);
+  compatible_refl p y;
+  y
 
 let pts_to_view_explicit_witinv
   (#a: Type u#1) (#b: Type u#b) (#p: pcm b)

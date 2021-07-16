@@ -6,13 +6,7 @@ open Steel.C.Connection
 
 #push-options "--print_universes"
 
-noeq type ref (a: Type u#1) #b (q: pcm b): Type = {
-  p: pcm a;
-  pl: connection p q;
-  r: Steel.Memory.ref a p;
-}
-
-let mpts_to (#p: pcm 'a) (r: Steel.Memory.ref 'a p) = Steel.PCMReference.pts_to r
+val ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type u#b
 
 open Steel.Effect
 
@@ -21,20 +15,17 @@ val pts_to
   (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
 : vprop
 
-let ref_focus
+val ref_focus
   (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
   (r: ref a p) (#q: pcm c) (l: connection p q)
 : ref a q
-= {p = r.p; pl = connection_compose r.pl l; r = r.r}
 
-let ref_focus_comp (r: ref 'a 'p) (l: connection 'p 'q) (m: connection 'q 'r)
+val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
+  (l: connection p q) (m: connection q s)
 : Lemma (ref_focus (ref_focus r l) m == ref_focus r (l `connection_compose` m))
   [SMTPatOr [
     [SMTPat (ref_focus (ref_focus r l) m)]; 
     [SMTPat (ref_focus r (l `connection_compose` m))]]]
-= connection_eq
-    ((r.pl `connection_compose` l) `connection_compose` m)
-    (r.pl `connection_compose` (l `connection_compose` m))
 
 module A = Steel.Effect.Atomic
 
@@ -91,7 +82,7 @@ let is_unit (#a: Type u#a) (p:pcm a)
          op p x p.FStar.PCM.p.one == x)
 = p.is_unit x
 
-let base_fpu
+val base_fpu
   (#a: Type)
   (p: pcm a)
   (x: Ghost.erased a)
@@ -99,10 +90,6 @@ let base_fpu
 : Pure (frame_preserving_upd p x y)
   (requires (exclusive p x /\ p.refine y))
   (ensures (fun _ -> True))
-= fun _ ->
-  Classical.forall_intro (is_unit p);
-  compatible_refl p y;
-  y
 
 let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
   (x: a { p x })

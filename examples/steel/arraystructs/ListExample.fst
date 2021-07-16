@@ -6,7 +6,7 @@ open Steel.C.Ref
 open Steel.Effect
 module A = Steel.Effect.Atomic
 
-open FStar.PCM.POD
+open Steel.C.Opt
 open ListNode
 
 /// void mk_figure_eight(struct node *p, struct node *q) {
@@ -28,7 +28,7 @@ val mk_figure_eight_step_one
   (p: ref node node_pcm)
   (q: ref node node_pcm)
   (i j: Ghost.erased int')
-: SteelT (r:ref node (pod_pcm (option (ref' node node))){r == ref_focus p _next})
+: SteelT (r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus p _next})
     (p `pts_to` mk_node (some i) (some nullptr))
     (fun r ->
       (p `pts_to` mk_node (some i) none) `star`
@@ -41,7 +41,7 @@ val mk_figure_eight_step_two
   (p: ref node node_pcm)
   (q: ref node node_pcm)
   (i j: Ghost.erased int')
-: SteelT (r:ref node (pod_pcm (option (ref' node node))){r == ref_focus q _next})
+: SteelT (r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus q _next})
     (q `pts_to` mk_node (some j) (some nullptr))
     (fun r ->
       (q `pts_to` mk_node (some j) none) `star`
@@ -53,34 +53,34 @@ let mk_figure_eight_step_two p q i j =
 val mk_figure_eight_step_three
   (p: ref node node_pcm)
   (q: ref node node_pcm)
-  (p_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus p _next}))
-  (q_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus q _next}))
+  (p_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus p _next}))
+  (q_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus q _next}))
   (i j: Ghost.erased int')
 : SteelT unit
     (p_next `pts_to` some nullptr)
     (fun _ -> p_next `pts_to` some (ptr q))
 
 let mk_figure_eight_step_three p q p_next q_next i j =
-  pod_write p_next (ptr' q)
+  opt_write p_next (ptr' q)
 
 val mk_figure_eight_step_four
   (p: ref node node_pcm)
   (q: ref node node_pcm)
-  (p_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus p _next}))
-  (q_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus q _next}))
+  (p_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus p _next}))
+  (q_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus q _next}))
   (i j: Ghost.erased int')
 : SteelT unit
     (q_next `pts_to` some nullptr)
     (fun _ -> q_next `pts_to` some (ptr p))
 
 let mk_figure_eight_step_four p q p_next q_next i j =
-  pod_write q_next (ptr' p)
+  opt_write q_next (ptr' p)
 
 val mk_figure_eight_step_five
   (p: ref node node_pcm)
   (q: ref node node_pcm)
-  (p_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus p _next}))
-  (q_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus q _next}))
+  (p_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus p _next}))
+  (q_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus q _next}))
   (i j: Ghost.erased int')
 : SteelT unit
     ((p `pts_to` mk_node (some i) none) `star`
@@ -93,8 +93,8 @@ let mk_figure_eight_step_five p q p_next q_next i j =
 val mk_figure_eight_step_six
   (p: ref node node_pcm)
   (q: ref node node_pcm)
-  (p_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus p _next}))
-  (q_next:(r:ref node (pod_pcm (option (ref' node node))){r == ref_focus q _next}))
+  (p_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus p _next}))
+  (q_next:(r:ref node (opt_pcm #(option (ref' node node))){r == ref_focus q _next}))
   (i j: Ghost.erased int')
 : SteelT unit
     ((q `pts_to` mk_node (some j) none) `star`
@@ -140,8 +140,8 @@ val mk_figure_eight
 let mk_figure_eight p q i j =
   let p_next = addr_of_next p in
   let q_next = addr_of_next q in
-  p_next `pod_write` ptr' q;
-  q_next `pod_write` ptr' p;
+  p_next `opt_write` ptr' q;
+  q_next `opt_write` ptr' p;
   unaddr_of_next p p_next;
   unaddr_of_next q q_next;
   A.return ()
