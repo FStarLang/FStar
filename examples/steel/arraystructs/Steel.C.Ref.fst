@@ -106,8 +106,7 @@ let pts_to_view_explicit_witinv
   (vw: sel_view p c)
 : Lemma
   (M.is_witness_invariant (pts_to_view_explicit r vw))
-= admit() (*
-  let aux (x y : Ghost.erased c) (m:M.mem)
+= let aux (x y : Ghost.erased c) (m:M.mem)
   : Lemma
     (requires (M.interp (pts_to_view_explicit r vw x) m /\ M.interp (pts_to_view_explicit r vw y) m))
     (ensures  (x == y))
@@ -131,4 +130,3 @@ let pts_to_view_explicit_witinv
     ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
-  *)
