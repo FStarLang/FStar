@@ -90,14 +90,13 @@ let switch_to_int_fpu (#u: Ghost.erased int_or_bool{exclusive int_or_bool_pcm (G
 : frame_preserving_upd int_or_bool_pcm u (mk_int (Ghost.hide (Ghost.reveal (some (Ghost.hide i)))))
 = base_fpu int_or_bool_pcm u (field_to_union_f int_or_bool_cases_pcm I (Some i))
 
-#push-options "--z3rlimit 30"
-
 let exclusive_not_unit (#u: Ghost.erased int_or_bool)
 : Lemma
     (requires exclusive int_or_bool_pcm u)
     (ensures Some? (case_of_int_or_bool u))
     [SMTPat (exclusive int_or_bool_pcm u)]
-= admit()
+= int_or_bool_pcm.is_unit (field_to_union_f int_or_bool_cases_pcm I (Some 42));
+  assert (~ (Ghost.reveal u == one int_or_bool_pcm))
 
 let switch_to_int (#u: Ghost.erased int_or_bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
