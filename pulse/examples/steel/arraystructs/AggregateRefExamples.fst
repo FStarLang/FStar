@@ -142,18 +142,46 @@ let int_or_bool_int_swap
 
 /// Convert an int_or_bool + runtime tag into an int
 ///
-/// int int_or_bool_to_int(bool *is_int, union int_or_bool *p) {
-///   if (*is_int) return p->i;
+/// int int_or_bool_to_int(bool is_int, union int_or_bool *p) {
+///   if (is_int) return p->i;
 ///   else return p->b ? 1 : 0;
 /// }
-val int_or_bool_to_int
-  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
-  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
+
+module I = FStar.IndefiniteDescription
+
+let int_or_bool_to_int
+  (is_int: bool)
+  (p: ref 'b int_or_bool_pcm)
+  (u: Ghost.erased int_or_bool)
 : Steel int
-    ((is_int `pts_to` some b) `star` (p `pts_to` u))
-    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
-    (requires fun _ -> if b then (exists i. u == mk_int i) else (exists b. u == mk_bool b))
+    (p `pts_to` u)
+    (fun _ -> p `pts_to` u)
+    (requires fun _ ->
+      if is_int then case_of_int_or_bool u == Some I 
+      else case_of_int_or_bool u == Some B)
     (ensures fun _ _ _ -> True)
+= if is_int then begin
+    //let i: Ghost.erased (pod int) =
+    //  I.indefinite_description_ghost (Ghost.erased (pod int)) (fun i -> u == mk_int i)
+    //in
+    let i: (i:Ghost.erased (pod int){u == mk_int i}) =
+      I.indefinite_description_tot (Ghost.erased (pod int)) (fun i -> u == mk_int i)
+    in
+    assert (u == mk_int i);
+    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int i);
+    let pi = addr_of_i p in
+    //let i = pod_read pi in
+    //unaddr_of_i p pi;
+    //A.return i
+    A.sladmit(); A.return (admit())
+  end else begin
+    //let pb = addr_of_b p in
+    //let b = pod_read pb in
+    //unaddr_of_b p pb;
+    //if b then A.return 1 else A.return 0
+    A.sladmit(); A.return (admit())
+  end
+
 (*= let b = pod_read is_int in
   if b then begin
     (* return p->i *)
