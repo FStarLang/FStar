@@ -3,6 +3,8 @@ module PointStruct
 open FStar.PCM.POD
 open FStar.PCM
 open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
 open Steel.Effect
 
 /// Suppose we have the following struct representing 2d points:

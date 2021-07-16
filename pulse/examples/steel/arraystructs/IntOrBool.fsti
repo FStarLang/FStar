@@ -3,6 +3,8 @@ module IntOrBool
 open FStar.PCM
 open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
 open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic

@@ -38,6 +38,14 @@ let split r xy x y =
     (r.r `mpts_to` Ghost.reveal (Ghost.hide (r.pl.conn_small_to_large.morph y)))
     (r `pts_to` y)
 
+let mgather
+  (#a:Type) (#p:pcm a)
+  (r:Steel.Memory.ref a p) (v0:Ghost.erased a) (v1:Ghost.erased a)
+: SteelT (_:unit{composable p v0 v1})
+    (mpts_to r v0 `star` mpts_to r v1)
+    (fun _ -> mpts_to r (op p v0 v1))
+= Steel.PCMReference.gather r v0 v1
+
 let gather #a #b #p r x y =
   A.change_equal_slprop
     (r `pts_to` x)

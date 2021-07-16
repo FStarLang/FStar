@@ -2,6 +2,7 @@ module FStar.PCM.POD
 
 open FStar.PCM
 open Steel.C.PCM
+open Steel.C.Ref
 open Steel.Effect
 
 let pod: Type u#a -> Type u#a = option

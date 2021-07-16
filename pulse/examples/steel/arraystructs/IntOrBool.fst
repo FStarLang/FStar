@@ -5,7 +5,11 @@ module IntOrBool
 open FStar.PCM
 open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
+open Steel.C.Union
 open Steel.Effect
+
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 module U = FStar.Universe
@@ -85,6 +89,15 @@ let switch_to_int_fpu (#u: Ghost.erased int_or_bool{exclusive int_or_bool_pcm (G
   (p: ref 'a int_or_bool_pcm) (i: int)
 : frame_preserving_upd int_or_bool_pcm u (mk_int (Ghost.hide (Ghost.reveal (some (Ghost.hide i)))))
 = base_fpu int_or_bool_pcm u (field_to_union_f int_or_bool_cases_pcm I (Some i))
+
+#push-options "--z3rlimit 30"
+
+let exclusive_not_unit (#u: Ghost.erased int_or_bool)
+: Lemma
+    (requires exclusive int_or_bool_pcm u)
+    (ensures Some? (case_of_int_or_bool u))
+    [SMTPat (exclusive int_or_bool_pcm u)]
+= admit()
 
 let switch_to_int (#u: Ghost.erased int_or_bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
