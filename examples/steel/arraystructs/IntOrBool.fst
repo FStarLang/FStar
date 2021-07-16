@@ -91,7 +91,7 @@ let switch_to_int (#u: Ghost.erased int_or_bool)
 : Steel unit
     (p `pts_to` u)
     (fun _ -> p `pts_to` mk_int (Ghost.hide (Ghost.reveal (some i))))
-    (requires fun _ -> Some? (case_of_int_or_bool u) /\ exclusive int_or_bool_pcm u)
+    (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
 = ref_upd p _ _ (switch_to_int_fpu p i)
 
@@ -100,7 +100,7 @@ let switch_to_bool (#u: Ghost.erased int_or_bool)
 : Steel unit
     (p `pts_to` u)
     (fun _ -> p `pts_to` mk_bool (Ghost.hide (Ghost.reveal (some b))))
-    (requires fun _ -> Some? (case_of_int_or_bool u) /\ exclusive int_or_bool_pcm u)
+    (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
 = ref_upd p u (mk_bool (Ghost.hide (Ghost.reveal (some (Ghost.hide b)))))
     (base_fpu int_or_bool_pcm u (field_to_union_f int_or_bool_cases_pcm B (Some b)))

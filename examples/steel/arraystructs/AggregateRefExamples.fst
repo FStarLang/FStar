@@ -117,43 +117,11 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
   unaddr_of_p2 p pp2;
   A.return ()
 
-/// Struct with potentially uninitialized values
-///
-/// Unions of scalars with tag type (e.g. int_or_bool)
-/// "Functional" model of struct data
-///
-/// Examples (linked list w/ mutable elements)?
-///   noeq type cell : Type0 = {
-///     value: int;
-///     next: ref (FStar.Universe.raise_t cell) cell
-///   }
-///
-/// Can also define bounded-lists
-///   let rec bounded_list (n: Ghost.erased nat): Tot Type0 (decreases (Ghost.reveal n)) =
-///   if Ghost.reveal n = 0 then False
-///   else (int & option (ref (FStar.Universe.raise_t (bounded_list (n - 1))) (bounded_list (n - 1))))
-///
-/// Unions with these structs in them
-///   May need particular functional style for unions because can't reason by unification on result of if-then-else
-/// 
-/// Specialized read and write
-/// 
-///   p: pcm a
-///   a is the carrier
-///   secretly: a type b of values that we actually care about
-///   lens a (option b)?
-///   pcm_lens a (opt_pcm b)?
-///
-///   read:
-///     p `pts_to` (x: a)
-///    extract x = Some (v, _)
-
 /// Swap two ints inside two (union int_or_bool)s using generic_swap
 ///
 /// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
 /// { generic_swap(&p.i, &q.i); }
 
-(*
 open IntOrBool
 let int_or_bool_int_swap
   (p: ref 'a int_or_bool_pcm) (q: ref 'b int_or_bool_pcm)
@@ -170,6 +138,7 @@ let int_or_bool_int_swap
   (* Give permissions back to p and q *)
   unaddr_of_i p pi;
   unaddr_of_i q qi
+
 /// Convert an int_or_bool + runtime tag into an int
 ///
 /// int int_or_bool_to_int(bool *is_int, union int_or_bool *p) {
@@ -202,7 +171,7 @@ val int_or_bool_to_int
     //A.return (if b then 1 else 0)
   end
 *)
-*)
+
 //let int_or_bool_to_int
 //  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
 //  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
