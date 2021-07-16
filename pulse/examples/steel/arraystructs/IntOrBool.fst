@@ -8,6 +8,16 @@ open Steel.Effect
 module M = Steel.Memory
 module A = Steel.Effect.Atomic
 
+let int_or_bool_cases k = match k with
+  | I -> pod int
+  | B -> pod bool
+  
+let int_or_bool_cases_pcm k: pcm (int_or_bool_cases k) = match k with
+  | I -> pod_pcm int
+  | B -> pod_pcm bool
+let int_or_bool = union int_or_bool_cases_pcm
+let int_or_bool_pcm: pcm int_or_bool = union_pcm int_or_bool_cases_pcm
+
 let mk_int i = Some (|I, Ghost.reveal i|)
 let mk_bool b = Some (|B, Ghost.reveal b|)
 

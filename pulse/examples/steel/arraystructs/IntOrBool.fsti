@@ -13,15 +13,11 @@ module A = Steel.Effect.Atomic
 
 type int_or_bool_case = | I | B
 
-let int_or_bool_cases k = match k with
-  | I -> pod int
-  | B -> pod bool
-  
-let int_or_bool_cases_pcm k: pcm (int_or_bool_cases k) = match k with
-  | I -> pod_pcm int
-  | B -> pod_pcm bool
-let int_or_bool = union int_or_bool_cases_pcm
-let int_or_bool_pcm: pcm int_or_bool = union_pcm int_or_bool_cases_pcm
+val int_or_bool: Type
+
+/// PCM for node:
+
+val int_or_bool_pcm: pcm int_or_bool
 
 /// (mk_int i) represents (union int_or_bool){.i = i}
 /// (mk_bool b) represents (union int_or_bool){.b = b}
@@ -31,11 +27,22 @@ val mk_bool (i: Ghost.erased (pod bool)): Ghost.erased int_or_bool
 
 /// Connections for cases
 
-val _i : connection int_or_bool_pcm (pod_pcm int)
-val _b : connection int_or_bool_pcm (pod_pcm bool)
+val _i : int_or_bool_pcm `connection` pod_pcm int
+val _b : int_or_bool_pcm `connection` pod_pcm bool
 
-// Construct using strong_excluded_middle
-//val case_of : int_or_bool -> GTot (option int_or_bool_case)
+/// Getting the case of a union in GTot
+
+// Construct using strong LEM
+val case_of_int_or_bool (u: Ghost.erased int_or_bool): GTot (option int_or_bool_case)
+
+val case_of_int_or_bool_int (i: Ghost.erased (pod int))
+: Lemma (case_of_int_or_bool (mk_int i) == Some I) [SMTPat (mk_int i)]
+
+val case_of_int_or_bool_bool (b: Ghost.erased (pod bool))
+: Lemma (case_of_int_or_bool (mk_bool b) == Some B) [SMTPat (mk_bool b)]
+
+val case_of_int_or_bool_one
+: squash (case_of_int_or_bool (one int_or_bool_pcm) == None)
 
 /// Taking pointers to the i and b cases of an int_or_bool
 
@@ -61,15 +68,18 @@ val unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
 
 /// Switching the case
 
-val switch_to_bool (#i: Ghost.erased int)
-  (p: ref 'a int_or_bool_pcm) (b: bool)
-: SteelT unit (p `pts_to` mk_int (some i)) (fun _ -> p `pts_to` mk_bool (some b))
-
-val switch_to_int (#b: Ghost.erased bool)
+val switch_to_int (#u: Ghost.erased int_or_bool)
   (p: ref 'a int_or_bool_pcm) (i: int)
-: SteelT unit (p `pts_to` mk_bool (some b)) (fun _ -> p `pts_to` mk_int (some i))
+: Steel unit
+    (p `pts_to` u)
+    (fun _ -> p `pts_to` mk_int (some i))
+    (requires fun _ -> Some? (case_of_int_or_bool u))
+    (requires fun _ _ _ -> True)
 
-/// Laws about unions
-
-//compatible p (mk_int i) v
-//==> exists j. v = mk_int j
+val switch_to_bool (#u: Ghost.erased int_or_bool)
+  (p: ref 'a int_or_bool_pcm) (b: bool)
+: Steel unit
+    (p `pts_to` u)
+    (fun _ -> p `pts_to` mk_bool (some b))
+    (requires fun _ -> Some? (case_of_int_or_bool u))
+    (requires fun _ _ _ -> True)
