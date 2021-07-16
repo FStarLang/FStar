@@ -3,7 +3,7 @@ module IntOrBool
 #push-options "--print_universes"
 
 open FStar.PCM
-open FStar.PCM.POD
+open Steel.C.Opt
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.C.Connection
@@ -15,12 +15,12 @@ module A = Steel.Effect.Atomic
 module U = FStar.Universe
 
 let int_or_bool_cases k = match k with
-  | I -> pod int
-  | B -> pod bool
+  | I -> option int
+  | B -> option bool
   
 let int_or_bool_cases_pcm k: pcm (int_or_bool_cases k) = match k with
-  | I -> pod_pcm int
-  | B -> pod_pcm bool
+  | I -> opt_pcm #int
+  | B -> opt_pcm #bool
   
 let int_or_bool = union #int_or_bool_case #int_or_bool_cases int_or_bool_cases_pcm
 
@@ -38,12 +38,12 @@ let case_of_int_or_bool u =
   let k = case_of_union int_or_bool_cases_pcm u in
   match k with
   | Some I ->
-    assert (~ (Ghost.reveal u I == one (pod_pcm int)));
+    assert (~ (Ghost.reveal u I == one (opt_pcm #int)));
     assert (exists (x:int). (Ghost.reveal u I == Ghost.reveal (some (Ghost.hide x))));
     assert (exists (x:int). (Ghost.reveal u I == Ghost.reveal (some (Ghost.hide x))) /\ u `feq` mk_int (Ghost.hide (Ghost.reveal (some (Ghost.hide x)))));
     assert (exists i. u == mk_int i); k
   | Some B -> 
-    assert (~ (Ghost.reveal u B == one (pod_pcm bool)));
+    assert (~ (Ghost.reveal u B == one (opt_pcm #bool)));
     assert (exists (b:bool). Ghost.reveal u B == Ghost.reveal (some (Ghost.hide b)) /\ u `feq` mk_bool (Ghost.hide (Ghost.reveal (some (Ghost.hide b))))); k
   | None -> None
   
@@ -55,25 +55,25 @@ let mk_int_exclusive i = exclusive_union_intro int_or_bool_cases_pcm (mk_int i) 
 
 let mk_bool_exclusive b = exclusive_union_intro int_or_bool_cases_pcm (mk_bool b) B
 
-let addr_of_i (#i: Ghost.erased (pod int)) (p: ref 'a int_or_bool_pcm)
-: Steel (q:ref 'a (pod_pcm int){q == ref_focus p _i})
+let addr_of_i (#i: Ghost.erased (option int)) (p: ref 'a int_or_bool_pcm)
+: Steel (q:ref 'a (opt_pcm #int){q == ref_focus p _i})
     (p `pts_to` mk_int i)
     (fun q -> q `pts_to` i)
     (requires fun _ -> ~ (i == none))
     (ensures fun _ _ _ -> True)
 = addr_of_union_field p I (mk_int i)
 
-let unaddr_of_i (#i: Ghost.erased (pod int)) (#opened: M.inames)
+let unaddr_of_i (#i: Ghost.erased (option int)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
-  (q: ref 'a (pod_pcm int){q == ref_focus p _i})
+  (q: ref 'a (opt_pcm #int){q == ref_focus p _i})
 = unaddr_of_union_field I q p i
 
-let addr_of_b (#b: Ghost.erased (pod bool)) (p: ref 'a int_or_bool_pcm)
+let addr_of_b (#b: Ghost.erased (option bool)) (p: ref 'a int_or_bool_pcm)
 = addr_of_union_field p B (mk_bool b)
 
-let unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
+let unaddr_of_b (#b: Ghost.erased (option bool)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
-  (q: ref 'a (pod_pcm bool){q == ref_focus p _b})
+  (q: ref 'a (opt_pcm #bool){q == ref_focus p _b})
 = unaddr_of_union_field B q p b
 
 let switch_to_int_fpu (#u: Ghost.erased int_or_bool{exclusive int_or_bool_pcm (Ghost.reveal u)})

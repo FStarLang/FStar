@@ -9,6 +9,8 @@ module A = Steel.Effect.Atomic
 /// Example 1: swapping the coordinates of a 2d point
 
 open Steel.C.Opt
+
+(*
 open PointStruct
 
 /// We can write the following function that swaps the x and y fields of a given point:
@@ -123,7 +125,6 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
 /// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
 /// { generic_swap(&p.i, &q.i); }
 
-open IntOrBool
 let int_or_bool_int_swap
   (p: ref 'a int_or_bool_pcm) (q: ref 'b int_or_bool_pcm)
   (i j: Ghost.erased int)
@@ -140,6 +141,8 @@ let int_or_bool_int_swap
   unaddr_of_i p pi;
   unaddr_of_i q qi
 
+*)
+
 /// Convert an int_or_bool + runtime tag into an int
 ///
 /// int int_or_bool_to_int(bool is_int, union int_or_bool *p) {
@@ -147,11 +150,20 @@ let int_or_bool_int_swap
 ///   else return p->b ? 1 : 0;
 /// }
 
+open IntOrBool
+
 module I = FStar.IndefiniteDescription
+
+#push-options "--z3rlimit 30"
+
+let extract (u: Ghost.erased int_or_bool) (h: squash (case_of_int_or_bool u == Some I))
+: Tot (i:Ghost.erased (option int){u == mk_int i /\ ~ (Ghost.reveal i == one (opt_pcm #int))})
+= Ghost.reveal (I.indefinite_description_tot (Ghost.erased (option int))
+    (fun i -> u == mk_int i /\ ~ (Ghost.reveal i == one (opt_pcm #int))))
 
 let int_or_bool_to_int
   (is_int: bool)
-  (p: ref 'b int_or_bool_pcm)
+  (p: ref 'a int_or_bool_pcm)
   (u: Ghost.erased int_or_bool)
 : Steel int
     (p `pts_to` u)
@@ -160,27 +172,30 @@ let int_or_bool_to_int
       if is_int then case_of_int_or_bool u == Some I 
       else case_of_int_or_bool u == Some B)
     (ensures fun _ _ _ -> True)
-= if is_int then begin
+= assume is_int;
+  let h : squash (case_of_int_or_bool u == Some I) = () in
+  //if is_int then begin
     //let i: Ghost.erased (option int) =
     //  I.indefinite_description_ghost (Ghost.erased (option int)) (fun i -> u == mk_int i)
     //in
     let i: (i:Ghost.erased (option int){u == mk_int i}) =
-      I.indefinite_description_tot (Ghost.erased (option int)) (fun i -> u == mk_int i)
+      extract u h
     in
+    let j: Ghost.erased int = Ghost.hide (Some?.v i) in
     assert (u == mk_int i);
-    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int i);
+    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int (some j));
     let pi = addr_of_i p in
-    //let i = opt_read pi in
-    //unaddr_of_i p pi;
-    //A.return i
-    A.sladmit(); A.return (admit())
-  end else begin
-    //let pb = addr_of_b p in
-    //let b = opt_read pb in
-    //unaddr_of_b p pb;
-    //if b then A.return 1 else A.return 0
-    A.sladmit(); A.return (admit())
-  end
+    let i = opt_read pi in
+    unaddr_of_i p pi;
+    A.return i
+    //A.sladmit(); A.return (admit())
+  //end else begin
+  //  //let pb = addr_of_b p in
+  //  //let b = opt_read pb in
+  //  //unaddr_of_b p pb;
+  //  //if b then A.return 1 else A.return 0
+  //  A.sladmit(); A.return (admit())
+  //end
 
 (*= let b = opt_read is_int in
   if b then begin
