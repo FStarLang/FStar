@@ -364,6 +364,7 @@ let addr_of_union_field
   A.change_equal_slprop (r `pts_to` xs) (r `pts_to` _);
   focus r (union_field p k) (field_to_union_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k)
 
+module M = Steel.Memory 
 let unaddr_of_union_field
   (#opened:M.inames) #base (#a:eqtype) #b (#p:(k:a -> pcm (b k))) (k:a)
   (r': ref base (p k)) (r: ref base (union_pcm p))

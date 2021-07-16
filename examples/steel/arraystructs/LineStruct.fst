@@ -1,6 +1,10 @@
 module LineStruct
 
 open FStar.FunctionalExtensionality
+open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
+open Steel.C.Struct
 module A = Steel.Effect.Atomic
 
 /// Example 2: pointers to nested fields

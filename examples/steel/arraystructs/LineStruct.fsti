@@ -5,6 +5,8 @@ open FStar.PCM
 open Steel.Effect
 open PointStruct
 open Steel.C.PCM
+open Steel.C.Connection
+open Steel.C.Ref
 
 /// Example 2: pointers to nested fields
 ///
@@ -23,7 +25,7 @@ val line_pcm : pcm line
 
 val mk_line (x y: Ghost.erased point): Ghost.erased line
 
-/// Lenses for fields
+/// Connections for fields
 
 #push-options "--print_universes"
 

@@ -8,6 +8,9 @@ open Steel.Effect
 open FStar.PCM
 open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
+open Steel.C.Struct
 module U = FStar.Universe
 
 type node_field = | Value | Next
@@ -42,17 +45,17 @@ let node_pcm: pcm node = {
   refine = (fun x -> node_pcm'.refine x.un_node);
 }
 
-let roll: node_pcm' `morphism` node_pcm = {
-  morph = Mknode;
-  morph_unit = ();
-  morph_compose = (fun _ _ -> ());
-}
+let roll: node_pcm' `morphism` node_pcm =
+  mkmorphism
+    Mknode
+    ()
+    (fun _ _ -> ())
 
-let unroll: node_pcm `morphism` node_pcm' = {
-  morph = Mknode?.un_node;
-  morph_unit = ();
-  morph_compose = (fun _ _ -> ());
-}
+let unroll: node_pcm `morphism` node_pcm' =
+  mkmorphism
+    Mknode?.un_node
+    ()
+    (fun _ _ -> ())
 
 let mk_un_node: squash (Mknode `is_inverse_of` Mknode?.un_node) = ()
 let un_mk_node: squash (Mknode?.un_node `is_inverse_of` Mknode) = ()

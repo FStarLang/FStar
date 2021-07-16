@@ -5,6 +5,8 @@ open FStar.PCM
 open Steel.Effect
 open PointStruct
 open Steel.C.PCM
+open Steel.C.Ref
+open Steel.C.Connection
 module U = FStar.Universe
 
 let ref'_f a b (pb: Ghost.erased (pcm b)) = ref a (Ghost.reveal pb)

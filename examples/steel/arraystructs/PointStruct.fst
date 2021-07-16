@@ -2,6 +2,8 @@ module PointStruct
 
 open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Connection
+open Steel.C.Struct
 open FStar.FunctionalExtensionality
 open Steel.Effect
 module A = Steel.Effect.Atomic
