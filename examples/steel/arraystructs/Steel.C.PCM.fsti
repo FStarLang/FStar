@@ -635,11 +635,11 @@ let case_refinement_f_uniq (p:(k:'a -> pcm ('b k))) (j k:'a) (f: restricted_t 'a
     (ensures f == one (prod_pcm p))
 = ext f (one (prod_pcm p)) (fun k -> ())
 
-let is_union (p:(k:'a -> pcm ('b k))) (f: restricted_t 'a 'b) =
-  (exists (k:'a). True) ==> (exists k. case_refinement_f p k f)
+let is_union (#a:Type) (#b:a->Type) (p:(k:a -> pcm (b k))) (f: restricted_t a b) =
+  (exists (k:a). True) ==> (exists k. case_refinement_f p k f)
   (** precondition is there because we don't care if 'a is inhabited *)
 
-let union (p:(k:'a -> pcm ('b k))) = f:restricted_t 'a 'b{is_union p f}
+let union (#a:Type) (#b:a->Type) (p:(k:a -> pcm (b k))) = f:restricted_t a b{is_union p f}
 
 let union_elim (p:(k:'a -> pcm ('b k))) (f: union p) (goal:Type)
   (cont:(k:'a -> Lemma (requires case_refinement_f p k f) (ensures goal)
@@ -931,6 +931,18 @@ let unaddr_of_union_field
     (ensures fun _ _ _ -> True)
 = unfocus r' r (union_field p k) x
 
+module I = FStar.IndefiniteDescription
+
+let case_of_union (p:(k:'a -> pcm ('b k))) (u: union p)
+: GTot (k:option 'a{match k with Some k -> ~ (u k == one (p k)) | None -> u == one (union_pcm p)})
+= if I.strong_excluded_middle (exists k. ~ (u k == one (p k))) then
+    let k = I.indefinite_description_ghost 'a (fun k -> ~ (u k == one (p k))) in
+    Some k
+  else begin
+    assert (u `feq` one (union_pcm p));
+    None
+  end
+
 let exclusive_union_intro
   (#a: Type)
   (#b: _)
@@ -1001,7 +1013,7 @@ let opt_pcm #a : pcm (option a) = {
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
   is_unit = (fun _ -> ());
-  refine = (fun x -> Some? x == true);
+  refine = (fun x -> Some? x == true \/ None? x);
 }
 
 let exclusive_opt
