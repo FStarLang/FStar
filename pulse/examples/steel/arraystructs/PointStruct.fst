@@ -1,7 +1,7 @@
 module PointStruct
 
-open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Opt
 open Steel.C.Connection
 open Steel.C.Struct
 open FStar.FunctionalExtensionality
@@ -10,20 +10,20 @@ module A = Steel.Effect.Atomic
 
 type point_field = | X | Y
 let point_fields k = match k with
-  | X -> pod int
-  | Y -> pod int
+  | X -> option int
+  | Y -> option int
 let point = restricted_t point_field point_fields
 
 let point_fields_pcm k : pcm (point_fields k) = match k with
-  | X -> pod_pcm int
-  | Y -> pod_pcm int
+  | X -> opt_pcm int
+  | Y -> opt_pcm int
 let point_pcm = prod_pcm point_fields_pcm
 
-let mk_point_f (x y: pod int) (k: point_field): point_fields k = match k with
+let mk_point_f (x y: option int) (k: point_field): point_fields k = match k with
   | X -> x
   | Y -> y
   
-let mk_point (x y: Ghost.erased (pod int)): Ghost.erased point =
+let mk_point (x y: Ghost.erased (option int)): Ghost.erased point =
   Ghost.hide (on_domain point_field (mk_point_f (Ghost.reveal x) (Ghost.reveal y)))
 
 let _x = struct_field point_fields_pcm X

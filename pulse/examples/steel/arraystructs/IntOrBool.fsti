@@ -1,8 +1,8 @@
 module IntOrBool
 
 open FStar.PCM
-open FStar.PCM.POD
 open Steel.C.PCM
+open Steel.C.Opt
 open Steel.C.Ref
 open Steel.C.Connection
 open Steel.Effect
@@ -24,13 +24,13 @@ val int_or_bool_pcm: pcm int_or_bool
 /// (mk_int i) represents (union int_or_bool){.i = i}
 /// (mk_bool b) represents (union int_or_bool){.b = b}
 
-val mk_int (i: Ghost.erased (pod int)): Ghost.erased int_or_bool
-val mk_bool (b: Ghost.erased (pod bool)): Ghost.erased int_or_bool
+val mk_int (i: Ghost.erased (option int)): Ghost.erased int_or_bool
+val mk_bool (b: Ghost.erased (option bool)): Ghost.erased int_or_bool
 
 /// Connections for cases
 
-val _i : int_or_bool_pcm `connection` pod_pcm int
-val _b : int_or_bool_pcm `connection` pod_pcm bool
+val _i : int_or_bool_pcm `connection` opt_pcm #int
+val _b : int_or_bool_pcm `connection` opt_pcm #bool
 
 /// Getting the case of a union in GTot
 
@@ -42,12 +42,12 @@ val case_of_int_or_bool (u: Ghost.erased int_or_bool):
     | None -> Ghost.reveal u == one int_or_bool_pcm
   })
 
-val case_of_int_or_bool_int (i: Ghost.erased (pod int))
+val case_of_int_or_bool_int (i: Ghost.erased (option int))
 : Lemma
     (requires ~ (i == none))
     (ensures case_of_int_or_bool (mk_int i) == Some I) [SMTPat (mk_int i)]
 
-val case_of_int_or_bool_bool (b: Ghost.erased (pod bool))
+val case_of_int_or_bool_bool (b: Ghost.erased (option bool))
 : Lemma
     (requires ~ (b == none))
     (ensures case_of_int_or_bool (mk_bool b) == Some B) [SMTPat (mk_bool b)]
@@ -55,46 +55,46 @@ val case_of_int_or_bool_bool (b: Ghost.erased (pod bool))
 val case_of_int_or_bool_one
 : squash (case_of_int_or_bool (one int_or_bool_pcm) == None)
 
-val mk_int_exclusive (i: Ghost.erased (pod int))
+val mk_int_exclusive (i: Ghost.erased (option int))
 : Lemma
-    (requires exclusive (pod_pcm int) i /\ ~ (i == none))
+    (requires exclusive (opt_pcm #int) i /\ ~ (i == none))
     (ensures exclusive int_or_bool_pcm (mk_int i))
-  [SMTPat (exclusive (pod_pcm int) i)]
+  [SMTPat (exclusive (opt_pcm #int) i)]
 
-val mk_bool_exclusive (b: Ghost.erased (pod bool))
+val mk_bool_exclusive (b: Ghost.erased (option bool))
 : Lemma
-    (requires exclusive (pod_pcm bool) b /\ ~ (b == none))
+    (requires exclusive (opt_pcm #bool) b /\ ~ (b == none))
     (ensures exclusive int_or_bool_pcm (mk_bool b))
-  [SMTPat (exclusive (pod_pcm bool) b)]
+  [SMTPat (exclusive (opt_pcm #bool) b)]
 
 /// Taking pointers to the i and b cases of an int_or_bool
 
-val addr_of_i (#i: Ghost.erased (pod int)) (p: ref 'a int_or_bool_pcm)
-: Steel (q:ref 'a (pod_pcm int){q == ref_focus p _i})
+val addr_of_i (#i: Ghost.erased (option int)) (p: ref 'a int_or_bool_pcm)
+: Steel (q:ref 'a (opt_pcm #int){q == ref_focus p _i})
     (p `pts_to` mk_int i)
     (fun q -> q `pts_to` i)
     (requires fun _ -> ~ (i == none))
     (ensures fun _ _ _ -> True)
 
-val unaddr_of_i (#i: Ghost.erased (pod int)) (#opened: M.inames)
+val unaddr_of_i (#i: Ghost.erased (option int)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
-  (q: ref 'a (pod_pcm int){q == ref_focus p _i})
+  (q: ref 'a (opt_pcm #int){q == ref_focus p _i})
 : A.SteelGhost unit opened
     (q `pts_to` i)
     (fun _ -> p `pts_to` mk_int i)
     (requires fun _ -> ~ (i == none))
     (ensures fun _ _ _ -> True)
 
-val addr_of_b (#b: Ghost.erased (pod bool)) (p: ref 'a int_or_bool_pcm)
-: Steel (q:ref 'a (pod_pcm bool){q == ref_focus p _b})
+val addr_of_b (#b: Ghost.erased (option bool)) (p: ref 'a int_or_bool_pcm)
+: Steel (q:ref 'a (opt_pcm #bool){q == ref_focus p _b})
     (p `pts_to` mk_bool b)
     (fun q -> q `pts_to` b)
     (requires fun _ -> ~ (b == none))
     (ensures fun _ _ _ -> True)
 
-val unaddr_of_b (#b: Ghost.erased (pod bool)) (#opened: M.inames)
+val unaddr_of_b (#b: Ghost.erased (option bool)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
-  (q: ref 'a (pod_pcm bool){q == ref_focus p _b})
+  (q: ref 'a (opt_pcm #bool){q == ref_focus p _b})
 : A.SteelGhost unit opened
     (q `pts_to` b)
     (fun _ -> p `pts_to` mk_bool b)

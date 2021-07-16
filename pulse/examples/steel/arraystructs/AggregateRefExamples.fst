@@ -8,7 +8,7 @@ module A = Steel.Effect.Atomic
 
 /// Example 1: swapping the coordinates of a 2d point
 
-open FStar.PCM.POD
+open Steel.C.Opt
 open PointStruct
 
 /// We can write the following function that swaps the x and y fields of a given point:
@@ -30,12 +30,12 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
   (* int *r = &p.y; *)
   let r = addr_of_y p in
   (* tmp = *q; *)
-  let tmp : int = pod_read q in
+  let tmp : int = opt_read q in
   (* *q = *r; *)
-  let vy : int = pod_read r in
-  pod_write q vy;
+  let vy : int = opt_read r in
+  opt_write q vy;
   (* *r = tmp; *)
-  pod_write r tmp;
+  opt_write r tmp;
   (* Gather *)
   unaddr_of_x p q;
   unaddr_of_y p r;
@@ -49,16 +49,16 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
 ///   *q = tmp;
 /// }
 
-let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (pod_pcm 'c)) (q:ref 'b (pod_pcm 'c))
+let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (opt_pcm #'c)) (q:ref 'b (opt_pcm #'c))
 : SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
     (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
 = (* A tmp = *p; *)
-  let tmp = pod_read p in
+  let tmp = opt_read p in
   (* *p = *q; *)
-  let vy = pod_read q in
-  pod_write p vy;
+  let vy = opt_read q in
+  opt_write p vy;
   (* *q = tmp *)
-  pod_write q tmp;
+  opt_write q tmp;
   A.return ()
 
 /// Now, point_swap written using generic_swap:
@@ -161,40 +161,40 @@ let int_or_bool_to_int
       else case_of_int_or_bool u == Some B)
     (ensures fun _ _ _ -> True)
 = if is_int then begin
-    //let i: Ghost.erased (pod int) =
-    //  I.indefinite_description_ghost (Ghost.erased (pod int)) (fun i -> u == mk_int i)
+    //let i: Ghost.erased (option int) =
+    //  I.indefinite_description_ghost (Ghost.erased (option int)) (fun i -> u == mk_int i)
     //in
-    let i: (i:Ghost.erased (pod int){u == mk_int i}) =
-      I.indefinite_description_tot (Ghost.erased (pod int)) (fun i -> u == mk_int i)
+    let i: (i:Ghost.erased (option int){u == mk_int i}) =
+      I.indefinite_description_tot (Ghost.erased (option int)) (fun i -> u == mk_int i)
     in
     assert (u == mk_int i);
     A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int i);
     let pi = addr_of_i p in
-    //let i = pod_read pi in
+    //let i = opt_read pi in
     //unaddr_of_i p pi;
     //A.return i
     A.sladmit(); A.return (admit())
   end else begin
     //let pb = addr_of_b p in
-    //let b = pod_read pb in
+    //let b = opt_read pb in
     //unaddr_of_b p pb;
     //if b then A.return 1 else A.return 0
     A.sladmit(); A.return (admit())
   end
 
-(*= let b = pod_read is_int in
+(*= let b = opt_read is_int in
   if b then begin
     (* return p->i *)
     let pi = addr_of_i p in
     A.sladmit(); A.return (admit())
-    //let i = pod_read pi in
+    //let i = opt_read pi in
     //unaddr_of_i p pi;
     //A.return i
   end else begin
     A.sladmit(); A.return (admit())
     //(* return p->b ? 1 : 0 *)
     //let pb = addr_of_b p in
-    //let b = pod_read pb in
+    //let b = opt_read pb in
     //unaddr_of_b p pb;
     //let b = b in
     //A.return (if b then 1 else 0)
@@ -202,24 +202,24 @@ let int_or_bool_to_int
 *)
 
 //let int_or_bool_to_int
-//  (is_int: ref 'a (pod_pcm bool)) (p: ref 'b int_or_bool_pcm)
+//  (is_int: ref 'a (opt_pcm #bool)) (p: ref 'b int_or_bool_pcm)
 //  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
-//: Steel (pod int)
+//: Steel (option int)
 //    ((is_int `pts_to` some b) `star` (p `pts_to` u))
 //    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
 //    (requires fun _ -> if b then case u == I else case u == B)
 //    (ensures fun _ _ _ -> True)
-//= let b = pod_read is_int in
+//= let b = opt_read is_int in
 //  if some_v b then begin
 //    (* return p->i *)
 //    let pi = addr_of_i p in
-//    let i = pod_read pi in
+//    let i = opt_read pi in
 //    unaddr_of_i p pi;
 //    A.return i
 //  end else begin
 //    (* return p->b ? 1 : 0 *)
 //    let pb = addr_of_b p in
-//    let b = pod_read pb in
+//    let b = opt_read pb in
 //    unaddr_of_b p pb;
 //    let b = some_v b in
 //    if b then some' 1 else some' 0
