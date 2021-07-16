@@ -1,6 +1,4 @@
 module Steel.C.PCM
-open FStar.PCM
-open FStar.FunctionalExtensionality
 
 unfold
 let one (#a: Type) (p: pcm a) = p.p.one

@@ -88,7 +88,7 @@ val switch_to_int (#u: Ghost.erased int_or_bool)
 : Steel unit
     (p `pts_to` u)
     (fun _ -> p `pts_to` mk_int (Ghost.hide (Ghost.reveal (some i))))
-    (requires fun _ -> Some? (case_of_int_or_bool u) /\ exclusive int_or_bool_pcm u)
+    (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
 
 val switch_to_bool (#u: Ghost.erased int_or_bool)
@@ -96,5 +96,5 @@ val switch_to_bool (#u: Ghost.erased int_or_bool)
 : Steel unit
     (p `pts_to` u)
     (fun _ -> p `pts_to` mk_bool (Ghost.hide (Ghost.reveal (some b))))
-    (requires fun _ -> Some? (case_of_int_or_bool u) /\ exclusive int_or_bool_pcm u)
+    (requires fun _ -> exclusive int_or_bool_pcm u)
     (ensures fun _ _ _ -> True)
