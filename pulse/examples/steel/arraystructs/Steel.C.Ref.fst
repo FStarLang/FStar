@@ -17,6 +17,8 @@ let pts_to r v =
   
 let ref_focus r l = {p = r.p; pl = connection_compose r.pl l; r = r.r}
 
+let ref_focus_id r = connection_compose_id_right r.pl
+
 let ref_focus_comp r l m
 = connection_eq
     ((r.pl `connection_compose` l) `connection_compose` m)
@@ -101,7 +103,7 @@ let ref_read (#p: pcm 'b) (#x: Ghost.erased 'b) (r: ref 'a p)
 
 let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p) }) (y: Ghost.erased 'b) (f: frame_preserving_upd 'p x y)
 : Tot (M.action_except unit Set.empty (hp_of (r `pts_to` x)) (fun _ -> hp_of (r `pts_to` y)))
-= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large.morph x)) (Ghost.hide (r.pl.conn_small_to_large.morph y)) (r.pl.conn_lift_frame_preserving_upd (|x, y, f|))
+= M.upd_gen Set.empty r.r  (Ghost.hide (r.pl.conn_small_to_large.morph x)) (Ghost.hide (r.pl.conn_small_to_large.morph y)) (r.pl.conn_lift_frame_preserving_upd (|x, y, restricted_frame_preserving_upd_intro f|))
 
 let as_action (#p:vprop)
               (#q:vprop)
