@@ -60,57 +60,21 @@ let unroll: node_pcm `morphism` node_pcm' =
 let mk_un_node: squash (Mknode `is_inverse_of` Mknode?.un_node) = ()
 let un_mk_node: squash (Mknode?.un_node `is_inverse_of` Mknode) = ()
 
-let roll_compatible x v
-: Lemma
-    (requires compatible node_pcm' x v)
-    (ensures compatible node_pcm (Mknode x) (Mknode v))
-    [SMTPat (compatible node_pcm' x v)]
-= compatible_morphism roll x v
+let node_iso : isomorphism node_pcm node_pcm' =
+  mkisomorphism
+    unroll
+    roll
+    ()
+    ()
+    (fun _ -> ())
+    (fun _ -> ())
 
-let unroll_compatible x v
-: Lemma
-    (requires compatible node_pcm x v)
-    (ensures compatible node_pcm' x.un_node v.un_node)
-    [SMTPat (compatible node_pcm x v)]
-= compatible_morphism unroll x v
-
-let roll_conn_lift_fpu
-  (x: Ghost.erased _ {~ (Ghost.reveal x == one node_pcm) })
-  (y: Ghost.erased _)
-  (f: frame_preserving_upd node_pcm x y)
-: frame_preserving_upd node_pcm' x.un_node y.un_node
-= fun v ->
-  let w = (f (Mknode v)).un_node in
-  assert (node_pcm'.refine w);
-  assert (compatible node_pcm' y.un_node w);
-  let aux (frame:_{composable node_pcm' x.un_node frame})
-  : Lemma (
-      composable node_pcm' y.un_node frame /\
-      (op node_pcm' x.un_node frame == v ==> op node_pcm' y.un_node frame == w))
-  = roll.morph_compose x.un_node frame
-  in FStar.Classical.forall_intro aux;
-  w
 
 let roll_conn: node_pcm' `connection` node_pcm =
-  mkconnection unroll roll () roll_conn_lift_fpu
-
-let unroll_conn_lift_fpu
-  (x: Ghost.erased _ {~ (Ghost.reveal x == one node_pcm') })
-  (y: Ghost.erased _)
-  (f: frame_preserving_upd node_pcm' x y)
-: frame_preserving_upd node_pcm (Mknode x) (Mknode y)
-= fun v ->
-  let w = Mknode (f v.un_node) in
-  let aux (frame:_{composable node_pcm (Mknode x) frame})
-  : Lemma (
-      composable node_pcm (Mknode y) frame /\
-      (op node_pcm (Mknode x) frame == v ==> op node_pcm (Mknode y) frame == w))
-  = unroll.morph_compose (Mknode x) frame
-  in FStar.Classical.forall_intro aux;
-  w
+  connection_of_isomorphism (isomorphism_inverse node_iso)
 
 let unroll_conn: node_pcm `connection` node_pcm' =
-  mkconnection roll unroll () unroll_conn_lift_fpu
+  connection_of_isomorphism node_iso
 
 let mk_node'_f (value: option int') (next: option (option (ref' node node)))
   (k: node_field)
