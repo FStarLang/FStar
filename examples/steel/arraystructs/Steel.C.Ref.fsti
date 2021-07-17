@@ -20,6 +20,12 @@ val ref_focus
   (r: ref a p) (#q: pcm c) (l: connection p q)
 : ref a q
 
+val ref_focus_id
+  (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
+  (r: ref a p)
+: Lemma
+  (ref_focus r (connection_id _) == r)
+
 val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
   (l: connection p q) (m: connection q s)
 : Lemma (ref_focus (ref_focus r l) m == ref_focus r (l `connection_compose` m))
