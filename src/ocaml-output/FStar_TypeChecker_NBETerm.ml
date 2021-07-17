@@ -1393,22 +1393,35 @@ let arg_as_list :
       FStar_All.pipe_right (FStar_Pervasives_Native.fst a1) uu___
 let (arg_as_bounded_int :
   arg ->
-    (FStar_Syntax_Syntax.fv * FStar_BigInt.t) FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.fv * FStar_BigInt.t *
+      FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.option)
   =
   fun uu___ ->
     match uu___ with
     | (a, uu___1) ->
-        (match a.nbe_t with
-         | FV
-             (fv1, [],
-              ({ nbe_t = Constant (Int i); nbe_r = uu___2;_}, uu___3)::[])
-             when
-             let uu___4 =
-               FStar_Ident.string_of_lid
-                 (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-             FStar_Util.ends_with uu___4 "int_to_t" ->
-             FStar_Pervasives_Native.Some (fv1, i)
-         | uu___2 -> FStar_Pervasives_Native.None)
+        let uu___2 =
+          match a.nbe_t with
+          | Meta (t1, tm) ->
+              let uu___3 = FStar_Thunk.force tm in
+              (match uu___3 with
+               | FStar_Syntax_Syntax.Meta_desugared m ->
+                   (t1, (FStar_Pervasives_Native.Some m))
+               | uu___4 -> (a, FStar_Pervasives_Native.None))
+          | uu___3 -> (a, FStar_Pervasives_Native.None) in
+        (match uu___2 with
+         | (a1, m) ->
+             (match a1.nbe_t with
+              | FV
+                  (fv1, [],
+                   ({ nbe_t = Constant (Int i); nbe_r = uu___3;_}, uu___4)::[])
+                  when
+                  let uu___5 =
+                    FStar_Ident.string_of_lid
+                      (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                  FStar_Util.ends_with uu___5 "int_to_t" ->
+                  FStar_Pervasives_Native.Some (fv1, i, m)
+              | uu___3 -> FStar_Pervasives_Native.None))
 let (int_as_bounded : FStar_Syntax_Syntax.fv -> FStar_BigInt.t -> t) =
   fun int_to_t ->
     fun n ->
@@ -1416,6 +1429,23 @@ let (int_as_bounded : FStar_Syntax_Syntax.fv -> FStar_BigInt.t -> t) =
       let int_to_t1 args1 =
         FStar_All.pipe_left mk_t (FV (int_to_t, [], args1)) in
       let uu___ = let uu___1 = as_arg c in [uu___1] in int_to_t1 uu___
+let (with_meta_ds :
+  t ->
+    FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option -> t)
+  =
+  fun t1 ->
+    fun m ->
+      match m with
+      | FStar_Pervasives_Native.None -> t1
+      | FStar_Pervasives_Native.Some m1 ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Thunk.mk
+                  (fun uu___3 -> FStar_Syntax_Syntax.Meta_desugared m1) in
+              (t1, uu___2) in
+            Meta uu___1 in
+          mk_t uu___
 let lift_unary :
   'a 'b .
     ('a -> 'b) ->
