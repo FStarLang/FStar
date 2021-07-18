@@ -1,6 +1,6 @@
 module Steel.C.Opt
 
-open FStar.PCM
+module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.Effect
@@ -14,14 +14,16 @@ let opt_comp (x y: option 'a): prop = match x, y with
 let opt_op (x: option 'a) (y: option 'a{opt_comp x y}): option 'a = match x, y with
   | None, z | z, None -> z
 
-let opt_pcm #a : pcm (option a) = {
-  FStar.PCM.p = {composable = opt_comp; op = opt_op; one = None};
+let fstar_opt_pcm #a : P.pcm (option a) = let open P in {
+  p = {composable = opt_comp; op = opt_op; one = None};
   comm = (fun _ _ -> ());
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
   is_unit = (fun _ -> ());
   refine = (fun x -> Some? x == true);
 }
+
+let opt_pcm #a : pcm (option a) = pcm_of_fstar_pcm fstar_opt_pcm
 
 let option: Type u#a -> Type u#a = option
 

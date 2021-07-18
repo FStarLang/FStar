@@ -1,6 +1,6 @@
 module Steel.C.Struct
 
-open FStar.PCM
+module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Connection
 open Steel.C.Ref
@@ -23,7 +23,7 @@ let prod_comp (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b): prop =
 let prod_op (p:(k:'a -> pcm ('b k)))
   (x: restricted_t 'a 'b) (y: restricted_t 'a 'b{prod_comp p x y})
 : restricted_t 'a 'b
-= on_domain 'a (fun k -> op (p k) (x k) (y k))
+= on_domain 'a (fun k -> op (p k) (x k) (y k) <: 'b k)
 
 let prod_one (p:(k:'a -> pcm ('b k))): restricted_t 'a 'b =
   on_domain 'a (fun k -> one (p k))
@@ -31,7 +31,7 @@ let prod_one (p:(k:'a -> pcm ('b k))): restricted_t 'a 'b =
 let prod_comm (p:(k:'a -> pcm ('b k)))
   (x: restricted_t 'a 'b) (y: restricted_t 'a 'b{prod_comp p x y})
 : Lemma (prod_op p x y == prod_op p y x)
-= ext (prod_op p x y) (prod_op p y x) (fun k -> (p k).comm (x k) (y k))
+= ext (prod_op p x y) (prod_op p y x) (fun k -> ())
 
 let prod_assoc (p:(k:'a -> pcm ('b k)))
   (x y: restricted_t 'a 'b)
@@ -43,10 +43,10 @@ let prod_assoc (p:(k:'a -> pcm ('b k)))
   : Lemma (composable (p k) (x k) (y k) /\
            composable (p k) (op (p k) (x k) (y k)) (z k)) 
     [SMTPat (p k)]
-  = (p k).assoc (x k) (y k) (z k)
+  = ()
   in
   ext (prod_op p x (prod_op p y z)) (prod_op p (prod_op p x y) z)
-    (fun k -> (p k).assoc (x k) (y k) (z k))
+    (fun k -> ())
 
 let prod_assoc_r (p:(k:'a -> pcm ('b k)))
   (x y: restricted_t 'a 'b)
@@ -58,10 +58,10 @@ let prod_assoc_r (p:(k:'a -> pcm ('b k)))
   : Lemma (composable (p k) (y k) (z k) /\
            composable (p k) (x k) (op (p k) (y k) (z k)))
     [SMTPat (p k)]
-  = (p k).assoc_r (x k) (y k) (z k)
+  = ()
   in
   ext (prod_op p x (prod_op p y z)) (prod_op p (prod_op p x y) z)
-    (fun k -> (p k).assoc (x k) (y k) (z k))
+    (fun k -> ())
 
 let prod_is_unit (p:(k:'a -> pcm ('b k))) (x: restricted_t 'a 'b)
 : Lemma (prod_comp p x (prod_one p) /\
@@ -69,20 +69,22 @@ let prod_is_unit (p:(k:'a -> pcm ('b k))) (x: restricted_t 'a 'b)
 = let is_unit k
   : Lemma (composable (p k) (x k) (prod_one p k))
     [SMTPat (p k)]
-  = (p k).is_unit (x k)
-  in ext (prod_op p x (prod_one p)) x (fun k -> (p k).is_unit (x k))
+  = ()
+  in ext (prod_op p x (prod_one p)) x (fun k -> ())
 
 let prod_refine (p:(k:'a -> pcm ('b k))) (x: restricted_t 'a 'b): prop =
-  (exists (k: 'a). True) /\ (forall k. (p k).refine (x k))
+  (exists (k: 'a). True) /\ (forall k. p_refine (p k) (x k))
 
-let prod_pcm' (p:(k:'a -> pcm ('b k))): FStar.PCM.pcm (restricted_t 'a 'b) = {
+let fstar_prod_pcm (p:(k:'a -> pcm ('b k))): P.pcm (restricted_t 'a 'b) = let open P in {
   comm = prod_comm p;
-  FStar.PCM.p = {composable = prod_comp p; op = prod_op p; one = prod_one p};
+  p = {composable = prod_comp p; op = prod_op p; one = prod_one p};
   assoc = prod_assoc p;
   assoc_r = prod_assoc_r p;
   is_unit = prod_is_unit p;
   refine = prod_refine p
 }
+
+let prod_pcm' (p:(k:'a -> pcm ('b k))): pcm0 (restricted_t 'a 'b) = pcm_of_fstar_pcm (fstar_prod_pcm p)
 
 let prod_pcm (p:(k:'a -> pcm ('b k))): pcm (restricted_t 'a 'b) =
   let p' = prod_pcm' p in
@@ -90,7 +92,16 @@ let prod_pcm (p:(k:'a -> pcm ('b k))): pcm (restricted_t 'a 'b) =
     x `feq` one p' /\ y `feq` one p'
   ));
   assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
-  p'
+  prod_pcm' p
+
+let prod_pcm_composable_intro0
+  (p:(k:'a -> pcm ('b k)))
+  (x y: restricted_t 'a 'b)
+: Lemma
+  ((composable (prod_pcm p) x y <==> prod_comp p x y) /\
+  (composable (prod_pcm p) x y ==> op (prod_pcm p) x y == prod_op p x y))
+  [SMTPat (composable (prod_pcm p) x y)]
+= ()
 
 let prod_pcm_composable_intro (p:(k:'a -> pcm ('b k))) (x y: restricted_t 'a 'b)
   (h:(k:'a -> Lemma (composable (p k) (x k) (y k))))
@@ -149,7 +160,7 @@ let struct_field_lift_fpu'
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
   (v: restricted_t a b {
-    (prod_pcm p).refine v /\
+    p_refine (prod_pcm p) v /\
     compatible (prod_pcm p) ((field_to_struct p k).morph x) v
   })
 : Tot (restricted_t a b)
@@ -161,6 +172,7 @@ let struct_field_lift_fpu'
     )
 
 #push-options "--query_stats --z3rlimit 30"
+#restart-solver
 
 let struct_field_lift_fpu_prf
   (#a: eqtype)
@@ -171,12 +183,12 @@ let struct_field_lift_fpu_prf
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
   (v: restricted_t a b {
-    (prod_pcm p).refine v /\
+    p_refine (prod_pcm p) v /\
     compatible (prod_pcm p) ((field_to_struct p k).morph x) v
   })
 : Lemma
   (let v_new = struct_field_lift_fpu' p k x y f v in
-    (prod_pcm p).refine v_new /\
+    p_refine (prod_pcm p) v_new /\
     compatible (prod_pcm p) ((field_to_struct p k).morph y) v_new /\
     (forall (frame:_{composable (prod_pcm p) ((field_to_struct p k).morph x) frame}).
        composable (prod_pcm p) ((field_to_struct p k).morph y) frame /\
@@ -283,7 +295,6 @@ let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
     composable (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)) /\
     xs == op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
 = Classical.forall_intro_2 (fun k -> is_unit (p k));
-  Classical.forall_intro_3 (fun k -> (p k).comm);
   assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
 
 let addr_of_struct_field
@@ -315,7 +326,6 @@ let struct_unpeel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
       composable (prod_pcm p) xs (field_to_struct_f p k x) /\
       struct_with_field p k x xs == op (prod_pcm p) xs (field_to_struct_f p k x))
 = Classical.forall_intro_2 (fun k -> is_unit (p k));
-  Classical.forall_intro_3 (fun k -> (p k).comm);
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
