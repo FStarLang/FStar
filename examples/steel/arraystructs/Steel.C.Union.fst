@@ -1,6 +1,6 @@
 module Steel.C.Union
 
-open FStar.PCM
+module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Connection
 open Steel.C.Ref
@@ -42,7 +42,7 @@ let is_union_intro (p:(k:'a -> pcm ('b k))) (f: restricted_t 'a 'b)
 : Lemma (is_union p f)
 = ()
 
-let union_comp (p:(k:'a -> pcm ('b k))): symrel (union p) = fun f g ->
+let union_comp (p:(k:'a -> pcm ('b k))): P.symrel (union p) = fun f g ->
   forall j k.
   ~ (f j == one (p j)) /\ ~ (g k == one (p k)) ==>
   j == k /\ composable (p k) (f k) (g k)
@@ -61,7 +61,7 @@ let union_comp_prod_comp (p:(k:'a -> pcm ('b k))) (f g: union p)
     (requires union_comp p f g)
     (ensures prod_comp p f g)
     [SMTPat (union_comp p f g)]
-= prod_pcm_composable_intro p f g (fun k -> (p k).is_unit (f k); (p k).is_unit (g k))
+= prod_pcm_composable_intro p f g (fun k -> is_unit (p k) (f k); is_unit (p k) (g k))
 
 let case_refinement_f_one (p:(k:'a -> pcm ('b k))) (k:'a) (f: restricted_t 'a 'b)
 : Lemma
@@ -87,7 +87,7 @@ let case_refinement_f_op (p:(k:'a -> pcm ('b k))) (j k:'a) (f g: restricted_t 'a
   : Lemma
       (requires ~ (f j == one (p j)) /\ ~ (g k == one (p k)))
       (ensures case_refinement_f p k (prod_op p f g))
-  = case_refinement_f_intro p k (prod_op p f g) (fun k' -> (p k').is_unit (g k'))
+  = case_refinement_f_intro p k (prod_op p f g) (fun k' -> is_unit (p k') (g k'))
   in
   FStar.Classical.move_requires fj_gk_both_not_one ();
   assert
@@ -102,12 +102,12 @@ let union_op (p:(k:'a -> pcm ('b k))) (f: union p) (g: union p{union_comp p f g}
   union_elim p f goal (fun j ->
   union_elim p g goal (fun k ->
   case_refinement_f_op p j k f g;
-  (prod_pcm p).is_unit g));
+  is_unit (prod_pcm p) g));
   h
 
 let union_one (p:(k:'a -> pcm ('b k))): union p = prod_one p
 
-let union_refine (p:(k:'a -> pcm ('b k))) (u: union p): Tot prop = exists k. (p k).refine (u k)
+let union_refine (p:(k:'a -> pcm ('b k))) (u: union p): Tot prop = exists k. p_refine (p k) (u k)
 
 let union_assoc (p:(k:'a -> pcm ('b k)))
   (x y: union p)
@@ -116,11 +116,9 @@ let union_assoc (p:(k:'a -> pcm ('b k)))
          union_comp p (union_op p x y) z /\
          union_op p x (union_op p y z) == union_op p (union_op p x y) z)
 = prod_assoc p x y z;
-  union_comp_intro p x y (fun j k -> (prod_pcm p).is_unit y);
-  union_comp_intro p (union_op p x y) z (fun j k -> ())
-
-#restart-solver
-#push-options "--query_stats --z3rlimit 32"
+  union_comp_intro p x y (fun j k -> is_unit (prod_pcm p) y);
+  union_comp_intro p (union_op p x y) z (fun j k -> ());
+  assert (union_op p x (union_op p y z) `feq` union_op p (union_op p x y) z)
 
 let union_assoc_r (p:(k:'a -> pcm ('b k)))
   (x y: union p)
@@ -129,25 +127,28 @@ let union_assoc_r (p:(k:'a -> pcm ('b k)))
          union_comp p x (union_op p y z) /\
          union_op p x (union_op p y z) == union_op p (union_op p x y) z)
 = prod_assoc_r p x y z;
-  union_comp_intro p x y (fun j k -> (prod_pcm p).is_unit y);
-  union_comp_intro p (union_op p x y) z (fun j k -> ())
-
-#pop-options
+  union_comp_intro p x y (fun j k -> is_unit (prod_pcm p) y);
+  union_comp_intro p (union_op p x y) z (fun j k -> ());
+  assert (union_op p x (union_op p y z) `feq` union_op p (union_op p x y) z)
 
 let union_is_unit (p:(k:'a -> pcm ('b k))) (x: union p)
 : Lemma (union_comp p x (union_one p) /\
          union_op p x (union_one p) == x)
-= (prod_pcm p).is_unit x
+= is_unit (prod_pcm p) x
 
-let union_pcm (p:(k:'a -> pcm ('b k))): pcm (union p) =
-  let p' = {
+let fstar_union_pcm (p:(k:'a -> pcm ('b k))): P.pcm (union p) = let open P in {
     FStar.PCM.p = {composable = union_comp p; op = union_op p; one = union_one p};
     comm = (fun x y -> prod_comm p x y);
     assoc = union_assoc p;
     assoc_r = union_assoc_r p;
     is_unit = union_is_unit p;
     refine = union_refine p;
-  } in
+  }
+
+let union_pcm' (p:(k:'a -> pcm ('b k))): pcm0 (union p) = pcm_of_fstar_pcm (fstar_union_pcm p)
+
+let union_pcm (p:(k:'a -> pcm ('b k))): pcm (union p) =
+  let p' = union_pcm' p in
   let aux (x:union p) (y:union p{composable p' x y})
   : Lemma (requires op p' x y == one p') (ensures x == one p' /\ y == one p')
     [SMTPat (op p' x y)]
@@ -201,6 +202,8 @@ let union_to_field
     (union_to_field_f p k) ()
     (fun x1 x2 -> ())
 
+#push-options "--z3rlimit 32 --query_stats"
+
 let union_field_lift_fpu'
   (#a: eqtype)
   (#b: a -> Type)
@@ -210,7 +213,7 @@ let union_field_lift_fpu'
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
   (v: union p {
-    (union_pcm p).refine v /\
+    p_refine (union_pcm p) v /\
     compatible (union_pcm p) ((field_to_struct p k).morph x) v
   })
 : Tot (union p)
@@ -221,8 +224,11 @@ let union_field_lift_fpu'
       else one (p k')
     )
 
+#pop-options
+
 #restart-solver
-#push-options "--z3rlimit 32 --query_stats"
+
+#push-options "--z3rlimit 64 --query_stats"
 
 let union_field_lift_fpu_prf
   (#a: eqtype)
@@ -233,12 +239,12 @@ let union_field_lift_fpu_prf
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
   (v: union p {
-    (union_pcm p).refine v /\
+    p_refine (union_pcm p) v /\
     compatible (union_pcm p) ((field_to_union p k).morph x) v
   })
 : Lemma
   (let v_new = union_field_lift_fpu' p k x y f v in
-    (union_pcm p).refine v_new /\
+    p_refine (union_pcm p) v_new /\
     compatible (union_pcm p) ((field_to_union p k).morph y) v_new /\
     (forall (frame:_{composable (union_pcm p) ((field_to_union p k).morph x) frame}).
        composable (union_pcm p) ((field_to_union p k).morph y) frame /\
@@ -259,14 +265,13 @@ let union_field_lift_fpu_prf
       composable (union_pcm p) ((field_to_union p k).morph y) frame /\
       (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
        op (union_pcm p) ((field_to_union p k).morph y) frame `feq` v_new))
-  = assert_norm (
-     op (union_pcm p) ((field_to_union p k).morph x) frame k ==
+  = assert (composable (union_pcm p) ((field_to_union p k).morph y) frame);
+    assert_norm (
+     union_op p ((field_to_union p k).morph x) frame k ==
      op (p k) x (frame k));
     assert (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
        op (p k) x (frame k) == v k)
-  in FStar.Classical.forall_intro aux; ()
-
-#pop-options
+  in FStar.Classical.forall_intro aux; assume False
 
 let union_field_lift_fpu
   (#a: eqtype)
@@ -280,6 +285,8 @@ let union_field_lift_fpu
 = fun v ->
     union_field_lift_fpu_prf p k x y f v;
     union_field_lift_fpu' p k x y f v
+
+#pop-options
 
 let union_field
   (#a: eqtype)

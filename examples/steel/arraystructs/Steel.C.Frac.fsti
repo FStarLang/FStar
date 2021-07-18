@@ -1,16 +1,16 @@
 module Steel.C.Frac
 
-open FStar.PCM
+module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.Effect
-  
+
 /// Fractional permissions: from Steel.HigherReference
 open Steel.FractionalPermission
 
 let fractional (a:Type u#1) = option (a & perm)
 
-let fractional_composable #a : symrel (fractional a) =
+let fractional_composable #a : P.symrel (fractional a) =
   fun (f0 f1:fractional a) ->
     match f0, f1 with
     | None, _
@@ -23,8 +23,8 @@ let fractional_compose #a (f0:fractional a) (f1:fractional a{fractional_composab
   | f, None -> f
   | Some (x0, p0), Some (_, p1) -> Some (x0, sum_perm p0 p1)
 
-let pcm_frac #a : pcm (fractional a) = {
-  FStar.PCM.p = {
+let fstar_pcm_frac #a : P.pcm (fractional a) = let open P in {
+  p = {
          composable = fractional_composable;
          op = fractional_compose;
          one = None
@@ -35,6 +35,8 @@ let pcm_frac #a : pcm (fractional a) = {
   is_unit = (fun _ -> ());
   refine = (fun x -> Some? x /\ snd (Some?.v x) == full_perm)
 }
+
+let pcm_frac #a : pcm (fractional a) = pcm_of_fstar_pcm fstar_pcm_frac
 
 let frac_pcm_fpu
   (#a: Type)

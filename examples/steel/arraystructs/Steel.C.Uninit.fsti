@@ -1,6 +1,6 @@
 module Steel.C.Uninit
 
-open FStar.PCM
+module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.C.Connection
@@ -16,7 +16,7 @@ type uninit_t (a: Type)
 let uninit_composable
   (#a: Type)
   (p: pcm a)
-: Tot (symrel (uninit_t a))
+: Tot (P.symrel (uninit_t a))
 = fun u1 u2 ->
   match u1, u2 with
   | Uninitialized, InitOrUnit x
@@ -46,28 +46,22 @@ let uninit_refine
 : Tot prop
 = match x with
   | Uninitialized -> True
-  | InitOrUnit y -> p.refine y
+  | InitOrUnit y -> p_refine p y
 
-let pcm_uninit #a (p: pcm a) : pcm (uninit_t a) = {
-  FStar.PCM.p = {
+let fstar_pcm_uninit #a (p: pcm a) : Tot (P.pcm (uninit_t a)) = let open P in {
+  p = {
          composable = uninit_composable p;
          op = uninit_compose p;
-         one = InitOrUnit (one p);
+         one = InitOrUnit (Steel.C.PCM.one p);
       };
-  comm = (fun _ _ ->
-    Classical.forall_intro_2 p.comm
-  );
-  assoc = (fun x1 x2 x3 ->
-    Classical.forall_intro_3 p.assoc;
-    Classical.forall_intro (is_unit p)
-  );
-  assoc_r = (fun _ _ _ -> 
-    Classical.forall_intro_3 p.assoc_r;
-    Classical.forall_intro (is_unit p)
-  );
-  is_unit = (fun _ -> Classical.forall_intro (is_unit p));
+  comm = (fun _ _ -> ());
+  assoc = (fun x1 x2 x3 -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ());
   refine = uninit_refine p;
 }
+
+let pcm_uninit #a (p: pcm a) : Tot (pcm (uninit_t a)) = pcm_of_fstar_pcm (fstar_pcm_uninit p)
 
 let value_to_uninit
   (#a: Type)
@@ -94,7 +88,7 @@ let uninit_conn_fpu'
   (y: Ghost.erased a)
   (f: frame_preserving_upd p x y)
   (v: uninit_t a {
-    (pcm_uninit p).refine v /\
+    p_refine (pcm_uninit p) v /\
     compatible (pcm_uninit p) ((value_to_uninit p).morph x) v
   })
 : Tot (uninit_t a)
@@ -109,12 +103,12 @@ let uninit_conn_fpu_prop
   (y: Ghost.erased a)
   (f: frame_preserving_upd p x y)
   (v: uninit_t a {
-    (pcm_uninit p).refine v /\
+    p_refine (pcm_uninit p) v /\
     compatible (pcm_uninit p) ((value_to_uninit p).morph x) v
   })
 : Lemma
   (let v_new = uninit_conn_fpu' p x y f v in
-    (pcm_uninit p).refine v_new /\
+    p_refine (pcm_uninit p) v_new /\
     compatible (pcm_uninit p) ((value_to_uninit p).morph y) v_new /\
     (forall (frame:_{composable (pcm_uninit p) ((value_to_uninit p).morph x) frame}).
        composable (pcm_uninit p) ((value_to_uninit p).morph y) frame /\
