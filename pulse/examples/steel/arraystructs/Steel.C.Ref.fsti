@@ -1,17 +1,21 @@
 module Steel.C.Ref
-open FStar.PCM
 open FStar.FunctionalExtensionality
 open Steel.C.PCM
 open Steel.C.Connection
 
 #push-options "--print_universes"
 
-val ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type u#(max 1 b)
+val ref' (a: Type u#0) (b: Type u#b) : Type u#b
+
+val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ref' a b) : GTot (pcm b)
+
+let ref (a: Type u#0) (#b: Type u#b) (q: pcm b) : Type u#b =
+  (r: ref' a b { pcm_of_ref' r == q })
 
 open Steel.Effect
 
 val pts_to
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
 : vprop
 
@@ -82,19 +86,13 @@ val ref_upd
   (r: ref a p) (x: Ghost.erased b { ~ (Ghost.reveal x == one p) }) (y: Ghost.erased b) (f: frame_preserving_upd p x y)
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
 
-let is_unit (#a: Type u#a) (p:pcm a) 
-  (x:a)
-:  Lemma (composable p x p.FStar.PCM.p.one /\
-         op p x p.FStar.PCM.p.one == x)
-= p.is_unit x
-
 val base_fpu
   (#a: Type)
   (p: pcm a)
   (x: Ghost.erased a)
   (y: a)
 : Pure (frame_preserving_upd p x y)
-  (requires (exclusive p x /\ p.refine y))
+  (requires (exclusive p x /\ p_refine p y))
   (ensures (fun _ -> True))
 
 let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
@@ -143,7 +141,7 @@ let sel_view_inv
   ()
 
 let pts_to_view_explicit
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
   (vw: sel_view p c)
@@ -152,7 +150,7 @@ let pts_to_view_explicit
 = hp_of (pts_to r (vw.to_carrier v))
 
 val pts_to_view_explicit_witinv
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
   (vw: sel_view p c)
@@ -160,7 +158,7 @@ val pts_to_view_explicit_witinv
   (M.is_witness_invariant (pts_to_view_explicit r vw))
 
 let pts_to_view_sl
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
   (vw: sel_view p c)
@@ -168,7 +166,7 @@ let pts_to_view_sl
 = M.h_exists (pts_to_view_explicit r vw)
 
 let pts_to_view_sel'
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -178,7 +176,7 @@ let pts_to_view_sel'
   Ghost.reveal (Ghost.reveal x)
 
 let pts_to_view_depends_only_on
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -190,7 +188,7 @@ let pts_to_view_depends_only_on
   M.elim_wi (pts_to_view_explicit r vw) x y (M.join m0 m1)
 
 let pts_to_view_depends_only_on_core
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -202,7 +200,7 @@ let pts_to_view_depends_only_on_core
   M.elim_wi (pts_to_view_explicit r vw) x y (M.core_mem m0)
 
 let pts_to_view_sel
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -213,7 +211,7 @@ let pts_to_view_sel
 
 [@@__steel_reduce__]
 let pts_to_view'
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -226,7 +224,7 @@ let pts_to_view'
 
 [@@__steel_reduce__]
 let pts_to_view 
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -234,7 +232,7 @@ let pts_to_view
 = VUnit (pts_to_view' r vw)
 
 let pts_to_view_intro_lemma
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (x: Ghost.erased b)
   (#c: Type0)
@@ -253,7 +251,7 @@ let pts_to_view_intro_lemma
 
 let pts_to_view_intro
   (#invs: _)
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (x: Ghost.erased b)
   (#c: Type0)
@@ -275,7 +273,7 @@ let pts_to_view_intro
     )
 
 let pts_to_view_elim_lemma
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)
@@ -310,7 +308,7 @@ let intro_vdep2 (#opened:_)
 
 let pts_to_view_elim
   (#invs: _)
-  (#a: Type u#1) (#b: Type u#b) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
   (vw: sel_view p c)

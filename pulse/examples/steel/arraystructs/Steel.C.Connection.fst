@@ -1,6 +1,5 @@
 module Steel.C.Connection
 
-open FStar.PCM
 open Steel.C.PCM
 open FStar.FunctionalExtensionality
 
@@ -8,8 +7,8 @@ let morph_compose2 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b)
   (x1: 'a) (x2: 'a{composable pa x1 x2})
 = squash (
     composable pb (morph x1) (morph x2) /\
-    morph (x1 `pa.p.op` x2) == morph x1 `pb.p.op` morph x2)
-    
+    morph (x1 `op pa` x2) == morph x1 `op pb` morph x2)
+
 let morph_compose1 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b) (x1: 'a) =
   restricted_t (x2:'a{composable pa x1 x2}) (morph_compose2 pa pb morph x1)
 
@@ -59,7 +58,7 @@ let morphism_morph_compose
   (x2: a)
 : Lemma
   (requires (composable pa x1 x2))
-  (ensures (composable pb (m.morph x1) (m.morph x2) /\ m.morph (x1 `pa.p.op` x2) == m.morph x1 `pb.p.op` m.morph x2))
+  (ensures (composable pb (m.morph x1) (m.morph x2) /\ m.morph (x1 `op pa` x2) == m.morph x1 `op pb` m.morph x2))
   [SMTPat (composable pb (m.morph x1) (m.morph x2))]
 = m.morph_compose x1 x2
 
@@ -94,31 +93,6 @@ let morphism_compose_id_right
   (m `morphism_compose` morphism_id pb == m)
 = morph_eq (m `morphism_compose` morphism_id pb) m
 
-let compatible_intro
-  (#a: Type u#a)
-  (pcm: pcm a)
-  (x y: a)
-  (frame: a)
-: Lemma
-  (requires (composable pcm x frame /\ op pcm frame x == y))
-  (ensures (compatible pcm x y))
-= ()
-
-let compatible_elim
-  (#a: Type u#a)
-  (pcm: pcm a)
-  (x y: a)
-: Ghost a
-  (requires (compatible pcm x y))
-  (ensures (fun frame ->
-    composable pcm x frame /\
-    op pcm frame x == y
-  ))
-= FStar.IndefiniteDescription.indefinite_description_ghost _ (fun frame -> 
-    composable pcm x frame /\
-    op pcm frame x == y
-  )
-
 let compatible_morphism
   (#p: pcm 'a) (#q: pcm 'b)
   (f: p `morphism` q)
@@ -150,7 +124,7 @@ let frame_preserving_upd_dom
   (#a:Type u#a) (p:pcm a) (x y:a)
 =
   v:a{
-    p.refine v /\
+    p_refine p v /\
     compatible p x v
   }
 
@@ -159,7 +133,7 @@ let frame_preserving_upd_codom
   (v: frame_preserving_upd_dom p x y)
 =
   v_new:a{
-    p.refine v_new /\
+    p_refine p v_new /\
     compatible p y v_new /\
     (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
        composable p y frame /\
@@ -174,7 +148,7 @@ let restricted_frame_preserving_upd
 
 let restricted_frame_preserving_upd_intro
   (#a:Type u#a) (#p:pcm a) (#x #y: Ghost.erased a)
-  (f: FStar.PCM.frame_preserving_upd p x y)
+  (f: frame_preserving_upd p x y)
 : Tot (restricted_frame_preserving_upd p x y)
 =
   on_dom
@@ -185,7 +159,7 @@ let restricted_frame_preserving_upd_intro
 let restricted_frame_preserving_upd_elim
   (#a:Type u#a) (#p:pcm a) (#x #y: Ghost.erased a)
   (f: restricted_frame_preserving_upd p x y)
-: Tot (FStar.PCM.frame_preserving_upd p x y)
+: Tot (frame_preserving_upd p x y)
 = f
 
 let fpu_lift_dom (#t_small: Type) (p_small: pcm t_small)
@@ -306,10 +280,28 @@ let connection_compose_id_right
   (c `connection_compose` connection_id p_small == c)
 = connection_eq (c `connection_compose` connection_id p_small) c
 
+#push-options "--z3rlimit 32"
+
+let connection_compose_assoc
+  (#t1 #t2 #t3 #t4: Type)
+  (#p1: pcm t1)
+  (#p2: pcm t2)
+  (#p3: pcm t3)
+  (#p4: pcm t4)
+  (c12: connection p1 p2)
+  (c23: connection p2 p3)
+  (c34: connection p3 p4)
+: Lemma
+  ((c12 `connection_compose` c23) `connection_compose` c34 == c12 `connection_compose` (c23 `connection_compose` c34))
+=
+  ((c12 `connection_compose` c23) `connection_compose` c34) `connection_eq` (c12 `connection_compose` (c23 `connection_compose` c34))
+
+#pop-options
+
 let morph_refine (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b)
-  (xa: 'a { pa.refine xa })
+  (xa: 'a { p_refine pa xa })
 = squash (
-    pb.refine (morph xa)
+    p_refine pb (morph xa)
   )
 
 noeq
@@ -318,8 +310,8 @@ type isomorphism (#t1 #t2: Type) (p1: pcm t1) (p2: pcm t2) = {
   iso_2_1: morphism p2 p1;
   iso_1_2_inv_2_1: squash (iso_1_2.morph `is_inverse_of` iso_2_1.morph);
   iso_2_1_inv_1_2: squash (iso_2_1.morph `is_inverse_of` iso_1_2.morph);
-  iso_1_2_refine: restricted_t (x1: t1 { p1.refine x1 }) (morph_refine p1 p2 iso_1_2.morph);
-  iso_2_1_refine: restricted_t (x2: t2 { p2.refine x2 }) (morph_refine p2 p1 iso_2_1.morph);
+  iso_1_2_refine: restricted_t (x1: t1 { p_refine p1 x1 }) (morph_refine p1 p2 iso_1_2.morph);
+  iso_2_1_refine: restricted_t (x2: t2 { p_refine p2 x2 }) (morph_refine p2 p1 iso_2_1.morph);
 }
 
 let isomorphism_eq
@@ -344,14 +336,14 @@ let mkisomorphism
   (iso_1_2_refine:
     (x1: t1) ->
     Lemma
-    (requires (p1.refine x1))
-    (ensures (p2.refine (iso_1_2.morph x1)))
+    (requires (p_refine p1 x1))
+    (ensures (p_refine p2 (iso_1_2.morph x1)))
   )
   (iso_2_1_refine:
     (x2: t2) ->
     Lemma
-    (requires (p2.refine x2))
-    (ensures (p1.refine (iso_2_1.morph x2)))
+    (requires (p_refine p2 x2))
+    (ensures (p_refine p1 (iso_2_1.morph x2)))
   )
 : Tot (isomorphism p1 p2)
 = {
@@ -359,8 +351,8 @@ let mkisomorphism
   iso_2_1 = iso_2_1;
   iso_1_2_inv_2_1 = iso_1_2_inv_2_1;
   iso_2_1_inv_1_2 = iso_2_1_inv_1_2;
-  iso_1_2_refine = on_dom (x1: t1 { p1.refine x1 }) #(morph_refine p1 p2 iso_1_2.morph) (fun x1 -> iso_1_2_refine x1);
-  iso_2_1_refine = on_dom (x2: t2 { p2.refine x2 }) #(morph_refine p2 p1 iso_2_1.morph) (fun x2 -> iso_2_1_refine x2);
+  iso_1_2_refine = on_dom (x1: t1 { p_refine p1 x1 }) #(morph_refine p1 p2 iso_1_2.morph) (fun x1 -> iso_1_2_refine x1);
+  iso_2_1_refine = on_dom (x2: t2 { p_refine p2 x2 }) #(morph_refine p2 p1 iso_2_1.morph) (fun x2 -> iso_2_1_refine x2);
 }
 
 let isomorphism_id
@@ -427,7 +419,7 @@ let connection_of_isomorphism_fpu'_correct
     let x1 = i.iso_2_1.morph x in
     let y1 = i.iso_2_1.morph y in
     let v_new = connection_of_isomorphism_fpu' i x y f v in
-    p1.refine v_new /\
+    p_refine p1 v_new /\
     compatible p1 y1 v_new /\
     (forall (frame: _ {composable p1 x1 frame}).{:pattern composable p1 x1 frame}
        composable p1 y1 frame /\
@@ -440,7 +432,7 @@ let connection_of_isomorphism_fpu'_correct
   let v2' = f (i.iso_1_2.morph v) in
   let v' = i.iso_2_1.morph v2' in
   i.iso_2_1_refine v2' ;
-  assert (p1.refine v');
+  assert (p_refine p1 v');
   compatible_morphism i.iso_2_1 y v2' ;
   let y1 = Ghost.hide (i.iso_2_1.morph y) in
   assert (compatible p1 y1 v');
