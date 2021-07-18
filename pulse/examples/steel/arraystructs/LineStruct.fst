@@ -71,7 +71,7 @@ let addr_of_p1 #a #p1 #p2 p =
   A.return q
 
 let unaddr_of_p1 #a #p1 #p2 p q =
-  unaddr_of_struct_field P1 q p (mk_line (one point_pcm) p2) p1;
+  unaddr_of_struct_field #_ #_ #_ #line_fields_pcm P1 q p (mk_line (one point_pcm) p2) p1; // FIXME: WHY WHY WHY is inference not working well here? (inferred point_pcm instead: it seems that F* infers the constant function due to the type of q)
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_p2 #a #p1 #p2 p =
@@ -81,5 +81,5 @@ let addr_of_p2 #a #p1 #p2 p =
   A.return q
 
 let unaddr_of_p2 #a #p1 #p2 p q =
-  unaddr_of_struct_field P2 q p (mk_line p1 (one point_pcm)) p2;
+  unaddr_of_struct_field #_ #_ #_ #line_fields_pcm P2 q (p <: ref _ (prod_pcm line_fields_pcm)) (mk_line p1 (one point_pcm)) p2; // same here
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
