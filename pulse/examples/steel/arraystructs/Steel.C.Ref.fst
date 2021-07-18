@@ -4,7 +4,7 @@ open FStar.FunctionalExtensionality
 
 #push-options "--print_universes"
 
-noeq type ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type = {
+noeq type ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type u#(max 1 b) = {
   p: pcm a;
   pl: connection p q;
   r: Steel.Memory.ref a p;

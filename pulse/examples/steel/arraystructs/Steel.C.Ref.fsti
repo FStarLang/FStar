@@ -6,7 +6,7 @@ open Steel.C.Connection
 
 #push-options "--print_universes"
 
-val ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type u#b
+val ref (a: Type u#1) (#b: Type u#b) (q: pcm b): Type u#(max 1 b)
 
 open Steel.Effect
 
