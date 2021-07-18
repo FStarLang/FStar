@@ -15,12 +15,12 @@ let morph_compose1 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b) (x1: 'a) =
 noeq
 type morphism (#a #b: Type) (pa: pcm a) (pb: pcm b) = {
   morph: (a ^-> b);
-  morph_unit: squash (morph pa.p.one == pb.p.one);
+  morph_unit: squash (morph (one pa) == one pb);
   morph_compose: restricted_t a (morph_compose1 pa pb morph);
 }
 
 let mkmorphism (#pa: pcm 'a) (#pb: pcm 'b) (morph: 'a -> 'b)
-  (morph_unit: squash (morph pa.p.one == pb.p.one))
+  (morph_unit: squash (morph (one pa) == one pb))
   (morph_compose: (x1:'a -> x2:'a{composable pa x1 x2} -> morph_compose2 pa pb (on_dom 'a morph) x1 x2))
 : pa `morphism` pb = {
   morph = on_dom 'a morph;
@@ -163,7 +163,7 @@ let restricted_frame_preserving_upd_elim
 = f
 
 let fpu_lift_dom (#t_small: Type) (p_small: pcm t_small)
-= (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == p_small.p.one)}) &
+= (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) &
    y:Ghost.erased t_small &
    restricted_frame_preserving_upd p_small x y)
 
@@ -203,7 +203,7 @@ let mkconnection0 (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: p
   (conn_small_to_large_inv:
     squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph))
   (conn_lift_frame_preserving_upd:
-    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == p_small.p.one)}) ->
+    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) ->
      y:Ghost.erased t_small ->
      restricted_frame_preserving_upd p_small x y ->
      restricted_frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)))
@@ -225,7 +225,7 @@ let mkconnection (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pc
   (conn_small_to_large_inv:
     squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph))
   (conn_lift_frame_preserving_upd:
-    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == p_small.p.one)}) ->
+    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) ->
      y:Ghost.erased t_small ->
      frame_preserving_upd p_small x y ->
      frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)))

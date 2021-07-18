@@ -12,7 +12,7 @@ let op_dom (#a: Type) (composable: symrel a) : Type = (xy: (a & a) { composable 
 let op_codom (#a: Type) (composable: symrel a) (x: op_dom composable) : Type = a
 
 noeq
-type pcm' (a:Type u#a) = {
+type pcm' (a:Type u#a) : Type u#a = {
   composable: symrel a;
   op: restricted_t (op_dom composable) (op_codom composable);
   one:a
@@ -141,11 +141,11 @@ let pcm_eq (#a: Type u#a) (p1 p2: pcm0 a) : Lemma
   assert (p1.assoc_r `feq` p2.assoc_r);
   assert (p1.is_unit `feq` p2.is_unit)
 
-let composable (#a: Type u#a) (p:pcm0 a) (x y:a) = p.p.composable (x, y) == true
+let composable (#a: Type u#a) (p:pcm0 a) (x y:a) : Tot prop = p.p.composable (x, y) == true
 
-let one (#a: Type) (p: pcm0 a) = p.p.one
+let one (#a: Type) (p: pcm0 a) : Tot a = p.p.one
 
-let op (#a: Type u#a) (p:pcm0 a) (x:a) (y:a{composable p x y}) = p.p.op (x, y)
+let op (#a: Type u#a) (p:pcm0 a) (x:a) (y:a{composable p x y}) : Tot a = p.p.op (x, y)
 
 let op_comm
   (#a: Type u#a)
@@ -156,6 +156,32 @@ let op_comm
   (ensures (composable p y x /\ op p x y == op p y x))
   [SMTPat (composable p x y)]
 = p.comm (x, y)
+
+let op_assoc_l
+  (#a: Type u#a)
+  (p: pcm0 a)
+  (x y z: a)
+: Lemma
+  (requires (composable p y z /\ composable p x (op p y z)))
+  (ensures (
+    composable p x y /\ composable p (op p x y) z /\
+    op p x (op p y z) == op p (op p x y) z
+  ))
+  [SMTPat (composable p y z); SMTPat (composable p x (op p y z))]
+= p.assoc (x, y, z)
+
+let op_assoc_r
+  (#a: Type u#a)
+  (p: pcm0 a)
+  (x y z: a)
+: Lemma
+  (requires (composable p x y /\ composable p (op p x y) z))
+  (ensures (
+    composable p y z /\ composable p x (op p y z) /\
+    op p x (op p y z) == op p (op p x y) z
+  ))
+  [SMTPat (composable p x y); SMTPat (composable p (op p x y) z)]
+= p.assoc_r (x, y, z)
 
 let p_refine (#a: Type) (p: pcm0 a) (x: a) : Tot prop =
   p.refine x == true
@@ -204,26 +230,38 @@ let pcm_of_fstar_pcm_of_pcm
   (pcm_of_fstar_pcm (fstar_pcm_of_pcm p) == p)
 = pcm_of_fstar_pcm (fstar_pcm_of_pcm p) `pcm_eq` p
 
-let exclusive (#a:Type u#a) (p:pcm0 a) (x:a) =
-  forall (frame:a). composable p x frame ==> frame == p.p.one
+let composable_pcm_of_fstar_pcm
+  (#a: Type)
+  (p: P.pcm a)
+  (x y: a)
+: Lemma
+  ((composable (pcm_of_fstar_pcm p) x y <==> P.composable p x y) /\
+    (composable (pcm_of_fstar_pcm p) x y ==> op (pcm_of_fstar_pcm p) x y == P.op p x y))
+  [SMTPat (composable (pcm_of_fstar_pcm p) x y)]
+= ()
 
-let compatible (#a: Type u#a) (pcm:pcm0 a) (x y:a) =
-  (exists (frame:a).
-    composable pcm x frame /\ op pcm frame x == y
-  )
+let one_pcm_of_fstar_pcm p = ()
+
+let p_refine_pcm_of_fstar_pcm
+  (#a: Type)
+  (p: P.pcm a)
+  (x: a)
+: Lemma
+  (p_refine (pcm_of_fstar_pcm p) x <==> p.P.refine x)
+  [SMTPat (p_refine (pcm_of_fstar_pcm p) x)]
+= ()
+
+let composable_fstar_pcm_of_pcm p x y = ()
+
+let one_fstar_pcm_of_pcm p = ()
+
+let refine_fstar_pcm_of_pcm p x = ()
 
 let is_unit (#a: Type u#a) (p:pcm0 a)
   (x:a)
 :  Lemma (composable p x (one p) /\
          op p x (one p) == x)
 = (fstar_pcm_of_pcm p).P.is_unit x
-
-let is_unit_pat (#a: Type u#a) (p:pcm0 a)
-  (x:a)
-:  Lemma (composable p x (one p) /\
-         op p x (one p) == x)
-   [SMTPat (composable p x (one p))]
-= is_unit p x
 
 let compatible_intro
   (#a: Type u#a)
@@ -258,17 +296,10 @@ let compatible_refl
   (compatible pcm x x)
 = compatible_intro pcm x x (one pcm)
 
-type frame_preserving_upd (#a:Type u#a) (p:pcm0 a) (x y:a) =
-  v:a{
-    p_refine p v /\
-    compatible p x v
-  } ->
-  v_new:a{
-    p_refine p v_new /\
-    compatible p y v_new /\
-    (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
-       composable p y frame /\
-       (op p x frame == v ==> op p y frame == v_new))}
+let compatible_fstar_pcm_of_pcm p x y = ()
+let compatible_pcm_of_fstar_pcm p x y = ()
+let exclusive_fstar_pcm_of_pcm p x = ()
+let exclusive_pcm_of_fstar_pcm p x = ()
 
 let fstar_fpu_of_fpu
   (#a: Type u#a)
@@ -280,11 +311,3 @@ let fstar_fpu_of_fpu
   let y : a = f v in
   assert (forall frame . P.composable (fstar_pcm_of_pcm p) x frame <==> composable p x frame);
   y
-
-let pcm (a: Type) : Tot Type =
-  (p: pcm0 a {
-    (forall (x:a) (y:a{composable p x y}).{:pattern (composable p x y)}
-      op p x y == one p ==> x == one p /\ y == one p) /\ // necessary to lift frame-preserving updates to unions
-    (forall (x:a) . {:pattern (p_refine p x)} p_refine p x ==> exclusive p x) /\ // nice to have, but not used yet
-    (~ (p_refine p (one p))) // necessary to maintain (refine ==> exclusive) for uninit
-  })
