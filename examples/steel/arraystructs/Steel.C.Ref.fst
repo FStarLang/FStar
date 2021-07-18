@@ -47,6 +47,28 @@ let ref_focus_id r = connection_compose_id_right r.pl
 let ref_focus_comp r l m
 = connection_compose_assoc r.pl l m
 
+let mk_id_ref
+  (#a: Type0)
+  (p: pcm a)
+  (r0: Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)))
+: Tot (ref a p)
+=
+  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
+  let fp = fstar_pcm_of_pcm p' in
+  let r : ref' a a = { p = p; q = p; pl = connection_id p; r = r0 } in
+  r
+
+let ref_alloc #a p x =
+  let x' : U.raise_t u#0 u#1 a = U.raise_val u#0 u#1 x in
+  let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
+//  let fp : P.pcm u#1 _ = fstar_pcm_of_pcm p' in // FIXME: I can define this local definition, but WHY WHY WHY can't I USE it?
+  compatible_refl p' x';
+  let r0 : Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) = Steel.PCMReference.alloc #_ #(fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) x' in
+  let r : ref' a a = mk_id_ref p r0 in
+  connection_compose_id_right (lower_conn r);
+  A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
+  A.return r
+
 let focus r l s x =
   let r' = ref_focus r l in
   connection_compose_assoc (lower_conn r) r.pl l;

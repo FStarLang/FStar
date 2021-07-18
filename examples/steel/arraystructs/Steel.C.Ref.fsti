@@ -39,6 +39,14 @@ val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
 
 module A = Steel.Effect.Atomic
 
+val ref_alloc
+  (#a:Type0) (p: pcm a) (x: a)
+: Steel (ref a p)
+    emp
+    (fun r -> r `pts_to` x)
+    (requires fun _ -> p_refine p x)
+    (ensures fun _ _ _ -> True)
+
 val focus (#p: pcm 'b) (r: ref 'a p)
   (#q: pcm 'c)
   (l: connection p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
