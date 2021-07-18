@@ -58,6 +58,8 @@ let mk_id_ref
   let r : ref' a a = { p = p; q = p; pl = connection_id p; r = r0 } in
   r
 
+#push-options "--z3rlimit 16"
+
 let ref_alloc #a p x =
   let x' : U.raise_t u#0 u#1 a = U.raise_val u#0 u#1 x in
   let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
@@ -68,6 +70,8 @@ let ref_alloc #a p x =
   connection_compose_id_right (lower_conn r);
   A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
   A.return r
+
+#pop-options
 
 let focus r l s x =
   let r' = ref_focus r l in

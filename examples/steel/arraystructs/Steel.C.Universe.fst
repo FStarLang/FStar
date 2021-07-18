@@ -7,31 +7,50 @@ module P = FStar.PCM
 
 #push-options "--print_universes"
 
+let raise_pcm_composable
+  (#a: Type u#a)
+  (p: pcm0 a)
+  (x y: raise_t u#a u#b a)
+: Tot prop
+= composable p (downgrade_val x) (downgrade_val y)
+
+let raise_pcm_op
+  (#a: Type u#a)
+  (p: pcm0 a)
+  (x: raise_t u#a u#b a)
+  (y: _ { raise_pcm_composable p x y })
+: Tot (raise_t u#a u#b a)
+= raise_val (op p (downgrade_val x) (downgrade_val y))
+
 let raise_pcm'
   (#a: Type u#a)
-  (p: pcm' a)
-: Tot (pcm' (raise_t u#a u#b a))
+  (p: pcm0 a)
+: Tot (P.pcm' (raise_t u#a u#b a))
 =
-  let pp = fstar_pcm'_of_pcm' p in
-  pcm'_of_fstar_pcm' ({
-    P.composable = (fun (x: raise_t u#a u#b a) y -> pp.P.composable (downgrade_val x) (downgrade_val y));
-    P.op = (fun x y -> raise_val (pp.P.op (downgrade_val x) (downgrade_val y)));
-    P.one = raise_val p.one;
-  })
+  {
+    P.composable = raise_pcm_composable p;
+    P.op = raise_pcm_op p;
+    P.one = raise_val (one p);
+  }
+
+let fstar_raise_pcm0
+  (#a: Type u#a)
+  (p: pcm0 a)
+: Tot (P.pcm (raise_t u#a u#b a))
+= {
+    P.p = raise_pcm' p;
+    P.comm = (fun x y -> ());
+    P.assoc = (fun x y z -> ());
+    P.assoc_r = (fun x y z -> ());
+    P.is_unit = (fun x -> ());
+    P.refine = (fun x -> p_refine p (downgrade_val x));
+  }
 
 let raise_pcm0
   (#a: Type u#a)
   (p: pcm0 a)
 : Tot (pcm0 (raise_t u#a u#b a))
-= let pp = fstar_pcm_of_pcm p in
-  pcm_of_fstar_pcm ({
-    P.p = fstar_pcm'_of_pcm' (raise_pcm' u#a u#b p.p);
-    P.comm = (fun x y -> pp.P.comm (downgrade_val x) (downgrade_val y));
-    P.assoc = (fun x y z -> pp.P.assoc (downgrade_val x) (downgrade_val y) (downgrade_val z));
-    P.assoc_r = (fun x y z -> pp.P.assoc_r (downgrade_val x) (downgrade_val y) (downgrade_val z));
-    P.is_unit = (fun x -> pp.P.is_unit (downgrade_val x));
-    P.refine = (fun x -> pp.P.refine (downgrade_val x));
-  })
+= pcm_of_fstar_pcm (fstar_raise_pcm0 p)
 
 let raise_pcm
   (#a: Type u#a)
