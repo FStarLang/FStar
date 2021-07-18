@@ -15,8 +15,8 @@ let point_fields k = match k with
 let point = restricted_t point_field point_fields
 
 let point_fields_pcm k : pcm (point_fields k) = match k with
-  | X -> opt_pcm int
-  | Y -> opt_pcm int
+  | X -> opt_pcm #int
+  | Y -> opt_pcm #int
 let point_pcm = prod_pcm point_fields_pcm
 
 let mk_point_f (x y: option int) (k: point_field): point_fields k = match k with
@@ -60,7 +60,7 @@ let addr_of_x #a #x #y p =
   A.return q
   
 let unaddr_of_x #a #x #y p q =
-  unaddr_of_struct_field X q p (mk_point none y) x;
+  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm X q p (mk_point none y) x; // FIXME: WHY WHY WHY does F* infer the constant function (due to the type of q) instead?
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_y #a #x #y p =
@@ -70,5 +70,5 @@ let addr_of_y #a #x #y p =
   A.return q
 
 let unaddr_of_y #a #x #y p q =
-  unaddr_of_struct_field Y q p (mk_point x none) y;
+  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm Y q p (mk_point x none) y; // same here
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)

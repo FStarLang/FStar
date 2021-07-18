@@ -23,7 +23,7 @@ let ok
 *)
 
 let oom
-  (#value:Ghost.erased (option int'))
+  (#value:Ghost.erased (option int))
   (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
 : SteelT (q:ref 'a (opt_pcm #(option (ref' node node))){q == ref_focus p _next})

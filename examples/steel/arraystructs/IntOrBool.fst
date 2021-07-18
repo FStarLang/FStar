@@ -66,7 +66,7 @@ let addr_of_i (#i: Ghost.erased (option int)) (p: ref 'a int_or_bool_pcm)
 let unaddr_of_i (#i: Ghost.erased (option int)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
   (q: ref 'a (opt_pcm #int){q == ref_focus p _i})
-= unaddr_of_union_field I q p i
+= unaddr_of_union_field #_ #_ #_ #_ #(int_or_bool_cases_pcm) I q p i // FIXME: WHY WHY WHY wrong inference of the pcm function, inferred to a constant function due to the type of q
 
 let addr_of_b (#b: Ghost.erased (option bool)) (p: ref 'a int_or_bool_pcm)
 = addr_of_union_field p B (mk_bool b)
@@ -74,7 +74,7 @@ let addr_of_b (#b: Ghost.erased (option bool)) (p: ref 'a int_or_bool_pcm)
 let unaddr_of_b (#b: Ghost.erased (option bool)) (#opened: M.inames)
   (p: ref 'a int_or_bool_pcm)
   (q: ref 'a (opt_pcm #bool){q == ref_focus p _b})
-= unaddr_of_union_field B q p b
+= unaddr_of_union_field #_ #_ #_ #_ #(int_or_bool_cases_pcm) B q p b // same here
 
 let switch_to_int_fpu (#u: Ghost.erased int_or_bool{exclusive int_or_bool_pcm (Ghost.reveal u)})
   (p: ref 'a int_or_bool_pcm) (i: int)
@@ -86,7 +86,7 @@ let exclusive_not_unit (#u: Ghost.erased int_or_bool)
     (requires exclusive int_or_bool_pcm u)
     (ensures Some? (case_of_int_or_bool u))
     [SMTPat (exclusive int_or_bool_pcm u)]
-= int_or_bool_pcm.is_unit (field_to_union_f int_or_bool_cases_pcm I (Some 42));
+= is_unit int_or_bool_pcm (field_to_union_f int_or_bool_cases_pcm I (Some 42));
   assert (~ (Ghost.reveal u == one int_or_bool_pcm))
 
 let switch_to_int (#u: Ghost.erased int_or_bool)
