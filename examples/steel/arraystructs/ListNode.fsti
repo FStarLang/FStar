@@ -23,6 +23,24 @@ val mk_node
   (next: Ghost.erased (option (option (ref' node node))))
 : Ghost.erased node
 
+val mk_node_tot
+  (i: option int)
+  (next: option (option (ref' node node)))
+: node
+
+val mk_node_tot_mk_node (i: option int) (next: option (option (ref' node node)))
+: Lemma (mk_node_tot i next == Ghost.reveal (mk_node i next))
+  [SMTPat (mk_node_tot i next)]
+
+open Steel.C.PCM
+module P = FStar.PCM
+
+val mk_node_refine (i: option int) (next: option (option (ref' node node)))
+: Lemma
+    (requires p_refine opt_pcm i /\ p_refine (opt_pcm) next)
+    (ensures p_refine node_pcm (mk_node i next))
+    [SMTPat (p_refine node_pcm (mk_node i next))]
+
 /// Lenses for fields
 
 val _value: node_pcm `connection` opt_pcm #int

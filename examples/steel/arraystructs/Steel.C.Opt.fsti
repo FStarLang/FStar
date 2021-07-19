@@ -31,6 +31,8 @@ let none #a: Ghost.erased (option a) = None
 
 let some (x: Ghost.erased 'a): Ghost.erased (option 'a) = Some (Ghost.reveal x)
 
+let some_v (x: Ghost.erased (option 'a){Some? x}): Ghost.erased 'a = Some?.v x
+
 val opt_read
   (#a:Type) (#b:Type) (#x: Ghost.erased b)
   (r: ref a (opt_pcm #b))
