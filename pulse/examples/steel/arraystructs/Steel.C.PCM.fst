@@ -301,6 +301,15 @@ let compatible_pcm_of_fstar_pcm p x y = ()
 let exclusive_fstar_pcm_of_pcm p x = ()
 let exclusive_pcm_of_fstar_pcm p x = ()
 
+let frame_preserving_upd_intro
+  p x y f prf1 prf2 prf3
+= fun v ->
+  let v_new = f v in
+  prf1 v;
+  Classical.forall_intro (Classical.move_requires (prf2 v));
+  Classical.forall_intro (Classical.move_requires (prf3 v));
+  v_new
+
 let fstar_fpu_of_fpu
   (#a: Type u#a)
   (p: pcm0 a)

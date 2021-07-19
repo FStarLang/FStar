@@ -190,17 +190,123 @@ val exclusive_pcm_of_fstar_pcm
   (exclusive (pcm_of_fstar_pcm p) x <==> P.exclusive p x)
   [SMTPat (exclusive (pcm_of_fstar_pcm p) x)]
 
-type frame_preserving_upd (#a:Type u#a) (p:pcm0 a) (x y:a) =
+let frame_preserving_upd_dom
+  (#a:Type u#a) (p:pcm0 a) (x:a)
+=
   v:a{
     p_refine p v /\
     compatible p x v
-  } ->
+  }
+
+let frame_preserving_upd_codom
+  (#a:Type u#a) (p:pcm0 a) (x y:a)
+  (v: frame_preserving_upd_dom p x)
+=
   v_new:a{
     p_refine p v_new /\
     compatible p y v_new /\
     (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
        composable p y frame /\
        (op p x frame == v ==> op p y frame == v_new))}
+
+type frame_preserving_upd (#a:Type u#a) (p:pcm0 a) (x y:a) =
+  v: frame_preserving_upd_dom p x ->
+  Tot (frame_preserving_upd_codom p x y v)
+
+unfold
+let frame_preserving_upd_goal1
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (v: frame_preserving_upd_dom p x)
+: Tot prop
+= 
+  let v_new = f v in
+  p_refine p v_new /\
+  compatible p y v_new
+
+unfold
+let frame_preserving_upd_goal2_pre
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (v: frame_preserving_upd_dom p x)
+  (frame: a)
+: Tot prop
+= frame_preserving_upd_goal1 p x y f v /\
+  composable p x frame
+
+unfold
+let frame_preserving_upd_goal2_post
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (v: frame_preserving_upd_dom p x)
+  (frame: a)
+: Tot prop
+= 
+  frame_preserving_upd_goal2_pre p x y f v frame /\
+  composable p y frame
+
+unfold
+let frame_preserving_upd_goal3_pre
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (v: frame_preserving_upd_dom p x)
+  (frame: a)
+: Tot prop
+= frame_preserving_upd_goal2_pre p x y f v frame /\
+  frame_preserving_upd_goal2_post p x y f v frame /\
+  op p x frame == v
+
+unfold
+let frame_preserving_upd_goal3_post
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (v: frame_preserving_upd_dom p x)
+  (frame: a)
+: Tot prop
+= frame_preserving_upd_goal3_pre p x y f v frame /\
+  op p y frame == f v
+
+val frame_preserving_upd_intro
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (prf1:
+    (v: frame_preserving_upd_dom p x) ->
+    Lemma
+    (frame_preserving_upd_goal1 p x y f v)
+  )
+  (prf2:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (frame_preserving_upd_goal2_pre p x y f v frame))
+    (ensures (frame_preserving_upd_goal2_post p x y f v frame))
+  )
+  (prf3:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (frame_preserving_upd_goal3_pre p x y f v frame))
+    (ensures (frame_preserving_upd_goal3_post p x y f v frame))
+  )
+: Tot (frame_preserving_upd p x y)
 
 val fstar_fpu_of_fpu
   (#a: Type u#a)
