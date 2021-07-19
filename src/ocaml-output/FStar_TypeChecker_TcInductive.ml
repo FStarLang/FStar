@@ -2533,13 +2533,17 @@ let (check_inductive_well_typedness :
                                                           expected_typ))
                                                 then
                                                   let uu___10 =
-                                                    FStar_TypeChecker_Env.inst_tscheme
-                                                      inferred_typ in
+                                                    FStar_Syntax_Subst.open_univ_vars
+                                                      univs1
+                                                      (FStar_Pervasives_Native.snd
+                                                         inferred_typ) in
                                                   (match uu___10 with
                                                    | (uu___11, inferred) ->
                                                        let uu___12 =
-                                                         FStar_TypeChecker_Env.inst_tscheme
-                                                           expected_typ in
+                                                         FStar_Syntax_Subst.open_univ_vars
+                                                           univs1
+                                                           (FStar_Pervasives_Native.snd
+                                                              expected_typ) in
                                                        (match uu___12 with
                                                         | (uu___13, expected)
                                                             ->
