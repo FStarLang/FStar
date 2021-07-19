@@ -68,6 +68,18 @@ val mk_bool_exclusive (b: Ghost.erased (option bool))
     (ensures exclusive int_or_bool_pcm (mk_bool b))
   [SMTPat (exclusive (opt_pcm #bool) b)]
 
+/// Getting the value inside a union of known case
+
+val get_int (u: Ghost.erased int_or_bool)
+: Ghost (option int)
+    (requires case_of_int_or_bool u == Some I)
+    (ensures fun i -> u == mk_int i /\ ~ (i == Ghost.reveal none))
+
+val get_bool (u: Ghost.erased int_or_bool)
+: Ghost (option bool)
+    (requires case_of_int_or_bool u == Some B)
+    (ensures fun b -> u == mk_bool b /\ ~ (b == Ghost.reveal none))
+
 /// Taking pointers to the i and b cases of an int_or_bool
 
 val addr_of_i (#i: Ghost.erased (option int)) (p: ref 'a int_or_bool_pcm)

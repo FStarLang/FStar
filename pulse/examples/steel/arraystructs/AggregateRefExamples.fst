@@ -10,7 +10,6 @@ module A = Steel.Effect.Atomic
 
 open Steel.C.Opt
 
-(*
 open PointStruct
 
 /// We can write the following function that swaps the x and y fields of a given point:
@@ -120,6 +119,8 @@ let reflect_and_reverse (p: ref 'a line_pcm) (x1 y1 x2 y2: Ghost.erased int)
   unaddr_of_p2 p pp2;
   A.return ()
 
+open IntOrBool
+
 /// Swap two ints inside two (union int_or_bool)s using generic_swap
 ///
 /// void int_or_bool_int_swap(union int_or_bool *p, union int_or_bool *q)
@@ -141,8 +142,6 @@ let int_or_bool_int_swap
   unaddr_of_i p pi;
   unaddr_of_i q qi
 
-*)
-
 /// Convert an int_or_bool + runtime tag into an int
 ///
 /// int int_or_bool_to_int(bool is_int, union int_or_bool *p) {
@@ -150,18 +149,15 @@ let int_or_bool_int_swap
 ///   else return p->b ? 1 : 0;
 /// }
 
-open IntOrBool
-
-module I = FStar.IndefiniteDescription
-
-#push-options "--z3rlimit 30"
-
-let extract (u: Ghost.erased int_or_bool) (h: squash (case_of_int_or_bool u == Some I))
+(* For some reason the proof needs to be given explicitly *)
+let extract_int (u: Ghost.erased int_or_bool) (h: squash (case_of_int_or_bool u == Some I))
 : Tot (i:Ghost.erased (option int){u == mk_int i /\ ~ (Ghost.reveal i == one (opt_pcm #int))})
-= Ghost.reveal (I.indefinite_description_tot (Ghost.erased (option int))
-    (fun i -> u == mk_int i /\ ~ (Ghost.reveal i == one (opt_pcm #int))))
+= get_int u
+let extract_bool (u: Ghost.erased int_or_bool) (h: squash (case_of_int_or_bool u == Some B))
+: Tot (b:Ghost.erased (option bool){u == mk_bool b /\ ~ (Ghost.reveal b == one (opt_pcm #bool))})
+= get_bool u
 
-let int_or_bool_to_int
+let int_or_bool_to_int'
   (is_int: bool)
   (p: ref 'a int_or_bool_pcm)
   (u: Ghost.erased int_or_bool)
@@ -172,105 +168,26 @@ let int_or_bool_to_int
       if is_int then case_of_int_or_bool u == Some I 
       else case_of_int_or_bool u == Some B)
     (ensures fun _ _ _ -> True)
-= assume is_int;
-  let h : squash (case_of_int_or_bool u == Some I) = () in
-  //if is_int then begin
-    //let i: Ghost.erased (option int) =
-    //  I.indefinite_description_ghost (Ghost.erased (option int)) (fun i -> u == mk_int i)
-    //in
-    let i: (i:Ghost.erased (option int){u == mk_int i}) =
-      extract u h
-    in
-    let j: Ghost.erased int = Ghost.hide (Some?.v i) in
-    assert (u == mk_int i);
-    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int (some j));
+= if is_int then begin
+    let prf: squash (case_of_int_or_bool u == Some I) = () in
+    let i: Ghost.erased int = Ghost.hide (Some?.v (extract_int u prf)) in
+    assert (u == mk_int (some i));
+    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_int (some i));
     let pi = addr_of_i p in
     let i = opt_read pi in
     unaddr_of_i p pi;
     A.return i
-    //A.sladmit(); A.return (admit())
-  //end else begin
-  //  //let pb = addr_of_b p in
-  //  //let b = opt_read pb in
-  //  //unaddr_of_b p pb;
-  //  //if b then A.return 1 else A.return 0
-  //  A.sladmit(); A.return (admit())
-  //end
-
-(*= let b = opt_read is_int in
-  if b then begin
-    (* return p->i *)
-    let pi = addr_of_i p in
-    A.sladmit(); A.return (admit())
-    //let i = opt_read pi in
-    //unaddr_of_i p pi;
-    //A.return i
   end else begin
-    A.sladmit(); A.return (admit())
-    //(* return p->b ? 1 : 0 *)
-    //let pb = addr_of_b p in
-    //let b = opt_read pb in
-    //unaddr_of_b p pb;
-    //let b = b in
-    //A.return (if b then 1 else 0)
+    let prf: squash (case_of_int_or_bool u == Some B) = () in
+    let b: Ghost.erased bool = Ghost.hide (Some?.v (extract_bool u prf)) in
+    assert (u == mk_bool (some b));
+    A.change_equal_slprop (p `pts_to` u) (p `pts_to` mk_bool (some b));
+    let pb = addr_of_b p in
+    let b = opt_read pb in
+    unaddr_of_b p pb;
+    if b then A.return 1 else A.return 0
   end
-*)
 
-//let int_or_bool_to_int
-//  (is_int: ref 'a (opt_pcm #bool)) (p: ref 'b int_or_bool_pcm)
-//  (b: Ghost.erased bool) (u: Ghost.erased int_or_bool)
-//: Steel (option int)
-//    ((is_int `pts_to` some b) `star` (p `pts_to` u))
-//    (fun _ -> ((is_int `pts_to` some b) `star` (p `pts_to` u)))
-//    (requires fun _ -> if b then case u == I else case u == B)
-//    (ensures fun _ _ _ -> True)
-//= let b = opt_read is_int in
-//  if some_v b then begin
-//    (* return p->i *)
-//    let pi = addr_of_i p in
-//    let i = opt_read pi in
-//    unaddr_of_i p pi;
-//    A.return i
-//  end else begin
-//    (* return p->b ? 1 : 0 *)
-//    let pb = addr_of_b p in
-//    let b = opt_read pb in
-//    unaddr_of_b p pb;
-//    let b = some_v b in
-//    if b then some' 1 else some' 0
-//  end
-(*
-addr_of
-  (r `pts_to` xs)
-  (r `pts_to` xs \ k `star` s `pts_to` xs k)
-  
-let point_swap_generically (#q: Ghost.erased int) (p: ref 'a point_pcm)
-: SteelT unit
-    (p `pts_to` q)
-    (fun _ -> p `pts_to` q[.y = q.x][.x = q.y])
-= (* int *q = &p.x; *)
-  let q = addr_of_x p in
-  (* int *r = &p.y; *)
-  let r = addr_of_y p in
-  (* generic_swap(q, r); *)
-  generic_swap q r;
-  (* Gather *)
-  unaddr_of_x p q;
-  unaddr_of_y p r;
-  A.return ()
-p\{x, y} `pts_to` (v, w)
-p.x `pts_to` v === p `pts_to` mk_point v one
-p.y `pts_to` w === p `pts_to` mk_point one w
-give p.x's share back to p
-p' `pts_to` v_x
-p' == ghost_addr_of p y
-ghost_addr_of  = ref_focus .. 
-ghost_addr_of p y `pts_to` v_y
-  
-addr_of
-  (r `pts_to` xs `star` s `pts_to` y)
-  (r `pts_to` xs [k `mapsto` y])
-  *)
 (*
 pts_to r x
 (fun r' -> pts_to r' x')

@@ -55,6 +55,10 @@ let mk_int_exclusive i = exclusive_union_intro int_or_bool_cases_pcm (mk_int i) 
 
 let mk_bool_exclusive b = exclusive_union_intro int_or_bool_cases_pcm (mk_bool b) B
 
+let get_int u = Ghost.reveal u I
+
+let get_bool u = Ghost.reveal u B
+
 let addr_of_i (#i: Ghost.erased (option int)) (p: ref 'a int_or_bool_pcm)
 : Steel (q:ref 'a (opt_pcm #int){q == ref_focus p _i})
     (p `pts_to` mk_int i)
