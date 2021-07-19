@@ -42,10 +42,13 @@ let is_union_intro (p:(k:'a -> pcm ('b k))) (f: restricted_t 'a 'b)
 : Lemma (is_union p f)
 = ()
 
-let union_comp (p:(k:'a -> pcm ('b k))): P.symrel (union p) = fun f g ->
+let union_comp0 (p:(k:'a -> pcm ('b k))) (f g: union p) : Tot prop =
   forall j k.
   ~ (f j == one (p j)) /\ ~ (g k == one (p k)) ==>
   j == k /\ composable (p k) (f k) (g k)
+
+let union_comp (p:(k:'a -> pcm ('b k))) : Tot (P.symrel (union p)) =
+  union_comp0 p
 
 let union_comp_intro (p:(k:'a -> pcm ('b k))) (f g: union p)
   (h:(j:'a -> k:'a ->
@@ -55,6 +58,13 @@ let union_comp_intro (p:(k:'a -> pcm ('b k))) (f g: union p)
       [SMTPat (f j); SMTPat (g k)]))
 : Lemma (union_comp p f g)
 = let _ = h in ()
+
+let union_comp_elim (p:(k:'a -> pcm ('b k))) (f g: union p)
+  (j:'a) (k:'a)
+: Lemma
+  (requires (union_comp p f g /\ ~ (f j == one (p j)) /\ ~ (g k == one (p k))))
+  (ensures j == k /\ composable (p k) (f k) (g k))
+= ()
 
 let union_comp_prod_comp (p:(k:'a -> pcm ('b k))) (f g: union p)
 : Lemma
@@ -156,7 +166,32 @@ let union_pcm (p:(k:'a -> pcm ('b k))): pcm (union p) =
     ext y (one p') (fun k -> let _ = p k in ())
   in
   assert (forall x frame . (union_refine p x /\ union_comp p x frame) ==> frame `feq` union_one p);
-  p'
+  union_pcm' p
+
+let union_pcm_composable_intro0
+  (p:(k:'a -> pcm ('b k)))
+  (x y: union p)
+: Lemma
+  ((composable (union_pcm p) x y <==> union_comp p x y) /\
+  (composable (union_pcm p) x y ==> op (union_pcm p) x y == union_op p x y))
+  [SMTPat (composable (union_pcm p) x y)]
+= ()
+
+let union_comp_intro0 (p:(k:'a -> pcm ('b k))) (f g: union p)
+  (h:(j:'a -> k:'a ->
+    Lemma
+      (requires ~ (f j == one (p j)) /\ ~ (g k == one (p k)))
+      (ensures j == k /\ composable (p k) (f k) (g k))
+      [SMTPat (f j); SMTPat (g k)]))
+: Lemma (composable (union_pcm p) f g)
+= let _ = h in ()
+
+let union_comp_elim0 (p:(k:'a -> pcm ('b k))) (f g: union p)
+  (j:'a) (k:'a)
+: Lemma
+  (requires (composable (union_pcm p) f g /\ ~ (f j == one (p j)) /\ ~ (g k == one (p k))))
+  (ensures j == k /\ composable (p k) (f k) (g k))
+= ()
 
 let field_to_union_f
   (#a: eqtype)
@@ -183,6 +218,15 @@ let field_to_union
       assert (union_op p (field_to_union_f p k x1) (field_to_union_f p k x2) `feq` field_to_union_f p k (op (p k) x1 x2));
         ())
 
+let field_to_union_elim (#a: eqtype) (#b: a -> Type) (p: (k: a -> pcm (b k)))
+  (k: a)
+  (x: b k)
+  (k': a)
+: Lemma
+  (requires (~ ((field_to_union p k).morph x k' == one (p k'))))
+  (ensures (k == k'))
+= ()
+
 let union_to_field_f
   (#a: Type)
   (#b: a -> Type)
@@ -202,8 +246,6 @@ let union_to_field
     (union_to_field_f p k) ()
     (fun x1 x2 -> ())
 
-#push-options "--z3rlimit 32 --query_stats"
-
 let union_field_lift_fpu'
   (#a: eqtype)
   (#b: a -> Type)
@@ -212,10 +254,7 @@ let union_field_lift_fpu'
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
-  (v: union p {
-    p_refine (union_pcm p) v /\
-    compatible (union_pcm p) ((field_to_struct p k).morph x) v
-  })
+  (v: frame_preserving_upd_dom (union_pcm p) ((field_to_struct p k).morph x))
 : Tot (union p)
 = 
     on_dom a (fun k' ->
@@ -224,13 +263,11 @@ let union_field_lift_fpu'
       else one (p k')
     )
 
-#pop-options
-
 #restart-solver
 
-#push-options "--z3rlimit 64 --query_stats"
+#push-options "--z3rlimit 30 --query_stats --fuel 2 --ifuel 4"
 
-let union_field_lift_fpu_prf
+let union_field_lift_fpu0_prf1
   (#a: eqtype)
   (#b: a -> Type)
   (p:(k: a -> pcm (b k)))
@@ -238,40 +275,93 @@ let union_field_lift_fpu_prf
   (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
-  (v: union p {
-    p_refine (union_pcm p) v /\
-    compatible (union_pcm p) ((field_to_union p k).morph x) v
-  })
+  (v: frame_preserving_upd_dom (union_pcm p) ((field_to_union p k).morph x))
 : Lemma
-  (let v_new = union_field_lift_fpu' p k x y f v in
-    p_refine (union_pcm p) v_new /\
-    compatible (union_pcm p) ((field_to_union p k).morph y) v_new /\
-    (forall (frame:_{composable (union_pcm p) ((field_to_union p k).morph x) frame}).
-       composable (union_pcm p) ((field_to_union p k).morph y) frame /\
-       (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==> op (union_pcm p) ((field_to_union p k).morph y) frame == v_new))
-  )
+  (frame_preserving_upd_goal1 (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y) (union_field_lift_fpu' p k x y f) v)
 =
-  let y' = (field_to_union p k).morph y in
-  let v_new = union_field_lift_fpu' p k x y f v in
-  Classical.forall_intro_2 (fun k -> is_unit (p k));
-  let frame : b k = compatible_elim (p k) y (f (v k)) in
-  let frame' : union p = on_dom a (fun k' -> if k' = k then (frame <: b k') else one (p k')) in
-  assert (composable (union_pcm p) y' frame');
-  assert (op (union_pcm p) frame' y' `feq` v_new);
-  compatible_intro (union_pcm p) y' v_new frame';
-  let x = Ghost.reveal x in
-  let aux (frame:_{composable (union_pcm p) ((field_to_union p k).morph x) frame})
-  : Lemma (
-      composable (union_pcm p) ((field_to_union p k).morph y) frame /\
-      (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
-       op (union_pcm p) ((field_to_union p k).morph y) frame `feq` v_new))
-  = assert (composable (union_pcm p) ((field_to_union p k).morph y) frame);
-    assert_norm (
-     union_op p ((field_to_union p k).morph x) frame k ==
-     op (p k) x (frame k));
-    assert (op (union_pcm p) ((field_to_union p k).morph x) frame == v ==>
-       op (p k) x (frame k) == v k)
-  in FStar.Classical.forall_intro aux; assume False
+      let y' = (field_to_union p k).morph y in
+      let v_new = union_field_lift_fpu' p k x y f v in
+      assert (p_refine (union_pcm p) v_new);
+      Classical.forall_intro_2 (fun k -> is_unit (p k));
+      let frame : b k = compatible_elim (p k) y (f (v k)) in
+      let frame' : union p = on_dom a (fun k' -> if k' = k then (frame <: b k') else one (p k')) in
+      assert (composable (union_pcm p) y' frame');
+      assert (op (union_pcm p) frame' y' `feq` v_new);
+      compatible_intro (union_pcm p) y' v_new frame'
+
+#pop-options
+
+#restart-solver
+
+#push-options "--query_stats --fuel 2 --ifuel 4 --z3rlimit 16"
+
+let union_field_lift_fpu0_prf2
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (k: a)
+  (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
+  (y: Ghost.erased (b k))
+  (f: frame_preserving_upd (p k) x y)
+  (v: frame_preserving_upd_dom (union_pcm p) ((field_to_union p k).morph x))
+  (frame: union p)
+: Lemma
+  (requires (
+    frame_preserving_upd_goal2_pre (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y) (union_field_lift_fpu' p k x y f) v frame
+  ))
+  (ensures (
+    frame_preserving_upd_goal2_post (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y) (union_field_lift_fpu' p k x y f) v frame
+  ))
+=
+  union_comp_intro0
+    p
+    ((field_to_union p k).morph y)
+    frame
+    (fun j' k' ->
+      field_to_union_elim p k y j';
+      union_comp_elim0 p ((field_to_union p k).morph x) frame k k';
+      let _ = f (v k) in
+      assert (composable (p k) x (frame k));
+      assert (composable (p k) y (frame k))
+  )
+
+#restart-solver
+
+let union_field_lift_fpu0_prf3
+  (#a: eqtype)
+  (#b: a -> Type)
+  (p:(k: a -> pcm (b k)))
+  (k: a)
+  (x: Ghost.erased (b k) { ~ (Ghost.reveal x == one (p k)) })
+  (y: Ghost.erased (b k))
+  (f: frame_preserving_upd (p k) x y)
+  (v: frame_preserving_upd_dom (union_pcm p) ((field_to_union p k).morph x))
+  (frame: union p)
+: Lemma
+  (requires (
+    frame_preserving_upd_goal3_pre (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y) (union_field_lift_fpu' p k x y f) v frame
+  ))
+  (ensures (
+    frame_preserving_upd_goal3_post (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y) (union_field_lift_fpu' p k x y f) v frame
+  ))
+=
+  let w = op (union_pcm p) ((field_to_union p k).morph x) frame in
+  union_pcm_composable_intro0 p ((field_to_union p k).morph x) frame;
+  assert (w == union_op p ((field_to_union p k).morph x) frame);
+  assert (w == prod_op p ((field_to_union p k).morph x) frame);
+  assert (w k == op (p k) x (frame k));
+  assert (w k == v k);
+  let v'k = f (v k) in
+  let w' = op (union_pcm p) ((field_to_union p k).morph y) frame in
+  union_pcm_composable_intro0 p ((field_to_union p k).morph y) frame;
+  assert (w' == union_op p ((field_to_union p k).morph y) frame);
+  assert (w' == prod_op p ((field_to_union p k).morph y) frame);
+  assert (w' k == op (p k) y (frame k));
+  assert (w' k == v'k);
+  assert (union_op p ((field_to_union p k).morph y) frame `feq` 
+    union_field_lift_fpu' p k x y f v)
+
+#pop-options
 
 let union_field_lift_fpu
   (#a: eqtype)
@@ -282,11 +372,16 @@ let union_field_lift_fpu
   (y: Ghost.erased (b k))
   (f: frame_preserving_upd (p k) x y)
 : Tot (frame_preserving_upd (union_pcm p) ((field_to_union p k).morph x) ((field_to_union p k).morph y))
-= fun v ->
-    union_field_lift_fpu_prf p k x y f v;
-    union_field_lift_fpu' p k x y f v
-
-#pop-options
+=
+  let y' = Ghost.hide ((field_to_union p k).morph y) in
+  frame_preserving_upd_intro
+    (union_pcm p)
+    ((field_to_union p k).morph x)
+    ((field_to_union p k).morph y)
+    (union_field_lift_fpu' p k x y f)
+    (union_field_lift_fpu0_prf1 p k x y f)
+    (union_field_lift_fpu0_prf2 p k x y f)
+    (union_field_lift_fpu0_prf3 p k x y f)
 
 let union_field
   (#a: eqtype)

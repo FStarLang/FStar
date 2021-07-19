@@ -120,30 +120,11 @@ let is_inverse_of_injective (#a #b: Type) (g: (b -> Tot a)) (f: (a -> Tot b))
 
 #push-options "--print_universes"
 
-let frame_preserving_upd_dom
-  (#a:Type u#a) (p:pcm a) (x y:a)
-=
-  v:a{
-    p_refine p v /\
-    compatible p x v
-  }
-
-let frame_preserving_upd_codom
-  (#a:Type u#a) (p:pcm a) (x y:a)
-  (v: frame_preserving_upd_dom p x y)
-=
-  v_new:a{
-    p_refine p v_new /\
-    compatible p y v_new /\
-    (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
-       composable p y frame /\
-       (op p x frame == v ==> op p y frame == v_new))}
-
 let restricted_frame_preserving_upd
   (#a:Type u#a) (p:pcm a) (x y:a)
 =
   restricted_t
-    (frame_preserving_upd_dom p x y)
+    (frame_preserving_upd_dom p x)
     (frame_preserving_upd_codom p x y)
 
 let restricted_frame_preserving_upd_intro
@@ -152,7 +133,7 @@ let restricted_frame_preserving_upd_intro
 : Tot (restricted_frame_preserving_upd p x y)
 =
   on_dom
-    (frame_preserving_upd_dom p x y)
+    (frame_preserving_upd_dom p x)
     #(frame_preserving_upd_codom p x y)
     (fun v -> f v)
 
@@ -395,7 +376,7 @@ let connection_of_isomorphism_fpu'
   (x: Ghost.erased t2 { ~ (Ghost.reveal x == one p2) })
   (y: Ghost.erased t2)
   (f: restricted_frame_preserving_upd p2 x y)
-  (v: frame_preserving_upd_dom p1 (i.iso_2_1.morph x) (i.iso_2_1.morph y))
+  (v: frame_preserving_upd_dom p1 (i.iso_2_1.morph x))
 : Tot t1
 =
   let x1 = Ghost.hide (i.iso_2_1.morph x) in
@@ -413,7 +394,7 @@ let connection_of_isomorphism_fpu'_correct
   (x: Ghost.erased t2 { ~ (Ghost.reveal x == one p2) })
   (y: Ghost.erased t2)
   (f: restricted_frame_preserving_upd p2 x y)
-  (v: frame_preserving_upd_dom p1 (i.iso_2_1.morph x) (i.iso_2_1.morph y))
+  (v: frame_preserving_upd_dom p1 (i.iso_2_1.morph x))
 : Lemma
   (
     let x1 = i.iso_2_1.morph x in
@@ -471,7 +452,7 @@ let connection_of_isomorphism_fpu_inverse'
   (x: Ghost.erased t2 { ~ (Ghost.reveal x == one p2) })
   (y: Ghost.erased t2)
   (f: restricted_frame_preserving_upd p2 x y)
-  (v: frame_preserving_upd_dom p2 x y)
+  (v: frame_preserving_upd_dom p2 x)
 : Lemma
   (connection_of_isomorphism_fpu (isomorphism_inverse i) (i.iso_2_1.morph x) (i.iso_2_1.morph y) (connection_of_isomorphism_fpu i x y f) v == f v)
 = compatible_morphism i.iso_2_1 x v;
