@@ -174,7 +174,7 @@ let addr_of_value
   (#value:Ghost.erased (option int))
   (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-: Steel (q:ref 'a (opt_pcm #int))
+: Steel (ref 'a (opt_pcm #int))
     (p `pts_to` mk_node value next)
     (fun q ->
        (p `pts_to` mk_node none next) `star`
@@ -201,7 +201,7 @@ let unaddr_of_value
     (requires (fun _ -> q == ref_focus p _value))
     (ensures (fun _ _ _ -> True))
 = let p' = unroll_ref p in
-  let q = unaddr_of_struct_field Value q p' (mk_node' none next) value in
+  let q = unaddr_of_struct_field #_ #_ #_ #node_fields_pcm Value q p' (mk_node' none next) value in // FIXME: WHY WHY WHY does F* infer the constant function (due to the type of q) instead?
   A.change_equal_slprop (p' `pts_to` _) (p' `pts_to` mk_node' value next);
   roll_ref p p';
   A.return ()
@@ -210,11 +210,13 @@ let addr_of_next
   (#value:Ghost.erased (option int))
   (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-: SteelT (q:ref 'a (opt_pcm #(option (ref' node node))){q == ref_focus p _next})
+: Steel (ref 'a (opt_pcm #(option (ref' node node))))
     (p `pts_to` mk_node value next)
     (fun q ->
        (p `pts_to` mk_node value none) `star`
        (q `pts_to` next))
+    (requires (fun _ -> True))
+    (ensures (fun _ q _ -> q == ref_focus p _next))
 = let p' = unroll_ref p in
   let q = addr_of_struct_field p' Next (mk_node' value next) in
   A.change_equal_slprop (p' `pts_to` _) (p' `pts_to` mk_node' value none);
@@ -226,12 +228,14 @@ let unaddr_of_next
   (#value:Ghost.erased (option int))
   (#next:Ghost.erased (option (option (ref' node node))))
   (p: ref 'a node_pcm)
-  (q: ref 'a (opt_pcm #(option (ref' node node))){q == ref_focus p _next})
-: SteelT unit
+  (q: ref 'a (opt_pcm #(option (ref' node node))))
+: Steel unit
     ((p `pts_to` mk_node value none) `star` (q `pts_to` next))
     (fun q -> p `pts_to` mk_node value next)
+    (requires (fun _ -> (q == ref_focus p _next)))
+    (ensures (fun _ _ _ -> True))
 = let p' = unroll_ref p in
-  let q = unaddr_of_struct_field Next q p' (mk_node' value none) next in
+  let q = unaddr_of_struct_field #_ #_ #_ #node_fields_pcm Next q p' (mk_node' value none) next in // same here
   A.change_equal_slprop (p' `pts_to` _) (p' `pts_to` mk_node' value next);
   roll_ref p p';
   A.return ()
