@@ -1158,17 +1158,6 @@ let (__tc_lax :
                         (FStar_Syntax_Print.binders_to_string ", ") in
                     fail3 "Cannot type %s in context (%s). Error = (%s)"
                       uu___5 uu___6 msg))
-let (istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun e ->
-    fun t ->
-      let steps =
-        [FStar_TypeChecker_Env.Reify;
-        FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
-        FStar_TypeChecker_Env.Primops;
-        FStar_TypeChecker_Env.Simplify;
-        FStar_TypeChecker_Env.UnfoldTac;
-        FStar_TypeChecker_Env.Unmeta] in
-      let t1 = normalize steps e t in is_true t1
 let (get_guard_policy :
   unit -> FStar_Tactics_Types.guard_policy FStar_Tactics_Monad.tac) =
   fun uu___ ->
@@ -1249,114 +1238,108 @@ let (proc_guard :
                     | FStar_TypeChecker_Common.Trivial ->
                         FStar_Tactics_Monad.ret ()
                     | FStar_TypeChecker_Common.NonTrivial f ->
-                        let uu___4 = istrivial e f in
-                        if uu___4
-                        then FStar_Tactics_Monad.ret ()
-                        else
-                          FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
-                            (fun ps ->
-                               match ps.FStar_Tactics_Types.guard_policy with
-                               | FStar_Tactics_Types.Drop ->
-                                   ((let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 =
-                                           FStar_TypeChecker_Rel.guard_to_string
-                                             e g in
-                                         FStar_Util.format1
-                                           "Tactics admitted guard <%s>\n\n"
-                                           uu___9 in
-                                       (FStar_Errors.Warning_TacAdmit,
-                                         uu___8) in
-                                     FStar_Errors.log_issue
-                                       e.FStar_TypeChecker_Env.range uu___7);
-                                    FStar_Tactics_Monad.ret ())
-                               | FStar_Tactics_Types.Goal ->
-                                   FStar_Tactics_Monad.mlog
-                                     (fun uu___6 ->
-                                        let uu___7 =
-                                          FStar_TypeChecker_Rel.guard_to_string
-                                            e g in
-                                        FStar_Util.print2
-                                          "Making guard (%s:%s) into a goal\n"
-                                          reason uu___7)
-                                     (fun uu___6 ->
-                                        let uu___7 =
-                                          FStar_Tactics_Monad.goal_of_guard
-                                            reason e f rng in
-                                        FStar_Tactics_Monad.bind uu___7
-                                          (fun g1 ->
-                                             FStar_Tactics_Monad.push_goals
-                                               [g1]))
-                               | FStar_Tactics_Types.SMT ->
-                                   FStar_Tactics_Monad.mlog
-                                     (fun uu___6 ->
-                                        let uu___7 =
-                                          FStar_TypeChecker_Rel.guard_to_string
-                                            e g in
-                                        FStar_Util.print2
-                                          "Sending guard (%s:%s) to SMT goal\n"
-                                          reason uu___7)
-                                     (fun uu___6 ->
-                                        let uu___7 =
-                                          FStar_Tactics_Monad.goal_of_guard
-                                            reason e f rng in
-                                        FStar_Tactics_Monad.bind uu___7
-                                          (fun g1 ->
-                                             FStar_Tactics_Monad.push_smt_goals
-                                               [g1]))
-                               | FStar_Tactics_Types.Force ->
-                                   FStar_Tactics_Monad.mlog
-                                     (fun uu___6 ->
-                                        let uu___7 =
-                                          FStar_TypeChecker_Rel.guard_to_string
-                                            e g in
-                                        FStar_Util.print2
-                                          "Forcing guard (%s:%s)\n" reason
-                                          uu___7)
-                                     (fun uu___6 ->
-                                        try
-                                          (fun uu___7 ->
-                                             match () with
-                                             | () ->
-                                                 let uu___8 =
-                                                   let uu___9 =
-                                                     let uu___10 =
-                                                       FStar_TypeChecker_Rel.discharge_guard_no_smt
-                                                         e g in
-                                                     FStar_All.pipe_left
-                                                       FStar_TypeChecker_Env.is_trivial
-                                                       uu___10 in
-                                                   Prims.op_Negation uu___9 in
-                                                 if uu___8
-                                                 then
-                                                   FStar_Tactics_Monad.mlog
-                                                     (fun uu___9 ->
-                                                        let uu___10 =
-                                                          FStar_TypeChecker_Rel.guard_to_string
-                                                            e g in
-                                                        FStar_Util.print1
-                                                          "guard = %s\n"
-                                                          uu___10)
-                                                     (fun uu___9 ->
-                                                        fail1
-                                                          "Forcing the guard failed (%s)"
-                                                          reason)
-                                                 else
-                                                   FStar_Tactics_Monad.ret ())
-                                            ()
-                                        with
-                                        | uu___7 ->
-                                            FStar_Tactics_Monad.mlog
-                                              (fun uu___8 ->
-                                                 let uu___9 =
-                                                   FStar_TypeChecker_Rel.guard_to_string
-                                                     e g in
-                                                 FStar_Util.print1
-                                                   "guard = %s\n" uu___9)
-                                              (fun uu___8 ->
-                                                 fail1
-                                                   "Forcing the guard failed (%s)"
-                                                   reason)))))
+                        FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+                          (fun ps ->
+                             match ps.FStar_Tactics_Types.guard_policy with
+                             | FStar_Tactics_Types.Drop ->
+                                 ((let uu___5 =
+                                     let uu___6 =
+                                       let uu___7 =
+                                         FStar_TypeChecker_Rel.guard_to_string
+                                           e g in
+                                       FStar_Util.format1
+                                         "Tactics admitted guard <%s>\n\n"
+                                         uu___7 in
+                                     (FStar_Errors.Warning_TacAdmit, uu___6) in
+                                   FStar_Errors.log_issue
+                                     e.FStar_TypeChecker_Env.range uu___5);
+                                  FStar_Tactics_Monad.ret ())
+                             | FStar_Tactics_Types.Goal ->
+                                 FStar_Tactics_Monad.mlog
+                                   (fun uu___4 ->
+                                      let uu___5 =
+                                        FStar_TypeChecker_Rel.guard_to_string
+                                          e g in
+                                      FStar_Util.print2
+                                        "Making guard (%s:%s) into a goal\n"
+                                        reason uu___5)
+                                   (fun uu___4 ->
+                                      let uu___5 =
+                                        FStar_Tactics_Monad.goal_of_guard
+                                          reason e f rng in
+                                      FStar_Tactics_Monad.bind uu___5
+                                        (fun g1 ->
+                                           FStar_Tactics_Monad.push_goals
+                                             [g1]))
+                             | FStar_Tactics_Types.SMT ->
+                                 FStar_Tactics_Monad.mlog
+                                   (fun uu___4 ->
+                                      let uu___5 =
+                                        FStar_TypeChecker_Rel.guard_to_string
+                                          e g in
+                                      FStar_Util.print2
+                                        "Sending guard (%s:%s) to SMT goal\n"
+                                        reason uu___5)
+                                   (fun uu___4 ->
+                                      let uu___5 =
+                                        FStar_Tactics_Monad.goal_of_guard
+                                          reason e f rng in
+                                      FStar_Tactics_Monad.bind uu___5
+                                        (fun g1 ->
+                                           FStar_Tactics_Monad.push_smt_goals
+                                             [g1]))
+                             | FStar_Tactics_Types.Force ->
+                                 FStar_Tactics_Monad.mlog
+                                   (fun uu___4 ->
+                                      let uu___5 =
+                                        FStar_TypeChecker_Rel.guard_to_string
+                                          e g in
+                                      FStar_Util.print2
+                                        "Forcing guard (%s:%s)\n" reason
+                                        uu___5)
+                                   (fun uu___4 ->
+                                      try
+                                        (fun uu___5 ->
+                                           match () with
+                                           | () ->
+                                               let uu___6 =
+                                                 let uu___7 =
+                                                   let uu___8 =
+                                                     FStar_TypeChecker_Rel.discharge_guard_no_smt
+                                                       e g in
+                                                   FStar_All.pipe_left
+                                                     FStar_TypeChecker_Env.is_trivial
+                                                     uu___8 in
+                                                 Prims.op_Negation uu___7 in
+                                               if uu___6
+                                               then
+                                                 FStar_Tactics_Monad.mlog
+                                                   (fun uu___7 ->
+                                                      let uu___8 =
+                                                        FStar_TypeChecker_Rel.guard_to_string
+                                                          e g in
+                                                      FStar_Util.print1
+                                                        "guard = %s\n" uu___8)
+                                                   (fun uu___7 ->
+                                                      fail1
+                                                        "Forcing the guard failed (%s)"
+                                                        reason)
+                                               else
+                                                 FStar_Tactics_Monad.ret ())
+                                          ()
+                                      with
+                                      | uu___5 ->
+                                          FStar_Tactics_Monad.mlog
+                                            (fun uu___6 ->
+                                               let uu___7 =
+                                                 FStar_TypeChecker_Rel.guard_to_string
+                                                   e g in
+                                               FStar_Util.print1
+                                                 "guard = %s\n" uu___7)
+                                            (fun uu___6 ->
+                                               fail1
+                                                 "Forcing the guard failed (%s)"
+                                                 reason)))))
 let (tcc :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1387,22 +1370,6 @@ let (tc :
         FStar_Tactics_Monad.bind uu___1
           (fun c -> FStar_Tactics_Monad.ret (FStar_Syntax_Util.comp_result c)) in
       FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "tc") uu___
-let (trivial : unit -> unit FStar_Tactics_Monad.tac) =
-  fun uu___ ->
-    FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
-      (fun goal ->
-         let uu___1 =
-           let uu___2 = FStar_Tactics_Types.goal_env goal in
-           let uu___3 = FStar_Tactics_Types.goal_type goal in
-           istrivial uu___2 uu___3 in
-         if uu___1
-         then solve' goal FStar_Syntax_Util.exp_unit
-         else
-           (let uu___3 =
-              let uu___4 = FStar_Tactics_Types.goal_env goal in
-              let uu___5 = FStar_Tactics_Types.goal_type goal in
-              tts uu___4 uu___5 in
-            fail1 "Not a trivial goal: %s" uu___3))
 let divide :
   'a 'b .
     FStar_BigInt.t ->
@@ -2863,24 +2830,28 @@ let (t_apply_lemma :
                                                                     =
                                                                     let uu___19
                                                                     =
-                                                                    FStar_Syntax_Util.mk_squash
-                                                                    pre_u
-                                                                    pre1 in
-                                                                    istrivial
+                                                                    FStar_TypeChecker_Env.guard_of_guard_formula
+                                                                    (FStar_TypeChecker_Common.NonTrivial
+                                                                    pre1) in
+                                                                    FStar_TypeChecker_Rel.simplify_guard
                                                                     env1
                                                                     uu___19 in
-                                                                    Prims.op_Negation
-                                                                    uu___18 in
-                                                                    if
-                                                                    uu___17
-                                                                    then
+                                                                    uu___18.FStar_TypeChecker_Common.guard_f in
+                                                                    match uu___17
+                                                                    with
+                                                                    | 
+                                                                    FStar_TypeChecker_Common.Trivial
+                                                                    ->
+                                                                    FStar_Tactics_Monad.ret
+                                                                    ()
+                                                                    | 
+                                                                    FStar_TypeChecker_Common.NonTrivial
+                                                                    uu___18
+                                                                    ->
                                                                     FStar_Tactics_Monad.add_irrelevant_goal
                                                                     goal
                                                                     "apply_lemma precondition"
-                                                                    env1 pre1
-                                                                    else
-                                                                    FStar_Tactics_Monad.ret
-                                                                    () in
+                                                                    env1 pre1 in
                                                                     FStar_Tactics_Monad.bind
                                                                     uu___16
                                                                     (fun

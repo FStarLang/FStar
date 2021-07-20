@@ -25,12 +25,7 @@ open FStar.Tactics.Util
 open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 
-(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
-let run_tactic (t:unit -> Tac unit)
-  : Pure unit
-         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
-         (ensures (fun _ -> True))
-  = ()
+exception Goal_not_trivial
 
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
@@ -76,6 +71,31 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let r = f () in
     set_guard_policy old_pol;
     r
+
+(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+[t] in [Gamma]. *)
+let exact (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
+
+let trivial () : Tac unit =
+  norm [iota; zeta; reify_; delta; primops; simplify; unmeta];
+  let g = cur_goal () in
+  match term_as_formula g with
+  | True_ -> exact (`())
+  | _ -> raise Goal_not_trivial
+
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
 
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)
@@ -123,17 +143,6 @@ let later () : Tac unit =
     match goals () with
     | g::gs -> set_goals (gs @ [g])
     | _ -> fail "later: no goals"
-
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. *)
-let exact (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact true false t)
-
-(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
-type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
-flexible variant of [exact]. *)
-let exact_with_ref (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact true true t)
 
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).

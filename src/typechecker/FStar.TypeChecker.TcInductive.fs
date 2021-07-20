@@ -1034,8 +1034,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                   (univs, body)
               in
               if List.length univs = List.length (fst expected_typ)
-              then let _, inferred = Env.inst_tscheme inferred_typ in
-                   let _, expected = Env.inst_tscheme expected_typ in
+              then let _, inferred = Subst.open_univ_vars univs (snd inferred_typ) in
+                   let _, expected = Subst.open_univ_vars univs (snd expected_typ) in
                    if Rel.teq_nosmt_force env0 inferred expected
                    then ()
                    else fail expected_typ inferred_typ
