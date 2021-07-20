@@ -12,13 +12,25 @@ open Steel.Effect
 
 val ptr (a: Type u#0) (b: Type u#b) : Type u#b
 
-val pts_to (p: ptr 'a 'b) (pb: pcm 'b) (v: Ghost.erased 'b): vprop
+val pts_to (p: ptr 'a 'b) (pb: pcm 'b) ([@@@smt_fallback] v: Ghost.erased 'b): vprop
 
 val pts_to_or_null (p: ptr 'a 'b) (pb: pcm 'b) (v: Ghost.erased 'b): vprop
 
 val nullptr (#a:Type) (#b:Type) : ptr a b
 
 val vptr (#a:Type) (#b:Type) (#pb: pcm b) (r: ref a pb) : ptr a b
+
+val nullptr_vptr_disjoint (#a:Type) (#b:Type) (#pb: pcm b) (r: ref a pb)
+: Lemma (nullptr =!= vptr r) [SMTPat (vptr r)]
+
+val pts_to_nonnull (#opened:inames) (#a:Type) (#b:Type) (#pb: pcm b)
+  (#v: Ghost.erased b)
+  (p: ptr a b)
+: SteelGhost unit opened
+    (pts_to p pb v)
+    (fun _ -> pts_to p pb v)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> p =!= nullptr)
 
 val intro_pts_to
   (#pb: pcm 'b) (#v: Ghost.erased 'b) (r: ref 'a pb)

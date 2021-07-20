@@ -80,6 +80,11 @@ let nullptr #a #b = None
 
 let vptr r = Some r
 
+let nullptr_vptr_disjoint r = ()
+
+let pts_to_nonnull #opened #a #b #pb p v =
+  change_equal_slprop (pts_to p pb v) (pts_to p pb v) // TODO easier way to do this?
+
 let intro_pts_to #a #b #pb #v r =
   let p = Some r in
   intro_vpure (nonnull p pb);
