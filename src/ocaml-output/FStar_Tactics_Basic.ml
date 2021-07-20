@@ -1387,22 +1387,6 @@ let (tc :
         FStar_Tactics_Monad.bind uu___1
           (fun c -> FStar_Tactics_Monad.ret (FStar_Syntax_Util.comp_result c)) in
       FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "tc") uu___
-let (trivial : unit -> unit FStar_Tactics_Monad.tac) =
-  fun uu___ ->
-    FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
-      (fun goal ->
-         let uu___1 =
-           let uu___2 = FStar_Tactics_Types.goal_env goal in
-           let uu___3 = FStar_Tactics_Types.goal_type goal in
-           istrivial uu___2 uu___3 in
-         if uu___1
-         then solve' goal FStar_Syntax_Util.exp_unit
-         else
-           (let uu___3 =
-              let uu___4 = FStar_Tactics_Types.goal_env goal in
-              let uu___5 = FStar_Tactics_Types.goal_type goal in
-              tts uu___4 uu___5 in
-            fail1 "Not a trivial goal: %s" uu___3))
 let divide :
   'a 'b .
     FStar_BigInt.t ->
