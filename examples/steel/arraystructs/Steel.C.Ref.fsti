@@ -114,7 +114,7 @@ type sel_view
 = {
   to_view_prop: (carrier -> Tot prop);
   to_view: (refine carrier to_view_prop -> Tot view);
-  to_carrier: (view -> GTot (refine carrier to_view_prop));
+  to_carrier: (view -> Tot (refine carrier to_view_prop));
   to_carrier_not_one:
     (x: view) ->
     Lemma
