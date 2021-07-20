@@ -79,6 +79,14 @@ let rec pts_to_llist (p:ptr node node) ([@@@smt_fallback] l:Ghost.erased cells)
     pts_to p node_pcm (mk_node (some value) (some next)) `star`
     (next `pts_to_llist` Ghost.hide tl)
 
+// TODO: should be something like:
+// pts_to_or_null p node_pcm (match l with [] -> one _ | (value, next) :: tl -> mk_node ...) `star`
+// vpure (p == null <==> l == []) `star`
+// begin match Ghost.reveal l with
+// | [] -> emp
+// | (value, next) :: tl -> next `pts_to_llist` ...
+// end
+
 let pts_to_llist_nil_eq p
 : Lemma ((p `pts_to_llist` []) == vpure (p == nullptr))
   [SMTPat (p `pts_to_llist` [])]
