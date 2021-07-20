@@ -376,11 +376,6 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
                                                   msg
            end))
 
-let istrivial (e:env) (t:term) : bool =
-    let steps = [Env.Reify; Env.UnfoldUntil delta_constant; Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
-    let t = normalize steps e t in
-    is_true t
-
 let get_guard_policy () : tac<guard_policy> =
     bind get (fun ps -> ret ps.guard_policy)
 
@@ -401,9 +396,6 @@ let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac<u
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-        if istrivial e f // trivializes further...
-        then ret ()
-        else // check the policy
     bind get (fun ps ->
     match ps.guard_policy with
     | Drop ->
@@ -880,11 +872,11 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" env guard (rangeof goal)) (fun _ ->
         let pre_u = env.universe_of env pre in
-        bind (if not (istrivial env (U.mk_squash pre_u pre))
-              then add_irrelevant_goal goal "apply_lemma precondition" env pre
-              else ret ()) (fun _ ->
-        add_goals sub_goals))))
-    )))))))
+        bind (match (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial pre))).guard_f with
+              | Trivial -> ret ()
+              | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre) //AR: should we use the normalized pre instead?
+        
+             (fun _ -> add_goals sub_goals)))))))))))
 
 let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
     let rec aux e =
