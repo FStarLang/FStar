@@ -1087,6 +1087,7 @@ type norm_step =
   | UnfoldAttr of Prims.string Prims.list 
   | UnfoldQual of Prims.string Prims.list 
   | NBE 
+  | Unmeta 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
 let (uu___is_Weak : norm_step -> Prims.bool) =
@@ -1127,6 +1128,8 @@ let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
 let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
+let (uu___is_Unmeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_simpl
 let (steps_Weak : FStar_Syntax_Syntax.term) =
@@ -1155,6 +1158,8 @@ let (steps_UnfoldQual : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldqual
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
+let (steps_Unmeta : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unmeta
 let (e_norm_step : norm_step embedding) =
   let t_norm_step =
     let uu___ = FStar_Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step" in
@@ -1180,6 +1185,7 @@ let (e_norm_step : norm_step embedding) =
          | ZetaFull -> steps_ZetaFull
          | Iota -> steps_Iota
          | NBE -> steps_NBE
+         | Unmeta -> steps_Unmeta
          | Reify -> steps_Reify
          | UnfoldOnly l ->
              let uu___1 =
@@ -1270,6 +1276,10 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_nbe
                   -> FStar_Pervasives_Native.Some NBE
+              | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_unmeta
+                  -> FStar_Pervasives_Native.Some Unmeta
               | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_reify
