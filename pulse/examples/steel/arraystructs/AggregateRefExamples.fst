@@ -62,6 +62,24 @@ let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (opt_pcm #'c)) (q:ref 'b (op
   opt_write q tmp;
   A.return ()
 
+let generic_swap_sel (p:ref 'a (opt_pcm #'c)) (q:ref 'b (opt_pcm #'c))
+: Steel unit
+  ((p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
+  (fun _ -> (p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
+  (requires (fun _ -> True))
+  (ensures (fun h _ h' ->
+    h' (p `pts_to_view` opt_view _) == h (q `pts_to_view` opt_view _) /\
+    h' (q `pts_to_view` opt_view _) == h (p `pts_to_view` opt_view _)
+  ))
+= (* A tmp = *p; *)
+  let tmp = opt_read_sel p in
+  (* *p = *q; *)
+  let vy = opt_read_sel q in
+  opt_write_sel p vy;
+  (* *q = tmp *)
+  opt_write_sel q tmp;
+  A.return ()
+
 /// Now, point_swap written using generic_swap:
 ///
 /// void point_swap_generically(struct point *p) {

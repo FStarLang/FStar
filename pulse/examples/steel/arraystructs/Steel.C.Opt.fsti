@@ -105,3 +105,32 @@ val opt_pcm_read
 : Steel b (r `pts_to` x) (fun _ -> r `pts_to` x)
   (requires (fun _ -> Some? x))
   (ensures (fun _ y _ -> Ghost.reveal x == Some y))
+
+let opt_read_sel
+  (#a: Type u#0) (#b: Type u#0)
+  (r: ref a (opt_pcm #b))
+: Steel b
+  (pts_to_view r (opt_view b))
+  (fun _ -> pts_to_view r (opt_view b))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    res == h (pts_to_view r (opt_view b)) /\
+    res == h' (pts_to_view r (opt_view b))
+  ))
+= ref_read_sel r (opt_view b)
+
+let opt_write_sel
+  (#a: Type u#0) (#b: Type u#0)
+  (r: ref a (opt_pcm #b))
+  (w: b)
+: Steel unit
+  (pts_to_view r (opt_view b))
+  (fun _ -> pts_to_view r (opt_view b))
+  (requires (fun _ -> True))
+  (ensures (fun _ _ h' ->
+    w == h' (pts_to_view r (opt_view b))
+  ))
+=
+  let _ = pts_to_view_elim r (opt_view _) in
+  opt_pcm_write r _ w;
+  pts_to_view_intro r _ (opt_view _) w
