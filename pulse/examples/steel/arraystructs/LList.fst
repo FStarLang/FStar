@@ -86,6 +86,7 @@ let rec pts_to_llist (p:ptr node node) ([@@@smt_fallback] l:Ghost.erased cells)
 // | [] -> emp
 // | (value, next) :: tl -> next `pts_to_llist` ...
 // end
+// TODO pts_to_or_null take option
 
 let pts_to_llist_nil_eq p
 : Lemma ((p `pts_to_llist` []) == vpure (p == nullptr))
