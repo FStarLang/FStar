@@ -57,6 +57,7 @@ type norm_step =
   | UnfoldFully : list string -> norm_step
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
   | UnfoldQual : list string -> norm_step
+  | Unmeta : norm_step
 
 irreducible
 let simplify = Simpl
@@ -99,6 +100,9 @@ let delta_attr s = UnfoldAttr s
 
 irreducible
 let delta_qualifier s = UnfoldAttr s
+
+irreducible
+let unmeta = Unmeta
 
 let norm _ #_ x = x
 

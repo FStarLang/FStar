@@ -303,6 +303,7 @@ let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
 let steps_unfoldqual    = psconst "delta_qualifier"
 let steps_nbe           = psconst "nbe"
+let steps_unmeta        = psconst "unmeta"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
