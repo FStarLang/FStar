@@ -2073,6 +2073,11 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
+let is_true (t:term) () : Tac unit =
+  match term_as_formula t with
+  | True_ -> exact (`())
+  | _ -> raise Goal_not_trivial
+
 /// Solve the maybe_emp goals:
 /// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
 /// solve the goal (either an equality through trefl, or True through trivial)
@@ -2086,10 +2091,12 @@ let rec solve_maybe_emps (l:list goal) : Tac unit =
       let hd, args = collect_app t in
       if term_eq hd (`maybe_emp) then
         (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
-         or_else trivial trefl)
+         let g = cur_goal () in
+         or_else (is_true g) trefl)
       else if term_eq hd (`maybe_emp_dep) then
         (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
-         or_else trivial (fun _ -> ignore (forall_intro ()); trefl ()))
+         let g = cur_goal () in
+         or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
       else later()
     | _ -> later()
     );
