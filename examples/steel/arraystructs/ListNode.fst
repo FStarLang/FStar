@@ -7,6 +7,7 @@ module A = Steel.Effect.Atomic
 open Steel.Effect
 open Steel.C.Opt
 open Steel.C.PCM
+open Steel.C.Ptr
 open Steel.C.Ref
 open Steel.C.Connection
 open Steel.C.Struct
@@ -17,7 +18,7 @@ type node_field = | Value | Next
 
 let node_fields (node:Type u#0) k : Type u#0 = match k with
   | Value -> option int
-  | Next -> option (option (ref' node node))
+  | Next -> option (ptr node node)
 
 #push-options "--__no_positivity"
 noeq type node: Type u#0 =
@@ -28,7 +29,7 @@ let node': Type u#0 = restricted_t node_field (node_fields node)
 
 let node_fields_pcm k: pcm (node_fields node k) = match k with
   | Value -> opt_pcm #int
-  | Next -> opt_pcm #(option (ref' node node))
+  | Next -> opt_pcm #(ptr node node)
 
 let node_pcm': pcm node' = prod_pcm node_fields_pcm
 
@@ -88,7 +89,7 @@ let roll_conn: node_pcm' `connection` node_pcm =
 let unroll_conn: node_pcm `connection` node_pcm' =
   connection_of_isomorphism node_iso
 
-let mk_node'_f (value: option int) (next: option (option (ref' node node)))
+let mk_node'_f (value: option int) (next: option (ptr node node))
   (k: node_field)
 : node_fields node k
 = match k with
@@ -97,7 +98,7 @@ let mk_node'_f (value: option int) (next: option (option (ref' node node)))
   
 let mk_node'
   (value: Ghost.erased (option int))
-  (next: Ghost.erased (option (option (ref' node node))))
+  (next: Ghost.erased (option (ptr node node)))
 : Ghost.erased node'
 = Ghost.hide (on_domain node_field (mk_node'_f (Ghost.reveal value) (Ghost.reveal next)))
 
@@ -117,7 +118,7 @@ let _value
 = unroll_conn `connection_compose` struct_field node_fields_pcm Value
 
 let _next
-: node_pcm `connection` opt_pcm #(option (ref' node node))
+: node_pcm `connection` opt_pcm #(ptr node node)
 = unroll_conn `connection_compose` struct_field node_fields_pcm Next
 
 let one_next : Ghost.erased (option int) =
@@ -155,7 +156,7 @@ let mk_node_mk_node' value next
 
 let unroll_ref 
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm)
 : Steel (ref 'a node_pcm')
     (p `pts_to` mk_node value next)
@@ -169,7 +170,7 @@ let unroll_ref
 
 let roll_ref 
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm) (p': ref 'a node_pcm')
 : Steel unit
     (p' `pts_to` mk_node' value next)
@@ -181,7 +182,7 @@ let roll_ref
 
 let addr_of_value
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm)
 : Steel (ref 'a (opt_pcm #int))
     (p `pts_to` mk_node value next)
@@ -201,7 +202,7 @@ let addr_of_value
 
 let unaddr_of_value
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm)
   (q: ref 'a (opt_pcm #int))
 : Steel unit
@@ -217,9 +218,9 @@ let unaddr_of_value
 
 let addr_of_next
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm)
-: Steel (ref 'a (opt_pcm #(option (ref' node node))))
+: Steel (ref 'a (opt_pcm #(ptr node node)))
     (p `pts_to` mk_node value next)
     (fun q ->
        (p `pts_to` mk_node value none) `star`
@@ -235,9 +236,9 @@ let addr_of_next
 
 let unaddr_of_next
   (#value:Ghost.erased (option int))
-  (#next:Ghost.erased (option (option (ref' node node))))
+  (#next:Ghost.erased (option (ptr node node)))
   (p: ref 'a node_pcm)
-  (q: ref 'a (opt_pcm #(option (ref' node node))))
+  (q: ref 'a (opt_pcm #(ptr node node)))
 : Steel unit
     ((p `pts_to` mk_node value none) `star` (q `pts_to` next))
     (fun q -> p `pts_to` mk_node value next)

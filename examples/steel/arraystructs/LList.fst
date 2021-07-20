@@ -3,12 +3,14 @@ open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 
+module R = Steel.C.Ref
 open Steel.C.Ref
+open Steel.C.Ptr
 open Steel.C.PCM
 open Steel.C.Opt
 open Steel.C.Connection
 
-open ListNode
+/// TODO move and dedup with Steel.C.Ptr.fst
 
 let vpure_sel'
   (p: prop)
@@ -63,112 +65,62 @@ let elim_vpure
     (fun _ _ -> p)
     (fun m -> pure_interp p m; reveal_emp (); intro_emp m)
 
-let ptr = option (ref' node node)
-let cells = list (int & ptr)
+// ----------------------------------------
 
-let pts_to_llist_cons (value: int) (next: ptr) (tl: cells)
-  (pts_to_llist:(
-    ptr ->
-    l:Ghost.erased cells{List.length l < List.length ((value, next) :: tl)} ->
-    Tot vprop))
-  (p: option (ref' node node))
-  (prf: squash (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm))
-: vprop
-= let r: ref node node_pcm = Some?.v p in
-  (r `pts_to` mk_node (some value) (some next)) `star`
-  (next `pts_to_llist` Ghost.hide tl)
+open ListNode
 
-let rec pts_to_llist (p:ptr) ([@@@smt_fallback] l:Ghost.erased cells)
+let cells = list (int & ptr node node)
+
+let rec pts_to_llist (p:ptr node node) ([@@@smt_fallback] l:Ghost.erased cells)
 : Tot vprop (decreases (List.length l))
 = match Ghost.reveal l with
-  | [] -> vpure (p == None)
+  | [] -> vpure (p == nullptr)
   | (value, next) :: tl ->
-    vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm) `vdep`
-    pts_to_llist_cons value next tl pts_to_llist p
+    pts_to p node_pcm (mk_node (some value) (some next)) `star`
+    (next `pts_to_llist` Ghost.hide tl)
 
 let pts_to_llist_nil_eq p
-: Lemma ((p `pts_to_llist` []) == vpure (p == None))
+: Lemma ((p `pts_to_llist` []) == vpure (p == nullptr))
   [SMTPat (p `pts_to_llist` [])]
 = ()
 
-let pts_to_llist_cons_eq (p:ptr) (value:int) (next:ptr) (tl:cells)
+let pts_to_llist_cons_eq (p:ptr node node) (value:int) (next:ptr node node) (tl:cells)
 : Lemma ((p `pts_to_llist` Ghost.hide ((value, next) :: tl)) == 
-    vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm) `vdep`
-    pts_to_llist_cons value next tl pts_to_llist p)
-= assert_norm ((p `pts_to_llist` Ghost.hide ((value, next) :: tl)) == 
-  (match Ghost.reveal (Ghost.hide ((value, next) :: tl)) with
-  | [] -> vpure (p == None)
-  | (value, next) :: tl ->
-    vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm) `vdep`
-    pts_to_llist_cons value next tl pts_to_llist p)) 
+    pts_to p node_pcm (mk_node (some value) (some next)) `star`
+    (next `pts_to_llist` Ghost.hide tl))
+= ()
 
-let pts_to_llist_cons_eq' (p: ptr) value (next:ptr) tl prf
-: Lemma (pts_to_llist_cons value next tl pts_to_llist p prf ==
-    (let r: ref node node_pcm = Some?.v p in
-     (r `pts_to` mk_node (some (Ghost.hide value)) (some (Ghost.hide next))) `star`
-     (next `pts_to_llist` Ghost.hide tl)))
-= assert_norm (pts_to_llist_cons value next tl pts_to_llist p prf ==
-    (let r: ref node node_pcm = Some?.v p in
-     (r `pts_to` mk_node (some value) (some next)) `star`
-     (next `pts_to_llist` Ghost.hide tl)))
-
-val intro_llist_nil : unit -> SteelT unit emp (fun _ -> None `pts_to_llist` [])
+val intro_llist_nil : unit -> SteelT unit emp (fun _ -> nullptr `pts_to_llist` [])
 
 let intro_llist_nil () =
-  intro_vpure (None #(ref' node node) == None);
-  pts_to_llist_nil_eq None;
-  change_equal_slprop _ (None `pts_to_llist` [])
+  intro_vpure (nullptr #node #node == nullptr);
+  pts_to_llist_nil_eq nullptr;
+  change_equal_slprop _ (nullptr `pts_to_llist` [])
   
 val intro_llist_cons
-  (#opened:inames) (r: ref node node_pcm) (p: ptr)
-  (value: int) (next: ptr)
+  (#opened:inames) (p: ptr node node)
+  (value: int) (next: ptr node node)
   (tl: cells)
-: SteelGhost unit opened
-    ((r `pts_to` mk_node (some value) (some next)) `star` (next `pts_to_llist` tl))
+: SteelGhostT unit opened
+    ((pts_to p node_pcm (mk_node (some value) (some next))) `star` (next `pts_to_llist` tl))
     (fun _ -> p `pts_to_llist` ((value, next)::tl))
-    (requires fun _ -> p == Some r)
-    (ensures fun _ _ _ -> True)
   
-let intro_llist_cons r p' value next tl = 
-  let p = Some r in
-  intro_vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm);
-  intro_vdep (vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm))
-    (r `pts_to` (mk_node (some value) (some next)) `star`
-     (next `pts_to_llist` tl))
-    (pts_to_llist_cons value next tl pts_to_llist p);
-  pts_to_llist_cons_eq p value next tl;
-  change_equal_slprop _ (p' `pts_to_llist` ((value, next)::tl))
+let intro_llist_cons p' value next tl = change_equal_slprop _ _
 
 val elim_llist_cons
-  (#opened:inames) (p: ptr)
-  (value: int) (next: ptr) (tl: cells)
-: SteelGhost (Ghost.erased (ref node node_pcm)) opened
+  (#opened:inames) (p: ptr node node)
+  (value: int) (next: ptr node node) (tl: cells)
+: SteelGhostT unit opened
     (p `pts_to_llist` ((value, next)::tl))
-    (fun r ->
-      (r `pts_to` mk_node (some value) (some next)) `star`
+    (fun _ ->
+      (pts_to p node_pcm (mk_node (some value) (some next))) `star`
       (next `pts_to_llist` tl))
-    (requires fun _ -> True)
-    (ensures fun _ r _ -> p == Some (Ghost.reveal r))
 
 let elim_llist_cons p value next tl =
-  pts_to_llist_cons_eq p value next tl;
   change_equal_slprop
-    (p `pts_to_llist` _)
-    (vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm) `vdep`
-     pts_to_llist_cons value next tl pts_to_llist p);
-  let prf: Ghost.erased (t_of (vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm))) =
-    elim_vdep 
-      (vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm))
-      (pts_to_llist_cons value next tl pts_to_llist p)
-  in
-  elim_vpure (Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm);
-  pts_to_llist_cons_eq' p value next tl prf;
-  let r: Ghost.erased (ref node node_pcm) = Some?.v p in
-  change_equal_slprop
-    (pts_to_llist_cons value next tl pts_to_llist p prf)
-    ((Ghost.reveal r `pts_to` mk_node (some value) (some next)) `star`
-     (next `pts_to_llist` tl));
-  r
+    (p `pts_to_llist` ((value, next)::tl)) // TODO why can't these be inferred?
+    ((pts_to p node_pcm (mk_node (some value) (some next))) `star`
+     (next `pts_to_llist` tl))
 
 let rec values (l:cells) : GTot (list int) =
   match l with
@@ -177,18 +129,19 @@ let rec values (l:cells) : GTot (list int) =
 
 #set-options "--ide_id_info_off"
 
-val push (p:ptr) (l:Ghost.erased cells) (value:int)
-: Steel (ptr & Ghost.erased cells)
+val push (p:ptr node node) (l:Ghost.erased cells) (value:int)
+: Steel (ptr node node & Ghost.erased cells)
     (p `pts_to_llist` l)
     (fun (p', l') -> p' `pts_to_llist` l')
     (requires fun _ -> True)
     (ensures fun _ (_, l') _ -> values l' == value :: values l)
 
 let push p l value =
-  let cell: int & ptr = (value, p) in
+  let cell: int & ptr node node = (value, p) in
   let r = ref_alloc node_pcm (mk_node_tot (Some value) (Some p)) in
-  intro_llist_cons r (Some r) value p l;
-  return (Some r, Ghost.hide (cell :: l))
+  let q = intro_pts_to r in
+  intro_llist_cons q value p l;
+  return (q, Ghost.hide (cell :: l))
   
 let cells_set_hd x (l: cells) = match l with
   | [] -> []
@@ -203,74 +156,80 @@ let exfalso (#opened:inames) (p:vprop) (q:'a -> vprop) (r:'a -> prop)
   change_slprop_rel p (q x) (fun _ _ -> r x) (fun _ -> ());
   x
 
-val pts_to_llist_nullptr (#opened:inames) (p:ptr) (l:Ghost.erased cells)
+val pts_to_llist_nullptr (#opened:inames) (p:ptr node node) (l:Ghost.erased cells)
 : SteelGhost unit opened
     (p `pts_to_llist` l) 
     (fun _ -> p `pts_to_llist` l)
-    (requires fun _ -> p == None)
+    (requires fun _ -> p == nullptr)
     (ensures fun _ _ _ -> Ghost.reveal l == [])
 
 let pts_to_llist_nullptr p l =
   match Ghost.reveal l with
   | [] -> change_equal_slprop (p `pts_to_llist` l) (p `pts_to_llist` l) // TODO why can't just put ()
   | (value, next) :: tl ->
-    change_equal_slprop (p `pts_to_llist` l) (None `pts_to_llist` ((value, next) :: tl));
-    let r = elim_llist_cons None value next tl in
-    assert (None == Some r);
+    change_equal_slprop (p `pts_to_llist` l) (p `pts_to_llist` ((value, next) :: tl));
+    let r = elim_llist_cons p value next tl in
+    pts_to_nonnull p;
+    assert (p =!= nullptr);
+    assert (p == nullptr);
     exfalso _ _ (fun _ -> Ghost.reveal l == [])
 
 [@@erasable]
 noeq type pts_to_llist_res = {
   value: int;
-  next: ptr;
+  next: ptr node node;
   tl: cells;
 }
 
-val pts_to_llist_some (#opened:inames) (p:ptr) (l:Ghost.erased cells)
+val pts_to_llist_some (#opened:inames) (p:ptr node node) (l:Ghost.erased cells)
 : SteelGhost pts_to_llist_res opened
     (p `pts_to_llist` l) 
     (fun res -> p `pts_to_llist` ((res.value, res.next) :: res.tl))
-    (requires fun _ -> Some? p)
-    (ensures fun _ res _ ->
-      Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm /\
-      Ghost.reveal l == ((res.value, res.next) :: res.tl))
+    (requires fun _ -> p =!= nullptr)
+    (ensures fun _ res _ -> Ghost.reveal l == ((res.value, res.next) :: res.tl))
 
 let pts_to_llist_some p l =
   match Ghost.reveal l with
   | [] ->
     change_equal_slprop (p `pts_to_llist` l) (p `pts_to_llist` []);
-    assert (Some? p /\ p == None);
-    exfalso _ _
-      (fun res -> Some? p /\ pcm_of_ref' (Some?.v p) == node_pcm /\
-       Ghost.reveal l == ((res.value, res.next) :: res.tl))
+    assert (p == nullptr);
+    assert (p =!= nullptr);
+    exfalso _ _ (fun res -> Ghost.reveal l == ((res.value, res.next) :: res.tl))
   | (value, next) :: tl ->
     change_equal_slprop (p `pts_to_llist` l) (p `pts_to_llist` ((value, next) :: tl));
     {value; next; tl}
 
-val set_hd (p:ptr) (l:Ghost.erased cells) (value:int)
+val set_hd (p:ptr node node) (l:Ghost.erased cells) (value:int)
 : SteelT unit
     (p `pts_to_llist` l)
     (fun _ -> p `pts_to_llist` cells_set_hd value l)
 
+// Problem: need (pts_to_or_null p pb v), where v =!= one, before can check whether it's null
+// Unclear how to rearrange pts_to_or_null
+
 let set_hd p l new_value =
-  match p with
-  | None -> pts_to_llist_nullptr p l; sladmit()
-  | Some r ->
-    let res = pts_to_llist_some p l in
-    let value: Ghost.erased int = Ghost.hide res.value in
-    let next: Ghost.erased ptr = Ghost.hide res.next in
-    let tl: Ghost.erased cells = Ghost.hide res.tl in
-    change_equal_slprop (p `pts_to_llist` _) (p `pts_to_llist` _);
-    let r' = elim_llist_cons p (Ghost.reveal value) (Ghost.reveal next) (Ghost.reveal tl) in
-    let r: ref node node_pcm = r in
-    change_equal_slprop
-      (Ghost.reveal r' `pts_to` mk_node (some value) (some next))
-      (r `pts_to` mk_node (some value) (some next));
-    let r_value = addr_of_value r in
-    r_value `opt_write` new_value;
-    unaddr_of_value r r_value;
-    intro_llist_cons r p new_value next tl;
-    return ()
+  //let b = is_null p in
+  if true then begin
+    //pts_to_llist_nullptr p l;
+    sladmit(); return ()
+  end else begin
+    sladmit(); return ()
+    //let res = pts_to_llist_some p l in
+    //let value: Ghost.erased int = Ghost.hide res.value in
+    //let next: Ghost.erased ptr = Ghost.hide res.next in
+    //let tl: Ghost.erased cells = Ghost.hide res.tl in
+    //change_equal_slprop (p `pts_to_llist` _) (p `pts_to_llist` _);
+    //let r' = elim_llist_cons p (Ghost.reveal value) (Ghost.reveal next) (Ghost.reveal tl) in
+    //let r: ref node node_pcm = r in
+    //change_equal_slprop
+    //  (Ghost.reveal r' `pts_to` mk_node (some value) (some next))
+    //  (r `pts_to` mk_node (some value) (some next));
+    //let r_value = addr_of_value r in
+    //r_value `opt_write` new_value;
+    //unaddr_of_value r r_value;
+    //intro_llist_cons r p new_value next tl;
+    //return ()
+  end
 
 // for the presentation, write write code for set_hd
 // based on assume val for needed selectors, then solve assumes
@@ -286,7 +245,7 @@ let rec cells_set_nth_nil n value
 = if n = 0 then () else cells_set_nth_nil (n - 1) value
 
 let llist_setter (n:nat) =
-  p:ptr -> l:Ghost.erased cells -> value:int ->
+  p:ptr node node -> l:Ghost.erased cells -> value:int ->
   SteelT unit
     (p `pts_to_llist` l)
     (fun _ -> p `pts_to_llist` cells_set_nth n value l)
