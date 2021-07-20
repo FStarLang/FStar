@@ -113,7 +113,7 @@ type sel_view
   (view: Type u#b)
 = {
   to_view_prop: (carrier -> Tot prop);
-  to_view: (refine carrier to_view_prop -> GTot view);
+  to_view: (refine carrier to_view_prop -> Tot view);
   to_carrier: (view -> GTot (refine carrier to_view_prop));
   to_carrier_not_one:
     (x: view) ->
@@ -325,11 +325,14 @@ let pts_to_view_elim
     (fun res -> pts_to r res)
     (fun _ -> True)
     (fun h res _ ->
-      Ghost.reveal res == vw.to_carrier (h (pts_to_view r vw))
+      Ghost.reveal res == vw.to_carrier (h (pts_to_view r vw)) /\
+      vw.to_view_prop res /\
+      ~ (Ghost.reveal res == one p)
     )
 =
   let g : Ghost.erased c = A.gget (pts_to_view r vw) in
   let res : Ghost.erased b = Ghost.hide (vw.to_carrier g) in
+  vw.to_carrier_not_one g;
   A.intro_pure (vw.to_carrier (Ghost.reveal g) == Ghost.reveal res);
   let f (x: t_of (pts_to_view r vw)) : Tot vprop = pure (vw.to_carrier x == Ghost.reveal res) in
   intro_vdep2
@@ -348,3 +351,38 @@ let pts_to_view_elim
     );
   res
 
+let compatible_elim'
+  (#a: Type u#a)
+  (pcm: pcm0 a)
+  (x y: a)
+  (sq: squash (compatible pcm x y))
+: GTot (frame: a {
+    composable pcm x frame /\
+    op pcm frame x == y
+  })
+= compatible_elim pcm x y
+
+let ref_read_sel
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (vw: sel_view p c)
+: Steel c
+  (pts_to_view r vw)
+  (fun _ -> pts_to_view r vw)
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    res == h (pts_to_view r vw) /\
+    res == h' (pts_to_view r vw)
+  ))
+=
+  let _v = pts_to_view_elim r vw in
+  let v = ref_read r in
+  let sq : squash (compatible p _v v) = () in
+  let frame = Ghost.hide (compatible_elim' p _v v sq) in
+  vw.to_view_frame (vw.to_view _v) frame ;
+  let res = vw.to_view v in
+  pts_to_view_intro r _v vw res;
+  A.return res
+
+(* write cannot be defined generically because of p_refine *)
