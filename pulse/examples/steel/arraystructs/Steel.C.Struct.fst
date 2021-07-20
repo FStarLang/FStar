@@ -342,3 +342,79 @@ let unaddr_of_struct_field
   struct_unpeel p k x xs;
   A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   A.return ()
+
+let struct_view_to_view_prop
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+: restricted_t a b -> Tot prop
+= (fun (f : restricted_t a b) -> forall k. (field_view k).to_view_prop (f k)) 
+
+let struct_view_to_view
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+: refine (restricted_t a b) (struct_view_to_view_prop view_t field_view) ->
+  Tot (restricted_t a view_t)
+= (fun (f: refine (restricted_t a b) _) ->
+    on_dom a (fun k -> (field_view k).to_view (f k)))
+
+let struct_view_to_carrier
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+: restricted_t a view_t ->
+  Tot (refine (restricted_t a b) (struct_view_to_view_prop view_t field_view))
+= fun (f: restricted_t a view_t) ->
+  let g: restricted_t a b = on_dom a (fun k -> (field_view k).to_carrier (f k) <: b k) in
+  g
+
+let struct_view_to_carrier_not_one
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+  (x:restricted_t a view_t)
+: Lemma
+    (requires exists (x:a). True)
+    (ensures struct_view_to_carrier view_t field_view x =!= one (prod_pcm p))
+= let k = FStar.IndefiniteDescription.indefinite_description_ghost a (fun _ -> True) in
+  (field_view k).to_carrier_not_one (x k)
+
+let struct_view_to_view_frame
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+  (x:restricted_t a view_t)
+  (frame: restricted_t a b)
+: Lemma
+    (requires (composable (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame))
+    (ensures
+      struct_view_to_view_prop view_t field_view
+        (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) /\ 
+      struct_view_to_view view_t field_view
+        (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) == x)
+= let aux k
+  : Lemma (
+      (field_view k).to_view_prop (op (p k) ((field_view k).to_carrier (x k)) (frame k)) /\
+      (field_view k).to_view (op (p k) ((field_view k).to_carrier (x k)) (frame k)) == x k)
+  = assert (composable (p k) ((field_view k).to_carrier (x k)) (frame k));
+    (field_view k).to_view_frame (x k) (frame k)
+  in forall_intro aux;
+  assert (
+    struct_view_to_view view_t field_view
+       (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) `feq` x)
+
+let struct_view
+  (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
+  (view_t:(a -> Type))
+  (field_view:(k:a -> sel_view (p k) (view_t k)))
+: Pure (sel_view (prod_pcm p) (restricted_t a view_t))
+    (requires exists (_:a). True)
+    (ensures fun _ -> True)
+= {
+  to_view_prop = struct_view_to_view_prop view_t field_view;
+  to_view = struct_view_to_view view_t field_view;
+  to_carrier = struct_view_to_carrier view_t field_view;
+  to_carrier_not_one = struct_view_to_carrier_not_one view_t field_view;
+  to_view_frame = struct_view_to_view_frame view_t field_view;
+}
