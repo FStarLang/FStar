@@ -103,6 +103,15 @@ let mk_node'
 
 let mk_node value next = Ghost.hide (Mknode (mk_node' (Ghost.reveal value) (Ghost.reveal next)))
 
+let mk_node_tot value next = Mknode (on_domain node_field (mk_node'_f value next))
+
+let mk_node_tot_mk_node value next = ()
+
+open Steel.C.PCM
+module P = FStar.PCM
+
+let mk_node_refine value next = ()
+
 let _value
 : node_pcm `connection` opt_pcm #int
 = unroll_conn `connection_compose` struct_field node_fields_pcm Value
