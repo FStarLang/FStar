@@ -41,7 +41,6 @@ val tc                     : env -> term -> tac<typ>
 val tcc                    : env -> term -> tac<comp>
 val unshelve               : term -> tac<unit>
 val unquote                : typ -> term -> tac<term>
-val trivial                : unit -> tac<unit>
 val norm                   : list<EMB.norm_step> -> tac<unit>
 val norm_term_env          : env -> list<EMB.norm_step> -> term -> tac<term>
 val norm_binder_type       : list<EMB.norm_step> -> binder -> tac<unit>

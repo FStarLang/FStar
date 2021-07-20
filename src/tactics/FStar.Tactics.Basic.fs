@@ -446,13 +446,6 @@ let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
 let tc (e : env) (t : term) : tac<typ> = wrap_err "tc" <|
     bind (tcc e t) (fun c -> ret (U.comp_result c))
 
-let trivial () : tac<unit> =
-    bind cur_goal (fun goal ->
-    if istrivial (goal_env goal) (goal_type goal)
-    then solve' goal U.exp_unit
-    else fail1 "Not a trivial goal: %s" (tts (goal_env goal) (goal_type goal))
-    )
-
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
     bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->

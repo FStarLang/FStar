@@ -246,10 +246,6 @@ let () =
         set_smt_goals (e_list E.e_goal) e_unit
         set_smt_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 
-      mk_tac_step_1 0 "trivial"
-        trivial e_unit e_unit
-        trivial NBET.e_unit NBET.e_unit;
-
       mk_tac_step_2 1 "catch"
         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
         (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
