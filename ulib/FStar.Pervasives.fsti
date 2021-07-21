@@ -257,6 +257,15 @@ val delta_attr (s: list string) : Tot norm_step
   *)
 val delta_qualifier (s: list string) : Tot norm_step
 
+(**
+    This step removes the some internal meta nodes during normalization
+
+    In most cases you shouldn't need to use this step explicitly
+
+   *)
+val unmeta : norm_step
+
+
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
 val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
