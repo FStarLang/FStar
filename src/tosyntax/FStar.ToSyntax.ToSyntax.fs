@@ -1461,7 +1461,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat in
         let tm, aq1 =
          match binder with
-         | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
+         | LetBinder(l, (t, tacopt)) ->
+           if tacopt |> is_some
+           then Errors.log_issue (tacopt |> must).pos (Errors.Warning_DefinitionNotTranslated,
+                  "Tactic annotation with a value type is not supported yet, \
+                    try annotating with a computation type; this tactic annotation will be ignored");
            let body, aq = desugar_term_aq env t2 in
            let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
            mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body), aq

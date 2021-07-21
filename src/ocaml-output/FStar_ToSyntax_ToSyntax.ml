@@ -3310,27 +3310,41 @@ and (desugar_term_maybe_top :
                    | (env1, binder, pat1) ->
                        let uu___3 =
                          match binder with
-                         | LetBinder (l, (t, _tacopt)) ->
-                             let uu___4 = desugar_term_aq env1 t2 in
-                             (match uu___4 with
-                              | (body1, aq) ->
-                                  let fv =
-                                    let uu___5 =
-                                      FStar_Syntax_Util.incr_delta_qualifier
-                                        t11 in
-                                    FStar_Syntax_Syntax.lid_as_fv l uu___5
-                                      FStar_Pervasives_Native.None in
-                                  let uu___5 =
-                                    FStar_All.pipe_left mk
-                                      (FStar_Syntax_Syntax.Tm_let
-                                         ((false,
-                                            [mk_lb
-                                               (attrs,
-                                                 (FStar_Pervasives.Inr fv),
-                                                 t, t11,
-                                                 (t11.FStar_Syntax_Syntax.pos))]),
-                                           body1)) in
-                                  (uu___5, aq))
+                         | LetBinder (l, (t, tacopt)) ->
+                             ((let uu___5 =
+                                 FStar_All.pipe_right tacopt
+                                   FStar_Util.is_some in
+                               if uu___5
+                               then
+                                 let uu___6 =
+                                   let uu___7 =
+                                     FStar_All.pipe_right tacopt
+                                       FStar_Util.must in
+                                   uu___7.FStar_Syntax_Syntax.pos in
+                                 FStar_Errors.log_issue uu___6
+                                   (FStar_Errors.Warning_DefinitionNotTranslated,
+                                     "Tactic annotation with a value type is not supported yet, try annotating with a computation type; this tactic annotation will be ignored")
+                               else ());
+                              (let uu___5 = desugar_term_aq env1 t2 in
+                               match uu___5 with
+                               | (body1, aq) ->
+                                   let fv =
+                                     let uu___6 =
+                                       FStar_Syntax_Util.incr_delta_qualifier
+                                         t11 in
+                                     FStar_Syntax_Syntax.lid_as_fv l uu___6
+                                       FStar_Pervasives_Native.None in
+                                   let uu___6 =
+                                     FStar_All.pipe_left mk
+                                       (FStar_Syntax_Syntax.Tm_let
+                                          ((false,
+                                             [mk_lb
+                                                (attrs,
+                                                  (FStar_Pervasives.Inr fv),
+                                                  t, t11,
+                                                  (t11.FStar_Syntax_Syntax.pos))]),
+                                            body1)) in
+                                   (uu___6, aq)))
                          | LocalBinder (x, uu___4, uu___5) ->
                              let uu___6 = desugar_term_aq env1 t2 in
                              (match uu___6 with
