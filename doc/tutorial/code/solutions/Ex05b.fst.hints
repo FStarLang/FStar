@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b1bc1990a193c54a23c403ba6930626f"
+      "89b50558cfc7c5e0638e1a0c9a2059d5"
     ],
     [
       "Ex05b.fib",
@@ -36,7 +36,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "aca1f88ae6ea55f3a883d34fa46546b6"
+      "8d479a711acb4a7843b54406849a3cd9"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -54,7 +54,7 @@
         "refinement_interpretation_Tm_refine_571d9f74016be5357787170b42ecf913"
       ],
       0,
-      "42a349a7e4421ab86d12c6559549f8ed"
+      "8614a27d83ce3063d870fcc6c3438e3d"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "940f3bd4b0af83b83d3c6a9a18abdc90"
+      "0971e4cf24f46154e1981030b600f5d3"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -106,7 +106,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "b7db725e39c928a84dff5b87a1e48563"
+      "2d43f5d39f433d8f8744b66196d61105"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4b7ab99eed31852dd6ef17a04c6dd90a"
+      "fba69cdc9a97a95870c19842da763ccf"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -139,7 +139,7 @@
         "typing_Ex05b.fibonacci"
       ],
       0,
-      "d1437b3a6a8a51a1fac999d3e13f27e9"
+      "03d61f557041f992cea67454657574e5"
     ],
     [
       "Ex05b.fib_inner_aux",
@@ -157,7 +157,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8552177108a3d356c99725fbb85a8e97"
+      "5a3a11419a6c460ce83197560eb09cda"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c3be935f2a20cd4c7a3288648a20c0a6"
+      "d2257a28ecc9f8baa07f836787da1c3a"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -198,7 +198,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "f4b96e6358f084ed7d4591806568a058"
+      "f3f2be6b2717f9cea2637a76a9fd805c"
     ]
   ]
 ]

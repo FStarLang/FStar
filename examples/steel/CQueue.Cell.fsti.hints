@@ -11,7 +11,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "ab76058358012ff648851057823ed64a"
+      "fa65577c8d647bbabf665bb6eea9aff3"
     ],
     [
       "CQueue.Cell.elim_ccell_is_lvalue",
@@ -23,7 +23,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "f68335568f9496b31f8688932850963b"
+      "01ec5770783a1a1af843a8204b7ad69e"
     ],
     [
       "CQueue.Cell.intro_ccell",
@@ -40,7 +40,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "367cb577f03f253e72c4c5d2385f926e"
+      "d79fbe4799377adb06e77bdd20375bfc"
     ],
     [
       "CQueue.Cell.elim_ccell_ghost",
@@ -57,10 +57,12 @@
         "refinement_interpretation_Tm_refine_f698373f0b61b27657568b8ffcbc6253",
         "typing_CQueue.Cell.ccell", "typing_CQueue.Cell.ccell_lvalue",
         "typing_CQueue.Cell.ccell_next", "typing_CQueue.Cell.ccell_ptrvalue",
-        "typing_FStar.Ghost.reveal", "typing_Steel.Reference.vptr_"
+        "typing_FStar.Ghost.reveal",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.Reference.vptr_"
       ],
       0,
-      "74c7e74840504ef5a03171ed18daad36"
+      "26680f6460a64cdbe7033c6c77eda0aa"
     ],
     [
       "CQueue.Cell.elim_ccell",
@@ -76,10 +78,12 @@
         "lemma_Steel.Effect.Common.can_be_split_star_r",
         "refinement_interpretation_Tm_refine_f698373f0b61b27657568b8ffcbc6253",
         "typing_CQueue.Cell.ccell", "typing_CQueue.Cell.ccell_next",
-        "typing_CQueue.Cell.ccell_ptrvalue", "typing_Steel.Reference.vptr_"
+        "typing_CQueue.Cell.ccell_ptrvalue",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.Reference.vptr_"
       ],
       0,
-      "6db05134870641f0a48482ef0a8027d9"
+      "0cc0fab012acd4a2f71d160b7c446fde"
     ],
     [
       "CQueue.Cell.ccell_not_null",
@@ -92,7 +96,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "9fa6f7d8b7edd3ca7d306249009273e4"
+      "e83828be41b68c52a35b5c61cf191120"
     ],
     [
       "CQueue.Cell.alloc_cell",
@@ -107,7 +111,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "8e76b79a23168420fa3dc23b7d3e8b0c"
+      "423f4031452ff141bcebb7597cffc22f"
     ]
   ]
 ]

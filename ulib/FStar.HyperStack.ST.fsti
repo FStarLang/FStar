@@ -474,12 +474,15 @@ unfold type stable_on (#a:Type0) (#rel:preorder a) (p:mem_predicate) (r:mreferen
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-[@@(deprecated "FStar.HyperStack.ST.stable_on")]
+(*
+ * The stable_on_t and mr_witness API is here for legacy reasons,
+ * the preferred API is stable_on and witness_p
+ *)
+
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
   = stable_on p r
 
-[@@(deprecated "FStar.HyperStack.ST.witness_p")]
 val mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))

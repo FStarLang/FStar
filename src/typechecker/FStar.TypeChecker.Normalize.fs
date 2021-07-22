@@ -756,6 +756,7 @@ let tr_norm_step = function
     | EMB.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
     | EMB.NBE -> [NBE]
+    | EMB.Unmeta -> [Unmeta]
 
 let tr_norm_steps s =
     let s = List.concatMap tr_norm_step s in
@@ -989,7 +990,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                yesno <|
                BU.for_some
                  (fun q ->
-                   BU.for_some 
+                   BU.for_some
                      (fun qual -> Print.qual_to_string qual = q)
                      quals)
                qs)
@@ -1574,6 +1575,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
+                      | Meta_desugared (Machine_integer (_,_)) ->
+                        (* meta doesn't block reduction,
+                           but we need to put the label back *)
+                        norm cfg env (Meta(env,m,t.pos)::stack) head
+
                       | _ ->
                           norm cfg env stack head //meta doesn't block reduction
                     end
@@ -1655,25 +1661,6 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     (* the Meta_monadic marker and reconstruct the computation after      *)
     (* normalization.                                                     *)
     let t = norm cfg env [] t in
-    let cfg, stack =
-      if cfg.steps.pure_subterms_within_computations
-      then
-        let new_steps = [PureSubtermsWithinComputations;
-                         Primops;
-                         AllowUnboundUniverses;
-                         EraseUniverses;
-      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints
-                         Exclude Zeta;
-                         Inlining]
-        in
-        let cfg' = { cfg with
-                       steps = List.fold_right fstep_add_one new_steps cfg.steps;
-                       delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
-                   }
-        in
-        cfg', (Cfg (cfg, None))::stack
-      else cfg, stack
-    in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with
                    | Inl m -> Meta_monadic (m, t)
@@ -2537,7 +2524,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         in
         //AR: no non-extraction reification for layered effects
         let is_layered_effect m = m |> Env.norm_eff_name cfg.tcenv |> Env.is_layered_effect cfg.tcenv in
-        
+
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
           when m |> is_layered_effect && not cfg.steps.for_extraction ->
@@ -2856,7 +2843,7 @@ let normalize_comp s e c =
     c)
   (Some (Ident.string_of_lid (Env.current_module e)))
   "FStar.TypeChecker.Normalize.normalize_comp"
-    
+
 
 let normalize_universe env u = norm_universe (config [] env) [] u
 
@@ -2944,7 +2931,7 @@ let ghost_to_pure2 env (c1, c2) =
   if Ident.lid_equals c1_eff c2_eff then c1, c2
   else let c1_erasable = Env.is_erasable_effect env c1_eff in
        let c2_erasable = Env.is_erasable_effect env c2_eff in
-  
+
        if c1_erasable && Ident.lid_equals c2_eff PC.effect_GHOST_lid
        then c1, ghost_to_pure env c2
        else if c2_erasable && Ident.lid_equals c1_eff PC.effect_GHOST_lid
@@ -2960,7 +2947,7 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
   if Ident.lid_equals lc1_eff lc2_eff then lc1, lc2
   else let lc1_erasable = Env.is_erasable_effect env lc1_eff in
        let lc2_erasable = Env.is_erasable_effect env lc2_eff in
-  
+
        if lc1_erasable && Ident.lid_equals lc2_eff PC.effect_GHOST_lid
        then lc1, ghost_to_pure_lcomp env lc2
        else if lc2_erasable && Ident.lid_equals lc1_eff PC.effect_GHOST_lid

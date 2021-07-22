@@ -246,6 +246,7 @@ let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
 let (steps_unfoldqual : FStar_Ident.lident) = psconst "delta_qualifier"
 let (steps_nbe : FStar_Ident.lident) = psconst "nbe"
+let (steps_unmeta : FStar_Ident.lident) = psconst "unmeta"
 let (deprecated_attr : FStar_Ident.lident) = pconst "deprecated"
 let (warn_on_use_attr : FStar_Ident.lident) = pconst "warn_on_use"
 let (inline_let_attr : FStar_Ident.lident) =

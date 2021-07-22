@@ -582,6 +582,7 @@ type norm_step =
     | UnfoldAttr  of list<string>
     | UnfoldQual  of list<string>
     | NBE
+    | Unmeta
 
 (* the steps as terms *)
 let steps_Simpl         = tconst PC.steps_simpl
@@ -598,6 +599,7 @@ let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
 let steps_NBE           = tconst PC.steps_nbe
+let steps_Unmeta        = tconst PC.steps_unmeta
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -630,6 +632,8 @@ let e_norm_step =
                     steps_Iota
                 | NBE ->
                     steps_NBE
+                | Unmeta ->
+                    steps_Unmeta
                 | Reify ->
                     steps_Reify
                 | UnfoldOnly l ->
@@ -675,6 +679,8 @@ let e_norm_step =
                     Some Iota
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
                     Some NBE
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_unmeta ->
+                    Some Unmeta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
                     Some Reify
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->

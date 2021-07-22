@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "0.9.8.0~dev"
+version: "2021.07.22~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
