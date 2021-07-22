@@ -1,5 +1,5 @@
 [
-  "$zçkèE\u0000-²ÒH\u0002ÝJÃ)",
+  "¬…#¾UH-¨í‡{°YÂÌG",
   [
     [
       "TwoLockQueue.ghost_gather",
@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "a1d4f0dd90b4ef5947ef95f0b07aae79"
+      "b410084f4bc56af07698f7aaa9ae78ab"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "1ade06d097e577e8bbd2a2386186fb0c"
+      "26c42223c1583b79c2d267bde45f5c26"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,7 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "24a1238d84d9628ad0724e174d20b472"
+      "0badf834fdf879a219b9f0f924588227"
     ],
     [
       "TwoLockQueue.open_exists",
@@ -70,7 +70,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "866ffd1a8db4a6e396c4864dac7e7d8d"
+      "ca1502b2451213fe8befde04e52edaa2"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,7 +84,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "8c55b4a0f67f78e133bac4e9130fde44"
+      "96a948b4d5a17092ef24627fb07438d9"
     ],
     [
       "TwoLockQueue.__proj__Mkq_ptr__item__lock",
@@ -98,7 +98,7 @@
         "projection_inverse_TwoLockQueue.Mkq_ptr_ptr"
       ],
       0,
-      "1a86f8bcc1295a897e0ce8e95ebd926a"
+      "963cbbe50ccc62b83771d6ac2de22ca5"
     ],
     [
       "TwoLockQueue.pack_queue_invariant",
@@ -107,7 +107,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b670a5bef4d07b77906e0c93e525558d"
+      "16296b87721c57296ca0e8ab321e59b7"
     ],
     [
       "TwoLockQueue.__proj__Mkt__item__inv",
@@ -121,7 +121,7 @@
         "projection_inverse_TwoLockQueue.Mkt_tail"
       ],
       0,
-      "206aca157175135c3d3cc8f195464cb4"
+      "d052780cce884147a5156cf6d803fdd7"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -130,7 +130,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "49a8319d14152663afba075b0c94a6dc"
+      "e371e15c7bf2cb3fe9cd1fb67d9b8808"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -183,7 +183,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "4286cf3ee24e6b5f3c5e8ca5eb5eabcf"
+      "9e7fcebb96e7e5d00df5e22f28752129"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -194,7 +194,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "90bf39c0f7eccd5770ac674e8771c1f2"
+      "746b5bff36bdd78415a195defe0ed6dc"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -211,7 +211,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "c9ac480e571845a5b8bb64bf7d312a0f"
+      "2182054399c38ee6e03f82680bb0aaa8"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -227,7 +227,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "02333f6214598861cec394c576247ea3"
+      "1996ae48a0cf607b01d68a9a812dce61"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -244,7 +244,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "8398ac8459da7de53945563ac1a00159"
+      "3bc0b6a14b67761921c1277a55f1d234"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -260,7 +260,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "72e84426cbd95eb579f3b9afb33e07f8"
+      "d4c9906dc917036e897cd38857db4aec"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -288,16 +288,15 @@
         "equation_Steel.Effect.Common.selector",
         "equation_Steel.Effect.Common.selector_",
         "equation_Steel.Effect.Common.to_vprop_",
-        "equation_Steel.Effect.Common.true_p",
         "equation_Steel.FractionalPermission.full_perm",
         "equation_Steel.FractionalPermission.half_perm",
         "equation_Steel.FractionalPermission.sum_perm",
+        "equation_Steel.Reference.ghost_pts_to",
         "equation_TwoLockQueue.full", "equation_TwoLockQueue.half",
         "equation_TwoLockQueue.maybe_ghost_pts_to",
         "equation_TwoLockQueue.uu___0",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
         "fuel_guarded_inversion_TwoLockQueue.t",
         "function_token_typing_FStar.Pervasives.pattern",
         "function_token_typing_TwoLockQueue.uu___0",
@@ -325,16 +324,16 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_FStar.Real.one",
         "typing_Queue.Def.t", "typing_Queue.dequeue_post",
         "typing_Queue.queue", "typing_Steel.Effect.Common.hp_of",
-        "typing_Steel.Effect.Common.to_vprop_",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.FractionalPermission.half_perm",
         "typing_Steel.Reference.ghost_pts_to_sl",
         "typing_Tm_abs_de48f415fe453a70dde1de63e42d3aa3",
         "typing_TwoLockQueue.__proj__Mkq_ptr__item__ghost",
         "typing_TwoLockQueue.__proj__Mkt__item__head",
-        "typing_TwoLockQueue.full", "typing_TwoLockQueue.half",
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "ef19939bb919ae8ff884bfb08b66378e"
+      "3ad616ef96b99a20487cc2a3cb3e3b7c"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -361,9 +360,12 @@
         "equation_Steel.Effect.Atomic.mem_inv",
         "equation_Steel.Effect.Common.star",
         "equation_Steel.Effect.Common.to_vprop_",
-        "equation_Steel.Effect.Common.true_p",
         "equation_Steel.FractionalPermission.full_perm",
-        "equation_Steel.Memory.inames", "equation_TwoLockQueue.lock_inv",
+        "equation_Steel.FractionalPermission.half_perm",
+        "equation_Steel.Memory.inames",
+        "equation_Steel.Reference.ghost_pts_to",
+        "equation_TwoLockQueue.full", "equation_TwoLockQueue.half",
+        "equation_TwoLockQueue.lock_inv",
         "equation_TwoLockQueue.maybe_ghost_pts_to",
         "equation_TwoLockQueue.queue_invariant",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
@@ -400,18 +402,19 @@
         "typing_Queue.Def.t", "typing_Steel.Effect.Atomic.mem_inv",
         "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.FractionalPermission.half_perm",
         "typing_Steel.Memory.h_exists", "typing_Steel.Memory.iname",
-        "typing_Steel.Reference.ghost_pts_to_sl",
+        "typing_Steel.Reference.ghost_pts_to",
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83",
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31",
         "typing_TwoLockQueue.__proj__Mkq_ptr__item__ghost",
         "typing_TwoLockQueue.__proj__Mkt__item__head",
         "typing_TwoLockQueue.__proj__Mkt__item__inv",
         "typing_TwoLockQueue.__proj__Mkt__item__tail",
-        "typing_TwoLockQueue.half", "typing_TwoLockQueue.queue_invariant"
+        "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "eae1fd1799f061d2b83506ca22963619"
+      "0093b2755aad9c2c3bd57b134f7442d2"
     ]
   ]
 ]

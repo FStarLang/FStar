@@ -69,7 +69,7 @@ val frame00 (#a:Type)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
     (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)) /\
-      frame_equalities frame (focus_rmem h0 frame) (focus_rmem h1 frame))
+      frame_opaque frame (focus_rmem h0 frame) (focus_rmem h1 frame))
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
@@ -114,12 +114,86 @@ let frame00 #a #framed #opened #obs #pre #post #req #ens f frame =
 
       focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
 
-      lemma_frame_equalities_refl frame (focus_rmem h0 frame);
+      lemma_frame_opaque_refl frame (focus_rmem h0 frame);
 
       x
 
+unfold
+let bind_req_opaque (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t)
+  (#pr:a -> prop)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_f:vprop) (frame_g:a -> vprop)
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+: req_t (pre_f `star` frame_f)
+= fun m0 ->
+  req_f (focus_rmem m0 pre_f) /\
+  (forall (x:a) (h1:hmem (post_f x `star` frame_f)).
+    (ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+      frame_opaque frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f))
+    ==> pr x /\
+      (can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+      (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x))))
+
+unfold
+let bind_ens_opaque (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#pr:a -> prop)
+  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (frame_f:vprop) (frame_g:a -> vprop)
+  (post:post_t b)
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+: ens_t (pre_f `star` frame_f) b post
+= fun m0 y m2 ->
+  req_f (focus_rmem m0 pre_f) /\
+  (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
+    pr x /\
+    (
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+    frame_opaque frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
+    frame_opaque (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
+    ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+    (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y))))
+
+val bind_opaque (a:Type) (b:Type)
+  (opened_invariants:inames)
+  (o1:eqtype_as_type observability)
+  (o2:eqtype_as_type observability)
+  (#framed_f:eqtype_as_type bool)
+  (#framed_g:eqtype_as_type bool)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#frame_f:vprop) (#frame_g:a -> vprop)
+  (#post:post_t b)
+  (# _ : squash (maybe_emp framed_f frame_f))
+  (# _ : squash (maybe_emp_dep framed_g frame_g))
+  (#pr:a -> prop)
+  (#p1:squash (can_be_split_forall_dep pr
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (#p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:repr a framed_f opened_invariants o1 pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b framed_g opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Pure (repr b true opened_invariants (join_obs o1 o2)
+    (pre_f `star` frame_f)
+    post
+    (bind_req_opaque req_f ens_f req_g frame_f frame_g p1)
+    (bind_ens_opaque req_f ens_f ens_g frame_f frame_g post p1 p2)
+    )
+    (requires obs_at_most_one o1 o2)
+    (ensures fun _ -> True)
+
 #push-options "--z3rlimit 20"
-let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g =
+let bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in
 
@@ -196,24 +270,38 @@ let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_
 
     y
 
-let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
+let norm_repr (#a:Type) (#framed:bool) (#opened:inames) (#obs:observability)
+ (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+ (f:repr a framed opened obs pre post req ens)
+ : repr a framed opened obs pre post (fun h -> norm_opaque (req h)) (fun h0 x h1 -> norm_opaque (ens h0 x h1))
+ = f
+
+let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g
+  = norm_repr (bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g)
+
+let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
-    focus_is_restrict_mk_rmem pre_g pre_f (core_mem m0);
 
-    can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant opened m0) m0;
+    can_be_split_3_interp (hp_of pre_g) (hp_of (pre_f `star` fr)) frame (locks_invariant opened m0) m0;
 
     lemma_unfold_subcomp_pre req_f ens_f req_g ens_g p1 p2;
 
-    let x = f frame in
+    can_be_split_trans pre_g (pre_f `star` fr) pre_f;
+
+    focus_replace pre_g (pre_f `star` fr) pre_f (core_mem m0);
+
+    let x = frame00 f fr frame in
 
     let m1:full_mem = NMSTTotal.get () in
     let h1 = mk_rmem (post_g x) (core_mem m1) in
 
-    focus_is_restrict_mk_rmem (post_g x) (post_f x) (core_mem m1);
+    can_be_split_trans (post_g x) (post_f x `star` fr) (post_f x);
 
-    can_be_split_3_interp (hp_of (post_f x)) (hp_of (post_g x)) frame (locks_invariant opened m1) m1;
+    can_be_split_3_interp (hp_of (post_f x `star` fr)) (hp_of (post_g x)) frame (locks_invariant opened m1) m1;
+
+    focus_replace (post_g x) (post_f x `star` fr) (post_f x) (core_mem m1);
 
     x
 
