@@ -102,15 +102,6 @@ let rec pts_to_llist (p:ptr node node) ([@@@smt_fallback] l:Ghost.erased cells)
   pts_to_or_null p node_pcm (hd_node l) `star`
   pts_to_llist_tl l pts_to_llist
 
-// TODO: should be something like:
-// pts_to_or_null p node_pcm (match l with [] -> one _ | (value, next) :: tl -> mk_node ...) `star`
-// vpure (p == null <==> l == []) `star`
-// begin match Ghost.reveal l with
-// | [] -> emp
-// | (value, next) :: tl -> next `pts_to_llist` ...
-// end
-// TODO pts_to_or_null take option
-
 let unfold_pts_to_llist (#opened:inames) (p:ptr node node) (l:Ghost.erased cells)
 : SteelGhost unit opened
     (p `pts_to_llist` l)
