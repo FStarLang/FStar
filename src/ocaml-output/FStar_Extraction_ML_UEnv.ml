@@ -587,7 +587,9 @@ let (new_mlpath_of_lident :
   fun g ->
     fun x ->
       let uu___ =
-        let uu___1 = FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid in
+        let uu___1 =
+          let uu___2 = FStar_Parser_Const.failwith_lid () in
+          FStar_Ident.lid_equals x uu___2 in
         if uu___1
         then
           let uu___2 =
@@ -1135,7 +1137,8 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
     let uu___ =
       let uu___1 =
         let uu___2 =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
+          let uu___3 = FStar_Parser_Const.failwith_lid () in
+          FStar_Syntax_Syntax.lid_as_fv uu___3
             FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
         FStar_Pervasives.Inr uu___2 in
       extend_lb env uu___1 FStar_Syntax_Syntax.tun failwith_ty false in

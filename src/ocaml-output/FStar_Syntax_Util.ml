@@ -333,7 +333,8 @@ let (ml_comp :
     fun r ->
       let uu___ =
         let uu___1 =
-          FStar_Ident.set_lid_range FStar_Parser_Const.effect_ML_lid r in
+          let uu___2 = FStar_Parser_Const.effect_ML_lid () in
+          FStar_Ident.set_lid_range uu___2 r in
         {
           FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_zero];
           FStar_Syntax_Syntax.effect_name = uu___1;
@@ -642,9 +643,8 @@ let (is_ml_comp :
   fun c ->
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Comp c1 ->
-        (FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
-           FStar_Parser_Const.effect_ML_lid)
-          ||
+        (let uu___ = FStar_Parser_Const.effect_ML_lid () in
+         FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name uu___) ||
           (FStar_Compiler_Effect.op_Bar_Greater c1.FStar_Syntax_Syntax.flags
              (FStar_Compiler_Util.for_some
                 (fun uu___ ->

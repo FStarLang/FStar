@@ -994,7 +994,8 @@ let (unit_const : FStar_Compiler_Range.range -> term) =
   fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
 let (ml_comp : term -> term) =
   fun t ->
-    let ml = mk_term (Name FStar_Parser_Const.effect_ML_lid) t.range Expr in
+    let lid = FStar_Parser_Const.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let (tot_comp : term -> term) =
   fun t ->

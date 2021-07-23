@@ -770,11 +770,12 @@ let (mk_lb :
   fun uu___ ->
     match uu___ with
     | (attrs, n, t, e, pos) ->
+        let uu___1 = FStar_Parser_Const.effect_ALL_lid () in
         {
           FStar_Syntax_Syntax.lbname = n;
           FStar_Syntax_Syntax.lbunivs = [];
           FStar_Syntax_Syntax.lbtyp = t;
-          FStar_Syntax_Syntax.lbeff = FStar_Parser_Const.effect_ALL_lid;
+          FStar_Syntax_Syntax.lbeff = uu___1;
           FStar_Syntax_Syntax.lbdef = e;
           FStar_Syntax_Syntax.lbattrs = attrs;
           FStar_Syntax_Syntax.lbpos = pos
@@ -3211,9 +3212,11 @@ and (desugar_term_maybe_top :
                                   (let uu___7 =
                                      ((FStar_Options.ml_ish ()) &&
                                         (let uu___8 =
+                                           let uu___9 =
+                                             FStar_Parser_Const.effect_ML_lid
+                                               () in
                                            FStar_Syntax_DsEnv.try_lookup_effect_name
-                                             env1
-                                             FStar_Parser_Const.effect_ML_lid in
+                                             env1 uu___9 in
                                          FStar_Compiler_Option.isSome uu___8))
                                        &&
                                        ((Prims.op_Negation is_rec) ||
@@ -3260,10 +3263,12 @@ and (desugar_term_maybe_top :
                                | FStar_Pervasives_Native.Some l ->
                                    FStar_Compiler_List.map
                                      (desugar_term env1) l in
-                             ((mk_lb
+                             let uu___6 =
+                               mk_lb
                                  (attrs, lbname1,
                                    (setpos FStar_Syntax_Syntax.tun), body2,
-                                   pos)), aq)) in
+                                   pos) in
+                             (uu___6, aq)) in
                   let uu___3 =
                     let uu___4 =
                       FStar_Compiler_List.map2
@@ -3374,15 +3379,22 @@ and (desugar_term_maybe_top :
                                      FStar_Syntax_Syntax.lid_as_fv l uu___6
                                        FStar_Pervasives_Native.None in
                                    let uu___6 =
+                                     let uu___7 =
+                                       let uu___8 =
+                                         let uu___9 =
+                                           let uu___10 =
+                                             let uu___11 =
+                                               mk_lb
+                                                 (attrs,
+                                                   (FStar_Pervasives.Inr fv),
+                                                   t, t11,
+                                                   (t11.FStar_Syntax_Syntax.pos)) in
+                                             [uu___11] in
+                                           (false, uu___10) in
+                                         (uu___9, body1) in
+                                       FStar_Syntax_Syntax.Tm_let uu___8 in
                                      FStar_Compiler_Effect.op_Less_Bar mk
-                                       (FStar_Syntax_Syntax.Tm_let
-                                          ((false,
-                                             [mk_lb
-                                                (attrs,
-                                                  (FStar_Pervasives.Inr fv),
-                                                  t, t11,
-                                                  (t11.FStar_Syntax_Syntax.pos))]),
-                                            body1)) in
+                                       uu___7 in
                                    (uu___6, aq)))
                          | LocalBinder (x, uu___4, uu___5) ->
                              let uu___6 = desugar_term_aq env1 t2 in
@@ -3420,18 +3432,22 @@ and (desugar_term_maybe_top :
                                         let uu___10 =
                                           let uu___11 =
                                             let uu___12 =
-                                              FStar_Syntax_Syntax.mk_binder x in
+                                              mk_lb
+                                                (attrs,
+                                                  (FStar_Pervasives.Inl x),
+                                                  (x.FStar_Syntax_Syntax.sort),
+                                                  t11,
+                                                  (t11.FStar_Syntax_Syntax.pos)) in
                                             [uu___12] in
-                                          FStar_Syntax_Subst.close uu___11
+                                          (false, uu___11) in
+                                        let uu___11 =
+                                          let uu___12 =
+                                            let uu___13 =
+                                              FStar_Syntax_Syntax.mk_binder x in
+                                            [uu___13] in
+                                          FStar_Syntax_Subst.close uu___12
                                             body2 in
-                                        ((false,
-                                           [mk_lb
-                                              (attrs,
-                                                (FStar_Pervasives.Inl x),
-                                                (x.FStar_Syntax_Syntax.sort),
-                                                t11,
-                                                (t11.FStar_Syntax_Syntax.pos))]),
-                                          uu___10) in
+                                        (uu___10, uu___11) in
                                       FStar_Syntax_Syntax.Tm_let uu___9 in
                                     FStar_Compiler_Effect.op_Less_Bar mk
                                       uu___8 in
@@ -4375,7 +4391,7 @@ and (desugar_comp :
                      let default_effect =
                        let uu___2 = FStar_Options.ml_ish () in
                        if uu___2
-                       then FStar_Parser_Const.effect_ML_lid
+                       then FStar_Parser_Const.effect_ML_lid ()
                        else
                          ((let uu___5 = FStar_Options.warn_default_effects () in
                            if uu___5
@@ -4536,8 +4552,11 @@ and (desugar_comp :
                                          then [FStar_Syntax_Syntax.TOTAL]
                                          else
                                            (let uu___13 =
+                                              let uu___14 =
+                                                FStar_Parser_Const.effect_ML_lid
+                                                  () in
                                               FStar_Ident.lid_equals eff
-                                                FStar_Parser_Const.effect_ML_lid in
+                                                uu___14 in
                                             if uu___13
                                             then
                                               [FStar_Syntax_Syntax.MLEFFECT]

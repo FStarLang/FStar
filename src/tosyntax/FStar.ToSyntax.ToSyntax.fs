@@ -411,7 +411,7 @@ let binder_of_bnd = function
 let mk_lb (attrs, n, t, e, pos) = {
     lbname=n;
     lbunivs=[];
-    lbeff=C.effect_ALL_lid;
+    lbeff=C.effect_ALL_lid ();
     lbtyp=t;
     lbdef=e;
     lbattrs=attrs;
@@ -1410,7 +1410,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                                              replace this pattern with a variable") p.prange in
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
-                    && Option.isSome (Env.try_lookup_effect_name env C.effect_ML_lid) //ML is in scope (not still in prims, e.g)
+                    && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
                     && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
@@ -1879,7 +1879,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       | _ when allow_type_promotion ->
         let default_effect =
           if Options.ml_ish ()
-          then Const.effect_ML_lid
+          then Const.effect_ML_lid()
           else (if Options.warn_default_effects()
                 then FStar.Errors.log_issue head.range (Errors.Warning_UseDefaultEffect, "Using default effect Tot");
                 Const.effect_Tot_lid) in
@@ -1937,7 +1937,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       let flags =
         if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
         else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-        else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+        else if lid_equals eff (C.effect_ML_lid()) then [MLEFFECT]
         else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
         else []
       in

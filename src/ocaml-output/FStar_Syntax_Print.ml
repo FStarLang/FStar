@@ -1074,9 +1074,9 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                             (let uu___8 = FStar_Options.print_implicits () in
                              Prims.op_Negation uu___8))
                            &&
-                           (FStar_Ident.lid_equals
-                              c1.FStar_Syntax_Syntax.effect_name
-                              FStar_Parser_Const.effect_ML_lid) in
+                           (let uu___8 = FStar_Parser_Const.effect_ML_lid () in
+                            FStar_Ident.lid_equals
+                              c1.FStar_Syntax_Syntax.effect_name uu___8) in
                        if uu___7
                        then term_to_string c1.FStar_Syntax_Syntax.result_typ
                        else

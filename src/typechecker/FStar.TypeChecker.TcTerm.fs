@@ -199,7 +199,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
         if (Options.ml_ish()
-            && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
+            && Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))

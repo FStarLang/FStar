@@ -10,7 +10,8 @@ let (fail_exp :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            FStar_Syntax_Syntax.fvar FStar_Parser_Const.failwith_lid
+            let uu___3 = FStar_Parser_Const.failwith_lid () in
+            FStar_Syntax_Syntax.fvar uu___3
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
           let uu___3 =
             let uu___4 = FStar_Syntax_Syntax.iarg t in
@@ -63,11 +64,12 @@ let (always_fail :
             FStar_Syntax_Syntax.lid_as_fv lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
           FStar_Pervasives.Inr uu___1 in
+        let uu___1 = FStar_Parser_Const.effect_ML_lid () in
         {
           FStar_Syntax_Syntax.lbname = uu___;
           FStar_Syntax_Syntax.lbunivs = [];
           FStar_Syntax_Syntax.lbtyp = t;
-          FStar_Syntax_Syntax.lbeff = FStar_Parser_Const.effect_ML_lid;
+          FStar_Syntax_Syntax.lbeff = uu___1;
           FStar_Syntax_Syntax.lbdef = imp;
           FStar_Syntax_Syntax.lbattrs = [];
           FStar_Syntax_Syntax.lbpos = (imp.FStar_Syntax_Syntax.pos)

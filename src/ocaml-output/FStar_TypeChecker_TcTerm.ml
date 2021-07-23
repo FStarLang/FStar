@@ -486,8 +486,8 @@ let (check_expected_effect :
               | FStar_Pervasives_Native.None ->
                   let uu___2 =
                     ((FStar_Options.ml_ish ()) &&
-                       (FStar_Ident.lid_equals
-                          FStar_Parser_Const.effect_ALL_lid
+                       (let uu___3 = FStar_Parser_Const.effect_ALL_lid () in
+                        FStar_Ident.lid_equals uu___3
                           (FStar_Syntax_Util.comp_effect_name c)))
                       ||
                       (((FStar_Options.ml_ish ()) &&

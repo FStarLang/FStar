@@ -210,7 +210,7 @@ let rec is_type_aux env t =
     | Tm_arrow _ ->
       true
 
-    | Tm_fvar fv when S.fv_eq_lid fv PC.failwith_lid ->
+    | Tm_fvar fv when S.fv_eq_lid fv (PC.failwith_lid()) ->
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
@@ -1228,7 +1228,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -1782,7 +1782,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

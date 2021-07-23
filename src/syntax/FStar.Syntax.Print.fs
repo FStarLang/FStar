@@ -532,7 +532,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name C.effect_ML_lid
+                  && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)

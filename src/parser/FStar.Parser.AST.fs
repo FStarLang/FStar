@@ -289,7 +289,8 @@ let mkConsList r elts =
 let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
-    let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
+    let lid = C.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 

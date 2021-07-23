@@ -257,8 +257,8 @@ let rec (is_type_aux :
       | FStar_Syntax_Syntax.Tm_refine uu___ -> true
       | FStar_Syntax_Syntax.Tm_arrow uu___ -> true
       | FStar_Syntax_Syntax.Tm_fvar fv when
-          FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.failwith_lid ->
-          false
+          let uu___ = FStar_Parser_Const.failwith_lid () in
+          FStar_Syntax_Syntax.fv_eq_lid fv uu___ -> false
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           FStar_Extraction_ML_UEnv.is_type_name env fv
       | FStar_Syntax_Syntax.Tm_uvar
@@ -2528,7 +2528,8 @@ and (term_as_mlexpr' :
            ->
            let uu___2 =
              let uu___3 =
-               FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
+               let uu___4 = FStar_Parser_Const.failwith_lid () in
+               FStar_Syntax_Syntax.lid_as_fv uu___4
                  FStar_Syntax_Syntax.delta_constant
                  FStar_Pervasives_Native.None in
              FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
@@ -3892,8 +3893,9 @@ and (term_as_mlexpr' :
                              | [] ->
                                  let uu___6 =
                                    let uu___7 =
-                                     FStar_Syntax_Syntax.lid_as_fv
-                                       FStar_Parser_Const.failwith_lid
+                                     let uu___8 =
+                                       FStar_Parser_Const.failwith_lid () in
+                                     FStar_Syntax_Syntax.lid_as_fv uu___8
                                        FStar_Syntax_Syntax.delta_constant
                                        FStar_Pervasives_Native.None in
                                    FStar_Extraction_ML_UEnv.lookup_fv

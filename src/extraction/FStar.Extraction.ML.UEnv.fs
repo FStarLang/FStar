@@ -433,7 +433,7 @@ let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
 *)
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
   let mlp, g =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    if Ident.lid_equals x (FStar.Parser.Const.failwith_lid())
     then ([], string_of_id (ident_of_lid x)), g
     else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
@@ -666,6 +666,6 @@ let new_uenv (e:TypeChecker.Env.env)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false
+        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) delta_constant None)) tun failwith_ty false
     in
     g

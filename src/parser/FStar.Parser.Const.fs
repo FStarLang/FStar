@@ -248,11 +248,37 @@ let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
 (* The "All" monad and its associated symbols *)
-let all_lid          = p2l ["FStar"; "Compiler"; "Effect"]
-let effect_ALL_lid   = p2l ["FStar"; "Compiler"; "Effect"; "ALL"]
-let effect_ML_lid    = p2l ["FStar"; "Compiler"; "Effect"; "ML"]
-let failwith_lid     = p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
-let try_with_lid     = p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
+let compiler_effect_lid          = p2l ["FStar"; "Compiler"; "Effect"]
+let compiler_effect_ALL_lid      = p2l ["FStar"; "Compiler"; "Effect"; "ALL"]
+let compiler_effect_ML_lid       = p2l ["FStar"; "Compiler"; "Effect"; "ML"]
+let compiler_effect_failwith_lid = p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
+let compiler_effect_try_with_lid = p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
+
+let all_lid          = p2l ["FStar"; "All"]
+let all_ALL_lid      = p2l ["FStar"; "All"; "All"]
+let all_ML_lid       = p2l ["FStar"; "All"; "ML"]
+let all_failwith_lid = p2l ["FStar"; "All"; "failwith"]
+let all_try_with_lid = p2l ["FStar"; "All"; "try_with"]
+
+let effect_ALL_lid () =
+  if Options.ml_ish()
+  then compiler_effect_ALL_lid
+  else all_lid
+
+let effect_ML_lid () =
+  if Options.ml_ish()
+  then compiler_effect_ML_lid
+  else all_ML_lid
+
+let failwith_lid () =
+  if Options.ml_ish()
+  then compiler_effect_failwith_lid
+  else all_failwith_lid
+
+let try_with_lid () =
+  if Options.ml_ish()
+  then compiler_effect_try_with_lid
+  else all_try_with_lid
 
 let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"

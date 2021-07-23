@@ -209,7 +209,7 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
 let ml_comp t r =
   mk_Comp ({comp_univs=[U_zero];
-            effect_name=set_lid_range PC.effect_ML_lid r;
+            effect_name=set_lid_range (PC.effect_ML_lid()) r;
             result_typ=t;
             effect_args=[];
             flags=[MLEFFECT]})
@@ -370,7 +370,7 @@ let un_uinst t =
         | _ -> t
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name PC.effect_ML_lid
+  | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
               || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false
