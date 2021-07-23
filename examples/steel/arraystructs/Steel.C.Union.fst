@@ -491,64 +491,17 @@ let union_view_to_view
   (#view_t:a -> Type) (case_view:(k:a -> sel_view (p k) (view_t k) false))
   (case_of:(u:union p -> k:a{case_refinement_f p k u}))
 : refine (union p) (union_view_to_view_prop case_view) -> dtuple2 a view_t
-= fun u ->
-  let k = case_of u in
-  (|k, (case_view k).to_view (u k)|)
+= fun u -> let k = case_of u in (|k, (case_view k).to_view (u k)|)
 
 let union_view_to_carrier
   (#a:eqtype) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
   (#view_t:a -> Type) (case_view:(k:a -> sel_view (p k) (view_t k) false))
 : dtuple2 a view_t -> refine (union p) (union_view_to_view_prop case_view)
-= fun (|k, x|) ->
-  let u: union p = field_to_union_f p k ((case_view k).to_carrier x) in
-  assert (case_refinement_f p k u);
-  assert (u k == (case_view k).to_carrier x);
-  assert ((case_view k).to_view_prop ((case_view k).to_carrier x));
-  assert ((case_view k).to_view_prop (u k));
-  // If (to_carrier x =!= one (p k)), then k is the unique k s.t. case_refinement p k u
-  // and we are done.
-  // If (to_carrier x == one (p k)), then must show that
-  //   forall k. to_view_prop (u k)
-  u
-
-let union_view_to_carrier_not_one
-  (#a:eqtype) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (#view_t:a -> Type) (case_view:(k:a -> sel_view (p k) (view_t k) false))
-  //{
-  //  ~ (s.to_view_prop (one (p k)))
-  //  // TODO Can we add this to the definition of a view?
-  //}))
-: u:dtuple2 a view_t -> Lemma (union_view_to_carrier case_view u =!= one (union_pcm p))
-= fun _ -> ()
-
-let union_view_to_view_frame
-  (#a:eqtype) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (#view_t:a -> Type) (case_view:(k:a -> sel_view (p k) (view_t k) false))
-  //{
-  //  ~ (s.to_view_prop (one (p k)))
-  //  // TODO Can we add this to the definition of a view?
-  //}))
-  (case_of:(u:union p -> k:a{case_refinement_f p k u}))
-: (v: dtuple2 a view_t) ->
-  (u: union p) ->
-  Lemma
-    (requires composable (union_pcm p) (union_view_to_carrier case_view v) u)
-    (ensures 
-      union_view_to_view_prop case_view (op (union_pcm p) (union_view_to_carrier case_view v) u) /\
-      union_view_to_view case_view case_of
-        (op (union_pcm p) (union_view_to_carrier case_view v) u) == v)
-= fun (|k, x|) u ->
-  assert (composable (p k) ((case_view k).to_carrier x) (u k));
-  (case_view k).to_view_frame x (u k);
-  ()
+= fun (|k, x|) -> field_to_union_f p k ((case_view k).to_carrier x)
 
 let union_view
   (#a:eqtype) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
   (#view_t:a -> Type) (case_view:(k:a -> sel_view (p k) (view_t k) false))
-  //{
-  //  ~ (s.to_view_prop (one (p k)))
-  //  // TODO Can we add this to the definition of a view?
-  //}))
   (case_of:(u:union p -> k:a{case_refinement_f p k u}))
 : Tot (sel_view (union_pcm p) (dtuple2 a view_t) false)
 = {
@@ -556,5 +509,5 @@ let union_view
   to_view = union_view_to_view case_view case_of;
   to_carrier = union_view_to_carrier case_view;
   to_carrier_not_one = ();
-  to_view_frame = union_view_to_view_frame case_view case_of;
+  to_view_frame = (fun (|k, x|) u -> (case_view k).to_view_frame x (u k));
 }
