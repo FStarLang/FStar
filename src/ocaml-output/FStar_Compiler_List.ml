@@ -28,7 +28,7 @@ let rec nth : 'a . 'a Prims.list -> Prims.int -> 'a =
           (match l with
            | [] -> failwith "not enough elements"
            | uu___2::tl1 -> nth tl1 (n - Prims.int_one))
-let rec count : 'a . 'a -> 'a Prims.list -> Prims.nat =
+let rec count : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list -> Prims.nat =
   fun x ->
     fun l ->
       match l with
@@ -53,7 +53,11 @@ let rec flatten : 'a . 'a Prims.list Prims.list -> 'a Prims.list =
 let concat : 'u6116 . 'u6116 Prims.list Prims.list -> 'u6116 Prims.list =
   fun x -> flatten x
 let rec iter : 'a . ('a -> unit) -> 'a Prims.list -> unit =
-  fun f -> fun x -> match x with | [] -> () | a1::tl1 -> (f a1; iter f tl1)
+  fun f ->
+    fun x ->
+      match x with
+      | [] -> ()
+      | a1::tl1 -> (f a1; (match () with | () -> iter f tl1))
 let rec iter2 :
   'a 'b . ('a -> 'b -> unit) -> 'a Prims.list -> 'b Prims.list -> unit =
   fun f ->

@@ -75,26 +75,14 @@ val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
  * but F# will then complain that there is whitespace between the name and
  * its parameters. Oh well. *)
 
-val count<'a when 'a : equality> // JUST FSHARP
-// IN F*: val count
-    : #a:eqtype -> a -> (list<a>) -> Tot<nat>
+val count: #a:eqtype -> a -> (list<a>) -> Tot<nat>
 
-val mem<'a when 'a : equality> // JUST FSHARP
-// IN F*: val mem
-    : #a:eqtype -> a -> (list<a>) -> Tot<bool>
+val mem: #a:eqtype -> a -> (list<a>) -> Tot<bool>
 
-val assoc<'a, 'b when 'a : equality> // JUST FSHARP
-// IN F*: val assoc
-    : #a:eqtype -> #b:Type -> a -> (list<(a * b)>) -> Tot<(option<b>)>
+val assoc: #a:eqtype -> #b:Type -> a -> (list<(a * b)>) -> Tot<(option<b>)>
 
-val contains<'a when 'a : equality> // JUST FSHARP
-// IN F*: val contains
-    : #a:eqtype -> a -> (list<a>) -> Tot<bool>
+val contains: #a:eqtype -> a -> (list<a>) -> Tot<bool>
 
-val unique<'a when 'a : equality> // JUST FSHARP
-// IN F*: val unique
-    : #a:eqtype -> list<a> -> list<a>
+val unique: #a:eqtype -> list<a> -> list<a>
 
-val index<'a when 'a : equality> // JUST FSHARP
-// IN F*: val index
-    : #a:eqtype -> (a -> bool) -> list<a> -> int
+val index: #a:eqtype -> (a -> bool) -> list<a> -> int

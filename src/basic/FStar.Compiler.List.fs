@@ -240,7 +240,7 @@ let rec sortWith f = function
      let lo, hi  = partition (fun x -> f pivot x > 0) tl in
      append (sortWith f lo) (pivot::sortWith f hi)
 
-let bool_of_compare (f:'a -> 'a -> int) x y = f x y >= 0
+let bool_of_compare (f:'a -> 'a -> Tot<int>) x y = f x y >= 0
 
 let rec unique l =
   // this matches the semantics of BatList.unique.
@@ -257,8 +257,8 @@ let rec iteri_aux i f x = match x with
   | a::tl -> f i a; iteri_aux (i+1) f tl
 let iteri f x = iteri_aux 0 f x
 
-let filter_map f l =
-  let rec filter_map_acc acc l =
+let filter_map (f:'a -> option<'b>) (l:list<'a>) =
+  let rec filter_map_acc (acc:list<'b>) (l:list<'a>) : list<'b> =
     match l with
     | [] ->
         rev acc
