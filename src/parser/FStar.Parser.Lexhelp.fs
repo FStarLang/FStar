@@ -30,10 +30,10 @@
 
 module FStar.Parser.Lexhelp
 open FStar.Compiler.Effect
-open FStar.Exn
 open FStar.Compiler.Effect
 open FStar.Mul
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Errors

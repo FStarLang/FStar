@@ -17,9 +17,9 @@
 
 module FStar.CheckedFiles
 open FStar.Compiler.Effect
-open FStar.Exn
 open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Extraction.ML.UEnv
 open FStar.Syntax.DsEnv

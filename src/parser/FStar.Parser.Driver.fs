@@ -17,10 +17,9 @@
 module FStar.Parser.Driver
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse

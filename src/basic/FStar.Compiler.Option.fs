@@ -17,36 +17,22 @@ module FStar.Compiler.Option
 
 open FStar.Compiler.Effect
 
-inline_for_extraction
-val isNone: option 'a -> Tot bool
-inline_for_extraction
 let isNone = function
   | None -> true
   | Some _ -> false
 
-inline_for_extraction
-val isSome: option 'a -> Tot bool
-inline_for_extraction
 let isSome = function
   | Some _ -> true
   | None -> false
 
-inline_for_extraction
-val map: ('a -> ML 'b) -> option 'a -> ML (option 'b)
-inline_for_extraction
 let map f = function
   | Some x -> Some (f x)
   | None -> None
 
-inline_for_extraction
-val mapTot: ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
-inline_for_extraction
 let mapTot f = function
   | Some x -> Some (f x)
   | None -> None
 
-inline_for_extraction
-val get: option 'a -> ML 'a
 let get = function
   | Some x -> x
   | None -> failwith "empty option"

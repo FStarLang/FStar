@@ -23,7 +23,6 @@
 #light "off"
 module FStar.TypeChecker.DeferredImplicits
 open FStar.Compiler.Effect
-open FStar.Exn
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env

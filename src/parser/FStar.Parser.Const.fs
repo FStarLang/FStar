@@ -24,6 +24,8 @@ open FStar.Compiler.Range
 open FStar.Const
 open FStar.Compiler.List
 module U = FStar.Compiler.Util
+module Options = FStar.Options
+module List = FStar.Compiler.List
 
 let p2l l = lid_of_path l dummyRange
 

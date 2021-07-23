@@ -14,14 +14,12 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Char
+module FStar.Compiler.Option
+open Prims
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
 
-type char' = char
-type char = char'
-
-val lowercase: char -> char
-val uppercase: char -> char
-val int_of_char: char -> int
-val char_of_int: int -> char
+val isNone: option<'a> -> Tot<bool>
+val isSome: option<'a> -> Tot<bool>
+val map: ('a -> ML<'b>) -> option<'a> -> ML<(option<'b>)>
+val mapTot: ('a -> Tot<'b>) -> option<'a> -> Tot<(option<'b>)>
+val get: option<'a> -> ML<'a>

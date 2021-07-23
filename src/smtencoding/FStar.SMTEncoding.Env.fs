@@ -18,10 +18,10 @@
 module FStar.SMTEncoding.Env
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
 open FStar.Compiler.Effect
 open Prims
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax

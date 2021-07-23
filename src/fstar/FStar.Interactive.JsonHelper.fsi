@@ -19,10 +19,10 @@
 #light "off"
 
 module FStar.Interactive.JsonHelper
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.Compiler.Util
-open FStar.Exn
 open FStar.Compiler.Range
 open FStar.TypeChecker.Env
 

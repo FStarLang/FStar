@@ -16,12 +16,10 @@
 #light "off"
 
 module FStar.CheckedFiles
-open FStar open FStar.Compiler
+open FStar
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar.Compiler
 open FStar.Errors
 open FStar.Compiler.Util
 open FStar.Getopt

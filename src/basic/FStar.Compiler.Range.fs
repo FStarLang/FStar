@@ -16,8 +16,9 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Compiler.Range
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect 
+module List = FStar.Compiler.List
+module Options = FStar.Options
 open FStar.BaseTypes
 open FStar.Compiler.Util
 
@@ -137,7 +138,7 @@ let col_of_pos p          = p.col
 let end_range r           = mk_range r.def_range.file_name r.def_range.end_pos r.def_range.end_pos
 
 let compare_rng r1 r2     =
-    let fcomp = String.compare r1.file_name r2.file_name in
+    let fcomp = FStar.String.compare r1.file_name r2.file_name in
     if fcomp = 0
     then let start1 = r1.start_pos in
          let start2 = r2.start_pos in

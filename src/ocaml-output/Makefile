@@ -91,16 +91,17 @@ endif
 	$(Q)echo "open FStar" >> $@
 	$(Q)echo "open FStar.Pervasives" >> $@
 	$(Q)echo "open FStar.Errors" >> $@
-	$(Q)echo "open FStar.List" >> $@
-	$(Q)echo "open FStar.Util" >> $@
-	$(Q)echo "open FStar.Range" >> $@
-	$(Q)echo "open FStar.Options" >> $@
+	$(Q)echo "open FStar.Compiler.Option" >> $@
+	$(Q)echo "open FStar.Compiler.List" >> $@
+	$(Q)echo "open FStar.Compiler.Util" >> $@
+	$(Q)echo "open FStar.Compiler.Range" >> $@
 	$(Q)echo "open FStar.Parser.Const" >> $@
 	$(Q)echo "open FStar.Parser.AST" >> $@
 	$(Q)echo "open FStar.Parser.Util" >> $@
 	$(Q)echo "open FStar.Const" >> $@
 	$(Q)echo "open FStar.Ident" >> $@
 	$(Q)echo "open FStar.String" >> $@
+	$(Q)echo "module List = FStar.Compiler.List" >> $@
 	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
 	$(Q)cat parse.mly | sed -e '/%{/d' \
 	                    -e '/^open /d' \

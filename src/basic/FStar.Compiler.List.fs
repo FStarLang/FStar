@@ -35,7 +35,7 @@ let rec nth (l:list<'a>) (n:int)
         | [] ->  failwith "not enough elements"
         | _::tl -> nth tl (n - 1)
 
-let rec count (#a:eqtype) (x:a) (l:list a) : Tot nat
+let rec count x l
   = match l with
     | [] -> 0
     | hd::tl ->
@@ -66,7 +66,7 @@ let concat x = flatten x
 
 let rec iter f x = match x with
   | [] -> ()
-  | a::tl -> let _ = f a in iter f tl
+  | a::tl -> let () = f a in iter f tl
 
 let rec iter2 f l m = match l, m with
   | [], [] -> ()
@@ -240,7 +240,7 @@ let rec sortWith f = function
      let lo, hi  = partition (fun x -> f pivot x > 0) tl in
      append (sortWith f lo) (pivot::sortWith f hi)
 
-let bool_of_compare f x y = f x y >= 0
+let bool_of_compare (f:'a -> 'a -> int) x y = f x y >= 0
 
 let rec unique l =
   // this matches the semantics of BatList.unique.
@@ -257,8 +257,8 @@ let rec iteri_aux i f x = match x with
   | a::tl -> f i a; iteri_aux (i+1) f tl
 let iteri f x = iteri_aux 0 f x
 
-let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
-  let rec filter_map_acc (acc:list 'b) (l:list 'a) : ML (list 'b) =
+let filter_map f l =
+  let rec filter_map_acc acc l =
     match l with
     | [] ->
         rev acc
@@ -272,7 +272,7 @@ let filter_map (f:'a -> ML (option 'b)) (l:list 'a) : ML (list 'b) =
   filter_map_acc [] l
 
 let index f l =
-  let rec index l i : ML int =
+  let rec index l i =
     match l with
     | [] ->
         failwith "List.index: not found"

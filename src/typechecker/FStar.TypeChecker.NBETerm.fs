@@ -2,8 +2,8 @@
 module FStar.TypeChecker.NBETerm
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Exn
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax

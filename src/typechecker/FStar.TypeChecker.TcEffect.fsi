@@ -17,7 +17,6 @@
 module FStar.TypeChecker.TcEffect
 
 open FStar.Compiler.Effect
-open FStar.Exn
 open FStar.Compiler.Effect
 
 open FStar open FStar.Compiler
