@@ -181,8 +181,8 @@ let uninit_view
   (#a: Type)
   (#p: pcm a)
   (#b: Type)
-  (w: sel_view p b)
-: Tot (sel_view #(uninit_t a) (pcm_uninit p) (uninit_t b))
+  (w: sel_view p b false)
+: Tot (sel_view #(uninit_t a) (pcm_uninit p) (uninit_t b) false)
 = {
   to_view_prop = (fun x -> match x with
   | Uninitialized -> True
@@ -194,15 +194,12 @@ let uninit_view
   );
   to_carrier = (fun v -> match v with
   | Uninitialized -> Uninitialized
-  | InitOrUnit v' -> (*w.to_carrier_not_one v'; *)InitOrUnit (w.to_carrier v')
+  | InitOrUnit v' -> InitOrUnit (w.to_carrier v')
   );
-  to_carrier_not_one = (fun v -> () (*match v with
-  | Uninitialized -> ()
-  | InitOrUnit v' -> w.to_carrier_not_one v'
-  *));
+  to_carrier_not_one = ();
   to_view_frame = (fun v frame -> match v with
   | Uninitialized -> ()
-  | InitOrUnit v' -> w.to_carrier_not_one v'; let InitOrUnit frame' = frame in w.to_view_frame v' frame'
+  | InitOrUnit v' -> let InitOrUnit frame' = frame in w.to_view_frame v' frame'
   );
 }
 
@@ -210,8 +207,8 @@ let uninit_view_initialized
   (#a: Type)
   (#p: pcm a)
   (#b: Type)
-  (w: sel_view p b)
-: Tot (sel_view #(uninit_t a) (pcm_uninit p) b)
+  (w: sel_view p b false)
+: Tot (sel_view #(uninit_t a) (pcm_uninit p) b false)
 = {
   to_view_prop = (fun x -> match x with
   | Uninitialized -> False
@@ -220,9 +217,9 @@ let uninit_view_initialized
   to_view = (fun x -> match x with
   | InitOrUnit x' -> w.to_view x'
   );
-  to_carrier = (fun v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v'));
-  to_carrier_not_one = (fun v -> () (*w.to_carrier_not_one v*));
+  to_carrier = (fun v' -> InitOrUnit (w.to_carrier v'));
+  to_carrier_not_one = ();
   to_view_frame = (fun v frame ->
-    w.to_carrier_not_one v; let InitOrUnit frame' = frame in w.to_view_frame v frame'
+    let InitOrUnit frame' = frame in w.to_view_frame v frame'
   );
 }

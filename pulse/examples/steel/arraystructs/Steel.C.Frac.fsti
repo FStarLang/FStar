@@ -68,12 +68,12 @@ val exclusive_frac
 let frac_view
   (a: Type)
   (p: perm)
-: Tot (sel_view (pcm_frac #a) a)
+: Tot (sel_view (pcm_frac #a) a false)
 = {
   to_view_prop = (fun x -> Some? x == true);
   to_view = (fun x -> let Some (v, _) = x in v);
   to_carrier = (fun v -> Some (v, p));
-  to_carrier_not_one = (fun _ -> ());
+  to_carrier_not_one = ();
   to_view_frame = (fun v frame -> ());
 }
 
