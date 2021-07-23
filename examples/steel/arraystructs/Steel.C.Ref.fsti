@@ -114,7 +114,6 @@ type sel_view
   (can_view_unit:bool)
 = {
   to_view_prop: (carrier -> Tot prop);
-  // (to_view_prop (one p) <==> prop only contains unit)
   to_view: (refine carrier to_view_prop -> Tot view);
   to_carrier: (view -> Tot (refine carrier to_view_prop));
   to_carrier_not_one:
@@ -126,88 +125,6 @@ type sel_view
     (requires (composable p (to_carrier x) frame))
     (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
-
-(*
-finite n = m:nat{m < n}
-a `iso` finite _
-
-fun 
-  "field1" -> 0
-  "field2" -> 1
-
-all : (finite n -> bool) -> bool
-ex : (finite n -> bool) -> bool
-
-desc = list (string * Type & pcm & view & ..)
-
-restricted_t 'a 'b ---> struct_t 'a 'b with the right equations
-typedef_struct: string -> .. -> struct_t 'a 'b
-
-typedef_struct A
-
-struct A { int x, y; };
-struct B { int x, y; };
-
-view_cases:(k:a -> sel_view p view false)
-sel_view (union p) .. false
-
-view_field:(k:a -> sel_view p view (can_view_unit k))
-sel_view (prod p) .. (k empty \/ all can_view_unit)
-*)
-
-(*
-
-Current sel_view:
-- uninit_view fails (to_carrier (InitOrUnit one) == one is composable with Uninitialized,
-  so to_view (op p (to_carrier (InitOrUnit one)) Uninitialized) == InitOrUnit one fails)
-- init_view_initialized fails for same reason
-
-Can we add side conditions to uninit_view and init_view to make them work?
-- How to add side conditions without these bubbling up to selectors for structs and unions?
-  For example, if explicitly excluded unit from PCM passed to uninit selector,
-  then can't write selector for a possibly-uninitialized struct that one has taken pointers
-  to all fields of.
-
-Can we define Uninitialized with an extra constructor explicitly for Unit?
-i.e.
-  Uninitialized
-  Init x
-  One
-and no longer have composable (Init (one p)) Uninitialized.
-
-Different idea:
-
-to_view . to_carrier = id
-forall x, whole_value (to_carrier x)
-  i.e. forall y. to_carrier x * y == to_carrier x
-
-From this could prove to_view_frame.
-- uninit_view satisfies this
-- so does uninit_view_initialized
-- partial struct fails (partial structs aren't whole values)
-- unions fail if one of the cases of the union is the trivial PCM
-
-
-If
-  to_view_frame:
-    (x: view) ->
-    (frame: carrier) ->
-    Lemma
-    (requires (composable p (to_carrier x) frame))
-    (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
-then
-
-1. specializing with (frame := unit) gives (to_view . to_carrier == id)
-2. specializing with (to_carrier x == one) gives
-     (forall y. to_view_prop y /\ to_view y == x));
-
-that is, if we want to_view_frame to hold, and there exists an x s.t. to_carrier x == one,
-then to_view_prop must be (const True) and to_view must be (const x)
-
-is this only fine when p is the trivial PCM?
-- that's not enough; uninit still has problem with (op p (to_carrier one) Uninitialized)
-
-*)
 
 let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
   (forall x . {:pattern (g (f x))} g (f x) == x)
