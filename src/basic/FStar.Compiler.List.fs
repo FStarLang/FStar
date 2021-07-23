@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Compiler.List
+open Prims
 open FStar.Compiler.Effect
 
 let isEmpty (l : list<'a>)
