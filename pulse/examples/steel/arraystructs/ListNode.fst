@@ -249,3 +249,45 @@ let unaddr_of_next
   A.change_equal_slprop (p' `pts_to` _) (p' `pts_to` mk_node' value next);
   roll_ref p p';
   A.return ()
+
+open Steel.C.Ptr
+
+(*
+val ptr_addr_of_value
+  (#value:Ghost.erased (option int))
+  (#next:Ghost.erased (option (ptr node node)))
+  (p: ptr node node)
+: Steel (ptr node (option int))
+    (pts_to p node_pcm (mk_node value next))
+    (fun q ->
+       (pts_to p node_pcm (mk_node none next)) `star`
+       (pts_to q opt_pcm value))
+    (requires (fun _ -> True))
+    (ensures (fun _ q _ -> ptr_focused q p _value))
+
+let ptr_addr_of_value #value #next (p: ptr node node)
+= let p_ref = elim_pts_to p in
+  let p' = unroll_ref p_ref in
+  let q = addr_of_struct_field p' Value (mk_node' value next) in
+  A.change_equal_slprop (p' `Steel.C.Ref.pts_to` _) (p' `Steel.C.Ref.pts_to` mk_node' none next);
+  A.change_equal_slprop (q `Steel.C.Ref.pts_to` _) (q `Steel.C.Ref.pts_to` value);
+  roll_ref p_ref p';
+  let p_ = intro_pts_to p_ref in
+  A.change_equal_slprop (pts_to p_ node_pcm _) (pts_to p node_pcm _);
+  let q_ = intro_pts_to q in
+  A.sladmit();
+  A.return q_
+  // TODO need split, gather, etc for ptrs
+
+assume val unaddr_of_value
+  (#value:Ghost.erased (option int))
+  (#next:Ghost.erased (option (Steel.C.Ptr.ptr node node)))
+  (p: Steel.C.Ptr.ptr node node)
+  (q: Steel.C.Ptr.ptr node (option int))
+: Steel unit
+    ((pts_to p node_pcm (mk_node none next)) `star`
+     (pts_to q opt_pcm value))
+    (fun q -> pts_to p node_pcm (mk_node value next))
+    (requires (fun _ -> ptr_focused q p _value))
+    (ensures (fun _ _ _ -> True))
+*)
