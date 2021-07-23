@@ -8,7 +8,6 @@ open FStar.FunctionalExtensionality
 open Steel.Effect
 module A = Steel.Effect.Atomic
 
-type point_field = | X | Y
 let point_fields k = match k with
   | X -> option int
   | Y -> option int

@@ -194,12 +194,12 @@ let uninit_view
   );
   to_carrier = (fun v -> match v with
   | Uninitialized -> Uninitialized
-  | InitOrUnit v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v')
+  | InitOrUnit v' -> (*w.to_carrier_not_one v'; *)InitOrUnit (w.to_carrier v')
   );
-  to_carrier_not_one = (fun v -> match v with
+  to_carrier_not_one = (fun v -> () (*match v with
   | Uninitialized -> ()
   | InitOrUnit v' -> w.to_carrier_not_one v'
-  );
+  *));
   to_view_frame = (fun v frame -> match v with
   | Uninitialized -> ()
   | InitOrUnit v' -> w.to_carrier_not_one v'; let InitOrUnit frame' = frame in w.to_view_frame v' frame'
@@ -221,7 +221,7 @@ let uninit_view_initialized
   | InitOrUnit x' -> w.to_view x'
   );
   to_carrier = (fun v' -> w.to_carrier_not_one v'; InitOrUnit (w.to_carrier v'));
-  to_carrier_not_one = (fun v -> w.to_carrier_not_one v);
+  to_carrier_not_one = (fun v -> () (*w.to_carrier_not_one v*));
   to_view_frame = (fun v frame ->
     w.to_carrier_not_one v; let InitOrUnit frame' = frame in w.to_view_frame v frame'
   );

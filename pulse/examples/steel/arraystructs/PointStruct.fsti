@@ -12,6 +12,8 @@ open Steel.Effect
 ///
 /// Carrier of PCM for struct point:
 
+type point_field = | X | Y
+
 val point : Type0
 
 /// PCM for struct point:
@@ -58,3 +60,15 @@ val unaddr_of_y
 : SteelT unit
     ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
     (fun q -> p `pts_to` mk_point x y)
+
+/// Views
+
+let point_view excluded : sel_view point_pcm (k:field_name not in excluded -> fields k)
+= {
+  to_view_prop = (fun x -> Some? x == true);
+  to_view = (fun x -> Some?.v x);
+  to_carrier = (fun z  -> Some z);
+  to_carrier_not_one = (fun _ -> ());
+  to_view_frame = (fun x frame -> ());
+}
+

@@ -111,14 +111,14 @@ type sel_view
   (#carrier: Type u#a)
   (p: pcm carrier)
   (view: Type u#b)
+  (can_view_unit:bool)
 = {
   to_view_prop: (carrier -> Tot prop);
+  // (to_view_prop (one p) <==> prop only contains unit)
   to_view: (refine carrier to_view_prop -> Tot view);
   to_carrier: (view -> Tot (refine carrier to_view_prop));
   to_carrier_not_one:
-    (x: view) ->
-    Lemma
-    (~ (to_carrier x == one p));
+    squash (~ can_view_unit ==> ~ (exists x. to_carrier x == one p) /\ ~ (to_view_prop (one p)));
   to_view_frame:
     (x: view) ->
     (frame: carrier) ->
@@ -127,6 +127,88 @@ type sel_view
     (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
 
+(*
+finite n = m:nat{m < n}
+a `iso` finite _
+
+fun 
+  "field1" -> 0
+  "field2" -> 1
+
+all : (finite n -> bool) -> bool
+ex : (finite n -> bool) -> bool
+
+desc = list (string * Type & pcm & view & ..)
+
+restricted_t 'a 'b ---> struct_t 'a 'b with the right equations
+typedef_struct: string -> .. -> struct_t 'a 'b
+
+typedef_struct A
+
+struct A { int x, y; };
+struct B { int x, y; };
+
+view_cases:(k:a -> sel_view p view false)
+sel_view (union p) .. false
+
+view_field:(k:a -> sel_view p view (can_view_unit k))
+sel_view (prod p) .. (k empty \/ all can_view_unit)
+*)
+
+(*
+
+Current sel_view:
+- uninit_view fails (to_carrier (InitOrUnit one) == one is composable with Uninitialized,
+  so to_view (op p (to_carrier (InitOrUnit one)) Uninitialized) == InitOrUnit one fails)
+- init_view_initialized fails for same reason
+
+Can we add side conditions to uninit_view and init_view to make them work?
+- How to add side conditions without these bubbling up to selectors for structs and unions?
+  For example, if explicitly excluded unit from PCM passed to uninit selector,
+  then can't write selector for a possibly-uninitialized struct that one has taken pointers
+  to all fields of.
+
+Can we define Uninitialized with an extra constructor explicitly for Unit?
+i.e.
+  Uninitialized
+  Init x
+  One
+and no longer have composable (Init (one p)) Uninitialized.
+
+Different idea:
+
+to_view . to_carrier = id
+forall x, whole_value (to_carrier x)
+  i.e. forall y. to_carrier x * y == to_carrier x
+
+From this could prove to_view_frame.
+- uninit_view satisfies this
+- so does uninit_view_initialized
+- partial struct fails (partial structs aren't whole values)
+- unions fail if one of the cases of the union is the trivial PCM
+
+
+If
+  to_view_frame:
+    (x: view) ->
+    (frame: carrier) ->
+    Lemma
+    (requires (composable p (to_carrier x) frame))
+    (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
+then
+
+1. specializing with (frame := unit) gives (to_view . to_carrier == id)
+2. specializing with (to_carrier x == one) gives
+     (forall y. to_view_prop y /\ to_view y == x));
+
+that is, if we want to_view_frame to hold, and there exists an x s.t. to_carrier x == one,
+then to_view_prop must be (const True) and to_view must be (const x)
+
+is this only fine when p is the trivial PCM?
+- that's not enough; uninit still has problem with (op p (to_carrier one) Uninitialized)
+
+*)
+
 let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
   (forall x . {:pattern (g (f x))} g (f x) == x)
 
@@ -134,10 +216,11 @@ let sel_view_inv
   (#carrier: Type u#a)
   (#p: pcm carrier)
   (#view: Type u#b)
-  (vw: sel_view p view)
+  (#can_view_unit: bool)
+  (vw: sel_view p view can_view_unit)
 : Lemma
   (vw.to_view `g_is_inverse_of` vw.to_carrier)
-  [SMTPat (has_type vw (sel_view p view))]
+  [SMTPat (has_type vw (sel_view p view can_view_unit))]
 = let aux
     (x: view)
   : Lemma
@@ -152,7 +235,8 @@ let pts_to_view_explicit
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (v: Ghost.erased c)
 : Tot M.slprop
 = hp_of (pts_to r (vw.to_carrier v))
@@ -161,7 +245,8 @@ val pts_to_view_explicit_witinv
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Lemma
   (M.is_witness_invariant (pts_to_view_explicit r vw))
 
@@ -169,7 +254,8 @@ let pts_to_view_sl
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Tot M.slprop
 = M.h_exists (pts_to_view_explicit r vw)
 
@@ -177,7 +263,8 @@ let pts_to_view_sel'
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Tot (selector' c (pts_to_view_sl r vw))
 = fun h ->
   let x = M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) h in
@@ -187,7 +274,8 @@ let pts_to_view_depends_only_on
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (m0:M.hmem (pts_to_view_sl r vw)) (m1:M.mem{M.disjoint m0 m1})
 : Lemma (pts_to_view_sel' r vw m0 == pts_to_view_sel' r vw (M.join m0 m1))
 = let x = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) m0) in
@@ -199,7 +287,8 @@ let pts_to_view_depends_only_on_core
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (m0:M.hmem (pts_to_view_sl r vw))
 : Lemma (pts_to_view_sel' r vw m0 == pts_to_view_sel' r vw (M.core_mem m0))
 = let x = Ghost.reveal (M.id_elim_exists #(Ghost.erased c) (pts_to_view_explicit r vw) m0) in
@@ -211,7 +300,8 @@ let pts_to_view_sel
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Tot (selector c (pts_to_view_sl r vw))
 = Classical.forall_intro_2 (pts_to_view_depends_only_on r vw);
   Classical.forall_intro (pts_to_view_depends_only_on_core r vw);
@@ -222,7 +312,8 @@ let pts_to_view'
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Tot vprop'
 = {
   hp = pts_to_view_sl r vw;
@@ -235,7 +326,8 @@ let pts_to_view
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Tot vprop
 = VUnit (pts_to_view' r vw)
 
@@ -244,7 +336,8 @@ let pts_to_view_intro_lemma
   (r: ref a p)
   (x: Ghost.erased b)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (y: Ghost.erased c) // necessary because to_view may erase information from x
   (m: M.mem)
 : Lemma
@@ -263,7 +356,8 @@ let pts_to_view_intro
   (r: ref a p)
   (x: Ghost.erased b)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (y: Ghost.erased c) // necessary because to_view may erase information from x
 : A.SteelGhost unit invs
     (pts_to r x)
@@ -284,7 +378,8 @@ let pts_to_view_elim_lemma
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
   (m: M.mem)
 : Lemma
   (requires (M.interp (pts_to_view_sl r vw) m))
@@ -319,7 +414,8 @@ let pts_to_view_elim
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : A.SteelGhost (Ghost.erased b) invs
     (pts_to_view r vw)
     (fun res -> pts_to r res)
@@ -327,12 +423,12 @@ let pts_to_view_elim
     (fun h res _ ->
       Ghost.reveal res == vw.to_carrier (h (pts_to_view r vw)) /\
       vw.to_view_prop res /\
-      ~ (Ghost.reveal res == one p)
+      True //~ (Ghost.reveal res == one p)
     )
 =
   let g : Ghost.erased c = A.gget (pts_to_view r vw) in
   let res : Ghost.erased b = Ghost.hide (vw.to_carrier g) in
-  vw.to_carrier_not_one g;
+  // vw.to_carrier_not_one g;
   A.intro_pure (vw.to_carrier (Ghost.reveal g) == Ghost.reveal res);
   let f (x: t_of (pts_to_view r vw)) : Tot vprop = pure (vw.to_carrier x == Ghost.reveal res) in
   intro_vdep2
@@ -366,7 +462,8 @@ let ref_read_sel
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type0)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Steel c
   (pts_to_view r vw)
   (fun _ -> pts_to_view r vw)

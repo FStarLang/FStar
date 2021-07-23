@@ -51,12 +51,12 @@ val opt_write
 
 let opt_view
   (a: Type)
-: Tot (sel_view (opt_pcm #a) a)
+: Tot (sel_view (opt_pcm #a) a false)
 = {
   to_view_prop = (fun x -> Some? x == true);
   to_view = (fun x -> Some?.v x);
   to_carrier = (fun z  -> Some z);
-  to_carrier_not_one = (fun _ -> ());
+  to_carrier_not_one = ();
   to_view_frame = (fun x frame -> ());
 }
 
