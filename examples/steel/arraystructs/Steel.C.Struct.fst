@@ -4,6 +4,7 @@ module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Connection
 open Steel.C.Ref
+module Ptr = Steel.C.Ptr
 open Steel.Effect
 module A = Steel.Effect.Atomic
 
@@ -313,6 +314,24 @@ let addr_of_struct_field
   let r = focus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
   A.return r
 
+(*
+let ptr_addr_of_struct_field
+  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
+  (r: Ptr.ptr base (prod_pcm p)) (k:a)
+  (xs: Ghost.erased (restricted_t a b))
+: Steel (ref base (p k))
+    (r `pts_to` xs)
+    (fun s ->
+      (r `pts_to` struct_without_field p k xs) `star` 
+      (s `pts_to` Ghost.reveal xs k))
+    (requires fun _ -> True)
+    (ensures fun _ r' _ -> r' == ref_focus r (struct_field p k))
+= struct_peel p k xs;
+  split r xs (struct_without_field p k xs) (field_to_struct_f p k (Ghost.reveal xs k));
+  let r = focus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
+  A.return r
+*)
+
 let struct_with_field (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   (x:b k) (xs: restricted_t a b)
 : restricted_t a b
@@ -345,55 +364,71 @@ let unaddr_of_struct_field
 
 let struct_view_to_view_prop
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
+  (fa:a -> prop)
+  (view_t:(refine a fa -> Type))
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
 : restricted_t a b -> Tot prop
-= (fun (f : restricted_t a b) -> forall k. (field_view k).to_view_prop (f k)) 
+= fun (f : restricted_t a b) ->
+  forall (k:a).
+    (fa k ==> (field_view k).to_view_prop (f k))
 
 let struct_view_to_view
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
-: refine (restricted_t a b) (struct_view_to_view_prop view_t field_view) ->
-  Tot (restricted_t a view_t)
-= (fun (f: refine (restricted_t a b) _) ->
-    on_dom a (fun k -> (field_view k).to_view (f k)))
+  (#fa:a -> prop)
+  (view_t:(refine a fa -> Type))
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
+: refine (restricted_t a b) (struct_view_to_view_prop fa view_t field_view) ->
+  Tot (restricted_t (refine a fa) view_t)
+= fun (f: refine (restricted_t a b) (struct_view_to_view_prop fa view_t field_view)) ->
+  let g = on_dom (refine a fa) (fun (k: refine a fa) -> (field_view k).to_view (f k)) in
+  g
+
+let decidable (p: 'a -> prop) = decide:('a -> bool){forall x. decide x <==> p x}
 
 let struct_view_to_carrier
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
-: restricted_t a view_t ->
-  Tot (refine (restricted_t a b) (struct_view_to_view_prop view_t field_view))
-= fun (f: restricted_t a view_t) ->
-  let g: restricted_t a b = on_dom a (fun k -> (field_view k).to_carrier (f k) <: b k) in
-  g
+  (#fa:a -> prop)
+  (dec_fa: decidable fa)
+  (view_t:(refine a fa -> Type))
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
+: restricted_t (refine a fa) view_t ->
+  Tot (refine (restricted_t a b) (struct_view_to_view_prop fa view_t field_view))
+= fun (f: restricted_t (refine a fa) view_t) ->
+  let g: restricted_t a b = on_dom a (fun k ->
+    if dec_fa k then
+      (field_view k).to_carrier (f k) <: b k
+    else one (p k))
+  in g
 
 let struct_view_to_carrier_not_one
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
-  (x:restricted_t a view_t)
+  (#fa:a -> prop)
+  (dec_fa: decidable fa)
+  (view_t:(refine a fa -> Type))
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
+  (x:restricted_t (refine a fa) view_t)
 : Lemma
-    (requires exists (x:a). True)
-    (ensures struct_view_to_carrier view_t field_view x =!= one (prod_pcm p))
-= let k = FStar.IndefiniteDescription.indefinite_description_ghost a (fun _ -> True) in
+    (requires exists (k:a). fa k)
+    (ensures struct_view_to_carrier dec_fa view_t field_view x =!= one (prod_pcm p))
+= let k = FStar.IndefiniteDescription.indefinite_description_ghost a fa in
   (field_view k).to_carrier_not_one (x k)
 
 let struct_view_to_view_frame
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
-  (x:restricted_t a view_t)
+  (#fa:a -> prop)
+  (dec_fa: decidable fa)
+  (view_t:(refine a fa -> Type))
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
+  (x:restricted_t (refine a fa) view_t)
   (frame: restricted_t a b)
 : Lemma
-    (requires (composable (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame))
+    (requires (composable (prod_pcm p) (struct_view_to_carrier dec_fa view_t field_view x) frame))
     (ensures
-      struct_view_to_view_prop view_t field_view
-        (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) /\ 
+      struct_view_to_view_prop fa view_t field_view
+        (op (prod_pcm p) (struct_view_to_carrier dec_fa view_t field_view x) frame) /\ 
       struct_view_to_view view_t field_view
-        (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) == x)
-= let aux k
+        (op (prod_pcm p) (struct_view_to_carrier dec_fa view_t field_view x) frame) == x)
+= let aux (k:refine a fa)
   : Lemma (
       (field_view k).to_view_prop (op (p k) ((field_view k).to_carrier (x k)) (frame k)) /\
       (field_view k).to_view (op (p k) ((field_view k).to_carrier (x k)) (frame k)) == x k)
@@ -402,19 +437,21 @@ let struct_view_to_view_frame
   in forall_intro aux;
   assert (
     struct_view_to_view view_t field_view
-       (op (prod_pcm p) (struct_view_to_carrier view_t field_view x) frame) `feq` x)
+       (op (prod_pcm p) (struct_view_to_carrier dec_fa view_t field_view x) frame) `feq` x)
 
 let struct_view
   (#a:Type) (#b: a -> Type) (#p:(k:a -> pcm (b k)))
-  (view_t:(a -> Type))
-  (field_view:(k:a -> sel_view (p k) (view_t k)))
-: Pure (sel_view (prod_pcm p) (restricted_t a view_t))
-    (requires exists (_:a). True)
+  (#fa:a -> prop)
+  (dec_fa:decidable fa)
+  (view_t:refine a fa -> Type)
+  (field_view:(k:refine a fa -> sel_view (p k) (view_t k)))
+: Pure (sel_view (prod_pcm p) (restricted_t (refine a fa) view_t))
+    (requires exists (k:a). fa k)
     (ensures fun _ -> True)
 = {
-  to_view_prop = struct_view_to_view_prop view_t field_view;
+  to_view_prop = struct_view_to_view_prop fa view_t field_view;
   to_view = struct_view_to_view view_t field_view;
-  to_carrier = struct_view_to_carrier view_t field_view;
-  to_carrier_not_one = struct_view_to_carrier_not_one view_t field_view;
-  to_view_frame = struct_view_to_view_frame view_t field_view;
+  to_carrier = struct_view_to_carrier dec_fa view_t field_view;
+  to_carrier_not_one = struct_view_to_carrier_not_one dec_fa view_t field_view;
+  to_view_frame = struct_view_to_view_frame dec_fa view_t field_view;
 }
