@@ -15,7 +15,7 @@
 *)
 
 module Steel.Effect.Common
-
+let ( @ ) x y = FStar.List.Tot.( x@y )
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
