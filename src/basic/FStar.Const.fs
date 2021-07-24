@@ -1,7 +1,7 @@
 ﻿#light "off"
 module FStar.Const
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 
@@ -17,7 +17,7 @@ type width = | Int8 | Int16 | Int32 | Int64
     and
     Const_int("67108863", None)
     which represent the same number
-    You should do an "FStar.Util.ensure_decimal" on the
+    You should do an "FStar.Compiler.Util.ensure_decimal" on the
     string representation before comparing integer constants.
 
     eq_const below does that for you
@@ -32,18 +32,18 @@ type sconst =
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
   | Const_float       of double
   | Const_real        of string
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of string * Range.range                (* UTF-8 encoded *)
+  | Const_bytearray   of array<byte> * FStar.Compiler.Range.range
+  | Const_string      of string * FStar.Compiler.Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
-  | Const_range       of Range.range                         (* not denotable by the programmer *)
+  | Const_range       of FStar.Compiler.Range.range                         (* not denotable by the programmer *)
   | Const_reify                                              (* a coercion from a computation to a Tot term *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
 
 let eq_const c1 c2 =
     match c1, c2 with
     | Const_int (s1, o1), Const_int(s2, o2) ->
-      FStar.Util.ensure_decimal s1 = FStar.Util.ensure_decimal s2 &&
+      FStar.Compiler.Util.ensure_decimal s1 = FStar.Compiler.Util.ensure_decimal s2 &&
       o1=o2
     | Const_bytearray(a, _), Const_bytearray(b, _) -> a=b
     | Const_string(a, _), Const_string(b, _) -> a=b
@@ -77,5 +77,5 @@ let bounds signedness width =
 
 let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
-  let value = big_int_of_string (FStar.Util.ensure_decimal repr) in
+  let value = big_int_of_string (FStar.Compiler.Util.ensure_decimal repr) in
   le_big_int lower value && le_big_int value upper

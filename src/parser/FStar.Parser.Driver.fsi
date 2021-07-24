@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Parser.Driver
 
-module Range      = FStar.Range
+module Range      = FStar.Compiler.Range
 module AST        = FStar.Parser.AST
 module ParseIt    = FStar.Parser.ParseIt
 

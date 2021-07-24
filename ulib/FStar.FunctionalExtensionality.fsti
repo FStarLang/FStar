@@ -15,7 +15,6 @@
 *)
 
 module FStar.FunctionalExtensionality
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 /// Functional extensionality asserts the equality of pointwise-equal
 /// functions.

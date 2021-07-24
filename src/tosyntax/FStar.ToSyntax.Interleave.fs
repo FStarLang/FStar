@@ -15,13 +15,13 @@
 *)
 #light "off"
 module FStar.ToSyntax.Interleave
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 //Reorders the top-level definitions/declarations in a file
 //in a proper order for consistent type-checking
 
 open FStar
+open FStar.Compiler
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax
@@ -334,7 +334,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
                 impls
         in
         let iface_lets, remaining_iface_vals =
-            match FStar.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
             | None -> iface, []
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in

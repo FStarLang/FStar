@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.NBEEmbeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.NBETerm
 open FStar.Order

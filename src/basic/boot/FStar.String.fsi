@@ -15,8 +15,8 @@
 *)
 #light "off"
 module FStar.String
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open Prims
 open FStar.Char
 open FStar.BigInt

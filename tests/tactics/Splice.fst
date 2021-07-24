@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Splice
-
+open FStar.List.Tot
 open FStar.Tactics
 
 let make_42 (nm:string) : Tac decls =

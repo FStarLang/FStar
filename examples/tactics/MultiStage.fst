@@ -1,5 +1,5 @@
 module MultiStage
-
+open FStar.List.Tot
 open FStar.Tactics
 
 let tau1 () : Tac decls =

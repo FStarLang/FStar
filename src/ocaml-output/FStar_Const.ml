@@ -28,12 +28,12 @@ type sconst =
   | Const_char of FStar_BaseTypes.char 
   | Const_float of FStar_BaseTypes.double 
   | Const_real of Prims.string 
-  | Const_bytearray of (FStar_BaseTypes.byte Prims.array * FStar_Range.range)
-  
-  | Const_string of (Prims.string * FStar_Range.range) 
+  | Const_bytearray of (FStar_BaseTypes.byte Prims.array *
+  FStar_Compiler_Range.range) 
+  | Const_string of (Prims.string * FStar_Compiler_Range.range) 
   | Const_range_of 
   | Const_set_range_of 
-  | Const_range of FStar_Range.range 
+  | Const_range of FStar_Compiler_Range.range 
   | Const_reify 
   | Const_reflect of FStar_Ident.lid [@@deriving yojson,show]
 let (uu___is_Const_effect : sconst -> Prims.bool) =
@@ -72,13 +72,13 @@ let (uu___is_Const_bytearray : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_bytearray _0 -> true | uu___ -> false
 let (__proj__Const_bytearray__item___0 :
-  sconst -> (FStar_BaseTypes.byte Prims.array * FStar_Range.range)) =
-  fun projectee -> match projectee with | Const_bytearray _0 -> _0
+  sconst -> (FStar_BaseTypes.byte Prims.array * FStar_Compiler_Range.range))
+  = fun projectee -> match projectee with | Const_bytearray _0 -> _0
 let (uu___is_Const_string : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_string _0 -> true | uu___ -> false
 let (__proj__Const_string__item___0 :
-  sconst -> (Prims.string * FStar_Range.range)) =
+  sconst -> (Prims.string * FStar_Compiler_Range.range)) =
   fun projectee -> match projectee with | Const_string _0 -> _0
 let (uu___is_Const_range_of : sconst -> Prims.bool) =
   fun projectee ->
@@ -89,7 +89,7 @@ let (uu___is_Const_set_range_of : sconst -> Prims.bool) =
 let (uu___is_Const_range : sconst -> Prims.bool) =
   fun projectee ->
     match projectee with | Const_range _0 -> true | uu___ -> false
-let (__proj__Const_range__item___0 : sconst -> FStar_Range.range) =
+let (__proj__Const_range__item___0 : sconst -> FStar_Compiler_Range.range) =
   fun projectee -> match projectee with | Const_range _0 -> _0
 let (uu___is_Const_reify : sconst -> Prims.bool) =
   fun projectee ->
@@ -104,9 +104,9 @@ let (eq_const : sconst -> sconst -> Prims.bool) =
     fun c2 ->
       match (c1, c2) with
       | (Const_int (s1, o1), Const_int (s2, o2)) ->
-          (let uu___ = FStar_Util.ensure_decimal s1 in
-           let uu___1 = FStar_Util.ensure_decimal s2 in uu___ = uu___1) &&
-            (o1 = o2)
+          (let uu___ = FStar_Compiler_Util.ensure_decimal s1 in
+           let uu___1 = FStar_Compiler_Util.ensure_decimal s2 in
+           uu___ = uu___1) && (o1 = o2)
       | (Const_bytearray (a, uu___), Const_bytearray (b, uu___1)) -> a = b
       | (Const_string (a, uu___), Const_string (b, uu___1)) -> a = b
       | (Const_reflect l1, Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
@@ -149,7 +149,7 @@ let (within_bounds : Prims.string -> signedness -> width -> Prims.bool) =
         match uu___ with
         | (lower, upper) ->
             let value =
-              let uu___1 = FStar_Util.ensure_decimal repr in
+              let uu___1 = FStar_Compiler_Util.ensure_decimal repr in
               FStar_BigInt.big_int_of_string uu___1 in
             (FStar_BigInt.le_big_int lower value) &&
               (FStar_BigInt.le_big_int value upper)

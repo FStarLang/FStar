@@ -16,15 +16,14 @@
 #light "off"
 module FStar.TypeChecker.DMFF
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax
@@ -39,7 +38,7 @@ module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
 

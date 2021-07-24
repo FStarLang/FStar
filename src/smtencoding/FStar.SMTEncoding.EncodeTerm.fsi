@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.EncodeTerm
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -32,7 +32,7 @@ open FStar.Const
 open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list<term> -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
 val maybe_curry_app : rng:Range.range -> head:either<op,term> -> arity:int -> args:list<term> -> term

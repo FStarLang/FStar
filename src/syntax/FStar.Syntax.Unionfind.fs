@@ -1,14 +1,14 @@
 #light "off"
 module FStar.Syntax.Unionfind
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Errors
 open FStar.Syntax.Syntax
 
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module S     = FStar.Syntax.Syntax
 module PU    = FStar.Unionfind
-module BU    = FStar.Util
-module L     = FStar.List
+module BU    = FStar.Compiler.Util
+module L     = FStar.Compiler.List
 module O     = FStar.Options
 
 type vops_t = {

@@ -16,18 +16,19 @@
 #light "off"
 module FStar.Syntax.Syntax
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
-open FStar
-open FStar.Util
-open FStar.Range
+open FStar 
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
@@ -531,7 +532,7 @@ let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open FStar.Range
+open FStar.Compiler.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None

@@ -21,12 +21,11 @@
 #light "off"
 module FStar.TypeChecker.Rel
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -38,7 +37,7 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 
 open FStar.Common
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -2249,7 +2248,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     else
 
     let binders_as_bv_set (bs:binders) =
-        FStar.Util.as_set (List.map (fun b -> b.binder_bv) bs)
+        FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
                           Syntax.order_bv
     in
 
@@ -4451,7 +4450,7 @@ let resolve_implicits' env is_tac g =
       else if unresolved ctx_u
       then begin match ctx_u.ctx_uvar_meta with
            | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-             let env : Env.env = FStar.Dyn.undyn env_dyn in
+             let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
              if Env.debug env (Options.Other "Tac") then
                BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
 

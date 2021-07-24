@@ -16,8 +16,8 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 module FStar.Extraction.ML.Code
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
 open FStar.Extraction.ML.Syntax
 open FStar.Pprint

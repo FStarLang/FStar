@@ -16,12 +16,12 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
-open FStar.Util
+open FStar.Compiler.Util
 
 module DsEnv = FStar.Syntax.DsEnv
 

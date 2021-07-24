@@ -64,7 +64,8 @@ let heap_from_list :
     ('uuuuu -> 'uuuuu -> Prims.int) -> 'uuuuu Prims.list -> 'uuuuu heap
   =
   fun cmp ->
-    fun values -> FStar_List.fold_left (heap_insert cmp) EmptyHeap values
+    fun values ->
+      FStar_Compiler_List.fold_left (heap_insert cmp) EmptyHeap values
 let push_nodup :
   'uuuuu .
     ('uuuuu -> Prims.string) ->
@@ -118,10 +119,10 @@ let merge_increasing_lists_rev :
         | FStar_Pervasives_Native.Some ((pr, v::tl), lists2) ->
             let uu___1 = heap_insert cmp lists2 (pr, tl) in
             let uu___2 = push_nodup key_fn v acc in aux uu___1 uu___2 in
-      let lists1 = FStar_List.filter (fun x -> x <> []) lists in
+      let lists1 = FStar_Compiler_List.filter (fun x -> x <> []) lists in
       match lists1 with
       | [] -> []
-      | l::[] -> FStar_List.rev l
+      | l::[] -> FStar_Compiler_List.rev l
       | uu___ ->
           let lists2 = add_priorities Prims.int_zero [] lists1 in
           let uu___1 = heap_from_list cmp lists2 in aux uu___1 []
@@ -280,7 +281,7 @@ let btree_find_prefix :
         | StrEmpty -> acc
         | StrBranch (k, v, lbt, rbt) ->
             let cmp = string_compare k prefix1 in
-            let include_middle = FStar_Util.starts_with k prefix1 in
+            let include_middle = FStar_Compiler_Util.starts_with k prefix1 in
             let explore_right = (cmp <= Prims.int_zero) || include_middle in
             let explore_left = cmp > Prims.int_zero in
             let matches = if explore_right then aux rbt prefix1 acc else acc in
@@ -363,7 +364,7 @@ let rec trie_descend_exact :
       | [] -> FStar_Pervasives_Native.Some tr
       | ns::query2 ->
           let uu___ = names_find_exact tr.namespaces ns in
-          FStar_Util.bind_opt uu___
+          FStar_Compiler_Util.bind_opt uu___
             (fun scope -> trie_descend_exact scope query2)
 let rec trie_find_exact :
   'a . 'a trie -> query -> 'a FStar_Pervasives_Native.option =
@@ -374,7 +375,7 @@ let rec trie_find_exact :
       | name::[] -> names_find_exact tr.bindings name
       | ns::query2 ->
           let uu___ = names_find_exact tr.namespaces ns in
-          FStar_Util.bind_opt uu___
+          FStar_Compiler_Util.bind_opt uu___
             (fun scope -> trie_find_exact scope query2)
 let names_insert : 'a . 'a names -> Prims.string -> 'a -> 'a names =
   fun name_collections ->
@@ -407,7 +408,7 @@ let rec namespaces_mutate :
             fun mut_leaf ->
               let trie1 =
                 let uu___ = names_find_exact namespaces ns in
-                FStar_Util.dflt (trie_empty ()) uu___ in
+                FStar_Compiler_Util.dflt (trie_empty ()) uu___ in
               let uu___ = trie_mutate trie1 q rev_acc mut_node mut_leaf in
               names_insert namespaces ns uu___
 and trie_mutate :
@@ -467,7 +468,7 @@ let trie_import :
           let label = query_to_string included_query in
           let included_trie =
             let uu___ = trie_descend_exact tr included_query in
-            FStar_Util.dflt (trie_empty ()) uu___ in
+            FStar_Compiler_Util.dflt (trie_empty ()) uu___ in
           trie_mutate_leaf tr host_query
             (fun tr1 -> fun uu___ -> mutator tr1 included_trie label)
 let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
@@ -523,7 +524,7 @@ let names_revmap :
   fun fn ->
     fun name_collections ->
       let rec aux acc imports name_collections1 =
-        FStar_List.fold_left
+        FStar_Compiler_List.fold_left
           (fun acc1 ->
              fun uu___ ->
                match uu___ with
@@ -572,11 +573,11 @@ let names_find_rev :
         | NSTPrefix id1 ->
             names_revmap (fun bt -> btree_find_prefix bt id1) names1 in
       let matching_values_per_collection =
-        FStar_List.map
+        FStar_Compiler_List.map
           (fun uu___ ->
              match uu___ with
              | (imports, matches) ->
-                 FStar_List.map
+                 FStar_Compiler_List.map
                    (fun uu___1 ->
                       match uu___1 with
                       | (segment, v) -> ((mk_path_el imports segment), v))
@@ -605,7 +606,7 @@ let rec trie_find_prefix' :
               let matching_namespaces_rev =
                 names_find_rev tr.namespaces ns_search_term in
               let acc_with_recursive_bindings =
-                FStar_List.fold_left
+                FStar_Compiler_List.fold_left
                   (fun acc1 ->
                      fun uu___1 ->
                        match uu___1 with
@@ -614,11 +615,11 @@ let rec trie_find_prefix' :
                              query2 acc1) acc matching_namespaces_rev in
               let matching_bindings_rev =
                 names_find_rev tr.bindings bindings_search_term in
-              FStar_List.rev_map_onto
+              FStar_Compiler_List.rev_map_onto
                 (fun uu___1 ->
                    match uu___1 with
                    | (path_el, v) ->
-                       ((FStar_List.rev (path_el :: path_acc)), v))
+                       ((FStar_Compiler_List.rev (path_el :: path_acc)), v))
                 matching_bindings_rev acc_with_recursive_bindings
 let trie_find_prefix : 'a . 'a trie -> query -> (path * 'a) Prims.list =
   fun tr -> fun query1 -> trie_find_prefix' tr [] query1 []
@@ -741,7 +742,7 @@ let (register_module_path :
                    mod_loaded = loaded1
                  }) in
           let name_of_revq query1 =
-            FStar_String.concat "." (FStar_List.rev query1) in
+            FStar_String.concat "." (FStar_Compiler_List.rev query1) in
           let ins id q revq bindings loaded1 =
             let name = name_of_revq (id :: revq) in
             match q with
@@ -762,12 +763,13 @@ let (register_module_path :
           { tbl_lids = (uu___.tbl_lids); tbl_mods = uu___1 }
 let (string_of_path : path -> Prims.string) =
   fun path1 ->
-    let uu___ = FStar_List.map (fun el -> (el.segment).completion) path1 in
+    let uu___ =
+      FStar_Compiler_List.map (fun el -> (el.segment).completion) path1 in
     FStar_String.concat "." uu___
 let (match_length_of_path : path -> Prims.int) =
   fun path1 ->
     let uu___ =
-      FStar_List.fold_left
+      FStar_Compiler_List.fold_left
         (fun acc ->
            fun elem ->
              let uu___1 = acc in
@@ -790,18 +792,19 @@ let (first_import_of_path :
   fun path1 ->
     match path1 with
     | [] -> FStar_Pervasives_Native.None
-    | { imports; segment = uu___;_}::uu___1 -> FStar_List.last imports
+    | { imports; segment = uu___;_}::uu___1 ->
+        FStar_Compiler_List.last imports
 let (alist_of_ns_info :
-  ns_info -> (Prims.string * FStar_Util.json) Prims.list) =
+  ns_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   fun ns_info1 ->
-    [("name", (FStar_Util.JsonStr (ns_info1.ns_name)));
-    ("loaded", (FStar_Util.JsonBool (ns_info1.ns_loaded)))]
+    [("name", (FStar_Compiler_Util.JsonStr (ns_info1.ns_name)));
+    ("loaded", (FStar_Compiler_Util.JsonBool (ns_info1.ns_loaded)))]
 let (alist_of_mod_info :
-  mod_info -> (Prims.string * FStar_Util.json) Prims.list) =
+  mod_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   fun mod_info1 ->
-    [("name", (FStar_Util.JsonStr (mod_info1.mod_name)));
-    ("path", (FStar_Util.JsonStr (mod_info1.mod_path)));
-    ("loaded", (FStar_Util.JsonBool (mod_info1.mod_loaded)))]
+    [("name", (FStar_Compiler_Util.JsonStr (mod_info1.mod_name)));
+    ("path", (FStar_Compiler_Util.JsonStr (mod_info1.mod_path)));
+    ("loaded", (FStar_Compiler_Util.JsonBool (mod_info1.mod_loaded)))]
 type completion_result =
   {
   completion_match_length: Prims.int ;
@@ -825,12 +828,13 @@ let (__proj__Mkcompletion_result__item__completion_annotation :
     match projectee with
     | { completion_match_length; completion_candidate;
         completion_annotation;_} -> completion_annotation
-let (json_of_completion_result : completion_result -> FStar_Util.json) =
+let (json_of_completion_result :
+  completion_result -> FStar_Compiler_Util.json) =
   fun result ->
-    FStar_Util.JsonList
-      [FStar_Util.JsonInt (result.completion_match_length);
-      FStar_Util.JsonStr (result.completion_annotation);
-      FStar_Util.JsonStr (result.completion_candidate)]
+    FStar_Compiler_Util.JsonList
+      [FStar_Compiler_Util.JsonInt (result.completion_match_length);
+      FStar_Compiler_Util.JsonStr (result.completion_annotation);
+      FStar_Compiler_Util.JsonStr (result.completion_candidate)]
 let completion_result_of_lid : 'uuuuu . (path * 'uuuuu) -> completion_result
   =
   fun uu___ ->
@@ -840,7 +844,7 @@ let completion_result_of_lid : 'uuuuu . (path * 'uuuuu) -> completion_result
         let uu___2 = string_of_path path1 in
         let uu___3 =
           let uu___4 = first_import_of_path path1 in
-          FStar_Util.dflt "" uu___4 in
+          FStar_Compiler_Util.dflt "" uu___4 in
         {
           completion_match_length = uu___1;
           completion_candidate = uu___2;
@@ -854,7 +858,8 @@ let (completion_result_of_mod :
         let uu___ = match_length_of_path path1 in
         let uu___1 = string_of_path path1 in
         let uu___2 =
-          FStar_Util.format1 (if loaded then " %s " else "(%s)") annot in
+          FStar_Compiler_Util.format1 (if loaded then " %s " else "(%s)")
+            annot in
         {
           completion_match_length = uu___;
           completion_candidate = uu___1;
@@ -878,7 +883,7 @@ let (autocomplete_lid : table -> query -> completion_result Prims.list) =
   fun tbl ->
     fun query1 ->
       let uu___ = trie_find_prefix tbl.tbl_lids query1 in
-      FStar_List.map completion_result_of_lid uu___
+      FStar_Compiler_List.map completion_result_of_lid uu___
 let (autocomplete_mod_or_ns :
   table ->
     query ->
@@ -891,6 +896,7 @@ let (autocomplete_mod_or_ns :
       fun filter ->
         let uu___ =
           let uu___1 = trie_find_prefix tbl.tbl_mods query1 in
-          FStar_All.pipe_right uu___1 (FStar_List.filter_map filter) in
-        FStar_All.pipe_right uu___
-          (FStar_List.map completion_result_of_ns_or_mod)
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_Compiler_List.filter_map filter) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          (FStar_Compiler_List.map completion_result_of_ns_or_mod)

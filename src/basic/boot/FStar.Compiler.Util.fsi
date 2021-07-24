@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 #light "off"
-module FStar.Util
+module FStar.Compiler.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 

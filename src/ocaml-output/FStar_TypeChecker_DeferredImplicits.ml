@@ -58,10 +58,10 @@ type goal_dep =
   goal_dep_id: Prims.int ;
   goal_type: goal_type ;
   goal_imp: FStar_TypeChecker_Common.implicit ;
-  assignees: FStar_Syntax_Syntax.ctx_uvar FStar_Util.set ;
-  goal_dep_uvars: FStar_Syntax_Syntax.ctx_uvar FStar_Util.set ;
-  dependences: goal_dep Prims.list FStar_ST.ref ;
-  visited: Prims.int FStar_ST.ref }
+  assignees: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set ;
+  goal_dep_uvars: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set ;
+  dependences: goal_dep Prims.list FStar_Compiler_Effect.ref ;
+  visited: Prims.int FStar_Compiler_Effect.ref }
 let (__proj__Mkgoal_dep__item__goal_dep_id : goal_dep -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -79,60 +79,63 @@ let (__proj__Mkgoal_dep__item__goal_imp :
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> goal_imp
 let (__proj__Mkgoal_dep__item__assignees :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Util.set) =
+  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> assignees
 let (__proj__Mkgoal_dep__item__goal_dep_uvars :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Util.set) =
+  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> goal_dep_uvars
 let (__proj__Mkgoal_dep__item__dependences :
-  goal_dep -> goal_dep Prims.list FStar_ST.ref) =
+  goal_dep -> goal_dep Prims.list FStar_Compiler_Effect.ref) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> dependences
-let (__proj__Mkgoal_dep__item__visited : goal_dep -> Prims.int FStar_ST.ref)
-  =
+let (__proj__Mkgoal_dep__item__visited :
+  goal_dep -> Prims.int FStar_Compiler_Effect.ref) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> visited
 type goal_deps = goal_dep Prims.list
 let (print_uvar_set :
-  FStar_Syntax_Syntax.ctx_uvar FStar_Util.set -> Prims.string) =
+  FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set -> Prims.string) =
   fun s ->
     let uu___ =
-      let uu___1 = FStar_Util.set_elements s in
-      FStar_All.pipe_right uu___1
-        (FStar_List.map
+      let uu___1 = FStar_Compiler_Util.set_elements s in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_List.map
            (fun u ->
               let uu___2 =
                 let uu___3 =
                   FStar_Syntax_Unionfind.uvar_id
                     u.FStar_Syntax_Syntax.ctx_uvar_head in
-                FStar_All.pipe_left FStar_Util.string_of_int uu___3 in
+                FStar_Compiler_Effect.op_Less_Bar
+                  FStar_Compiler_Util.string_of_int uu___3 in
               Prims.op_Hat "?" uu___2)) in
-    FStar_All.pipe_right uu___ (FStar_String.concat "; ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "; ")
 let (print_goal_dep : goal_dep -> Prims.string) =
   fun gd ->
-    let uu___ = FStar_Util.string_of_int gd.goal_dep_id in
+    let uu___ = FStar_Compiler_Util.string_of_int gd.goal_dep_id in
     let uu___1 = print_uvar_set gd.assignees in
     let uu___2 =
       let uu___3 =
-        let uu___4 = FStar_ST.op_Bang gd.dependences in
-        FStar_List.map (fun gd1 -> FStar_Util.string_of_int gd1.goal_dep_id)
+        let uu___4 = FStar_Compiler_Effect.op_Bang gd.dependences in
+        FStar_Compiler_List.map
+          (fun gd1 -> FStar_Compiler_Util.string_of_int gd1.goal_dep_id)
           uu___4 in
-      FStar_All.pipe_right uu___3 (FStar_String.concat "; ") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___3 (FStar_String.concat "; ") in
     let uu___3 =
       FStar_Syntax_Print.ctx_uvar_to_string
         (gd.goal_imp).FStar_TypeChecker_Common.imp_uvar in
-    FStar_Util.format4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n" uu___
-      uu___1 uu___2 uu___3
+    FStar_Compiler_Util.format4
+      "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n" uu___ uu___1 uu___2
+      uu___3
 let (find_user_tac_for_uvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.ctx_uvar ->
@@ -146,11 +149,13 @@ let (find_user_tac_for_uvar :
           let hooks =
             FStar_TypeChecker_Env.lookup_attr env
               FStar_Parser_Const.resolve_implicits_attr_string in
-          FStar_All.pipe_right hooks
-            (FStar_Util.try_find
+          FStar_Compiler_Effect.op_Bar_Greater hooks
+            (FStar_Compiler_Util.try_find
                (fun hook ->
-                  FStar_All.pipe_right hook.FStar_Syntax_Syntax.sigattrs
-                    (FStar_Util.for_some (FStar_Syntax_Util.attr_eq a))))
+                  FStar_Compiler_Effect.op_Bar_Greater
+                    hook.FStar_Syntax_Syntax.sigattrs
+                    (FStar_Compiler_Util.for_some
+                       (FStar_Syntax_Util.attr_eq a))))
       | uu___ -> FStar_Pervasives_Native.None
 let (should_defer_uvar_to_user_tac :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
@@ -160,7 +165,7 @@ let (should_defer_uvar_to_user_tac :
       then false
       else
         (let uu___1 = find_user_tac_for_uvar env u in
-         FStar_Option.isSome uu___1)
+         FStar_Compiler_Option.isSome uu___1)
 let solve_goals_with_tac :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
@@ -542,7 +547,8 @@ let (solve_deferred_to_tactic_goals :
                                | (goal, ctx_uvar, uu___9) ->
                                    let imp =
                                      let uu___10 =
-                                       let uu___11 = FStar_List.hd ctx_uvar in
+                                       let uu___11 =
+                                         FStar_Compiler_List.hd ctx_uvar in
                                        FStar_Pervasives_Native.fst uu___11 in
                                      {
                                        FStar_TypeChecker_Common.imp_reason =
@@ -597,10 +603,10 @@ let (solve_deferred_to_tactic_goals :
                                         (imp, se)))))
                 | uu___3 -> failwith "Unexpected problem deferred to tactic") in
          let eqs =
-           FStar_List.map prob_as_implicit
+           FStar_Compiler_List.map prob_as_implicit
              g.FStar_TypeChecker_Common.deferred_to_tac in
          let uu___1 =
-           FStar_List.fold_right
+           FStar_Compiler_List.fold_right
              (fun imp ->
                 fun uu___2 ->
                   match uu___2 with
@@ -624,8 +630,8 @@ let (solve_deferred_to_tactic_goals :
          match uu___1 with
          | (more, imps) ->
              let bucketize is =
-               let map = FStar_Util.smap_create (Prims.of_int (17)) in
-               FStar_List.iter
+               let map = FStar_Compiler_Util.smap_create (Prims.of_int (17)) in
+               FStar_Compiler_List.iter
                  (fun uu___3 ->
                     match uu___3 with
                     | (i, s) ->
@@ -635,18 +641,20 @@ let (solve_deferred_to_tactic_goals :
                              failwith "Unexpected: tactic without a name"
                          | FStar_Pervasives_Native.Some l ->
                              let lstr = FStar_Ident.string_of_lid l in
-                             let uu___5 = FStar_Util.smap_try_find map lstr in
+                             let uu___5 =
+                               FStar_Compiler_Util.smap_try_find map lstr in
                              (match uu___5 with
                               | FStar_Pervasives_Native.None ->
-                                  FStar_Util.smap_add map lstr ([i], s)
+                                  FStar_Compiler_Util.smap_add map lstr
+                                    ([i], s)
                               | FStar_Pervasives_Native.Some (is1, s1) ->
-                                  (FStar_Util.smap_remove map lstr;
-                                   FStar_Util.smap_add map lstr
+                                  (FStar_Compiler_Util.smap_remove map lstr;
+                                   FStar_Compiler_Util.smap_add map lstr
                                      ((i :: is1), s1))))) is;
-               FStar_Util.smap_fold map
+               FStar_Compiler_Util.smap_fold map
                  (fun uu___3 -> fun is1 -> fun out -> is1 :: out) [] in
-             let buckets = bucketize (FStar_List.append eqs more) in
-             (FStar_List.iter
+             let buckets = bucketize (FStar_Compiler_List.op_At eqs more) in
+             (FStar_Compiler_List.iter
                 (fun uu___3 ->
                    match uu___3 with
                    | (imps1, sigel) -> solve_goals_with_tac env g imps1 sigel)

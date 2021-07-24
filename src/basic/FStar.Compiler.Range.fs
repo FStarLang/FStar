@@ -15,11 +15,12 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module FStar.Range
-open FStar.ST
-open FStar.All
+module FStar.Compiler.Range
+open FStar.Compiler.Effect 
+module List = FStar.Compiler.List
+module Options = FStar.Options
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string
@@ -107,7 +108,7 @@ let string_of_file_name f =
     if Options.ide()
     then begin
         try
-            match FStar.Options.find_file (FStar.Util.basename f) with
+            match FStar.Options.find_file (FStar.Compiler.Util.basename f) with
             | None -> f //couldn't find file; just return the relative path
             | Some absolute_path ->
                 absolute_path
@@ -137,7 +138,7 @@ let col_of_pos p          = p.col
 let end_range r           = mk_range r.def_range.file_name r.def_range.end_pos r.def_range.end_pos
 
 let compare_rng r1 r2     =
-    let fcomp = String.compare r1.file_name r2.file_name in
+    let fcomp = FStar.String.compare r1.file_name r2.file_name in
     if fcomp = 0
     then let start1 = r1.start_pos in
          let start2 = r2.start_pos in

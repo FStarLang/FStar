@@ -1,11 +1,11 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.VConfig
 
 module Print = FStar.Syntax.Print
@@ -13,7 +13,7 @@ module S = FStar.Syntax.Syntax
 module C = FStar.Const
 module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
@@ -33,7 +33,7 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
     BU.map_opt s (Thunk.map f)
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
-type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
 
 type raw_embedder<'a>   = 'a -> embed_t
@@ -115,7 +115,7 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (Print.emb_typ_to_string et)

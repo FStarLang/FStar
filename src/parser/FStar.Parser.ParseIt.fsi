@@ -15,11 +15,11 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Parser
-open FStar.Util
-open FStar
+open FStar.Compiler.Util
+open FStar open FStar.Compiler
 open FStar.Errors
 
 type filename = string

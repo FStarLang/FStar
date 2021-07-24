@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Tactics.Derived
-
+open FStar.List.Tot
 open FStar.Reflection
 open FStar.Reflection.Formula
 open FStar.Tactics.Types
