@@ -126,6 +126,14 @@ type sel_view
     (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
 
+let weaken_view (#p: pcm 'a) (v: sel_view p 'b false): sel_view p 'b true = {
+  to_view_prop = v.to_view_prop;
+  to_view = v.to_view;
+  to_carrier = v.to_carrier;
+  to_carrier_not_one = ();
+  to_view_frame = v.to_view_frame;
+}
+
 let g_is_inverse_of (#a #b: Type) (g: (b -> GTot a)) (f: (a -> GTot b)) : Tot prop =
   (forall x . {:pattern (g (f x))} g (f x) == x)
 

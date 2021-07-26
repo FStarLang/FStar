@@ -42,7 +42,7 @@ val mk_node_refine (i: option int) (next: option (ptr node node))
     (ensures p_refine node_pcm (mk_node i next))
     [SMTPat (p_refine node_pcm (mk_node i next))]
 
-/// Lenses for fields
+/// Connections for fields
 
 val _value: node_pcm `connection` opt_pcm #int
 val _next: node_pcm `connection` opt_pcm #(ptr node node)
