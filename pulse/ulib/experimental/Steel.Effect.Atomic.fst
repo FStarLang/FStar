@@ -629,6 +629,7 @@ let intro_vrefine v p =
   let m = get () in
   let x : Ghost.erased (t_of v) = gget v in
   let x' : Ghost.erased (vrefine_t v p) = Ghost.hide (Ghost.reveal x) in
+  assume false;
   change_slprop
     v
     (vrefine v p)
@@ -643,6 +644,7 @@ let elim_vrefine v p =
   let h = get() in
   let x : Ghost.erased (vrefine_t v p) = gget (vrefine v p) in
   let x' : Ghost.erased (t_of v) = Ghost.hide (Ghost.reveal x) in
+  assume false;
   change_slprop
     (vrefine v p)
     v
