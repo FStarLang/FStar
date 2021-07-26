@@ -2061,81 +2061,52 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
           then TcUtil.bind head.pos env (Some head) chead (None, comp)
           else TcUtil.bind head.pos env None chead (None, comp) in
 
-      (* TODO : This is a really syntactic criterion to check if we can evaluate *)
-      (* applications left-to-right, can we do better ? *)
-      let shortcuts_evaluation_order =
-        match (SS.compress head).n with
-        | Tm_fvar fv ->
-          S.fv_eq_lid fv Parser.Const.op_And ||
-          S.fv_eq_lid fv Parser.Const.op_Or
-        | _ -> false
-      in
-
       let app =
-       if shortcuts_evaluation_order then
-         (* Note: this case is only reachable in --lax mode.
-                  In non-lax code, shortcut evaluation order is handled by
-                  check_short_circuit_args. See, roughly, line 511, case Tm_app
-         *)
-         (* If the head is shortcutting we cannot hoist its arguments *)
-         (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
-         let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
-         let app = mk_Tm_app head args r in
-         let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-         TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
+        let lifted_args, head, args =
+          let map_fun ((e, q), _ , c) =
+            if Env.debug env Options.Extreme then
+              BU.print2 "For arg e=(%s) c=(%s)... " (Print.term_to_string e) (TcComm.lcomp_to_string c);
+            if TcComm.is_pure_or_ghost_lcomp c
+            then begin
+              if Env.debug env Options.Extreme then BU.print_string "... not lifting\n";
+              None, (e, q)
+            end else begin
+              //this argument is effectful, warn if the function would be erased
+              //special casing for ignore, may be use an attribute instead?
+              let warn_effectful_args  =
+                (TcUtil.must_erase_for_extraction env chead.res_typ) &&
+                (not (match (U.un_uinst head).n with
+                      | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
+                      | _ -> true)) in
+              if warn_effectful_args then
+                Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
+                                        (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
+                                           (Print.term_to_string e) (string_of_lid c.eff_name) (Print.term_to_string head)));
+              if Env.debug env Options.Extreme then
+                BU.print_string "... lifting!\n";
+              let x = S.new_bv None c.res_typ in
+              let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
+              Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
+            end in
+          let lifted_args, reverse_args =
+            List.split <| List.map map_fun ((as_arg head, None, chead)::arg_comps_rev) in
+          lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
+        in
 
-       else
-          (* 2. For each monadic argument (including the head of the application) we introduce *)
-          (*    a fresh variable and lift the actual argument to comp.       *)
-          let lifted_args, head, args =
-            let map_fun ((e, q), _ , c) =
-               if Env.debug env Options.Extreme then
-                 BU.print2 "For arg e=(%s) c=(%s)... " (Print.term_to_string e) (TcComm.lcomp_to_string c);
-               if TcComm.is_pure_or_ghost_lcomp c
-               then begin
-                   if Env.debug env Options.Extreme then
-                      BU.print_string "... not lifting\n";
-                   None, (e, q)
-               end else begin
-                   //this argument is effectful, warn if the function would be erased
-                   //special casing for ignore, may be use an attribute instead?
-                   let warn_effectful_args  =
-                     (TcUtil.must_erase_for_extraction env chead.res_typ) &&
-                     (not (match (U.un_uinst head).n with
-                           | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
-                           | _ -> true))
-                   in
-                   if warn_effectful_args then
-                     Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
-                                             (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
-                                                      (Print.term_to_string e) (string_of_lid c.eff_name) (Print.term_to_string head)));
-                   if Env.debug env Options.Extreme then
-                       BU.print_string "... lifting!\n";
-                   let x = S.new_bv None c.res_typ in
-                   let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
-                   Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
-               end
-            in
-            let lifted_args, reverse_args =
-                List.split <| List.map map_fun ((as_arg head, None, chead)::arg_comps_rev)
-            in
-            lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
-          in
-
-          (* 3. We apply the (non-monadic) head to the non-monadic arguments, lift the *)
-          (*    result to comp and then bind each monadic arguments to close over the *)
-          (*    variables introduces at step 2. *)
-          let app = mk_Tm_app head args r in
-          let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
-          let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
-          let bind_lifted_args e = function
-            | None -> e
-            | Some (x, m, t, e1) ->
-              let lb = U.mk_letbinding (Inl x) [] t m e1 [] e1.pos in
-              let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) e.pos in
-              mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) e.pos
-          in
-          List.fold_left bind_lifted_args app lifted_args
+        (* 3. We apply the (non-monadic) head to the non-monadic arguments, lift the *)
+        (*    result to comp and then bind each monadic arguments to close over the *)
+        (*    variables introduces at step 2. *)
+        let app = mk_Tm_app head args r in
+        let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
+        let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
+        let bind_lifted_args e = function
+          | None -> e
+          | Some (x, m, t, e1) ->
+            let lb = U.mk_letbinding (Inl x) [] t m e1 [] e1.pos in
+            let letbinding = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e)) e.pos in
+            mk (Tm_meta(letbinding, Meta_monadic(m, comp.res_typ))) e.pos
+        in
+        List.fold_left bind_lifted_args app lifted_args
       in
 
       (* Each conjunct in g is already labeled *)
@@ -2257,6 +2228,25 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
                    (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ) (string_of_bool env.use_eq);
             let e, c, g_e = tc_term env e in
+            (*
+             * AR: for short circuit operators, we come here only in lax mode
+             *       in phase 2 (verification on), we do the typechecking in check_short_circuit_args
+             *     now, the check that arguments to short circuit operators should be pure or ghost
+             *       could be done only in check_short_circuit_args
+             *     but we need to support the cases where some code is typechecked lax,
+             *       and then reified, e.g. some tactic
+             *     for those cases, we need to prohobit effectful arguments to short circuit operators,
+             *       else in the absence of meta monadic nodes, reification would get stuck
+             *     so we do a check here as well
+             *)
+            if (let (head, _, _, _) = head_info in
+                TcUtil.short_circuit_head head &&
+                not (Options.ml_ish ()) &&
+                not (TcUtil.is_pure_or_ghost_effect env c.eff_name ||
+                     TcComm.is_tot_or_gtot_lcomp c))  //for cases too early in prims, when Tot (GTot) is not a PURE (GHOST)
+            then raise_error
+                   (Err.expected_ghost_expression e (TcComm.lcomp_comp c |> fst)
+                     "arguments to short circuiting operators must be pure or ghost") e.pos;
             let g = Env.conj_guard g_ex <| Env.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
