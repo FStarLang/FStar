@@ -75,7 +75,7 @@ let imap (a:eqtype) (b: a -> Type) (inv:DM.t a (opt b) -> Type) =
     r:map a b{inv (repr r)}
 
 /// `grows r1 r2` is an abstract preorder on `imap`
-val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> Type)
+val grows (#a:eqtype) (#b:_) (#inv:DM.t a (opt b) -> Type)
   : FStar.Preorder.preorder (imap a b inv)
 
 /// And, finally, the main type of this module:

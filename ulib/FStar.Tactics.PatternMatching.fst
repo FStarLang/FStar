@@ -713,177 +713,177 @@ let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
 (** Specialize a continuation of type ``abspat_continuation``.
 This constructs a fully applied version of `continuation`, but it requires a
 quoted solution to be passed in. **)
-let specialize_abspat_continuation' (continuation: abspat_continuation)
-                                    (solution_term:term)
-    : Tac term =
-  let mk_arg argspec =
-    (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
-  let argspecs, body = continuation in
-  mk_app body (map mk_arg argspecs)
+// let specialize_abspat_continuation' (continuation: abspat_continuation)
+//                                     (solution_term:term)
+//     : Tac term =
+//   let mk_arg argspec =
+//     (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
+//   let argspecs, body = continuation in
+//   mk_app body (map mk_arg argspecs)
 
-(** Specialize a continuation of type ``abspat_continuation``.  This yields a
-quoted function taking a matching solution and running its body with appropriate
-bindings. **)
-let specialize_abspat_continuation (continuation: abspat_continuation)
-    : Tac term =
-  let solution_binder = fresh_binder (`matching_solution) in
-  let solution_term = pack (Tv_Var (bv_of_binder solution_binder)) in
-  let applied = specialize_abspat_continuation' continuation solution_term in
-  let thunked = pack (Tv_Abs solution_binder applied) in
-  debug ("Specialized into " ^ (term_to_string thunked));
-  let normalized = beta_reduce thunked in
-  debug ("… which reduces to " ^ (term_to_string normalized));
-  thunked
+// (** Specialize a continuation of type ``abspat_continuation``.  This yields a
+// quoted function taking a matching solution and running its body with appropriate
+// bindings. **)
+// let specialize_abspat_continuation (continuation: abspat_continuation)
+//     : Tac term =
+//   let solution_binder = fresh_binder (`matching_solution) in
+//   let solution_term = pack (Tv_Var (bv_of_binder solution_binder)) in
+//   let applied = specialize_abspat_continuation' continuation solution_term in
+//   let thunked = pack (Tv_Abs solution_binder applied) in
+//   debug ("Specialized into " ^ (term_to_string thunked));
+//   let normalized = beta_reduce thunked in
+//   debug ("… which reduces to " ^ (term_to_string normalized));
+//   thunked
 
-(** Interpret a continuation of type ``abspat_continuation``.
-This yields a function taking a matching solution and running the body of the
-continuation with appropriate bindings. **)
-let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
-    : Tac (matching_solution -> Tac a) =
-  let applied = specialize_abspat_continuation continuation in
-  unquote #(matching_solution -> Tac a) applied
+// (** Interpret a continuation of type ``abspat_continuation``.
+// This yields a function taking a matching solution and running the body of the
+// continuation with appropriate bindings. **)
+// let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
+//     : Tac (matching_solution -> Tac a) =
+//   let applied = specialize_abspat_continuation continuation in
+//   unquote #(matching_solution -> Tac a) applied
 
-/// Putting it all together
-/// =======================
-///
-/// We now have all we need to use pattern-matching, short of a few convenience functions:
+// /// Putting it all together
+// /// =======================
+// ///
+// /// We now have all we need to use pattern-matching, short of a few convenience functions:
 
-(** Construct a matching problem from an abspat. **)
-let interp_abspat #a (abspat: a)
-    : Tac (matching_problem * abspat_continuation) =
-  matching_problem_of_abs (quote abspat)
+// (** Construct a matching problem from an abspat. **)
+// let interp_abspat #a (abspat: a)
+//     : Tac (matching_problem * abspat_continuation) =
+//   matching_problem_of_abs (quote abspat)
 
-(** Construct an solve a matching problem.
-This higher-order function isn't very usable on its own — it's mostly a
-convenience function to avoid duplicating the problem-parsing code. **)
-let match_abspat #b #a (abspat: a)
-                 (k: abspat_continuation -> Tac (matching_solution -> Tac b))
-    : Tac b =
-  let goal = cur_goal () in
-  let hypotheses = binders_of_env (cur_env ()) in
-  let problem, continuation = interp_abspat abspat in
-  admit();  //NS: imprecision in the encoding of the impure result function type
-  solve_mp #matching_solution problem hypotheses goal (k continuation)
+// (** Construct an solve a matching problem.
+// This higher-order function isn't very usable on its own — it's mostly a
+// convenience function to avoid duplicating the problem-parsing code. **)
+// let match_abspat #b #a (abspat: a)
+//                  (k: abspat_continuation -> Tac (matching_solution -> Tac b))
+//     : Tac b =
+//   let goal = cur_goal () in
+//   let hypotheses = binders_of_env (cur_env ()) in
+//   let problem, continuation = interp_abspat abspat in
+//   admit();  //NS: imprecision in the encoding of the impure result function type
+//   solve_mp #matching_solution problem hypotheses goal (k continuation)
 
-(** Inspect the matching problem produced by parsing an abspat. **)
-let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
-  fst (interp_abspat #a abspat)
+// (** Inspect the matching problem produced by parsing an abspat. **)
+// let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
+//   fst (interp_abspat #a abspat)
 
-(** Inspect the matching solution produced by parsing and solving an abspat. **)
-let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
+// (** Inspect the matching solution produced by parsing and solving an abspat. **)
+// let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
+//   match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
 
-let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
-  fun (y: b) -> (x, y)
+// let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
+//   fun (y: b) -> (x, y)
 
-/// Our first convenient entry point!
-///
-/// This takes an abspat, parses it, computes a solution, and runs the body of
-/// the abspat with appropriate bindings.  It implements what others call ‘lazy’
-/// pattern-matching, so called because the success of the body of the pattern
-/// isn't taken into account when deciding whether a particular set of matched
-/// hypothesis should be retained.  In other words, it picks the first matching
-/// set of hypotheses, and commits to it.
-///
-/// If you think that sounds like a greedy algorithm, it does.  That's why it's
-/// called ‘gpm’ below: greedy pattern-matching.
+// /// Our first convenient entry point!
+// ///
+// /// This takes an abspat, parses it, computes a solution, and runs the body of
+// /// the abspat with appropriate bindings.  It implements what others call ‘lazy’
+// /// pattern-matching, so called because the success of the body of the pattern
+// /// isn't taken into account when deciding whether a particular set of matched
+// /// hypothesis should be retained.  In other words, it picks the first matching
+// /// set of hypotheses, and commits to it.
+// ///
+// /// If you think that sounds like a greedy algorithm, it does.  That's why it's
+// /// called ‘gpm’ below: greedy pattern-matching.
 
-(** Solve a greedy pattern-matching problem and run its continuation.
-This if for pattern-matching problems in the ``Tac`` effect. **)
-let gpm #b #a (abspat: a) () : Tac b =
-  let continuation, solution = match_abspat abspat tpair in
-  interp_abspat_continuation b continuation solution
+// (** Solve a greedy pattern-matching problem and run its continuation.
+// This if for pattern-matching problems in the ``Tac`` effect. **)
+// let gpm #b #a (abspat: a) () : Tac b =
+//   let continuation, solution = match_abspat abspat tpair in
+//   interp_abspat_continuation b continuation solution
 
-/// And here's the non-greedy version of the same.  It's informative to compare
-/// the implementations!  This one will only find assignments that let the body
-/// run successfuly.
+// /// And here's the non-greedy version of the same.  It's informative to compare
+// /// the implementations!  This one will only find assignments that let the body
+// /// run successfuly.
 
-(** Solve a greedy pattern-matching problem and run its continuation.
-This if for pattern-matching problems in the ``Tac`` effect. **)
-let pm #b #a (abspat: a) : Tac b =
-  match_abspat abspat (interp_abspat_continuation b)
+// (** Solve a greedy pattern-matching problem and run its continuation.
+// This if for pattern-matching problems in the ``Tac`` effect. **)
+// let pm #b #a (abspat: a) : Tac b =
+//   match_abspat abspat (interp_abspat_continuation b)
 
-/// Examples
-/// ========
-///
-/// We conclude with a small set of examples.
+// /// Examples
+// /// ========
+// ///
+// /// We conclude with a small set of examples.
 
-/// Simple examples
-/// ---------------
-///
-/// Here's the example from the intro, which we can now run!
+// /// Simple examples
+// /// ---------------
+// ///
+// /// Here's the example from the intro, which we can now run!
 
-let fetch_eq_side' #a : Tac (term * term) =
-  gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
-         (quote left, quote right)) ()
+// let fetch_eq_side' #a : Tac (term * term) =
+//   gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
+//          (quote left, quote right)) ()
 
-// TODO: GM: The following definition breaks extraction with
-(*
-FStar.Tactics.Effect.fst(20,16-20,21): (Error 76) Ill-typed application: application is FStar.Tactics.PatternMatching.fetch_eq_side' (FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range
-ps
-(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45))))
-remaining args are FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range ps
-(FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45)))
-ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
-*)
+// // TODO: GM: The following definition breaks extraction with
+// (*
+// FStar.Tactics.Effect.fst(20,16-20,21): (Error 76) Ill-typed application: application is FStar.Tactics.PatternMatching.fetch_eq_side' (FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range
+// ps
+// (FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45))))
+// remaining args are FStar.Tactics.Types.incr_depth (FStar.Tactics.Types.set_proofstate_range ps
+// (FStar.Range.prims_to_fstar_range FStar.Tactics.PatternMatching.fst(811,26-811,45)))
+// ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
+// *)
 
-(* let _ = *)
-(*   assert_by_tactic (1 + 1 == 2) *)
-(*     (fun () -> let l, r = fetch_eq_side' #int in *)
-(*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
+// (* let _ = *)
+// (*   assert_by_tactic (1 + 1 == 2) *)
+// (*     (fun () -> let l, r = fetch_eq_side' #int in *)
+// (*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
-(* let _ = *)
-(*   assert_by_tactic (1 + 1 == 2) *)
-(*     (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) -> *)
-(*             let l, r = quote left, quote right in *)
-(*             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit)) *)
+// (* let _ = *)
+// (*   assert_by_tactic (1 + 1 == 2) *)
+// (*     (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) -> *)
+// (*             let l, r = quote left, quote right in *)
+// (*             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit)) *)
 
-/// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
-/// instructive:
+// /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
+// /// instructive:
 
-(*
-let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
-  assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
-    (fun () -> repeat' implies_intro';
-               gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
-                           print (binder_to_string h);
-                           fail "fail here" <: Tac unit);
-               qed ())
-*)
+// (*
+// let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
+//   assert_by_tactic ((a ==> d) ==> (b ==> d) ==> (c ==> d) ==> a ==> d)
+//     (fun () -> repeat' implies_intro';
+//                gpm (fun (a b: Type0) (h: hyp (a ==> b)) ->
+//                            print (binder_to_string h);
+//                            fail "fail here" <: Tac unit);
+//                qed ())
+// *)
 
-/// A real-life example
-/// -------------------
-///
-/// The following tactics combines mutliple simple building blocks to solve a
-/// goal.  Each use of ``lpm`` recognizes a specific pattern; and each tactic is
-/// tried in succession, until one succeeds.  The whole process is repeated as
-/// long as at least one tactic succeeds.
+// /// A real-life example
+// /// -------------------
+// ///
+// /// The following tactics combines mutliple simple building blocks to solve a
+// /// goal.  Each use of ``lpm`` recognizes a specific pattern; and each tactic is
+// /// tried in succession, until one succeeds.  The whole process is repeated as
+// /// long as at least one tactic succeeds.
 
-let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> repeat' (fun () ->
-                 gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
-                              clear h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
-                              implies_intro' () <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                              and_elim' h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
-                              rewrite h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
-                              exact_hyp a h <: Tac unit) ())))));
-               qed ())
+// let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
+//   assert_by_tactic (a /\ b ==> c == b ==> c)
+//     (fun () -> repeat' (fun () ->
+//                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
+//                               clear h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
+//                               implies_intro' () <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
+//                               and_elim' h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
+//                               rewrite h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
+//                               exact_hyp a h <: Tac unit) ())))));
+//                qed ())
 
-/// Possible extensions
-/// ===================
-///
-/// The following tasks would make for interesting extensions of this
-/// experiment:
-///
-/// - Handling multiple goal patterns (easy)
-/// - Extending the matching language (match under binders?)
-/// - Introducing specialized syntax
-/// - Thinking about a sound way of supporting ‘match-anything’ patterns in
-///   abspat notations
-/// - Using the normalizer to partially-evaluated pattern-matching tactics
-/// - Migrating to a compile-time version of ``quote``
+// /// Possible extensions
+// /// ===================
+// ///
+// /// The following tasks would make for interesting extensions of this
+// /// experiment:
+// ///
+// /// - Handling multiple goal patterns (easy)
+// /// - Extending the matching language (match under binders?)
+// /// - Introducing specialized syntax
+// /// - Thinking about a sound way of supporting ‘match-anything’ patterns in
+// ///   abspat notations
+// /// - Using the normalizer to partially-evaluated pattern-matching tactics
+// /// - Migrating to a compile-time version of ``quote``

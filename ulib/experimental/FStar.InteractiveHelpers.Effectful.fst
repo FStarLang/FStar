@@ -563,33 +563,33 @@ let term_has_effectful_comp dbg e tm =
 /// can't compute a term computation. In this case, we consider that the term is
 /// effectful. There are also situations in which we may not be sure which term to
 /// consider.
-let related_term_is_effectul dbg ge tv : Tac bool =
-  let is_effectful tm =
-    term_has_effectful_comp dbg ge.env tm <> Some false
-  in
-  match tv with
-  | Tv_Var _ | Tv_BVar _ | Tv_FVar _ -> false
-  | Tv_App hd (a, qual) ->
-    (* The term under focus should be the app itself or an argument *)
-    false
-  | Tv_Abs br body -> false
-  | Tv_Arrow br c0 -> false
-  | Tv_Type () -> false
-  | Tv_Refine bv ref ->
-    false
-  | Tv_Const _ -> false
-  | Tv_Uvar _ _ -> false
-  | Tv_Let recf attrs bv def body -> is_effectful def
-  | Tv_Match scrutinee _ret_opt branches ->
-    (* TODO: we need to keep track of the relation between parents and children *)
-    (* We assume the term under focus is in one the branches of the match - this
-     * assumption is safe: in the worst case, we won't be able to find a mem to use.
-     * Besides, in practice it is uncommon (impossible?) to use an effectful term
-     * as the scrutinee of a match *)
-    is_effectful scrutinee
-  | Tv_AscribedT e ty tac -> false (* The focused term should be inside the ascription *)
-  | Tv_AscribedC e c tac -> false (* The focused term should be inside the ascription *)
-  | _ -> (* Unknown: keep things safe *) true
+let related_term_is_effectul dbg ge tv : Tac bool = admit ()
+  // let is_effectful tm =
+  //   term_has_effectful_comp dbg ge.env tm <> Some false
+  // in
+  // match tv with
+  // | Tv_Var _ | Tv_BVar _ | Tv_FVar _ -> false
+  // | Tv_App hd (a, qual) ->
+  //   (* The term under focus should be the app itself or an argument *)
+  //   false
+  // | Tv_Abs br body -> false
+  // | Tv_Arrow br c0 -> false
+  // | Tv_Type () -> false
+  // | Tv_Refine bv ref ->
+  //   false
+  // | Tv_Const _ -> false
+  // | Tv_Uvar _ _ -> false
+  // | Tv_Let recf attrs bv def body -> is_effectful def
+  // | Tv_Match scrutinee _ret_opt branches ->
+  //   (* TODO: we need to keep track of the relation between parents and children *)
+  //   (* We assume the term under focus is in one the branches of the match - this
+  //    * assumption is safe: in the worst case, we won't be able to find a mem to use.
+  //    * Besides, in practice it is uncommon (impossible?) to use an effectful term
+  //    * as the scrutinee of a match *)
+  //   is_effectful scrutinee
+  // | Tv_AscribedT e ty tac -> false (* The focused term should be inside the ascription *)
+  // | Tv_AscribedC e c tac -> false (* The focused term should be inside the ascription *)
+  // | _ -> (* Unknown: keep things safe *) true
 
 /// Look for a term of the form ``let h = ST.get ()`` in a list of parent/children terms
 /// and return the let-bound bv. Abort the search if we find a non-effectful term.
