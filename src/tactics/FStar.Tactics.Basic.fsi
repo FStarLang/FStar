@@ -84,5 +84,6 @@ val join                   : unit -> tac<unit>
 val lget                   : typ -> string -> tac<term>
 val lset                   : typ -> string -> term -> tac<unit>
 val curms                  : unit -> tac<Z.t>
+val with_timing            : string -> tac<'a> -> tac<'a>
 val set_urgency            : Z.t -> tac<unit>
 val t_commute_applied_match : unit -> tac<unit>

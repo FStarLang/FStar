@@ -337,6 +337,13 @@ let fresh () : tac<Z.t> =
 let curms () : tac<Z.t> =
     ret (BU.now_ms () |> Z.of_int_fs)
 
+let with_timing msg (f: tac<'a>) : tac<'a> =
+  bind (curms ()) (fun t0 ->
+  bind f (fun x ->
+  bind (curms()) (fun t1 ->
+  bind (print ("TIMING: " ^ msg ^ " " ^ (string_of_int (Z.to_int_fs t1 - Z.to_int_fs t0)) ^"ms")) (fun _ ->
+  ret x))))
+
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->

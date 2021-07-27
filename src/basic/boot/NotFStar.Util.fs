@@ -34,7 +34,7 @@ type time = System.DateTime
 let now () = System.DateTime.Now
 let now_ms () =
     let t = now () in
-    t.Second * 1000 + t.Millisecond
+    bigint (t.Second * 1000 + t.Millisecond)
 let time_diff (t1:time) (t2:time) : float * int =
     let ts = t2 - t1 in
     ts.TotalSeconds, int32 ts.TotalMilliseconds

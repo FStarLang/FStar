@@ -637,6 +637,38 @@ let (curms : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
       let uu___2 = FStar_Util.now_ms () in
       FStar_All.pipe_right uu___2 FStar_BigInt.of_int_fs in
     FStar_Tactics_Monad.ret uu___1
+let with_timing :
+  'a .
+    Prims.string -> 'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac
+  =
+  fun msg ->
+    fun f ->
+      let uu___ = curms () in
+      FStar_Tactics_Monad.bind uu___
+        (fun t0 ->
+           FStar_Tactics_Monad.bind f
+             (fun x ->
+                let uu___1 = curms () in
+                FStar_Tactics_Monad.bind uu___1
+                  (fun t1 ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 =
+                               let uu___7 =
+                                 let uu___8 =
+                                   let uu___9 = FStar_BigInt.to_int_fs t1 in
+                                   let uu___10 = FStar_BigInt.to_int_fs t0 in
+                                   uu___9 - uu___10 in
+                                 FStar_Util.string_of_int uu___8 in
+                               Prims.op_Hat uu___7 "ms" in
+                             Prims.op_Hat " " uu___6 in
+                           Prims.op_Hat msg uu___5 in
+                         Prims.op_Hat "TIMING: " uu___4 in
+                       print uu___3 in
+                     FStar_Tactics_Monad.bind uu___2
+                       (fun uu___3 -> FStar_Tactics_Monad.ret x))))
 let (__tc :
   env ->
     FStar_Syntax_Syntax.term ->

@@ -361,7 +361,7 @@ val elim_conjunction (p1 p1' p2 p2':Type0)
 /// When that happens, we want to replace frame_equalities by an equality on the frame,
 /// mimicking reduction
 [@@plugin]
-let frame_vc_norm () : Tac unit =
+let frame_vc_norm' () : Tac unit =
   // Do not normalize mk_rmem/focus_rmem to simplify application of
   // the reflexivity lemma on frame_equalities'
   norm [delta_attr [`%__steel_reduce__];
@@ -401,6 +401,10 @@ let frame_vc_norm () : Tac unit =
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
   norm normal_steps;
   trefl ()
+
+[@@plugin]
+let frame_vc_norm () : Tac unit =
+  with_timing "frame_vc_norm" frame_vc_norm'
 
 [@@ __steel_reduce__]
 unfold
@@ -2105,43 +2109,49 @@ let rec norm_return_pre (l:list goal) : Tac unit =
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
 /// The `plugin` attribute ensures that this tactic is compiled, and executed natively for performance reasons
-[@@ resolve_implicits; framing_implicit; plugin]
+[@@ plugin]
 let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
-  let slgs, loggs = filter_goals (goals()) in
+  let slgs, loggs =
+    with_timing "filter_goals" (fun () -> filter_goals (goals()))
+  in
 
   // We first solve the slprops
   set_goals slgs;
 
   // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
+  with_timing "solve_maybe_emps" (fun () -> solve_maybe_emps (goals ()));
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
-  solve_indirection_eqs (goals());
+  with_timing "solve_indirection_eqs" (fun () -> solve_indirection_eqs (goals()));
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
   // We can now solve the equalities for returns
-  solve_return_eqs (goals());
+  with_timing "solve_return_eqs" (fun () -> solve_return_eqs (goals()));
 
   // It is important to not normalize the return_pre equalities before solving them
   // Else, we lose some variables dependencies, leading to the tactic being stuck
   // See test7 in FramingTestSuite for more explanations of what is failing
   // Once unification has been done, we can then safely normalize and remove all return_pre
-  norm_return_pre (goals());
+  with_timing "norm_return_pre" (fun () -> norm_return_pre (goals()));
 
   // Finally running the core of the tactic, scheduling and solving goals
-  resolve_tac ();
+  with_timing "resolve_tac" (fun () -> resolve_tac ());
 
   // We now solve the requires/ensures goals, which are all equalities
   // All slprops are resolved by now
   set_goals loggs;
 
-  resolve_tac_logical ()
+  with_timing "resolve_tac_logical" (fun () -> resolve_tac_logical ())
+
+[@@ resolve_implicits; framing_implicit; plugin]
+let init_resolve_tac' () : Tac unit =
+  with_timing "init_resolve_tac" init_resolve_tac
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
@@ -2202,4 +2212,5 @@ let ite_soundness_tac () : Tac unit =
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
-let vc_norm () : Tac unit = norm normal_steps; trefl()
+let vc_norm () : Tac unit =
+  with_timing "vc_norm" (fun () -> norm normal_steps; trefl())

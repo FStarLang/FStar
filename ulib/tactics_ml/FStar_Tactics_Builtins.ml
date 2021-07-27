@@ -142,6 +142,7 @@ let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 let curms                   = from_tac_1 B.curms
+let with_timing msg t       = from_tac_2 B.with_timing msg (to_tac_0 (t()))
 let set_urgency             = from_tac_1 B.set_urgency
 let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 

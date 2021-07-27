@@ -4156,7 +4156,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then begin
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options "--no_tactics";
-                        let vcs = env.solver.preprocess env vc in
+                        let vcs =
+                          Profiling.profile
+                            (fun () -> env.solver.preprocess env vc)
+                            (Some "FStar.TypeChecker.Rel.solver.preprocess")
+                            "FStar.TypeChecker.Rel.solver.preprocess"
+                        in
                         vcs |> List.map (fun (env, goal, opts) ->
                         env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts)
                     )

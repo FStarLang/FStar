@@ -359,6 +359,14 @@ val set_smt_goals : list goal -> Tac unit
 (** [curms ()] returns the current (wall) time in millseconds *)
 val curms : unit -> Tac int
 
+(** [with_timing ()] measures the execution time of [t] in milliseconds and prints it to stdout as "TIMING: [msg] <n>ms" **)
+let with_timing (msg:string) (t:unit -> Tac 'a) : Tac 'a =
+  let start = curms () in
+  let res = t() in
+  let fin = curms() in
+  print ("TIMING: " ^ msg ^ " " ^ (string_of_int (fin - start)) ^ "ms");
+  res
+
 (** [set_urgency u] sets the urgency of error messages. Usually set just
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> Tac unit
