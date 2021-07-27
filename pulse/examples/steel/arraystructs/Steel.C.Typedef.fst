@@ -15,30 +15,6 @@ noeq type typedef = {
 
 // assume val malloc: typedef -> ptr typedef.carrier typedef.pcm 
 
-let has_field (fields: list (string & typedef)) (field: string): prop =
-  field `mem` map fst fields == true
-
-let field_of (fields: list (string & typedef)) = refine string (has_field fields)
-
-let get_field (fields: list (string & typedef)) (field: field_of fields): typedef =
-  assoc_mem field fields;
-  Some?.v (assoc field fields)
-  
-let type_family_of (fields: list (string & typedef)) (field: field_of fields) =
-  (get_field fields field).view_type
-
-//struct : string -> list (_ & _) -> Type
-
-val typedef_struct: string -> list (string & typedef) -> Tot typedef 
-
-let typedef_struct name fields = {
-  carrier = restricted_t (field_of fields) (type_family_of fields);
-  pcm = admit();
-  view_type = admit();
-  can_view_unit = admit();
-  view = admit();
-}
-
 (*
  
 
