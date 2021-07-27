@@ -1,4 +1,4 @@
-module PointStruct
+module PointStructSelectors
 
 open Steel.C.PCM
 open Steel.C.Opt
@@ -9,6 +9,7 @@ open Steel.Effect
 module A = Steel.Effect.Atomic
 
 open Steel.C.Typedef
+open Steel.C.StructLiteral
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
