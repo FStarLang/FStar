@@ -186,12 +186,15 @@ val struct_pcm_put_put_ne
       struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
       struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
+/// View a struct_pcm_carrier as a struct
+val struct_view (tag: string) (fields: struct_fields{Cons? fields})
+: sel_view (struct_pcm tag fields) (struct tag fields) false
+
 /// Typedef for struct from typedefs for its fields
 
-// let typedef_struct (tag: string) (fields: struct_fields): typedef = {
-//   carrier = Type0; 
-//   pcm: pcm carrier; 
-//   view_type: Type0; 
-//   can_view_unit: bool; 
-//   view: sel_view pcm view_type can_view_unit; 
-// }
+let typedef_struct (tag: string) (fields: struct_fields{Cons? fields}): typedef = {
+  carrier = struct_pcm_carrier tag fields; 
+  pcm = struct_pcm tag fields;
+  view_type = struct tag fields;
+  view = struct_view tag fields;
+}

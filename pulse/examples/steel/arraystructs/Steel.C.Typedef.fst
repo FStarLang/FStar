@@ -9,8 +9,7 @@ noeq type typedef = {
   carrier: Type0; 
   pcm: pcm carrier; 
   view_type: Type0; 
-  can_view_unit: bool; 
-  view: sel_view pcm view_type can_view_unit; 
+  view: sel_view pcm view_type false;
 } 
 
 // assume val malloc: typedef -> ptr typedef.carrier typedef.pcm 

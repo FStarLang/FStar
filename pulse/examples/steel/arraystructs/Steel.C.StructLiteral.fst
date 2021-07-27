@@ -218,3 +218,67 @@ let struct_pcm_put_put_ne x field1 v field2 w =
    assert (
      struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
+
+let field_views (tag: string) (fields: struct_fields) (field: field_of fields)
+: sel_view (struct_pcms tag fields field) (struct_view_types fields field) false
+= (get_field fields field).view
+
+let struct_view_to_view_prop (tag: string) (fields: struct_fields)
+: struct_pcm_carrier tag fields -> prop
+= fun x -> forall (field:field_of fields). (field_views tag fields field).to_view_prop (x field)
+
+let struct_view_to_view (tag: string) (fields: struct_fields)
+: refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields) ->
+  Tot (struct tag fields)
+= fun x -> on_dom _ (fun (field: field_of fields) -> (field_views tag fields field).to_view (x field))
+
+let struct_view_to_carrier (tag: string) (fields: struct_fields)
+: struct tag fields ->
+  Tot (refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields))
+= fun x ->
+  let y: struct_pcm_carrier tag fields =
+    on_dom _ (fun (field: field_of fields) ->
+      (field_views tag fields field).to_carrier (x field)
+      <: struct_carriers fields field)
+  in y
+
+let struct_view_to_view_frame (tag: string) (fields: struct_fields)
+  (x: struct tag fields)
+  (frame: struct_pcm_carrier tag fields)
+: Lemma
+    (requires (composable (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame))
+    (ensures
+      struct_view_to_view_prop tag fields
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) /\ 
+      struct_view_to_view tag fields
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) == x)
+= let p = struct_pcms tag fields in
+  let aux (k:field_of fields)
+  : Lemma (
+      (field_views tag fields k).to_view_prop
+        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) /\
+      (field_views tag fields k).to_view
+        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) == x k)
+  = assert (composable (p k) ((field_views tag fields k).to_carrier (x k)) (frame k));
+    (field_views tag fields k).to_view_frame (x k) (frame k)
+  in FStar.Classical.forall_intro aux;
+  assert (
+    struct_view_to_view tag fields
+       (op (prod_pcm p) (struct_view_to_carrier tag fields x) frame) `feq` x)
+
+let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields{Cons? fields})
+: squash (
+    ~ (exists x. struct_view_to_carrier tag fields x == one (struct_pcm tag fields)) /\
+    ~ (struct_view_to_view_prop tag fields (one (struct_pcm tag fields))))
+= let (field, _) :: _ = fields in
+  let field: field_of fields = field in
+  (field_views tag fields field).to_carrier_not_one
+
+let struct_view tag fields = {
+  to_view_prop = struct_view_to_view_prop tag fields;
+  to_view = struct_view_to_view tag fields;
+  to_carrier = struct_view_to_carrier tag fields;
+  to_carrier_not_one = struct_view_to_carrier_not_one tag fields;
+  to_view_frame = struct_view_to_view_frame tag fields;
+}
+
