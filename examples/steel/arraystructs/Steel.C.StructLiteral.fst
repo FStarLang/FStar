@@ -1,108 +1,46 @@
 module Steel.C.StructLiteral
 
-(*
-open Steel.C.PCM
-open Steel.C.Opt
-open Steel.C.Connection
-open Steel.C.Struct
-open FStar.FunctionalExtensionality
-open Steel.Effect
-module A = Steel.Effect.Atomic
-*)
-
-open Steel.C.PCM
 open Steel.C.Typedef
 open Steel.C.Ref // for refine
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
-let struct_fields = list (string * typedef)
+let struct tag fields = restricted_t (field_of fields) (struct_view_types fields)
 
-assume val struct' (tag: string) (fields: struct_fields) (excluded: list string): Type
+let rec mk_struct (tag: string) (fields: list (string * typedef))
+: mk_struct_ty tag fields
+= match fields with
+  | [] -> on_dom _ (fun field -> () <: struct_view_types fields field)
+  | (field, td) :: fields' ->
+    fun (x:td.view_type) ->
+    let f: map struct_field_view_type fields' `list_fn` struct tag fields' = mk_struct tag fields' in
+    let lift_struct (g: struct tag fields'): struct tag fields =
+      let h (field': field_of fields): struct_view_types fields field' =
+        if field' = field then x else g field'
+      in on_dom _ h
+    in
+    list_fn_map lift_struct f
 
-let struct (tag: string) (fields: struct_fields): Type = struct' tag fields []
+let struct_get x field = x field
 
-(* BEGIN TODO delete the ones in Steel.C.Typedef *)
-
-let has_field (fields: struct_fields) (excluded: list string) (field: string): prop =
-  field `mem` map fst fields == true /\ ~ (field `mem` excluded == true)
-  
-let field_of (fields: struct_fields) (excluded: list string) =
-  refine string (has_field fields excluded)
-
-let get_field (fields: struct_fields) (excluded: list string)
-  (field: field_of fields excluded)
-: typedef
-= assoc_mem field fields;
-  Some?.v (assoc field fields)
-  
-(* END TODO *)
-
-/// Reading a struct field
-assume val struct_get
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field: field_of fields excluded)
-: (get_field fields excluded field).view_type
-
-/// Writing a struct field
-assume val struct_put
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field: field_of fields excluded)
-  (v: (get_field fields excluded field).view_type)
-: struct' tag fields excluded
+let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
 
 /// For a fixed field name, struct_get and struct_put form a lens
 
-assume val struct_get_put 
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field: field_of fields excluded)
-  (v: (get_field fields excluded field).view_type)
-: Lemma (struct_put x field v `struct_get` field == v)
-  [SMTPat (struct_put x field v `struct_get` field)]
+let struct_get_put x field v = ()
 
-assume val struct_put_get
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field: field_of fields excluded)
-: Lemma (struct_put x field (x `struct_get` field) == x)
-  [SMTPat (struct_put x field (x `struct_get` field))]
+let struct_put_get x field =
+  assert (struct_put x field (x `struct_get` field) `feq` x)
 
-assume val struct_put_put
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field: field_of fields excluded)
-  (v w: (get_field fields excluded field).view_type)
-: Lemma (struct_put (struct_put x field v) field w == struct_put x field w)
-  [SMTPat (struct_put (struct_put x field v) field w)]
+let struct_put_put x field v w =
+  assert (struct_put (struct_put x field v) field w `feq` struct_put x field w)
 
-/// struct_get/struct_put pairs for different fields don't interfere with each other
+let struct_get_put_ne x field1 field2 v = ()
 
-assume val struct_get_put_ne
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field1: field_of fields excluded)
-  (field2: field_of fields excluded)
-  (v: (get_field fields excluded field1).view_type)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures struct_put x field1 v `struct_get` field2 == x `struct_get` field2)
-  [SMTPat (struct_put x field1 v `struct_get` field2)]
-
-assume val struct_put_put_ne
-  (#tag: string) (#fields: struct_fields) (#excluded: list string)
-  (x: struct' tag fields excluded)
-  (field1: field_of fields excluded)
-  (v: (get_field fields excluded field1).view_type)
-  (field2: field_of fields excluded)
-  (w: (get_field fields excluded field2).view_type)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures
-      struct_put (struct_put x field1 v) field2 w ==
-      struct_put (struct_put x field2 w) field1 v)
+let struct_put_put_ne x field1 v field2 w = 
+  assert (
+    struct_put (struct_put x field1 v) field2 w `feq`
+    struct_put (struct_put x field2 w) field1 v)
 
 (*
 define attribute on mk_struct_view_type, etc..
@@ -118,6 +56,11 @@ mk_struct_view v .. = mk_struct_view' (Some v) ..
 mk_struct_view' (Some v) None
 
 struct_type tag fields =
+
+without:
+  (#tag: string) (#fields: struct_fields) (#excluded: list string)
+  (x: struct' tag fields excluded)
+  (field: field_of fields excluded)
 *)
 
 (*
@@ -406,3 +349,129 @@ let point_view
 //   to_view_frame = (fun x frame -> ());
 // }
 *)
+
+
+(*
+
+to translate t
+
+  typedef_t: typedef t = { ... }
+
+to translate struct tag { S s; ... }
+
+  assume val struct (tag: string) (fields: list (string * typedef)): Type
+  assume val mk_struct_typedef (tag: string) (fields: list (string * typedef)):
+    typedef (struct tag ["s", typedef_S; ..))
+  
+  typedef_struct_tag: typedef (struct "tag" ["s", typedef_S; ..]) =
+     mk_struct_typedef "tag" ["s", typedef_S; ..]
+
+to translate struct loop { struct loop *again; }
+
+// Done (assuming can store pointers in heap)
+  carrier: Type0; 
+  pcm: pcm carrier; 
+
+view_type = {loop: ref struct_loop_carrier struct_loop_pcm}
+
+mk_view_type
+  (carrier: Type0)
+  (pcm: pcm carrier)
+-> view_type : {loop: ref struct_loop_carrier struct_loop_pcm}
+
+mk_rec_typedef:
+  (carrier: Type0)
+  (pcm: pcm carrier)
+-> t:typedef (mk_view_type carrier pcm) { t.carrier == carrier /\ t.pcm == pcm}
+
+noeq type typedef = { 
+
+// _
+  view_type: Type0; 
+
+// Should be fine
+  can_view_unit: bool; 
+  view: sel_view pcm view_type can_view_unit; 
+} 
+
+  typedef_struct_loop_f (recur:typedef)
+  : typedef (struct "loop" ["again", ref_typedef recur.carrier recur.pcm])
+  = mk_struct_typedef "loop" ["again", ref_typedef recur.carrier recur.pcm]
+
+  typedef_struct_loop
+  : typedef (struct "loop"
+      ["again",
+       ref_typedef
+         typedef_struct_loop.carrier
+         typedef_struct_loop.pcm])
+  = typedef_struct_loop_f typedef_struct_loop
+
+*)
+
+/// TODO Would be nice to have somtehing like this but proofs get tricky
+
+/// struct_put and struct_get are sound w.r.t. a model of structs as n-tuples
+
+(* BEGIN public *)
+
+let rec list_fn_args (dom: list Type) = match dom with
+  | [] -> unit
+  | d :: dom -> d & list_fn_args dom
+
+let rec list_apply #dom #b (f: dom `list_fn` b) (xs: list_fn_args dom): b = match dom with
+  | [] -> f
+  | a :: dom ->
+    let (x, xs): a & list_fn_args dom = xs in
+    let f: a -> dom `list_fn` b = f in
+    f x `list_apply` xs
+
+let rec struct_get_model
+  (#tag: string) (#fields: struct_fields) 
+  (vs: list_fn_args (mk_struct_ty_dom tag fields))
+  (field: field_of fields)
+: (get_field fields field).view_type
+= match fields with
+  | [] -> assert false
+  | (field', td) :: fields ->
+    let (v, vs): td.view_type & list_fn_args (mk_struct_ty_dom tag fields) = vs in
+    if field = field' then v else struct_get_model vs field
+
+let rec struct_put_model
+  (#tag: string) (#fields: struct_fields) 
+  (vs: list_fn_args (mk_struct_ty_dom tag fields))
+  (field: field_of fields)
+  (v: (get_field fields field).view_type)
+: list_fn_args (mk_struct_ty_dom tag fields)
+= match fields with
+  | [] -> vs
+  | (field', td) :: fields ->
+    let (v', vs): td.view_type & list_fn_args (mk_struct_ty_dom tag fields) = vs in
+    if field = field' then (v, vs) else (v', struct_put_model vs field v)
+
+(* END public *)
+
+val struct_get_sound
+  (#tag: string) (#fields: struct_fields) 
+  (vs: list_fn_args (mk_struct_ty_dom tag fields))
+  (field: field_of fields)
+: Lemma (
+    (mk_struct tag fields `list_apply` vs) `struct_get` field ==
+    struct_get_model vs field)
+
+let rec struct_get_sound #tag #fields vs field : Lemma (ensures
+    (mk_struct tag fields `list_apply` vs) `struct_get` field ==
+    struct_get_model vs field) (decreases fields) = match fields with
+  | [] -> ()
+  | (field', td) :: fields ->
+    let (v, vs): td.view_type & list_fn_args (mk_struct_ty_dom tag fields) = vs in
+    let field: field_of ((field', td) :: fields) = field in
+    if field = field' then begin
+      let f = mk_struct tag ((field', td) :: fields) in
+      assert ((list_apply #(mk_struct_ty_dom tag ((field', td) :: fields)) f (v, vs)) `struct_get` field ==
+        begin
+          let (x, xs): (struct_field_view_type (field', td) & list_fn_args (mk_struct_ty_dom tag fields)) = (v, vs) in
+          let f: struct_field_view_type (field', td) -> (mk_struct_ty_dom tag fields `list_fn` struct tag fields) = admit() in
+          f x `list_apply` xs
+        end);
+      assume ((list_apply #(mk_struct_ty_dom tag ((field', td) :: fields)) (mk_struct tag ((field', td) :: fields)) (v, vs)) `struct_get` field == v)
+    end else admit()//struct_get_sound #tag #fields vs field
