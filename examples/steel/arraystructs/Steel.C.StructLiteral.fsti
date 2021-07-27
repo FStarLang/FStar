@@ -1,5 +1,6 @@
 module Steel.C.StructLiteral
 
+open Steel.C.PCM
 open Steel.C.Typedef
 open Steel.C.Ref // for refine
 open FStar.List.Tot
@@ -15,9 +16,6 @@ let field_of (fields: struct_fields) =
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
   assoc_mem field fields;
   Some?.v (assoc field fields)
-
-let struct_view_types (fields: struct_fields) (field: field_of fields) =
-  (get_field fields field).view_type
 
 /// A view type for structs
 val struct (tag: string) (fields: struct_fields): Type0
@@ -107,3 +105,13 @@ val struct_put_put_ne
     (ensures
       struct_put (struct_put x field1 v) field2 w ==
       struct_put (struct_put x field2 w) field1 v)
+
+/// Typedef for struct from typedefs for its fields
+
+// let typedef_struct (tag: string) (fields: struct_fields): typedef = {
+//   carrier = Type0; 
+//   pcm: pcm carrier; 
+//   view_type: Type0; 
+//   can_view_unit: bool; 
+//   view: sel_view pcm view_type can_view_unit; 
+// }
