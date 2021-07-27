@@ -22,10 +22,30 @@ open PointStruct
 ///   *r = tmp;
 /// }
 
-let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
+let point_swap_some (p: ref 'a point_pcm) (x y: Ghost.erased int)
 : SteelT unit
     (p `pts_to` mk_point (some x) (some y))
     (fun _ -> p `pts_to` mk_point (some y) (some x))
+= (* int *q = &p.x; *)
+  let q = addr_of_x p in
+  (* int *r = &p.y; *)
+  let r = addr_of_y p in
+  (* tmp = *q; *)
+  let tmp : int = opt_read q in
+  (* *q = *r; *)
+  let vy : int = opt_read r in
+  opt_write q vy;
+  (* *r = tmp; *)
+  opt_write r tmp;
+  (* Gather *)
+  unaddr_of_x p q;
+  unaddr_of_y p r;
+  A.return ()
+
+let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
+: SteelT unit
+    (p `pts_to` mk_point (Some #int x) (Some #int y))
+    (fun _ -> p `pts_to` mk_point (Some #int y) (Some #int x))
 = (* int *q = &p.x; *)
   let q = addr_of_x p in
   (* int *r = &p.y; *)
@@ -51,8 +71,8 @@ let point_swap (p: ref 'a point_pcm) (x y: Ghost.erased int)
 /// }
 
 let generic_swap (#x #y: Ghost.erased 'c) (p:ref 'a (opt_pcm #'c)) (q:ref 'b (opt_pcm #'c))
-: SteelT unit ((p `pts_to` some x) `star` (q `pts_to` some y))
-    (fun _ -> (p `pts_to` some y) `star` (q `pts_to` some x))
+: SteelT unit ((p `pts_to` Some #'c x) `star` (q `pts_to` Some #'c y))
+    (fun _ -> (p `pts_to` Some #'c y) `star` (q `pts_to` Some #'c x))
 = (* A tmp = *p; *)
   let tmp = opt_read p in
   (* *p = *q; *)

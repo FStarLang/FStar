@@ -22,7 +22,7 @@ val point_pcm : pcm point
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
 
-val mk_point (x y: Ghost.erased (option int)): Ghost.erased point
+val mk_point (x y: option int): point
 
 /// Connections for the fields of a point
 
@@ -32,32 +32,40 @@ val _y : connection point_pcm (opt_pcm #int)
 /// Taking pointers to the x and y fields of a point
 
 val addr_of_x (#x #y: Ghost.erased (option int)) (p: ref 'a point_pcm)
-: SteelT (q:ref 'a (opt_pcm #int){q == ref_focus p _x})
+: Steel (ref 'a (opt_pcm #int))
     (p `pts_to` mk_point x y)
     (fun q ->
-       (p `pts_to` mk_point none y) `star`
+       (p `pts_to` mk_point None y) `star`
        (q `pts_to` x))
+    (requires fun _ -> True)
+    (ensures fun _ q _ -> q == ref_focus p _x)
 
 val unaddr_of_x
   (#x #y: Ghost.erased (option int))
   (p: ref 'a point_pcm)
-  (q: ref 'a (opt_pcm #int){q == ref_focus p _x})
-: SteelT unit
-    ((p `pts_to` mk_point none y) `star` (q `pts_to` x))
+  (q: ref 'a (opt_pcm #int))
+: Steel unit
+    ((p `pts_to` mk_point None y) `star` (q `pts_to` x))
     (fun q -> p `pts_to` mk_point x y)
+    (requires fun _ -> q == ref_focus p _x)
+    (ensures fun _ _ _ -> True)
 
 val addr_of_y (#x #y: Ghost.erased (option int)) (p: ref 'a point_pcm)
-: SteelT (q:ref 'a (opt_pcm #int){q == ref_focus p _y})
+: Steel (ref 'a (opt_pcm #int))
     (p `pts_to` mk_point x y)
     (fun q ->
-       (p `pts_to` mk_point x none) `star`
+       (p `pts_to` mk_point x None) `star`
        (q `pts_to` y))
+    (requires fun _ -> True)
+    (ensures fun _ q _ -> q == ref_focus p _y)
 
 val unaddr_of_y
   (#x #y: Ghost.erased (option int))
   (p: ref 'a point_pcm)
-  (q: ref 'a (opt_pcm #int){q == ref_focus p _y})
-: SteelT unit
-    ((p `pts_to` mk_point x none) `star` (q `pts_to` y))
+  (q: ref 'a (opt_pcm #int))
+: Steel unit
+    ((p `pts_to` mk_point x None) `star` (q `pts_to` y))
     (fun q -> p `pts_to` mk_point x y)
+    (requires fun _ -> q == ref_focus p _y)
+    (ensures fun _ _ _ -> True)
 

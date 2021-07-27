@@ -69,11 +69,11 @@ let ptr a b = option (ref' a b)
 
 let nonnull (p: ptr 'a 'b) (pb: pcm 'b): prop = Some? p /\ pcm_of_ref' (Some?.v p) == pb
 
-let pts_to_dep (p: ptr 'a 'b) (pb: pcm 'b) (v: Ghost.erased 'b) (prf: squash (nonnull p pb))
+let pts_to_dep (p: ptr 'a 'b) (pb: pcm 'b) (v: 'b) (prf: squash (nonnull p pb))
 = let r: ref 'a pb = Some?.v p in r `pts_to` v
 
 let pts_to' (p: ptr 'a 'b) (pb: pcm 'b) (v: 'b): vprop = vpure (nonnull p pb) `vdep` pts_to_dep p pb v
-let pts_to p pb v = pts_to' p pb (Ghost.reveal v)
+let pts_to p pb v = pts_to' p pb v
 
 let pts_to_or_null' (p: ptr 'a 'b) (pb: pcm 'b) (v: option 'b): vprop =
   vpure (v == None <==> p == None) `star`
@@ -81,7 +81,7 @@ let pts_to_or_null' (p: ptr 'a 'b) (pb: pcm 'b) (v: option 'b): vprop =
    | None -> vpure True
    | Some v -> pts_to' p pb v)
 
-let pts_to_or_null p pb v = pts_to_or_null' p pb (Ghost.reveal v)
+let pts_to_or_null p pb v = pts_to_or_null' p pb v
 
 let nullptr #a #b = None
 
@@ -110,41 +110,6 @@ let elim_pts_to #a #b #pb #v p =
 
 #push-options "--print_implicits"
 
-(*
-let aux' #a #b (pb:pcm b) : unit =
-  assert_norm (
-    pts_to_or_null #a #b (nullptr #a #b) pb (none #b)  ==
-    (if None? #(Steel.C.Ref.ref' a b) (nullptr #a #b)
-      then
-        Steel.C.Ptr.vpure (Prims.eq2 #(FStar.Ghost.erased (Steel.C.Opt.option b))
-	      (Steel.C.Opt.none #b)
-              (Steel.C.Opt.none #b))
-      else
-        (match FStar.Ghost.reveal #(Steel.C.Opt.option b) (Steel.C.Opt.none #b) with
-          | FStar.Pervasives.Native.None #_ -> Steel.C.Ptr.vpure Prims.l_False
-          | FStar.Pervasives.Native.Some #_ v ->
-            Steel.C.Ptr.pts_to #a #b (nullptr #a #b) pb (FStar.Ghost.hide #b v))
-        <:
-        Steel.Effect.Common.vprop)) // How is this not equal?? TODO
-*)
-
-(*
-let unfold_pts_to_or_null (p: ptr 'a 'b) (pb: pcm 'b) (v: Ghost.erased (option 'b))
-: Lemma
-    (pts_to_or_null #'a #'b p pb (none #'b)  ==
-     (if None? p then vpure (v == none #'b) else
-     (match Ghost.reveal v with
-     | None -> vpure False
-     | Some v -> pts_to p pb (Ghost.hide v))))
-    [SMTPat (pts_to_or_null p pb v)]
-= assume // TODO why
-    (pts_to_or_null #'a #'b p pb (none #'b)  ==
-     (if None? p then vpure (v == none #'b) else
-     (match Ghost.reveal v with
-     | None -> vpure False
-     | Some v -> pts_to p pb (Ghost.hide v))))
-*)
-
 let unfold_pts_to_or_null #a #b (pb: pcm b) (p: ptr a b) (v: option b)
 : Lemma
     (pts_to_or_null #a #b p pb v  ==
@@ -155,18 +120,18 @@ let unfold_pts_to_or_null #a #b (pb: pcm b) (p: ptr a b) (v: option b)
 = ()
 
 let intro_pts_to_or_null_nullptr #a #b pb =
-  intro_vpure (Ghost.reveal (none #b) == None <==> nullptr #a #b == None);
+  intro_vpure (None #b == None <==> nullptr #a #b == None);
   intro_vpure True;
   unfold_pts_to_or_null #a #b pb (nullptr #a #b) None; 
-  change_equal_slprop _ (pts_to_or_null (nullptr #a #b) pb (none #b))
+  change_equal_slprop _ (pts_to_or_null (nullptr #a #b) pb (None #b))
 
 let intro_pts_to_or_null #a #b #_ #pb #v p =
-  let prf_p_nonnull = gget (pts_to p pb v) in
+  let prf_p_nonnull = gget (pts_to p pb (Ghost.reveal v)) in
   intro_vpure (Some (Ghost.reveal v) == None <==> p == None);
   unfold_pts_to_or_null pb p (Some (Ghost.reveal v));
   change_equal_slprop
     (vpure (Some (Ghost.reveal v) == None <==> p == None) `star` pts_to' p pb (Ghost.reveal v))
-    (pts_to_or_null p pb (some v))
+    (pts_to_or_null p pb (Some (Ghost.reveal v)))
   
 val unreachable (#opened:inames) (#p:vprop) (#q:'a -> vprop) (r:'a -> prop)
 : SteelGhostF 'a opened p q (requires fun _ -> False) (ensures fun _ x _ -> r x)
@@ -191,30 +156,30 @@ let elim_pts_to_or_null_nonnull_witness #opened
   (#pb: pcm 'b) (#v: Ghost.erased (option 'b)) (p: ptr 'a 'b)
 : SteelGhost (Ghost.erased 'b) opened
     (pts_to_or_null p pb v)
-    (fun w -> pts_to_or_null p pb (some w))
+    (fun w -> pts_to_or_null p pb (Some w))
     (requires fun _ -> p =!= nullptr)
-    (ensures fun _ w _ -> v == some w)
+    (ensures fun _ w _ -> v == Some w)
 = match Ghost.reveal v with
   | None -> 
     let prf = gget (pts_to_or_null p pb v) in
     let _: squash (Ghost.reveal v == None <==> p == None) = fst prf in
     assert (p == nullptr);
-    unreachable (fun w -> v == some w)
+    unreachable (fun w -> v == Some w)
   | Some w ->
     let prf = gget (pts_to_or_null p pb v) in
     let _: squash (Ghost.reveal v == None <==> p == None) = fst prf in
     assert (p =!= nullptr);
-    change_equal_slprop (pts_to_or_null p pb v) (pts_to_or_null p pb (some w));
+    change_equal_slprop (pts_to_or_null p pb v) (pts_to_or_null p pb (Some w));
     w
 
 #set-options "--ide_id_info_off"
 
 let elim_pts_to_or_null #a #b #_ #pb #v p =
   let w = elim_pts_to_or_null_nonnull_witness p in
-  unfold_pts_to_or_null pb p (some w);
-  change_equal_slprop (pts_to_or_null p pb (some w))
-    (vpure (Ghost.reveal (some w) == None <==> p == None) `star` pts_to' p pb w);
-  elim_vpure (Ghost.reveal (some w) == None <==> p == None);
+  unfold_pts_to_or_null pb p (Some w);
+  change_equal_slprop (pts_to_or_null p pb (Some w))
+    (vpure (Ghost.reveal (Some w) == None <==> p == None) `star` pts_to' p pb w);
+  elim_vpure (Ghost.reveal (Some w) == None <==> p == None);
   w
   
 let is_null #a #b #pb #v p = return (None? p)

@@ -16,7 +16,7 @@ open Steel.Effect
 
 val pts_to
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
-  (r: ref a p) ([@@@smt_fallback] v: Ghost.erased b)
+  (r: ref a p) ([@@@smt_fallback] v: b)
 : vprop
 
 val ref_focus

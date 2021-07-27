@@ -29,6 +29,7 @@ let option: Type u#a -> Type u#a = option
 
 let none #a: Ghost.erased (option a) = None
 
+[@@__reduce__]
 let some (x: Ghost.erased 'a): Ghost.erased (option 'a) = Some (Ghost.reveal x)
 
 let some_v (x: Ghost.erased (option 'a){Some? x}): Ghost.erased 'a = Some?.v x
@@ -37,8 +38,8 @@ val opt_read
   (#a:Type) (#b:Type) (#x: Ghost.erased b)
   (r: ref a (opt_pcm #b))
 : Steel b
-    (r `pts_to` some x)
-    (fun _ -> r `pts_to` some x)
+    (r `pts_to` Some #b x)
+    (fun _ -> r `pts_to` Some #b x)
     (requires fun _ -> True)
     (ensures fun _ x' _ -> Ghost.reveal x == x')
 
@@ -46,8 +47,8 @@ val opt_write
   (#a:Type) (#b:Type) (#x: Ghost.erased b)
   (r: ref a (opt_pcm #b)) (y: b)
 : SteelT unit
-    (r `pts_to` some x)
-    (fun _ -> r `pts_to` some (Ghost.hide y))
+    (r `pts_to` Some #b x)
+    (fun _ -> r `pts_to` Some y)
 
 let opt_view
   (a: Type)
