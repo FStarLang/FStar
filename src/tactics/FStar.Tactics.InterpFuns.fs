@@ -3,10 +3,10 @@ module FStar.Tactics.InterpFuns
 
 (* This module is awful, don't even look at it please. *)
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -17,7 +17,7 @@ open FStar.Tactics.Monad
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
 module PC    = FStar.Parser.Const
-module BU    = FStar.Util
+module BU    = FStar.Compiler.Util
 module Print = FStar.Syntax.Print
 module Cfg   = FStar.TypeChecker.Cfg
 module E     = FStar.Tactics.Embedding

@@ -1,6 +1,6 @@
 open Dynlink
 
-module U = FStar_Util
+module U = FStar_Compiler_Util
 module E = FStar_Errors
 module O = FStar_Options
 

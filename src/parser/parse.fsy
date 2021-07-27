@@ -5,16 +5,17 @@ open Prims
 open FStar
 open FStar.Pervasives
 open FStar.Errors
-open FStar.List
-open FStar.Util
-open FStar.Range
-open FStar.Options
+open FStar.Compiler.Option
+open FStar.Compiler.List
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Parser.Const
 open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Const
 open FStar.Ident
 open FStar.String
+module List = FStar.Compiler.List
 (*
  We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
  A lot (176) of end-of-stream conflicts are also reported and
@@ -2728,4 +2729,5 @@ in
    ( x :: xs )}
 
 %%
+
 

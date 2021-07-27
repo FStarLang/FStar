@@ -1,9 +1,9 @@
 #light "off"
 module FStar.Reflection.Basic
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Order
@@ -14,8 +14,8 @@ module S = FStar.Syntax.Syntax // TODO: remove, it's open
 module C     = FStar.Const
 module PC    = FStar.Parser.Const
 module SS    = FStar.Syntax.Subst
-module BU    = FStar.Util
-module Range = FStar.Range
+module BU    = FStar.Compiler.Util
+module Range = FStar.Compiler.Range
 module U     = FStar.Syntax.Util
 module UF    = FStar.Syntax.Unionfind
 module Print = FStar.Syntax.Print
@@ -30,7 +30,7 @@ module EMB   = FStar.Syntax.Embeddings
 module N     = FStar.TypeChecker.Normalize
 open FStar.VConfig
 
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 (* This file provides implementation for reflection primitives in F*.
  *

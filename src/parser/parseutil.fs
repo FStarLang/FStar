@@ -1,8 +1,8 @@
 ﻿module FStar.Parser.Util
 open FStar.Parser
 open FStar.Parser.AST
-open FStar
-open FStar.Range
+open FStar open FStar.Compiler
+open FStar.Compiler.Range
 
 type bytes = byte[]
 type decimal = System.Decimal
@@ -45,7 +45,7 @@ let ulexeme lexbuf = lexeme lexbuf
 
 let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p
 
-let comments : (string * FStar.Range.range) list ref = ref []
+let comments : (string * FStar.Compiler.Range.range) list ref = ref []
 let add_comment x = comments := x :: !comments
 let flush_comments () =
   let lexed_comments = !comments in

@@ -1,5 +1,5 @@
 open Prims
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Range.range) =
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
   fun g ->
     (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
@@ -156,7 +156,7 @@ let (__do_rewrite :
                    (FStar_Errors.Error_LayeredMissingAnnot, uu___2, uu___3,
                     uu___4)
                    -> FStar_Pervasives_Native.None
-               | e -> FStar_Exn.raise e in
+               | e -> FStar_Compiler_Effect.raise e in
              match res with
              | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret tm
              | FStar_Pervasives_Native.Some (uu___1, lcomp, g) ->
@@ -181,7 +181,7 @@ let (__do_rewrite :
                                     FStar_Syntax_Print.term_to_string tm in
                                   let uu___8 =
                                     FStar_Syntax_Print.term_to_string ut in
-                                  FStar_Util.print2
+                                  FStar_Compiler_Util.print2
                                     "do_rewrite: making equality\n\t%s ==\n\t%s\n"
                                     uu___7 uu___8)
                                (fun uu___6 ->
@@ -211,7 +211,7 @@ let (__do_rewrite :
                                                  let uu___13 =
                                                    FStar_Syntax_Print.term_to_string
                                                      ut1 in
-                                                 FStar_Util.print2
+                                                 FStar_Compiler_Util.print2
                                                    "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                                                    uu___12 uu___13)
                                               (fun uu___11 ->
@@ -402,7 +402,8 @@ and (on_subterms :
                                   FStar_Tactics_Monad.ret
                                     ((orig.FStar_Syntax_Syntax.n), flag)
                               | uu___2 ->
-                                  let bs1 = FStar_List.rev accum_binders in
+                                  let bs1 =
+                                    FStar_Compiler_List.rev accum_binders in
                                   let uu___3 =
                                     let uu___4 =
                                       let uu___5 =
@@ -706,7 +707,7 @@ let (ctrl_rewrite :
                           (fun uu___4 ->
                              let uu___5 =
                                FStar_Syntax_Print.term_to_string gt in
-                             FStar_Util.print1
+                             FStar_Compiler_Util.print1
                                "ctrl_rewrite starting with %s\n" uu___5);
                         (let uu___4 =
                            let uu___5 = FStar_Tactics_Types.goal_env g in
@@ -718,7 +719,7 @@ let (ctrl_rewrite :
                                 (fun uu___6 ->
                                    let uu___7 =
                                      FStar_Syntax_Print.term_to_string gt' in
-                                   FStar_Util.print1
+                                   FStar_Compiler_Util.print1
                                      "ctrl_rewrite seems to have succeded with %s\n"
                                      uu___7);
                               (let uu___6 = FStar_Tactics_Monad.push_goals gs in
@@ -730,5 +731,5 @@ let (ctrl_rewrite :
                                           gt' in
                                       [uu___9] in
                                     FStar_Tactics_Monad.add_goals uu___8)))))) in
-        FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "ctrl_rewrite")
-          uu___
+        FStar_Compiler_Effect.op_Less_Bar
+          (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___

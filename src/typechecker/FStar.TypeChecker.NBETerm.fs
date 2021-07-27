@@ -1,9 +1,9 @@
 #light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.Pervasives
-open FStar.All
-open FStar.Exn
+open FStar.Compiler.Effect
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
@@ -36,11 +36,11 @@ module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module SE = FStar.Syntax.Embeddings
 open FStar.VConfig
 
@@ -415,7 +415,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
-         let li = FStar.Dyn.mkdyn x, et in
+         let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
 let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
@@ -433,7 +433,7 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
                                 (P.emb_typ_to_string et')
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print1 "Unembed cancelled for %s\n"
                                      (P.emb_typ_to_string et)
@@ -969,9 +969,9 @@ let mk_range args : option<t> =
           arg_as_int to_line,
           arg_as_int to_col with
     | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
-      let r = FStar.Range.mk_range fn
-                (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+      let r = FStar.Compiler.Range.mk_range fn
+                (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
       Some (embed e_range bogus_cbs r)
     | _ -> None
     end

@@ -16,11 +16,11 @@
 #light "off"
 
 module FStar.CheckedFiles
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction.ML.UEnv
 open FStar.Syntax.DsEnv
 

@@ -2,10 +2,12 @@
 module FStar.Tactics.Basic
 
 open FStar
+open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
@@ -16,7 +18,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Printing
 
-module BU     = FStar.Util
+module BU     = FStar.Compiler.Util
 module Cfg    = FStar.TypeChecker.Cfg
 module EMB    = FStar.Syntax.Embeddings
 module Env    = FStar.TypeChecker.Env

@@ -6,8 +6,8 @@ open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
 
-module Range = FStar.Range
-module BU    = FStar.Util
+module Range = FStar.Compiler.Range
+module BU    = FStar.Compiler.Util
 module O     = FStar.Options
 
 (* Type of tactics *)

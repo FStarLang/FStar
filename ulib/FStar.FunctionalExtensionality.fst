@@ -15,7 +15,6 @@
 *)
 
 module FStar.FunctionalExtensionality
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 inline_for_extraction
 let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
@@ -33,17 +32,35 @@ let quantifier_as_lemma (#a:Type) (#b: a -> Type)
     : Lemma (b x)
     = ()
 
+open FStar.Tactics.Builtins
+open FStar.Reflection.Types
+open FStar.Tactics.Types
+open FStar.Tactics.Effect
+(* we're early enough in the module stack that we need to reimplement
+   a few of the tactic helpers *)
+noextract
+let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
+    match catch f with
+    | Inl e -> h e
+    | Inr x -> x
+
+noextract
+let l_to_r (t:term) : Tac unit =
+  ctrl_rewrite BottomUp
+    (fun  _ -> true, Continue)
+    (fun _ ->
+      try t_apply_lemma false true t
+      with _ -> t_trefl false)
+
 let extensionality_1 (a:Type)
                      (b: a -> Type)
                      (f g: arrow a b)
                      (sq_feq : squash (feq f g))
   : Lemma (ensures on_domain a f == on_domain a g)
-  = admit()
-    // let open FStar.Tactics in
-    // assert (on_domain a f == on_domain a g)
-    //    by  (norm [delta_only [`%on_domain]];
-    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
-    //         trefl())
+  = assert (on_domain a f == on_domain a g)
+       by  (norm [delta_only [`%on_domain]];
+            l_to_r (quote (quantifier_as_lemma sq_feq));
+            t_trefl false)
 
 let extensionality a b f g
   = let fwd a b (f g:arrow a b)
@@ -71,12 +88,10 @@ let extensionality_1_g (a:Type)
                        (f g: arrow_g a b)
                        (sq_feq : squash (feq_g f g))
   : Lemma (ensures on_domain_g a f == on_domain_g a g)
-  = admit()
-    // let open FStar.Tactics in
-    // assert (on_domain_g a f == on_domain_g a g)
-    //    by  (norm [delta_only [`%on_domain_g]];
-    //         l_to_r [quote (quantifier_as_lemma sq_feq)];
-    //         trefl())
+  = assert (on_domain_g a f == on_domain_g a g)
+       by  (norm [delta_only [`%on_domain_g]];
+            l_to_r (quote (quantifier_as_lemma sq_feq));
+            t_trefl false)
 
 let extensionality_g a b f g
   = let fwd a b (f g:arrow_g a b)

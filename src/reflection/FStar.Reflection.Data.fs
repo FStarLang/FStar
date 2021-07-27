@@ -2,6 +2,8 @@
 module FStar.Reflection.Data
 
 open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 (* NOTE: This file is exactly the same as its .fs variant. It is only
 here so the equally-named interface file in ulib/ is not taken by the
@@ -11,7 +13,7 @@ from an interface. Hence we keep both, exactly equal to each other. *)
 
 open FStar.Syntax.Syntax
 module Ident = FStar.Ident
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
 module PC = FStar.Parser.Const

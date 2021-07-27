@@ -23,7 +23,7 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range FStar.Thunk		\
+EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		\
 		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
@@ -31,7 +31,8 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range FStar.Thunk		\
 		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
-		FStar.Main
+		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
+                FStar.Compiler.Dyn
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES

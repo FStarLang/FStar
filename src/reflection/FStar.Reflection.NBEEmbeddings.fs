@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.NBEEmbeddings
-
-open FStar.All
+open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Pervasives
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
@@ -15,8 +15,8 @@ module S = FStar.Syntax.Syntax // TODO: remove, it's open
 module Thunk = FStar.Thunk
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
-module Range = FStar.Range
+module BU = FStar.Compiler.Util
+module Range = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
@@ -29,7 +29,7 @@ open FStar.TypeChecker.NBETerm
 module RD = FStar.Reflection.Data
 
 
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 (*
  * embed   : from compiler to user
@@ -54,7 +54,7 @@ let mk_emb' x y fv = mk_emb x y (mkFV fv [] []) (fv_as_emb_typ fv)
 
 let mk_lazy cb obj ty kind =
     let li = {
-          blob = FStar.Dyn.mkdyn obj
+          blob = FStar.Compiler.Dyn.mkdyn obj
         ; lkind = kind
         ; ltyp = ty
         ; rng = Range.dummyRange
@@ -70,7 +70,7 @@ let e_bv =
     let unembed_bv cb (t:t) : option<bv> =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
-            Some <| FStar.Dyn.undyn b
+            Some <| FStar.Compiler.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
             None
@@ -302,7 +302,7 @@ let unlazy_as_t k t =
     match t.nbe_t with
     | Lazy (Inl {lkind=k'; blob=v}, _)
         when U.eq_lazy_kind k k' ->
-      FStar.Dyn.undyn v
+      FStar.Compiler.Dyn.undyn v
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 

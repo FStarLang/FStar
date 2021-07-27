@@ -20,10 +20,11 @@
 
 module FStar.Interactive.PushHelper
 open FStar
+open FStar.Compiler
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Universal
@@ -31,7 +32,7 @@ open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err

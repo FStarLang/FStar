@@ -16,17 +16,17 @@
 #light "off"
 module FStar.Syntax.Syntax
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
-open FStar
-open FStar.Util
-open FStar.Range
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Ident
-open FStar.Dyn
+open FStar.Compiler.Dyn
 open FStar.Const
 module O = FStar.Options
 open FStar.VConfig

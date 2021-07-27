@@ -26,7 +26,7 @@ let try_unembed :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range ->
+      FStar_Compiler_Range.range ->
         'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun ea ->
@@ -56,7 +56,7 @@ let int1 :
                 match args with
                 | (a1, uu___)::[] ->
                     let uu___1 = try_unembed ea a1 n in
-                    FStar_Util.bind_opt uu___1
+                    FStar_Compiler_Util.bind_opt uu___1
                       (fun a2 ->
                          let uu___2 =
                            let uu___3 = FStar_TypeChecker_Cfg.psc_range psc in
@@ -86,10 +86,10 @@ let int2 :
                   match args with
                   | (a1, uu___)::(b1, uu___1)::[] ->
                       let uu___2 = try_unembed ea a1 n in
-                      FStar_Util.bind_opt uu___2
+                      FStar_Compiler_Util.bind_opt uu___2
                         (fun a2 ->
                            let uu___3 = try_unembed eb b1 n in
-                           FStar_Util.bind_opt uu___3
+                           FStar_Compiler_Util.bind_opt uu___3
                              (fun b2 ->
                                 let uu___4 =
                                   let uu___5 =
@@ -123,13 +123,13 @@ let int3 :
                     match args with
                     | (a1, uu___)::(b1, uu___1)::(c1, uu___2)::[] ->
                         let uu___3 = try_unembed ea a1 n in
-                        FStar_Util.bind_opt uu___3
+                        FStar_Compiler_Util.bind_opt uu___3
                           (fun a2 ->
                              let uu___4 = try_unembed eb b1 n in
-                             FStar_Util.bind_opt uu___4
+                             FStar_Compiler_Util.bind_opt uu___4
                                (fun b2 ->
                                   let uu___5 = try_unembed ec c1 n in
-                                  FStar_Util.bind_opt uu___5
+                                  FStar_Compiler_Util.bind_opt uu___5
                                     (fun c2 ->
                                        let uu___6 =
                                          let uu___7 =
@@ -158,7 +158,7 @@ let nbe_int1 :
               match args with
               | (a1, uu___)::[] ->
                   let uu___1 = FStar_TypeChecker_NBETerm.unembed ea cb a1 in
-                  FStar_Util.bind_opt uu___1
+                  FStar_Compiler_Util.bind_opt uu___1
                     (fun a2 ->
                        let uu___2 =
                          let uu___3 = f a2 in
@@ -186,11 +186,11 @@ let nbe_int2 :
                 match args with
                 | (a1, uu___)::(b1, uu___1)::[] ->
                     let uu___2 = FStar_TypeChecker_NBETerm.unembed ea cb a1 in
-                    FStar_Util.bind_opt uu___2
+                    FStar_Compiler_Util.bind_opt uu___2
                       (fun a2 ->
                          let uu___3 =
                            FStar_TypeChecker_NBETerm.unembed eb cb b1 in
-                         FStar_Util.bind_opt uu___3
+                         FStar_Compiler_Util.bind_opt uu___3
                            (fun b2 ->
                               let uu___4 =
                                 let uu___5 = f a2 b2 in
@@ -221,15 +221,15 @@ let nbe_int3 :
                   match args with
                   | (a1, uu___)::(b1, uu___1)::(c1, uu___2)::[] ->
                       let uu___3 = FStar_TypeChecker_NBETerm.unembed ea cb a1 in
-                      FStar_Util.bind_opt uu___3
+                      FStar_Compiler_Util.bind_opt uu___3
                         (fun a2 ->
                            let uu___4 =
                              FStar_TypeChecker_NBETerm.unembed eb cb b1 in
-                           FStar_Util.bind_opt uu___4
+                           FStar_Compiler_Util.bind_opt uu___4
                              (fun b2 ->
                                 let uu___5 =
                                   FStar_TypeChecker_NBETerm.unembed ec cb c1 in
-                                FStar_Util.bind_opt uu___5
+                                FStar_Compiler_Util.bind_opt uu___5
                                   (fun c2 ->
                                      let uu___6 =
                                        let uu___7 = f a2 b2 c2 in
@@ -809,5 +809,5 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
     uu___2 :: uu___3 in
   uu___ :: uu___1
 let (uu___186 : unit) =
-  FStar_List.iter FStar_TypeChecker_Cfg.register_extra_step
+  FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

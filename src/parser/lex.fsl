@@ -21,7 +21,7 @@ module FStar.LexFStar
  * (c) Microsoft Corporation. All rights reserved
  *-----------------------------------------------------------------------*)
 open FSharp.Compatibility.OCaml
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.Parser.AST

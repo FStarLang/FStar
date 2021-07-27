@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module MkList
-
+open FStar.List.Tot
 (* Makes top-level list definitions annotated by their length *)
 
 open FStar.Tactics

@@ -16,15 +16,15 @@
 #light "off"
 
 module FStar.SMTEncoding.Z3
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -404,7 +404,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
-        then let reason = FStar.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
+        then let reason = FStar.Compiler.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
              let res = String.substring reason 0 (String.length reason - 2) in //it ends with '")'
              res
         else ru) in

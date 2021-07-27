@@ -12,7 +12,7 @@ let (uu___is_FromTempToFile : printing_mode -> Prims.bool) =
   fun projectee ->
     match projectee with | FromTempToFile -> true | uu___ -> false
 let (temp_file_name : Prims.string -> Prims.string) =
-  fun f -> FStar_Util.format1 "%s.print_.fst" f
+  fun f -> FStar_Compiler_Util.format1 "%s.print_.fst" f
 let (generate : printing_mode -> Prims.string Prims.list -> unit) =
   fun m ->
     fun filenames ->
@@ -24,15 +24,16 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
               match m1 with
               | FromTempToStdout -> FStar_Pervasives_Native.None
               | FromTempToFile ->
-                  let outf1 = FStar_Util.open_file_for_writing filename in
+                  let outf1 =
+                    FStar_Compiler_Util.open_file_for_writing filename in
                   FStar_Pervasives_Native.Some outf1
               | ToTempFile ->
                   let outf1 =
                     let uu___1 = temp_file_name filename in
-                    FStar_Util.open_file_for_writing uu___1 in
+                    FStar_Compiler_Util.open_file_for_writing uu___1 in
                   FStar_Pervasives_Native.Some outf1 in
             let leftover_comments =
-              let comments1 = FStar_List.rev comments in
+              let comments1 = FStar_Compiler_List.rev comments in
               let uu___1 =
                 FStar_Parser_ToDocument.modul_with_comments_to_document modul
                   comments1 in
@@ -42,17 +43,19 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                     | FStar_Pervasives_Native.Some f ->
                         let uu___3 =
                           FStar_Pprint.pretty_string
-                            (FStar_Util.float_of_string "1.0")
+                            (FStar_Compiler_Util.float_of_string "1.0")
                             (Prims.of_int (100)) doc in
-                        FStar_All.pipe_left (FStar_Util.append_to_file f)
-                          uu___3
+                        FStar_Compiler_Effect.op_Less_Bar
+                          (FStar_Compiler_Util.append_to_file f) uu___3
                     | FStar_Pervasives_Native.None ->
                         FStar_Pprint.pretty_out_channel
-                          (FStar_Util.float_of_string "1.0")
-                          (Prims.of_int (100)) doc FStar_Util.stdout);
+                          (FStar_Compiler_Util.float_of_string "1.0")
+                          (Prims.of_int (100)) doc FStar_Compiler_Util.stdout);
                    comments2) in
             let left_over_doc =
-              if Prims.op_Negation (FStar_List.isEmpty leftover_comments)
+              if
+                Prims.op_Negation
+                  (FStar_Compiler_List.isEmpty leftover_comments)
               then
                 let uu___1 =
                   let uu___2 =
@@ -73,14 +76,15 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
             (match outf with
              | FStar_Pervasives_Native.None ->
                  FStar_Pprint.pretty_out_channel
-                   (FStar_Util.float_of_string "1.0") (Prims.of_int (100))
-                   left_over_doc FStar_Util.stdout
+                   (FStar_Compiler_Util.float_of_string "1.0")
+                   (Prims.of_int (100)) left_over_doc
+                   FStar_Compiler_Util.stdout
              | FStar_Pervasives_Native.Some outf1 ->
                  ((let uu___2 =
                      FStar_Pprint.pretty_string
-                       (FStar_Util.float_of_string "1.0")
+                       (FStar_Compiler_Util.float_of_string "1.0")
                        (Prims.of_int (100)) left_over_doc in
-                   FStar_All.pipe_left (FStar_Util.append_to_file outf1)
-                     uu___2);
-                  FStar_Util.close_file outf1)) in
-      FStar_List.iter (parse_and_prettyprint m) filenames
+                   FStar_Compiler_Effect.op_Less_Bar
+                     (FStar_Compiler_Util.append_to_file outf1) uu___2);
+                  FStar_Compiler_Util.close_file outf1)) in
+      FStar_Compiler_List.iter (parse_and_prettyprint m) filenames

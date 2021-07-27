@@ -17,11 +17,12 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
+open FStar.Compiler
+module List = FStar.Compiler.List
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -46,7 +47,7 @@ val init                        : unit    -> unit  //sets the current options to
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
-type optionstate = Util.smap<option_val>
+type optionstate = FStar.Compiler.Util.smap<option_val>
 (* Control the option stack *)
 (* Briefly, push/pop are used by the interactive mode and internal_*
  * by #push-options/#pop-options. Read the comment in the .fs for more

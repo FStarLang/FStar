@@ -16,13 +16,13 @@
 #light "off"
 
 module FStar.SMTEncoding.Z3
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
-open FStar.Util
-module BU = FStar.Util
+open FStar.Compiler.Util
+module BU = FStar.Compiler.Util
 
 type unsat_core = option<list<string>>
 type scope_t = list<list<decl>>

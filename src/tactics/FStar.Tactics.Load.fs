@@ -1,11 +1,12 @@
 #light "off"
 
 module FStar.Tactics.Load
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler
 
 let try_load_lib () : unit =
     if FStar.Options.debug_any () then
-        FStar.Util.print_error "Not attempting to load fstartaclib (Since this is the F# build)\n";
+        FStar.Compiler.Util.print_error "Not attempting to load fstartaclib (Since this is the F# build)\n";
     ()
 
 let load_lib () : unit = failwith "load_lib: Not implemented in F#"

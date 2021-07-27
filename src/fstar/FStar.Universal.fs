@@ -18,12 +18,12 @@
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Syntax.Syntax
@@ -46,7 +46,7 @@ module Const   = FStar.Parser.Const
 module Pars    = FStar.Parser.ParseIt
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Dep     = FStar.Parser.Dep
 module NBE     = FStar.TypeChecker.NBE
 module Ch      = FStar.CheckedFiles
@@ -276,7 +276,7 @@ let tc_one_file
       || not (Options.should_extract (string_of_lid tcmod.name))
       then None, 0
       else
-        FStar.Util.record_time (fun () ->
+        FStar.Compiler.Util.record_time (fun () ->
             with_env env (fun env ->
               let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -286,7 +286,7 @@ let tc_one_file
       if Options.codegen() = None
       then env, 0
       else
-        FStar.Util.record_time (fun () ->
+        FStar.Compiler.Util.record_time (fun () ->
             let env, _ = with_env env (fun env ->
                   FStar.Extraction.ML.Modul.extract_iface env tcmod) in
             env
@@ -447,8 +447,8 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
+  List.mem (FStar.Compiler.Util.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (FStar.Compiler.Util.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list<string>) (env:uenv)
                                (deps:FStar.Parser.Dep.deps)  //used to query parsing data
@@ -485,10 +485,10 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
 (***********************************************************************)
 let batch_mode_tc filenames dep_graph =
   if Options.debug_at_level_no_module (Options.Other "Dep") then begin
-    FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
-    FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
+    FStar.Compiler.Util.print_endline "Auto-deps kicked in; here's some info.";
+    FStar.Compiler.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
-    FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
+    FStar.Compiler.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in

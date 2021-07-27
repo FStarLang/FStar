@@ -14,9 +14,9 @@
    limitations under the License.
  *)
 #light "off"
-module FStar.List
-open FStar.ST
-open FStar.All
+module FStar.Compiler.List
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
 
 val isEmpty : (list<'a>) -> Tot<bool>
@@ -26,6 +26,7 @@ val nth : (list<'a>) -> int -> 'a
 val rev_acc : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val rev : (list<'a>) -> Tot<(list<'a>)>
 val append : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
+val ( @ ) :  (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val flatten : (list<(list<'a>)>) -> Tot<(list<'a>)>
 val iter : ('a -> unit) -> (list<'a>) -> unit
 val iter2 : ('a -> 'b -> unit) -> (list<'a>) -> list<'b> -> unit
@@ -43,9 +44,9 @@ val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list<'a>) -> (list<'b>) -> (list<'b>)
 val init : (list<'a>) -> list<'a>
 val last : (list<'a>) -> option<'a>
-val existsb : f:('a -> bool) -> (list<'a>) -> Tot<bool>
+val existsb : f:('a -> bool) -> (list<'a>) -> bool
 val existsML : f:('a -> bool) -> (list<'a>) -> bool
-val find : f:('a -> bool) -> (list<'a>) -> Tot<(option<'a>)>
+val find : f:('a -> bool) -> (list<'a>) -> (option<'a>)
 val filter : ('a -> bool) -> (list<'a>) -> (list<'a>)
 val for_all : ('a -> bool) -> (list<'a>) -> bool
 val forall2 : ('a -> 'b -> bool) -> (list<'a>) -> (list<'b>) -> bool
@@ -74,26 +75,20 @@ val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
  * but F# will then complain that there is whitespace between the name and
  * its parameters. Oh well. *)
 
-val count<'a when 'a : equality> // JUST FSHARP
-// IN F*: val count
+val count<'a when 'a : equality>
     : 'a -> (list<'a>) -> Tot<nat>
 
-val mem<'a when 'a : equality> // JUST FSHARP
-// IN F*: val mem
+val mem<'a when 'a : equality>
     : 'a -> (list<'a>) -> Tot<bool>
 
-val assoc<'a, 'b when 'a : equality> // JUST FSHARP
-// IN F*: val assoc
+val assoc<'a, 'b when 'a : equality>
     : 'a -> (list<('a * 'b)>) -> Tot<(option<'b>)>
 
-val contains<'a when 'a : equality> // JUST FSHARP
-// IN F*: val contains
+val contains<'a when 'a : equality>
     : 'a -> (list<'a>) -> Tot<bool>
 
-val unique<'a when 'a : equality> // JUST FSHARP
-// IN F*: val unique
+val unique<'a when 'a : equality>
     : list<'a> -> list<'a>
 
-val index<'a when 'a : equality> // JUST FSHARP
-// IN F*: val index
+val index<'a when 'a : equality> 
     : ('a -> bool) -> list<'a> -> int

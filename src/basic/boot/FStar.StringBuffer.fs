@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.StringBuffer
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open Prims
 open FStar.BigInt
 open System.Text

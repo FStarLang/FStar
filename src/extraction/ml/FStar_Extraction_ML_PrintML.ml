@@ -92,7 +92,8 @@ let mk_top_mllb (e: mlexpr): mllb =
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
-let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
+let fstar_compiler_effect_try_with_ident = path_to_ident (["FStar"; "Compiler"; "Effect"], "try_with")
+let fstar_all_try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -314,7 +315,8 @@ let rec build_expr (e: mlexpr): expression =
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when (x = try_with_ident) ->
+  | Pexp_ident x when (x = fstar_all_try_with_ident ||
+                       x = fstar_compiler_effect_try_with_ident) ->
     (* resugar FStar_All.try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
@@ -529,7 +531,7 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      (* Use the old printer for F# extraction *)
      let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStar_Util.write_file
+         FStar_Compiler_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc

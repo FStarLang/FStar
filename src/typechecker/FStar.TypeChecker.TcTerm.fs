@@ -16,23 +16,22 @@
 #light "off"
 module FStar.TypeChecker.TcTerm
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 
@@ -42,7 +41,7 @@ module TcComm = FStar.TypeChecker.Common
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
@@ -200,7 +199,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
         if (Options.ml_ish()
-            && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
+            && Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
