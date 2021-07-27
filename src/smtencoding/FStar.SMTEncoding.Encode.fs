@@ -600,16 +600,26 @@ let declare_top_level_let env x t t_norm =
       fvb, [], env
 
 
-let encode_top_level_val uninterpreted env lid t quals =
-    let tt = norm_before_encoding env t in
-//        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-//        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n"
-//            (Print.lid_to_string lid)
-//            (Print.term_to_string t)
-//            (Print.term_to_string tt);
-    let decls, env = encode_free_var uninterpreted env lid t tt quals in
+let encode_top_level_val uninterpreted env fv t quals =
+    let tt =
+      if FStar.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
+      then norm_with_steps //no primops for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
+                [Env.Eager_unfolding;
+                 Env.Simplify;
+                 Env.AllowUnboundUniverses;
+                 Env.EraseUniverses;
+                 Env.Exclude Env.Zeta]
+                 env.tcenv t
+      else norm_before_encoding env t
+    in
+    // if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
+    //        (Print.fv_to_string fv)
+    //        (Print.term_to_string t)
+    //        (Print.term_to_string tt);
+    let decls, env = encode_free_var uninterpreted env fv t tt quals in
     if U.is_smt_lemma t
-    then decls@encode_smt_lemma env lid tt, env
+    then decls@encode_smt_lemma env fv tt, env
     else decls, env
 
 let encode_top_level_vals env bindings quals =

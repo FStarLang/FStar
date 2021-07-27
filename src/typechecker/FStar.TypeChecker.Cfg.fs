@@ -1006,7 +1006,40 @@ let built_in_primitive_steps : prim_step_set =
        @ div_mod_unsigned
        @ bitwise
     in
-    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let reveal_hide =
+      let mk f g =
+            f,
+            2,
+            1,
+            mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              let head, args = U.head_and_args x  in
+              if U.is_fvar g head
+              then match args with
+                   | [_t; (body, _)] -> Some body
+                   | _ -> None
+              else None)
+            (fun r body -> body)
+            (fun r _t body -> body),
+            NBETerm.mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              match NBETerm.nbe_t_of_t x with
+              | NBETerm.FV (fv, _, [(_t, _); (body, _)])
+                when fv_eq_lid fv g ->
+                Some body
+              | _ -> None)
+            (fun body -> body)
+            (fun _t body -> body)
+      in
+      [mk PC.reveal PC.hide;
+       mk PC.hide PC.reveal]
+    in
+    let strong_steps =
+      List.map (as_primitive_step true)
+               (basic_ops@bounded_arith_ops@reveal_hide)
+    in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
