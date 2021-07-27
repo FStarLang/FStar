@@ -97,16 +97,12 @@ let mk_node'_f (value: option int) (next: option (ptr node node))
   | Next -> next
   
 let mk_node'
-  (value: Ghost.erased (option int))
-  (next: Ghost.erased (option (ptr node node)))
-: Ghost.erased node'
-= Ghost.hide (on_domain node_field (mk_node'_f (Ghost.reveal value) (Ghost.reveal next)))
+  (value: option int)
+  (next: option (ptr node node))
+: node'
+= on_domain node_field (mk_node'_f value next)
 
-let mk_node value next = Ghost.hide (Mknode (mk_node' (Ghost.reveal value) (Ghost.reveal next)))
-
-let mk_node_tot value next = Mknode (on_domain node_field (mk_node'_f value next))
-
-let mk_node_tot_mk_node value next = ()
+let mk_node value next = Mknode (mk_node' value next)
 
 open Steel.C.PCM
 module P = FStar.PCM
@@ -121,36 +117,33 @@ let _next
 : node_pcm `connection` opt_pcm #(ptr node node)
 = unroll_conn `connection_compose` struct_field node_fields_pcm Next
 
-let one_next : Ghost.erased (option int) =
-  Ghost.hide (one (opt_pcm #int))
-
 let node'_without_value value next
 : Lemma (struct_without_field node_fields_pcm Value (mk_node' value next) `feq`
-         Ghost.reveal (mk_node' none next))
+         mk_node' none next)
   [SMTPat (mk_node' value next)]
 = ()
 
 let node'_with_value value next
-: Lemma (struct_with_field node_fields_pcm Value (Ghost.reveal value) (mk_node' none next) `feq`
-         Ghost.reveal (mk_node' value next))
+: Lemma (struct_with_field node_fields_pcm Value value (mk_node' none next) `feq`
+         mk_node' value next)
   [SMTPat (mk_node' value next)]
 = ()
 
 let node'_without_next value next
 : Lemma (struct_without_field node_fields_pcm Next (mk_node' value next) `feq`
-         Ghost.reveal (mk_node' value none))
+         mk_node' value none)
   [SMTPat (mk_node' value next)]
 = ()
 
 let node'_with_next value next
-: Lemma (struct_with_field node_fields_pcm Next (Ghost.reveal next) (mk_node' value none) `feq`
-         Ghost.reveal (mk_node' value next))
+: Lemma (struct_with_field node_fields_pcm Next next (mk_node' value none) `feq`
+         mk_node' value next)
   [SMTPat (mk_node' value next)]
 = ()
 
 let mk_node_mk_node' value next
 : Lemma (
-    Ghost.reveal (mk_node value next) ==
+    mk_node value next ==
     unroll_conn.conn_small_to_large.morph (mk_node' value next))
 = ()
 
