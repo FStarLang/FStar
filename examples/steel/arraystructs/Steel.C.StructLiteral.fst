@@ -175,42 +175,24 @@ let rec struct_get_sound #tag #fields vs field : Lemma (ensures
       assume ((list_apply #(mk_struct_ty_dom tag ((field', td) :: fields)) (mk_struct tag ((field', td) :: fields)) (v, vs)) `struct_get` field == v)
     end else admit()//struct_get_sound #tag #fields vs field
 
-
-/// Similarly, a PCM for structs
-
 let struct_carriers (fields: struct_fields) (field: field_of fields) =
   (get_field fields field).carrier
 
-val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
 let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers fields)
 
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
 : pcm (struct_carriers fields field)
 = (get_field fields field).pcm
 
-val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
 let struct_pcm tag fields = prod_pcm (struct_pcms tag fields)
 
-(* BEGIN public *)
-let struct_field_carrier ((_, td): string * typedef): Type = td.carrier
-
-let mk_struct_pcm_ty_dom (tag: string) (fields: list (string * typedef)): list Type =
-  map struct_field_carrier fields
-
-let mk_struct_pcm_ty (tag: string) (fields: list (string * typedef)): Type =
-  mk_struct_pcm_ty_dom tag fields `list_fn` struct_pcm_carrier tag fields
-(* END public *)
-
-/// A struct PCM carrier literal
-val mk_struct_pcm (tag: string) (fields: list (string * typedef)): mk_struct_pcm_ty tag fields
-
-let rec mk_struct_pcm_carrier (tag: string) (fields: list (string * typedef))
+let rec mk_struct_pcm (tag: string) (fields: list (string * typedef))
 : mk_struct_pcm_ty tag fields
 = match fields with
   | [] -> on_dom _ (fun field -> () <: struct_carriers fields field)
   | (field, td) :: fields' ->
     fun (x:td.carrier) ->
-    let f: map struct_field_carrier fields' `list_fn` struct_pcm_carrier tag fields' = mk_struct_pcm_carrier tag fields' in
+    let f: map struct_field_carrier fields' `list_fn` struct_pcm_carrier tag fields' = mk_struct_pcm tag fields' in
     let lift_struct (g: struct_pcm_carrier tag fields'): struct_pcm_carrier tag fields =
       let h (field': field_of fields): struct_carriers fields field' =
         if field' = field then x else g field'
@@ -218,84 +200,19 @@ let rec mk_struct_pcm_carrier (tag: string) (fields: list (string * typedef))
     in
     list_fn_map lift_struct f
 
-/// Reading a pcm_struct_carrier field
-val struct_pcm_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields) (field: field_of fields)
-: (get_field fields field).carrier
-
 let struct_pcm_get x field = x field
-
-/// Writing a struct_pcm_carrier field
-val struct_pcm_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v: (get_field fields field).carrier)
-: struct_pcm_carrier tag fields
 
 let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
 
-/// For a fixed field name, struct_pcm_get and struct_pcm_put form a lens
-
-val struct_pcm_get_put 
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v: (get_field fields field).carrier)
-: Lemma (struct_pcm_put x field v `struct_pcm_get` field == v)
-  [SMTPat (struct_pcm_put x field v `struct_pcm_get` field)]
-
 let struct_pcm_get_put x field v = ()
-
-val struct_pcm_put_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-: Lemma (struct_pcm_put x field (x `struct_pcm_get` field) == x)
-  [SMTPat (struct_pcm_put x field (x `struct_pcm_get` field))]
 
 let struct_pcm_put_get x field =
   assert (struct_pcm_put x field (x `struct_pcm_get` field) `feq` x)
 
-val struct_pcm_put_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v w: (get_field fields field).carrier)
-: Lemma (struct_pcm_put (struct_pcm_put x field v) field w == struct_pcm_put x field w)
-  [SMTPat (struct_pcm_put (struct_pcm_put x field v) field w)]
-
 let struct_pcm_put_put x field v w =
   assert (struct_pcm_put (struct_pcm_put x field v) field w `feq` struct_pcm_put x field w)
 
-/// struct_pcm_get/struct_pcm_put pairs for different fields don't interfere with each other
-
-val struct_pcm_get_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field1: field_of fields)
-  (field2: field_of fields)
-  (v: (get_field fields field1).carrier)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures struct_pcm_put x field1 v `struct_pcm_get` field2 == x `struct_pcm_get` field2)
-  [SMTPat (struct_pcm_put x field1 v `struct_pcm_get` field2)]
-
 let struct_pcm_get_put_ne x field1 field2 v = ()
-
-val struct_pcm_put_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field1: field_of fields)
-  (v: (get_field fields field1).carrier)
-  (field2: field_of fields)
-  (w: (get_field fields field2).carrier)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures
-      struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
-      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
 let struct_pcm_put_put_ne x field1 v field2 w =
    assert (
