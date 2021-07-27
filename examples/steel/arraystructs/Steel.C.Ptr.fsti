@@ -13,9 +13,9 @@ open Steel.Effect
 
 val ptr (a: Type u#0) (b: Type u#b) : Type u#b
 
-val pts_to (p: ptr 'a 'b) (pb: pcm 'b) ([@@@smt_fallback] v: Ghost.erased 'b): vprop
+val pts_to (p: ptr 'a 'b) (pb: pcm 'b) ([@@@smt_fallback] v: 'b): vprop
 
-val pts_to_or_null (p: ptr 'a 'b) (pb: pcm 'b) ([@@@smt_fallback] v: Ghost.erased (option 'b)): vprop
+val pts_to_or_null (p: ptr 'a 'b) (pb: pcm 'b) ([@@@smt_fallback] v: option 'b): vprop
 
 val nullptr (#a:Type) (#b:Type) : ptr a b
 
@@ -54,13 +54,13 @@ val elim_pts_to
 
 val intro_pts_to_or_null_nullptr (#a:Type) (#b:Type) (#opened:inames)
   (pb: pcm b)
-: SteelGhostT unit opened emp (fun _ -> pts_to_or_null (nullptr #a) pb none)
+: SteelGhostT unit opened emp (fun _ -> pts_to_or_null (nullptr #a) pb None)
 
 val intro_pts_to_or_null (#opened:inames)
   (#pb: pcm 'b) (#v: Ghost.erased 'b) (p: ptr 'a 'b)
 : SteelGhostT unit opened
     (pts_to p pb v)
-    (fun _ -> pts_to_or_null p pb (some v))
+    (fun _ -> pts_to_or_null p pb (Some #'b v))
 
 val elim_pts_to_or_null_nullptr (#opened:inames)
   (#pb: pcm 'b) (#v: Ghost.erased (option 'b)) (p: ptr 'a 'b)
@@ -68,7 +68,7 @@ val elim_pts_to_or_null_nullptr (#opened:inames)
     (pts_to_or_null p pb v)
     (fun _ -> emp)
     (requires fun _ -> p == nullptr)
-    (ensures fun _ _ _ -> v == none)
+    (ensures fun _ _ _ -> Ghost.reveal v == None)
 
 val elim_pts_to_or_null (#opened:inames)
   (#pb: pcm 'b) (#v: Ghost.erased (option 'b)) (p: ptr 'a 'b)
@@ -76,7 +76,7 @@ val elim_pts_to_or_null (#opened:inames)
     (pts_to_or_null p pb v)
     (fun w -> pts_to p pb w)
     (requires fun _ -> p =!= nullptr)
-    (ensures fun _ w _ -> v == some w)
+    (ensures fun _ w _ -> Ghost.reveal v == Some #'b w)
 
 val is_null
   (#pb: pcm 'b) (#v: Ghost.erased (option 'b)) (p: ptr 'a 'b)
@@ -114,5 +114,5 @@ val ptr_opt_write
   (#a:Type) (#b:Type) (#x: Ghost.erased b)
   (p: ptr a (option b)) (y: b)
 : SteelT unit
-    (pts_to p opt_pcm (some x))
-    (fun _ -> pts_to p opt_pcm (some (Ghost.hide y)))
+    (pts_to p opt_pcm (Some #b x))
+    (fun _ -> pts_to p opt_pcm (Some #b y))

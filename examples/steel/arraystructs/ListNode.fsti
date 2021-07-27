@@ -20,18 +20,18 @@ val node_pcm: pcm node
 /// (mk_node value next) represents (struct node){.value = value, .next = next}
 
 val mk_node
-  (i: Ghost.erased (option int))
-  (next: Ghost.erased (option (ptr node node)))
-: Ghost.erased node
-
-val mk_node_tot
   (i: option int)
   (next: option (ptr node node))
 : node
 
-val mk_node_tot_mk_node (i: option int) (next: option (ptr node node))
-: Lemma (mk_node_tot i next == Ghost.reveal (mk_node i next))
-  [SMTPat (mk_node_tot i next)]
+// val mk_node_tot
+//   (i: option int)
+//   (next: option (ptr node node))
+// : node
+
+// val mk_node_tot_mk_node (i: option int) (next: option (ptr node node))
+// : Lemma (mk_node_tot i next == Ghost.reveal (mk_node i next))
+//   [SMTPat (mk_node_tot i next)]
 
 open Steel.C.PCM
 module P = FStar.PCM
