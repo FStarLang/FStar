@@ -1,23 +1,48 @@
 module Steel.C.StructLiteral
 
+open Steel.Memory
+open Steel.Effect.Common
+open Steel.Effect.Atomic
+
 open Steel.C.PCM
 open Steel.C.Typedef
 open Steel.C.Ref // for refine
+open Steel.C.Connection
 open FStar.List.Tot
 
-let struct_fields = list (string * typedef)
+let struct_fields =
+  struct_fields:list (string * typedef){Cons? struct_fields}
 
+let has_field_bool (fields: struct_fields) (field: string): bool =
+  field `mem` map fst fields
+
+irreducible let iter_unfold = 0
+
+[@@iter_unfold]
 let has_field (fields: struct_fields) (field: string): prop =
-  field `mem` map fst fields == true
-  
+  has_field_bool fields field == true
+
 let field_of (fields: struct_fields) =
   refine string (has_field fields)
 
+[@@iter_unfold]
+let mk_field_of (fields: struct_fields) (field: string)
+: Pure (field_of fields)
+    (requires normalize_term (has_field_bool fields field) == true)
+    (ensures fun field' -> field' == field)
+= field
+
+[@@iter_unfold]
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
   assoc_mem field fields;
   Some?.v (assoc field fields)
 
 /// A view type for structs
+
+[@@iter_unfold]
+let struct_views (fields: struct_fields) (field: field_of fields) =
+  (get_field fields field).view
+
 val struct (tag: string) (fields: struct_fields): Type0
 
 let rec list_fn (dom: list Type) (cod: Type) = match dom with
@@ -35,11 +60,11 @@ let struct_field_view_type ((_, td): string * typedef): Type = td.view_type
 let mk_struct_ty_dom (tag: string) (fields: list (string * typedef)): list Type =
   map struct_field_view_type fields
 
-let mk_struct_ty (tag: string) (fields: list (string * typedef)): Type =
+let mk_struct_ty (tag: string) (fields: struct_fields): Type =
   mk_struct_ty_dom tag fields `list_fn` struct tag fields
 
 /// A struct literal
-val mk_struct (tag: string) (fields: list (string * typedef)): mk_struct_ty tag fields
+val mk_struct (tag: string) (fields: struct_fields): mk_struct_ty tag fields
 
 /// Reading a struct field
 val struct_get
@@ -107,6 +132,14 @@ val struct_put_put_ne
       struct_put (struct_put x field2 w) field1 v)
 
 /// Similarly, a PCM for structs
+
+let struct_carriers (fields: struct_fields) (field: field_of fields) =
+  (get_field fields field).carrier
+
+let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
+: pcm (struct_carriers fields field)
+= (get_field fields field).pcm
+
 val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
 val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
 
@@ -115,11 +148,11 @@ let struct_field_carrier ((_, td): string * typedef): Type = td.carrier
 let mk_struct_pcm_ty_dom (tag: string) (fields: list (string * typedef)): list Type =
   map struct_field_carrier fields
 
-let mk_struct_pcm_ty (tag: string) (fields: list (string * typedef)): Type =
+let mk_struct_pcm_ty (tag: string) (fields: struct_fields): Type =
   mk_struct_pcm_ty_dom tag fields `list_fn` struct_pcm_carrier tag fields
 
 /// A struct PCM carrier literal
-val mk_struct_pcm (tag: string) (fields: list (string * typedef)): mk_struct_pcm_ty tag fields
+val mk_struct_pcm (tag: string) (fields: struct_fields): mk_struct_pcm_ty tag fields
 
 /// Reading a pcm_struct_carrier field
 val struct_pcm_get
@@ -187,14 +220,23 @@ val struct_pcm_put_put_ne
       struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
 /// View a struct_pcm_carrier as a struct
-val struct_view (tag: string) (fields: struct_fields{Cons? fields})
+val struct_view (tag: string) (fields: struct_fields)
 : sel_view (struct_pcm tag fields) (struct tag fields) false
 
 /// Typedef for struct from typedefs for its fields
 
-let typedef_struct (tag: string) (fields: struct_fields{Cons? fields}): typedef = {
+let typedef_struct (tag: string) (fields: struct_fields): typedef = {
   carrier = struct_pcm_carrier tag fields; 
   pcm = struct_pcm tag fields;
   view_type = struct tag fields;
   view = struct_view tag fields;
 }
+
+/// Connections for fields of structs
+
+val struct_field
+  (tag: string) (fields: struct_fields) (field: field_of fields)
+: connection (struct_pcm tag fields) (struct_pcms tag fields field)
+
+/// Explode and recombine
+

@@ -1,9 +1,14 @@
 module Steel.C.StructLiteral
 
+open Steel.Memory
+open Steel.Effect.Common
+open Steel.Effect.Atomic
+
 open Steel.C.PCM
 open Steel.C.Struct
 open Steel.C.Typedef
 open Steel.C.Ref // for refine
+open Steel.C.Connection
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
@@ -12,10 +17,10 @@ let struct_view_types (fields: struct_fields) (field: field_of fields) =
 
 let struct tag fields = restricted_t (field_of fields) (struct_view_types fields)
 
-let rec mk_struct (tag: string) (fields: list (string * typedef))
+let rec mk_struct (tag: string) (fields: struct_fields)
 : mk_struct_ty tag fields
 = match fields with
-  | [] -> on_dom _ (fun field -> () <: struct_view_types fields field)
+  | [(field, td)] -> fun (x:td.view_type) -> on_dom _ (fun field -> x <: struct_view_types fields field)
   | (field, td) :: fields' ->
     fun (x:td.view_type) ->
     let f: map struct_field_view_type fields' `list_fn` struct tag fields' = mk_struct tag fields' in
@@ -157,6 +162,7 @@ val struct_get_sound
     (mk_struct tag fields `list_apply` vs) `struct_get` field ==
     struct_get_model vs field)
 
+(*
 let rec struct_get_sound #tag #fields vs field : Lemma (ensures
     (mk_struct tag fields `list_apply` vs) `struct_get` field ==
     struct_get_model vs field) (decreases fields) = match fields with
@@ -174,22 +180,16 @@ let rec struct_get_sound #tag #fields vs field : Lemma (ensures
         end);
       assume ((list_apply #(mk_struct_ty_dom tag ((field', td) :: fields)) (mk_struct tag ((field', td) :: fields)) (v, vs)) `struct_get` field == v)
     end else admit()//struct_get_sound #tag #fields vs field
-
-let struct_carriers (fields: struct_fields) (field: field_of fields) =
-  (get_field fields field).carrier
+    *)
 
 let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers fields)
 
-let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
-: pcm (struct_carriers fields field)
-= (get_field fields field).pcm
-
 let struct_pcm tag fields = prod_pcm (struct_pcms tag fields)
 
-let rec mk_struct_pcm (tag: string) (fields: list (string * typedef))
+let rec mk_struct_pcm (tag: string) (fields: struct_fields)
 : mk_struct_pcm_ty tag fields
 = match fields with
-  | [] -> on_dom _ (fun field -> () <: struct_carriers fields field)
+  | [(field, td)] -> fun (x:td.carrier) -> on_dom _ (fun field -> x <: struct_carriers fields field)
   | (field, td) :: fields' ->
     fun (x:td.carrier) ->
     let f: map struct_field_carrier fields' `list_fn` struct_pcm_carrier tag fields' = mk_struct_pcm tag fields' in
@@ -266,7 +266,7 @@ let struct_view_to_view_frame (tag: string) (fields: struct_fields)
     struct_view_to_view tag fields
        (op (prod_pcm p) (struct_view_to_carrier tag fields x) frame) `feq` x)
 
-let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields{Cons? fields})
+let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields)
 : squash (
     ~ (exists x. struct_view_to_carrier tag fields x == one (struct_pcm tag fields)) /\
     ~ (struct_view_to_view_prop tag fields (one (struct_pcm tag fields))))
@@ -282,3 +282,4 @@ let struct_view tag fields = {
   to_view_frame = struct_view_to_view_frame tag fields;
 }
 
+let struct_field tag fields field = struct_field (struct_pcms tag fields) field
