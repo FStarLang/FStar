@@ -236,7 +236,8 @@ let write
   assert (P.readable h1 tag_ptr);
   assert (P.readable h1 u_ptr);
   P.readable_struct_fields_readable_struct h1 p;
-  P.is_active_union_field_includes_readable #l h1 u_ptr f (P.ufield u_ptr f);
+  let uf = P.ufield u_ptr f in
+  P.is_active_union_field_includes_readable #l h1 u_ptr f uf;
   assert (P.is_active_union_field #l h1 u_ptr f)
 
 let write_tag

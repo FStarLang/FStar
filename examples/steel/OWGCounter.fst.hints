@@ -13,7 +13,6 @@
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_d952d001575ecb20c572af535c88dd2d",
         "constructor_distinct_Steel.Effect.Common.VUnit",
-        "data_typing_intro_Steel.Effect.Common.VUnit@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_OWGCounter.fst",
         "equation_OWGCounter.half_perm", "equation_OWGCounter.lock_inv",
@@ -23,12 +22,13 @@
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_FStar.Pervasives.Native.snd",
-        "function_token_typing_Prims.int", "int_typing",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_Steel.Memory.reveal_equiv", "primitive_Prims.op_Addition",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
@@ -42,13 +42,12 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.half_perm",
         "typing_OWGCounter.lock_inv", "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.star",
-        "typing_Steel.Effect.Common.to_vprop_",
         "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.Reference.ghost_pts_to_sl",
-        "typing_Steel.Reference.pts_to_sl"
+        "typing_Steel.Reference.ghost_pts_to",
+        "typing_Steel.Reference.pts_to"
       ],
       0,
-      "aee57253759f1cc0d9c7a1558f3c78f1"
+      "05ae73c63290b4b393d05b7e9bec1364"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -91,7 +90,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
       ],
       0,
-      "888ab26fd6b0f40e615f11b8bd0cf50d"
+      "2e7f4b9864a2eadd6ced8798d5f0c5e4"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -134,7 +133,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
       ],
       0,
-      "075a0f6e8dcc4f11725a3f80568b7e37"
+      "78788ca154ab3e1fc08917e27fba79e7"
     ],
     [
       "OWGCounter.og_acquire",
@@ -159,7 +158,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "4e954645926d516c8c7bab6312361204"
+      "c63f4e34574bff537da06588b8f88c9e"
     ],
     [
       "OWGCounter.og_release",
@@ -184,7 +183,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "383ee8d5403e9d882b2304de1f792c2b"
+      "996bd09e0bf94d7e5bcf7d50f7d39705"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -201,7 +200,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "66243df05fd4a03092242cdc38c38650"
+      "178418ef1cf06eefd1c7115b53c7b4c1"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -223,7 +222,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "fd8a7745472ef267f0d7a9115ea7e86a"
+      "c7943cd5ad2243b73652406c10fefa6d"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -255,7 +254,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "49f24b026e74e86189c00654b66c41d7"
+      "5d5d16f768ae4e4960458a2aaa393a96"
     ],
     [
       "OWGCounter.incr",
@@ -279,7 +278,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "cae60b8c811aefe95c8f241ff718aae9"
+      "b1951ef3e2bd9cd4fcacf325e517cd19"
     ],
     [
       "OWGCounter.incr_main",
@@ -326,7 +325,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "ea803778528f941e3709eb58bbefa4ae"
+      "a4ef9bcda926a6cc93e8086f502db184"
     ]
   ]
 ]

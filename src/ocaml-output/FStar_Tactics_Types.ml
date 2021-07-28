@@ -36,7 +36,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_uvar
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
-      FStar_Range.dummyRange
+      FStar_Compiler_Range.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
 let (goal_with_type : goal -> FStar_Syntax_Syntax.term -> goal) =
@@ -142,7 +142,7 @@ let (goal_of_goal_ty :
           FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
       match uu___ with
       | (u, ctx_uvars, g_u) ->
-          let uu___1 = FStar_List.hd ctx_uvars in
+          let uu___1 = FStar_Compiler_List.hd ctx_uvars in
           (match uu___1 with
            | (ctx_uvar, uu___2) ->
                let g =
@@ -257,8 +257,8 @@ let (rename_binders :
   =
   fun subst ->
     fun bs ->
-      FStar_All.pipe_right bs
-        (FStar_List.map
+      FStar_Compiler_Effect.op_Bar_Greater bs
+        (FStar_Compiler_List.map
            (fun uu___ ->
               let x = uu___.FStar_Syntax_Syntax.binder_bv in
               let y =
@@ -348,11 +348,11 @@ type proofstate =
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
   psc: FStar_TypeChecker_Cfg.psc ;
-  entry_range: FStar_Range.range ;
+  entry_range: FStar_Compiler_Range.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
-  local_state: FStar_Syntax_Syntax.term FStar_Util.psmap ;
+  local_state: FStar_Syntax_Syntax.term FStar_Compiler_Util.psmap ;
   urgency: Prims.int }
 let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStar_TypeChecker_Env.env) =
@@ -401,7 +401,7 @@ let (__proj__Mkproofstate__item__psc :
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> psc
 let (__proj__Mkproofstate__item__entry_range :
-  proofstate -> FStar_Range.range) =
+  proofstate -> FStar_Compiler_Range.range) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -426,7 +426,7 @@ let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> tac_verb_dbg
 let (__proj__Mkproofstate__item__local_state :
-  proofstate -> FStar_Syntax_Syntax.term FStar_Util.psmap) =
+  proofstate -> FStar_Syntax_Syntax.term FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -447,7 +447,7 @@ let (subst_proof_state :
       then ps
       else
         (let uu___2 = ps in
-         let uu___3 = FStar_List.map (subst_goal subst) ps.goals in
+         let uu___3 = FStar_Compiler_List.map (subst_goal subst) ps.goals in
          {
            main_context = (uu___2.main_context);
            all_implicits = (uu___2.all_implicits);
@@ -545,13 +545,14 @@ let (tracepoint : proofstate -> Prims.bool) =
        let uu___2 = subst_proof_state subst ps in ps.__dump uu___2 "TRACE"
      else ());
     true
-let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
+let (set_proofstate_range :
+  proofstate -> FStar_Compiler_Range.range -> proofstate) =
   fun ps ->
     fun r ->
       let uu___ = ps in
       let uu___1 =
-        let uu___2 = FStar_Range.def_range r in
-        FStar_Range.set_def_range ps.entry_range uu___2 in
+        let uu___2 = FStar_Compiler_Range.def_range r in
+        FStar_Compiler_Range.set_def_range ps.entry_range uu___2 in
       {
         main_context = (uu___.main_context);
         all_implicits = (uu___.all_implicits);
@@ -610,7 +611,8 @@ let (check_goal_solved' :
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
-    let uu___ = check_goal_solved' goal1 in FStar_Option.isSome uu___
+    let uu___ = check_goal_solved' goal1 in
+    FStar_Compiler_Option.isSome uu___
 let (get_phi :
   goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun g ->
@@ -620,4 +622,4 @@ let (get_phi :
       FStar_TypeChecker_Normalize.unfold_whnf uu___1 uu___2 in
     FStar_Syntax_Util.un_squash uu___
 let (is_irrelevant : goal -> Prims.bool) =
-  fun g -> let uu___ = get_phi g in FStar_Option.isSome uu___
+  fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___

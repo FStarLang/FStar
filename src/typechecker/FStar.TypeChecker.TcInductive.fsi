@@ -1,11 +1,11 @@
 #light "off"
 module FStar.TypeChecker.TcInductive
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax

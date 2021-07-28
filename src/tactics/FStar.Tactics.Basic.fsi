@@ -14,10 +14,10 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 
-module BU    = FStar.Util
+module BU    = FStar.Compiler.Util
 module EMB   = FStar.Syntax.Embeddings
 module O     = FStar.Options
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 
 (* Internal utilities *)
@@ -41,7 +41,6 @@ val tc                     : env -> term -> tac<typ>
 val tcc                    : env -> term -> tac<comp>
 val unshelve               : term -> tac<unit>
 val unquote                : typ -> term -> tac<term>
-val trivial                : unit -> tac<unit>
 val norm                   : list<EMB.norm_step> -> tac<unit>
 val norm_term_env          : env -> list<EMB.norm_step> -> term -> tac<term>
 val norm_binder_type       : list<EMB.norm_step> -> binder -> tac<unit>

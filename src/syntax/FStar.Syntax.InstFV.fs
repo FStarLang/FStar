@@ -17,14 +17,16 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Util
+open FStar.Compiler.Util
+open FStar.Compiler
+
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module U = FStar.Util
+module U = FStar.Compiler.Util
 type inst_t = list<(lident * universes)>
 
 
@@ -120,7 +122,7 @@ and inst_decreases_order s = function
 
 and inst_lcomp_opt s l = match l with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (inst s)})
+    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (inst s)})
 
 and inst_ascription s (asc:ascription) =
   let annot, topt = asc in
@@ -128,7 +130,7 @@ and inst_ascription s (asc:ascription) =
     match annot with
     | Inl t -> Inl (inst s t)
     | Inr c -> Inr (inst_comp s c) in
-  let topt = FStar.Util.map_opt topt (inst s) in
+  let topt = FStar.Compiler.Util.map_opt topt (inst s) in
   annot, topt
 
 let instantiate i t = match i with

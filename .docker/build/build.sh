@@ -382,7 +382,7 @@ function fstar_default_build () {
     # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.
     echo "Searching for a diff in src/ocaml-output"
-    if ! git diff --exit-code --name-only src/ocaml-output; then
+    if ! git diff --exit-code src/ocaml-output; then
         echo "GIT DIFF: the files in the list above have a git diff"
         { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
     fi

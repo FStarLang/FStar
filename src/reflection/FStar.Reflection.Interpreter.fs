@@ -1,6 +1,8 @@
 #light "off"
 module FStar.Reflection.Interpreter
-
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
@@ -8,12 +10,12 @@ open FStar.Reflection.Basic
 module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
-module Range = FStar.Range
-open FStar.List
+module Range = FStar.Compiler.Range
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module E = FStar.Reflection.Embeddings
 module NRE = FStar.Reflection.NBEEmbeddings
 module Ident = FStar.Ident

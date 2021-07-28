@@ -18,15 +18,14 @@
 #light "off"
 module FStar.TypeChecker.TcInductive
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -41,7 +40,7 @@ module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
@@ -291,7 +290,7 @@ let debug_log (env:env_t) (msg : unit -> string) : unit =
       BU.print_string ("Positivity::" ^ msg () ^ "\n")
 
 //return true if ty occurs in the term
-let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Util.set_mem ty_lid (Free.fvars t)
+let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Compiler.Util.set_mem ty_lid (Free.fvars t)
 
 //this function is called during the positivity check, when we have a binder type that is a Tm_app, and t is the head node of Tm_app
 //it tries to get fvar from this t, since the type is already normalized, other cases should have been handled
@@ -1034,8 +1033,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                   (univs, body)
               in
               if List.length univs = List.length (fst expected_typ)
-              then let _, inferred = Env.inst_tscheme inferred_typ in
-                   let _, expected = Env.inst_tscheme expected_typ in
+              then let _, inferred = Subst.open_univ_vars univs (snd inferred_typ) in
+                   let _, expected = Subst.open_univ_vars univs (snd expected_typ) in
                    if Rel.teq_nosmt_force env0 inferred expected
                    then ()
                    else fail expected_typ inferred_typ

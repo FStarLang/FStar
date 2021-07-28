@@ -22,12 +22,12 @@ open FStar.Backends.JS.Ast
 open System
 open System.Text
 
-open FStar
-open FStar.Util
-open FStar.Range
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
-open FStar.Util
+open FStar.Compiler.Util
 
 let constructors : smap<(option<int> * option<(list<expression_t> -> expression_t)>)>   = Util.smap_create 1000
 

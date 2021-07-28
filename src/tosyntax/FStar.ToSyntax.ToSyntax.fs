@@ -16,12 +16,11 @@
 #light "off"
 module FStar.ToSyntax.ToSyntax
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
@@ -36,7 +35,7 @@ open FStar.Syntax
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.Syntax.DsEnv
 module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
@@ -149,8 +148,8 @@ let op_as_term env arity op : option<S.term> =
     match Ident.string_of_id op with
     | "=" ->
       r C.op_Eq delta_equational
-    | ":=" ->
-      r C.write_lid delta_equational
+    // | ":=" ->
+    //   r C.write_lid delta_equational
     | "<" ->
       r C.op_LT delta_equational
     | "<=" ->
@@ -173,16 +172,18 @@ let op_as_term env arity op : option<S.term> =
       r C.op_Division delta_equational
     | "%" ->
       r C.op_Modulus delta_equational
-    | "!" ->
-      r C.read_lid delta_equational
+    // | "!" ->
+    //   r C.read_lid delta_equational 
     | "@" ->
-      if Options.ml_ish ()
-      then r C.list_append_lid     (Delta_equational_at_level 2)
-      else r C.list_tot_append_lid (Delta_equational_at_level 2)
-    | "|>" ->
-      r C.pipe_right_lid delta_equational
-    | "<|" ->
-      r C.pipe_left_lid delta_equational
+      FStar.Errors.log_issue 
+        (range_of_id op)
+        (FStar.Errors.Warning_DeprecatedGeneric,
+         "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'");
+      r C.list_tot_append_lid (Delta_equational_at_level 2)
+    // | "|>" ->
+    //   r C.pipe_right_lid delta_equational
+    // | "<|" ->
+    //   r C.pipe_left_lid delta_equational
     | "<>" ->
       r C.op_notEq delta_equational
     | "~"   ->
@@ -410,7 +411,7 @@ let binder_of_bnd = function
 let mk_lb (attrs, n, t, e, pos) = {
     lbname=n;
     lbunivs=[];
-    lbeff=C.effect_ALL_lid;
+    lbeff=C.effect_ALL_lid ();
     lbtyp=t;
     lbdef=e;
     lbattrs=attrs;
@@ -1409,7 +1410,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                                              replace this pattern with a variable") p.prange in
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
-                    && Option.isSome (Env.try_lookup_effect_name env C.effect_ML_lid) //ML is in scope (not still in prims, e.g)
+                    && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
                     && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
@@ -1461,7 +1462,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat in
         let tm, aq1 =
          match binder with
-         | LetBinder(l, (t, _tacopt)) -> //_tacopt must be None here
+         | LetBinder(l, (t, tacopt)) ->
+           if tacopt |> is_some
+           then Errors.log_issue (tacopt |> must).pos (Errors.Warning_DefinitionNotTranslated,
+                  "Tactic annotation with a value type is not supported yet, \
+                    try annotating with a computation type; this tactic annotation will be ignored");
            let body, aq = desugar_term_aq env t2 in
            let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
            mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body), aq
@@ -1874,7 +1879,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       | _ when allow_type_promotion ->
         let default_effect =
           if Options.ml_ish ()
-          then Const.effect_ML_lid
+          then Const.effect_ML_lid()
           else (if Options.warn_default_effects()
                 then FStar.Errors.log_issue head.range (Errors.Warning_UseDefaultEffect, "Using default effect Tot");
                 Const.effect_Tot_lid) in
@@ -1932,7 +1937,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       let flags =
         if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
         else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-        else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+        else if lid_equals eff (C.effect_ML_lid()) then [MLEFFECT]
         else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
         else []
       in
@@ -2764,7 +2769,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                 let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
-                    // a name of the form FStar.ST.uu___proj__STATE__item__get
+                    // a name of the form FStar.Compiler.Effect.uu___proj__STATE__item__get
                     action_name = Env.qualify env (action.action_unqualified_name);
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;

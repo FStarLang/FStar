@@ -223,7 +223,7 @@ let permute_via_swaps (p:permute) =
   (#a:Type) -> (am:amap a) -> xs:list atom ->
     Lemma (exists (ss:swaps_for xs). p xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
+let permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
                                (#a:Type) (eq:equiv a)(m:cm a eq) (am:amap a) (xs:list atom)
   : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (p xs)) =
   pvs am xs;
@@ -253,7 +253,7 @@ let sort_via_swaps (#a:Type) (am:amap a)  (xs:list atom)
   // but ss gets substituted by its definition in the WP
   // (the same already in FStar.Tactics.CanonCommMonoidSimple.fst)
 
-let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
+let sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
   : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (sort xs)) =
   permute_via_swaps_correct sort (fun #a am -> sort_via_swaps am) eq m am xs
 

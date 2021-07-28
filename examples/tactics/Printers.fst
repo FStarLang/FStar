@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Printers
-
+open FStar.List.Tot
 (* TODO: This is pretty much a blast-to-the-past of Meta-F*, we can do
  * much better now. *)
 

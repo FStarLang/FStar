@@ -17,19 +17,19 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 
 module Errors     = FStar.Errors
-module U          = FStar.Util
+module U          = FStar.Compiler.Util
 module A          = FStar.Parser.AST
 module Resugar    = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
@@ -532,7 +532,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name C.effect_ML_lid
+                  && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)

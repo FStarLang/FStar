@@ -1,8 +1,8 @@
 #light "off"
 module FStar.Tactics.Types
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
@@ -12,8 +12,8 @@ module O       = FStar.Options
 module SS      = FStar.Syntax.Subst
 module Cfg     = FStar.TypeChecker.Cfg
 module N       = FStar.TypeChecker.Normalize
-module Range   = FStar.Range
-module BU      = FStar.Util
+module Range   = FStar.Compiler.Range
+module BU      = FStar.Compiler.Util
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
 

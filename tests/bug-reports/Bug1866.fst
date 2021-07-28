@@ -1,5 +1,5 @@
 module Bug1866
-
+open FStar.List.Tot
 open FStar.Tactics
 
 let rec not_do_much e: Tac term =

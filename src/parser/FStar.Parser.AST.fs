@@ -16,15 +16,15 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Errors
 module C = FStar.Parser.Const
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Const
 
 (* AST produced by the parser, before desugaring
@@ -289,7 +289,8 @@ let mkConsList r elts =
 let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
-    let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
+    let lid = C.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 

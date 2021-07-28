@@ -16,8 +16,8 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 type inst_t = list<(lident * universes)>

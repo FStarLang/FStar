@@ -20,13 +20,13 @@
 
 module FStar.Interactive.JsonHelper
 open FStar
+open FStar.Compiler
 open FStar.Errors
-open FStar.Util
-open FStar.Exn
-open FStar.Range
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.TypeChecker.Env
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module PI = FStar.Parser.ParseIt
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable

@@ -17,10 +17,10 @@
 
 module FStar.TypeChecker.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env

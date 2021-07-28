@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "ec29324714c52a2186dd21a861238ff7"
+      "08c711cbc43b13811f77461057d66ced"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "55ebdbda853bf2bf792aefb87db6daa5"
+      "8ed6b51db85c0af8a77de4f9a848c715"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -39,7 +39,7 @@
         "true_interp"
       ],
       0,
-      "7db57a9386dbb7d79aa81153e7e59d07"
+      "3fc6c8e62b67ba9bea34b073ce9a1270"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -47,10 +47,12 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "constructor_distinct_Steel.Effect.Common.VUnit",
         "equation_Prims.eqtype", "equation_Steel.Effect.Common.to_vprop_",
-        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Reference.pts_to",
         "equation_Steel.SpinLock.available",
         "equation_Steel.SpinLock.locked", "function_token_typing_Prims.bool",
         "lemma_FStar.Ghost.hide_reveal",
@@ -60,10 +62,10 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_1a6ee90a1d8e6101af07bd26982e0c4d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "true_interp", "typing_FStar.Ghost.reveal"
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "50fa5881d7b7f5893a21b8419af73a61"
+      "61eb3672264423c1ba52de92f0737b69"
     ],
     [
       "Steel.SpinLock.acquire",
@@ -100,7 +102,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "fbceeda219c38104fa166cee3a3e7d50"
+      "050161aedbadbc1155accbedd78e35b5"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -108,10 +110,12 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "constructor_distinct_Steel.Effect.Common.VUnit",
         "equation_Prims.eqtype", "equation_Steel.Effect.Common.to_vprop_",
-        "equation_Steel.Effect.Common.true_p",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Reference.pts_to",
         "equation_Steel.SpinLock.available",
         "equation_Steel.SpinLock.locked", "function_token_typing_Prims.bool",
         "lemma_FStar.Ghost.hide_reveal",
@@ -121,10 +125,10 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f316b444f0c777e2e328a66e246c57ac",
-        "true_interp", "typing_FStar.Ghost.reveal"
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "51910a9c97e4a68213e44e5918bc34a7"
+      "be9644b64a908f3d9e86b12c763ab5ce"
     ],
     [
       "Steel.SpinLock.release",
@@ -158,7 +162,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "1badb6effd02a455f06fe8a33ed7d716"
+      "a35584defbed72d1569205b189cfdfd4"
     ]
   ]
 ]

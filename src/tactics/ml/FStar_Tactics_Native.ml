@@ -1,4 +1,4 @@
-open FStar_Range
+open FStar_Compiler_Range
 open FStar_Tactics_Types
 open FStar_Tactics_Result
 open FStar_Tactics_Basic
@@ -7,7 +7,7 @@ open FStar_Syntax_Syntax
 
 module N = FStar_TypeChecker_Normalize
 module C = FStar_TypeChecker_Cfg
-module BU = FStar_Util
+module BU = FStar_Compiler_Util
 module NBETerm = FStar_TypeChecker_NBETerm
 module O = FStar_Options
 

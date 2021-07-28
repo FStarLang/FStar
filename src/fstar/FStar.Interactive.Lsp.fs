@@ -16,16 +16,16 @@
 #light "off"
 module FStar.Interactive.Lsp
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
-open FStar.Util
-open FStar.Range
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Universal
 open FStar.Interactive.JsonHelper
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module QH = FStar.Interactive.QueryHelper
 module PH = FStar.Interactive.PushHelper
 module PI = FStar.Parser.ParseIt

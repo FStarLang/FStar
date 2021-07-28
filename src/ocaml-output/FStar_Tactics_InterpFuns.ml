@@ -13,7 +13,7 @@ let unembed :
 let embed :
   'uuuuu .
     'uuuuu FStar_Syntax_Embeddings.embedding ->
-      FStar_Range.range ->
+      FStar_Compiler_Range.range ->
         'uuuuu -> FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e ->
@@ -127,7 +127,7 @@ let mk_total_interpretation_1_psc :
               match args with
               | (a1, uu___)::[] ->
                   let uu___1 = unembed e1 a1 ncb in
-                  FStar_Util.bind_opt uu___1
+                  FStar_Compiler_Util.bind_opt uu___1
                     (fun a11 ->
                        let r1 = f psc a11 in
                        let uu___2 =
@@ -152,7 +152,7 @@ let mk_total_nbe_interpretation_1_psc :
             match args with
             | (a1, uu___)::[] ->
                 let uu___1 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                FStar_Util.bind_opt uu___1
+                FStar_Compiler_Util.bind_opt uu___1
                   (fun a11 ->
                      let r1 = f FStar_TypeChecker_Cfg.null_psc a11 in
                      let uu___2 = FStar_TypeChecker_NBETerm.embed er cb r1 in
@@ -205,11 +205,11 @@ let mk_tactic_interpretation_1 :
               match args with
               | (a1, uu___)::(a2, uu___1)::[] ->
                   let uu___2 = unembed e1 a1 ncb in
-                  FStar_Util.bind_opt uu___2
+                  FStar_Compiler_Util.bind_opt uu___2
                     (fun a11 ->
                        let uu___3 =
                          unembed FStar_Tactics_Embedding.e_proofstate a2 ncb in
-                       FStar_Util.bind_opt uu___3
+                       FStar_Compiler_Util.bind_opt uu___3
                          (fun ps ->
                             let ps1 = FStar_Tactics_Types.set_ps_psc psc ps in
                             let r1 =
@@ -244,15 +244,15 @@ let mk_tactic_interpretation_2 :
                 match args with
                 | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
                     let uu___3 = unembed e1 a1 ncb in
-                    FStar_Util.bind_opt uu___3
+                    FStar_Compiler_Util.bind_opt uu___3
                       (fun a11 ->
                          let uu___4 = unembed e2 a2 ncb in
-                         FStar_Util.bind_opt uu___4
+                         FStar_Compiler_Util.bind_opt uu___4
                            (fun a21 ->
                               let uu___5 =
                                 unembed FStar_Tactics_Embedding.e_proofstate
                                   a3 ncb in
-                              FStar_Util.bind_opt uu___5
+                              FStar_Compiler_Util.bind_opt uu___5
                                 (fun ps ->
                                    let ps1 =
                                      FStar_Tactics_Types.set_ps_psc psc ps in
@@ -291,19 +291,19 @@ let mk_tactic_interpretation_3 :
                   | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::[]
                       ->
                       let uu___4 = unembed e1 a1 ncb in
-                      FStar_Util.bind_opt uu___4
+                      FStar_Compiler_Util.bind_opt uu___4
                         (fun a11 ->
                            let uu___5 = unembed e2 a2 ncb in
-                           FStar_Util.bind_opt uu___5
+                           FStar_Compiler_Util.bind_opt uu___5
                              (fun a21 ->
                                 let uu___6 = unembed e3 a3 ncb in
-                                FStar_Util.bind_opt uu___6
+                                FStar_Compiler_Util.bind_opt uu___6
                                   (fun a31 ->
                                      let uu___7 =
                                        unembed
                                          FStar_Tactics_Embedding.e_proofstate
                                          a4 ncb in
-                                     FStar_Util.bind_opt uu___7
+                                     FStar_Compiler_Util.bind_opt uu___7
                                        (fun ps ->
                                           let ps1 =
                                             FStar_Tactics_Types.set_ps_psc
@@ -348,22 +348,23 @@ let mk_tactic_interpretation_4 :
                     | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::
                         (a5, uu___4)::[] ->
                         let uu___5 = unembed e1 a1 ncb in
-                        FStar_Util.bind_opt uu___5
+                        FStar_Compiler_Util.bind_opt uu___5
                           (fun a11 ->
                              let uu___6 = unembed e2 a2 ncb in
-                             FStar_Util.bind_opt uu___6
+                             FStar_Compiler_Util.bind_opt uu___6
                                (fun a21 ->
                                   let uu___7 = unembed e3 a3 ncb in
-                                  FStar_Util.bind_opt uu___7
+                                  FStar_Compiler_Util.bind_opt uu___7
                                     (fun a31 ->
                                        let uu___8 = unembed e4 a4 ncb in
-                                       FStar_Util.bind_opt uu___8
+                                       FStar_Compiler_Util.bind_opt uu___8
                                          (fun a41 ->
                                             let uu___9 =
                                               unembed
                                                 FStar_Tactics_Embedding.e_proofstate
                                                 a5 ncb in
-                                            FStar_Util.bind_opt uu___9
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___9
                                               (fun ps ->
                                                  let ps1 =
                                                    FStar_Tactics_Types.set_ps_psc
@@ -414,25 +415,26 @@ let mk_tactic_interpretation_5 :
                       | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::
                           (a5, uu___4)::(a6, uu___5)::[] ->
                           let uu___6 = unembed e1 a1 ncb in
-                          FStar_Util.bind_opt uu___6
+                          FStar_Compiler_Util.bind_opt uu___6
                             (fun a11 ->
                                let uu___7 = unembed e2 a2 ncb in
-                               FStar_Util.bind_opt uu___7
+                               FStar_Compiler_Util.bind_opt uu___7
                                  (fun a21 ->
                                     let uu___8 = unembed e3 a3 ncb in
-                                    FStar_Util.bind_opt uu___8
+                                    FStar_Compiler_Util.bind_opt uu___8
                                       (fun a31 ->
                                          let uu___9 = unembed e4 a4 ncb in
-                                         FStar_Util.bind_opt uu___9
+                                         FStar_Compiler_Util.bind_opt uu___9
                                            (fun a41 ->
                                               let uu___10 = unembed e5 a5 ncb in
-                                              FStar_Util.bind_opt uu___10
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___10
                                                 (fun a51 ->
                                                    let uu___11 =
                                                      unembed
                                                        FStar_Tactics_Embedding.e_proofstate
                                                        a6 ncb in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___11
                                                      (fun ps ->
                                                         let ps1 =
@@ -488,31 +490,33 @@ let mk_tactic_interpretation_6 :
                                                                     uu___3)::
                             (a5, uu___4)::(a6, uu___5)::(a7, uu___6)::[] ->
                             let uu___7 = unembed e1 a1 ncb in
-                            FStar_Util.bind_opt uu___7
+                            FStar_Compiler_Util.bind_opt uu___7
                               (fun a11 ->
                                  let uu___8 = unembed e2 a2 ncb in
-                                 FStar_Util.bind_opt uu___8
+                                 FStar_Compiler_Util.bind_opt uu___8
                                    (fun a21 ->
                                       let uu___9 = unembed e3 a3 ncb in
-                                      FStar_Util.bind_opt uu___9
+                                      FStar_Compiler_Util.bind_opt uu___9
                                         (fun a31 ->
                                            let uu___10 = unembed e4 a4 ncb in
-                                           FStar_Util.bind_opt uu___10
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___10
                                              (fun a41 ->
                                                 let uu___11 =
                                                   unembed e5 a5 ncb in
-                                                FStar_Util.bind_opt uu___11
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___11
                                                   (fun a51 ->
                                                      let uu___12 =
                                                        unembed e6 a6 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___12
                                                        (fun a61 ->
                                                           let uu___13 =
                                                             unembed
                                                               FStar_Tactics_Embedding.e_proofstate
                                                               a7 ncb in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___13
                                                             (fun ps ->
                                                                let ps1 =
@@ -579,30 +583,32 @@ let mk_tactic_interpretation_7 :
                               (a4, uu___3)::(a5, uu___4)::(a6, uu___5)::
                               (a7, uu___6)::(a8, uu___7)::[] ->
                               let uu___8 = unembed e1 a1 ncb in
-                              FStar_Util.bind_opt uu___8
+                              FStar_Compiler_Util.bind_opt uu___8
                                 (fun a11 ->
                                    let uu___9 = unembed e2 a2 ncb in
-                                   FStar_Util.bind_opt uu___9
+                                   FStar_Compiler_Util.bind_opt uu___9
                                      (fun a21 ->
                                         let uu___10 = unembed e3 a3 ncb in
-                                        FStar_Util.bind_opt uu___10
+                                        FStar_Compiler_Util.bind_opt uu___10
                                           (fun a31 ->
                                              let uu___11 = unembed e4 a4 ncb in
-                                             FStar_Util.bind_opt uu___11
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___11
                                                (fun a41 ->
                                                   let uu___12 =
                                                     unembed e5 a5 ncb in
-                                                  FStar_Util.bind_opt uu___12
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___12
                                                     (fun a51 ->
                                                        let uu___13 =
                                                          unembed e6 a6 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___13
                                                          (fun a61 ->
                                                             let uu___14 =
                                                               unembed e7 a7
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___14
                                                               (fun a71 ->
                                                                  let uu___15
@@ -610,7 +616,7 @@ let mk_tactic_interpretation_7 :
                                                                    unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a8 ncb in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___15
                                                                    (fun ps ->
                                                                     let ps1 =
@@ -683,39 +689,41 @@ let mk_tactic_interpretation_8 :
                                 (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::[]
                                 ->
                                 let uu___9 = unembed e1 a1 ncb in
-                                FStar_Util.bind_opt uu___9
+                                FStar_Compiler_Util.bind_opt uu___9
                                   (fun a11 ->
                                      let uu___10 = unembed e2 a2 ncb in
-                                     FStar_Util.bind_opt uu___10
+                                     FStar_Compiler_Util.bind_opt uu___10
                                        (fun a21 ->
                                           let uu___11 = unembed e3 a3 ncb in
-                                          FStar_Util.bind_opt uu___11
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___11
                                             (fun a31 ->
                                                let uu___12 =
                                                  unembed e4 a4 ncb in
-                                               FStar_Util.bind_opt uu___12
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___12
                                                  (fun a41 ->
                                                     let uu___13 =
                                                       unembed e5 a5 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___13
                                                       (fun a51 ->
                                                          let uu___14 =
                                                            unembed e6 a6 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___14
                                                            (fun a61 ->
                                                               let uu___15 =
                                                                 unembed e7 a7
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___15
                                                                 (fun a71 ->
                                                                    let uu___16
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___16
                                                                     (fun a81
                                                                     ->
@@ -724,7 +732,7 @@ let mk_tactic_interpretation_8 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun ps
                                                                     ->
@@ -802,40 +810,42 @@ let mk_tactic_interpretation_9 :
                                   (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::
                                   (a10, uu___9)::[] ->
                                   let uu___10 = unembed e1 a1 ncb in
-                                  FStar_Util.bind_opt uu___10
+                                  FStar_Compiler_Util.bind_opt uu___10
                                     (fun a11 ->
                                        let uu___11 = unembed e2 a2 ncb in
-                                       FStar_Util.bind_opt uu___11
+                                       FStar_Compiler_Util.bind_opt uu___11
                                          (fun a21 ->
                                             let uu___12 = unembed e3 a3 ncb in
-                                            FStar_Util.bind_opt uu___12
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___12
                                               (fun a31 ->
                                                  let uu___13 =
                                                    unembed e4 a4 ncb in
-                                                 FStar_Util.bind_opt uu___13
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___13
                                                    (fun a41 ->
                                                       let uu___14 =
                                                         unembed e5 a5 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___14
                                                         (fun a51 ->
                                                            let uu___15 =
                                                              unembed e6 a6
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___15
                                                              (fun a61 ->
                                                                 let uu___16 =
                                                                   unembed e7
                                                                     a7 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___16
                                                                   (fun a71 ->
                                                                     let uu___17
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a81
                                                                     ->
@@ -843,7 +853,7 @@ let mk_tactic_interpretation_9 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a91
                                                                     ->
@@ -852,7 +862,7 @@ let mk_tactic_interpretation_9 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a10 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun ps
                                                                     ->
@@ -934,35 +944,36 @@ let mk_tactic_interpretation_10 :
                                     (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::
                                     (a10, uu___9)::(a11, uu___10)::[] ->
                                     let uu___11 = unembed e1 a1 ncb in
-                                    FStar_Util.bind_opt uu___11
+                                    FStar_Compiler_Util.bind_opt uu___11
                                       (fun a12 ->
                                          let uu___12 = unembed e2 a2 ncb in
-                                         FStar_Util.bind_opt uu___12
+                                         FStar_Compiler_Util.bind_opt uu___12
                                            (fun a21 ->
                                               let uu___13 = unembed e3 a3 ncb in
-                                              FStar_Util.bind_opt uu___13
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___13
                                                 (fun a31 ->
                                                    let uu___14 =
                                                      unembed e4 a4 ncb in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___14
                                                      (fun a41 ->
                                                         let uu___15 =
                                                           unembed e5 a5 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___15
                                                           (fun a51 ->
                                                              let uu___16 =
                                                                unembed e6 a6
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___16
                                                                (fun a61 ->
                                                                   let uu___17
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (
                                                                     fun a71
@@ -971,7 +982,7 @@ let mk_tactic_interpretation_10 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a81
                                                                     ->
@@ -979,7 +990,7 @@ let mk_tactic_interpretation_10 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a91
                                                                     ->
@@ -988,7 +999,7 @@ let mk_tactic_interpretation_10 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a101
                                                                     ->
@@ -997,7 +1008,7 @@ let mk_tactic_interpretation_10 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a11 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun ps
                                                                     ->
@@ -1086,36 +1097,38 @@ let mk_tactic_interpretation_11 :
                                       (a10, uu___9)::(a11, uu___10)::
                                       (a12, uu___11)::[] ->
                                       let uu___12 = unembed e1 a1 ncb in
-                                      FStar_Util.bind_opt uu___12
+                                      FStar_Compiler_Util.bind_opt uu___12
                                         (fun a13 ->
                                            let uu___13 = unembed e2 a2 ncb in
-                                           FStar_Util.bind_opt uu___13
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___13
                                              (fun a21 ->
                                                 let uu___14 =
                                                   unembed e3 a3 ncb in
-                                                FStar_Util.bind_opt uu___14
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___14
                                                   (fun a31 ->
                                                      let uu___15 =
                                                        unembed e4 a4 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___15
                                                        (fun a41 ->
                                                           let uu___16 =
                                                             unembed e5 a5 ncb in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___16
                                                             (fun a51 ->
                                                                let uu___17 =
                                                                  unembed e6
                                                                    a6 ncb in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___17
                                                                  (fun a61 ->
                                                                     let uu___18
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a71
                                                                     ->
@@ -1123,7 +1136,7 @@ let mk_tactic_interpretation_11 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a81
                                                                     ->
@@ -1131,7 +1144,7 @@ let mk_tactic_interpretation_11 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a91
                                                                     ->
@@ -1140,7 +1153,7 @@ let mk_tactic_interpretation_11 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a101
                                                                     ->
@@ -1149,7 +1162,7 @@ let mk_tactic_interpretation_11 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a111
                                                                     ->
@@ -1158,7 +1171,7 @@ let mk_tactic_interpretation_11 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a12 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun ps
                                                                     ->
@@ -1252,31 +1265,33 @@ let mk_tactic_interpretation_12 :
                                         (a10, uu___9)::(a11, uu___10)::
                                         (a12, uu___11)::(a13, uu___12)::[] ->
                                         let uu___13 = unembed e1 a1 ncb in
-                                        FStar_Util.bind_opt uu___13
+                                        FStar_Compiler_Util.bind_opt uu___13
                                           (fun a14 ->
                                              let uu___14 = unembed e2 a2 ncb in
-                                             FStar_Util.bind_opt uu___14
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___14
                                                (fun a21 ->
                                                   let uu___15 =
                                                     unembed e3 a3 ncb in
-                                                  FStar_Util.bind_opt uu___15
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___15
                                                     (fun a31 ->
                                                        let uu___16 =
                                                          unembed e4 a4 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___16
                                                          (fun a41 ->
                                                             let uu___17 =
                                                               unembed e5 a5
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___17
                                                               (fun a51 ->
                                                                  let uu___18
                                                                    =
                                                                    unembed e6
                                                                     a6 ncb in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___18
                                                                    (fun a61
                                                                     ->
@@ -1284,7 +1299,7 @@ let mk_tactic_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a71
                                                                     ->
@@ -1292,7 +1307,7 @@ let mk_tactic_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a81
                                                                     ->
@@ -1300,7 +1315,7 @@ let mk_tactic_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a91
                                                                     ->
@@ -1309,7 +1324,7 @@ let mk_tactic_interpretation_12 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a101
                                                                     ->
@@ -1318,7 +1333,7 @@ let mk_tactic_interpretation_12 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a111
                                                                     ->
@@ -1327,7 +1342,7 @@ let mk_tactic_interpretation_12 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a121
                                                                     ->
@@ -1336,7 +1351,7 @@ let mk_tactic_interpretation_12 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a13 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun ps
                                                                     ->
@@ -1434,33 +1449,35 @@ let mk_tactic_interpretation_13 :
                                           (a12, uu___11)::(a13, uu___12)::
                                           (a14, uu___13)::[] ->
                                           let uu___14 = unembed e1 a1 ncb in
-                                          FStar_Util.bind_opt uu___14
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___14
                                             (fun a15 ->
                                                let uu___15 =
                                                  unembed e2 a2 ncb in
-                                               FStar_Util.bind_opt uu___15
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___15
                                                  (fun a21 ->
                                                     let uu___16 =
                                                       unembed e3 a3 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___16
                                                       (fun a31 ->
                                                          let uu___17 =
                                                            unembed e4 a4 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___17
                                                            (fun a41 ->
                                                               let uu___18 =
                                                                 unembed e5 a5
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___18
                                                                 (fun a51 ->
                                                                    let uu___19
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a61
                                                                     ->
@@ -1468,7 +1485,7 @@ let mk_tactic_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a71
                                                                     ->
@@ -1476,7 +1493,7 @@ let mk_tactic_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a81
                                                                     ->
@@ -1484,7 +1501,7 @@ let mk_tactic_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a91
                                                                     ->
@@ -1493,7 +1510,7 @@ let mk_tactic_interpretation_13 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a101
                                                                     ->
@@ -1502,7 +1519,7 @@ let mk_tactic_interpretation_13 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a111
                                                                     ->
@@ -1511,7 +1528,7 @@ let mk_tactic_interpretation_13 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a121
                                                                     ->
@@ -1520,7 +1537,7 @@ let mk_tactic_interpretation_13 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a131
                                                                     ->
@@ -1529,7 +1546,7 @@ let mk_tactic_interpretation_13 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a14 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun ps
                                                                     ->
@@ -1631,34 +1648,36 @@ let mk_tactic_interpretation_14 :
                                             (a13, uu___12)::(a14, uu___13)::
                                             (a15, uu___14)::[] ->
                                             let uu___15 = unembed e1 a1 ncb in
-                                            FStar_Util.bind_opt uu___15
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___15
                                               (fun a16 ->
                                                  let uu___16 =
                                                    unembed e2 a2 ncb in
-                                                 FStar_Util.bind_opt uu___16
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___16
                                                    (fun a21 ->
                                                       let uu___17 =
                                                         unembed e3 a3 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___17
                                                         (fun a31 ->
                                                            let uu___18 =
                                                              unembed e4 a4
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___18
                                                              (fun a41 ->
                                                                 let uu___19 =
                                                                   unembed e5
                                                                     a5 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___19
                                                                   (fun a51 ->
                                                                     let uu___20
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a61
                                                                     ->
@@ -1666,7 +1685,7 @@ let mk_tactic_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a71
                                                                     ->
@@ -1674,7 +1693,7 @@ let mk_tactic_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a81
                                                                     ->
@@ -1682,7 +1701,7 @@ let mk_tactic_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a91
                                                                     ->
@@ -1691,7 +1710,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a101
                                                                     ->
@@ -1700,7 +1719,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a111
                                                                     ->
@@ -1709,7 +1728,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a121
                                                                     ->
@@ -1718,7 +1737,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a131
                                                                     ->
@@ -1727,7 +1746,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a141
                                                                     ->
@@ -1736,7 +1755,7 @@ let mk_tactic_interpretation_14 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a15 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun ps
                                                                     ->
@@ -1844,29 +1863,30 @@ let mk_tactic_interpretation_15 :
                                               (a15, uu___14)::(a16, uu___15)::[]
                                               ->
                                               let uu___16 = unembed e1 a1 ncb in
-                                              FStar_Util.bind_opt uu___16
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___16
                                                 (fun a17 ->
                                                    let uu___17 =
                                                      unembed e2 a2 ncb in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___17
                                                      (fun a21 ->
                                                         let uu___18 =
                                                           unembed e3 a3 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___18
                                                           (fun a31 ->
                                                              let uu___19 =
                                                                unembed e4 a4
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___19
                                                                (fun a41 ->
                                                                   let uu___20
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (
                                                                     fun a51
@@ -1875,7 +1895,7 @@ let mk_tactic_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a61
                                                                     ->
@@ -1883,7 +1903,7 @@ let mk_tactic_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a71
                                                                     ->
@@ -1891,7 +1911,7 @@ let mk_tactic_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a81
                                                                     ->
@@ -1899,7 +1919,7 @@ let mk_tactic_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a91
                                                                     ->
@@ -1908,7 +1928,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a101
                                                                     ->
@@ -1917,7 +1937,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a111
                                                                     ->
@@ -1926,7 +1946,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a121
                                                                     ->
@@ -1935,7 +1955,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a131
                                                                     ->
@@ -1944,7 +1964,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a141
                                                                     ->
@@ -1953,7 +1973,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a151
                                                                     ->
@@ -1962,7 +1982,7 @@ let mk_tactic_interpretation_15 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a16 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun ps
                                                                     ->
@@ -2078,29 +2098,30 @@ let mk_tactic_interpretation_16 :
                                                 (a17, uu___16)::[] ->
                                                 let uu___17 =
                                                   unembed e1 a1 ncb in
-                                                FStar_Util.bind_opt uu___17
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___17
                                                   (fun a18 ->
                                                      let uu___18 =
                                                        unembed e2 a2 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___18
                                                        (fun a21 ->
                                                           let uu___19 =
                                                             unembed e3 a3 ncb in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___19
                                                             (fun a31 ->
                                                                let uu___20 =
                                                                  unembed e4
                                                                    a4 ncb in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___20
                                                                  (fun a41 ->
                                                                     let uu___21
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a51
                                                                     ->
@@ -2108,7 +2129,7 @@ let mk_tactic_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a61
                                                                     ->
@@ -2116,7 +2137,7 @@ let mk_tactic_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a71
                                                                     ->
@@ -2124,7 +2145,7 @@ let mk_tactic_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a81
                                                                     ->
@@ -2132,7 +2153,7 @@ let mk_tactic_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a91
                                                                     ->
@@ -2141,7 +2162,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a101
                                                                     ->
@@ -2150,7 +2171,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a111
                                                                     ->
@@ -2159,7 +2180,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a121
                                                                     ->
@@ -2168,7 +2189,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a131
                                                                     ->
@@ -2177,7 +2198,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a141
                                                                     ->
@@ -2186,7 +2207,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a151
                                                                     ->
@@ -2195,7 +2216,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a161
                                                                     ->
@@ -2204,7 +2225,7 @@ let mk_tactic_interpretation_16 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a17 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun ps
                                                                     ->
@@ -2329,24 +2350,25 @@ let mk_tactic_interpretation_17 :
                                                   ->
                                                   let uu___18 =
                                                     unembed e1 a1 ncb in
-                                                  FStar_Util.bind_opt uu___18
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___18
                                                     (fun a19 ->
                                                        let uu___19 =
                                                          unembed e2 a2 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___19
                                                          (fun a21 ->
                                                             let uu___20 =
                                                               unembed e3 a3
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___20
                                                               (fun a31 ->
                                                                  let uu___21
                                                                    =
                                                                    unembed e4
                                                                     a4 ncb in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___21
                                                                    (fun a41
                                                                     ->
@@ -2354,7 +2376,7 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a51
                                                                     ->
@@ -2362,7 +2384,7 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a61
                                                                     ->
@@ -2370,7 +2392,7 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a71
                                                                     ->
@@ -2378,7 +2400,7 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a81
                                                                     ->
@@ -2386,7 +2408,7 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a91
                                                                     ->
@@ -2395,7 +2417,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a101
                                                                     ->
@@ -2404,7 +2426,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a111
                                                                     ->
@@ -2413,7 +2435,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a121
                                                                     ->
@@ -2422,7 +2444,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a131
                                                                     ->
@@ -2431,7 +2453,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a141
                                                                     ->
@@ -2440,7 +2462,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a151
                                                                     ->
@@ -2449,7 +2471,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a161
                                                                     ->
@@ -2458,7 +2480,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a171
                                                                     ->
@@ -2467,7 +2489,7 @@ let mk_tactic_interpretation_17 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a18 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun ps
                                                                     ->
@@ -2604,25 +2626,25 @@ let mk_tactic_interpretation_18 :
                                                     (a19, uu___18)::[] ->
                                                     let uu___19 =
                                                       unembed e1 a1 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___19
                                                       (fun a110 ->
                                                          let uu___20 =
                                                            unembed e2 a2 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___20
                                                            (fun a21 ->
                                                               let uu___21 =
                                                                 unembed e3 a3
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___21
                                                                 (fun a31 ->
                                                                    let uu___22
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a41
                                                                     ->
@@ -2630,7 +2652,7 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a51
                                                                     ->
@@ -2638,7 +2660,7 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a61
                                                                     ->
@@ -2646,7 +2668,7 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a71
                                                                     ->
@@ -2654,7 +2676,7 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a81
                                                                     ->
@@ -2662,7 +2684,7 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a91
                                                                     ->
@@ -2671,7 +2693,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a101
                                                                     ->
@@ -2680,7 +2702,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a111
                                                                     ->
@@ -2689,7 +2711,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a121
                                                                     ->
@@ -2698,7 +2720,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a131
                                                                     ->
@@ -2707,7 +2729,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a141
                                                                     ->
@@ -2716,7 +2738,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a151
                                                                     ->
@@ -2725,7 +2747,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a161
                                                                     ->
@@ -2734,7 +2756,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a171
                                                                     ->
@@ -2743,7 +2765,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a181
                                                                     ->
@@ -2752,7 +2774,7 @@ let mk_tactic_interpretation_18 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a19 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun ps
                                                                     ->
@@ -2896,26 +2918,26 @@ let mk_tactic_interpretation_19 :
                                                       (a20, uu___19)::[] ->
                                                       let uu___20 =
                                                         unembed e1 a1 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___20
                                                         (fun a110 ->
                                                            let uu___21 =
                                                              unembed e2 a2
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___21
                                                              (fun a21 ->
                                                                 let uu___22 =
                                                                   unembed e3
                                                                     a3 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___22
                                                                   (fun a31 ->
                                                                     let uu___23
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a41
                                                                     ->
@@ -2923,7 +2945,7 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a51
                                                                     ->
@@ -2931,7 +2953,7 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a61
                                                                     ->
@@ -2939,7 +2961,7 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a71
                                                                     ->
@@ -2947,7 +2969,7 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a81
                                                                     ->
@@ -2955,7 +2977,7 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a91
                                                                     ->
@@ -2964,7 +2986,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a101
                                                                     ->
@@ -2973,7 +2995,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a111
                                                                     ->
@@ -2982,7 +3004,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a121
                                                                     ->
@@ -2991,7 +3013,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a131
                                                                     ->
@@ -3000,7 +3022,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a141
                                                                     ->
@@ -3009,7 +3031,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a151
                                                                     ->
@@ -3018,7 +3040,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a161
                                                                     ->
@@ -3027,7 +3049,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a171
                                                                     ->
@@ -3036,7 +3058,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a181
                                                                     ->
@@ -3045,7 +3067,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     e19 a19
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a191
                                                                     ->
@@ -3054,7 +3076,7 @@ let mk_tactic_interpretation_19 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a20 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun ps
                                                                     ->
@@ -3206,20 +3228,20 @@ let mk_tactic_interpretation_20 :
                                                         (a21, uu___20)::[] ->
                                                         let uu___21 =
                                                           unembed e1 a1 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___21
                                                           (fun a110 ->
                                                              let uu___22 =
                                                                unembed e2 a2
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___22
                                                                (fun a22 ->
                                                                   let uu___23
                                                                     =
                                                                     unembed
                                                                     e3 a3 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (
                                                                     fun a31
@@ -3228,7 +3250,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a41
                                                                     ->
@@ -3236,7 +3258,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a51
                                                                     ->
@@ -3244,7 +3266,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a61
                                                                     ->
@@ -3252,7 +3274,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a71
                                                                     ->
@@ -3260,7 +3282,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a81
                                                                     ->
@@ -3268,7 +3290,7 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a91
                                                                     ->
@@ -3277,7 +3299,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a101
                                                                     ->
@@ -3286,7 +3308,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a111
                                                                     ->
@@ -3295,7 +3317,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a121
                                                                     ->
@@ -3304,7 +3326,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a131
                                                                     ->
@@ -3313,7 +3335,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a141
                                                                     ->
@@ -3322,7 +3344,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a151
                                                                     ->
@@ -3331,7 +3353,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a161
                                                                     ->
@@ -3340,7 +3362,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a171
                                                                     ->
@@ -3349,7 +3371,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a181
                                                                     ->
@@ -3358,7 +3380,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e19 a19
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun a191
                                                                     ->
@@ -3367,7 +3389,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     e20 a20
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___40
                                                                     (fun a201
                                                                     ->
@@ -3376,7 +3398,7 @@ let mk_tactic_interpretation_20 :
                                                                     unembed
                                                                     FStar_Tactics_Embedding.e_proofstate
                                                                     a21 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___41
                                                                     (fun ps
                                                                     ->
@@ -3435,12 +3457,12 @@ let mk_tactic_nbe_interpretation_1 :
             match args with
             | (a1, uu___)::(a2, uu___1)::[] ->
                 let uu___2 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                FStar_Util.bind_opt uu___2
+                FStar_Compiler_Util.bind_opt uu___2
                   (fun a11 ->
                      let uu___3 =
                        FStar_TypeChecker_NBETerm.unembed
                          FStar_Tactics_Embedding.e_proofstate_nbe cb a2 in
-                     FStar_Util.bind_opt uu___3
+                     FStar_Compiler_Util.bind_opt uu___3
                        (fun ps ->
                           let r1 =
                             let uu___4 = t a11 in
@@ -3470,17 +3492,17 @@ let mk_tactic_nbe_interpretation_2 :
               match args with
               | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
                   let uu___3 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                  FStar_Util.bind_opt uu___3
+                  FStar_Compiler_Util.bind_opt uu___3
                     (fun a11 ->
                        let uu___4 =
                          FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                       FStar_Util.bind_opt uu___4
+                       FStar_Compiler_Util.bind_opt uu___4
                          (fun a21 ->
                             let uu___5 =
                               FStar_TypeChecker_NBETerm.unembed
                                 FStar_Tactics_Embedding.e_proofstate_nbe cb
                                 a3 in
-                            FStar_Util.bind_opt uu___5
+                            FStar_Compiler_Util.bind_opt uu___5
                               (fun ps ->
                                  let r1 =
                                    let uu___6 = t a11 a21 in
@@ -3514,21 +3536,21 @@ let mk_tactic_nbe_interpretation_3 :
                 | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::[]
                     ->
                     let uu___4 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                    FStar_Util.bind_opt uu___4
+                    FStar_Compiler_Util.bind_opt uu___4
                       (fun a11 ->
                          let uu___5 =
                            FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                         FStar_Util.bind_opt uu___5
+                         FStar_Compiler_Util.bind_opt uu___5
                            (fun a21 ->
                               let uu___6 =
                                 FStar_TypeChecker_NBETerm.unembed e3 cb a3 in
-                              FStar_Util.bind_opt uu___6
+                              FStar_Compiler_Util.bind_opt uu___6
                                 (fun a31 ->
                                    let uu___7 =
                                      FStar_TypeChecker_NBETerm.unembed
                                        FStar_Tactics_Embedding.e_proofstate_nbe
                                        cb a4 in
-                                   FStar_Util.bind_opt uu___7
+                                   FStar_Compiler_Util.bind_opt uu___7
                                      (fun ps ->
                                         let r1 =
                                           let uu___8 = t a11 a21 a31 in
@@ -3567,26 +3589,26 @@ let mk_tactic_nbe_interpretation_4 :
                   | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::
                       (a5, uu___4)::[] ->
                       let uu___5 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                      FStar_Util.bind_opt uu___5
+                      FStar_Compiler_Util.bind_opt uu___5
                         (fun a11 ->
                            let uu___6 =
                              FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                           FStar_Util.bind_opt uu___6
+                           FStar_Compiler_Util.bind_opt uu___6
                              (fun a21 ->
                                 let uu___7 =
                                   FStar_TypeChecker_NBETerm.unembed e3 cb a3 in
-                                FStar_Util.bind_opt uu___7
+                                FStar_Compiler_Util.bind_opt uu___7
                                   (fun a31 ->
                                      let uu___8 =
                                        FStar_TypeChecker_NBETerm.unembed e4
                                          cb a4 in
-                                     FStar_Util.bind_opt uu___8
+                                     FStar_Compiler_Util.bind_opt uu___8
                                        (fun a41 ->
                                           let uu___9 =
                                             FStar_TypeChecker_NBETerm.unembed
                                               FStar_Tactics_Embedding.e_proofstate_nbe
                                               cb a5 in
-                                          FStar_Util.bind_opt uu___9
+                                          FStar_Compiler_Util.bind_opt uu___9
                                             (fun ps ->
                                                let r1 =
                                                  let uu___10 =
@@ -3630,32 +3652,34 @@ let mk_tactic_nbe_interpretation_5 :
                         (a5, uu___4)::(a6, uu___5)::[] ->
                         let uu___6 =
                           FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                        FStar_Util.bind_opt uu___6
+                        FStar_Compiler_Util.bind_opt uu___6
                           (fun a11 ->
                              let uu___7 =
                                FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                             FStar_Util.bind_opt uu___7
+                             FStar_Compiler_Util.bind_opt uu___7
                                (fun a21 ->
                                   let uu___8 =
                                     FStar_TypeChecker_NBETerm.unembed e3 cb
                                       a3 in
-                                  FStar_Util.bind_opt uu___8
+                                  FStar_Compiler_Util.bind_opt uu___8
                                     (fun a31 ->
                                        let uu___9 =
                                          FStar_TypeChecker_NBETerm.unembed e4
                                            cb a4 in
-                                       FStar_Util.bind_opt uu___9
+                                       FStar_Compiler_Util.bind_opt uu___9
                                          (fun a41 ->
                                             let uu___10 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e5 cb a5 in
-                                            FStar_Util.bind_opt uu___10
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___10
                                               (fun a51 ->
                                                  let uu___11 =
                                                    FStar_TypeChecker_NBETerm.unembed
                                                      FStar_Tactics_Embedding.e_proofstate_nbe
                                                      cb a6 in
-                                                 FStar_Util.bind_opt uu___11
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___11
                                                    (fun ps ->
                                                       let r1 =
                                                         let uu___12 =
@@ -3703,38 +3727,39 @@ let mk_tactic_nbe_interpretation_6 :
                           (a5, uu___4)::(a6, uu___5)::(a7, uu___6)::[] ->
                           let uu___7 =
                             FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                          FStar_Util.bind_opt uu___7
+                          FStar_Compiler_Util.bind_opt uu___7
                             (fun a11 ->
                                let uu___8 =
                                  FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                               FStar_Util.bind_opt uu___8
+                               FStar_Compiler_Util.bind_opt uu___8
                                  (fun a21 ->
                                     let uu___9 =
                                       FStar_TypeChecker_NBETerm.unembed e3 cb
                                         a3 in
-                                    FStar_Util.bind_opt uu___9
+                                    FStar_Compiler_Util.bind_opt uu___9
                                       (fun a31 ->
                                          let uu___10 =
                                            FStar_TypeChecker_NBETerm.unembed
                                              e4 cb a4 in
-                                         FStar_Util.bind_opt uu___10
+                                         FStar_Compiler_Util.bind_opt uu___10
                                            (fun a41 ->
                                               let uu___11 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e5 cb a5 in
-                                              FStar_Util.bind_opt uu___11
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___11
                                                 (fun a51 ->
                                                    let uu___12 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e6 cb a6 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___12
                                                      (fun a61 ->
                                                         let uu___13 =
                                                           FStar_TypeChecker_NBETerm.unembed
                                                             FStar_Tactics_Embedding.e_proofstate_nbe
                                                             cb a7 in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___13
                                                           (fun ps ->
                                                              let r1 =
@@ -3790,44 +3815,46 @@ let mk_tactic_nbe_interpretation_7 :
                             (a8, uu___7)::[] ->
                             let uu___8 =
                               FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                            FStar_Util.bind_opt uu___8
+                            FStar_Compiler_Util.bind_opt uu___8
                               (fun a11 ->
                                  let uu___9 =
                                    FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                                 FStar_Util.bind_opt uu___9
+                                 FStar_Compiler_Util.bind_opt uu___9
                                    (fun a21 ->
                                       let uu___10 =
                                         FStar_TypeChecker_NBETerm.unembed e3
                                           cb a3 in
-                                      FStar_Util.bind_opt uu___10
+                                      FStar_Compiler_Util.bind_opt uu___10
                                         (fun a31 ->
                                            let uu___11 =
                                              FStar_TypeChecker_NBETerm.unembed
                                                e4 cb a4 in
-                                           FStar_Util.bind_opt uu___11
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___11
                                              (fun a41 ->
                                                 let uu___12 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e5 cb a5 in
-                                                FStar_Util.bind_opt uu___12
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___12
                                                   (fun a51 ->
                                                      let uu___13 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e6 cb a6 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___13
                                                        (fun a61 ->
                                                           let uu___14 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e7 cb a7 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___14
                                                             (fun a71 ->
                                                                let uu___15 =
                                                                  FStar_TypeChecker_NBETerm.unembed
                                                                    FStar_Tactics_Embedding.e_proofstate_nbe
                                                                    cb a8 in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___15
                                                                  (fun ps ->
                                                                     let r1 =
@@ -3891,45 +3918,47 @@ let mk_tactic_nbe_interpretation_8 :
                               (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::[] ->
                               let uu___9 =
                                 FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                              FStar_Util.bind_opt uu___9
+                              FStar_Compiler_Util.bind_opt uu___9
                                 (fun a11 ->
                                    let uu___10 =
                                      FStar_TypeChecker_NBETerm.unembed e2 cb
                                        a2 in
-                                   FStar_Util.bind_opt uu___10
+                                   FStar_Compiler_Util.bind_opt uu___10
                                      (fun a21 ->
                                         let uu___11 =
                                           FStar_TypeChecker_NBETerm.unembed
                                             e3 cb a3 in
-                                        FStar_Util.bind_opt uu___11
+                                        FStar_Compiler_Util.bind_opt uu___11
                                           (fun a31 ->
                                              let uu___12 =
                                                FStar_TypeChecker_NBETerm.unembed
                                                  e4 cb a4 in
-                                             FStar_Util.bind_opt uu___12
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___12
                                                (fun a41 ->
                                                   let uu___13 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e5 cb a5 in
-                                                  FStar_Util.bind_opt uu___13
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___13
                                                     (fun a51 ->
                                                        let uu___14 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e6 cb a6 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___14
                                                          (fun a61 ->
                                                             let uu___15 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e7 cb a7 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___15
                                                               (fun a71 ->
                                                                  let uu___16
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___16
                                                                    (fun a81
                                                                     ->
@@ -3938,7 +3967,7 @@ let mk_tactic_nbe_interpretation_8 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun ps
                                                                     ->
@@ -4007,46 +4036,48 @@ let mk_tactic_nbe_interpretation_9 :
                                 (a10, uu___9)::[] ->
                                 let uu___10 =
                                   FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                                FStar_Util.bind_opt uu___10
+                                FStar_Compiler_Util.bind_opt uu___10
                                   (fun a11 ->
                                      let uu___11 =
                                        FStar_TypeChecker_NBETerm.unembed e2
                                          cb a2 in
-                                     FStar_Util.bind_opt uu___11
+                                     FStar_Compiler_Util.bind_opt uu___11
                                        (fun a21 ->
                                           let uu___12 =
                                             FStar_TypeChecker_NBETerm.unembed
                                               e3 cb a3 in
-                                          FStar_Util.bind_opt uu___12
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___12
                                             (fun a31 ->
                                                let uu___13 =
                                                  FStar_TypeChecker_NBETerm.unembed
                                                    e4 cb a4 in
-                                               FStar_Util.bind_opt uu___13
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___13
                                                  (fun a41 ->
                                                     let uu___14 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e5 cb a5 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___14
                                                       (fun a51 ->
                                                          let uu___15 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e6 cb a6 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___15
                                                            (fun a61 ->
                                                               let uu___16 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e7 cb a7 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___16
                                                                 (fun a71 ->
                                                                    let uu___17
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a81
                                                                     ->
@@ -4054,7 +4085,7 @@ let mk_tactic_nbe_interpretation_9 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a91
                                                                     ->
@@ -4063,7 +4094,7 @@ let mk_tactic_nbe_interpretation_9 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun ps
                                                                     ->
@@ -4138,46 +4169,48 @@ let mk_tactic_nbe_interpretation_10 :
                                   let uu___11 =
                                     FStar_TypeChecker_NBETerm.unembed e1 cb
                                       a1 in
-                                  FStar_Util.bind_opt uu___11
+                                  FStar_Compiler_Util.bind_opt uu___11
                                     (fun a12 ->
                                        let uu___12 =
                                          FStar_TypeChecker_NBETerm.unembed e2
                                            cb a2 in
-                                       FStar_Util.bind_opt uu___12
+                                       FStar_Compiler_Util.bind_opt uu___12
                                          (fun a21 ->
                                             let uu___13 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e3 cb a3 in
-                                            FStar_Util.bind_opt uu___13
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___13
                                               (fun a31 ->
                                                  let uu___14 =
                                                    FStar_TypeChecker_NBETerm.unembed
                                                      e4 cb a4 in
-                                                 FStar_Util.bind_opt uu___14
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___14
                                                    (fun a41 ->
                                                       let uu___15 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e5 cb a5 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___15
                                                         (fun a51 ->
                                                            let uu___16 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e6 cb a6 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___16
                                                              (fun a61 ->
                                                                 let uu___17 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___17
                                                                   (fun a71 ->
                                                                     let uu___18
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a81
                                                                     ->
@@ -4185,7 +4218,7 @@ let mk_tactic_nbe_interpretation_10 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a91
                                                                     ->
@@ -4194,7 +4227,7 @@ let mk_tactic_nbe_interpretation_10 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a101
                                                                     ->
@@ -4203,7 +4236,7 @@ let mk_tactic_nbe_interpretation_10 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun ps
                                                                     ->
@@ -4283,41 +4316,42 @@ let mk_tactic_nbe_interpretation_11 :
                                     let uu___12 =
                                       FStar_TypeChecker_NBETerm.unembed e1 cb
                                         a1 in
-                                    FStar_Util.bind_opt uu___12
+                                    FStar_Compiler_Util.bind_opt uu___12
                                       (fun a13 ->
                                          let uu___13 =
                                            FStar_TypeChecker_NBETerm.unembed
                                              e2 cb a2 in
-                                         FStar_Util.bind_opt uu___13
+                                         FStar_Compiler_Util.bind_opt uu___13
                                            (fun a21 ->
                                               let uu___14 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e3 cb a3 in
-                                              FStar_Util.bind_opt uu___14
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___14
                                                 (fun a31 ->
                                                    let uu___15 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e4 cb a4 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___15
                                                      (fun a41 ->
                                                         let uu___16 =
                                                           FStar_TypeChecker_NBETerm.unembed
                                                             e5 cb a5 in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___16
                                                           (fun a51 ->
                                                              let uu___17 =
                                                                FStar_TypeChecker_NBETerm.unembed
                                                                  e6 cb a6 in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___17
                                                                (fun a61 ->
                                                                   let uu___18
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (
                                                                     fun a71
@@ -4326,7 +4360,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a81
                                                                     ->
@@ -4334,7 +4368,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a91
                                                                     ->
@@ -4343,7 +4377,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a101
                                                                     ->
@@ -4352,7 +4386,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a111
                                                                     ->
@@ -4361,7 +4395,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun ps
                                                                     ->
@@ -4447,41 +4481,43 @@ let mk_tactic_nbe_interpretation_12 :
                                       let uu___13 =
                                         FStar_TypeChecker_NBETerm.unembed e1
                                           cb a1 in
-                                      FStar_Util.bind_opt uu___13
+                                      FStar_Compiler_Util.bind_opt uu___13
                                         (fun a14 ->
                                            let uu___14 =
                                              FStar_TypeChecker_NBETerm.unembed
                                                e2 cb a2 in
-                                           FStar_Util.bind_opt uu___14
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___14
                                              (fun a21 ->
                                                 let uu___15 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e3 cb a3 in
-                                                FStar_Util.bind_opt uu___15
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___15
                                                   (fun a31 ->
                                                      let uu___16 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e4 cb a4 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___16
                                                        (fun a41 ->
                                                           let uu___17 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e5 cb a5 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___17
                                                             (fun a51 ->
                                                                let uu___18 =
                                                                  FStar_TypeChecker_NBETerm.unembed
                                                                    e6 cb a6 in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___18
                                                                  (fun a61 ->
                                                                     let uu___19
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a71
                                                                     ->
@@ -4489,7 +4525,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a81
                                                                     ->
@@ -4497,7 +4533,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a91
                                                                     ->
@@ -4506,7 +4542,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a101
                                                                     ->
@@ -4515,7 +4551,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a111
                                                                     ->
@@ -4524,7 +4560,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a121
                                                                     ->
@@ -4533,7 +4569,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun ps
                                                                     ->
@@ -4623,35 +4659,37 @@ let mk_tactic_nbe_interpretation_13 :
                                         let uu___14 =
                                           FStar_TypeChecker_NBETerm.unembed
                                             e1 cb a1 in
-                                        FStar_Util.bind_opt uu___14
+                                        FStar_Compiler_Util.bind_opt uu___14
                                           (fun a15 ->
                                              let uu___15 =
                                                FStar_TypeChecker_NBETerm.unembed
                                                  e2 cb a2 in
-                                             FStar_Util.bind_opt uu___15
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___15
                                                (fun a21 ->
                                                   let uu___16 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e3 cb a3 in
-                                                  FStar_Util.bind_opt uu___16
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___16
                                                     (fun a31 ->
                                                        let uu___17 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e4 cb a4 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___17
                                                          (fun a41 ->
                                                             let uu___18 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e5 cb a5 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___18
                                                               (fun a51 ->
                                                                  let uu___19
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___19
                                                                    (fun a61
                                                                     ->
@@ -4659,7 +4697,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a71
                                                                     ->
@@ -4667,7 +4705,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a81
                                                                     ->
@@ -4675,7 +4713,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a91
                                                                     ->
@@ -4684,7 +4722,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a101
                                                                     ->
@@ -4693,7 +4731,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a111
                                                                     ->
@@ -4702,7 +4740,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a121
                                                                     ->
@@ -4711,7 +4749,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a131
                                                                     ->
@@ -4720,7 +4758,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun ps
                                                                     ->
@@ -4816,36 +4854,38 @@ let mk_tactic_nbe_interpretation_14 :
                                           let uu___15 =
                                             FStar_TypeChecker_NBETerm.unembed
                                               e1 cb a1 in
-                                          FStar_Util.bind_opt uu___15
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___15
                                             (fun a16 ->
                                                let uu___16 =
                                                  FStar_TypeChecker_NBETerm.unembed
                                                    e2 cb a2 in
-                                               FStar_Util.bind_opt uu___16
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___16
                                                  (fun a21 ->
                                                     let uu___17 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e3 cb a3 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___17
                                                       (fun a31 ->
                                                          let uu___18 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e4 cb a4 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___18
                                                            (fun a41 ->
                                                               let uu___19 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e5 cb a5 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___19
                                                                 (fun a51 ->
                                                                    let uu___20
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a61
                                                                     ->
@@ -4853,7 +4893,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a71
                                                                     ->
@@ -4861,7 +4901,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a81
                                                                     ->
@@ -4869,7 +4909,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a91
                                                                     ->
@@ -4878,7 +4918,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a101
                                                                     ->
@@ -4887,7 +4927,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a111
                                                                     ->
@@ -4896,7 +4936,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a121
                                                                     ->
@@ -4905,7 +4945,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a131
                                                                     ->
@@ -4914,7 +4954,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a141
                                                                     ->
@@ -4923,7 +4963,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun ps
                                                                     ->
@@ -5024,36 +5064,38 @@ let mk_tactic_nbe_interpretation_15 :
                                             let uu___16 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e1 cb a1 in
-                                            FStar_Util.bind_opt uu___16
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___16
                                               (fun a17 ->
                                                  let uu___17 =
                                                    FStar_TypeChecker_NBETerm.unembed
                                                      e2 cb a2 in
-                                                 FStar_Util.bind_opt uu___17
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___17
                                                    (fun a21 ->
                                                       let uu___18 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e3 cb a3 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___18
                                                         (fun a31 ->
                                                            let uu___19 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e4 cb a4 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___19
                                                              (fun a41 ->
                                                                 let uu___20 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___20
                                                                   (fun a51 ->
                                                                     let uu___21
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a61
                                                                     ->
@@ -5061,7 +5103,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a71
                                                                     ->
@@ -5069,7 +5111,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a81
                                                                     ->
@@ -5077,7 +5119,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a91
                                                                     ->
@@ -5086,7 +5128,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a101
                                                                     ->
@@ -5095,7 +5137,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a111
                                                                     ->
@@ -5104,7 +5146,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a121
                                                                     ->
@@ -5113,7 +5155,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a131
                                                                     ->
@@ -5122,7 +5164,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a141
                                                                     ->
@@ -5131,7 +5173,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a151
                                                                     ->
@@ -5140,7 +5182,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun ps
                                                                     ->
@@ -5249,31 +5291,32 @@ let mk_tactic_nbe_interpretation_16 :
                                               let uu___17 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e1 cb a1 in
-                                              FStar_Util.bind_opt uu___17
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___17
                                                 (fun a18 ->
                                                    let uu___18 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e2 cb a2 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___18
                                                      (fun a21 ->
                                                         let uu___19 =
                                                           FStar_TypeChecker_NBETerm.unembed
                                                             e3 cb a3 in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___19
                                                           (fun a31 ->
                                                              let uu___20 =
                                                                FStar_TypeChecker_NBETerm.unembed
                                                                  e4 cb a4 in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___20
                                                                (fun a41 ->
                                                                   let uu___21
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (
                                                                     fun a51
@@ -5282,7 +5325,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a61
                                                                     ->
@@ -5290,7 +5333,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a71
                                                                     ->
@@ -5298,7 +5341,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a81
                                                                     ->
@@ -5306,7 +5349,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a91
                                                                     ->
@@ -5315,7 +5358,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a101
                                                                     ->
@@ -5324,7 +5367,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a111
                                                                     ->
@@ -5333,7 +5376,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a121
                                                                     ->
@@ -5342,7 +5385,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a131
                                                                     ->
@@ -5351,7 +5394,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a141
                                                                     ->
@@ -5360,7 +5403,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a151
                                                                     ->
@@ -5369,7 +5412,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a161
                                                                     ->
@@ -5378,7 +5421,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun ps
                                                                     ->
@@ -5499,31 +5542,32 @@ let mk_tactic_nbe_interpretation_17 :
                                                 let uu___18 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e1 cb a1 in
-                                                FStar_Util.bind_opt uu___18
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___18
                                                   (fun a19 ->
                                                      let uu___19 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e2 cb a2 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___19
                                                        (fun a21 ->
                                                           let uu___20 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e3 cb a3 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___20
                                                             (fun a31 ->
                                                                let uu___21 =
                                                                  FStar_TypeChecker_NBETerm.unembed
                                                                    e4 cb a4 in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___21
                                                                  (fun a41 ->
                                                                     let uu___22
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a51
                                                                     ->
@@ -5531,7 +5575,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a61
                                                                     ->
@@ -5539,7 +5583,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a71
                                                                     ->
@@ -5547,7 +5591,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a81
                                                                     ->
@@ -5555,7 +5599,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a91
                                                                     ->
@@ -5564,7 +5608,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a101
                                                                     ->
@@ -5573,7 +5617,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a111
                                                                     ->
@@ -5582,7 +5626,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a121
                                                                     ->
@@ -5591,7 +5635,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a131
                                                                     ->
@@ -5600,7 +5644,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a141
                                                                     ->
@@ -5609,7 +5653,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a151
                                                                     ->
@@ -5618,7 +5662,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a161
                                                                     ->
@@ -5627,7 +5671,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a171
                                                                     ->
@@ -5636,7 +5680,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun ps
                                                                     ->
@@ -5764,25 +5808,26 @@ let mk_tactic_nbe_interpretation_18 :
                                                   let uu___19 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e1 cb a1 in
-                                                  FStar_Util.bind_opt uu___19
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___19
                                                     (fun a110 ->
                                                        let uu___20 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e2 cb a2 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___20
                                                          (fun a21 ->
                                                             let uu___21 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e3 cb a3 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___21
                                                               (fun a31 ->
                                                                  let uu___22
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___22
                                                                    (fun a41
                                                                     ->
@@ -5790,7 +5835,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a51
                                                                     ->
@@ -5798,7 +5843,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a61
                                                                     ->
@@ -5806,7 +5851,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a71
                                                                     ->
@@ -5814,7 +5859,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a81
                                                                     ->
@@ -5822,7 +5867,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a91
                                                                     ->
@@ -5831,7 +5876,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a101
                                                                     ->
@@ -5840,7 +5885,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a111
                                                                     ->
@@ -5849,7 +5894,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a121
                                                                     ->
@@ -5858,7 +5903,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a131
                                                                     ->
@@ -5867,7 +5912,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a141
                                                                     ->
@@ -5876,7 +5921,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a151
                                                                     ->
@@ -5885,7 +5930,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a161
                                                                     ->
@@ -5894,7 +5939,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a171
                                                                     ->
@@ -5903,7 +5948,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a181
                                                                     ->
@@ -5912,7 +5957,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a19 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun ps
                                                                     ->
@@ -6052,26 +6097,26 @@ let mk_tactic_nbe_interpretation_19 :
                                                     let uu___20 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e1 cb a1 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___20
                                                       (fun a110 ->
                                                          let uu___21 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e2 cb a2 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___21
                                                            (fun a21 ->
                                                               let uu___22 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e3 cb a3 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___22
                                                                 (fun a31 ->
                                                                    let uu___23
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a41
                                                                     ->
@@ -6079,7 +6124,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a51
                                                                     ->
@@ -6087,7 +6132,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a61
                                                                     ->
@@ -6095,7 +6140,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a71
                                                                     ->
@@ -6103,7 +6148,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a81
                                                                     ->
@@ -6111,7 +6156,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a91
                                                                     ->
@@ -6120,7 +6165,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a101
                                                                     ->
@@ -6129,7 +6174,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a111
                                                                     ->
@@ -6138,7 +6183,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a121
                                                                     ->
@@ -6147,7 +6192,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a131
                                                                     ->
@@ -6156,7 +6201,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a141
                                                                     ->
@@ -6165,7 +6210,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a151
                                                                     ->
@@ -6174,7 +6219,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a161
                                                                     ->
@@ -6183,7 +6228,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a171
                                                                     ->
@@ -6192,7 +6237,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a181
                                                                     ->
@@ -6201,7 +6246,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e19 cb
                                                                     a19 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a191
                                                                     ->
@@ -6210,7 +6255,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a20 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun ps
                                                                     ->
@@ -6356,26 +6401,26 @@ let mk_tactic_nbe_interpretation_20 :
                                                       let uu___21 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e1 cb a1 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___21
                                                         (fun a110 ->
                                                            let uu___22 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e2 cb a2 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___22
                                                              (fun a22 ->
                                                                 let uu___23 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e3 cb a3 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___23
                                                                   (fun a31 ->
                                                                     let uu___24
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a41
                                                                     ->
@@ -6383,7 +6428,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a51
                                                                     ->
@@ -6391,7 +6436,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a61
                                                                     ->
@@ -6399,7 +6444,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a71
                                                                     ->
@@ -6407,7 +6452,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a81
                                                                     ->
@@ -6415,7 +6460,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a91
                                                                     ->
@@ -6424,7 +6469,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a101
                                                                     ->
@@ -6433,7 +6478,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a111
                                                                     ->
@@ -6442,7 +6487,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a121
                                                                     ->
@@ -6451,7 +6496,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a131
                                                                     ->
@@ -6460,7 +6505,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a141
                                                                     ->
@@ -6469,7 +6514,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a151
                                                                     ->
@@ -6478,7 +6523,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a161
                                                                     ->
@@ -6487,7 +6532,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a171
                                                                     ->
@@ -6496,7 +6541,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a181
                                                                     ->
@@ -6505,7 +6550,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e19 cb
                                                                     a19 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun a191
                                                                     ->
@@ -6514,7 +6559,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e20 cb
                                                                     a20 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___40
                                                                     (fun a201
                                                                     ->
@@ -6523,7 +6568,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     FStar_Tactics_Embedding.e_proofstate_nbe
                                                                     cb a21 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___41
                                                                     (fun ps
                                                                     ->
@@ -6576,7 +6621,7 @@ let mk_total_interpretation_1 :
               match args with
               | (a1, uu___)::[] ->
                   let uu___1 = unembed e1 a1 ncb in
-                  FStar_Util.bind_opt uu___1
+                  FStar_Compiler_Util.bind_opt uu___1
                     (fun a11 ->
                        let r1 = f a11 in
                        let uu___2 =
@@ -6605,10 +6650,10 @@ let mk_total_interpretation_2 :
                 match args with
                 | (a1, uu___)::(a2, uu___1)::[] ->
                     let uu___2 = unembed e1 a1 ncb in
-                    FStar_Util.bind_opt uu___2
+                    FStar_Compiler_Util.bind_opt uu___2
                       (fun a11 ->
                          let uu___3 = unembed e2 a2 ncb in
-                         FStar_Util.bind_opt uu___3
+                         FStar_Compiler_Util.bind_opt uu___3
                            (fun a21 ->
                               let r1 = f a11 a21 in
                               let uu___4 =
@@ -6640,13 +6685,13 @@ let mk_total_interpretation_3 :
                   match args with
                   | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
                       let uu___3 = unembed e1 a1 ncb in
-                      FStar_Util.bind_opt uu___3
+                      FStar_Compiler_Util.bind_opt uu___3
                         (fun a11 ->
                            let uu___4 = unembed e2 a2 ncb in
-                           FStar_Util.bind_opt uu___4
+                           FStar_Compiler_Util.bind_opt uu___4
                              (fun a21 ->
                                 let uu___5 = unembed e3 a3 ncb in
-                                FStar_Util.bind_opt uu___5
+                                FStar_Compiler_Util.bind_opt uu___5
                                   (fun a31 ->
                                      let r1 = f a11 a21 a31 in
                                      let uu___6 =
@@ -6681,16 +6726,16 @@ let mk_total_interpretation_4 :
                     | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::[]
                         ->
                         let uu___4 = unembed e1 a1 ncb in
-                        FStar_Util.bind_opt uu___4
+                        FStar_Compiler_Util.bind_opt uu___4
                           (fun a11 ->
                              let uu___5 = unembed e2 a2 ncb in
-                             FStar_Util.bind_opt uu___5
+                             FStar_Compiler_Util.bind_opt uu___5
                                (fun a21 ->
                                   let uu___6 = unembed e3 a3 ncb in
-                                  FStar_Util.bind_opt uu___6
+                                  FStar_Compiler_Util.bind_opt uu___6
                                     (fun a31 ->
                                        let uu___7 = unembed e4 a4 ncb in
-                                       FStar_Util.bind_opt uu___7
+                                       FStar_Compiler_Util.bind_opt uu___7
                                          (fun a41 ->
                                             let r1 = f a11 a21 a31 a41 in
                                             let uu___8 =
@@ -6730,19 +6775,20 @@ let mk_total_interpretation_5 :
                       | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::
                           (a5, uu___4)::[] ->
                           let uu___5 = unembed e1 a1 ncb in
-                          FStar_Util.bind_opt uu___5
+                          FStar_Compiler_Util.bind_opt uu___5
                             (fun a11 ->
                                let uu___6 = unembed e2 a2 ncb in
-                               FStar_Util.bind_opt uu___6
+                               FStar_Compiler_Util.bind_opt uu___6
                                  (fun a21 ->
                                     let uu___7 = unembed e3 a3 ncb in
-                                    FStar_Util.bind_opt uu___7
+                                    FStar_Compiler_Util.bind_opt uu___7
                                       (fun a31 ->
                                          let uu___8 = unembed e4 a4 ncb in
-                                         FStar_Util.bind_opt uu___8
+                                         FStar_Compiler_Util.bind_opt uu___8
                                            (fun a41 ->
                                               let uu___9 = unembed e5 a5 ncb in
-                                              FStar_Util.bind_opt uu___9
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___9
                                                 (fun a51 ->
                                                    let r1 =
                                                      f a11 a21 a31 a41 a51 in
@@ -6786,24 +6832,26 @@ let mk_total_interpretation_6 :
                                                                     uu___3)::
                             (a5, uu___4)::(a6, uu___5)::[] ->
                             let uu___6 = unembed e1 a1 ncb in
-                            FStar_Util.bind_opt uu___6
+                            FStar_Compiler_Util.bind_opt uu___6
                               (fun a11 ->
                                  let uu___7 = unembed e2 a2 ncb in
-                                 FStar_Util.bind_opt uu___7
+                                 FStar_Compiler_Util.bind_opt uu___7
                                    (fun a21 ->
                                       let uu___8 = unembed e3 a3 ncb in
-                                      FStar_Util.bind_opt uu___8
+                                      FStar_Compiler_Util.bind_opt uu___8
                                         (fun a31 ->
                                            let uu___9 = unembed e4 a4 ncb in
-                                           FStar_Util.bind_opt uu___9
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___9
                                              (fun a41 ->
                                                 let uu___10 =
                                                   unembed e5 a5 ncb in
-                                                FStar_Util.bind_opt uu___10
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___10
                                                   (fun a51 ->
                                                      let uu___11 =
                                                        unembed e6 a6 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___11
                                                        (fun a61 ->
                                                           let r1 =
@@ -6852,30 +6900,32 @@ let mk_total_interpretation_7 :
                               (a4, uu___3)::(a5, uu___4)::(a6, uu___5)::
                               (a7, uu___6)::[] ->
                               let uu___7 = unembed e1 a1 ncb in
-                              FStar_Util.bind_opt uu___7
+                              FStar_Compiler_Util.bind_opt uu___7
                                 (fun a11 ->
                                    let uu___8 = unembed e2 a2 ncb in
-                                   FStar_Util.bind_opt uu___8
+                                   FStar_Compiler_Util.bind_opt uu___8
                                      (fun a21 ->
                                         let uu___9 = unembed e3 a3 ncb in
-                                        FStar_Util.bind_opt uu___9
+                                        FStar_Compiler_Util.bind_opt uu___9
                                           (fun a31 ->
                                              let uu___10 = unembed e4 a4 ncb in
-                                             FStar_Util.bind_opt uu___10
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___10
                                                (fun a41 ->
                                                   let uu___11 =
                                                     unembed e5 a5 ncb in
-                                                  FStar_Util.bind_opt uu___11
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___11
                                                     (fun a51 ->
                                                        let uu___12 =
                                                          unembed e6 a6 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___12
                                                          (fun a61 ->
                                                             let uu___13 =
                                                               unembed e7 a7
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___13
                                                               (fun a71 ->
                                                                  let r1 =
@@ -6931,39 +6981,41 @@ let mk_total_interpretation_8 :
                                 (a4, uu___3)::(a5, uu___4)::(a6, uu___5)::
                                 (a7, uu___6)::(a8, uu___7)::[] ->
                                 let uu___8 = unembed e1 a1 ncb in
-                                FStar_Util.bind_opt uu___8
+                                FStar_Compiler_Util.bind_opt uu___8
                                   (fun a11 ->
                                      let uu___9 = unembed e2 a2 ncb in
-                                     FStar_Util.bind_opt uu___9
+                                     FStar_Compiler_Util.bind_opt uu___9
                                        (fun a21 ->
                                           let uu___10 = unembed e3 a3 ncb in
-                                          FStar_Util.bind_opt uu___10
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___10
                                             (fun a31 ->
                                                let uu___11 =
                                                  unembed e4 a4 ncb in
-                                               FStar_Util.bind_opt uu___11
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___11
                                                  (fun a41 ->
                                                     let uu___12 =
                                                       unembed e5 a5 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___12
                                                       (fun a51 ->
                                                          let uu___13 =
                                                            unembed e6 a6 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___13
                                                            (fun a61 ->
                                                               let uu___14 =
                                                                 unembed e7 a7
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___14
                                                                 (fun a71 ->
                                                                    let uu___15
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___15
                                                                     (fun a81
                                                                     ->
@@ -7023,40 +7075,42 @@ let mk_total_interpretation_9 :
                                   (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::[]
                                   ->
                                   let uu___9 = unembed e1 a1 ncb in
-                                  FStar_Util.bind_opt uu___9
+                                  FStar_Compiler_Util.bind_opt uu___9
                                     (fun a11 ->
                                        let uu___10 = unembed e2 a2 ncb in
-                                       FStar_Util.bind_opt uu___10
+                                       FStar_Compiler_Util.bind_opt uu___10
                                          (fun a21 ->
                                             let uu___11 = unembed e3 a3 ncb in
-                                            FStar_Util.bind_opt uu___11
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___11
                                               (fun a31 ->
                                                  let uu___12 =
                                                    unembed e4 a4 ncb in
-                                                 FStar_Util.bind_opt uu___12
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___12
                                                    (fun a41 ->
                                                       let uu___13 =
                                                         unembed e5 a5 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___13
                                                         (fun a51 ->
                                                            let uu___14 =
                                                              unembed e6 a6
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___14
                                                              (fun a61 ->
                                                                 let uu___15 =
                                                                   unembed e7
                                                                     a7 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___15
                                                                   (fun a71 ->
                                                                     let uu___16
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___16
                                                                     (fun a81
                                                                     ->
@@ -7064,7 +7118,7 @@ let mk_total_interpretation_9 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a91
                                                                     ->
@@ -7129,35 +7183,36 @@ let mk_total_interpretation_10 :
                                     (a7, uu___6)::(a8, uu___7)::(a9, uu___8)::
                                     (a10, uu___9)::[] ->
                                     let uu___10 = unembed e1 a1 ncb in
-                                    FStar_Util.bind_opt uu___10
+                                    FStar_Compiler_Util.bind_opt uu___10
                                       (fun a11 ->
                                          let uu___11 = unembed e2 a2 ncb in
-                                         FStar_Util.bind_opt uu___11
+                                         FStar_Compiler_Util.bind_opt uu___11
                                            (fun a21 ->
                                               let uu___12 = unembed e3 a3 ncb in
-                                              FStar_Util.bind_opt uu___12
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___12
                                                 (fun a31 ->
                                                    let uu___13 =
                                                      unembed e4 a4 ncb in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___13
                                                      (fun a41 ->
                                                         let uu___14 =
                                                           unembed e5 a5 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___14
                                                           (fun a51 ->
                                                              let uu___15 =
                                                                unembed e6 a6
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___15
                                                                (fun a61 ->
                                                                   let uu___16
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___16
                                                                     (
                                                                     fun a71
@@ -7166,7 +7221,7 @@ let mk_total_interpretation_10 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a81
                                                                     ->
@@ -7174,7 +7229,7 @@ let mk_total_interpretation_10 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a91
                                                                     ->
@@ -7183,7 +7238,7 @@ let mk_total_interpretation_10 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a101
                                                                     ->
@@ -7253,36 +7308,38 @@ let mk_total_interpretation_11 :
                                                                    uu___8)::
                                       (a10, uu___9)::(a11, uu___10)::[] ->
                                       let uu___11 = unembed e1 a1 ncb in
-                                      FStar_Util.bind_opt uu___11
+                                      FStar_Compiler_Util.bind_opt uu___11
                                         (fun a12 ->
                                            let uu___12 = unembed e2 a2 ncb in
-                                           FStar_Util.bind_opt uu___12
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___12
                                              (fun a21 ->
                                                 let uu___13 =
                                                   unembed e3 a3 ncb in
-                                                FStar_Util.bind_opt uu___13
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___13
                                                   (fun a31 ->
                                                      let uu___14 =
                                                        unembed e4 a4 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___14
                                                        (fun a41 ->
                                                           let uu___15 =
                                                             unembed e5 a5 ncb in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___15
                                                             (fun a51 ->
                                                                let uu___16 =
                                                                  unembed e6
                                                                    a6 ncb in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___16
                                                                  (fun a61 ->
                                                                     let uu___17
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a71
                                                                     ->
@@ -7290,7 +7347,7 @@ let mk_total_interpretation_11 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a81
                                                                     ->
@@ -7298,7 +7355,7 @@ let mk_total_interpretation_11 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a91
                                                                     ->
@@ -7307,7 +7364,7 @@ let mk_total_interpretation_11 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a101
                                                                     ->
@@ -7316,7 +7373,7 @@ let mk_total_interpretation_11 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a111
                                                                     ->
@@ -7392,31 +7449,33 @@ let mk_total_interpretation_12 :
                                         (a10, uu___9)::(a11, uu___10)::
                                         (a12, uu___11)::[] ->
                                         let uu___12 = unembed e1 a1 ncb in
-                                        FStar_Util.bind_opt uu___12
+                                        FStar_Compiler_Util.bind_opt uu___12
                                           (fun a13 ->
                                              let uu___13 = unembed e2 a2 ncb in
-                                             FStar_Util.bind_opt uu___13
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___13
                                                (fun a21 ->
                                                   let uu___14 =
                                                     unembed e3 a3 ncb in
-                                                  FStar_Util.bind_opt uu___14
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___14
                                                     (fun a31 ->
                                                        let uu___15 =
                                                          unembed e4 a4 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___15
                                                          (fun a41 ->
                                                             let uu___16 =
                                                               unembed e5 a5
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___16
                                                               (fun a51 ->
                                                                  let uu___17
                                                                    =
                                                                    unembed e6
                                                                     a6 ncb in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___17
                                                                    (fun a61
                                                                     ->
@@ -7424,7 +7483,7 @@ let mk_total_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a71
                                                                     ->
@@ -7432,7 +7491,7 @@ let mk_total_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a81
                                                                     ->
@@ -7440,7 +7499,7 @@ let mk_total_interpretation_12 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a91
                                                                     ->
@@ -7449,7 +7508,7 @@ let mk_total_interpretation_12 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a101
                                                                     ->
@@ -7458,7 +7517,7 @@ let mk_total_interpretation_12 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a111
                                                                     ->
@@ -7467,7 +7526,7 @@ let mk_total_interpretation_12 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a121
                                                                     ->
@@ -7547,33 +7606,35 @@ let mk_total_interpretation_13 :
                                           (a12, uu___11)::(a13, uu___12)::[]
                                           ->
                                           let uu___13 = unembed e1 a1 ncb in
-                                          FStar_Util.bind_opt uu___13
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___13
                                             (fun a14 ->
                                                let uu___14 =
                                                  unembed e2 a2 ncb in
-                                               FStar_Util.bind_opt uu___14
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___14
                                                  (fun a21 ->
                                                     let uu___15 =
                                                       unembed e3 a3 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___15
                                                       (fun a31 ->
                                                          let uu___16 =
                                                            unembed e4 a4 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___16
                                                            (fun a41 ->
                                                               let uu___17 =
                                                                 unembed e5 a5
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___17
                                                                 (fun a51 ->
                                                                    let uu___18
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a61
                                                                     ->
@@ -7581,7 +7642,7 @@ let mk_total_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a71
                                                                     ->
@@ -7589,7 +7650,7 @@ let mk_total_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a81
                                                                     ->
@@ -7597,7 +7658,7 @@ let mk_total_interpretation_13 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a91
                                                                     ->
@@ -7606,7 +7667,7 @@ let mk_total_interpretation_13 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a101
                                                                     ->
@@ -7615,7 +7676,7 @@ let mk_total_interpretation_13 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a111
                                                                     ->
@@ -7624,7 +7685,7 @@ let mk_total_interpretation_13 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a121
                                                                     ->
@@ -7633,7 +7694,7 @@ let mk_total_interpretation_13 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a131
                                                                     ->
@@ -7718,34 +7779,36 @@ let mk_total_interpretation_14 :
                                             (a13, uu___12)::(a14, uu___13)::[]
                                             ->
                                             let uu___14 = unembed e1 a1 ncb in
-                                            FStar_Util.bind_opt uu___14
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___14
                                               (fun a15 ->
                                                  let uu___15 =
                                                    unembed e2 a2 ncb in
-                                                 FStar_Util.bind_opt uu___15
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___15
                                                    (fun a21 ->
                                                       let uu___16 =
                                                         unembed e3 a3 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___16
                                                         (fun a31 ->
                                                            let uu___17 =
                                                              unembed e4 a4
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___17
                                                              (fun a41 ->
                                                                 let uu___18 =
                                                                   unembed e5
                                                                     a5 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___18
                                                                   (fun a51 ->
                                                                     let uu___19
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a61
                                                                     ->
@@ -7753,7 +7816,7 @@ let mk_total_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a71
                                                                     ->
@@ -7761,7 +7824,7 @@ let mk_total_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a81
                                                                     ->
@@ -7769,7 +7832,7 @@ let mk_total_interpretation_14 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a91
                                                                     ->
@@ -7778,7 +7841,7 @@ let mk_total_interpretation_14 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a101
                                                                     ->
@@ -7787,7 +7850,7 @@ let mk_total_interpretation_14 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a111
                                                                     ->
@@ -7796,7 +7859,7 @@ let mk_total_interpretation_14 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a121
                                                                     ->
@@ -7805,7 +7868,7 @@ let mk_total_interpretation_14 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a131
                                                                     ->
@@ -7814,7 +7877,7 @@ let mk_total_interpretation_14 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a141
                                                                     ->
@@ -7904,29 +7967,30 @@ let mk_total_interpretation_15 :
                                               (a13, uu___12)::(a14, uu___13)::
                                               (a15, uu___14)::[] ->
                                               let uu___15 = unembed e1 a1 ncb in
-                                              FStar_Util.bind_opt uu___15
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___15
                                                 (fun a16 ->
                                                    let uu___16 =
                                                      unembed e2 a2 ncb in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___16
                                                      (fun a21 ->
                                                         let uu___17 =
                                                           unembed e3 a3 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___17
                                                           (fun a31 ->
                                                              let uu___18 =
                                                                unembed e4 a4
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___18
                                                                (fun a41 ->
                                                                   let uu___19
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (
                                                                     fun a51
@@ -7935,7 +7999,7 @@ let mk_total_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a61
                                                                     ->
@@ -7943,7 +8007,7 @@ let mk_total_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a71
                                                                     ->
@@ -7951,7 +8015,7 @@ let mk_total_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a81
                                                                     ->
@@ -7959,7 +8023,7 @@ let mk_total_interpretation_15 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a91
                                                                     ->
@@ -7968,7 +8032,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a101
                                                                     ->
@@ -7977,7 +8041,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a111
                                                                     ->
@@ -7986,7 +8050,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a121
                                                                     ->
@@ -7995,7 +8059,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a131
                                                                     ->
@@ -8004,7 +8068,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a141
                                                                     ->
@@ -8013,7 +8077,7 @@ let mk_total_interpretation_15 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a151
                                                                     ->
@@ -8112,29 +8176,30 @@ let mk_total_interpretation_16 :
                                                 ->
                                                 let uu___16 =
                                                   unembed e1 a1 ncb in
-                                                FStar_Util.bind_opt uu___16
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___16
                                                   (fun a17 ->
                                                      let uu___17 =
                                                        unembed e2 a2 ncb in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___17
                                                        (fun a21 ->
                                                           let uu___18 =
                                                             unembed e3 a3 ncb in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___18
                                                             (fun a31 ->
                                                                let uu___19 =
                                                                  unembed e4
                                                                    a4 ncb in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___19
                                                                  (fun a41 ->
                                                                     let uu___20
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a51
                                                                     ->
@@ -8142,7 +8207,7 @@ let mk_total_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a61
                                                                     ->
@@ -8150,7 +8215,7 @@ let mk_total_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a71
                                                                     ->
@@ -8158,7 +8223,7 @@ let mk_total_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a81
                                                                     ->
@@ -8166,7 +8231,7 @@ let mk_total_interpretation_16 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a91
                                                                     ->
@@ -8175,7 +8240,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a101
                                                                     ->
@@ -8184,7 +8249,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a111
                                                                     ->
@@ -8193,7 +8258,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a121
                                                                     ->
@@ -8202,7 +8267,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a131
                                                                     ->
@@ -8211,7 +8276,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a141
                                                                     ->
@@ -8220,7 +8285,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a151
                                                                     ->
@@ -8229,7 +8294,7 @@ let mk_total_interpretation_16 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a161
                                                                     ->
@@ -8335,24 +8400,25 @@ let mk_total_interpretation_17 :
                                                   (a17, uu___16)::[] ->
                                                   let uu___17 =
                                                     unembed e1 a1 ncb in
-                                                  FStar_Util.bind_opt uu___17
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___17
                                                     (fun a18 ->
                                                        let uu___18 =
                                                          unembed e2 a2 ncb in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___18
                                                          (fun a21 ->
                                                             let uu___19 =
                                                               unembed e3 a3
                                                                 ncb in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___19
                                                               (fun a31 ->
                                                                  let uu___20
                                                                    =
                                                                    unembed e4
                                                                     a4 ncb in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___20
                                                                    (fun a41
                                                                     ->
@@ -8360,7 +8426,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a51
                                                                     ->
@@ -8368,7 +8434,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a61
                                                                     ->
@@ -8376,7 +8442,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a71
                                                                     ->
@@ -8384,7 +8450,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a81
                                                                     ->
@@ -8392,7 +8458,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a91
                                                                     ->
@@ -8401,7 +8467,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a101
                                                                     ->
@@ -8410,7 +8476,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a111
                                                                     ->
@@ -8419,7 +8485,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a121
                                                                     ->
@@ -8428,7 +8494,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a131
                                                                     ->
@@ -8437,7 +8503,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a141
                                                                     ->
@@ -8446,7 +8512,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a151
                                                                     ->
@@ -8455,7 +8521,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a161
                                                                     ->
@@ -8464,7 +8530,7 @@ let mk_total_interpretation_17 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a171
                                                                     ->
@@ -8584,25 +8650,25 @@ let mk_total_interpretation_18 :
                                                     ->
                                                     let uu___18 =
                                                       unembed e1 a1 ncb in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___18
                                                       (fun a19 ->
                                                          let uu___19 =
                                                            unembed e2 a2 ncb in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___19
                                                            (fun a21 ->
                                                               let uu___20 =
                                                                 unembed e3 a3
                                                                   ncb in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___20
                                                                 (fun a31 ->
                                                                    let uu___21
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a41
                                                                     ->
@@ -8610,7 +8676,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a51
                                                                     ->
@@ -8618,7 +8684,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a61
                                                                     ->
@@ -8626,7 +8692,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a71
                                                                     ->
@@ -8634,7 +8700,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a81
                                                                     ->
@@ -8642,7 +8708,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a91
                                                                     ->
@@ -8651,7 +8717,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a101
                                                                     ->
@@ -8660,7 +8726,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a111
                                                                     ->
@@ -8669,7 +8735,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a121
                                                                     ->
@@ -8678,7 +8744,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a131
                                                                     ->
@@ -8687,7 +8753,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a141
                                                                     ->
@@ -8696,7 +8762,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a151
                                                                     ->
@@ -8705,7 +8771,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a161
                                                                     ->
@@ -8714,7 +8780,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a171
                                                                     ->
@@ -8723,7 +8789,7 @@ let mk_total_interpretation_18 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a181
                                                                     ->
@@ -8848,26 +8914,26 @@ let mk_total_interpretation_19 :
                                                       (a19, uu___18)::[] ->
                                                       let uu___19 =
                                                         unembed e1 a1 ncb in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___19
                                                         (fun a110 ->
                                                            let uu___20 =
                                                              unembed e2 a2
                                                                ncb in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___20
                                                              (fun a21 ->
                                                                 let uu___21 =
                                                                   unembed e3
                                                                     a3 ncb in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___21
                                                                   (fun a31 ->
                                                                     let uu___22
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a41
                                                                     ->
@@ -8875,7 +8941,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a51
                                                                     ->
@@ -8883,7 +8949,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a61
                                                                     ->
@@ -8891,7 +8957,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a71
                                                                     ->
@@ -8899,7 +8965,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a81
                                                                     ->
@@ -8907,7 +8973,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a91
                                                                     ->
@@ -8916,7 +8982,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a101
                                                                     ->
@@ -8925,7 +8991,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a111
                                                                     ->
@@ -8934,7 +9000,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a121
                                                                     ->
@@ -8943,7 +9009,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a131
                                                                     ->
@@ -8952,7 +9018,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a141
                                                                     ->
@@ -8961,7 +9027,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a151
                                                                     ->
@@ -8970,7 +9036,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a161
                                                                     ->
@@ -8979,7 +9045,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a171
                                                                     ->
@@ -8988,7 +9054,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a181
                                                                     ->
@@ -8997,7 +9063,7 @@ let mk_total_interpretation_19 :
                                                                     unembed
                                                                     e19 a19
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a191
                                                                     ->
@@ -9131,20 +9197,20 @@ let mk_total_interpretation_20 :
                                                         (a20, uu___19)::[] ->
                                                         let uu___20 =
                                                           unembed e1 a1 ncb in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___20
                                                           (fun a110 ->
                                                              let uu___21 =
                                                                unembed e2 a2
                                                                  ncb in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___21
                                                                (fun a21 ->
                                                                   let uu___22
                                                                     =
                                                                     unembed
                                                                     e3 a3 ncb in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (
                                                                     fun a31
@@ -9153,7 +9219,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e4 a4 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a41
                                                                     ->
@@ -9161,7 +9227,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e5 a5 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a51
                                                                     ->
@@ -9169,7 +9235,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e6 a6 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a61
                                                                     ->
@@ -9177,7 +9243,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e7 a7 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a71
                                                                     ->
@@ -9185,7 +9251,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e8 a8 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a81
                                                                     ->
@@ -9193,7 +9259,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     unembed
                                                                     e9 a9 ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a91
                                                                     ->
@@ -9202,7 +9268,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e10 a10
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a101
                                                                     ->
@@ -9211,7 +9277,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e11 a11
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a111
                                                                     ->
@@ -9220,7 +9286,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e12 a12
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a121
                                                                     ->
@@ -9229,7 +9295,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e13 a13
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a131
                                                                     ->
@@ -9238,7 +9304,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e14 a14
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a141
                                                                     ->
@@ -9247,7 +9313,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e15 a15
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a151
                                                                     ->
@@ -9256,7 +9322,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e16 a16
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a161
                                                                     ->
@@ -9265,7 +9331,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e17 a17
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a171
                                                                     ->
@@ -9274,7 +9340,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e18 a18
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a181
                                                                     ->
@@ -9283,7 +9349,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e19 a19
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a191
                                                                     ->
@@ -9292,7 +9358,7 @@ let mk_total_interpretation_20 :
                                                                     unembed
                                                                     e20 a20
                                                                     ncb in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun a201
                                                                     ->
@@ -9338,7 +9404,7 @@ let mk_total_nbe_interpretation_1 :
             match args with
             | (a1, uu___)::[] ->
                 let uu___1 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                FStar_Util.bind_opt uu___1
+                FStar_Compiler_Util.bind_opt uu___1
                   (fun a11 ->
                      let r1 = f a11 in
                      let uu___2 = FStar_TypeChecker_NBETerm.embed er cb r1 in
@@ -9363,11 +9429,11 @@ let mk_total_nbe_interpretation_2 :
               match args with
               | (a1, uu___)::(a2, uu___1)::[] ->
                   let uu___2 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                  FStar_Util.bind_opt uu___2
+                  FStar_Compiler_Util.bind_opt uu___2
                     (fun a11 ->
                        let uu___3 =
                          FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                       FStar_Util.bind_opt uu___3
+                       FStar_Compiler_Util.bind_opt uu___3
                          (fun a21 ->
                             let r1 = f a11 a21 in
                             let uu___4 =
@@ -9395,15 +9461,15 @@ let mk_total_nbe_interpretation_3 :
                 match args with
                 | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
                     let uu___3 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                    FStar_Util.bind_opt uu___3
+                    FStar_Compiler_Util.bind_opt uu___3
                       (fun a11 ->
                          let uu___4 =
                            FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                         FStar_Util.bind_opt uu___4
+                         FStar_Compiler_Util.bind_opt uu___4
                            (fun a21 ->
                               let uu___5 =
                                 FStar_TypeChecker_NBETerm.unembed e3 cb a3 in
-                              FStar_Util.bind_opt uu___5
+                              FStar_Compiler_Util.bind_opt uu___5
                                 (fun a31 ->
                                    let r1 = f a11 a21 a31 in
                                    let uu___6 =
@@ -9435,20 +9501,20 @@ let mk_total_nbe_interpretation_4 :
                   | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::(a4, uu___3)::[]
                       ->
                       let uu___4 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                      FStar_Util.bind_opt uu___4
+                      FStar_Compiler_Util.bind_opt uu___4
                         (fun a11 ->
                            let uu___5 =
                              FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                           FStar_Util.bind_opt uu___5
+                           FStar_Compiler_Util.bind_opt uu___5
                              (fun a21 ->
                                 let uu___6 =
                                   FStar_TypeChecker_NBETerm.unembed e3 cb a3 in
-                                FStar_Util.bind_opt uu___6
+                                FStar_Compiler_Util.bind_opt uu___6
                                   (fun a31 ->
                                      let uu___7 =
                                        FStar_TypeChecker_NBETerm.unembed e4
                                          cb a4 in
-                                     FStar_Util.bind_opt uu___7
+                                     FStar_Compiler_Util.bind_opt uu___7
                                        (fun a41 ->
                                           let r1 = f a11 a21 a31 a41 in
                                           let uu___8 =
@@ -9484,26 +9550,27 @@ let mk_total_nbe_interpretation_5 :
                         (a5, uu___4)::[] ->
                         let uu___5 =
                           FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                        FStar_Util.bind_opt uu___5
+                        FStar_Compiler_Util.bind_opt uu___5
                           (fun a11 ->
                              let uu___6 =
                                FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                             FStar_Util.bind_opt uu___6
+                             FStar_Compiler_Util.bind_opt uu___6
                                (fun a21 ->
                                   let uu___7 =
                                     FStar_TypeChecker_NBETerm.unembed e3 cb
                                       a3 in
-                                  FStar_Util.bind_opt uu___7
+                                  FStar_Compiler_Util.bind_opt uu___7
                                     (fun a31 ->
                                        let uu___8 =
                                          FStar_TypeChecker_NBETerm.unembed e4
                                            cb a4 in
-                                       FStar_Util.bind_opt uu___8
+                                       FStar_Compiler_Util.bind_opt uu___8
                                          (fun a41 ->
                                             let uu___9 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e5 cb a5 in
-                                            FStar_Util.bind_opt uu___9
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___9
                                               (fun a51 ->
                                                  let r1 =
                                                    f a11 a21 a31 a41 a51 in
@@ -9543,31 +9610,32 @@ let mk_total_nbe_interpretation_6 :
                           (a5, uu___4)::(a6, uu___5)::[] ->
                           let uu___6 =
                             FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                          FStar_Util.bind_opt uu___6
+                          FStar_Compiler_Util.bind_opt uu___6
                             (fun a11 ->
                                let uu___7 =
                                  FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                               FStar_Util.bind_opt uu___7
+                               FStar_Compiler_Util.bind_opt uu___7
                                  (fun a21 ->
                                     let uu___8 =
                                       FStar_TypeChecker_NBETerm.unembed e3 cb
                                         a3 in
-                                    FStar_Util.bind_opt uu___8
+                                    FStar_Compiler_Util.bind_opt uu___8
                                       (fun a31 ->
                                          let uu___9 =
                                            FStar_TypeChecker_NBETerm.unembed
                                              e4 cb a4 in
-                                         FStar_Util.bind_opt uu___9
+                                         FStar_Compiler_Util.bind_opt uu___9
                                            (fun a41 ->
                                               let uu___10 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e5 cb a5 in
-                                              FStar_Util.bind_opt uu___10
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___10
                                                 (fun a51 ->
                                                    let uu___11 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e6 cb a6 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___11
                                                      (fun a61 ->
                                                         let r1 =
@@ -9612,37 +9680,39 @@ let mk_total_nbe_interpretation_7 :
                             (a5, uu___4)::(a6, uu___5)::(a7, uu___6)::[] ->
                             let uu___7 =
                               FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                            FStar_Util.bind_opt uu___7
+                            FStar_Compiler_Util.bind_opt uu___7
                               (fun a11 ->
                                  let uu___8 =
                                    FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
-                                 FStar_Util.bind_opt uu___8
+                                 FStar_Compiler_Util.bind_opt uu___8
                                    (fun a21 ->
                                       let uu___9 =
                                         FStar_TypeChecker_NBETerm.unembed e3
                                           cb a3 in
-                                      FStar_Util.bind_opt uu___9
+                                      FStar_Compiler_Util.bind_opt uu___9
                                         (fun a31 ->
                                            let uu___10 =
                                              FStar_TypeChecker_NBETerm.unembed
                                                e4 cb a4 in
-                                           FStar_Util.bind_opt uu___10
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___10
                                              (fun a41 ->
                                                 let uu___11 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e5 cb a5 in
-                                                FStar_Util.bind_opt uu___11
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___11
                                                   (fun a51 ->
                                                      let uu___12 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e6 cb a6 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___12
                                                        (fun a61 ->
                                                           let uu___13 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e7 cb a7 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___13
                                                             (fun a71 ->
                                                                let r1 =
@@ -9691,45 +9761,47 @@ let mk_total_nbe_interpretation_8 :
                               (a7, uu___6)::(a8, uu___7)::[] ->
                               let uu___8 =
                                 FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                              FStar_Util.bind_opt uu___8
+                              FStar_Compiler_Util.bind_opt uu___8
                                 (fun a11 ->
                                    let uu___9 =
                                      FStar_TypeChecker_NBETerm.unembed e2 cb
                                        a2 in
-                                   FStar_Util.bind_opt uu___9
+                                   FStar_Compiler_Util.bind_opt uu___9
                                      (fun a21 ->
                                         let uu___10 =
                                           FStar_TypeChecker_NBETerm.unembed
                                             e3 cb a3 in
-                                        FStar_Util.bind_opt uu___10
+                                        FStar_Compiler_Util.bind_opt uu___10
                                           (fun a31 ->
                                              let uu___11 =
                                                FStar_TypeChecker_NBETerm.unembed
                                                  e4 cb a4 in
-                                             FStar_Util.bind_opt uu___11
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___11
                                                (fun a41 ->
                                                   let uu___12 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e5 cb a5 in
-                                                  FStar_Util.bind_opt uu___12
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___12
                                                     (fun a51 ->
                                                        let uu___13 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e6 cb a6 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___13
                                                          (fun a61 ->
                                                             let uu___14 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e7 cb a7 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___14
                                                               (fun a71 ->
                                                                  let uu___15
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___15
                                                                    (fun a81
                                                                     ->
@@ -9783,46 +9855,48 @@ let mk_total_nbe_interpretation_9 :
                                 ->
                                 let uu___9 =
                                   FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
-                                FStar_Util.bind_opt uu___9
+                                FStar_Compiler_Util.bind_opt uu___9
                                   (fun a11 ->
                                      let uu___10 =
                                        FStar_TypeChecker_NBETerm.unembed e2
                                          cb a2 in
-                                     FStar_Util.bind_opt uu___10
+                                     FStar_Compiler_Util.bind_opt uu___10
                                        (fun a21 ->
                                           let uu___11 =
                                             FStar_TypeChecker_NBETerm.unembed
                                               e3 cb a3 in
-                                          FStar_Util.bind_opt uu___11
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___11
                                             (fun a31 ->
                                                let uu___12 =
                                                  FStar_TypeChecker_NBETerm.unembed
                                                    e4 cb a4 in
-                                               FStar_Util.bind_opt uu___12
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___12
                                                  (fun a41 ->
                                                     let uu___13 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e5 cb a5 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___13
                                                       (fun a51 ->
                                                          let uu___14 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e6 cb a6 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___14
                                                            (fun a61 ->
                                                               let uu___15 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e7 cb a7 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___15
                                                                 (fun a71 ->
                                                                    let uu___16
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___16
                                                                     (fun a81
                                                                     ->
@@ -9830,7 +9904,7 @@ let mk_total_nbe_interpretation_9 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a91
                                                                     ->
@@ -9890,46 +9964,48 @@ let mk_total_nbe_interpretation_10 :
                                   let uu___10 =
                                     FStar_TypeChecker_NBETerm.unembed e1 cb
                                       a1 in
-                                  FStar_Util.bind_opt uu___10
+                                  FStar_Compiler_Util.bind_opt uu___10
                                     (fun a11 ->
                                        let uu___11 =
                                          FStar_TypeChecker_NBETerm.unembed e2
                                            cb a2 in
-                                       FStar_Util.bind_opt uu___11
+                                       FStar_Compiler_Util.bind_opt uu___11
                                          (fun a21 ->
                                             let uu___12 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e3 cb a3 in
-                                            FStar_Util.bind_opt uu___12
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___12
                                               (fun a31 ->
                                                  let uu___13 =
                                                    FStar_TypeChecker_NBETerm.unembed
                                                      e4 cb a4 in
-                                                 FStar_Util.bind_opt uu___13
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___13
                                                    (fun a41 ->
                                                       let uu___14 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e5 cb a5 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___14
                                                         (fun a51 ->
                                                            let uu___15 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e6 cb a6 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___15
                                                              (fun a61 ->
                                                                 let uu___16 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___16
                                                                   (fun a71 ->
                                                                     let uu___17
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (fun a81
                                                                     ->
@@ -9937,7 +10013,7 @@ let mk_total_nbe_interpretation_10 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a91
                                                                     ->
@@ -9946,7 +10022,7 @@ let mk_total_nbe_interpretation_10 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a101
                                                                     ->
@@ -10010,41 +10086,42 @@ let mk_total_nbe_interpretation_11 :
                                     let uu___11 =
                                       FStar_TypeChecker_NBETerm.unembed e1 cb
                                         a1 in
-                                    FStar_Util.bind_opt uu___11
+                                    FStar_Compiler_Util.bind_opt uu___11
                                       (fun a12 ->
                                          let uu___12 =
                                            FStar_TypeChecker_NBETerm.unembed
                                              e2 cb a2 in
-                                         FStar_Util.bind_opt uu___12
+                                         FStar_Compiler_Util.bind_opt uu___12
                                            (fun a21 ->
                                               let uu___13 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e3 cb a3 in
-                                              FStar_Util.bind_opt uu___13
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___13
                                                 (fun a31 ->
                                                    let uu___14 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e4 cb a4 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___14
                                                      (fun a41 ->
                                                         let uu___15 =
                                                           FStar_TypeChecker_NBETerm.unembed
                                                             e5 cb a5 in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___15
                                                           (fun a51 ->
                                                              let uu___16 =
                                                                FStar_TypeChecker_NBETerm.unembed
                                                                  e6 cb a6 in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___16
                                                                (fun a61 ->
                                                                   let uu___17
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___17
                                                                     (
                                                                     fun a71
@@ -10053,7 +10130,7 @@ let mk_total_nbe_interpretation_11 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a81
                                                                     ->
@@ -10061,7 +10138,7 @@ let mk_total_nbe_interpretation_11 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a91
                                                                     ->
@@ -10070,7 +10147,7 @@ let mk_total_nbe_interpretation_11 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a101
                                                                     ->
@@ -10079,7 +10156,7 @@ let mk_total_nbe_interpretation_11 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a111
                                                                     ->
@@ -10150,41 +10227,43 @@ let mk_total_nbe_interpretation_12 :
                                       let uu___12 =
                                         FStar_TypeChecker_NBETerm.unembed e1
                                           cb a1 in
-                                      FStar_Util.bind_opt uu___12
+                                      FStar_Compiler_Util.bind_opt uu___12
                                         (fun a13 ->
                                            let uu___13 =
                                              FStar_TypeChecker_NBETerm.unembed
                                                e2 cb a2 in
-                                           FStar_Util.bind_opt uu___13
+                                           FStar_Compiler_Util.bind_opt
+                                             uu___13
                                              (fun a21 ->
                                                 let uu___14 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e3 cb a3 in
-                                                FStar_Util.bind_opt uu___14
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___14
                                                   (fun a31 ->
                                                      let uu___15 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e4 cb a4 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___15
                                                        (fun a41 ->
                                                           let uu___16 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e5 cb a5 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___16
                                                             (fun a51 ->
                                                                let uu___17 =
                                                                  FStar_TypeChecker_NBETerm.unembed
                                                                    e6 cb a6 in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___17
                                                                  (fun a61 ->
                                                                     let uu___18
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___18
                                                                     (fun a71
                                                                     ->
@@ -10192,7 +10271,7 @@ let mk_total_nbe_interpretation_12 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a81
                                                                     ->
@@ -10200,7 +10279,7 @@ let mk_total_nbe_interpretation_12 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a91
                                                                     ->
@@ -10209,7 +10288,7 @@ let mk_total_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a101
                                                                     ->
@@ -10218,7 +10297,7 @@ let mk_total_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a111
                                                                     ->
@@ -10227,7 +10306,7 @@ let mk_total_nbe_interpretation_12 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a121
                                                                     ->
@@ -10302,35 +10381,37 @@ let mk_total_nbe_interpretation_13 :
                                         let uu___13 =
                                           FStar_TypeChecker_NBETerm.unembed
                                             e1 cb a1 in
-                                        FStar_Util.bind_opt uu___13
+                                        FStar_Compiler_Util.bind_opt uu___13
                                           (fun a14 ->
                                              let uu___14 =
                                                FStar_TypeChecker_NBETerm.unembed
                                                  e2 cb a2 in
-                                             FStar_Util.bind_opt uu___14
+                                             FStar_Compiler_Util.bind_opt
+                                               uu___14
                                                (fun a21 ->
                                                   let uu___15 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e3 cb a3 in
-                                                  FStar_Util.bind_opt uu___15
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___15
                                                     (fun a31 ->
                                                        let uu___16 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e4 cb a4 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___16
                                                          (fun a41 ->
                                                             let uu___17 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e5 cb a5 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___17
                                                               (fun a51 ->
                                                                  let uu___18
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___18
                                                                    (fun a61
                                                                     ->
@@ -10338,7 +10419,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a71
                                                                     ->
@@ -10346,7 +10427,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a81
                                                                     ->
@@ -10354,7 +10435,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a91
                                                                     ->
@@ -10363,7 +10444,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a101
                                                                     ->
@@ -10372,7 +10453,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a111
                                                                     ->
@@ -10381,7 +10462,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a121
                                                                     ->
@@ -10390,7 +10471,7 @@ let mk_total_nbe_interpretation_13 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a131
                                                                     ->
@@ -10470,36 +10551,38 @@ let mk_total_nbe_interpretation_14 :
                                           let uu___14 =
                                             FStar_TypeChecker_NBETerm.unembed
                                               e1 cb a1 in
-                                          FStar_Util.bind_opt uu___14
+                                          FStar_Compiler_Util.bind_opt
+                                            uu___14
                                             (fun a15 ->
                                                let uu___15 =
                                                  FStar_TypeChecker_NBETerm.unembed
                                                    e2 cb a2 in
-                                               FStar_Util.bind_opt uu___15
+                                               FStar_Compiler_Util.bind_opt
+                                                 uu___15
                                                  (fun a21 ->
                                                     let uu___16 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e3 cb a3 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___16
                                                       (fun a31 ->
                                                          let uu___17 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e4 cb a4 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___17
                                                            (fun a41 ->
                                                               let uu___18 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e5 cb a5 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___18
                                                                 (fun a51 ->
                                                                    let uu___19
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___19
                                                                     (fun a61
                                                                     ->
@@ -10507,7 +10590,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a71
                                                                     ->
@@ -10515,7 +10598,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a81
                                                                     ->
@@ -10523,7 +10606,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a91
                                                                     ->
@@ -10532,7 +10615,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a101
                                                                     ->
@@ -10541,7 +10624,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a111
                                                                     ->
@@ -10550,7 +10633,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a121
                                                                     ->
@@ -10559,7 +10642,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a131
                                                                     ->
@@ -10568,7 +10651,7 @@ let mk_total_nbe_interpretation_14 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a141
                                                                     ->
@@ -10654,36 +10737,38 @@ let mk_total_nbe_interpretation_15 :
                                             let uu___15 =
                                               FStar_TypeChecker_NBETerm.unembed
                                                 e1 cb a1 in
-                                            FStar_Util.bind_opt uu___15
+                                            FStar_Compiler_Util.bind_opt
+                                              uu___15
                                               (fun a16 ->
                                                  let uu___16 =
                                                    FStar_TypeChecker_NBETerm.unembed
                                                      e2 cb a2 in
-                                                 FStar_Util.bind_opt uu___16
+                                                 FStar_Compiler_Util.bind_opt
+                                                   uu___16
                                                    (fun a21 ->
                                                       let uu___17 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e3 cb a3 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___17
                                                         (fun a31 ->
                                                            let uu___18 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e4 cb a4 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___18
                                                              (fun a41 ->
                                                                 let uu___19 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___19
                                                                   (fun a51 ->
                                                                     let uu___20
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (fun a61
                                                                     ->
@@ -10691,7 +10776,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a71
                                                                     ->
@@ -10699,7 +10784,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a81
                                                                     ->
@@ -10707,7 +10792,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a91
                                                                     ->
@@ -10716,7 +10801,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a101
                                                                     ->
@@ -10725,7 +10810,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a111
                                                                     ->
@@ -10734,7 +10819,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a121
                                                                     ->
@@ -10743,7 +10828,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a131
                                                                     ->
@@ -10752,7 +10837,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a141
                                                                     ->
@@ -10761,7 +10846,7 @@ let mk_total_nbe_interpretation_15 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a151
                                                                     ->
@@ -10856,31 +10941,32 @@ let mk_total_nbe_interpretation_16 :
                                               let uu___16 =
                                                 FStar_TypeChecker_NBETerm.unembed
                                                   e1 cb a1 in
-                                              FStar_Util.bind_opt uu___16
+                                              FStar_Compiler_Util.bind_opt
+                                                uu___16
                                                 (fun a17 ->
                                                    let uu___17 =
                                                      FStar_TypeChecker_NBETerm.unembed
                                                        e2 cb a2 in
-                                                   FStar_Util.bind_opt
+                                                   FStar_Compiler_Util.bind_opt
                                                      uu___17
                                                      (fun a21 ->
                                                         let uu___18 =
                                                           FStar_TypeChecker_NBETerm.unembed
                                                             e3 cb a3 in
-                                                        FStar_Util.bind_opt
+                                                        FStar_Compiler_Util.bind_opt
                                                           uu___18
                                                           (fun a31 ->
                                                              let uu___19 =
                                                                FStar_TypeChecker_NBETerm.unembed
                                                                  e4 cb a4 in
-                                                             FStar_Util.bind_opt
+                                                             FStar_Compiler_Util.bind_opt
                                                                uu___19
                                                                (fun a41 ->
                                                                   let uu___20
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                  FStar_Util.bind_opt
+                                                                  FStar_Compiler_Util.bind_opt
                                                                     uu___20
                                                                     (
                                                                     fun a51
@@ -10889,7 +10975,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a61
                                                                     ->
@@ -10897,7 +10983,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a71
                                                                     ->
@@ -10905,7 +10991,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a81
                                                                     ->
@@ -10913,7 +10999,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a91
                                                                     ->
@@ -10922,7 +11008,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a101
                                                                     ->
@@ -10931,7 +11017,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a111
                                                                     ->
@@ -10940,7 +11026,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a121
                                                                     ->
@@ -10949,7 +11035,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a131
                                                                     ->
@@ -10958,7 +11044,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a141
                                                                     ->
@@ -10967,7 +11053,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a151
                                                                     ->
@@ -10976,7 +11062,7 @@ let mk_total_nbe_interpretation_16 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a161
                                                                     ->
@@ -11081,31 +11167,32 @@ let mk_total_nbe_interpretation_17 :
                                                 let uu___17 =
                                                   FStar_TypeChecker_NBETerm.unembed
                                                     e1 cb a1 in
-                                                FStar_Util.bind_opt uu___17
+                                                FStar_Compiler_Util.bind_opt
+                                                  uu___17
                                                   (fun a18 ->
                                                      let uu___18 =
                                                        FStar_TypeChecker_NBETerm.unembed
                                                          e2 cb a2 in
-                                                     FStar_Util.bind_opt
+                                                     FStar_Compiler_Util.bind_opt
                                                        uu___18
                                                        (fun a21 ->
                                                           let uu___19 =
                                                             FStar_TypeChecker_NBETerm.unembed
                                                               e3 cb a3 in
-                                                          FStar_Util.bind_opt
+                                                          FStar_Compiler_Util.bind_opt
                                                             uu___19
                                                             (fun a31 ->
                                                                let uu___20 =
                                                                  FStar_TypeChecker_NBETerm.unembed
                                                                    e4 cb a4 in
-                                                               FStar_Util.bind_opt
+                                                               FStar_Compiler_Util.bind_opt
                                                                  uu___20
                                                                  (fun a41 ->
                                                                     let uu___21
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___21
                                                                     (fun a51
                                                                     ->
@@ -11113,7 +11200,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a61
                                                                     ->
@@ -11121,7 +11208,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a71
                                                                     ->
@@ -11129,7 +11216,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a81
                                                                     ->
@@ -11137,7 +11224,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a91
                                                                     ->
@@ -11146,7 +11233,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a101
                                                                     ->
@@ -11155,7 +11242,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a111
                                                                     ->
@@ -11164,7 +11251,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a121
                                                                     ->
@@ -11173,7 +11260,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a131
                                                                     ->
@@ -11182,7 +11269,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a141
                                                                     ->
@@ -11191,7 +11278,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a151
                                                                     ->
@@ -11200,7 +11287,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a161
                                                                     ->
@@ -11209,7 +11296,7 @@ let mk_total_nbe_interpretation_17 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a171
                                                                     ->
@@ -11323,25 +11410,26 @@ let mk_total_nbe_interpretation_18 :
                                                   let uu___18 =
                                                     FStar_TypeChecker_NBETerm.unembed
                                                       e1 cb a1 in
-                                                  FStar_Util.bind_opt uu___18
+                                                  FStar_Compiler_Util.bind_opt
+                                                    uu___18
                                                     (fun a19 ->
                                                        let uu___19 =
                                                          FStar_TypeChecker_NBETerm.unembed
                                                            e2 cb a2 in
-                                                       FStar_Util.bind_opt
+                                                       FStar_Compiler_Util.bind_opt
                                                          uu___19
                                                          (fun a21 ->
                                                             let uu___20 =
                                                               FStar_TypeChecker_NBETerm.unembed
                                                                 e3 cb a3 in
-                                                            FStar_Util.bind_opt
+                                                            FStar_Compiler_Util.bind_opt
                                                               uu___20
                                                               (fun a31 ->
                                                                  let uu___21
                                                                    =
                                                                    FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                 FStar_Util.bind_opt
+                                                                 FStar_Compiler_Util.bind_opt
                                                                    uu___21
                                                                    (fun a41
                                                                     ->
@@ -11349,7 +11437,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a51
                                                                     ->
@@ -11357,7 +11445,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a61
                                                                     ->
@@ -11365,7 +11453,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a71
                                                                     ->
@@ -11373,7 +11461,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a81
                                                                     ->
@@ -11381,7 +11469,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a91
                                                                     ->
@@ -11390,7 +11478,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a101
                                                                     ->
@@ -11399,7 +11487,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a111
                                                                     ->
@@ -11408,7 +11496,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a121
                                                                     ->
@@ -11417,7 +11505,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a131
                                                                     ->
@@ -11426,7 +11514,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a141
                                                                     ->
@@ -11435,7 +11523,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a151
                                                                     ->
@@ -11444,7 +11532,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a161
                                                                     ->
@@ -11453,7 +11541,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a171
                                                                     ->
@@ -11462,7 +11550,7 @@ let mk_total_nbe_interpretation_18 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a181
                                                                     ->
@@ -11585,26 +11673,26 @@ let mk_total_nbe_interpretation_19 :
                                                     let uu___19 =
                                                       FStar_TypeChecker_NBETerm.unembed
                                                         e1 cb a1 in
-                                                    FStar_Util.bind_opt
+                                                    FStar_Compiler_Util.bind_opt
                                                       uu___19
                                                       (fun a110 ->
                                                          let uu___20 =
                                                            FStar_TypeChecker_NBETerm.unembed
                                                              e2 cb a2 in
-                                                         FStar_Util.bind_opt
+                                                         FStar_Compiler_Util.bind_opt
                                                            uu___20
                                                            (fun a21 ->
                                                               let uu___21 =
                                                                 FStar_TypeChecker_NBETerm.unembed
                                                                   e3 cb a3 in
-                                                              FStar_Util.bind_opt
+                                                              FStar_Compiler_Util.bind_opt
                                                                 uu___21
                                                                 (fun a31 ->
                                                                    let uu___22
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                   FStar_Util.bind_opt
+                                                                   FStar_Compiler_Util.bind_opt
                                                                     uu___22
                                                                     (fun a41
                                                                     ->
@@ -11612,7 +11700,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a51
                                                                     ->
@@ -11620,7 +11708,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a61
                                                                     ->
@@ -11628,7 +11716,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a71
                                                                     ->
@@ -11636,7 +11724,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a81
                                                                     ->
@@ -11644,7 +11732,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a91
                                                                     ->
@@ -11653,7 +11741,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a101
                                                                     ->
@@ -11662,7 +11750,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a111
                                                                     ->
@@ -11671,7 +11759,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a121
                                                                     ->
@@ -11680,7 +11768,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a131
                                                                     ->
@@ -11689,7 +11777,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a141
                                                                     ->
@@ -11698,7 +11786,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a151
                                                                     ->
@@ -11707,7 +11795,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a161
                                                                     ->
@@ -11716,7 +11804,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a171
                                                                     ->
@@ -11725,7 +11813,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a181
                                                                     ->
@@ -11734,7 +11822,7 @@ let mk_total_nbe_interpretation_19 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e19 cb
                                                                     a19 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a191
                                                                     ->
@@ -11865,26 +11953,26 @@ let mk_total_nbe_interpretation_20 :
                                                       let uu___20 =
                                                         FStar_TypeChecker_NBETerm.unembed
                                                           e1 cb a1 in
-                                                      FStar_Util.bind_opt
+                                                      FStar_Compiler_Util.bind_opt
                                                         uu___20
                                                         (fun a110 ->
                                                            let uu___21 =
                                                              FStar_TypeChecker_NBETerm.unembed
                                                                e2 cb a2 in
-                                                           FStar_Util.bind_opt
+                                                           FStar_Compiler_Util.bind_opt
                                                              uu___21
                                                              (fun a21 ->
                                                                 let uu___22 =
                                                                   FStar_TypeChecker_NBETerm.unembed
                                                                     e3 cb a3 in
-                                                                FStar_Util.bind_opt
+                                                                FStar_Compiler_Util.bind_opt
                                                                   uu___22
                                                                   (fun a31 ->
                                                                     let uu___23
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e4 cb a4 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___23
                                                                     (fun a41
                                                                     ->
@@ -11892,7 +11980,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e5 cb a5 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___24
                                                                     (fun a51
                                                                     ->
@@ -11900,7 +11988,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e6 cb a6 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___25
                                                                     (fun a61
                                                                     ->
@@ -11908,7 +11996,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e7 cb a7 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___26
                                                                     (fun a71
                                                                     ->
@@ -11916,7 +12004,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e8 cb a8 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___27
                                                                     (fun a81
                                                                     ->
@@ -11924,7 +12012,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e9 cb a9 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___28
                                                                     (fun a91
                                                                     ->
@@ -11933,7 +12021,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e10 cb
                                                                     a10 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___29
                                                                     (fun a101
                                                                     ->
@@ -11942,7 +12030,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e11 cb
                                                                     a11 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___30
                                                                     (fun a111
                                                                     ->
@@ -11951,7 +12039,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e12 cb
                                                                     a12 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___31
                                                                     (fun a121
                                                                     ->
@@ -11960,7 +12048,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e13 cb
                                                                     a13 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___32
                                                                     (fun a131
                                                                     ->
@@ -11969,7 +12057,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e14 cb
                                                                     a14 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___33
                                                                     (fun a141
                                                                     ->
@@ -11978,7 +12066,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e15 cb
                                                                     a15 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___34
                                                                     (fun a151
                                                                     ->
@@ -11987,7 +12075,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e16 cb
                                                                     a16 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___35
                                                                     (fun a161
                                                                     ->
@@ -11996,7 +12084,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e17 cb
                                                                     a17 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___36
                                                                     (fun a171
                                                                     ->
@@ -12005,7 +12093,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e18 cb
                                                                     a18 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___37
                                                                     (fun a181
                                                                     ->
@@ -12014,7 +12102,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e19 cb
                                                                     a19 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___38
                                                                     (fun a191
                                                                     ->
@@ -12023,7 +12111,7 @@ let mk_total_nbe_interpretation_20 :
                                                                     FStar_TypeChecker_NBETerm.unembed
                                                                     e20 cb
                                                                     a20 in
-                                                                    FStar_Util.bind_opt
+                                                                    FStar_Compiler_Util.bind_opt
                                                                     uu___39
                                                                     (fun a201
                                                                     ->

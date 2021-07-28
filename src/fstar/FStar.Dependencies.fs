@@ -17,10 +17,10 @@
 
 // A dependency-finding routine
 module FStar.Dependencies
-open FStar.ST
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 

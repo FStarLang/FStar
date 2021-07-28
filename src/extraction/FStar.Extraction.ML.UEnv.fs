@@ -38,17 +38,18 @@ module FStar.Extraction.ML.UEnv
  *)
 
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
 module U  = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
 (**** Type definitions *)
@@ -432,7 +433,7 @@ let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
 *)
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
   let mlp, g =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    if Ident.lid_equals x (FStar.Parser.Const.failwith_lid())
     then ([], string_of_id (ident_of_lid x)), g
     else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
@@ -661,10 +662,10 @@ let new_uenv (e:TypeChecker.Env.env)
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
-       rather than FStar_All.failwith. Not sure this is necessary *)
+       rather than FStar.Compiler.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false
+        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) delta_constant None)) tun failwith_ty false
     in
     g
