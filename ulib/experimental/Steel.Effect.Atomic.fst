@@ -581,8 +581,20 @@ let intro_exists_erased #a #opened x p =
 let witness_exists #a #u #p _ =
   SteelGhost?.reflect (Steel.Memory.witness_h_exists #u (fun x -> hp_of (p x)))
 
+#set-options "--print_implicits --print_full_names --print_bound_var_types"
+
+assume val lift_exists_rewrite_lemma (#a:_) (p:a -> vprop)
+  : Lemma
+      (to_vprop (Steel.Memory.h_exists #(U.raise_t a) (U.lift_dom #a #Steel.Memory.slprop (fun (x:a) -> hp_of (p x)))) ==
+       h_exists #(U.raise_t a) (U.lift_dom #a #vprop p))  
+
 let lift_exists #a #u p =
-  as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)))
+  as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)));
+  sladmit ()
+  // lift_exists_rewrite_lemma p;
+  // change_equal_slprop
+  //   (to_vprop (Steel.Memory.h_exists #(U.raise_t a) (U.lift_dom #a #Steel.Memory.slprop (fun (x:a) -> hp_of (p x)))))
+  //   (h_exists #(U.raise_t a) (U.lift_dom #a #vprop p))
 
 let exists_cong p q =
   rewrite_slprop (h_exists p) (h_exists q)

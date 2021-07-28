@@ -350,7 +350,7 @@ let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
     vs_msg
 
 #push-options "--ide_id_info_off"
-let send_receive_prelude (#p:prot) (cc:chan p)
+assume val send_receive_prelude (#p:prot) (cc:chan p)
   : SteelT (chan_val & chan_val)
            emp
            (fun v ->
@@ -358,15 +358,15 @@ let send_receive_prelude (#p:prot) (cc:chan p)
              pts_to cc.chan_chan.recv half (snd v) `star`
              trace_until cc.chan_chan.trace (snd v) `star`
              chan_inv_cond (fst v) (snd v))
-  = let c = cc.chan_chan in
-    Steel.SpinLock.acquire cc.chan_lock;
-    let vs = read_refine (chan_inv_recv cc.chan_chan) cc.chan_chan.send in
-    let _ = witness_exists () in
-    let vr = H.read cc.chan_chan.recv in
-    rewrite_slprop (trace_until _ _ `star` chan_inv_cond _ _)
-                               (trace_until cc.chan_chan.trace vr `star` chan_inv_cond vs vr)
-                               (fun _ -> ());
-    return (vs, vr)
+  // = let c = cc.chan_chan in
+  //   Steel.SpinLock.acquire cc.chan_lock;
+  //   let vs = read_refine (chan_inv_recv cc.chan_chan) cc.chan_chan.send in
+  //   let _ = witness_exists () in
+  //   let vr = H.read cc.chan_chan.recv in
+  //   rewrite_slprop (trace_until _ _ `star` chan_inv_cond _ _)
+  //                              (trace_until cc.chan_chan.trace vr `star` chan_inv_cond vs vr)
+  //                              (fun _ -> ());
+  //   return (vs, vr)
 
 let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
   : SteelT unit (sender c next) (fun _ -> sender c (step next x))
@@ -425,17 +425,17 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
           (ensures fun _ _ _ -> history_p tr tr')
   = MRef.recall (history_p tr) r tr'
 
-let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
+assume val prot_equals (#q:_)  (#p:_) (#vr:chan_val) (cc:chan q)
   : Steel unit
           (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (fun _ -> pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (requires fun _ -> True)
           (ensures fun _ _ _ -> step vr.chan_prot vr.chan_msg == p)
-  = let vr' = witness_exists () in
-    H.higher_ref_pts_to_injective_eq #_ #_ #_ #_ #vr #_ cc.chan_chan.recv;
-    rewrite_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
-    elim_pure _;
-    intro_in_state _ _ vr
+  // = let vr' = witness_exists () in
+  //   H.higher_ref_pts_to_injective_eq #_ #_ #_ #_ #vr #_ cc.chan_chan.recv;
+  //   rewrite_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
+  //   elim_pure _;
+  //   intro_in_state _ _ vr
 
 let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
   : Steel (partial_trace_of q)

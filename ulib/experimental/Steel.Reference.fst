@@ -105,11 +105,27 @@ let read_pt #a #p #v r =
   rewrite_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
   return v'
 
+assume val sladmit (#a:Type)
+            (#opened:inames)
+            (#p:pre_t)
+            (#q:post_t a)
+            (_:unit)
+  : SteelAtomicF a opened p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
+
+//#set-options "--print_implicits --print_full_names"
+assume val to_h_pts_to (#a:Type0) (#p:perm) (q:a -> vprop) (r:ref a)
+  : SteelT unit
+      (h_exists (fun (v:U.raise_t a) -> pts_to r p (Ghost.hide (U.downgrade_val v)) `star` U.lift_dom q v))
+      (fun _ -> h_exists (fun (v:U.raise_t a) -> H.pts_to r p (Ghost.hide v) `star` U.lift_dom q v))
+  // = exists_cong (fun (v:U.raise_t a) -> pts_to r p (Ghost.hide (U.downgrade_val v)) `star` U.lift_dom q v) 
+  //               (fun (v:U.raise_t a) -> H.pts_to r p (Ghost.hide v) `star` U.lift_dom q v)
+
 let read_refine_pt #a #p q r =
   Classical.forall_intro_2 reveal_equiv;
   lift_exists (fun (v:a) -> pts_to r p v `star` q v);
-  exists_cong (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v))
-                (fun (v:U.raise_t a) -> H.pts_to r p v `star` U.lift_dom q v);
+  exists_cong (U.lift_dom (fun v -> pts_to r p (Ghost.hide v) `star` q v))
+              (fun (v:U.raise_t a) -> pts_to r p (Ghost.hide (U.downgrade_val v)) `star` U.lift_dom q v);
+  to_h_pts_to q r;
   let x = H.read_refine (U.lift_dom q) r in
   rewrite_slprop
     (H.pts_to r p (hide x) `star` U.lift_dom q x)
