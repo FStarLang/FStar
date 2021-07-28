@@ -12879,21 +12879,47 @@ let (force_trivial_guard :
        | [] ->
            let uu___1 = discharge_guard env g2 in
            FStar_Compiler_Effect.op_Less_Bar (fun uu___2 -> ()) uu___1
-       | imp::uu___1 ->
-           let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 FStar_Syntax_Print.uvar_to_string
-                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-               let uu___5 =
-                 FStar_TypeChecker_Normalize.term_to_string env
-                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
-               FStar_Compiler_Util.format3
-                 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                 uu___4 uu___5 imp.FStar_TypeChecker_Common.imp_reason in
-             (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu___3) in
-           FStar_Errors.raise_error uu___2
-             imp.FStar_TypeChecker_Common.imp_range)
+       | uu___1 ->
+           if env.FStar_TypeChecker_Env.phase1
+           then
+             let tx = FStar_Syntax_Unionfind.new_transaction () in
+             (FStar_Compiler_List.iter
+                (fun imp ->
+                   (let uu___4 =
+                      FStar_Compiler_Effect.op_Less_Bar
+                        (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "Rel") in
+                    if uu___4
+                    then
+                      let uu___5 =
+                        FStar_Syntax_Print.ctx_uvar_to_string
+                          imp.FStar_TypeChecker_Common.imp_uvar in
+                      FStar_Compiler_Util.print1
+                        "Uvar %s remained unresolved, setting it to unknown"
+                        uu___5
+                    else ());
+                   FStar_Syntax_Util.set_uvar
+                     (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+                     FStar_Syntax_Syntax.tun)
+                g2.FStar_TypeChecker_Common.implicits;
+              FStar_Syntax_Unionfind.commit tx)
+           else
+             (let imp =
+                FStar_Compiler_List.hd g2.FStar_TypeChecker_Common.implicits in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    FStar_Syntax_Print.uvar_to_string
+                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                  let uu___6 =
+                    FStar_TypeChecker_Normalize.term_to_string env
+                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
+                  FStar_Compiler_Util.format3
+                    "Failed to resolve implicit argument %s of type %s introduced for %s"
+                    uu___5 uu___6 imp.FStar_TypeChecker_Common.imp_reason in
+                (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu___4) in
+              FStar_Errors.raise_error uu___3
+                imp.FStar_TypeChecker_Common.imp_range))
 let (subtype_nosmt_force :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> Prims.bool)

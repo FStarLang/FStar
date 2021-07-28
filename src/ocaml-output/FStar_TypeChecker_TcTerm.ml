@@ -9629,11 +9629,36 @@ and (check_inner_let :
                               then FStar_Syntax_Util.inline_let_attr ::
                                 (lb.FStar_Syntax_Syntax.lbattrs)
                               else lb.FStar_Syntax_Syntax.lbattrs in
-                            FStar_Syntax_Util.mk_letbinding
-                              (FStar_Pervasives.Inl x1) []
-                              c1.FStar_TypeChecker_Common.res_typ
-                              cres.FStar_TypeChecker_Common.eff_name e11
-                              attrs lb.FStar_Syntax_Syntax.lbpos in
+                            let lb2 =
+                              FStar_Syntax_Util.mk_letbinding
+                                (FStar_Pervasives.Inl x1) []
+                                c1.FStar_TypeChecker_Common.res_typ
+                                cres.FStar_TypeChecker_Common.eff_name e11
+                                attrs lb.FStar_Syntax_Syntax.lbpos in
+                            let lb3 =
+                              if
+                                env2.FStar_TypeChecker_Env.phase1 &&
+                                  (Prims.op_Negation annotated)
+                              then
+                                let uu___5 = lb2 in
+                                {
+                                  FStar_Syntax_Syntax.lbname =
+                                    (uu___5.FStar_Syntax_Syntax.lbname);
+                                  FStar_Syntax_Syntax.lbunivs =
+                                    (uu___5.FStar_Syntax_Syntax.lbunivs);
+                                  FStar_Syntax_Syntax.lbtyp =
+                                    FStar_Syntax_Syntax.tun;
+                                  FStar_Syntax_Syntax.lbeff =
+                                    (uu___5.FStar_Syntax_Syntax.lbeff);
+                                  FStar_Syntax_Syntax.lbdef =
+                                    (uu___5.FStar_Syntax_Syntax.lbdef);
+                                  FStar_Syntax_Syntax.lbattrs =
+                                    (uu___5.FStar_Syntax_Syntax.lbattrs);
+                                  FStar_Syntax_Syntax.lbpos =
+                                    (uu___5.FStar_Syntax_Syntax.lbpos)
+                                }
+                              else lb2 in
+                            lb3 in
                           let e3 =
                             let uu___5 =
                               let uu___6 =

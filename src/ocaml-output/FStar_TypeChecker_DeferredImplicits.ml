@@ -657,8 +657,15 @@ let (solve_deferred_to_tactic_goals :
              (FStar_Compiler_List.iter
                 (fun uu___3 ->
                    match uu___3 with
-                   | (imps1, sigel) -> solve_goals_with_tac env g imps1 sigel)
-                buckets;
+                   | (imps1, sigel) ->
+                       if env.FStar_TypeChecker_Env.phase1
+                       then
+                         FStar_Compiler_List.iter
+                           (fun imp ->
+                              FStar_Syntax_Util.set_uvar
+                                (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+                                FStar_Syntax_Syntax.tun) imps1
+                       else solve_goals_with_tac env g imps1 sigel) buckets;
               (let uu___3 = g in
                {
                  FStar_TypeChecker_Common.guard_f =
