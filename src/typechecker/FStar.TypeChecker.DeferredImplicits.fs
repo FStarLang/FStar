@@ -207,5 +207,9 @@ let solve_deferred_to_tactic_goals env g =
     in
     let buckets = bucketize (eqs@more) in
     // Dispatch each bucket of implicits to their respective tactic
-    List.iter (fun (imps, sigel) -> solve_goals_with_tac env g imps sigel) buckets;
+    // if not env.phase1 then
+    List.iter (fun (imps, sigel) ->
+      if env.phase1
+      then List.iter (fun imp -> FStar.Syntax.Util.set_uvar imp.imp_uvar.ctx_uvar_head S.tun) imps
+      else solve_goals_with_tac env g imps sigel) buckets;
     { g with deferred_to_tac=[]; implicits = imps}
