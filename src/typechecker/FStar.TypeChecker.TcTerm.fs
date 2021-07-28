@@ -3313,7 +3313,11 @@ and check_inner_let env e =
            if add_inline_let
            then U.inline_let_attr::lb.lbattrs
            else lb.lbattrs in
-         U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
+         let lb = U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
+         let lb =
+           if env.phase1 && not annotated then {lb with lbtyp = S.tun}
+           else lb in
+         lb in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
 
