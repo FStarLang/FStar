@@ -59,7 +59,7 @@ let addr_of_x #a #x #y p =
   A.return q
   
 let unaddr_of_x #a #x #y p q =
-  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm X q p (mk_point none y) x; // FIXME: WHY WHY WHY does F* infer the constant function (due to the type of q) instead?
+  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm X q p (mk_point None y) x; // FIXME: WHY WHY WHY does F* infer the constant function (due to the type of q) instead?
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_y #a #x #y p =
@@ -69,5 +69,5 @@ let addr_of_y #a #x #y p =
   A.return q
 
 let unaddr_of_y #a #x #y p q =
-  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm Y q p (mk_point x none) y; // same here
+  unaddr_of_struct_field #_ #_ #_ #point_fields_pcm Y q p (mk_point x None) y; // same here
   A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
