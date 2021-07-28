@@ -67,7 +67,7 @@
         "typing_tok_FStar.Tactics.Common.NotAListLiteral@tok"
       ],
       0,
-      "7c27926df53c113b9634eec8be58cb80"
+      "614b234627c07b558f19b15dbce16c6f"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality_1",
@@ -76,7 +76,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "4d7538b6e85fc7e733cbe549a93995fc"
+      "1bfcbd98b84ecf12de4a58c82d07fd57"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality",
@@ -132,7 +132,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "69c92f2412e6008aac9a069f50546a0e"
+      "c0b9715d118595a152f450fee9b872ea"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality_g",

@@ -481,7 +481,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "3ebec59b1d82f816f2f5ea55d2111836"
+      "734ef7a20923b5816ab7eb3db06f4134"
     ],
     [
       "Sec2.HIFC.has_flow_append",
@@ -551,7 +551,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "5fb9beb35375b4c94cf0df58a35d85bc"
+      "82e187b974b878318298cadd0c41f8d6"
     ],
     [
       "Sec2.HIFC.add_source_monotonic",
@@ -604,7 +604,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "c2b5b7d2a1331037fdab06054143d0dc"
+      "3c42bd184502d59ecf8361d49dcfbea8"
     ],
     [
       "Sec2.HIFC.has_flow_soundness",
@@ -781,7 +781,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "bf11a002dee5668da8c3295eaeb79c01"
+      "dcb2d81ca2099a84b6051f70cd622a55"
     ],
     [
       "Sec2.HIFC.flows_included_append",
@@ -823,7 +823,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "20f4db1ca65c6330cdb476f122204d05"
+      "1d68fc24f76ee4de79168d6cfb177128"
     ],
     [
       "Sec2.HIFC.left_unit",
@@ -882,7 +882,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "00ac1acb82fef36c8c839de2852b18d2"
+      "3afc30ddaeffe1872e05dd7fa39591e3"
     ],
     [
       "Sec2.HIFC.right_unit",
@@ -938,7 +938,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "f7618804dd288ba9e6aa4bb16e7d9880"
+      "e1ca9bc073e4acfb6af35976fd6b00fd"
     ],
     [
       "Sec2.HIFC.assoc_hst",
@@ -984,7 +984,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "25914f1b60b42e6301f9e0a23f6a4d9c"
+      "9257bd0a5c54f1600da4fdcfa3e084d9"
     ],
     [
       "Sec2.HIFC.frame",
@@ -1144,7 +1144,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "ca3aa78e632d5f1933f9c7a3c44475d1"
+      "b3ed15a9f393e66de48dd50d5d0e1d8f"
     ],
     [
       "Sec2.HIFC.weaken_flows_append",
@@ -1190,7 +1190,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_Sec2.HIFC.union"
       ],
       0,
-      "b4d747785a36ae82cd8356157134e998"
+      "87f0014bbc25f5a26d40bd63377ba2b3"
     ],
     [
       "Sec2.HIFC.HIFC",
@@ -1222,7 +1222,7 @@
         "typing_Sec2.HIFC.union"
       ],
       0,
-      "29fe305f70e130762887645b21acc830"
+      "08d6a55e52f23ee13a6bfc782f884260"
     ],
     [
       "Sec2.HIFC.read",
@@ -1360,7 +1360,7 @@
         "typing_Sec2.HIFC.single"
       ],
       0,
-      "3221f4c3ea0caf9769c7232fa3d5bcf5"
+      "6381e309a14a481fd49e8e6f69a96f5a"
     ],
     [
       "Sec2.HIFC.test2",
@@ -1408,7 +1408,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "6d710249a41b46192bbf7dc16ffba16b"
+      "495225f4414f470aa047a9cde0ad33b9"
     ],
     [
       "Sec2.HIFC.test3",
@@ -1456,7 +1456,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "599d143709457c3a6296982f5681de8d"
+      "7cf0b110edc8d3132cee72c9c5cd6d6e"
     ],
     [
       "Sec2.HIFC.test3_lab",
@@ -1505,7 +1505,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "585c70f309374e17a29bc224b561617e"
+      "a6a77fa3e745eee3ae912f562d60067b"
     ],
     [
       "Sec2.HIFC.test3_1",
@@ -1557,7 +1557,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "5bbd83b93f54155b867a43351b0ff749"
+      "533bd35128e3e263085414031c05ab70"
     ],
     [
       "Sec2.HIFC.test4",
@@ -1605,7 +1605,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "2430c1ee4596e0f01a10f21e198369ba"
+      "7bf4d1b62d543b62a25b625c3c65fa45"
     ],
     [
       "Sec2.HIFC.test5",
@@ -1657,7 +1657,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "edbf600ecd7dae6b286f27b05ea7015c"
+      "a4d5fd85bf17be33bba279329fc279cd"
     ],
     [
       "Sec2.HIFC.test6",
@@ -1706,7 +1706,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "bca1211af7680fae572cd66d6099bc02"
+      "e81f2b4370b5f5252863a91331975e20"
     ],
     [
       "Sec2.HIFC.test7",
@@ -1754,7 +1754,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "91cea73ef8d6b739a8457ddcc6e3fbb2"
+      "993b0d2457b099bdfb25bfe7332a67a9"
     ],
     [
       "Sec2.HIFC.test8",
@@ -1812,7 +1812,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "478247111c96ed09ece5d2f081b733d0"
+      "3e9840fb7bc4e50d2b19ccb57e96784d"
     ],
     [
       "Sec2.HIFC.test_cond",
@@ -1870,7 +1870,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "bcaeae7a39734295c8cf02755bcbbee9"
+      "e98a1a7ddbfa90aca0aefd2f0df72663"
     ],
     [
       "Sec2.HIFC.refine_test8",
@@ -1955,7 +1955,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "12004f68ffe8d92f188940139ed4874b"
+      "6dfc36a5e97bbc7501ac699e2e6d7eaa"
     ],
     [
       "Sec2.HIFC.refine_test9",
@@ -2014,7 +2014,7 @@
         "typing_Sec2.HIFC.union"
       ],
       0,
-      "6450d26daa264d27f548f94465716880"
+      "4446694445e7c3974bd7f5adcd6e5522"
     ],
     [
       "Sec2.HIFC.test12",
@@ -2067,7 +2067,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "9078520548d6c873b34e22cb431825e1"
+      "e13e82fa8635ed28528ed1e7d3fb737b"
     ],
     [
       "Sec2.HIFC.test12_1",
@@ -2120,7 +2120,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "e84faaa498492504c16c35339f6cac00"
+      "1ea3caad37677b1712b391e95ef9353e"
     ],
     [
       "Sec2.HIFC.test13",
@@ -2147,7 +2147,7 @@
         "typing_Sec2.HIFC.cw1"
       ],
       0,
-      "270ec9436222563bbb0c49753d3ff760"
+      "bfd88b83007a7665161ce6f0cbd3f432"
     ],
     [
       "Sec2.HIFC.test14",
@@ -2198,7 +2198,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "56f8a03b40d7a0bf74039bf485804047"
+      "58c469c4de5fcedce69312643910ad28"
     ],
     [
       "Sec2.HIFC.test15",
@@ -2250,7 +2250,7 @@
         "typing_Tm_abs_d08aeea6ff1dc3fc36f7ff3217fea021"
       ],
       0,
-      "bbf6433d5a7f777612f16f95cdc89f05"
+      "3881eb4a5b96f159460f79ee4501c1a3"
     ],
     [
       "Sec2.HIFC.ist_exn",
