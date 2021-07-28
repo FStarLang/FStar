@@ -4532,11 +4532,22 @@ let force_trivial_guard env g =
     let g = resolve_implicits env g in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
-    | imp::_ -> raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                           BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
-                                imp.imp_reason) imp.imp_range
+    | _ ->
+      if env.phase1
+      then let tx = UF.new_transaction () in
+           List.iter (fun imp ->
+             if Env.debug env <| Options.Other "Rel"
+             then BU.print1 "Uvar %s remained unresolved, setting it to unknown"
+                    (Print.ctx_uvar_to_string imp.imp_uvar);
+             U.set_uvar imp.imp_uvar.ctx_uvar_head S.tun) g.implicits;
+           UF.commit tx
+      else let imp = List.hd g.implicits in
+      
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
+                        BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
+                          (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                          (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                          imp.imp_reason) imp.imp_range
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with
