@@ -16,6 +16,7 @@ open Steel.C.StructLiteral
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
+(*
 (** ** BEGIN TODO impl and move to StructLiteral *)
 
 (*
@@ -26,7 +27,7 @@ let rec iter_star_fields (fields: struct_fields) (f: field_of fields -> vprop): 
   | (field, _) :: fields -> f field `star` iter_star_fields fields f
 *)
 
-[@@__steel_reduce__]
+[@@__reduce__;__steel_reduce__;iter_unfold]
 let pts_to_field_vprop
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
@@ -101,6 +102,18 @@ let pts_to_field
   h (p `pts_to_view` struct_view tag fields) `struct_get` field
   *)
 
+unfold let norm_list = [
+  delta_attr [`%iter_unfold];
+  delta_only [
+    `%map; `%mem; `%fst; `%Mktuple2?._1;
+    `%assoc;
+    `%Some?.v;
+    `%Mktypedef?.view_type
+  ];
+  iota; primops; zeta
+]
+
+
 assume val explode (#opened: inames)
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
@@ -109,7 +122,7 @@ assume val explode (#opened: inames)
     (fun _ -> pts_to_fields_vprop tag fields p fields)
     (requires fun _ -> True)
     (ensures fun h _ h' ->
-      norm [delta_attr [`%iter_unfold]; iota; primops; zeta]
+      norm norm_list
         (pts_to_fields tag fields p h h' fields))
 //(iter_and_fields fields (pts_to_field tag fields p h h')))
         
@@ -130,6 +143,7 @@ assume val recombine (#opened: inames)
 
 /// Point struct
 
+[@@iter_unfold]
 let c_int: typedef = {
   carrier = option int;
   pcm = opt_pcm #int;
@@ -143,9 +157,12 @@ let point_fields: struct_fields = [
   "y", c_int;
 ]
 
+[@@iter_unfold]
 let point = struct "point" point_fields
 
+[@@iter_unfold]
 let point_pcm_carrier = struct_pcm_carrier "point" point_fields
+[@@iter_unfold]
 let point_pcm: pcm point_pcm_carrier = struct_pcm "point" point_fields
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
@@ -156,14 +173,17 @@ let mk_point_pcm: option int -> option int -> point_pcm_carrier = mk_struct_pcm 
 
 /// Connections for the fields of a point
 
+[@@iter_unfold]
 val _x: connection point_pcm (opt_pcm #int)
 let _x = struct_field "point" point_fields "x"
 
+[@@iter_unfold]
 val _y: connection point_pcm (opt_pcm #int)
 let _y = struct_field "point" point_fields "y"
 
 /// View for points
 
+[@@iter_unfold]
 val point_view: sel_view point_pcm point false
 let point_view = struct_view "point" point_fields
 
@@ -214,13 +234,185 @@ val recombine' (#opened: inames)
 let recombine' p = recombine "point" point_fields p
 *)
 
+#push-options "--debug PointStructSelectors --debug_level SMTQuery --log_queries --query_stats --fuel 0"
+#restart-solver
+
+[@@iter_unfold] let x: field_of point_fields = mk_field_of point_fields "x"
+[@@iter_unfold] let y: field_of point_fields = mk_field_of point_fields "y"
+
+
+module T = FStar.Tactics
+
+let aux (p: ref 'a point_pcm) (h: rmem (p `pts_to_view` point_view))
+  (h': rmem
+     ((ref_focus p _x `pts_to_view` c_int.view) `star`
+      (ref_focus p _y `pts_to_view` c_int.view)))
+: Tot (squash (
+   (norm norm_list
+      (pts_to_fields "point" point_fields p h h' point_fields)
+      ==
+   norm norm_list (begin
+      let pointprop =
+      ((ref_focus p _x `pts_to_view` c_int.view) `star`
+      (ref_focus p _y `pts_to_view` c_int.view))
+      in
+      (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x) /\
+      (can_be_split pointprop (ref_focus p _y `pts_to_view` c_int.view) /\
+      h' (ref_focus p _y `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` y)
+   end))))
+= _ by (T.dump ""; T.smt ())
+
+val explode' (#opened: inames)
+  (p: ref 'a point_pcm)
+: SteelGhost unit opened
+    (p `pts_to_view` point_view)
+    (fun _ -> pts_to_fields_vprop "point" point_fields p point_fields)
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      norm norm_list
+        (pts_to_fields "point" point_fields p h h' point_fields))
+//(iter_and_fields fields (pts_to_field "point" fields p h h')))
+
+let explode' p = explode "point" point_fields p
+
+val explode'' (#opened: inames)
+  (p: ref 'a point_pcm)
+: SteelGhost unit opened
+    (p `pts_to_view` struct_view "point" point_fields)
+    (fun _ -> pts_to_fields_vprop "point" point_fields p point_fields)
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      (
+      let pointprop =
+      (pts_to_fields_vprop "point" point_fields p point_fields)
+      in
+      (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)))
+
+// let explode'' p = explode "point" point_fields p
+
+assume val recombine (#opened: inames)
+  (tag: string) (fields: struct_fields)
+  (p: ref 'a (struct_pcm tag fields))
+: SteelGhost unit opened
+    (pts_to_fields_vprop tag fields p fields)
+    (fun _ -> p `pts_to_view` struct_view tag fields)
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      norm norm_list
+        (pts_to_fields tag fields p h' h fields))
+
+
+val explode''' (#opened: inames)
+  (p: ref 'a point_pcm)
+: SteelGhost unit opened
+    (p `pts_to_view` point_view)
+    (fun _ -> 
+    ((ref_focus p _x `pts_to_view` c_int.view) `star`
+      (ref_focus p _y `pts_to_view` c_int.view)))
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      norm norm_list
+        (pts_to_fields "point" point_fields p h h' point_fields))
+//(iter_and_fields fields (pts_to_field "point" fields p h h')))
+
+let explode''' p =
+  explode "point" point_fields p;
+  change_equal_slprop
+    (pts_to_fields_vprop "point" point_fields p point_fields)
+    ((ref_focus p _x `pts_to_view` c_int.view) `star`
+      (ref_focus p _y `pts_to_view` c_int.view))
+
+let aux'
+  (p: ref 'a (struct_pcm "point" point_fields))
+  (h': rmem (p `pts_to_view` point_view))
+= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: c_int.view_type) <: int
+// TODO why are two coercions necessary?
+
+val zero_x
+  (p: ref 'a (struct_pcm "point" point_fields))
+: Steel unit
+    (p `pts_to_view` point_view)
+    (fun _ -> p `pts_to_view` point_view)
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x == (0 <: c_int.view_type)))
+
+let zero_x p =
+  explode "point" point_fields p;
+  slassert (
+     ((ref_focus p _x `pts_to_view` c_int.view) `star`
+      (ref_focus p _y `pts_to_view` c_int.view)));
+  //recombine "point" point_fields p;
+  sladmit(); return()
+
+(*
+val explode''' (#opened: inames)
+  (p: ref 'a (struct_pcm "point" point_fields))
+: SteelGhost unit opened
+    (p `pts_to_view` struct_view "point" point_fields)
+    (fun _ -> pts_to_fields_vprop "point" point_fields p point_fields)
+    (requires fun _ -> True)
+    (ensures fun h _ h' ->
+      let pointprop =
+      (pts_to_fields_vprop "point" point_fields p point_fields)
+      in
+      (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x))
+
+let testlemma p
+    (h: rmem (p `pts_to_view` struct_view "point" point_fields))
+    (h': rmem( pts_to_fields_vprop "point" point_fields p point_fields))
+: Lemma
+  (requires
+  norm norm_list (let pointprop =
+  (pts_to_fields_vprop "point" point_fields p point_fields)
+  in
+  (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+  h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)
+  ))
+  (ensures
+  norm norm_list (let pointprop =
+  (pts_to_fields_vprop "point" point_fields p point_fields)
+  in
+  (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+  h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)
+  ))
+= ()
+*)
+(*
+let testlemma' (p: ref 'a point_pcm)
+    (h: rmem (p `pts_to_view` struct_view "point" point_fields))
+    (h': rmem( pts_to_fields_vprop "point" point_fields p point_fields))
+: Lemma
+  (requires
+  norm norm_list (let pointprop =
+  (pts_to_fields_vprop "point" point_fields p point_fields)
+  in
+  (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+  h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)
+  ))
+  (ensures
+  (let pointprop =
+  (pts_to_fields_vprop "point" point_fields p point_fields)
+  in
+  (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
+  h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)
+  ))
+= _ by (T.dump "") // T.norm norm_list; T.dump ""; T.tadmit()); admit()
+*)
+
+//let explode''' p = explode'' p
+
 let aux p (h: rmem (p `pts_to_view` point_view))
   (h': rmem
      ((ref_focus p _x `pts_to_view` c_int.view) `star`
       (ref_focus p _y `pts_to_view` c_int.view)))
 : Lemma
    (requires
-      norm [delta_attr [`%iter_unfold]; iota; primops; zeta]
+      //norm [delta_attr [`%iter_unfold]; iota; primops; zeta]
+      norm norm_list
       (pts_to_fields "point" point_fields p h h' point_fields))
    (ensures begin
       let pointprop =
@@ -228,9 +420,9 @@ let aux p (h: rmem (p `pts_to_view` point_view))
       (ref_focus p _y `pts_to_view` c_int.view))
       in
       can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
-      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` "x" /\
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x /\
       can_be_split pointprop (ref_focus p _y `pts_to_view` c_int.view) /\
-      h' (ref_focus p _y `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` "y"
+      h' (ref_focus p _y `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` y
    end)
 = ()
 
@@ -845,3 +1037,4 @@ let recombine_oct' p =
   recombine "oct" oct_fields p
 
 #pop-options
+*)
