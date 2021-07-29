@@ -359,9 +359,39 @@ let quad_aux (p: ref 'a quad_pcm) (h: rmem (p `pts_to_view` quad_view))
           h' (ref_focus p _quad_w `pts_to_view` c_int.view) === h (p `pts_to_view` quad_view) `struct_get` w)))
    end))
 = _ by (T.trefl ())
+// assert_norm produces a stack overflow?
 //_ by (
 //    T.norm norm_list;
 //    T.trefl ())
+
+let quad_aux2 (p: ref 'a quad_pcm) (h: rmem (p `pts_to_view` quad_view))
+  (h': rmem
+     ((ref_focus p _quad_x `pts_to_view` c_int.view) `star`
+      ((ref_focus p _quad_y `pts_to_view` c_int.view) `star`
+       ((ref_focus p _quad_z `pts_to_view` c_int.view) `star`
+        (ref_focus p _quad_w `pts_to_view` c_int.view)))))
+: squash
+   ((
+      norm norm_list//[delta_attr [`%iter_unfold]; iota; primops; zeta]
+        (pts_to_fields "quad" quad_fields p h h' quad_fields))
+   <==>
+   norm norm_list (begin
+      let quadprop =
+        (ref_focus p _quad_x `pts_to_view` c_int.view) `star`
+        ((ref_focus p _quad_y `pts_to_view` c_int.view) `star`
+         ((ref_focus p _quad_z `pts_to_view` c_int.view) `star`
+          (ref_focus p _quad_w `pts_to_view` c_int.view)))
+      in
+      (can_be_split quadprop (ref_focus p _quad_x `pts_to_view` c_int.view) /\
+       h' (ref_focus p _quad_x `pts_to_view` c_int.view) === h (p `pts_to_view` quad_view) `struct_get` x) /\
+      ((can_be_split quadprop (ref_focus p _quad_y `pts_to_view` c_int.view) /\
+       h' (ref_focus p _quad_y `pts_to_view` c_int.view) === h (p `pts_to_view` quad_view) `struct_get` y) /\
+       ((can_be_split quadprop (ref_focus p _quad_z `pts_to_view` c_int.view) /\
+         h' (ref_focus p _quad_z `pts_to_view` c_int.view) === h (p `pts_to_view` quad_view) `struct_get` z) /\
+         (can_be_split quadprop (ref_focus p _quad_w `pts_to_view` c_int.view) /\
+          h' (ref_focus p _quad_w `pts_to_view` c_int.view) === h (p `pts_to_view` quad_view) `struct_get` w)))
+   end))
+= () // _ by (T.trefl ())
 
 (*
 let quad_unfold_iter_star_fields p
