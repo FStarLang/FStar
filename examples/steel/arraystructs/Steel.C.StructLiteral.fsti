@@ -13,10 +13,11 @@ open FStar.List.Tot
 let struct_fields =
   struct_fields:list (string * typedef){Cons? struct_fields}
 
+irreducible let iter_unfold = 0
+
+[@@iter_unfold]
 let has_field_bool (fields: struct_fields) (field: string): bool =
   field `mem` map fst fields
-
-irreducible let iter_unfold = 0
 
 [@@iter_unfold]
 let has_field (fields: struct_fields) (field: string): prop =
@@ -133,9 +134,11 @@ val struct_put_put_ne
 
 /// Similarly, a PCM for structs
 
+[@@iter_unfold]
 let struct_carriers (fields: struct_fields) (field: field_of fields) =
   (get_field fields field).carrier
 
+[@@iter_unfold]
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
 : pcm (struct_carriers fields field)
 = (get_field fields field).pcm
@@ -222,6 +225,34 @@ val struct_pcm_put_put_ne
 /// View a struct_pcm_carrier as a struct
 val struct_view (tag: string) (fields: struct_fields)
 : sel_view (struct_pcm tag fields) (struct tag fields) false
+
+// /// View a struct_pcm_carrier as a struct
+// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields{normalize_term (fields' \subset fields) == true})
+// : sel_view (struct_pcm tag fields) (struct tag fields') false
+// 
+// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields)
+// : sel_view (struct_pcm tag fields) (struct tag (normalize (fields - fields'))) false
+// 
+// struct_view_convert #opened
+//   (v: struct_view tag fields fields'1)
+// : SteelGhost (struct_view tag fields fields'2) opened
+//     (p `pts_to_view` v)
+//     (fun w -> (p `pts_to_view` w))
+//     (requires fun _ -> normalize (fields - fields'1 == fields - fields'2))
+//     (ensures fun h w h' -> forall field. field in (fields - fields'1) ==>
+//        h (p `pts_to_view` v) `struct_get` field == 
+//        h' (p `pts_to_view` w) `struct_get` field)
+// 
+// struct_view_convert
+//   (v: struct_view tag fields fields'1)
+// : Pure (struct_view tag fields fields'2)
+//     (requires normalize (fields - fields'1 == fields - fields'2))
+//     (ensures fun w -> True)
+//
+// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields) (fields_fields': struct_fields) (heq: squash (fields_fields' == normalize_term (fields - fields')))
+// : sel_view (struct_pcm tag fields) (struct tag fields_fields') false
+
+// struct_view tag fields fields' (_ by (T.norm _; T.trefl ()))
 
 /// Typedef for struct from typedefs for its fields
 
