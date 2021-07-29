@@ -412,9 +412,9 @@ let () =
         curms       e_unit e_int
         curms       NBET.e_unit NBET.e_int;
 
-      // mk_tac_step_2 1 "with_timing"
-      //   with_timing  e_string (e_tactic_thunk e_any) e_any
-      //   with_timing  NBET.e_string (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
+      mk_tac_step_3 1 "with_timing"
+        (fun _ -> with_timing)  e_any e_string (e_tactic_thunk e_any) e_any
+        (fun _ -> with_timing)  NBET.e_any NBET.e_string (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
 
       mk_tac_step_2 0 "uvar_env"
         uvar_env RE.e_env (e_option RE.e_term) RE.e_term

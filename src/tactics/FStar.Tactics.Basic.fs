@@ -339,19 +339,17 @@ let fresh () : tac<Z.t> =
 let curms () : tac<Z.t> =
     ret (BU.now_ms () |> Z.of_int_fs)
 
-let with_timing msg (f: tac<'a>) : tac<'a> =
-  bind (curms ()) (fun t0 ->
-  bind f (fun x ->
-  bind (curms()) (fun t1 ->
-  bind (print ("TIMING: " ^ msg ^ " " ^ (string_of_int (Z.to_int_fs t1 - Z.to_int_fs t0)) ^"ms")) (fun _ ->
-  ret x))))
+let with_timing tag (f: tac<'a>) : tac<'a> =
+  mk_tac (fun ps -> FStar.Profiling.profile (fun () -> run f ps) 
+                 (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
+                 tag)
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (TcTerm.typeof_tot_or_gtot_term e t true)
+    try with_timing "FStar.Tactics.Basic.__tc" (bind idtac (fun _ -> ret (TcTerm.typeof_tot_or_gtot_term e t true)))
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -1331,9 +1329,10 @@ let fresh_bv_named (nm : string) (t : typ) : tac<bv> =
 let change (ty : typ) : tac<unit> = wrap_err "change" <|
     mlog (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) (fun _ ->
     bind cur_goal (fun g ->
-    bind (__tc (goal_env g) ty) (fun (ty, _, guard) ->
+    bind (with_timing "FStar.Tactics.Basic.change.do_unify.tc" (__tc (goal_env g) ty)) (fun (ty, _, guard) ->
     bind (proc_guard "change" (goal_env g) guard (rangeof g)) (fun () ->
-    bind (do_unify (goal_env g) (goal_type g) ty) (fun bb ->
+    bind (with_timing "FStar.Tactics.Basic.change.do_unify.1" 
+             (do_unify (goal_env g) (goal_type g) ty)) (fun bb ->
     if bb
     then replace_cur (goal_with_type g ty)
     else begin
@@ -1341,10 +1340,13 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * and unify it with the fully normalized goal. If that succeeds,
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
-        let steps = [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant; Env.Primops] in
-        let ng  = normalize steps (goal_env g) (goal_type g) in
-        let nty = normalize steps (goal_env g) ty in
-        bind (do_unify (goal_env g) ng nty) (fun b ->
+         bind 
+         (with_timing "FStar.Tactics.Basic.change.do_unify.2"
+           (bind (ret ()) (fun _ -> 
+             let steps = [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant; Env.Primops] in
+             let ng  = normalize steps (goal_env g) (goal_type g) in
+             let nty = normalize steps (goal_env g) ty in
+             do_unify (goal_env g) ng nty))) (fun b ->
         if b
         then replace_cur (goal_with_type g ty)
         else fail "not convertible")

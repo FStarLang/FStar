@@ -643,6 +643,23 @@ let (curms : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
       let uu___2 = FStar_Compiler_Util.now_ms () in
       FStar_Compiler_Effect.op_Bar_Greater uu___2 FStar_BigInt.of_int_fs in
     FStar_Tactics_Monad.ret uu___1
+let with_timing :
+  'a .
+    Prims.string -> 'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac
+  =
+  fun tag ->
+    fun f ->
+      FStar_Tactics_Monad.mk_tac
+        (fun ps ->
+           let uu___ =
+             let uu___1 =
+               let uu___2 =
+                 FStar_TypeChecker_Env.current_module
+                   ps.FStar_Tactics_Types.main_context in
+               FStar_Ident.string_of_lid uu___2 in
+             FStar_Pervasives_Native.Some uu___1 in
+           FStar_Profiling.profile
+             (fun uu___1 -> FStar_Tactics_Monad.run f ps) uu___ tag)
 let (__tc :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -763,9 +780,13 @@ let (__tc :
                      match () with
                      | () ->
                          let uu___2 =
-                           FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
-                             e1 t true in
-                         FStar_Tactics_Monad.ret uu___2) ()
+                           FStar_Tactics_Monad.bind FStar_Tactics_Monad.idtac
+                             (fun uu___3 ->
+                                let uu___4 =
+                                  FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
+                                    e1 t true in
+                                FStar_Tactics_Monad.ret uu___4) in
+                         with_timing "FStar.Tactics.Basic.__tc" uu___2) ()
                 with
                 | FStar_Errors.Err (uu___2, msg, uu___3) ->
                     let uu___4 = tts e1 t in
@@ -4308,8 +4329,10 @@ let (change : FStar_Reflection_Data.typ -> unit FStar_Tactics_Monad.tac) =
            FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
              (fun g ->
                 let uu___2 =
-                  let uu___3 = FStar_Tactics_Types.goal_env g in
-                  __tc uu___3 ty in
+                  let uu___3 =
+                    let uu___4 = FStar_Tactics_Types.goal_env g in
+                    __tc uu___4 ty in
+                  with_timing "FStar.Tactics.Basic.change.do_unify.tc" uu___3 in
                 FStar_Tactics_Monad.bind uu___2
                   (fun uu___3 ->
                      match uu___3 with
@@ -4320,9 +4343,14 @@ let (change : FStar_Reflection_Data.typ -> unit FStar_Tactics_Monad.tac) =
                          FStar_Tactics_Monad.bind uu___5
                            (fun uu___6 ->
                               let uu___7 =
-                                let uu___8 = FStar_Tactics_Types.goal_env g in
-                                let uu___9 = FStar_Tactics_Types.goal_type g in
-                                do_unify uu___8 uu___9 ty1 in
+                                let uu___8 =
+                                  let uu___9 = FStar_Tactics_Types.goal_env g in
+                                  let uu___10 =
+                                    FStar_Tactics_Types.goal_type g in
+                                  do_unify uu___9 uu___10 ty1 in
+                                with_timing
+                                  "FStar.Tactics.Basic.change.do_unify.1"
+                                  uu___8 in
                               FStar_Tactics_Monad.bind uu___7
                                 (fun bb ->
                                    if bb
@@ -4332,25 +4360,38 @@ let (change : FStar_Reflection_Data.typ -> unit FStar_Tactics_Monad.tac) =
                                          ty1 in
                                      FStar_Tactics_Monad.replace_cur uu___8
                                    else
-                                     (let steps =
-                                        [FStar_TypeChecker_Env.AllowUnboundUniverses;
-                                        FStar_TypeChecker_Env.UnfoldUntil
-                                          FStar_Syntax_Syntax.delta_constant;
-                                        FStar_TypeChecker_Env.Primops] in
-                                      let ng =
-                                        let uu___9 =
-                                          FStar_Tactics_Types.goal_env g in
+                                     (let uu___9 =
                                         let uu___10 =
-                                          FStar_Tactics_Types.goal_type g in
-                                        normalize steps uu___9 uu___10 in
-                                      let nty =
-                                        let uu___9 =
-                                          FStar_Tactics_Types.goal_env g in
-                                        normalize steps uu___9 ty1 in
-                                      let uu___9 =
-                                        let uu___10 =
-                                          FStar_Tactics_Types.goal_env g in
-                                        do_unify uu___10 ng nty in
+                                          let uu___11 =
+                                            FStar_Tactics_Monad.ret () in
+                                          FStar_Tactics_Monad.bind uu___11
+                                            (fun uu___12 ->
+                                               let steps =
+                                                 [FStar_TypeChecker_Env.AllowUnboundUniverses;
+                                                 FStar_TypeChecker_Env.UnfoldUntil
+                                                   FStar_Syntax_Syntax.delta_constant;
+                                                 FStar_TypeChecker_Env.Primops] in
+                                               let ng =
+                                                 let uu___13 =
+                                                   FStar_Tactics_Types.goal_env
+                                                     g in
+                                                 let uu___14 =
+                                                   FStar_Tactics_Types.goal_type
+                                                     g in
+                                                 normalize steps uu___13
+                                                   uu___14 in
+                                               let nty =
+                                                 let uu___13 =
+                                                   FStar_Tactics_Types.goal_env
+                                                     g in
+                                                 normalize steps uu___13 ty1 in
+                                               let uu___13 =
+                                                 FStar_Tactics_Types.goal_env
+                                                   g in
+                                               do_unify uu___13 ng nty) in
+                                        with_timing
+                                          "FStar.Tactics.Basic.change.do_unify.2"
+                                          uu___10 in
                                       FStar_Tactics_Monad.bind uu___9
                                         (fun b ->
                                            if b

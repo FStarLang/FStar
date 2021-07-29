@@ -50,7 +50,7 @@ clean:
 # fastest way to incrementally build a patch to the compiler
 boot:
 	$(Q)+$(MAKE) -C src/ ocaml
-	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
+	$(Q)+$(MAKE) -C src/ocaml-output
 
 # Alias for boot
 2: boot

@@ -1590,15 +1590,22 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
   let r2 = quote_exp r2_raw in
   let l1 = quote_atoms l1_raw in
   let l2 = quote_atoms l2_raw in
-  change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
+
+  with_timing "Steel.Effect.Common.canon_l_r.normal_tac" (fun () ->
+    change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `CE.EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2))));
-  apply_lemma (`normal_elim);
+                 mdenote (`#eq) (`#m) (`#am) (`#r2)))));
 
-  apply (`monoid_reflect );
+  with_timing "Steel.Effect.Common.canon_l_r.normal_elim" (fun () ->
+    apply_lemma (`normal_elim));
+
+  with_timing "Steel.Effect.Common.canon_l_r.monoid_reflect" (fun () ->
+    apply (`monoid_reflect ));
 
 
-  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+  with_timing "Steel.Effect.Common.canon_l_r.equivalent_sorted" (fun () ->
+    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2)));
+
   let g = goals () in
   if List.Tot.Base.length g = 0 then
     // The application of equivalent_sorted seems to sometimes solve

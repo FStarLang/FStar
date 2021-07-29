@@ -11803,8 +11803,13 @@ let (discharge_guard' :
                                        FStar_Compiler_Effect.op_Less_Bar
                                          (fun uu___14 -> ()) uu___13);
                                       (let vcs1 =
-                                         (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
-                                           env vc2 in
+                                         FStar_Profiling.profile
+                                           (fun uu___13 ->
+                                              (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
+                                                env vc2)
+                                           (FStar_Pervasives_Native.Some
+                                              "FStar.TypeChecker.Rel.solver.preprocess")
+                                           "FStar.TypeChecker.Rel.solver.preprocess" in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          vcs1
                                          (FStar_Compiler_List.map
