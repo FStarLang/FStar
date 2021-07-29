@@ -1,6 +1,7 @@
 module Steel.C.StructLiteral
 
 open Steel.Memory
+open Steel.Effect
 open Steel.Effect.Common
 open Steel.Effect.Atomic
 
@@ -10,37 +11,36 @@ open Steel.C.Ref // for refine
 open Steel.C.Connection
 open FStar.List.Tot
 
-let struct_fields =
-  struct_fields:list (string * typedef){Cons? struct_fields}
+let struct_fields = list (string * typedef)
 
-irreducible let iter_unfold = 0
+//irreducible let iter_unfold = 0
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let has_field_bool (fields: struct_fields) (field: string): bool =
   field `mem` map fst fields
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let has_field (fields: struct_fields) (field: string): prop =
   has_field_bool fields field == true
 
 let field_of (fields: struct_fields) =
   refine string (has_field fields)
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let mk_field_of (fields: struct_fields) (field: string)
 : Pure (field_of fields)
     (requires normalize_term (has_field_bool fields field) == true)
     (ensures fun field' -> field' == field)
 = field
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
   assoc_mem field fields;
   Some?.v (assoc field fields)
 
 /// A view type for structs
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let struct_views (fields: struct_fields) (field: field_of fields) =
   (get_field fields field).view
 
@@ -134,11 +134,11 @@ val struct_put_put_ne
 
 /// Similarly, a PCM for structs
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let struct_carriers (fields: struct_fields) (field: field_of fields) =
   (get_field fields field).carrier
 
-[@@iter_unfold]
+//[@@iter_unfold]
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
 : pcm (struct_carriers fields field)
 = (get_field fields field).pcm
@@ -222,10 +222,73 @@ val struct_pcm_put_put_ne
       struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
       struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
-/// View a struct_pcm_carrier as a struct
-val struct_view (tag: string) (fields: struct_fields)
-: sel_view (struct_pcm tag fields) (struct tag fields) false
+let rec without (fields: struct_fields) (field: string): struct_fields = match fields with
+  | [] -> []
+  | (field', td) :: fields ->
+    if field = field' then fields `without` field 
+    else (field', td) :: (fields `without` field)
 
+let rec minus (fields: struct_fields) (excluded: list string)
+: Tot (struct_fields) (decreases excluded)
+= match excluded with
+  | [] -> fields
+  | field :: excluded -> (fields `without` field) `minus` excluded
+
+/// View a struct_pcm_carrier as a struct
+val struct_view (tag: string) (fields: struct_fields) (excluded: list string)
+: sel_view (struct_pcm tag fields) (struct tag (normalize_term (fields `minus` excluded))) false
+
+/// Typedef for struct from typedefs for its fields
+
+let typedef_struct (tag: string) (fields: struct_fields): typedef = {
+  carrier = struct_pcm_carrier tag fields; 
+  pcm = struct_pcm tag fields;
+  view_type = struct tag fields;
+  view = struct_view tag fields [];
+}
+
+/// Connections for fields of structs
+
+val struct_field
+  (tag: string) (fields: struct_fields) (field: field_of fields)
+: connection (struct_pcm tag fields) (struct_pcms tag fields field)
+
+/// addr_of/unaddr_of
+
+val struct_view_convert (#opened:inames)
+  (tag: string) (fields: struct_fields) (excluded1 excluded2: list string)
+  (p: ref 'a (struct_pcm tag fields))
+: SteelGhost unit opened
+    (p `pts_to_view` struct_view tag fields excluded1)
+    (fun _ -> p `pts_to_view` struct_view tag fields excluded2)
+    (requires fun _ -> normalize (fields `minus` excluded1 == fields `minus` excluded2))
+    (requires fun h _ h' ->
+      fields `minus` excluded1 == fields `minus` excluded2 /\
+      h (p `pts_to_view` struct_view tag fields excluded1) ==
+      h' (p `pts_to_view` struct_view tag fields excluded2))
+
+val addr_of_struct_field
+  (tag: string) (fields: struct_fields) (excluded: list string)
+  (p: ref 'a (struct_pcm tag fields))
+  (field: string{has_field fields field})//field_of (normalize_term (fields `minus` excluded)))
+: Steel (ref 'a (struct_pcms tag fields field))
+    (p `pts_to_view` struct_view tag fields excluded)
+    (fun q ->
+      (p `pts_to_view` struct_view tag fields (field :: excluded)) `star`
+      (q `pts_to_view` struct_views fields field))
+    (requires fun _ -> has_field (normalize_term (fields `minus` excluded)) field)
+    (ensures fun h q h' ->
+      has_field fields field /\
+      has_field (normalize_term (fields `minus` excluded)) field /\
+      q == ref_focus p (struct_field tag fields field) /\
+      h' (q `pts_to_view` struct_views fields field) ===
+      h (p `pts_to_view` struct_view tag fields excluded) `struct_get` field /\
+      (forall (field':string). field' =!= field /\ has_field fields field' ==> 
+        h' (p `pts_to_view` struct_view tag fields (field :: excluded)) `struct_get` field' ===
+        h (p `pts_to_view` struct_view tag fields excluded) `struct_get` field'
+      ))
+/// TODO need some kind of simlar splitting for struct view type values?
+///   i.e. split "y" (mk_struct x y z) = (y, mk_struct x z)
 // /// View a struct_pcm_carrier as a struct
 // val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields{normalize_term (fields' \subset fields) == true})
 // : sel_view (struct_pcm tag fields) (struct tag fields') false
@@ -243,31 +306,8 @@ val struct_view (tag: string) (fields: struct_fields)
 //        h (p `pts_to_view` v) `struct_get` field == 
 //        h' (p `pts_to_view` w) `struct_get` field)
 // 
-// struct_view_convert
-//   (v: struct_view tag fields fields'1)
-// : Pure (struct_view tag fields fields'2)
-//     (requires normalize (fields - fields'1 == fields - fields'2))
-//     (ensures fun w -> True)
-//
 // val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields) (fields_fields': struct_fields) (heq: squash (fields_fields' == normalize_term (fields - fields')))
 // : sel_view (struct_pcm tag fields) (struct tag fields_fields') false
 
 // struct_view tag fields fields' (_ by (T.norm _; T.trefl ()))
-
-/// Typedef for struct from typedefs for its fields
-
-let typedef_struct (tag: string) (fields: struct_fields): typedef = {
-  carrier = struct_pcm_carrier tag fields; 
-  pcm = struct_pcm tag fields;
-  view_type = struct tag fields;
-  view = struct_view tag fields;
-}
-
-/// Connections for fields of structs
-
-val struct_field
-  (tag: string) (fields: struct_fields) (field: field_of fields)
-: connection (struct_pcm tag fields) (struct_pcms tag fields field)
-
-/// Explode and recombine
 
