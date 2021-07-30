@@ -326,14 +326,23 @@ unfold let norm''  (#a: Type) (x: a) : Tot (norm norm_list a) =
   norm_spec norm_list a;
   norm norm_list x
 
+assume val struct_get' :
+  #tag: string -> #fields: struct_fields -> x: struct tag fields -> field: field_of fields
+    -> Prims.Tot (norm norm_list (Mktypedef?.view_type (get_field fields field)))
+
 let aux'
   (p: ref 'a (struct_pcm "point" point_fields))
   (h': rmem (p `pts_to_view` point_view))
-= let i: int =
-    (norm'' (h' (p `pts_to_view` point_view) `struct_get` x))// <: (get_field point_fields x).view_type)) in
-  in let j: int = i in j
-//= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: c_int.view_type) <: int
+  : GTot int
+= 
+    ((h' (p `pts_to_view` point_view) `struct_get'` x))
+    // <: (get_field point_fields x).view_type)) in
+//  in let j: int = i in j
+//= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: (get_field point_fields x).view_type) <: int
 // TODO why are two coercions necessary?
+
+let aux'' (s: (Mktypedef?.view_type (get_field point_fields xc_)): int
+= s <: int
 
 /// Reading a struct field
 val struct_get
