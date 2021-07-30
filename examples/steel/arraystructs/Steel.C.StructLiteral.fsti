@@ -13,8 +13,6 @@ open FStar.List.Tot
 let struct_fields =
   struct_fields:list (string * typedef){Cons? struct_fields}
 
-irreducible let iter_unfold = 0
-
 [@@iter_unfold]
 let has_field_bool (fields: struct_fields) (field: string): bool =
   field `mem` map fst fields
