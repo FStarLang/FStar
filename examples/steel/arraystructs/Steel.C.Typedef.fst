@@ -5,6 +5,9 @@ open Steel.C.PCM
 open Steel.C.Ref
 open FStar.FunctionalExtensionality
 
+irreducible let iter_unfold = 0
+
+[@@iter_unfold]
 noeq type typedef = { 
   carrier: Type0; 
   pcm: pcm carrier; 

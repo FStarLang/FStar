@@ -16,7 +16,6 @@ open Steel.C.StructLiteral
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
-(*
 (** ** BEGIN TODO impl and move to StructLiteral *)
 
 (*
@@ -108,7 +107,7 @@ unfold let norm_list = [
     `%map; `%mem; `%fst; `%Mktuple2?._1;
     `%assoc;
     `%Some?.v;
-    `%Mktypedef?.view_type
+    //`%Mktypedef?.view_type
   ];
   iota; primops; zeta
 ]
@@ -317,18 +316,37 @@ val explode''' (#opened: inames)
         (pts_to_fields "point" point_fields p h h' point_fields))
 //(iter_and_fields fields (pts_to_field "point" fields p h h')))
 
+#push-options "--print_implicits"
+
+unfold let norm' (s: list norm_step) (#a: Type) (x: a) : Tot (norm s a) =
+  norm_spec s a;
+  norm s x
+
+unfold let norm''  (#a: Type) (x: a) : Tot (norm norm_list a) =
+  norm_spec norm_list a;
+  norm norm_list x
+
+let aux'
+  (p: ref 'a (struct_pcm "point" point_fields))
+  (h': rmem (p `pts_to_view` point_view))
+= let i: int =
+    (norm'' (h' (p `pts_to_view` point_view) `struct_get` x))// <: (get_field point_fields x).view_type)) in
+  in let j: int = i in j
+//= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: c_int.view_type) <: int
+// TODO why are two coercions necessary?
+
+/// Reading a struct field
+val struct_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields) (field: field_of fields)
+: (get_field fields field).view_type
+
 let explode''' p =
   explode "point" point_fields p;
   change_equal_slprop
     (pts_to_fields_vprop "point" point_fields p point_fields)
     ((ref_focus p _x `pts_to_view` c_int.view) `star`
       (ref_focus p _y `pts_to_view` c_int.view))
-
-let aux'
-  (p: ref 'a (struct_pcm "point" point_fields))
-  (h': rmem (p `pts_to_view` point_view))
-= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: c_int.view_type) <: int
-// TODO why are two coercions necessary?
 
 val zero_x
   (p: ref 'a (struct_pcm "point" point_fields))
@@ -1037,4 +1055,3 @@ let recombine_oct' p =
   recombine "oct" oct_fields p
 
 #pop-options
-*)
