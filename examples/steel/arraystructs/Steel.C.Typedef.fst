@@ -4,10 +4,11 @@ open FStar.List.Tot
 open Steel.C.PCM
 open Steel.C.Ref
 open FStar.FunctionalExtensionality
+open Steel.Effect
 
 irreducible let iter_unfold = 0
 
-[@@iter_unfold]
+[@@__reduce__]
 noeq type typedef = { 
   carrier: Type0; 
   pcm: pcm carrier; 
