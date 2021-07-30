@@ -16,6 +16,20 @@ open Steel.C.StructLiteral
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
+unfold let norm_list = [
+  delta_attr [`%iter_unfold];
+  delta_only [
+    `%map; `%mem; `%fst; `%Mktuple2?._1;
+    `%assoc;
+    `%Some?.v;
+  ];
+  iota; primops; zeta
+]
+
+assume val struct_get' :
+  #tag: string -> #fields: struct_fields -> x: struct tag fields -> field: field_of fields
+    -> Prims.Tot (norm norm_list (Mktypedef?.view_type (get_field fields field)))
+
 (** ** BEGIN TODO impl and move to StructLiteral *)
 
 (*
@@ -48,34 +62,63 @@ let rec pts_to_fields_vprop
       pts_to_fields_vprop tag fields p fields'
     end else emp
 
+#push-options "--debug PointStructSelectors --debug_level SMTQuery --log_queries --query_stats --fuel 0"
+(*
 [@@iter_unfold]
-let rec pts_to_fields
+let pts_to_fields
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
   (h: rmem (p `pts_to_view` struct_view tag fields))
   (h': rmem (pts_to_fields_vprop tag fields p fields))
   //(prefix: list (string * typedef))
-  (fields': struct_fields)
+  (field: field_of fields)
   //(hfields': squash (fields == rev prefix `append` fields'))
-: prop
-= match fields' with
-  | [(field, _)] ->
-    if has_field_bool fields field then
-      can_be_split 
+: Tot prop
+= 
+      can_be_split
         (pts_to_fields_vprop tag fields p fields)
         (pts_to_field_vprop tag fields p field) /\
-      h' (pts_to_field_vprop tag fields p field) ===
-      h (p `pts_to_view` struct_view tag fields) `struct_get` field
-    else True
-  | (field, _) :: fields' ->
-    if has_field_bool fields field then
-      can_be_split 
-        (pts_to_fields_vprop tag fields p fields)
-        (pts_to_field_vprop tag fields p field) /\
-      h' (pts_to_field_vprop tag fields p field) ===
-      h (p `pts_to_view` struct_view tag fields) `struct_get` field /\
-      pts_to_fields tag fields p h h' fields'
-    else True
+       begin
+         //let lhs = h' (pts_to_field_vprop tag fields p field) in
+         let rhs 
+         : (
+         
+           assoc_mem field fields;
+         let { carrier = _ ; pcm = _ ; view_type = view_type ; view = _ } =
+           let FStar.Pervasives.Native.Some v =
+             match fields with
+             | [] -> None
+             | (x', y) :: tl ->
+               (if field = x' then Some y else assoc field tl) <: Pervasives.Native.option typedef
+           in
+           v
+         in
+         view_type)
+         = h (p `pts_to_view` struct_view tag fields) `struct_get'` field in
+         rhs == rhs
+         //let rhs = h (p `pts_to_view` struct_view tag fields) `struct_get'` field in
+         //rhs == rhs
+       end
+  //| (field, _) :: fields' ->
+  //  if has_field_bool fields field then
+  //    True
+  //    //can_be_split 
+  //    //  (pts_to_fields_vprop tag fields p fields)
+  //    //  (pts_to_field_vprop tag fields p field) /\
+  //    //h' (pts_to_field_vprop tag fields p field) ===
+  //    //h (p `pts_to_view` struct_view tag fields) `struct_get'` field /\
+  //    //pts_to_fields tag fields p h h' fields'
+  //  else True
+
+// 1. normalizing iterated conjunction and star
+// 2. keep a list of fields to be excluded (relies on normalizing list difference operator)
+// 3. don't use selectors, but also don't use PCM carrier values
+//    i.e. have slprop p `pts_to` v where v is a value corresponding to a C type
+//      pts_to p view v = (p `pts_to_view` view) `vdep` (fun x -> x == v)
+//    + no more issues with normalization of props
+//    - need laws about struct_get/struct_put (may rely on smt_fallback)
+
+#push-options "--print_implicits"
 
 (*
 [@@__reduce__;iter_unfold]
@@ -101,17 +144,6 @@ let pts_to_field
   h (p `pts_to_view` struct_view tag fields) `struct_get` field
   *)
 
-unfold let norm_list = [
-  delta_attr [`%iter_unfold];
-  delta_only [
-    `%map; `%mem; `%fst; `%Mktuple2?._1;
-    `%assoc;
-    `%Some?.v;
-    //`%Mktypedef?.view_type
-  ];
-  iota; primops; zeta
-]
-
 
 assume val explode (#opened: inames)
   (tag: string) (fields: struct_fields)
@@ -121,7 +153,7 @@ assume val explode (#opened: inames)
     (fun _ -> pts_to_fields_vprop tag fields p fields)
     (requires fun _ -> True)
     (ensures fun h _ h' ->
-      norm norm_list
+      //norm norm_list
         (pts_to_fields tag fields p h h' fields))
 //(iter_and_fields fields (pts_to_field tag fields p h h')))
         
@@ -256,9 +288,9 @@ let aux (p: ref 'a point_pcm) (h: rmem (p `pts_to_view` point_view))
       (ref_focus p _y `pts_to_view` c_int.view))
       in
       (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
-      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x) /\
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get'` x) /\
       (can_be_split pointprop (ref_focus p _y `pts_to_view` c_int.view) /\
-      h' (ref_focus p _y `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` y)
+      h' (ref_focus p _y `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get'` y)
    end))))
 = _ by (T.dump ""; T.smt ())
 
@@ -287,7 +319,7 @@ val explode'' (#opened: inames)
       (pts_to_fields_vprop "point" point_fields p point_fields)
       in
       (can_be_split pointprop (ref_focus p _x `pts_to_view` c_int.view) /\
-      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get` x)))
+      h' (ref_focus p _x `pts_to_view` c_int.view) === h (p `pts_to_view` point_view) `struct_get'` x)))
 
 // let explode'' p = explode "point" point_fields p
 
@@ -326,10 +358,6 @@ unfold let norm''  (#a: Type) (x: a) : Tot (norm norm_list a) =
   norm_spec norm_list a;
   norm norm_list x
 
-assume val struct_get' :
-  #tag: string -> #fields: struct_fields -> x: struct tag fields -> field: field_of fields
-    -> Prims.Tot (norm norm_list (Mktypedef?.view_type (get_field fields field)))
-
 let aux'
   (p: ref 'a (struct_pcm "point" point_fields))
   (h': rmem (p `pts_to_view` point_view))
@@ -341,8 +369,8 @@ let aux'
 //= (norm norm_list (h' (p `pts_to_view` point_view) `struct_get` x) <: (get_field point_fields x).view_type) <: int
 // TODO why are two coercions necessary?
 
-let aux'' (s: (Mktypedef?.view_type (get_field point_fields xc_)): int
-= s <: int
+//let aux'' (s: (Mktypedef?.view_type (get_field point_fields xc_)): int
+//= s <: int
 
 /// Reading a struct field
 val struct_get
@@ -1064,3 +1092,4 @@ let recombine_oct' p =
   recombine "oct" oct_fields p
 
 #pop-options
+*)
