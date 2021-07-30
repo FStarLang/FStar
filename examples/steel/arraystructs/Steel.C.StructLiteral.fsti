@@ -34,13 +34,16 @@ let mk_field_of (fields: struct_fields) (field: string)
 [@@iter_unfold]
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
   assoc_mem field fields;
-  Some?.v (assoc field fields)
+  match assoc field fields with
+  | Some v -> v
+  | None -> false_elim ()
 
 /// A view type for structs
 
 [@@iter_unfold]
-let struct_views (fields: struct_fields) (field: field_of fields) =
-  (get_field fields field).view
+let struct_views (fields: struct_fields) (field: field_of fields)
+: sel_view ((get_field fields field).pcm) ((get_field fields field).view_type) false
+= (get_field fields field).view
 
 val struct (tag: string) (fields: struct_fields): Type0
 
