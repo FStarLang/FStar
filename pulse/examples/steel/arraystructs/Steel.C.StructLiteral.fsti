@@ -13,7 +13,21 @@ open FStar.List.Tot
 let struct_fields =
   struct_fields:list (string * typedef){Cons? struct_fields}
 
-[@@iter_unfold]
+[@@__reduce__]
+let rec mem (#a:eqtype) (x:a) (xs:list a)
+: Pure bool (requires True) (ensures fun b -> b == List.Tot.mem x xs)
+= match xs with
+  | [] -> false
+  | x' :: xs -> x = x' || x `mem` xs
+
+[@@__reduce__]
+let rec map (f: 'a -> 'b) (xs:list 'a)
+: Pure (list 'b) (requires True) (ensures fun b -> b == List.Tot.map f xs)
+= match xs with
+  | [] -> []
+  | x :: xs -> f x :: map f xs
+
+[@@__reduce__]
 let has_field_bool (fields: struct_fields) (field: string): bool =
   field `mem` map fst fields
 
@@ -24,23 +38,21 @@ let has_field (fields: struct_fields) (field: string): prop =
 let field_of (fields: struct_fields) =
   refine string (has_field fields)
 
-[@@iter_unfold]
+[@@__reduce__;iter_unfold]
 let mk_field_of (fields: struct_fields) (field: string)
 : Pure (field_of fields)
     (requires normalize_term (has_field_bool fields field) == true)
     (ensures fun field' -> field' == field)
 = field
 
-[@@iter_unfold]
-let get_field (fields: struct_fields) (field: field_of fields): typedef =
-  assoc_mem field fields;
-  match assoc field fields with
-  | Some v -> v
-  | None -> false_elim ()
+[@@__reduce__]
+let rec get_field (fields: struct_fields) (field: field_of fields): typedef =
+  match fields with
+  | (field', td) :: fields -> if field = field' then td else get_field fields field
 
 /// A view type for structs
 
-[@@iter_unfold]
+[@@__reduce__]
 let struct_views (fields: struct_fields) (field: field_of fields)
 : sel_view ((get_field fields field).pcm) ((get_field fields field).view_type) false
 = (get_field fields field).view
@@ -135,11 +147,11 @@ val struct_put_put_ne
 
 /// Similarly, a PCM for structs
 
-[@@iter_unfold]
+[@@__reduce__]
 let struct_carriers (fields: struct_fields) (field: field_of fields) =
   (get_field fields field).carrier
 
-[@@iter_unfold]
+[@@__reduce__]
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
 : pcm (struct_carriers fields field)
 = (get_field fields field).pcm
