@@ -16,19 +16,67 @@ open Steel.C.StructLiteral
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
-unfold let norm_list = [
-  delta_attr [`%iter_unfold];
-  delta_only [
-    `%map; `%mem; `%fst; `%Mktuple2?._1;
-    `%assoc;
-    `%Some?.v;
-  ];
-  iota; primops; zeta
-]
+/// TODO move and dedup with Steel.C.Ptr.fst
 
-assume val struct_get' :
-  #tag: string -> #fields: struct_fields -> x: struct tag fields -> field: field_of fields
-    -> Prims.Tot (norm norm_list (Mktypedef?.view_type (get_field fields field)))
+let vpure_sel'
+  (p: prop)
+: Tot (selector' (squash p) (Steel.Memory.pure p))
+= fun (m: Steel.Memory.hmem (Steel.Memory.pure p)) -> pure_interp p m
+
+let vpure_sel
+  (p: prop)
+: Tot (selector (squash p) (Steel.Memory.pure p))
+= vpure_sel' p
+
+[@@ __steel_reduce__]
+let vpure'
+  (p: prop)
+: GTot vprop'
+= {
+  hp = Steel.Memory.pure p;
+  t = squash p;
+  sel = vpure_sel p;
+}
+
+[@@ __steel_reduce__]
+let vpure (p: prop) : Tot vprop = VUnit (vpure' p)
+
+let intro_vpure
+  (#opened: _)
+  (p: prop)
+: SteelGhost unit opened
+    emp
+    (fun _ -> vpure p)
+    (fun _ -> p)
+    (fun _ _ h' -> p)
+=
+  change_slprop_rel
+    emp
+    (vpure p)
+    (fun _ _ -> p)
+    (fun m -> pure_interp p m)
+
+let elim_vpure
+  (#opened: _)
+  (p: prop)
+: SteelGhost unit opened
+    (vpure p)
+    (fun _ -> emp)
+    (fun _ -> True)
+    (fun _ _ _ -> p)
+=
+  change_slprop_rel
+    (vpure p)
+    emp
+    (fun _ _ -> p)
+    (fun m -> pure_interp p m; reveal_emp (); intro_emp m)
+
+let pts_to_v
+  (#pcm: pcm 'a) (#can_view_unit: bool)
+  (p: ref 'a pcm) (view: sel_view pcm 'b can_view_unit)
+  (v: 'b)
+: vprop
+= (p `pts_to_view` view) `vdep` (fun x -> vpure (x == v))
 
 (** ** BEGIN TODO impl and move to StructLiteral *)
 
