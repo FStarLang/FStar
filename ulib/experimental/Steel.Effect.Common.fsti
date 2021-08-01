@@ -404,7 +404,7 @@ let frame_vc_norm' () : Tac unit =
 
 [@@plugin]
 let frame_vc_norm () : Tac unit =
-  with_timing "frame_vc_norm" frame_vc_norm'
+  with_timing "Steel.Effect.Common.frame_vc_norm" frame_vc_norm'
 
 [@@ __steel_reduce__]
 unfold
@@ -2128,44 +2128,44 @@ let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs =
-    with_timing "filter_goals" (fun () -> filter_goals (goals()))
+    with_timing "Steel.Effect.Common.filter_goals" (fun () -> filter_goals (goals()))
   in
 
   // We first solve the slprops
   set_goals slgs;
 
   // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  with_timing "solve_maybe_emps" (fun () -> solve_maybe_emps (goals ()));
+  with_timing "Steel.Effect.Common.solve_maybe_emps" (fun () -> solve_maybe_emps (goals ()));
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
-  with_timing "solve_indirection_eqs" (fun () -> solve_indirection_eqs (goals()));
+  with_timing "Steel.Effect.Common.solve_indirection_eqs" (fun () -> solve_indirection_eqs (goals()));
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
   // We can now solve the equalities for returns
-  with_timing "solve_return_eqs" (fun () -> solve_return_eqs (goals()));
+  with_timing "Steel.Effect.Common.solve_return_eqs" (fun () -> solve_return_eqs (goals()));
 
   // It is important to not normalize the return_pre equalities before solving them
   // Else, we lose some variables dependencies, leading to the tactic being stuck
   // See test7 in FramingTestSuite for more explanations of what is failing
   // Once unification has been done, we can then safely normalize and remove all return_pre
-  with_timing "norm_return_pre" (fun () -> norm_return_pre (goals()));
+  with_timing "Steel.Effect.Common.norm_return_pre" (fun () -> norm_return_pre (goals()));
 
   // Finally running the core of the tactic, scheduling and solving goals
-  with_timing "resolve_tac" (fun () -> resolve_tac ());
+  with_timing "Steel.Effect.Common.resolve_tac" (fun () -> resolve_tac ());
 
   // We now solve the requires/ensures goals, which are all equalities
   // All slprops are resolved by now
   set_goals loggs;
 
-  with_timing "resolve_tac_logical" (fun () -> resolve_tac_logical ())
+  with_timing "Steel.Effect.Common.resolve_tac_logical" (fun () -> resolve_tac_logical ())
 
 [@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac' () : Tac unit =
-  with_timing "init_resolve_tac" init_resolve_tac
+  with_timing "Steel.Effect.Common.init_resolve_tac" init_resolve_tac
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
@@ -2227,4 +2227,4 @@ let ite_soundness_tac () : Tac unit =
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
 let vc_norm () : Tac unit =
-  with_timing "vc_norm" (fun () -> norm normal_steps; trefl())
+  with_timing "Steel.Effect.Common.vc_norm" (fun () -> norm normal_steps; trefl())
