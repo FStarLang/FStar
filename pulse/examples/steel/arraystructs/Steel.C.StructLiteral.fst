@@ -179,6 +179,58 @@ let point_fields = normalize_term (mk_clist ["x", c_int; "y", c_int])
 let _ : field_of point_fields = "x"
 #pop-options
 
+(**** MOVE TO ChurchList *)
+
+noeq type clist' (a:Type u#a): Type = {
+  raw: list a;
+  elim:
+    b:(list a -> Type u#b) ->
+    base:b [] ->
+    (x:a -> xs:list a -> b xs -> b (x :: xs)) ->
+    b raw;
+}
+
+let rec list_elim (xs: list 'a)
+  (b:(list 'a -> Type))
+  (base:b [])
+  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
+: b xs
+= match xs with
+  | [] -> base
+  | x :: xs -> ind x xs (list_elim xs b base ind)
+
+let mk_clist' (xs: list 'a) = {
+  raw = xs;
+  elim = list_elim xs;
+}
+
+#push-options "--print_universes --print_implicits"
+
+#push-options "--fuel 0"
+let _ =
+  let xs = normalize_term (mk_clist' [1; 2; 3; 4]) in
+  assert (xs.elim (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
+#pop-options
+
+(**** END MOVE TO ChurchList *)
+
+(**** BEGIN PUBLIC *)
+
+let struct_fields' =
+  clist' u#1 u#1 (string * typedef)
+
+let has_field' (fields: struct_fields') (field: string): prop =
+  fields.elim (fun _ -> prop)
+    False
+    (fun (field', td) fields recur -> field == field' \/ recur)
+
+let field_of' (fields: struct_fields') =
+  refine string (has_field' fields)
+
+let get_field' (fields: struct_fields') (field: field_of' fields): typedef =
+  fields.elim (fun _ -> typedef) trivial_typedef
+    (fun (field', td) fields recur -> if field = field' then td else recur)
+
 /// A view type for structs
 
 [@@__reduce__]
