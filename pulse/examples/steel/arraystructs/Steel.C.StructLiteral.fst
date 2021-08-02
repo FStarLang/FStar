@@ -105,47 +105,6 @@ let raise_clist_elim_ok (#a: Type u#a) (xs: clist u#a u#(max b c) a)
   [SMTPat (raise_clist_elim xs b base ind)]
 = raise_list_elim_ok xs.raw b base ind
 
-let raise_clist (#a: Type u#a) (xs: clist u#a u#(max b c) a)
-: clist u#a u#c a
-= {raw = xs.raw; elim = raise_clist_elim xs; elim_prf = (fun _ _ _ -> ())}
-
-let nil (#a: Type u#a): clist u#a u#b a = {
-  raw = [];
-  elim = list_elim [];
-  elim_prf = (fun _ _ _ -> ());
-}
-
-let cons (#a: Type u#a) (x: a) (xs: clist u#a u#b a): clist u#a u#b a = {
-  raw = x :: xs.raw;
-  elim = list_elim (x :: xs.raw);
-  elim_prf = (fun _ _ _ -> ());
-}
-
-let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a): bool
-= raise_clist_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur)
-
-let cmem_ok (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a)
-: Lemma (cmem x xs == mem x xs.raw)
-= let rec aux (xs: list a)
-  : Lemma (list_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur) == mem x xs)
-  = match xs with [] -> () | x :: xs -> aux xs
-  in aux xs.raw
-
-let cmap (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
-: clist u#b u#c b
-= xs.elim (fun _ -> clist u#b u#c b) (nil u#b u#c) (fun x xs recur -> cons u#b u#c #b (f x) recur)
-
-let cmap_ok (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
-: Lemma ((cmap f xs).raw == map f xs.raw)
-  [SMTPat (cmap f xs)]
-= let rec aux (xs: list a)
-  : Lemma (
-      (list_elim xs (fun _ -> clist u#b u#c b) (nil u#b u#c)
-        (fun x xs recur -> cons u#b u#c #b (f x) recur))
-      .raw == map f xs)
-  = match xs with [] -> () | x :: xs -> aux xs
-  in aux xs.raw
-
 (**** END MOVE TO ChurchList *)
 
 (**** BEGIN PUBLIC *)
@@ -159,81 +118,7 @@ let has_field (fields: struct_fields) (field: string): bool =
 
 let field_of (fields: struct_fields) = field:string{has_field fields field == true}
 
-let assoc'_motive (#a:eqtype) (#b: Type u#b): list (a * b) -> Type u#b =
-  (fun xs -> x:a -> Pure (option b) True (ensures fun y -> y == List.Tot.assoc x xs))
-
-let assoc'_base
-: assoc'_motive []
-= fun _ -> None
-
-let assoc'_ind (#a:eqtype) #b (x:a * b) (xs:list (a * b)) (recur: assoc'_motive xs)
-: assoc'_motive (x :: xs)
-= fun x' -> let (x, v) = x in if x = x' then Some v else recur x'
-
-//let assoc'_motive (#a:eqtype) (x:a) (xs:clist (a * 'b)) =
-//  (fun xs -> x:a -> Pure (option 'b) True (ensures fun y -> y == List.Tot.assoc x xs))
-
-let assoc' (#a:eqtype) (#b: Type u#b) (x:a) (xs:clist u#b u#(max b c) (a * b))
-: Pure (option b) True (ensures fun y -> y == List.Tot.assoc x xs.raw)
-= raise_clist_elim xs assoc'_motive assoc'_base assoc'_ind x
-
-let weak_assoc'_motive (#a:eqtype) (#b: Type u#b): list (a * b) -> Type u#b =
-  (fun xs -> x:a -> option b)
-
-let weak_assoc'_base: weak_assoc'_motive [] = (fun _ -> None)
-let weak_assoc'_ind (#a:eqtype) #b (x:a * b) (xs:list (a * b)) (recur: weak_assoc'_motive xs)
-: weak_assoc'_motive (x :: xs)
-= fun x' -> let (x, v) = x in if x = x' then Some v else recur x'
-
-let weak_assoc' (#a:eqtype) (#b: Type u#b) (x:a) (xs:clist (a * b))
-: option b
-= xs.elim weak_assoc'_motive weak_assoc'_base weak_assoc'_ind x
-
-let rec assoc_weak_eq (#a:eqtype) (x:a) (xs:list (a * 'b))
-: Lemma ((list_elim xs
-    assoc'_motive
-    assoc'_base
-    assoc'_ind
-        x == list_elim xs
-    weak_assoc'_motive
-    weak_assoc'_base
-    weak_assoc'_ind
-    x))
-= match xs with
-  | [] -> ()
-  | _ :: xs -> assoc_weak_eq x xs
-
-let assoc_weak_eq' (#a:eqtype) (x:a) (xs:clist (a * 'b))
-: Lemma (assoc' x xs == weak_assoc' x xs)
-= assoc_weak_eq x xs.raw
-
-//= match xs.raw with
-//  | [] -> ()
-//  | x :: xs -> 
-//= xs.elim (fun xs' -> xs_clist:clist (a * 'b) ->
-//      Lemma (requires xs' == xs_clist.raw) (ensures assoc' x xs_clist == weak_assoc' x xs_clist))
-//      (fun _ -> ())
-//      (fun (x, v) xs recur x' -> if x = x' then () else recur x')
-//      x
-
-// requires prefix 
-//   assoc' x (prefix @ xs) == weak_assoc' x (prefix @ xs)
-// ensures
-// let rec assoc_weak_eq (#a:eqtype) (x:a) (xs:clist (a * 'b))
-// : Lemma (assoc' x xs == weak_assoc' x xs)
-// //= match xs.raw with
-// //  | [] -> ()
-// //  | x :: xs -> 
-// = xs.elim (fun xs' -> xs_clist:clist (a * 'b) ->
-//       Lemma (requires xs' == xs_clist.raw) (ensures assoc' x xs_clist == weak_assoc' x xs_clist))
-//       (fun _ -> ())
-//       (fun (x, v) xs recur x' -> if x = x' then () else recur x')
-//       x
-// 
-//     Pure (b raw) True (ensures fun y -> y == list_elim raw b base ind);
-
 assume val trivial_typedef: typedef
-assume val nontrivial_typedef: typedef
 
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
   fields.elim (fun fields -> typedef) trivial_typedef
@@ -242,6 +127,7 @@ let get_field (fields: struct_fields) (field: field_of fields): typedef =
 (**** END PUBLIC *)
 
 #push-options "--fuel 0"
+assume val nontrivial_typedef: typedef
 let _ =
   let test_fields = normalize_term (mk_clist [
     "a", trivial_typedef;
@@ -256,11 +142,7 @@ let _ =
     "j", nontrivial_typedef;
   ]) in
   assert (has_field test_fields "e" == true);
-  assert (get_field test_fields "j" == nontrivial_typedef);
-  assert (assoc' "j" test_fields == Some nontrivial_typedef);
-  assert (assoc' "k" test_fields == None);
-  assert (weak_assoc' "j" test_fields == Some nontrivial_typedef);
-  assert (weak_assoc' "k" test_fields == None)
+  assert (get_field test_fields "j" == nontrivial_typedef)
 #pop-options
 
 (**** BEGIN PUBLIC *)
