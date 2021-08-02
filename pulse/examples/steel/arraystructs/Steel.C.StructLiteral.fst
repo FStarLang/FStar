@@ -13,47 +13,139 @@ open Steel.C.Connection
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
+open ChurchList
+
+(**** MOVE TO ChurchList *)
+
+let rec list_elim
+  (xs: list 'a)
+  (motive: list 'a -> Type)
+  (base: motive [])
+  (ind:(x:'a -> xs:list 'a -> motive xs -> motive (x :: xs)))
+: motive xs
+= match xs with
+  | [] -> base
+  | x :: xs -> ind x xs (list_elim xs motive base ind)
+
+noeq type clist (a:Type u#a): Type = {
+  raw: list a;
+  (*
+  elim:
+    motive:(list a -> Type) ->
+    base:motive [] ->
+    ind:(x:a -> xs:list a -> motive xs -> motive (x :: xs)) ->
+    Pure (motive raw) (requires True) (ensures fun res -> res == list_elim raw motive base ind);
+    *)
+    (*
+  elim:
+    #b:Type u#b -> r:(list a -> b -> prop) ->
+    base:b ->
+    ind:(x:a -> xs:list a -> ind:b ->
+      Pure b
+        (requires xs `r` ind)
+        (ensures fun res -> (x :: xs) `r` res)) ->
+    Pure b
+      (requires [] `r` base)
+      (ensures fun res -> raw `r` res);
+      *)
+}
+
+let mk_clist_elim #a (xs: list a) #b
+: r:(list a -> b -> prop) ->
+  base:b ->
+  ind:(x:a -> xs:list a -> ind:b ->
+    Pure b
+      (requires xs `r` ind)
+      (ensures fun res -> (x :: xs) `r` res)) ->
+  Pure b
+    (requires [] `r` base)
+    (ensures fun res -> xs `r` res)
+= fun r base ind -> list_elim xs (fun xs -> x:b{xs `r` x}) base (fun x xs recur -> ind x xs recur)
+
+let mk_clist (xs: list 'a) = {
+  raw = xs;
+  //elim = (fun motive base ind -> list_elim xs motive base ind);
+  elim = mk_clist_elim xs;
+}
+
+#push-options "--print_universes --print_implicits"
+
+
+#push-options "--fuel 0"
+let _ =
+  let xs = normalize_term (mk_clist [1; 2; 3; 4]) in
+  //assert (xs.elim (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
+  assert (xs.elim (fun _ _ -> True) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
+#pop-options
+
+let cons (x: 'a) (xs: clist 'a): clist 'a = mk_clist (x :: xs.raw)
+let nil #a : clist a = mk_clist []
+
+// TODO is it better to use Pure than return a refinement?
+
+let is_cons (xs: clist 'a): b:bool{b == Cons? xs.raw} =
+  //xs.elim (fun xs -> b:bool{b == Cons? xs}) false (fun _ _ _ -> true)
+  xs.elim (fun xs b -> b == Cons? xs) false (fun _ _ _ -> true)
+
+let is_nil (xs: clist 'a): b:bool{b == Nil? xs.raw} =
+  //xs.elim (fun xs -> b:bool{b == Nil? xs}) true (fun _ _ _ -> false)
+  xs.elim (fun xs b -> b == Nil? xs) true (fun _ _ _ -> false)
+
+(*
+Can't seem to define these in useful way due to universe issues
+
+let mem (#a:eqtype) (x:a) (xs:clist a)
+: b:bool{b == List.Tot.mem x xs.raw}
+= xs.elim (fun xs -> b:bool{b == List.Tot.mem x xs})
+    false
+    (fun x' xs x_mem_xs -> x = x' || x_mem_xs)
+
+let map (f: 'a -> 'b) (xs: clist 'a)
+: ys:clist 'b{ys.raw == List.Tot.map f xs.raw}
+= xs.elim (fun xs -> ys:clist 'b{ys.raw == List.Tot.map f xs})
+    nil
+    (fun x xs map_f_xs -> cons (f x) map_f_xs)
+*)
+
+(**** END MOVE TO ChurchList *)
+
 (**** BEGIN PUBLIC *)
 
 let struct_fields =
-  struct_fields:list (string * typedef){Cons? struct_fields}
+  struct_fields:clist (string * typedef){is_cons struct_fields}
 
-[@@__reduce__]
-let rec mem (#a:eqtype) (x:a) (xs:list a)
-: Pure bool (requires True) (ensures fun b -> b == List.Tot.mem x xs)
-= match xs with
-  | [] -> false
-  | x' :: xs -> x = x' || x `mem` xs
+let has_field_bool (fields: struct_fields) (field: string)
+: b:bool{b == field `mem` map fst fields.raw}
+= fields.elim
+    (fun fields -> b:bool{b == field `mem` map fst fields})
+    false
+    (fun (field', td) fields recur -> field = field' || recur)
 
-[@@__reduce__]
-let rec map (f: 'a -> 'b) (xs:list 'a)
-: Pure (list 'b) (requires True) (ensures fun b -> b == List.Tot.map f xs)
-= match xs with
-  | [] -> []
-  | x :: xs -> f x :: map f xs
-
-[@@__reduce__]
-let has_field_bool (fields: struct_fields) (field: string): bool =
-  field `mem` map fst fields
-
-[@@iter_unfold]
 let has_field (fields: struct_fields) (field: string): prop =
   has_field_bool fields field == true
 
 let field_of (fields: struct_fields) =
   refine string (has_field fields)
 
-[@@__reduce__;iter_unfold]
-let mk_field_of (fields: struct_fields) (field: string)
-: Pure (field_of fields)
-    (requires normalize_term (has_field_bool fields field) == true)
-    (ensures fun field' -> field' == field)
-= field
+let get_field (fields: struct_fields) (field: field_of fields): typedef =
+  fields.elim (fun fields -> typedef)
+    ()
+    (fun (field', td) fields recur -> if field = field' then td else recur)
 
-[@@__reduce__]
-let rec get_field (fields: struct_fields) (field: field_of fields): typedef =
-  match fields with
-  | (field', td) :: fields -> if field = field' then td else get_field fields field
+open Steel.C.Opt
+
+let c_int: typedef = {
+  carrier = option int;
+  pcm = opt_pcm #int;
+  view_type = int;
+  view = opt_view int;
+}
+
+let point_fields = normalize_term (mk_clist ["x", c_int; "y", c_int])
+
+#push-options "--fuel 0"
+let _ : field_of point_fields = "x"
+#pop-options
 
 /// A view type for structs
 
@@ -330,58 +422,37 @@ let struct_pcm_put_put_ne x field1 v field2 w =
    assert (
      struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
-     
-(**** BEGIN PUBLIC *)
-// /// View a struct_pcm_carrier as a struct
-// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields{normalize_term (fields' \subset fields) == true})
-// : sel_view (struct_pcm tag fields) (struct tag fields') false
-// 
-// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields)
-// : sel_view (struct_pcm tag fields) (struct tag (normalize (fields - fields'))) false
-// 
-// struct_view_convert #opened
-//   (v: struct_view tag fields fields'1)
-// : SteelGhost (struct_view tag fields fields'2) opened
-//     (p `pts_to_view` v)
-//     (fun w -> (p `pts_to_view` w))
-//     (requires fun _ -> normalize (fields - fields'1 == fields - fields'2))
-//     (ensures fun h w h' -> forall field. field in (fields - fields'1) ==>
-//        h (p `pts_to_view` v) `struct_get` field == 
-//        h' (p `pts_to_view` w) `struct_get` field)
-// 
-// struct_view_convert
-//   (v: struct_view tag fields fields'1)
-// : Pure (struct_view tag fields fields'2)
-//     (requires normalize (fields - fields'1 == fields - fields'2))
-//     (ensures fun w -> True)
-//
-// val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields) (fields_fields': struct_fields) (heq: squash (fields_fields' == normalize_term (fields - fields')))
-// : sel_view (struct_pcm tag fields) (struct tag fields_fields') false
+
+(*
+
+/// View a struct_pcm_carrier as a struct
+val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields{normalize_term (fields' \subset fields) == true})
+: sel_view (struct_pcm tag fields) (struct tag fields') false
+
+val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields)
+: sel_view (struct_pcm tag fields) (struct tag (normalize (fields - fields'))) false
+
+struct_view_convert #opened
+  (v: struct_view tag fields fields'1)
+: SteelGhost (struct_view tag fields fields'2) opened
+    (p `pts_to_view` v)
+    (fun w -> (p `pts_to_view` w))
+    (requires fun _ -> normalize (fields - fields'1 == fields - fields'2))
+    (ensures fun h w h' -> forall field. field in (fields - fields'1) ==>
+       h (p `pts_to_view` v) `struct_get` field == 
+       h' (p `pts_to_view` w) `struct_get` field)
+
+struct_view_convert
+  (v: struct_view tag fields fields'1)
+: Pure (struct_view tag fields fields'2)
+    (requires normalize (fields - fields'1 == fields - fields'2))
+    (ensures fun w -> True)
+
+val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields) (fields_fields': struct_fields) (heq: squash (fields_fields' == normalize_term (fields - fields')))
+: sel_view (struct_pcm tag fields) (struct tag fields_fields') false
 
 // struct_view tag fields fields' (_ by (T.norm _; T.trefl ()))
 
-/// Typedef for struct from typedefs for its fields
-(*
-let typedef_struct (tag: string) (fields: struct_fields): typedef = {
-  carrier = struct_pcm_carrier tag fields; 
-  pcm = struct_pcm tag fields;
-  view_type = struct tag fields;
-  view = struct_view tag fields;
-}
-*)
-
-/// Connections for fields of structs
-
-(*
-val struct_field
-  (tag: string) (fields: struct_fields) (field: field_of fields)
-: connection (struct_pcm tag fields) (struct_pcms tag fields field)
-*)
-
-/// Explode and recombine
-(**** END PUBLIC *)
-
-(*
 let field_views (tag: string) (fields: struct_fields) (field: field_of fields)
 : sel_view (struct_pcms tag fields field) (struct_view_types fields field) false
 = (get_field fields field).view
@@ -445,7 +516,22 @@ let struct_view tag fields = {
   to_view_frame = struct_view_to_view_frame tag fields;
 }
 
+/// Connections for fields of structs
+val struct_field
+  (tag: string) (fields: struct_fields) (field: field_of fields)
+: connection (struct_pcm tag fields) (struct_pcms tag fields field)
 let struct_field tag fields field = struct_field (struct_pcms tag fields) field
+
+/// Typedef for struct from typedefs for its fields
+(*
+let typedef_struct (tag: string) (fields: struct_fields): typedef = {
+  carrier = struct_pcm_carrier tag fields; 
+  pcm = struct_pcm tag fields;
+  view_type = struct tag fields;
+  view = struct_view tag fields;
+}
+*)
+
 *)
 
 /// TODO move and dedup with Steel.C.Ptr.fst
