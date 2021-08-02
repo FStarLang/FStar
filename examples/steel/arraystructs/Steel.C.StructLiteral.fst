@@ -17,26 +17,8 @@ open ChurchList
 
 (**** MOVE TO ChurchList *)
 
-let rec list_elim
-  (xs: list 'a)
-  (motive: list 'a -> Type)
-  (base: motive [])
-  (ind:(x:'a -> xs:list 'a -> motive xs -> motive (x :: xs)))
-: motive xs
-= match xs with
-  | [] -> base
-  | x :: xs -> ind x xs (list_elim xs motive base ind)
-
 noeq type clist (a:Type u#a): Type = {
   raw: list a;
-  (*
-  elim:
-    motive:(list a -> Type) ->
-    base:motive [] ->
-    ind:(x:a -> xs:list a -> motive xs -> motive (x :: xs)) ->
-    Pure (motive raw) (requires True) (ensures fun res -> res == list_elim raw motive base ind);
-    *)
-    (*
   elim:
     #b:Type u#b -> r:(list a -> b -> prop) ->
     base:b ->
@@ -47,10 +29,9 @@ noeq type clist (a:Type u#a): Type = {
     Pure b
       (requires [] `r` base)
       (ensures fun res -> raw `r` res);
-      *)
 }
 
-let mk_clist_elim #a (xs: list a) #b
+let mk_clist_elim (#a: Type u#a) (xs: list a) (#b: Type u#b)
 : r:(list a -> b -> prop) ->
   base:b ->
   ind:(x:a -> xs:list a -> ind:b ->
@@ -64,12 +45,10 @@ let mk_clist_elim #a (xs: list a) #b
 
 let mk_clist (xs: list 'a) = {
   raw = xs;
-  //elim = (fun motive base ind -> list_elim xs motive base ind);
   elim = mk_clist_elim xs;
 }
 
 #push-options "--print_universes --print_implicits"
-
 
 #push-options "--fuel 0"
 let _ =
@@ -78,10 +57,13 @@ let _ =
   assert (xs.elim (fun _ _ -> True) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
 #pop-options
 
+// TODO is it better to use Pure than return a refinement?
+
+(*
+Can't seem to call these without running into universe issues
+
 let cons (x: 'a) (xs: clist 'a): clist 'a = mk_clist (x :: xs.raw)
 let nil #a : clist a = mk_clist []
-
-// TODO is it better to use Pure than return a refinement?
 
 let is_cons (xs: clist 'a): b:bool{b == Cons? xs.raw} =
   //xs.elim (fun xs -> b:bool{b == Cons? xs}) false (fun _ _ _ -> true)
@@ -91,18 +73,15 @@ let is_nil (xs: clist 'a): b:bool{b == Nil? xs.raw} =
   //xs.elim (fun xs -> b:bool{b == Nil? xs}) true (fun _ _ _ -> false)
   xs.elim (fun xs b -> b == Nil? xs) true (fun _ _ _ -> false)
 
-(*
-Can't seem to define these in useful way due to universe issues
-
-let mem (#a:eqtype) (x:a) (xs:clist a)
-: b:bool{b == List.Tot.mem x xs.raw}
-= xs.elim (fun xs -> b:bool{b == List.Tot.mem x xs})
+let cmem (#a:eqtype) (x:a) (xs:clist a)
+: Pure bool True (fun b -> b == List.Tot.mem x xs.raw)
+= xs.elim (fun xs b -> b == List.Tot.mem x xs)
     false
     (fun x' xs x_mem_xs -> x = x' || x_mem_xs)
 
-let map (f: 'a -> 'b) (xs: clist 'a)
-: ys:clist 'b{ys.raw == List.Tot.map f xs.raw}
-= xs.elim (fun xs -> ys:clist 'b{ys.raw == List.Tot.map f xs})
+let cmap (f: 'a -> 'b) (xs: clist 'a)
+: Pure (clist 'b) True (fun ys -> ys.raw == List.Tot.map f xs.raw)
+= xs.elim (fun xs ys -> ys.raw == List.Tot.map f xs)
     nil
     (fun x xs map_f_xs -> cons (f x) map_f_xs)
 *)
@@ -112,25 +91,78 @@ let map (f: 'a -> 'b) (xs: clist 'a)
 (**** BEGIN PUBLIC *)
 
 let struct_fields =
-  struct_fields:clist (string * typedef){is_cons struct_fields}
+  struct_fields:clist u#1 u#1 (string * typedef)
 
+(*
 let has_field_bool (fields: struct_fields) (field: string)
 : b:bool{b == field `mem` map fst fields.raw}
 = fields.elim
-    (fun fields -> b:bool{b == field `mem` map fst fields})
+    (fun fields b -> b == field `mem` map fst fields)
     false
-    (fun (field', td) fields recur -> field = field' || recur)
+    (fun (field', td) fields recur ->
+      field = field' || recur)
 
 let has_field (fields: struct_fields) (field: string): prop =
   has_field_bool fields field == true
+      *)
+
+let has_field (fields: struct_fields) (field: string): prop =
+  fields.elim #prop (fun _ _ -> True)
+    False
+    (fun (field', td) fields recur -> field == field' \/ recur)
 
 let field_of (fields: struct_fields) =
   refine string (has_field fields)
 
+(*
+let elim_clist (#a:Type u#a) (xs: clist a) (#b: Type u#b)
+: r:(list a -> b -> prop) ->
+  base:b ->
+  ind:(x:a -> xs:list a -> ind:b ->
+    Pure b
+      (requires xs `r` ind)
+      (ensures fun res -> (x :: xs) `r` res)) ->
+  Pure b
+    (requires [] `r` base)
+    (ensures fun res -> xs.raw `r` res)
+= Mkclist?.elim xs
+
+let elim_clist' (xs: clist (string * typedef)) (#b: Type u#b)
+: r:(list (string * typedef) -> b -> prop) ->
+  base:b ->
+  ind:(x:(string * typedef) -> xs:list (string * typedef) -> ind:b ->
+    Pure b
+      (requires xs `r` ind)
+      (ensures fun res -> (x :: xs) `r` res)) ->
+  Pure b
+    (requires [] `r` base)
+    (ensures fun res -> xs.raw `r` res)
+= Mkclist?.elim xs
+
+let elim_clist'' (xs: clist u#1 u#1 (string * typedef))
+: r:(list (string * typedef) -> typedef -> prop) ->
+  base:typedef ->
+  ind:(x:(string * typedef) -> xs:list (string * typedef) -> ind:typedef ->
+    Pure typedef
+      (requires xs `r` ind)
+      (ensures fun res -> (x :: xs) `r` res)) ->
+  Pure typedef
+    (requires [] `r` base)
+    (ensures fun res -> xs.raw `r` res)
+= Mkclist?.elim xs
+*)
+
+assume val trivial_typedef: typedef
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
-  fields.elim (fun fields -> typedef)
-    ()
+  fields.elim (fun _ _ -> True) trivial_typedef
     (fun (field', td) fields recur -> if field = field' then td else recur)
+  (*
+  elim_clist fields #typedef (admit())//(fun _ _ -> True)
+    (admit())
+    (admit())
+    //trivial_typedef
+    //(fun (field', td) fields recur -> if field = field' then td else recur)
+    *)
 
 open Steel.C.Opt
 
