@@ -157,8 +157,9 @@ let has_field_bool_spec (fields: struct_fields) (field: string)
   = match fields with [] -> () | _ :: fields -> aux fields
   in aux fields.raw
 
-let has_field (fields: struct_fields) (field: string): prop =
-  has_field_bool fields field == true
+let has_field (fields: struct_fields)
+: (string ^-> prop)
+= on_dom string (fun field -> has_field_bool fields field == true <: prop)
 
 let field_of (fields: struct_fields) = refine string (has_field fields)
 
@@ -173,8 +174,9 @@ let get_field (fields: struct_fields) (field: field_of fields): typedef =
 let has_field_bool' (fields: list (string * typedef)) (field: string): bool =
   field `mem` map fst fields
 
-let has_field' (fields: list (string * typedef)) (field: string): prop =
-  has_field_bool' fields field == true
+let has_field' (fields: list (string * typedef))
+: (string ^-> prop)
+= on_dom _ (fun field -> has_field_bool' fields field == true <: prop)
 
 let field_of' (fields: list (string * typedef)) =
   refine string (has_field' fields)
@@ -227,96 +229,148 @@ let struct_views (fields: struct_fields) (field: field_of fields)
 : sel_view ((get_field fields field).pcm) ((get_field fields field).view_type) false
 = (get_field fields field).view
 
-let struct_view_types (fields: struct_fields) (field: field_of fields) =
-  (get_field fields field).view_type
+let const_Type (x: 'a) = Type
+
+let struct_view_types (fields: struct_fields)
+: restricted_t (field_of fields) const_Type
+= on_dom _ (fun field -> (get_field fields field).view_type)
 
 val struct (tag: string) (fields: struct_fields): Type0
 
 (**** END PUBLIC *)
 
-let struct_view_types' (fields: list (string * typedef)) (field: field_of' fields): Type =
-  (get_field' fields field).view_type
+let struct_view_types' (fields: list (string * typedef))
+: restricted_t (field_of' fields) const_Type
+= on_dom _ (fun field -> (get_field' fields field).view_type)
 
-let struct tag fields = restricted_t (field_of' fields.raw) (struct_view_types' fields.raw)
+let struct tag fields = restricted_t (field_of fields) (struct_view_types fields)
 
 (**** BEGIN PUBLIC *)
 
+let struct_field_view_type ((_, td): string * typedef): Type = td.view_type
+
+let mk_struct_ty_dom (tag: string) (fields: struct_fields): clist Type =
+  cmap struct_field_view_type fields
+
+let clist_fn (dom: clist (Type u#a)) (cod: Type u#a): Type u#a =
+  clist_elim dom (fun _ -> Type) cod (fun d dom recur -> d -> recur)
+
+let mk_struct_ty (tag: string) (fields: struct_fields): Type =
+  mk_struct_ty_dom tag fields `clist_fn` struct tag fields
+
+/// A struct literal
+val mk_struct (tag: string) (fields: struct_fields): mk_struct_ty tag fields
+(**** END PUBLIC *)
+
+let struct' tag fields = restricted_t (field_of' fields) (struct_view_types' fields)
+
+let field_of_eq fields
+: Lemma (field_of fields == field_of' fields.raw)
+  [SMTPat (field_of fields)]
+= assert (has_field fields `feq` has_field' fields.raw)
+
+let ext' (a a': Type) (b: a -> Type) (b': a' -> Type)
+  (f: restricted_t a b)
+  (g: restricted_t a' b')
+: Lemma (requires a == a' /\ b == b' /\ f `feq` g) (ensures f == g)
+= ()
+
+let struct_view_types_eq fields
+: Lemma (struct_view_types fields == struct_view_types' fields.raw)
+  [SMTPat (struct_view_types fields)]
+= ext' _ _ _ _ (struct_view_types fields) (struct_view_types' fields.raw)
+
 let list_fn (dom: list (Type u#a)) (cod: Type u#a): Type u#a =
   list_elim dom (fun _ -> Type) cod (fun d dom recur -> d -> recur)
-  
+
+let mk_struct_ty' tag fields =
+  map struct_field_view_type fields `list_fn` struct' tag fields
+
+let mk_struct_ty_eq tag fields
+: Lemma (mk_struct_ty tag fields == mk_struct_ty' tag fields.raw)
+= ()
+
+let unreachable (a: Type) : Pure a (requires False) (ensures fun _ -> True)
+= ()
+
 let rec list_fn_map #dom (f: 'a -> 'b) (g: dom `list_fn` 'a): dom `list_fn` 'b = match dom with 
   | [] -> f g <: [] `list_fn` 'b
   | d :: dom' ->
     let g: d -> dom' `list_fn` 'a = g in
     fun (x:d) -> list_fn_map f (g x) <: dom' `list_fn` 'b
 
-let struct_field_view_type ((_, td): string * typedef): Type = td.view_type
+let rec mk_struct' (tag: string) (fields: list (string * typedef))
+: mk_struct_ty' tag fields
+= match fields with
+  | [] -> on_dom (field_of' []) (fun field -> unreachable (struct_view_types' [] field))
+  | (field, td) :: fields' ->
+    fun (x:td.view_type) ->
+    let lift_struct (g: struct' tag fields'): struct' tag fields =
+      let h (field': field_of' fields): struct_view_types' fields field' =
+        if field' = field then x else g field'
+      in on_dom _ h
+    in
+    list_fn_map lift_struct (mk_struct' tag fields')
 
-let mk_struct_ty_dom (tag: string) (fields: list (string * typedef)): list Type =
-  map struct_field_view_type fields
-
-let mk_struct_ty (tag: string) (fields: struct_fields): Type =
-  mk_struct_ty_dom tag fields.raw `list_fn` struct tag fields
-
-/// A struct literal
-val mk_struct (tag: string) (fields: struct_fields): mk_struct_ty tag fields
-(**** END PUBLIC *)
+let mk_struct tag fields = mk_struct' tag fields.raw
 
 (*
-let clist_fn_map (#a: Type u#a) (#b: Type u#a)
-  (#dom: clist u#_ u#(1 + a) (Type u#a)) (f: a -> b)
-: dom `clist_fn` a -> dom `clist_fn` b
-= raise_clist_elim u#_ u#(1 + a) u#a dom (fun dom -> dom `list_fn` a -> dom `list_fn` b)
-    f (fun d dom recur g x -> recur (g x))
-    *)
+let one_list_elim
+  (b:(list Type -> Type))
+  (base:b [])
+  (ind:(x:Type -> xs:list Type -> b xs -> b (x :: xs)))
+: b [int]
+= ind int [] base
 
-let struct' tag (fields: list (string * typedef)) =
-  restricted_t (field_of' fields) (struct_view_types' fields)
+let one_list_elim'
+  (base:Type)
+  (ind:(x:Type -> xs:list Type -> Type -> Type))
+: Type
+= ind int [] base
 
-let mk_struct_ty' tag (fields: list (string * typedef)) = 
-  mk_struct_ty_dom tag fields `list_fn` 
-  struct' tag fields
+let one_list_elim''
+  (base:Type)
+: Type
+= int -> base
+*)
 
-let mk_struct_nil (tag: string): mk_struct_ty' tag [] =
-  on_dom _ (fun field -> (assert false) <: struct_view_types' [] field)
+(*
+let f (a:Type): Type = int -> a
 
-let mk_struct_cons (tag: string)
-  (field_td: string * typedef)
-  (fields': list (string * typedef))
-  (recur: mk_struct_ty' tag fields')
-: mk_struct_ty' tag (field_td :: fields') =
-  let (field, td) = field_td in
-  let fields = field_td :: fields' in
-  fun (x:td.view_type) ->
-  let lift_struct (g: struct' tag fields'): struct' tag fields =
-    let h (field': field_of' fields): struct_view_types' fields field' =
-      if field' = field then x else g field'
-    in on_dom _ h
-  in
-  list_fn_map lift_struct recur
-
-let mk_struct tag fields =
-  raise_clist_elim fields
-    (mk_struct_ty' tag)
-    (mk_struct_nil tag)
-    (mk_struct_cons tag)
+let _ = assert (f bool == (int -> bool))
+*)
 
 #push-options "--fuel 0"
+
+(*
 let _ =
-  let c_int: typedef = {
-    carrier = option int;
-    pcm = Steel.C.Opt.opt_pcm #int;
-    view_type = int;
-    view = Steel.C.Opt.opt_view int;
-  } in
-  let fields = mk_clist [
-    "x", c_int;
-    "y", c_int;
-    "z", c_int;
-  ] in
-  let _ : int -> int -> int -> struct "a" fields =
-    mk_struct "a" fields
-  in ()
+  //let c_int: typedef = {
+  //  carrier = option int;
+  //  pcm = Steel.C.Opt.opt_pcm #int;
+  //  view_type = int;
+  //  view = Steel.C.Opt.opt_view int;
+  //} in
+  //let fields = normalize_term (mk_clist [
+  //  "x", c_int;
+  //  //"y", c_int;
+  //  //"z", c_int;
+  //]) in
+  //let args = normalize_term (fun b base ind -> list_elim (int :: ([] #Type))) in
+  //assert (args `clist_fn` bool == (int -> bool));
+  //assert (one_list_elim (fun _ -> Type) bool (fun d dom recur -> int -> recur)
+  //  == (int -> bool));
+  //assert (one_list_elim' bool (fun d dom recur -> int -> recur)
+  //  == (int -> bool));
+  assert (one_list_elim'' bool == (int -> bool));
+  //assert (args.elim (fun _ -> int) 0 (fun n ns sum -> n + sum)
+  //  == 3);
+  //assert (mk_struct_ty "a" fields == (int -> struct "a" fields));
+  //let _ : int -> int -> int -> struct "a" fields =
+  //  mk_struct "a" fields
+  //in ()
+  ()
+*)
+
 #pop-options
 
 (**** BEGIN PUBLIC *)
@@ -349,14 +403,10 @@ let view_type_of (fields: struct_fields) (field: field_of fields)
 : struct_view_types' fields.raw field
 = assoc_mem field fields.raw; v
 
-let struct_get #tag #fields x field =
-  view_type'_of fields field (x (field'_of fields field))
+let struct_get x field = x field
 
-let struct_put #tag #fields x field v =
-  on_dom _ (fun field' ->
-    if field'_of fields field = field'
-    then view_type_of fields field v
-    else x field')
+let struct_put x field v =
+  on_dom _ (fun field' -> if field = field' then v else x field')
 
 (**** BEGIN PUBLIC *)
 
