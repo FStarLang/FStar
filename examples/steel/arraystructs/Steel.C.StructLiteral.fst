@@ -26,18 +26,25 @@ let rec list_elim (xs: list 'a)
   | [] -> base
   | x :: xs -> ind x xs (list_elim xs b base ind)
 
+let elim_t (#a: Type u#a) (xs: list a): Tot (Type u#(max a (1 + b))) =
+  b:(list a -> Type u#b) ->
+  base:b [] ->
+  ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
+  b xs
+
+//[@@__reduce__]
 noeq type clist (a:Type u#a): Type = {
   raw: list a;
-  elim:
-    b:(list a -> Type u#b) ->
-    base:b [] ->
-    ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
-    b raw;
+  elim0: elim_t u#_ u#0 raw;
+  elim1: elim_t u#_ u#1 raw;
+  elim2: elim_t u#_ u#2 raw;
+  elim3: elim_t u#_ u#3 raw;
 }
 
-let clist_elim
+//[@@__reduce__]
+let clist_elim0
   (c: clist 'a)
-  (b:(list 'a -> Type))
+  (b:(list 'a -> Type0))
   (base:b [])
   (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
 : Pure (b c.raw)
@@ -46,93 +53,87 @@ let clist_elim
 = let b' (l2: list 'a) : Type =
     (x: b l2 { x == list_elim l2 b base ind })
   in
-  c.elim
+  c.elim0
     b'
     base
     (fun x xs x' -> ind x xs x')
 
-let mk_clist (xs: list 'a) = {
-  raw = xs;
-  elim = list_elim xs;
-}
+//[@@__reduce__]
+let clist_elim1
+  (c: clist 'a)
+  (b:(list 'a -> Type u#1))
+  (base:b [])
+  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
+: Pure (b c.raw)
+  (requires True)
+  (ensures (fun y -> y == list_elim c.raw b base ind))
+= let b' (l2: list 'a) : Type =
+    (x: b l2 { x == list_elim l2 b base ind })
+  in
+  c.elim1
+    b'
+    base
+    (fun x xs x' -> ind x xs x')
+
+//[@@__reduce__]
+let clist_elim2
+  (c: clist 'a)
+  (b:(list 'a -> Type u#2))
+  (base:b [])
+  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
+: Pure (b c.raw)
+  (requires True)
+  (ensures (fun y -> y == list_elim c.raw b base ind))
+= let b' (l2: list 'a) : Type =
+    (x: b l2 { x == list_elim l2 b base ind })
+  in
+  c.elim2
+    b'
+    base
+    (fun x xs x' -> ind x xs x')
 
 #push-options "--print_universes --print_implicits"
 
 #push-options "--fuel 0"
+let mk_clist (xs: list 'a) = {
+  raw = xs;
+  elim0 = list_elim xs;
+  elim1 = list_elim xs;
+  elim2 = list_elim xs;
+  elim3 = list_elim xs;
+}
 let _ =
   let xs = normalize_term (mk_clist [1; 2; 3; 4]) in
-  assert (clist_elim xs (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
+  assert (clist_elim0 xs (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
 #pop-options
 
-module U = FStar.Universe
-
-let raise_clist_elim (#a: Type u#a) (xs: clist u#a u#(max b c) a)
-  (b:(list a -> Type u#c))
-  (base: b [])
-  (ind:(x:a -> xs:list a -> b xs -> b (x :: xs)))
-: b xs.raw
-= U.downgrade_val
-    (clist_elim xs (fun xs -> U.raise_t (b xs))
-      (U.raise_val base)
-      (fun x xs recur -> U.raise_val (ind x xs (U.downgrade_val recur))))
-
-let rec raise_list_elim_ok (#a: Type u#a) (xs: list a)
-  (b:(list a -> Type u#c))
-  (base: b [])
-  (ind:(x:a -> xs:list a -> b xs -> b (x :: xs)))
-: Lemma (list_elim xs b base ind ==
-    U.downgrade_val
-      (list_elim xs (fun xs -> U.raise_t u#c u#b (b xs))
-        (U.raise_val base)
-        (fun x xs recur -> U.raise_val (ind x xs (U.downgrade_val recur)))))
-= match xs with
-  | [] -> ()
-  | _ :: xs -> raise_list_elim_ok xs b base ind
-
-let raise_clist_elim_ok (#a: Type u#a) (xs: clist u#a u#(max b c) a)
-  (b:(list a -> Type u#c))
-  (base: b [])
-  (ind:(x:a -> xs:list a -> b xs -> b (x :: xs)))
-: Lemma (raise_clist_elim xs b base ind == list_elim xs.raw b base ind)
-  [SMTPat (raise_clist_elim xs b base ind)]
-= raise_list_elim_ok xs.raw b base ind
-
-let raise_clist (#a: Type u#a) (xs: clist u#a u#(max b c) a)
-: clist u#a u#c a
-= {raw = xs.raw; elim = raise_clist_elim xs; }
-
-let nil (#a: Type u#a): clist u#a u#b a = {
+//[@@__reduce__]
+let nil (#a: Type u#a): clist u#a a = {
   raw = [];
-  elim = (fun _ base _ -> base);
+  elim0 = (fun _ base _ -> base);
+  elim1 = (fun _ base _ -> base);
+  elim2 = (fun _ base _ -> base);
+  elim3 = (fun _ base _ -> base);
 }
 
-let cons (#a: Type u#a) (x: a) (xs: clist u#a u#b a): clist u#a u#b a = {
+//[@@__reduce__]
+let cons (#a: Type u#a) (x: a) (xs: clist u#a a): clist u#a a = {
   raw = x :: xs.raw;
-  elim = (fun b base ind -> ind x xs.raw (clist_elim xs b base ind));
+  elim0 = (fun b base ind -> ind x xs.raw (xs.elim0 b base ind));
+  elim1 = (fun b base ind -> ind x xs.raw (xs.elim1 b base ind));
+  elim2 = (fun b base ind -> ind x xs.raw (xs.elim2 b base ind));
+  elim3 = (fun b base ind -> ind x xs.raw (xs.elim3 b base ind));
 }
 
-let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a): bool
-= raise_clist_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur)
+//[@@__reduce__]
+let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 a): bool
+= clist_elim0 xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur)
 
-let cmem_ok (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a)
+//[@@__reduce__]
+let cmem_ok (#a:eqtype) (x: a) (xs: clist u#0 a)
 : Lemma (cmem x xs == mem x xs.raw)
 = let rec aux (xs: list a)
   : Lemma (list_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur) == mem x xs)
-  = match xs with [] -> () | x :: xs -> aux xs
-  in aux xs.raw
-
-let cmap (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
-: clist u#b u#c b
-= clist_elim xs (fun _ -> clist u#b u#c b) (nil u#b u#c) (fun x xs recur -> cons u#b u#c #b (f x) recur)
-
-let cmap_ok (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
-: Lemma ((cmap f xs).raw == map f xs.raw)
-  [SMTPat (cmap f xs)]
-= let rec aux (xs: list a)
-  : Lemma (
-      (list_elim xs (fun _ -> clist u#b u#c b) (nil u#b u#c)
-        (fun x xs recur -> cons u#b u#c #b (f x) recur))
-      .raw == map f xs)
   = match xs with [] -> () | x :: xs -> aux xs
   in aux xs.raw
 
@@ -140,10 +141,11 @@ let cmap_ok (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1
 
 (**** BEGIN PUBLIC *)
 
-let struct_fields = clist u#1 u#3 (string * typedef)
+let struct_fields = clist u#1 (string * typedef)
 
+//[@@__reduce__]
 let has_field_bool (fields: struct_fields) (field: string): bool =
-  raise_clist_elim fields (fun _ -> bool)
+  clist_elim0 fields (fun _ -> bool)
     false
     (fun (field', td) fields recur -> field = field' || recur)
 
@@ -157,6 +159,7 @@ let has_field_bool_spec (fields: struct_fields) (field: string)
   = match fields with [] -> () | _ :: fields -> aux fields
   in aux fields.raw
 
+//[@@__reduce__]
 let has_field (fields: struct_fields)
 : (string ^-> prop)
 = on_dom string (fun field -> has_field_bool fields field == true <: prop)
@@ -165,8 +168,9 @@ let field_of (fields: struct_fields) = refine string (has_field fields)
 
 assume val trivial_typedef: typedef
 
+//[@@__reduce__]
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
-  raise_clist_elim u#1 u#3 u#1 fields (fun fields -> typedef) trivial_typedef
+  clist_elim1 fields (fun fields -> typedef) trivial_typedef
     (fun (field', td) fields recur -> if field = field' then td else recur)
 
 (**** END PUBLIC *)
@@ -225,12 +229,14 @@ let _ =
 
 /// A view type for structs
 
+//[@@__reduce__]
 let struct_views (fields: struct_fields) (field: field_of fields)
 : sel_view ((get_field fields field).pcm) ((get_field fields field).view_type) false
 = (get_field fields field).view
 
 let const_Type (x: 'a) = Type
 
+//[@@__reduce__]
 let struct_view_types (fields: struct_fields)
 : restricted_t (field_of fields) const_Type
 = on_dom _ (fun field -> (get_field fields field).view_type)
@@ -249,6 +255,7 @@ let struct tag fields = restricted_t (field_of fields) (struct_view_types fields
 
 let struct_field_view_type ((_, td): string * typedef): Type = td.view_type
 
+(*
 let mk_struct_ty_dom (tag: string) (fields: struct_fields)
 : clist u#1 u#2 Type0
 = cmap struct_field_view_type fields
@@ -261,6 +268,7 @@ let mk_struct_ty (tag: string) (fields: struct_fields): Type =
 
 /// A struct literal
 val mk_struct (tag: string) (fields: struct_fields): mk_struct_ty tag fields
+*)
 (**** END PUBLIC *)
 
 let struct' tag fields = restricted_t (field_of' fields) (struct_view_types' fields)
@@ -287,6 +295,7 @@ let list_fn (dom: list (Type u#a)) (cod: Type u#a): Type u#a =
 let mk_struct_ty' tag fields =
   map struct_field_view_type fields `list_fn` struct' tag fields
 
+(*
 let mk_struct_ty_eq tag fields
 : Lemma (mk_struct_ty tag fields == mk_struct_ty' tag fields.raw)
 = ()
@@ -314,6 +323,7 @@ let rec mk_struct' (tag: string) (fields: list (string * typedef))
     list_fn_map lift_struct (mk_struct' tag fields')
 
 let mk_struct tag fields = mk_struct' tag fields.raw
+*)
 
 (*
 let one_list_elim
@@ -465,10 +475,12 @@ let struct_put_put_ne x field1 v field2 w =
 (**** BEGIN PUBLIC *)
 /// Similarly, a PCM for structs
 
+//[@@__reduce__]
 let struct_carriers (fields: struct_fields)
 : restricted_t (field_of fields) const_Type
 = on_dom _ (fun (field: field_of fields) -> (get_field fields field).carrier)
 
+//[@@__reduce__]
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
 : pcm (struct_carriers fields field)
 = (get_field fields field).pcm
@@ -486,6 +498,7 @@ let struct_carriers_eq fields
 = ext' _ _ _ _ (struct_carriers fields) (struct_carriers' fields.raw)
   
 let struct_pcm_carrier' tag fields = restricted_t (field_of' fields) (struct_carriers' fields)
+
 let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers fields)
 
 let struct_pcms' (tag: string) (fields: list (string * typedef)) (field: field_of' fields)
@@ -634,16 +647,24 @@ let _ =
     "z", c_int;
     //"w", c_int;
   ]) in
-  let aux (x y: struct_pcm_carrier "" fields) =
-    assert (has_field_bool fields "x");
-    assert (has_field_bool fields "y");
-    assert (has_field_bool fields "z");
+  let aux (s t: struct_pcm_carrier "" fields) =
+    //assert (has_field_bool fields "x");
+    //assert (has_field_bool fields "y");
+    //assert (has_field_bool fields "z");
+    let x: field_of fields = "x" in
+    let y: field_of fields = "y" in
+    let z: field_of fields = "z" in
     //assert (has_field_bool fields "w");
-    assume (x `struct_pcm_get` "x" == y `struct_pcm_get` "x");
-    assume (x `struct_pcm_get` "y" == y `struct_pcm_get` "y");
-    assume (x `struct_pcm_get` "z" == y `struct_pcm_get` "z");
-    //assume (x `struct_pcm_get` "w" == y `struct_pcm_get` "w");
-    assert (x `struct_eq` y)
+    //assume (s `struct_pcm_get` "x" == t `struct_pcm_get` "x");
+    //assume (s `struct_pcm_get` "y" == t `struct_pcm_get` "y");
+    //assume (s `struct_pcm_get` "z" == t `struct_pcm_get` "z");
+    //assume (s `struct_pcm_get` "w" == t `struct_pcm_get` "w");
+    assume (s `struct_pcm_get` x == t `struct_pcm_get` x);
+    assume (s `struct_pcm_get` y == t `struct_pcm_get` y);
+    assume (s `struct_pcm_get` z == t `struct_pcm_get` z);
+    //assume (s `struct_pcm_get` w == t `struct_pcm_get` w);
+    //assert (s `struct_eq` t);
+    ()
   in ()
 #pop-options
 
@@ -815,12 +836,12 @@ let pts_to_fields'
   (s: struct tag fields)
   (fields': struct_fields)
 : vprop
-= raise_clist_elim u#1 u#3 u#2 fields' (fun _ -> vprop)
+= clist_elim2 fields' (fun _ -> vprop)
     emp
     (fun (field, _) _ recur ->
       if has_field_bool fields field then begin
         pts_to_field tag fields p s field `star` recur
-    end else recur)
+      end else emp)
 
 //[@@__reduce__]
 let pts_to_fields
@@ -831,7 +852,7 @@ let pts_to_fields
 = pts_to_fields' tag fields p s fields
 
 assume val explode (#opened: inames)
-  (tag: string) (fields: struct_fields)
+  (tag: string) (fields: struct_fields{Cons? fields.raw})
   (p: ref 'a (struct_pcm tag fields))
   (s: Ghost.erased (struct tag fields))
 : SteelGhostT unit opened
@@ -839,7 +860,7 @@ assume val explode (#opened: inames)
     (fun _ -> pts_to_fields tag fields p s)
 
 assume val recombine (#opened: inames)
-  (tag: string) (fields: struct_fields)
+  (tag: string) (fields: struct_fields{Cons? fields.raw})
   (p: ref 'a (struct_pcm tag fields))
   (s: Ghost.erased (struct tag fields))
 : SteelGhostT unit opened
@@ -850,7 +871,7 @@ assume val recombine (#opened: inames)
 
 open Steel.C.Opt
 
-[@@__reduce__]
+//[@@__reduce__]
 let c_int: typedef = {
   carrier = option int;
   pcm = opt_pcm #int;
@@ -858,59 +879,94 @@ let c_int: typedef = {
   view = opt_view int;
 }
 
-[@@__reduce__]
-let point_fields: struct_fields = [
+//[@@__reduce__]
+//let point_fields: struct_fields =
+//  cons ("x", c_int) (cons ("y", c_int) nil)
+//  //normalize_term (fun c_int -> cons ("x", c_int) (cons ("y", c_int) nil)) c_int
+  
+//[@@__reduce__]
+let point_fields: struct_fields = normalize_term (fun c_int -> mk_clist [
   "x", c_int;
   "y", c_int;
-]
+]) c_int // NOTE: tricky! pull c_int out to avoid normalizing into lambdas
+  
+//[@@__reduce__]
+let point_fields': struct_fields = point_fields
 
-//[@@iter_unfold]
-[@@__reduce__]
+//[@@__reduce__]
 let point = struct "point" point_fields
 
-//[@@iter_unfold]
-[@@__reduce__]
+//[@@__reduce__]
 let point_pcm_carrier = struct_pcm_carrier "point" point_fields
 //[@@iter_unfold]
-[@@__reduce__]
+//[@@__reduce__]
 let point_pcm: pcm point_pcm_carrier = struct_pcm "point" point_fields
 
 /// (mk_point x y) represents (struct point){.x = x, .y = y}
 /// (mk_point_pcm x y) same, but where x and y are PCM carrier values
 
-let mk_point: int -> int -> point = mk_struct "point" point_fields
-let mk_point_pcm: option int -> option int -> point_pcm_carrier = mk_struct_pcm "point" point_fields
+//let mk_point: int -> int -> point = mk_struct "point" point_fields
+//let mk_point_pcm: option int -> option int -> point_pcm_carrier = mk_struct_pcm "point" point_fields
+
+#push-options "--fuel 0"
+
+let _ = assert (struct_pcm_carrier "point" point_fields == point_pcm_carrier)
+
+let _ = assert (struct_carriers point_fields "x" == option int)
+
+let _ = assert (struct_pcm "point" point_fields == point_pcm)
+
+let _ = assert (struct_pcms "point" point_fields "x" == c_int.pcm)
+
+let _ = assert (struct_pcms "point" point_fields "x" === opt_pcm #int)
 
 /// Connections for the fields of a point
 
-//[@@iter_unfold]
-val _x: connection point_pcm (opt_pcm #int)
-let _x = struct_field' "point" point_fields "x"
+// //[@@iter_unfold]
+// val _x: connection point_pcm (opt_pcm #int)
+// let _x =
+//   //assert (struct_pcms "point" point_fields "x" === opt_pcm #int);
+// assume (connection u#0
+//   u#0
+//   #point_pcm_carrier
+//   #(Pervasives.Native.option u#0 int)
+//   point_pcm
+//   (opt_pcm u#0 #int)
+//   == connection u#0
+//   u#0
+//   #(struct_pcm_carrier "point" point_fields)
+//   #(struct_carriers point_fields "x")
+//   (struct_pcm "point" point_fields)
+//   (struct_pcms "point" point_fields "x"));
+//   struct_field' "point" point_fields "x"
+// 
+// //[@@iter_unfold]
+// val _y: connection point_pcm (opt_pcm #int)
+// let _y = struct_field' "point" point_fields "y"
+// 
+// //[@@iter_unfold]
+// [@@__reduce__]
+// let x: field_of point_fields = mk_field_of point_fields "x"
+// [@@__reduce__]
+// let y: field_of point_fields = mk_field_of point_fields "y"
+// 
+// /// View for points
+// 
+// [@@__reduce__]
+// val point_view: sel_view point_pcm point false
+// let point_view = struct_view "point" point_fields
+// 
+// /// Explode and recombine
+// 
+// //val explode' (#opened: inames)
+// //  (p: ref 'a point_pcm)
+// //  (s: Ghost.erased point)
+// //: SteelGhostT unit opened
+// //    (pts_to_v p point_view s)
+// //    (fun _ -> pts_to_fields "point" point_fields p s)
 
-//[@@iter_unfold]
-val _y: connection point_pcm (opt_pcm #int)
-let _y = struct_field' "point" point_fields "y"
-
-//[@@iter_unfold]
-[@@__reduce__]
-let x: field_of point_fields = mk_field_of point_fields "x"
-[@@__reduce__]
-let y: field_of point_fields = mk_field_of point_fields "y"
-
-/// View for points
-
-[@@__reduce__]
-val point_view: sel_view point_pcm point false
-let point_view = struct_view "point" point_fields
-
-/// Explode and recombine
-
-//val explode' (#opened: inames)
-//  (p: ref 'a point_pcm)
-//  (s: Ghost.erased point)
-//: SteelGhostT unit opened
-//    (pts_to_v p point_view s)
-//    (fun _ -> pts_to_fields "point" point_fields p s)
+//[@@__reduce__]
+//let point_view = struct_view "point" point_fields
 
 val explode' (#opened: inames)
   (p: ref 'a (struct_pcm "point" point_fields))
@@ -919,7 +975,8 @@ val explode' (#opened: inames)
     (pts_to_v p (struct_view "point" point_fields) s)
     (fun _ -> pts_to_fields "point" point_fields p s)
 
-let explode' p = explode "point" point_fields p
+let explode' p s =
+  explode "point" point_fields p s
 
 (*
 
@@ -944,30 +1001,68 @@ p ~~~> p /\ (fun x -> x =!= removed_field)
 
 *)
 
+//[@@__reduce__]
+let x: field_of point_fields = "x"
+//[@@__reduce__]
+let y: field_of point_fields = "y"
+
+//[@@__reduce__]
+let point_view = struct_view "point" point_fields
+
+//[@@__reduce__]
+let _x = struct_field' "point" point_fields x
+//[@@__reduce__]
+let _y = struct_field' "point" point_fields y
+
+let aux
+  (p: ref 'a (struct_pcm "point" point_fields))
+  (s: Ghost.erased (struct "point" point_fields))
+: Lemma (pts_to_fields "point" point_fields p s
+    == 
+      (pts_to_field "point" point_fields p s x `star`
+        (pts_to_field "point" point_fields p s y `star`
+         emp)))
+= ()
+
+let aux1
+  (p: ref 'a (struct_pcm "point" point_fields))
+  (s: Ghost.erased (struct "point" point_fields))
+: Lemma (pts_to_fields "point" point_fields p s
+    == 
+      (pts_to_v (ref_focus p _x) (struct_views point_fields x) (s `struct_get'` x) `star`
+        (pts_to_v (ref_focus p _y) (struct_views point_fields y) (s `struct_get'` y) `star`
+         emp)))
+= ()
+  
+
+// = pts_to_v
+//     (ref_focus p (struct_field' tag fields field))
+//     (struct_views fields field)
+//     (s `struct_get'` field)
+// = ()
+
 val explode'' (#opened: inames)
   (p: ref 'a (struct_pcm "point" point_fields))
   (s: Ghost.erased (struct "point" point_fields))
 : SteelGhostT unit opened
-    (pts_to_v p (struct_view "point" point_fields) s)
+    (pts_to_v p point_view s)
     (fun _ ->
-//(:struct_def) (fun (field, td) -> pts_to_v ..) Star)
-//= struct_def ..
   pts_to_v
     (ref_focus p _x)
-    (opt_view int)
+    (struct_views point_fields x)
     (s `struct_get'` x)
     `star`
   pts_to_v
     (ref_focus p _y)
-    (opt_view int)
+    (struct_views point_fields y)
     (s `struct_get'` y))
 
-//      pts_to_field "point" point_fields p s x `star`
-//      pts_to_field "point" point_fields p s y)
-
-#push-options "--print_implicits"
-
-let explode'' p s = explode "point" point_fields p s
+let explode'' p s =
+  explode "point" point_fields p s;
+  change_equal_slprop (pts_to_fields "point" point_fields p s)
+  (pts_to_v (ref_focus p _x) (struct_views point_fields x) (s `struct_get'` x) `star`
+        (pts_to_v (ref_focus p _y) (struct_views point_fields y) (s `struct_get'` y) `star`
+         emp))
 
 (*
 (*
