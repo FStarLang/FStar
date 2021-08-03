@@ -10,8 +10,349 @@ open Steel.C.Struct
 open Steel.C.Typedef
 open Steel.C.Ref // for refine
 open Steel.C.Connection
+open Steel.C.Opt
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
+
+let set a = a ^-> bool
+
+let insert (#a:eqtype) x (s: set a): set a = on_dom _ (fun x' -> x = x' || s x')
+
+let remove (#a:eqtype) x (s: set a): set a = on_dom _ (fun x' -> not (x = x') && s x')
+
+let insert_remove (#a:eqtype) x (s: set a)
+: Lemma (insert x (remove x s) == insert x s)
+= assert (insert x (remove x s) `feq` insert x s)
+
+let remove_insert (#a:eqtype) x (s: set a)
+: Lemma (remove x (insert x s) == remove x s)
+= assert (remove x (insert x s) `feq` remove x s)
+
+noeq type struct_fields = {
+  fields: list string; // for extraction only
+  has_field: set string;
+  // has_field_prf: forall field. has_field field <==> field `mem` fields;
+  get_field: string ^-> typedef;
+  // get_field_prf: forall field. has_field field == false ==> get_field field == trivial_typedef;
+}
+
+let trivial_typedef: typedef = {
+  carrier = option unit;
+  pcm = opt_pcm #unit;
+  view_type = unit;
+  view = opt_view unit;
+}
+
+let nil: struct_fields = {
+  fields = [];
+  has_field = on_dom _ (fun _ -> false);
+  get_field = on_dom _ (fun _ -> trivial_typedef);
+}
+
+let cons (field: string) (td: typedef) (fields: struct_fields): struct_fields = {
+  fields = field :: fields.fields;
+  has_field = on_dom _ (fun field' -> field = field' || fields.has_field field');
+  get_field = on_dom _ (fun field' -> if field = field' then td else fields.get_field field');
+}
+
+val struct (tag: string) (fields: struct_fields): Type0
+
+let struct_cod (fields: struct_fields) (field: string) =
+  (fields.get_field field).view_type
+
+let struct tag fields = restricted_t string (struct_cod fields)
+
+val mk_nil (tag: string): struct tag nil
+
+let mk_nil tag = on_dom _ (fun _ -> ())
+
+val mk_cons (tag: string) (fields: struct_fields)
+  (field: string) (td: typedef) (x: td.view_type) (v: struct tag fields)
+: Pure (struct tag (cons field td fields))
+    (requires fields.has_field field == false)
+    (ensures fun _ -> True)
+
+let mk_cons tag fields field td x v =
+  on_dom _ (fun field' ->
+    if field = field' then x
+    else v field' <: ((cons field td fields).get_field field').view_type)
+
+val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
+
+let struct_pcm_carrier_cod (fields: struct_fields) (field: string) =
+  (fields.get_field field).carrier
+
+let struct_pcm_carrier tag fields =
+  restricted_t string (struct_pcm_carrier_cod fields)
+
+val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
+
+let struct_pcms (fields: struct_fields) (field: string) = (fields.get_field field).pcm
+
+let struct_pcm tag fields = prod_pcm (struct_pcms fields)
+
+(* public *) let field_of (fields: struct_fields) = field:string{fields.has_field field == true}
+
+/// Reading a struct field
+val struct_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields) (field: field_of fields)
+: (fields.get_field field).view_type
+
+/// Writing a struct field
+val struct_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field: field_of fields)
+  (v: (fields.get_field field).view_type)
+: struct tag fields
+
+let struct_get x field = x field
+let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
+
+/// For a fixed field name, struct_get and struct_put form a lens
+
+val struct_get_put 
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field: field_of fields)
+  (v: (fields.get_field field).view_type)
+: Lemma (struct_put x field v `struct_get` field == v)
+  [SMTPat (struct_put x field v `struct_get` field)]
+
+val struct_put_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field: field_of fields)
+: Lemma (struct_put x field (x `struct_get` field) == x)
+  [SMTPat (struct_put x field (x `struct_get` field))]
+
+val struct_put_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field: field_of fields)
+  (v w: (fields.get_field field).view_type)
+: Lemma (struct_put (struct_put x field v) field w == struct_put x field w)
+  [SMTPat (struct_put (struct_put x field v) field w)]
+
+/// struct_get/struct_put pairs for different fields don't interfere with each other
+
+val struct_get_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field1: field_of fields)
+  (field2: field_of fields)
+  (v: (fields.get_field field1).view_type)
+: Lemma
+    (requires field1 =!= field2)
+    (ensures struct_put x field1 v `struct_get` field2 == x `struct_get` field2)
+  [SMTPat (struct_put x field1 v `struct_get` field2)]
+  
+val struct_put_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct tag fields)
+  (field1: field_of fields)
+  (v: (fields.get_field field1).view_type)
+  (field2: field_of fields)
+  (w: (fields.get_field field2).view_type)
+: Lemma
+    (requires field1 =!= field2)
+    (ensures
+      struct_put (struct_put x field1 v) field2 w ==
+      struct_put (struct_put x field2 w) field1 v)
+      
+let struct_get_put x field v = ()
+
+let struct_put_get x field =
+  assert (struct_put x field (x `struct_get` field) `feq` x)
+
+let struct_put_put x field v w =
+  assert (struct_put (struct_put x field v) field w `feq` struct_put x field w)
+
+let struct_get_put_ne x field1 field2 v = ()
+
+let struct_put_put_ne x field1 v field2 w = 
+  assert (
+    struct_put (struct_put x field1 v) field2 w `feq`
+    struct_put (struct_put x field2 w) field1 v)
+
+(* public *)
+let struct_pcm_one (tag: string) (fields: struct_fields)
+: struct_pcm_carrier tag fields
+= one (struct_pcm tag fields)
+
+/// Reading a pcm_struct_carrier field
+val struct_pcm_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields) (field: field_of fields)
+: (fields.get_field field).carrier
+
+/// Writing a struct_pcm_carrier field
+val struct_pcm_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v: (fields.get_field field).carrier)
+: struct_pcm_carrier tag fields
+
+let struct_pcm_get x field = x field
+let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
+
+/// For a fixed field name, struct_pcm_get and struct_pcm_put form a lens
+
+val struct_pcm_get_put 
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v: (fields.get_field field).carrier)
+: Lemma (struct_pcm_put x field v `struct_pcm_get` field == v)
+  [SMTPat (struct_pcm_put x field v `struct_pcm_get` field)]
+
+val struct_pcm_put_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+: Lemma (struct_pcm_put x field (x `struct_pcm_get` field) == x)
+  [SMTPat (struct_pcm_put x field (x `struct_pcm_get` field))]
+
+val struct_pcm_put_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v w: (fields.get_field field).carrier)
+: Lemma (struct_pcm_put (struct_pcm_put x field v) field w == struct_pcm_put x field w)
+  [SMTPat (struct_pcm_put (struct_pcm_put x field v) field w)]
+  
+/// struct_pcm_get/struct_pcm_put pairs for different fields don't interfere with each other
+
+val struct_pcm_get_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field1: field_of fields)
+  (field2: field_of fields)
+  (v: (fields.get_field field1).carrier)
+: Lemma
+    (requires field1 =!= field2)
+    (ensures struct_pcm_put x field1 v `struct_pcm_get` field2 == x `struct_pcm_get` field2)
+  [SMTPat (struct_pcm_put x field1 v `struct_pcm_get` field2)]
+  
+val struct_pcm_put_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field1: field_of fields)
+  (v: (fields.get_field field1).carrier)
+  (field2: field_of fields)
+  (w: (fields.get_field field2).carrier)
+: Lemma
+    (requires field1 =!= field2)
+    (ensures
+      struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
+      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
+
+let struct_pcm_get_put x field v = ()
+
+let struct_pcm_put_get x field =
+  assert (struct_pcm_put x field (x `struct_pcm_get` field) `feq` x)
+
+let struct_pcm_put_put x field v w =
+  assert (struct_pcm_put (struct_pcm_put x field v) field w `feq` struct_pcm_put x field w)
+
+let struct_pcm_get_put_ne x field1 field2 v = ()
+
+let struct_pcm_put_put_ne x field1 v field2 w =
+   assert (
+     struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
+     struct_pcm_put (struct_pcm_put x field2 w) field1 v)
+
+let minus (fields: struct_fields) (excluded: set string): struct_fields = {
+  fields = filter (fun field -> not (excluded field)) fields.fields;
+  has_field = on_dom _ (fun field -> fields.has_field field && not (excluded field));
+  get_field = on_dom _ (fun field -> if excluded field then trivial_typedef else fields.get_field field);
+}
+
+val struct_view (tag: string) (fields: struct_fields) (excluded: set string)
+: sel_view (struct_pcm tag fields) (struct tag (fields `minus` excluded)) false
+
+let struct_view_to_view_prop (tag: string) (fields: struct_fields) (excluded: set string)
+: struct_pcm_carrier tag fields -> prop
+= admit()
+
+let struct_view_to_view (tag: string) (fields: struct_fields) (excluded: set string)
+: refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields excluded) -> 
+  struct tag (fields `minus` excluded)
+= admit()
+
+let struct_view_to_carrier (tag: string) (fields: struct_fields) (excluded: set string)
+: struct tag (fields `minus` excluded) ->
+  refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields excluded)
+= admit()
+
+// TODO: There will be a problem here when all fields are excluded
+let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields) (excluded: set string)
+: Lemma (
+    ~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)) /\
+    ~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
+= admit()
+
+let struct_view_to_view_frame (tag: string) (fields: struct_fields) (excluded: set string)
+: (x: struct tag (fields `minus` excluded)) ->
+  (frame: struct_pcm_carrier tag fields) ->
+  Lemma
+    (requires (composable (struct_pcm tag fields) (struct_view_to_carrier tag fields excluded x) frame))
+    (ensures
+      struct_view_to_view_prop tag fields excluded
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields excluded x) frame) /\
+      struct_view_to_view tag fields excluded
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields excluded x) frame) == x)
+= admit()
+
+let struct_view tag fields excluded = {
+  to_view_prop = struct_view_to_view_prop tag fields excluded;
+  to_view = struct_view_to_view tag fields excluded;
+  to_carrier = struct_view_to_carrier tag fields excluded;
+  to_carrier_not_one = struct_view_to_carrier_not_one tag fields excluded;
+  to_view_frame = struct_view_to_view_frame tag fields excluded;
+}
+
+(*
+
+struct tag fields : Type
+
+struct_pcm_carrier tag fields : Type
+struct_pcm tag fields : pcm (struct_pcm_carrier tag fields)
+
+fields : list (string * typedef)
+
+type struct_fields = {fields: list string; get: string ^-> typedef; get_prf: dom(get) ⊆ fields}
+
+fields : struct_fields
+
+nil : struct_fields
+cons : string -> typedef -> struct_fields -> struct_fields
+
+struct_view tag fields excluded
+  carrier = struct_pcm tag fields
+  view_type = restricted_t (refine string (notin excluded)) (struct_pcm_carriers tag fields)
+
+val addr_of_struct_field 
+
+addr_of_struct_field #tag #point_fields p "x" <--- "x" should be a valid field name
+  p : ref base_type (struct_pcm tag fields)
+  "x" notin excluded
+  excluded : string ^-> bool
+  {p `pts_to_view` struct_view tag fields excluded}
+  {p `pts_to_view` struct_view tag fields (cons "x" excluded)
+   q `pts_to_view` struct_field_view tag fields "x"}
+
+unaddr_of_struct_field p "x"
+  p : ref base_type (struct_pcm tag fields)
+  "x" in excluded
+  excluded : string ^-> bool
+  q = ref_focus p ..
+  {p `pts_to_view` struct_view tag fields excluded
+   q `pts_to_view` struct_field_view tag fields "x"}
+  {p `pts_to_view` struct_view tag fields (excluded \ "x")}
+*)
 
 // open ChurchList
 
@@ -1066,51 +1407,6 @@ let explode'' p s =
 
 (*
 (*
-
-struct tag fields : Type
-
-struct_pcm_carrier tag fields : Type
-struct_pcm tag fields : pcm (struct_pcm_carrier tag fields)
-
-fields : list (string * typedef)
-
-type struct_fields = {fields: list string; get: string ^-> typedef; get_prf: dom(get) ⊆ fields}
-
-fields : struct_fields
-
-nil : struct_fields
-cons : string -> typedef -> struct_fields -> struct_fields
-
-struct_view tag fields excluded
-  carrier = struct_pcm tag fields
-  view_type = restricted_t (refine string (notin excluded)) (struct_pcm_carriers tag fields)
-
-mk_nil : nil
-
-mk_cons #tag #fields
-  (s: string) (t: typedef) (x: t.view_type) (v: struct tag fields)
-: struct tag (cons s t fields)
-
-get_field fields s = fields.get s
-
-val addr_of_struct_field 
-
-addr_of_struct_field #tag #point_fields p "x" <--- "x" should be a valid field name
-  p : ref base_type (struct_pcm tag fields)
-  "x" notin excluded
-  excluded : string ^-> bool
-  {p `pts_to_view` struct_view tag fields excluded}
-  {p `pts_to_view` struct_view tag fields (cons "x" excluded)
-   q `pts_to_view` struct_field_view tag fields "x"}
-
-unaddr_of_struct_field p "x"
-  p : ref base_type (struct_pcm tag fields)
-  "x" in excluded
-  excluded : string ^-> bool
-  q = ref_focus p ..
-  {p `pts_to_view` struct_view tag fields excluded
-   q `pts_to_view` struct_field_view tag fields "x"}
-  {p `pts_to_view` struct_view tag fields (excluded \ "x")}
 
 sel_view (struct_pcm tag fields) (struct tag (fields \ excluded)) false
 
