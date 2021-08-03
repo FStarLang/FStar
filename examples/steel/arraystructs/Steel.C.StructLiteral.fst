@@ -13,7 +13,7 @@ open Steel.C.Connection
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
-open ChurchList
+// open ChurchList
 
 (**** MOVE TO ChurchList *)
 
@@ -28,48 +28,40 @@ let rec list_elim (xs: list 'a)
 
 noeq type clist (a:Type u#a): Type = {
   raw: list a;
-  //elim:
-  //  b:(list a -> Type u#b) ->
-  //  base:b [] ->
-  //  ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
-  //  Pure (b raw) True (ensures fun y -> y == list_elim raw b base ind);
   elim:
     b:(list a -> Type u#b) ->
     base:b [] ->
     ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
     b raw;
-  elim_prf:
-    b:(list a -> Type u#b) ->
-    base:b [] ->
-    ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
-    Lemma (elim b base ind == list_elim raw b base ind);
 }
 
-let elim_prf' #a (xs: clist a)
-  (b:(list a -> Type)) (base:b [])
-  (ind:(x:a -> xs:list a -> b xs -> b (x :: xs)))
-: Lemma (xs.elim b base ind == list_elim xs.raw b base ind)
-  [SMTPat (xs.elim b base ind)]
-= xs.elim_prf b base ind
+let clist_elim
+  (c: clist 'a)
+  (b:(list 'a -> Type))
+  (base:b [])
+  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
+: Pure (b c.raw)
+  (requires True)
+  (ensures (fun y -> y == list_elim c.raw b base ind))
+= let b' (l2: list 'a) : Type =
+    (x: b l2 { x == list_elim l2 b base ind })
+  in
+  c.elim
+    b'
+    base
+    (fun x xs x' -> ind x xs x')
 
 let mk_clist (xs: list 'a) = {
   raw = xs;
   elim = list_elim xs;
-  elim_prf = (fun _ _ _ -> ());
 }
-
-(*
-let clist_elim_prf (#a: Type u#a) (xs: clist u#a u#b a)
-: Lemma (xs.elim == list_elim xs.raw) [SMTPat (xs.elim)]
-= let _ = xs.elim_prf in () // TODO bug in Z3?
-*)
 
 #push-options "--print_universes --print_implicits"
 
 #push-options "--fuel 0"
 let _ =
   let xs = normalize_term (mk_clist [1; 2; 3; 4]) in
-  assert (xs.elim (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
+  assert (clist_elim xs (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
 #pop-options
 
 module U = FStar.Universe
@@ -80,7 +72,7 @@ let raise_clist_elim (#a: Type u#a) (xs: clist u#a u#(max b c) a)
   (ind:(x:a -> xs:list a -> b xs -> b (x :: xs)))
 : b xs.raw
 = U.downgrade_val
-    (xs.elim (fun xs -> U.raise_t (b xs))
+    (clist_elim xs (fun xs -> U.raise_t (b xs))
       (U.raise_val base)
       (fun x xs recur -> U.raise_val (ind x xs (U.downgrade_val recur))))
 
@@ -107,18 +99,16 @@ let raise_clist_elim_ok (#a: Type u#a) (xs: clist u#a u#(max b c) a)
 
 let raise_clist (#a: Type u#a) (xs: clist u#a u#(max b c) a)
 : clist u#a u#c a
-= {raw = xs.raw; elim = raise_clist_elim xs; elim_prf = (fun _ _ _ -> ())}
+= {raw = xs.raw; elim = raise_clist_elim xs; }
 
 let nil (#a: Type u#a): clist u#a u#b a = {
   raw = [];
-  elim = list_elim [];
-  elim_prf = (fun _ _ _ -> ());
+  elim = (fun _ base _ -> base);
 }
 
 let cons (#a: Type u#a) (x: a) (xs: clist u#a u#b a): clist u#a u#b a = {
   raw = x :: xs.raw;
-  elim = list_elim (x :: xs.raw);
-  elim_prf = (fun _ _ _ -> ());
+  elim = (fun b base ind -> ind x xs.raw (clist_elim xs b base ind));
 }
 
 let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a): bool
@@ -133,7 +123,7 @@ let cmem_ok (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 u#b a)
 
 let cmap (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
 : clist u#b u#c b
-= xs.elim (fun _ -> clist u#b u#c b) (nil u#b u#c) (fun x xs recur -> cons u#b u#c #b (f x) recur)
+= clist_elim xs (fun _ -> clist u#b u#c b) (nil u#b u#c) (fun x xs recur -> cons u#b u#c #b (f x) recur)
 
 let cmap_ok (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1 + c)) a)
 : Lemma ((cmap f xs).raw == map f xs.raw)
