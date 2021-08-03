@@ -140,7 +140,7 @@ let cmap_ok (#a: Type u#a) (#b: Type u#b) (f: a -> b) (xs: clist u#a u#(max b (1
 
 (**** BEGIN PUBLIC *)
 
-let struct_fields = clist u#1 u#2 (string * typedef)
+let struct_fields = clist u#1 u#3 (string * typedef)
 
 let has_field_bool (fields: struct_fields) (field: string): bool =
   raise_clist_elim fields (fun _ -> bool)
@@ -166,7 +166,7 @@ let field_of (fields: struct_fields) = refine string (has_field fields)
 assume val trivial_typedef: typedef
 
 let get_field (fields: struct_fields) (field: field_of fields): typedef =
-  raise_clist_elim u#1 u#2 u#1 fields (fun fields -> typedef) trivial_typedef
+  raise_clist_elim u#1 u#3 u#1 fields (fun fields -> typedef) trivial_typedef
     (fun (field', td) fields recur -> if field = field' then td else recur)
 
 (**** END PUBLIC *)
@@ -249,14 +249,15 @@ let struct tag fields = restricted_t (field_of fields) (struct_view_types fields
 
 let struct_field_view_type ((_, td): string * typedef): Type = td.view_type
 
-let mk_struct_ty_dom (tag: string) (fields: struct_fields): clist Type =
-  cmap struct_field_view_type fields
+let mk_struct_ty_dom (tag: string) (fields: struct_fields)
+: clist u#1 u#2 Type0
+= cmap struct_field_view_type fields
 
-let clist_fn (dom: clist (Type u#a)) (cod: Type u#a): Type u#a =
-  clist_elim dom (fun _ -> Type) cod (fun d dom recur -> d -> recur)
+let clist_fn (dom: clist u#(1 + c) u#(max b (1 + c)) (Type u#c)) (cod: Type u#c): Type u#c =
+  raise_clist_elim dom (fun _ -> Type u#c) cod (fun d dom recur -> d -> recur)
 
 let mk_struct_ty (tag: string) (fields: struct_fields): Type =
-  mk_struct_ty_dom tag fields `clist_fn` struct tag fields
+  clist_fn u#0 u#2 (mk_struct_ty_dom tag fields) (struct tag fields)
 
 /// A struct literal
 val mk_struct (tag: string) (fields: struct_fields): mk_struct_ty tag fields
@@ -465,7 +466,7 @@ let struct_put_put_ne x field1 v field2 w =
 /// Similarly, a PCM for structs
 
 let struct_carriers (fields: struct_fields)
-: restricted_t (field_of fields) (fun _ -> Type)
+: restricted_t (field_of fields) const_Type
 = on_dom _ (fun (field: field_of fields) -> (get_field fields field).carrier)
 
 let struct_pcms (tag: string) (fields: struct_fields) (field: field_of fields)
@@ -476,11 +477,16 @@ val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
 (**** END PUBLIC *)
 
 let struct_carriers' (fields: list (string * typedef))
-: restricted_t (field_of' fields) (fun _ -> Type)
+: restricted_t (field_of' fields) const_Type
 = on_dom _ (fun field -> (get_field' fields field).carrier)
+
+let struct_carriers_eq fields
+: Lemma (struct_carriers fields == struct_carriers' fields.raw)
+  [SMTPat (struct_carriers fields)]
+= ext' _ _ _ _ (struct_carriers fields) (struct_carriers' fields.raw)
   
 let struct_pcm_carrier' tag fields = restricted_t (field_of' fields) (struct_carriers' fields)
-let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers' fields.raw)
+let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers fields)
 
 let struct_pcms' (tag: string) (fields: list (string * typedef)) (field: field_of' fields)
 : pcm (struct_carriers' fields field)
@@ -489,7 +495,7 @@ let struct_pcms' (tag: string) (fields: list (string * typedef)) (field: field_o
 (**** BEGIN PUBLIC *)
 val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
 (**** END PUBLIC *)
-let struct_pcm tag fields = prod_pcm (struct_pcms' tag fields.raw)
+let struct_pcm tag fields = prod_pcm (struct_pcms tag fields)
 
 let struct_field_carrier ((_, td): string * typedef): Type = td.carrier
 
@@ -641,6 +647,78 @@ let _ =
   in ()
 #pop-options
 
+(**** BEGIN PUBLIC *)
+
+/// View a struct_pcm_carrier as a struct
+val struct_view (tag: string) (fields: struct_fields{Cons? fields.raw})
+: sel_view (struct_pcm tag fields) (struct tag fields) false
+
+(**** END PUBLIC *)
+
+let field_views (tag: string) (fields: struct_fields) (field: field_of fields)
+: sel_view (struct_pcms tag fields field) (struct_view_types fields field) false
+= (get_field fields field).view
+
+let struct_view_to_view_prop (tag: string) (fields: struct_fields)
+: struct_pcm_carrier tag fields -> prop
+= fun x -> forall (field:field_of fields). (field_views tag fields field).to_view_prop (x field)
+
+let struct_view_to_view (tag: string) (fields: struct_fields)
+: refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields) ->
+  Tot (struct tag fields)
+= fun x -> on_dom _ (fun (field: field_of fields) -> (field_views tag fields field).to_view (x field))
+
+let struct_view_to_carrier (tag: string) (fields: struct_fields)
+: struct tag fields ->
+  Tot (refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields))
+= fun x ->
+  let y: struct_pcm_carrier tag fields =
+    on_dom _ (fun (field: field_of fields) ->
+      (field_views tag fields field).to_carrier (x field)
+      <: struct_carriers' fields.raw field)
+  in y
+
+#push-options "--z3rlimit 30"
+let struct_view_to_view_frame (tag: string) (fields: struct_fields)
+  (x: struct tag fields)
+  (frame: struct_pcm_carrier tag fields)
+: Lemma
+    (requires (composable (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame))
+    (ensures
+      struct_view_to_view_prop tag fields
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) /\ 
+      struct_view_to_view tag fields
+        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) == x)
+= let p = struct_pcms tag fields in
+  let aux (k:field_of fields)
+  : Lemma (
+      (field_views tag fields k).to_view_prop
+        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) /\
+      (field_views tag fields k).to_view
+        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) == x k)
+  = assert (composable (p k) ((field_views tag fields k).to_carrier (x k)) (frame k));
+    (field_views tag fields k).to_view_frame (x k) (frame k)
+  in FStar.Classical.forall_intro aux;
+  assert (
+    struct_view_to_view tag fields
+       (op (prod_pcm p) (struct_view_to_carrier tag fields x) frame) `feq` x)
+       
+let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields{Cons? fields.raw})
+: squash (
+    ~ (exists x. struct_view_to_carrier tag fields x == one (struct_pcm tag fields)) /\
+    ~ (struct_view_to_view_prop tag fields (one (struct_pcm tag fields))))
+= let (field, _) :: _ = fields.raw in
+  let field: field_of fields = field in
+  (field_views tag fields field).to_carrier_not_one
+
+let struct_view tag fields = {
+  to_view_prop = struct_view_to_view_prop tag fields;
+  to_view = struct_view_to_view tag fields;
+  to_carrier = struct_view_to_carrier tag fields;
+  to_carrier_not_one = struct_view_to_carrier_not_one tag fields;
+  to_view_frame = struct_view_to_view_frame tag fields;
+}
+
 (**** MOVE EVERYTHING BELOW TO SEPARATE FILES *)
 
 /// TODO move and dedup with Steel.C.Ptr.fst
@@ -718,7 +796,7 @@ assume val struct_field':
           (struct_pcm tag fields)
           (struct_pcms tag fields field))
 
-[@@__reduce__]
+//[@@__reduce__]
 let pts_to_field
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
@@ -730,23 +808,21 @@ let pts_to_field
     (struct_views fields field)
     (s `struct_get'` field)
 
-[@@__reduce__]
-let rec pts_to_fields'
+//[@@__reduce__]
+let pts_to_fields'
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
   (s: struct tag fields)
   (fields': struct_fields)
 : vprop
-= match fields' with
-  | [(field, _)] ->
-    if has_field_bool fields field then pts_to_field tag fields p s field else emp
-  | (field, _) :: fields' ->
-    if has_field_bool fields field then begin
-      pts_to_field tag fields p s field `star`
-      pts_to_fields' tag fields p s fields'
-    end else emp
+= raise_clist_elim u#1 u#3 u#2 fields' (fun _ -> vprop)
+    emp
+    (fun (field, _) _ recur ->
+      if has_field_bool fields field then begin
+        pts_to_field tag fields p s field `star` recur
+    end else recur)
 
-[@@__reduce__]
+//[@@__reduce__]
 let pts_to_fields
   (tag: string) (fields: struct_fields)
   (p: ref 'a (struct_pcm tag fields))
