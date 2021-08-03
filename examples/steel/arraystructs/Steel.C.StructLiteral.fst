@@ -389,24 +389,8 @@ val struct_put
 : struct tag fields
 (**** END PUBLIC *)
 
-let field'_of (fields: struct_fields) (field: field_of fields)
-: field_of' fields.raw
-= field
-
-let view_type'_of (fields: struct_fields) (field: field_of fields)
-  (v: struct_view_types' fields.raw field)
-: struct_view_types fields field
-= assoc_mem field fields.raw; v
-
-let view_type_of (fields: struct_fields) (field: field_of fields)
-  (v: struct_view_types fields field)
-: struct_view_types' fields.raw field
-= assoc_mem field fields.raw; v
-
 let struct_get x field = x field
-
-let struct_put x field v =
-  on_dom _ (fun field' -> if field = field' then v else x field')
+let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
 
 (**** BEGIN PUBLIC *)
 
@@ -496,7 +480,7 @@ let struct_carriers' (fields: list (string * typedef))
 = on_dom _ (fun field -> (get_field' fields field).carrier)
   
 let struct_pcm_carrier' tag fields = restricted_t (field_of' fields) (struct_carriers' fields)
-let struct_pcm_carrier tag fields = struct_pcm_carrier' tag fields.raw
+let struct_pcm_carrier tag fields = restricted_t (field_of fields) (struct_carriers' fields.raw)
 
 let struct_pcms' (tag: string) (fields: list (string * typedef)) (field: field_of' fields)
 : pcm (struct_carriers' fields field)
@@ -509,116 +493,155 @@ let struct_pcm tag fields = prod_pcm (struct_pcms' tag fields.raw)
 
 let struct_field_carrier ((_, td): string * typedef): Type = td.carrier
 
-(*
+(**** BEGIN PUBLIC *)
+let struct_pcm_one (tag: string) (fields: struct_fields)
+: struct_pcm_carrier tag fields
+= one (struct_pcm tag fields)
 
-/// View a struct_pcm_carrier as a struct
-val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields{normalize_term (fields' \subset fields) == true})
-: sel_view (struct_pcm tag fields) (struct tag fields') false
+/// Reading a pcm_struct_carrier field
+val struct_pcm_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields) (field: field_of fields)
+: (get_field fields field).carrier
 
-val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields)
-: sel_view (struct_pcm tag fields) (struct tag (normalize (fields - fields'))) false
+/// Writing a struct_pcm_carrier field
+val struct_pcm_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v: (get_field fields field).carrier)
+: struct_pcm_carrier tag fields
 
-struct_view_convert #opened
-  (v: struct_view tag fields fields'1)
-: SteelGhost (struct_view tag fields fields'2) opened
-    (p `pts_to_view` v)
-    (fun w -> (p `pts_to_view` w))
-    (requires fun _ -> normalize (fields - fields'1 == fields - fields'2))
-    (ensures fun h w h' -> forall field. field in (fields - fields'1) ==>
-       h (p `pts_to_view` v) `struct_get` field == 
-       h' (p `pts_to_view` w) `struct_get` field)
+(**** END PUBLIC *)
 
-struct_view_convert
-  (v: struct_view tag fields fields'1)
-: Pure (struct_view tag fields fields'2)
-    (requires normalize (fields - fields'1 == fields - fields'2))
-    (ensures fun w -> True)
+let struct_pcm_get x field = x field
+let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
 
-val struct_view (tag: string) (fields: struct_fields) (fields': struct_fields) (fields_fields': struct_fields) (heq: squash (fields_fields' == normalize_term (fields - fields')))
-: sel_view (struct_pcm tag fields) (struct tag fields_fields') false
+(**** BEGIN PUBLIC *)
 
-// struct_view tag fields fields' (_ by (T.norm _; T.trefl ()))
+/// For a fixed field name, struct_pcm_get and struct_pcm_put form a lens
 
-let field_views (tag: string) (fields: struct_fields) (field: field_of fields)
-: sel_view (struct_pcms tag fields field) (struct_view_types fields field) false
-= (get_field fields field).view
+val struct_pcm_get_put 
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v: (get_field fields field).carrier)
+: Lemma (struct_pcm_put x field v `struct_pcm_get` field == v)
+  [SMTPat (struct_pcm_put x field v `struct_pcm_get` field)]
 
-let struct_view_to_view_prop (tag: string) (fields: struct_fields)
-: struct_pcm_carrier tag fields -> prop
-= fun x -> forall (field:field_of fields). (field_views tag fields field).to_view_prop (x field)
+val struct_pcm_put_get
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+: Lemma (struct_pcm_put x field (x `struct_pcm_get` field) == x)
+  [SMTPat (struct_pcm_put x field (x `struct_pcm_get` field))]
 
-let struct_view_to_view (tag: string) (fields: struct_fields)
-: refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields) ->
-  Tot (struct tag fields)
-= fun x -> on_dom _ (fun (field: field_of fields) -> (field_views tag fields field).to_view (x field))
+val struct_pcm_put_put
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field: field_of fields)
+  (v w: (get_field fields field).carrier)
+: Lemma (struct_pcm_put (struct_pcm_put x field v) field w == struct_pcm_put x field w)
+  [SMTPat (struct_pcm_put (struct_pcm_put x field v) field w)]
+  
+/// struct_pcm_get/struct_pcm_put pairs for different fields don't interfere with each other
 
-let struct_view_to_carrier (tag: string) (fields: struct_fields)
-: struct tag fields ->
-  Tot (refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields))
-= fun x ->
-  let y: struct_pcm_carrier tag fields =
-    on_dom _ (fun (field: field_of fields) ->
-      (field_views tag fields field).to_carrier (x field)
-      <: struct_carriers fields field)
-  in y
-
-let struct_view_to_view_frame (tag: string) (fields: struct_fields)
-  (x: struct tag fields)
-  (frame: struct_pcm_carrier tag fields)
+val struct_pcm_get_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field1: field_of fields)
+  (field2: field_of fields)
+  (v: (get_field fields field1).carrier)
 : Lemma
-    (requires (composable (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame))
+    (requires field1 =!= field2)
+    (ensures struct_pcm_put x field1 v `struct_pcm_get` field2 == x `struct_pcm_get` field2)
+  [SMTPat (struct_pcm_put x field1 v `struct_pcm_get` field2)]
+  
+val struct_pcm_put_put_ne
+  (#tag: string) (#fields: struct_fields)
+  (x: struct_pcm_carrier tag fields)
+  (field1: field_of fields)
+  (v: (get_field fields field1).carrier)
+  (field2: field_of fields)
+  (w: (get_field fields field2).carrier)
+: Lemma
+    (requires field1 =!= field2)
     (ensures
-      struct_view_to_view_prop tag fields
-        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) /\ 
-      struct_view_to_view tag fields
-        (op (struct_pcm tag fields) (struct_view_to_carrier tag fields x) frame) == x)
-= let p = struct_pcms tag fields in
-  let aux (k:field_of fields)
-  : Lemma (
-      (field_views tag fields k).to_view_prop
-        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) /\
-      (field_views tag fields k).to_view
-        (op (p k) ((field_views tag fields k).to_carrier (x k)) (frame k)) == x k)
-  = assert (composable (p k) ((field_views tag fields k).to_carrier (x k)) (frame k));
-    (field_views tag fields k).to_view_frame (x k) (frame k)
-  in FStar.Classical.forall_intro aux;
-  assert (
-    struct_view_to_view tag fields
-       (op (prod_pcm p) (struct_view_to_carrier tag fields x) frame) `feq` x)
+      struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
+      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
-let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields)
-: squash (
-    ~ (exists x. struct_view_to_carrier tag fields x == one (struct_pcm tag fields)) /\
-    ~ (struct_view_to_view_prop tag fields (one (struct_pcm tag fields))))
-= let (field, _) :: _ = fields in
-  let field: field_of fields = field in
-  (field_views tag fields field).to_carrier_not_one
+/// Struct PCM carrier values are extensional
 
-let struct_view tag fields = {
-  to_view_prop = struct_view_to_view_prop tag fields;
-  to_view = struct_view_to_view tag fields;
-  to_carrier = struct_view_to_carrier tag fields;
-  to_carrier_not_one = struct_view_to_carrier_not_one tag fields;
-  to_view_frame = struct_view_to_view_frame tag fields;
-}
+let struct_eq
+  (#tag: string) (#fields: struct_fields)
+  (x y: struct_pcm_carrier tag fields)
+= forall (field: field_of fields).
+  x `struct_pcm_get` field == y `struct_pcm_get` field
 
-/// Connections for fields of structs
-val struct_field
-  (tag: string) (fields: struct_fields) (field: field_of fields)
-: connection (struct_pcm tag fields) (struct_pcms tag fields field)
-let struct_field tag fields field = struct_field (struct_pcms tag fields) field
+// let struct_eq
+//   (#tag: string) (#fields: struct_fields)
+//   (x y: struct_pcm_carrier tag fields)
+// = raise_clist_elim u#1 u#2 u#_ fields (fun _ -> prop) True
+//     (fun (field, td) _ recur ->
+//       has_field_bool fields field /\
+//       x `struct_pcm_get` field == y `struct_pcm_get` field /\
+//       recur)
 
-/// Typedef for struct from typedefs for its fields
-(*
-let typedef_struct (tag: string) (fields: struct_fields): typedef = {
-  carrier = struct_pcm_carrier tag fields; 
-  pcm = struct_pcm tag fields;
-  view_type = struct tag fields;
-  view = struct_view tag fields;
-}
-*)
+val struct_pcm_ext
+  (#tag: string) (#fields: struct_fields)
+  (x y: struct_pcm_carrier tag fields)
+: Lemma
+    (requires x `struct_eq` y)
+    (ensures x == y)
+    [SMTPat (x `struct_eq` y)]
 
-*)
+(**** END PUBLIC *)
+
+let struct_pcm_get_put x field v = ()
+
+let struct_pcm_put_get x field =
+  assert (struct_pcm_put x field (x `struct_pcm_get` field) `feq` x)
+
+let struct_pcm_put_put x field v w =
+  assert (struct_pcm_put (struct_pcm_put x field v) field w `feq` struct_pcm_put x field w)
+
+let struct_pcm_get_put_ne x field1 field2 v = ()
+
+let struct_pcm_put_put_ne x field1 v field2 w =
+   assert (
+     struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
+     struct_pcm_put (struct_pcm_put x field2 w) field1 v)
+
+let struct_pcm_ext x y = assert (x `feq` y)
+
+#push-options "--fuel 0"
+let _ =
+  let c_int: typedef = {
+    carrier = option int;
+    pcm = Steel.C.Opt.opt_pcm #int;
+    view_type = int;
+    view = Steel.C.Opt.opt_view int;
+  } in
+  let fields = normalize_term (mk_clist [
+    "x", c_int;
+    "y", c_int;
+    "z", c_int;
+    //"w", c_int;
+  ]) in
+  let aux (x y: struct_pcm_carrier "" fields) =
+    assert (has_field_bool fields "x");
+    assert (has_field_bool fields "y");
+    assert (has_field_bool fields "z");
+    //assert (has_field_bool fields "w");
+    assume (x `struct_pcm_get` "x" == y `struct_pcm_get` "x");
+    assume (x `struct_pcm_get` "y" == y `struct_pcm_get` "y");
+    assume (x `struct_pcm_get` "z" == y `struct_pcm_get` "z");
+    //assume (x `struct_pcm_get` "w" == y `struct_pcm_get` "w");
+    assert (x `struct_eq` y)
+  in ()
+#pop-options
+
+(**** MOVE EVERYTHING BELOW TO SEPARATE FILES *)
 
 /// TODO move and dedup with Steel.C.Ptr.fst
 
