@@ -1067,6 +1067,53 @@ let explode'' p s =
 (*
 (*
 
+struct tag fields : Type
+
+struct_pcm_carrier tag fields : Type
+struct_pcm tag fields : pcm (struct_pcm_carrier tag fields)
+
+fields : list (string * typedef)
+
+type struct_fields = {fields: list string; get: string ^-> typedef; get_prf: dom(get) ⊆ fields}
+
+fields : struct_fields
+
+nil : struct_fields
+cons : string -> typedef -> struct_fields -> struct_fields
+
+struct_view tag fields excluded
+  carrier = struct_pcm tag fields
+  view_type = restricted_t (refine string (notin excluded)) (struct_pcm_carriers tag fields)
+
+mk_nil : nil
+
+mk_cons #tag #fields
+  (s: string) (t: typedef) (x: t.view_type) (v: struct tag fields)
+: struct tag (cons s t fields)
+
+get_field fields s = fields.get s
+
+val addr_of_struct_field 
+
+addr_of_struct_field #tag #point_fields p "x" <--- "x" should be a valid field name
+  p : ref base_type (struct_pcm tag fields)
+  "x" notin excluded
+  excluded : string ^-> bool
+  {p `pts_to_view` struct_view tag fields excluded}
+  {p `pts_to_view` struct_view tag fields (cons "x" excluded)
+   q `pts_to_view` struct_field_view tag fields "x"}
+
+unaddr_of_struct_field p "x"
+  p : ref base_type (struct_pcm tag fields)
+  "x" in excluded
+  excluded : string ^-> bool
+  q = ref_focus p ..
+  {p `pts_to_view` struct_view tag fields excluded
+   q `pts_to_view` struct_field_view tag fields "x"}
+  {p `pts_to_view` struct_view tag fields (excluded \ "x")}
+
+sel_view (struct_pcm tag fields) (struct tag (fields \ excluded)) false
+
 val explode'' (#opened: inames)
   (p: ref 'a point_pcm)
 : SteelGhost unit opened
