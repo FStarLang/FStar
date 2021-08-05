@@ -253,6 +253,11 @@ let pts_to_view
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
+  //(#a: Type u#0) (#[@@@smt_fallback] b: Type u#b) (#[@@@smt_fallback] p: pcm b)
+  //(r: ref a p)
+  //(#[@@@smt_fallback] c: Type0)
+  //(#can_view_unit: bool)
+  //([@@@smt_fallback] vw: sel_view p c can_view_unit)
 : Tot vprop
 = VUnit (pts_to_view' r vw)
 
