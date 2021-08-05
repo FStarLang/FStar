@@ -191,6 +191,7 @@ let cmem_ok (#a:eqtype) (x: a) (xs: clist u#0 a)
 
 (**** END MOVE TO ChurchList *)
 
+//[@@__reduce__]
 noeq type struct_fields = {
   //cfields: clist string;
   cfields: list string;
@@ -207,6 +208,7 @@ let trivial_typedef: typedef = {
   view = opt_view unit;
 }
 
+//[@@__reduce__]
 let fields_nil: struct_fields = {
   cfields = [];
   has_field = emptyset;
@@ -214,6 +216,7 @@ let fields_nil: struct_fields = {
   get_field = on_dom _ (fun _ -> trivial_typedef);
 }
 
+//[@@__reduce__]
 let fields_cons (field: string) (td: typedef) (fields: struct_fields): struct_fields = {
   cfields = field :: fields.cfields;
   has_field = insert field fields.has_field;
