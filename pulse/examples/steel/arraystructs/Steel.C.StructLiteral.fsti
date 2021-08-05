@@ -241,33 +241,41 @@ let field_of (fields: struct_fields) = field:string{fields.has_field field == tr
 
 /// Reading a struct field
 val struct_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields) (field: field_of fields)
-: (fields.get_field field).view_type
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded) (field: field_of fields)
+: Pure (fields.get_field field).view_type
+    (requires excluded field == false)
+    (ensures fun _ -> True)
 
 /// Writing a struct field
 val struct_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded)
   (field: field_of fields)
   (v: (fields.get_field field).view_type)
-: struct tag fields
+: Pure (struct' tag fields excluded)
+    (requires excluded field == false)
+    (ensures fun _ -> True)
 
 /// For a fixed field name, struct_get and struct_put form a lens
 
 val struct_get_put 
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded)
   (field: field_of fields)
   (v: (fields.get_field field).view_type)
-: Lemma (struct_put x field v `struct_get` field == v)
+: Lemma
+    (requires excluded field == false)
+    (ensures struct_put x field v `struct_get` field == v)
   [SMTPat (struct_put x field v `struct_get` field)]
 
 val struct_put_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded)
   (field: field_of fields)
-: Lemma (struct_put x field (x `struct_get` field) == x)
+: Lemma
+    (requires excluded field == false)
+    (ensures struct_put x field (x `struct_get` field) == x)
   [SMTPat (struct_put x field (x `struct_get` field))]
 
 val struct_put_put
@@ -281,25 +289,25 @@ val struct_put_put
 /// struct_get/struct_put pairs for different fields don't interfere with each other
 
 val struct_get_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded)
   (field1: field_of fields)
   (field2: field_of fields)
   (v: (fields.get_field field1).view_type)
 : Lemma
-    (requires field1 =!= field2)
+    (requires field1 =!= field2 /\ excluded field1 == false /\ excluded field2 == false)
     (ensures struct_put x field1 v `struct_get` field2 == x `struct_get` field2)
   [SMTPat (struct_put x field1 v `struct_get` field2)]
   
 val struct_put_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (x: struct' tag fields excluded)
   (field1: field_of fields)
   (v: (fields.get_field field1).view_type)
   (field2: field_of fields)
   (w: (fields.get_field field2).view_type)
 : Lemma
-    (requires field1 =!= field2)
+    (requires field1 =!= field2 /\ excluded field1 == false /\ excluded field2 == false)
     (ensures
       struct_put (struct_put x field1 v) field2 w ==
       struct_put (struct_put x field2 w) field1 v)
@@ -406,6 +414,11 @@ val addr_of_struct_field
        ==
         (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
          h' (q `pts_to_view` (fields.get_field field).view)))
+
+let insert_remove x (s: set 'a)
+: Lemma (requires s x == true) (ensures insert x (remove x s) == s)
+  [SMTPat (insert x (remove x s))]
+= assert (insert x (remove x s) `feq` s)
 
 val unaddr_of_struct_field
   (#tag: string) (#fields: struct_fields) (#excluded: set string)
