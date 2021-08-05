@@ -24,6 +24,7 @@ module FStar.Int$i
 
 (**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
+noextract
 unfold let n = $i
 
 EOF
@@ -99,6 +100,7 @@ module FStar.UInt$i
 
 (**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
+noextract
 unfold let n = $i
 
 EOF

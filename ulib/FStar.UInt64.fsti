@@ -17,6 +17,7 @@ module FStar.UInt64
 
 (**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
+noextract
 unfold let n = 64
 
 /// For FStar.UIntN.fstp: anything that you fix/update here should be
@@ -75,8 +76,10 @@ val v_inj (x1 x2: t): Lemma
   (ensures (x1 == x2))
 
 (** Constants 0 and 1 *)
+inline_for_extraction noextract
 val zero : x:t{v x = 0}
 
+inline_for_extraction noextract
 val one : x:t{v x = 1}
 
 (**** Addition primitives *)
@@ -235,11 +238,11 @@ let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (** Unary negation *)
-inline_for_extraction
+inline_for_extraction noextract
 let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
 (** The maximum value for this type *)
-inline_for_extraction
+inline_for_extraction noextract
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
 #set-options "--z3rlimit 80 --initial_fuel 1 --max_fuel 1"

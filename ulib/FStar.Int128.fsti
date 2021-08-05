@@ -17,6 +17,7 @@ module FStar.Int128
 
 (**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
+noextract
 unfold let n = 128
 
 open FStar.Int

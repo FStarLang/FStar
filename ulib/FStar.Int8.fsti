@@ -17,6 +17,7 @@ module FStar.Int8
 
 (**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
+noextract
 unfold let n = 8
 
 open FStar.Int
