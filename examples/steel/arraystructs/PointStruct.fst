@@ -4,9 +4,52 @@ open Steel.C.PCM
 open Steel.C.Opt
 open Steel.C.Connection
 open Steel.C.Struct
+open Steel.C.StructLiteral
+open Steel.C.Typedef
 open FStar.FunctionalExtensionality
 open Steel.Effect
 module A = Steel.Effect.Atomic
+
+let c_int: typedef = {
+  carrier = option int;
+  pcm = opt_pcm #int;
+  view_type = int;
+  view = opt_view int;
+}
+
+let point_fields: struct_fields = 
+  fields_cons "x" c_int (
+  fields_cons "y" c_int (
+  fields_nil))
+
+let point_view_t = struct "point" point_fields
+
+let point_view = struct_view "point" point_fields
+
+let point = struct_pcm_carrier "point" point_fields
+
+let point_pcm = struct_pcm "point" point_fields
+
+#push-options "--fuel 0"
+
+let x_conn = struct_field "point" point_fields "x"
+
+val addr_of_x' (p: ref 'a point_pcm) (excluded: set string)
+: Steel (ref 'a (opt_pcm #int))
+    (p `pts_to_view` point_view excluded)
+    (fun q ->
+       (p `pts_to_view` point_view (insert "x" excluded)) `star`
+       (q `pts_to_view` opt_view int))
+    (requires fun _ -> not (excluded "x"))
+    (ensures fun h q h' ->
+      q == ref_focus p x_conn /\
+      extract_field "point" point_fields excluded "x"
+        (h (p `pts_to_view` point_view excluded) `struct_get` "x")
+      == 
+        (h' (p `pts_to_view` point_view (insert "x" excluded)),
+         h' (q `pts_to_view` opt_view int)))
+
+let addr_of_x'
 
 let point_fields k = match k with
   | X -> option int
