@@ -8,219 +8,12 @@ open Steel.Effect.Atomic
 open Steel.C.PCM
 open Steel.C.Struct
 open Steel.C.Typedef
-open Steel.C.Ref // for refine
+open Steel.C.Ref
 open Steel.C.Connection
 open Steel.C.Opt
+
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
-
-let has_elements (#a:eqtype) (f: a ^-> bool) (xs: list a): prop =
-  forall x. f x == x `mem` xs
-
-// Finite sets
-let set (a:eqtype) = f:(a ^-> bool){exists xs. f `has_elements` xs}
-
-let set_as_list (s: set 'a): GTot (list 'a) =
-  FStar.IndefiniteDescription.indefinite_description_ghost (list 'a)
-    (has_elements s)
-
-let intro_set (#a:eqtype) (f: a ^-> bool) (xs: Ghost.erased (list a))
-: Pure (set a)
-    (requires f `has_elements` xs)
-    (ensures fun _ -> True)
-= Classical.exists_intro (fun xs -> f `has_elements` xs) xs;
-  f 
-
-let emptyset #a: set a = intro_set (on_dom a (fun _ -> false)) []
-
-let insert x (s: set 'a): set 'a =
-  intro_set (on_dom _ (fun x' -> x = x' || s x')) (x :: set_as_list s)
-
-let set_remove (#a:eqtype) x (s: a ^-> bool): (a ^-> bool) =
-  on_dom _ (fun x' -> not (x = x') && s x')
-
-let rec list_remove (#a:eqtype) x (xs: list a) = match xs with
-  | [] -> []
-  | x' :: xs ->
-    if x = x' then list_remove x xs
-    else x' :: list_remove x xs
-
-let rec list_remove_spec (#a:eqtype) f x (xs: list a)
-: Lemma
-    (requires f `has_elements` xs)
-    (ensures set_remove x f `has_elements` list_remove x xs)
-    (decreases xs)
-= match xs with
-  | [] -> ()
-  | x' :: xs ->
-    let g: (a ^-> bool) = on_dom _ (fun x -> x `mem` xs) in
-    let f': (a ^-> bool) = on_dom _ (fun x'' -> x'' = x' || g x'') in
-    assert (f `feq` f');
-    assert (g `has_elements` xs);
-    list_remove_spec g x xs;
-    assert (set_remove x g `has_elements` list_remove x xs)
-
-let remove x (s: set 'a): set 'a =
-  list_remove_spec s x (set_as_list s);
-  intro_set (set_remove x s) (list_remove x (set_as_list s))
-
-let notin (s: set 'a) (x: 'a): prop = s x == false
-
-(**** MOVE TO ChurchList *)
-
-let rec list_elim (xs: list 'a)
-  (b:(list 'a -> Type))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: b xs
-= match xs with
-  | [] -> base
-  | x :: xs -> ind x xs (list_elim xs b base ind)
-
-let elim_t (#a: Type u#a) (xs: list a): Tot (Type u#(max a (1 + b))) =
-  b:(list a -> Type u#b) ->
-  base:b [] ->
-  ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
-  b xs
-
-//[@@__reduce__]
-noeq type clist (a:Type u#a): Type = {
-  raw: list a;
-  elim0: elim_t u#_ u#0 raw;
-  elim1: elim_t u#_ u#1 raw;
-  elim2: elim_t u#_ u#2 raw;
-  elim3: elim_t u#_ u#3 raw;
-}
-
-//[@@__reduce__]
-let clist_elim0
-  (c: clist 'a)
-  (b:(list 'a -> Type0))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim0
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-//[@@__reduce__]
-let clist_elim1
-  (c: clist 'a)
-  (b:(list 'a -> Type u#1))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim1
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-//[@@__reduce__]
-let clist_elim2
-  (c: clist 'a)
-  (b:(list 'a -> Type u#2))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim2
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-#push-options "--print_universes --print_implicits"
-
-#push-options "--fuel 0"
-let mk_clist (xs: list 'a) = {
-  raw = xs;
-  elim0 = list_elim xs;
-  elim1 = list_elim xs;
-  elim2 = list_elim xs;
-  elim3 = list_elim xs;
-}
-let _ =
-  let xs = normalize_term (mk_clist [1; 2; 3; 4]) in
-  assert (clist_elim0 xs (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
-#pop-options
-
-//[@@__reduce__]
-let nil (#a: Type u#a): clist u#a a = {
-  raw = [];
-  elim0 = (fun _ base _ -> base);
-  elim1 = (fun _ base _ -> base);
-  elim2 = (fun _ base _ -> base);
-  elim3 = (fun _ base _ -> base);
-}
-
-//[@@__reduce__]
-let cons (#a: Type u#a) (x: a) (xs: clist u#a a): clist u#a a = {
-  raw = x :: xs.raw;
-  elim0 = (fun b base ind -> ind x xs.raw (xs.elim0 b base ind));
-  elim1 = (fun b base ind -> ind x xs.raw (xs.elim1 b base ind));
-  elim2 = (fun b base ind -> ind x xs.raw (xs.elim2 b base ind));
-  elim3 = (fun b base ind -> ind x xs.raw (xs.elim3 b base ind));
-}
-
-//[@@__reduce__]
-let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 a): bool
-= clist_elim0 xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur)
-
-//[@@__reduce__]
-let cmem_ok (#a:eqtype) (x: a) (xs: clist u#0 a)
-: Lemma (cmem x xs == mem x xs.raw)
-= let rec aux (xs: list a)
-  : Lemma (list_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur) == mem x xs)
-  = match xs with [] -> () | x :: xs -> aux xs
-  in aux xs.raw
-
-(**** END MOVE TO ChurchList *)
-
-noeq type struct_fields = {
-  //cfields: clist string;
-  cfields: list string;
-  has_field: set string;
-  //has_field_prf: squash (forall field. has_field field == field `mem` cfields);
-  get_field: string ^-> typedef;
-  // get_field_prf: forall field. has_field field == false ==> get_field field == trivial_typedef;
-}
-
-let trivial_typedef: typedef = {
-  carrier = option unit;
-  pcm = opt_pcm #unit;
-  view_type = unit;
-  view = opt_view unit;
-}
-
-let fields_nil: struct_fields = {
-  cfields = [];
-  has_field = emptyset;
-  //has_field_prf = ();
-  get_field = on_dom _ (fun _ -> trivial_typedef);
-}
-
-let fields_cons (field: string) (td: typedef) (fields: struct_fields): struct_fields = {
-  cfields = field :: fields.cfields;
-  has_field = insert field fields.has_field;
-  //has_field_prf = ();
-  get_field = on_dom _ (fun field' -> if field = field' then td else fields.get_field field');
-}
-
-val struct' (tag: string) (fields: struct_fields) (excluded: set string): Type0
 
 let struct_dom (excluded: set string) = refine string (notin excluded)
 
@@ -230,108 +23,27 @@ let struct_cod (fields: struct_fields) (excluded: set string) (field: struct_dom
 let struct' tag fields excluded =
   restricted_t (struct_dom excluded) (struct_cod fields excluded)
 
-let struct (tag: string) (fields: struct_fields) = struct' tag fields emptyset
-
-val mk_nil (tag: string): struct tag fields_nil
-
 let mk_nil tag = on_dom _ (fun _ -> ())
-
-val mk_cons (tag: string) (fields: struct_fields)
-  (field: string) (td: typedef) (x: td.view_type) (v: struct tag fields)
-: Pure (struct tag (fields_cons field td fields))
-    (requires fields.has_field field == false)
-    (ensures fun _ -> True)
 
 let mk_cons tag fields field td x v =
   on_dom (refine string (notin emptyset)) (fun field' ->
     if field = field' then x
     else v field' <: ((fields_cons field td fields).get_field field').view_type)
 
-val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
-
 let struct_pcm_carrier_cod (fields: struct_fields) (field: string) =
   (fields.get_field field).carrier
 
 let struct_pcm_carrier tag fields =
   restricted_t string (struct_pcm_carrier_cod fields)
-
-val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
-
+  
 let struct_pcms (fields: struct_fields) (field: string)
 : pcm (struct_pcm_carrier_cod fields field)
 = (fields.get_field field).pcm
 
 let struct_pcm tag fields = prod_pcm (struct_pcms fields)
 
-(* public *) let field_of (fields: struct_fields) = field:string{fields.has_field field == true}
-
-/// Reading a struct field
-val struct_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields) (field: field_of fields)
-: (fields.get_field field).view_type
-
-/// Writing a struct field
-val struct_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field: field_of fields)
-  (v: (fields.get_field field).view_type)
-: struct tag fields
-
 let struct_get x field = x field
 let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
-
-/// For a fixed field name, struct_get and struct_put form a lens
-
-val struct_get_put 
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field: field_of fields)
-  (v: (fields.get_field field).view_type)
-: Lemma (struct_put x field v `struct_get` field == v)
-  [SMTPat (struct_put x field v `struct_get` field)]
-
-val struct_put_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field: field_of fields)
-: Lemma (struct_put x field (x `struct_get` field) == x)
-  [SMTPat (struct_put x field (x `struct_get` field))]
-
-val struct_put_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field: field_of fields)
-  (v w: (fields.get_field field).view_type)
-: Lemma (struct_put (struct_put x field v) field w == struct_put x field w)
-  [SMTPat (struct_put (struct_put x field v) field w)]
-
-/// struct_get/struct_put pairs for different fields don't interfere with each other
-
-val struct_get_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field1: field_of fields)
-  (field2: field_of fields)
-  (v: (fields.get_field field1).view_type)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures struct_put x field1 v `struct_get` field2 == x `struct_get` field2)
-  [SMTPat (struct_put x field1 v `struct_get` field2)]
-  
-val struct_put_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct tag fields)
-  (field1: field_of fields)
-  (v: (fields.get_field field1).view_type)
-  (field2: field_of fields)
-  (w: (fields.get_field field2).view_type)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures
-      struct_put (struct_put x field1 v) field2 w ==
-      struct_put (struct_put x field2 w) field1 v)
       
 let struct_get_put x field v = ()
 
@@ -348,78 +60,8 @@ let struct_put_put_ne x field1 v field2 w =
     struct_put (struct_put x field1 v) field2 w `feq`
     struct_put (struct_put x field2 w) field1 v)
 
-(* public *)
-let struct_pcm_one (tag: string) (fields: struct_fields)
-: struct_pcm_carrier tag fields
-= one (struct_pcm tag fields)
-
-/// Reading a pcm_struct_carrier field
-val struct_pcm_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields) (field: field_of fields)
-: (fields.get_field field).carrier
-
-/// Writing a struct_pcm_carrier field
-val struct_pcm_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v: (fields.get_field field).carrier)
-: struct_pcm_carrier tag fields
-
 let struct_pcm_get x field = x field
 let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
-
-/// For a fixed field name, struct_pcm_get and struct_pcm_put form a lens
-
-val struct_pcm_get_put 
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v: (fields.get_field field).carrier)
-: Lemma (struct_pcm_put x field v `struct_pcm_get` field == v)
-  [SMTPat (struct_pcm_put x field v `struct_pcm_get` field)]
-
-val struct_pcm_put_get
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-: Lemma (struct_pcm_put x field (x `struct_pcm_get` field) == x)
-  [SMTPat (struct_pcm_put x field (x `struct_pcm_get` field))]
-
-val struct_pcm_put_put
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field: field_of fields)
-  (v w: (fields.get_field field).carrier)
-: Lemma (struct_pcm_put (struct_pcm_put x field v) field w == struct_pcm_put x field w)
-  [SMTPat (struct_pcm_put (struct_pcm_put x field v) field w)]
-  
-/// struct_pcm_get/struct_pcm_put pairs for different fields don't interfere with each other
-
-val struct_pcm_get_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field1: field_of fields)
-  (field2: field_of fields)
-  (v: (fields.get_field field1).carrier)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures struct_pcm_put x field1 v `struct_pcm_get` field2 == x `struct_pcm_get` field2)
-  [SMTPat (struct_pcm_put x field1 v `struct_pcm_get` field2)]
-  
-val struct_pcm_put_put_ne
-  (#tag: string) (#fields: struct_fields)
-  (x: struct_pcm_carrier tag fields)
-  (field1: field_of fields)
-  (v: (fields.get_field field1).carrier)
-  (field2: field_of fields)
-  (w: (fields.get_field field2).carrier)
-: Lemma
-    (requires field1 =!= field2)
-    (ensures
-      struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
-      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
 let struct_pcm_get_put x field v = ()
 
@@ -435,9 +77,6 @@ let struct_pcm_put_put_ne x field1 v field2 w =
    assert (
      struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
-
-val struct_view (tag: string) (fields: struct_fields) (excluded: set string)
-: sel_view (struct_pcm tag fields) (struct' tag fields excluded) false
 
 let struct_view_to_view_prop (tag: string) (fields: struct_fields) (excluded: set string)
 : struct_pcm_carrier tag fields -> prop
@@ -482,7 +121,35 @@ let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields) (exclud
 : Lemma 
     (~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)) /\
      ~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
-= (fields.get_field (arbitrary_unexcluded excluded)).view.to_carrier_not_one
+= (fields.get_field (arbitrary_unexcluded excluded)).view.to_carrier_not_one;
+  let field: struct_dom excluded = (arbitrary_unexcluded excluded) in
+  assert (
+    (~ (exists x. (fields.get_field field).view.to_carrier x == one (struct_pcms fields field)) /\
+     ~ ((fields.get_field field).view.to_view_prop (one (struct_pcms fields field)))));
+     (*
+  let aux x
+  : Lemma (requires struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields))
+      (ensures exists x. (fields.get_field field).view.to_carrier x == one (struct_pcms fields field))
+  = //assert (has_type ((fields.get_field field).view.to_carrier (x field)) ((fields.get_field field).carrier));
+    //assert (has_type (one (fields.get_field field).pcm) ((fields.get_field field).carrier));
+    assert (struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields));
+    assert (struct_view_to_carrier tag fields excluded x field == one (struct_pcm tag fields) field);
+    //assert (
+    //  (   
+    //      (fields.get_field field).view.to_carrier (x field)
+    //      <: (fields.get_field field).carrier)
+    //  == one (struct_pcm tag fields) field);
+    assert (
+      (   
+          (fields.get_field field).view.to_carrier (x field)
+          <: (fields.get_field field).carrier)
+      == one (prod_pcm (struct_pcms fields)) field);
+    //assert ((fields.get_field field).view.to_carrier (x field) == one ((fields.get_field field).pcm));
+    //admit()
+  in*)
+  ()
+  //assume (~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)));
+  //assume (~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
 
 let struct_view_to_view_frame (tag: string) (fields: struct_fields) (excluded: set string)
 : (x: struct' tag fields excluded) ->
@@ -518,10 +185,6 @@ let struct_view tag fields excluded = {
   to_view_frame = struct_view_to_view_frame tag fields excluded;
 }
 
-val struct_field
-  (tag: string) (fields: struct_fields) (field: field_of fields)
-: connection (struct_pcm tag fields) (struct_pcms fields field)
-
 let struct_field tag fields field = struct_field (struct_pcms fields) field
 
 let struct'_without_field
@@ -554,24 +217,10 @@ let extract_field
     (ensures fun _ -> True)
 = (struct'_without_field tag fields excluded field v, v field)
 
-val addr_of_struct_field
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
-  (field: field_of fields)
-  (p: ref 'a (struct_pcm tag fields))
-: Steel (ref 'a (struct_pcms fields field))
-    (p `pts_to_view` struct_view tag fields excluded)
-    (fun q ->
-      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
-      (q `pts_to_view` (fields.get_field field).view))
-    (requires fun _ -> not (excluded field))
-    (ensures fun h q h' -> 
-      not (excluded field) /\
-      q == ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
-       ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+let insert_remove x (s: set 'a)
+: Lemma (requires s x == true) (ensures insert x (remove x s) == s)
+  [SMTPat (insert x (remove x s))]
+= assert (insert x (remove x s) `feq` s)
 
 #push-options "--z3rlimit 30"
 let addr_of_struct_field #a #tag #fields #excluded field p =
@@ -597,35 +246,6 @@ let addr_of_struct_field #a #tag #fields #excluded field p =
     (Ghost.reveal v field);
   return q
 #pop-options
-
-let insert_remove x (s: set 'a)
-: Lemma (requires s x == true) (ensures insert x (remove x s) == s)
-  [SMTPat (insert x (remove x s))]
-= assert (insert x (remove x s) `feq` s)
-
-// let remove_insert x (s: set 'a)
-// : Lemma (remove x (insert x s) == remove x s)
-// = assert (remove x (insert x s) `feq` remove x s)
-
-val unaddr_of_struct_field
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
-  (field: field_of fields)
-  (p: ref 'a (struct_pcm tag fields))
-  (q: ref 'a (struct_pcms fields field))
-: Steel unit
-    ((p `pts_to_view` struct_view tag fields excluded) `star`
-     (q `pts_to_view` (fields.get_field field).view))
-    (fun _ -> p `pts_to_view` struct_view tag fields (remove field excluded))
-    (requires fun _ ->
-      excluded field == true /\
-      q == ref_focus p (struct_field tag fields field))
-    (ensures fun h _ h' -> 
-      excluded field == true /\
-      extract_field tag fields (remove field excluded) field
-        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))
-       ==
-        (h (p `pts_to_view` struct_view tag fields excluded),
-         h (q `pts_to_view` (fields.get_field field).view)))
 
 let struct'_with_field
   (tag: string) (fields: struct_fields) (excluded: set string)
@@ -726,7 +346,7 @@ let unaddr_of_struct_field #a #tag #fields #excluded field p q =
          (struct'_with_field tag fields excluded field w v)
          == (Ghost.reveal v, Ghost.reveal w));
   return ()
-  
+
 (**** MOVE EVERYTHING BELOW TO SEPARATE FILES *)
 
 /// TODO move and dedup with Steel.C.Ptr.fst
