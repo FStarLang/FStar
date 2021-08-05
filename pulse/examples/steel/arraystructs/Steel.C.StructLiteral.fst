@@ -121,35 +121,7 @@ let struct_view_to_carrier_not_one (tag: string) (fields: struct_fields) (exclud
 : Lemma 
     (~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)) /\
      ~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
-= (fields.get_field (arbitrary_unexcluded excluded)).view.to_carrier_not_one;
-  let field: struct_dom excluded = (arbitrary_unexcluded excluded) in
-  assert (
-    (~ (exists x. (fields.get_field field).view.to_carrier x == one (struct_pcms fields field)) /\
-     ~ ((fields.get_field field).view.to_view_prop (one (struct_pcms fields field)))));
-     (*
-  let aux x
-  : Lemma (requires struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields))
-      (ensures exists x. (fields.get_field field).view.to_carrier x == one (struct_pcms fields field))
-  = //assert (has_type ((fields.get_field field).view.to_carrier (x field)) ((fields.get_field field).carrier));
-    //assert (has_type (one (fields.get_field field).pcm) ((fields.get_field field).carrier));
-    assert (struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields));
-    assert (struct_view_to_carrier tag fields excluded x field == one (struct_pcm tag fields) field);
-    //assert (
-    //  (   
-    //      (fields.get_field field).view.to_carrier (x field)
-    //      <: (fields.get_field field).carrier)
-    //  == one (struct_pcm tag fields) field);
-    assert (
-      (   
-          (fields.get_field field).view.to_carrier (x field)
-          <: (fields.get_field field).carrier)
-      == one (prod_pcm (struct_pcms fields)) field);
-    //assert ((fields.get_field field).view.to_carrier (x field) == one ((fields.get_field field).pcm));
-    //admit()
-  in*)
-  ()
-  //assume (~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)));
-  //assume (~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
+= (fields.get_field (arbitrary_unexcluded excluded)).view.to_carrier_not_one
 
 let struct_view_to_view_frame (tag: string) (fields: struct_fields) (excluded: set string)
 : (x: struct' tag fields excluded) ->
@@ -230,13 +202,7 @@ let addr_of_struct_field #a #tag #fields #excluded field p =
   let s: Ghost.erased (struct_pcm_carrier tag fields) =
     pts_to_view_elim p (struct_view tag fields excluded)
   in
-  //assert (Ghost.reveal s == (struct_view tag fields excluded).to_carrier v);
-  //slassert (p `pts_to` s);
   let q = addr_of_struct_field p field s in
-  assert (q == ref_focus p (struct_field tag fields field));
-  //slassert (
-  //  (p `pts_to` struct_without_field (struct_pcms fields) field s) `star`
-  //  (q `pts_to` Ghost.reveal s field));
   struct_without_field_to_carrier tag fields excluded field s v;
   pts_to_view_intro p (struct_without_field (struct_pcms fields) field s)
     (struct_view tag fields (insert field excluded))
@@ -256,26 +222,6 @@ let struct'_with_field
     (ensures fun _ -> True)
 = on_dom (struct_dom (remove field excluded))
     (fun field' -> if field = field' then w else v field')
-
-let struct_with_field_to_carrier
-  (tag: string) (fields: struct_fields) (excluded: set string) (field: string)
-  (s: struct_pcm_carrier tag fields)
-  (t: (fields.get_field field).carrier)
-  (v: struct' tag fields excluded)
-  (w: (fields.get_field field).view_type)
-: Lemma
-    (requires
-      excluded field == true /\
-      s == (struct_view tag fields excluded).to_carrier v /\
-      t === (fields.get_field field).view.to_carrier w)
-    (ensures
-      struct_with_field (struct_pcms fields) field t s
-      == (struct_view tag fields (remove field excluded)).to_carrier
-           (struct'_with_field tag fields excluded field w v))
-= assert
-    (struct_with_field (struct_pcms fields) field t s
-      `feq` (struct_view tag fields (remove field excluded)).to_carrier
-           (struct'_with_field tag fields excluded field w v))
 
 let struct_with_field_to_carrier'
   (tag: string) (fields: struct_fields) (excluded: set string) (field: string)
@@ -323,9 +269,6 @@ let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   let t: Ghost.erased (fields.get_field field).carrier =
     pts_to_view_elim q (fields.get_field field).view
   in
-  //slassert ((p `pts_to` s) `star` (q `pts_to` t));
-  //assert (Ghost.reveal s field == one (struct_pcms fields field));
-  //assert (q == ref_focus p (Struct.struct_field (struct_pcms fields) field));
   unaddr_of_struct_field #_ #_ #_ #(struct_pcms fields) field q p s t;
   let h1: squash (excluded field == true) = () in
   let h2: squash (Ghost.reveal s == (struct_view tag fields excluded).to_carrier v) = () in
@@ -333,18 +276,11 @@ let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   struct_with_field_to_carrier' tag fields excluded field
     (Ghost.reveal s) (Ghost.reveal t) (Ghost.reveal v) (Ghost.reveal w)
     h1 h2 h3; // TODO why need pass explicitly
-  assert (struct_with_field (struct_pcms fields) field t s
-      == (struct_view tag fields (remove field excluded)).to_carrier
-           (struct'_with_field tag fields excluded field w v));
   pts_to_view_intro p
     (struct_with_field (struct_pcms fields) field t s)
     (struct_view tag fields (remove field excluded))
     (struct'_with_field tag fields excluded field w v);
   extract_field_with_field tag fields excluded field (Ghost.reveal v) (Ghost.reveal w);
-  assert
-     (extract_field tag fields (remove field excluded) field
-         (struct'_with_field tag fields excluded field w v)
-         == (Ghost.reveal v, Ghost.reveal w));
   return ()
 
 (**** MOVE EVERYTHING BELOW TO SEPARATE FILES *)
