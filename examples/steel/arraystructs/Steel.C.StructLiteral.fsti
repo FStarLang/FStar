@@ -65,6 +65,16 @@ let remove x (s: set 'a): set 'a =
   list_remove_spec s x (set_as_list s);
   intro_set (set_remove x s) (list_remove x (set_as_list s))
 
+let insert_remove x (s: set 'a)
+: Lemma (requires s x == true) (ensures insert x (remove x s) == s)
+  [SMTPat (insert x (remove x s))]
+= assert (insert x (remove x s) `feq` s)
+
+let remove_insert x (s: set 'a)
+: Lemma (requires s x == false) (ensures remove x (insert x s) == s)
+  [SMTPat (remove x (insert x s))]
+= assert (remove x (insert x s) `feq` s)
+
 let notin (s: set 'a) (x: 'a): prop = s x == false
 
 (**** MOVE TO ChurchList *)
@@ -399,7 +409,7 @@ val extract_field
     (requires not (excluded field))
     (ensures fun _ -> True)
 
-val addr_of_struct_field
+val addr_of_struct_field'
   (#tag: string) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct_pcm tag fields))
@@ -418,10 +428,68 @@ val addr_of_struct_field
         (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
          h' (q `pts_to_view` (fields.get_field field).view)))
 
-let insert_remove x (s: set 'a)
-: Lemma (requires s x == true) (ensures insert x (remove x s) == s)
-  [SMTPat (insert x (remove x s))]
-= assert (insert x (remove x s) `feq` s)
+irreducible let c_typedef = 0
+
+let mk_struct_typedef a b = b
+
+unfold let norm_list =
+  [delta_attr [`%c_typedef];
+   delta_only
+    [`%mk_struct_typedef;
+     `%fields_cons;
+     `%fields_nil;
+     `%Mkstruct_fields?.get_field;
+     `%Mktypedef?.carrier;
+     `%Mktypedef?.pcm;
+     `%Mktypedef?.view_type;
+     `%Mktypedef?.view];
+   iota; zeta; primops]
+
+val addr_of_struct_field
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (field: field_of fields)
+  (p: ref 'a (struct_pcm tag fields))
+: Steel (ref 'a (fields.get_field field).pcm)
+    (p `pts_to_view` struct_view tag fields excluded)
+    (fun q ->
+      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
+      (pts_to_view u#0
+                  #'a
+                  #(norm norm_list (Mktypedef?.carrier (Mkstruct_fields?.get_field fields field)))
+                  #(norm norm_list (Mktypedef?.pcm (Mkstruct_fields?.get_field fields field)))
+                  q
+                  #(norm norm_list (Mktypedef?.view_type (Mkstruct_fields?.get_field fields field)))
+                  #false
+                  (norm norm_list (Mktypedef?.view (Mkstruct_fields?.get_field fields field)))))
+    (requires fun _ -> not (excluded field))
+    (ensures fun h q h' -> 
+      not (excluded field) /\
+      q == ref_focus p (struct_field tag fields field) /\
+      extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded))
+       ==
+        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
+         h' (q `pts_to_view` (fields.get_field field).view)))
+
+val unaddr_of_struct_field'
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (field: field_of fields)
+  (p: ref 'a (struct_pcm tag fields))
+  (q: ref 'a (fields.get_field field).pcm)
+: Steel unit
+    ((p `pts_to_view` struct_view tag fields excluded) `star`
+     (q `pts_to_view` (fields.get_field field).view))
+    (fun _ -> p `pts_to_view` struct_view tag fields (remove field excluded))
+    (requires fun _ ->
+      excluded field == true /\
+      q == ref_focus p (struct_field tag fields field))
+    (ensures fun h _ h' -> 
+      excluded field == true /\
+      extract_field tag fields (remove field excluded) field
+        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))
+       ==
+        (h (p `pts_to_view` struct_view tag fields excluded),
+         h (q `pts_to_view` (fields.get_field field).view)))
 
 val unaddr_of_struct_field
   (#tag: string) (#fields: struct_fields) (#excluded: set string)
@@ -430,7 +498,14 @@ val unaddr_of_struct_field
   (q: ref 'a (fields.get_field field).pcm)
 : Steel unit
     ((p `pts_to_view` struct_view tag fields excluded) `star`
-     (q `pts_to_view` (fields.get_field field).view))
+     (pts_to_view u#0
+                  #'a
+                  #(norm norm_list (Mktypedef?.carrier (Mkstruct_fields?.get_field fields field)))
+                  #(norm norm_list (Mktypedef?.pcm (Mkstruct_fields?.get_field fields field)))
+                  q
+                  #(norm norm_list (Mktypedef?.view_type (Mkstruct_fields?.get_field fields field)))
+                  #false
+                  (norm norm_list (Mktypedef?.view (Mkstruct_fields?.get_field fields field)))))
     (fun _ -> p `pts_to_view` struct_view tag fields (remove field excluded))
     (requires fun _ ->
       excluded field == true /\
