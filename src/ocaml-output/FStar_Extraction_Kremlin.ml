@@ -80,6 +80,7 @@ and expr =
   | EAbortT of (Prims.string * typ) 
   | EComment of (Prims.string * expr * Prims.string) 
   | EStandaloneComment of Prims.string 
+  | EAddrOf of expr 
 and op =
   | Add 
   | AddW 
@@ -426,6 +427,10 @@ let (uu___is_EStandaloneComment : expr -> Prims.bool) =
     match projectee with | EStandaloneComment _0 -> true | uu___ -> false
 let (__proj__EStandaloneComment__item___0 : expr -> Prims.string) =
   fun projectee -> match projectee with | EStandaloneComment _0 -> _0
+let (uu___is_EAddrOf : expr -> Prims.bool) =
+  fun projectee -> match projectee with | EAddrOf _0 -> true | uu___ -> false
+let (__proj__EAddrOf__item___0 : expr -> expr) =
+  fun projectee -> match projectee with | EAddrOf _0 -> _0
 let (uu___is_Add : op -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_AddW : op -> Prims.bool) =
