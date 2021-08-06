@@ -39,6 +39,11 @@ verify: $(ALL_CHECKED_FILES)
 	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen OCaml \
 	--extract_module $(basename $(notdir $(subst .checked,,$<)))
 
+.PRECIOUS: %.krml
+%.krml:
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen Kremlin \
+	--extract_module $(basename $(notdir $(subst .checked,,$<)))
+
 clean:
 	-rm -rf *.checked *.krml .depend kremlin.rsp *.tmp *.o compile_flags.txt
 
