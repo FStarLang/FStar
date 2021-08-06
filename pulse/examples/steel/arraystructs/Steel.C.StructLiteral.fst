@@ -190,7 +190,7 @@ let extract_field
 = (struct'_without_field tag fields excluded field v, v field)
 
 #push-options "--z3rlimit 30"
-let addr_of_struct_field' #a #tag #fields #excluded field p =
+let addr_of_struct_field_ref' #a #tag #fields #excluded field p =
   let v: Ghost.erased (struct' tag fields excluded) =
     gget (p `pts_to_view` struct_view tag fields excluded)
   in
@@ -208,8 +208,8 @@ let addr_of_struct_field' #a #tag #fields #excluded field p =
   return q
 #pop-options
 
-let addr_of_struct_field #a #tag #fields #excluded field p =
-  addr_of_struct_field' field p
+let addr_of_struct_field_ref #a #tag #fields #excluded field p =
+  addr_of_struct_field_ref' field p
 
 let struct'_with_field
   (tag: string) (fields: struct_fields) (excluded: set string)
@@ -254,7 +254,7 @@ let extract_field_with_field
     (struct'_with_field tag fields excluded field w v)
     `feq` v)
 
-let unaddr_of_struct_field' #a #tag #fields #excluded field p q =
+let unaddr_of_struct_field_ref' #a #tag #fields #excluded field p q =
   let v: Ghost.erased (struct' tag fields excluded) =
     gget (p `pts_to_view` struct_view tag fields excluded)
   in
@@ -281,5 +281,5 @@ let unaddr_of_struct_field' #a #tag #fields #excluded field p q =
   extract_field_with_field tag fields excluded field (Ghost.reveal v) (Ghost.reveal w);
   return ()
 
-let unaddr_of_struct_field #a #tag #fields #excluded field p q =
-  unaddr_of_struct_field' field p q
+let unaddr_of_struct_field_ref #a #tag #fields #excluded field p q =
+  unaddr_of_struct_field_ref' field p q
