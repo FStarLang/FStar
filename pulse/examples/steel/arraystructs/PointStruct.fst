@@ -8,7 +8,8 @@ open Steel.C.StructLiteral
 open Steel.C.Typedef
 open FStar.FunctionalExtensionality
 open Steel.Effect
-module A = Steel.Effect.Atomic
+open Steel.Effect.Atomic
+//open Steel.C.Reference
 
 [@@c_typedef]
 let c_int: typedef = {
@@ -62,8 +63,8 @@ let swap #a p =
   r `opt_write_sel` x;
   unaddr_of_struct_field "y" p r;
   unaddr_of_struct_field "x" p q;
-  A.change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
-  A.return ()
+  change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
+  return ()
 
 (*
 TO PROVE:
@@ -110,22 +111,22 @@ addr_of_struct_field "x" (p: ref 'a #(struct_pcm_carrier tag point_fields) (stru
 /// make pts_to_view stuff smt_fallback?
 let addr_of_x' #a p excluded =
   let q = addr_of_struct_field #_ #"point" #point_fields #excluded "x" p in
-  //A.change_equal_slprop (q `pts_to_view` _) (q `pts_to_view` opt_view int);
-  //A.change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` point_view (insert "x" excluded));
-  //A.slassert ((p `pts_to_view` point_view (insert "x" excluded)) `star`
+  //change_equal_slprop (q `pts_to_view` _) (q `pts_to_view` opt_view int);
+  //change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` point_view (insert "x" excluded));
+  //slassert ((p `pts_to_view` point_view (insert "x" excluded)) `star`
   //     (q `pts_to_view` opt_view int));
-  A.change_equal_slprop (q `pts_to_view` _)
+  change_equal_slprop (q `pts_to_view` _)
     (pts_to_view #a #(option int) #(opt_pcm #int) q #int #false (opt_view int));
-  A.change_equal_slprop (p `pts_to_view` _)
+  change_equal_slprop (p `pts_to_view` _)
     (pts_to_view #a #point #point_pcm p
           #(struct' "point" point_fields (insert #string "x" excluded)) #false 
          (point_view (insert "x" excluded)));
-  //A.slassert ((pts_to_view #a #point #point_pcm p
+  //slassert ((pts_to_view #a #point #point_pcm p
   //        #(struct' "point" point_fields (insert #string "x" excluded)) #false 
   //       (point_view (insert "x" excluded))) `star`
   //     (pts_to_view #a #(option int) #(opt_pcm #int) q #int #false (opt_view int)));
-  //A.sladmit();
-  A.return q
+  //sladmit();
+  return q
 
 let point_fields k = match k with
   | X -> option int
@@ -173,20 +174,20 @@ let point_with_y x y
 
 let addr_of_x #a #x #y p =
   let q = addr_of_struct_field p X (mk_point x y) in
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point None y);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` x);
-  A.return q
+  change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point None y);
+  change_equal_slprop (q `pts_to` _) (q `pts_to` x);
+  return q
   
 let unaddr_of_x #a #x #y p q =
   unaddr_of_struct_field #_ #_ #_ #point_fields_pcm X q p (mk_point None y) x; // FIXME: WHY WHY WHY does F* infer the constant function (due to the type of q) instead?
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
+  change_equal_slprop (p `pts_to` _) (p `pts_to` _)
 
 let addr_of_y #a #x #y p =
   let q = addr_of_struct_field p Y (mk_point x y) in
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x None);
-  A.change_equal_slprop (q `pts_to` _) (q `pts_to` y);
-  A.return q
+  change_equal_slprop (p `pts_to` _) (p `pts_to` mk_point x None);
+  change_equal_slprop (q `pts_to` _) (q `pts_to` y);
+  return q
 
 let unaddr_of_y #a #x #y p q =
   unaddr_of_struct_field #_ #_ #_ #point_fields_pcm Y q p (mk_point x None) y; // same here
-  A.change_equal_slprop (p `pts_to` _) (p `pts_to` _)
+  change_equal_slprop (p `pts_to` _) (p `pts_to` _)
