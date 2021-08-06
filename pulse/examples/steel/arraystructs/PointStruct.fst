@@ -15,6 +15,7 @@ open FStar.FSet
 //open Steel.C.Reference
 
 [@@c_typedef]
+noextract
 let c_int: typedef = {
   carrier = option int;
   pcm = opt_pcm #int;
@@ -23,18 +24,32 @@ let c_int: typedef = {
 }
 
 [@@c_struct]
+noextract
 let point_fields: struct_fields = 
   fields_cons "x" c_int (
   fields_cons "y" c_int (
   fields_nil))
 
+noextract
 let point_view_t = struct "point" point_fields
 
+noextract
 let point_view = struct_view "point" point_fields
 
 //let point = struct_pcm_carrier "point" point_fields
 
+noextract
 let point_pcm = struct_pcm "point" point_fields
+
+noextract
+let c_point: typedef = {
+  carrier = struct_pcm_carrier "point" point_fields;
+  pcm = struct_pcm "point" point_fields;
+  view_type = struct "point" point_fields;
+  view = struct_view "point" point_fields emptyset;
+}
+
+// let register_c_point: register_t point_view_t = register_typedef point_view_t c_point
 
 #push-options "--fuel 0"
 
@@ -48,6 +63,7 @@ let x_conn
 // --z3rlimit 30"
 
 [@@c_typedef]
+noextract
 let point = struct "point" point_fields
 
 open Steel.C.Reference
@@ -64,8 +80,8 @@ val swap (p: ref 'a point point_pcm)
       // == h (p `pts_to_view` point_view emptyset) `struct_get` "x")
 
 let swap #a p =
-  let q: ref a int _ = addr_of_struct_field "x" p in
-  let r = addr_of_struct_field "y" p in
+  let q: ref _ int _ = addr_of_struct_field "x" p in
+  let r: ref _ int _ = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
   let y = opt_read_sel r in
   q `opt_write_sel` y;
