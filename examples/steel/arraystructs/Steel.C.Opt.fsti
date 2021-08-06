@@ -135,3 +135,31 @@ let opt_write_sel
   let _ = pts_to_view_elim r (opt_view _) in
   opt_pcm_write r _ w;
   pts_to_view_intro r _ (opt_view _) w
+
+open Steel.C.Reference
+
+let ref_opt_read
+  (#a: Type u#0) (#b: Type u#0)
+  (r: ref a b (opt_pcm #b))
+: Steel b
+  (pts_to_view r (opt_view b))
+  (fun _ -> pts_to_view r (opt_view b))
+  (requires (fun _ -> True))
+  (ensures (fun h res h' ->
+    res == h (pts_to_view r (opt_view b)) /\
+    res == h' (pts_to_view r (opt_view b))
+  ))
+= ref_read_sel r (opt_view b)
+
+let ref_opt_write
+  (#a: Type u#0) (#b: Type u#0)
+  (r: ref a b (opt_pcm #b))
+  (w: b)
+: Steel unit
+  (pts_to_view r (opt_view b))
+  (fun _ -> pts_to_view r (opt_view b))
+  (requires (fun _ -> True))
+  (ensures (fun _ _ h' ->
+    w == h' (pts_to_view r (opt_view b))
+  ))
+= opt_write_sel r w

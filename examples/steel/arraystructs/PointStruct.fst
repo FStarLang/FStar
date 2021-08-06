@@ -9,6 +9,9 @@ open Steel.C.Typedef
 open FStar.FunctionalExtensionality
 open Steel.Effect
 open Steel.Effect.Atomic
+open Steel.C.Ref
+
+open FStar.FSet
 //open Steel.C.Reference
 
 [@@c_typedef]
@@ -19,31 +22,37 @@ let c_int: typedef = {
   view = opt_view int;
 }
 
-[@@c_typedef]
+[@@c_struct]
 let point_fields: struct_fields = 
-  mk_struct_typedef "point" (
   fields_cons "x" c_int (
   fields_cons "y" c_int (
-  fields_nil)))
+  fields_nil))
 
 let point_view_t = struct "point" point_fields
 
 let point_view = struct_view "point" point_fields
 
-let point = struct_pcm_carrier "point" point_fields
+//let point = struct_pcm_carrier "point" point_fields
 
 let point_pcm = struct_pcm "point" point_fields
 
 #push-options "--fuel 0"
 
+(*
 let x_conn
 : connection point_pcm (opt_pcm #int)
 = struct_field "point" point_fields "x"
+*)
 
 #push-options "--print_universes --print_implicits"
 // --z3rlimit 30"
 
-val swap (p: ref 'a point_pcm)
+[@@c_typedef]
+let point = struct "point" point_fields
+
+open Steel.C.Reference
+
+val swap (p: ref 'a point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
     (fun _ -> (p `pts_to_view` point_view emptyset))
@@ -55,7 +64,7 @@ val swap (p: ref 'a point_pcm)
       // == h (p `pts_to_view` point_view emptyset) `struct_get` "x")
 
 let swap #a p =
-  let q = addr_of_struct_field "x" p in
+  let q: ref a int _ = addr_of_struct_field "x" p in
   let r = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
   let y = opt_read_sel r in
@@ -65,6 +74,33 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
+  
+(*
+ref 'a (struct tag fields)
+ref 'a (fields.get_field field).view_type
+ref 'a view_t ...
+
+struct: s:string -> x:Type{x == y:string{y == s}} -> struct_fields -> Type
+point = s:string{s == "point"}
+
+[@@c_typedef]
+s = struct ..
+
+[@@c_struct]
+point_fields = fields_cons "a" s
+
+[@@c_typedef]
+point = struct "point" point_fields
+
+mark get_field, view_type, ... c_struct
+
+norm [unfold c_typedef] point
+
+p: ref 'a point  ...
+---> (PointStruct.point, unit) struct
+
+p: ref 'a int ...
+*)
 
 (*
 TO PROVE:
