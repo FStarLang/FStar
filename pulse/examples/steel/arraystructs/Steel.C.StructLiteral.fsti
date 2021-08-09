@@ -526,3 +526,11 @@ let unaddr_of_struct_field
 =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
+
+[@@c_typedef]
+let typedef_struct (tag: string) (fields: struct_fields): typedef = {
+  carrier = struct_pcm_carrier tag fields;
+  pcm = struct_pcm tag fields;
+  view_type = struct tag fields;
+  view = struct_view tag fields emptyset;
+}

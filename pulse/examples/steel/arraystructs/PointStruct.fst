@@ -15,7 +15,8 @@ open FStar.FSet
 //open Steel.C.Reference
 
 [@@c_typedef]
-noextract
+//noextract
+//inline_for_extraction
 let c_int: typedef = {
   carrier = option int;
   pcm = opt_pcm #int;
@@ -24,32 +25,157 @@ let c_int: typedef = {
 }
 
 [@@c_struct]
-noextract
+//noextract
+//inline_for_extraction
 let point_fields: struct_fields = 
   fields_cons "x" c_int (
   fields_cons "y" c_int (
   fields_nil))
 
-noextract
-let point_view_t = struct "point" point_fields
+//noextract
+//inline_for_extraction
+let point = struct "point" point_fields
 
-noextract
+//noextract
+//inline_for_extraction
 let point_view = struct_view "point" point_fields
 
 //let point = struct_pcm_carrier "point" point_fields
 
-noextract
+//noextract
+//inline_for_extraction
 let point_pcm = struct_pcm "point" point_fields
 
-noextract
-let c_point: typedef = {
-  carrier = struct_pcm_carrier "point" point_fields;
-  pcm = struct_pcm "point" point_fields;
-  view_type = struct "point" point_fields;
-  view = struct_view "point" point_fields emptyset;
-}
+[@@c_typedef]
+//noextract
+//inline_for_extraction
+let c_point: typedef = typedef_struct "point" point_fields
 
-// let register_c_point: register_t point_view_t = register_typedef point_view_t c_point
+assume val a: Type0
+assume val b: Type0
+assume val c: Type0
+assume val d: Type0
+assume val e: Type0
+assume val f: Type0
+assume val g: Type0
+assume val h: Type0
+assume val i: Type0
+assume val j: Type0
+assume val k: Type0
+assume val l: Type0
+assume val m: Type0
+assume val n: Type0
+assume val o: Type0
+assume val p: Type0
+assume val q: Type0
+assume val r: Type0
+assume val s: Type0
+assume val t: Type0
+assume val u: Type0
+assume val v: Type0
+assume val w: Type0
+assume val x: Type0
+assume val y: Type0
+assume val z: Type0
+assume val zero: Type0
+assume val one: Type0
+assume val two: Type0
+assume val three: Type0
+assume val four: Type0
+assume val five: Type0
+assume val six: Type0
+assume val seven: Type0
+assume val eight: Type0
+assume val nine: Type0
+assume val underscore: Type0
+
+assume val string_nil: Type0
+assume val string_cons (c: Type0) (s: Type0): Type0
+
+assume val struct_fields_nil: Type0
+assume val struct_fields_cons
+  (field: Type0) (t: Type0) (fields: Type0)
+: Type0
+
+assume val mk_c_typedef (viewtype: Type0) (field_descriptions: Type0): Type0
+
+open FStar.String
+
+let char_t_of_char (ch: char): Type0 =
+  match ch with
+  | 'a' -> a
+  | 'b' -> b
+  | 'c' -> c
+  | 'd' -> d
+  | 'e' -> e
+  | 'f' -> f
+  | 'g' -> g
+  | 'h' -> h
+  | 'i' -> i
+  | 'j' -> j
+  | 'k' -> k
+  | 'l' -> l
+  | 'm' -> m
+  | 'n' -> n
+  | 'o' -> o
+  | 'p' -> p
+  | 'q' -> q
+  | 'r' -> r
+  | 's' -> s
+  | 't' -> t
+  | 'u' -> u
+  | 'v' -> v
+  | 'w' -> w
+  | 'x' -> x
+  | 'y' -> y
+  | 'z' -> z
+  | '0' -> zero
+  | '1' -> one
+  | '2' -> two
+  | '3' -> three
+  | '4' -> four
+  | '5' -> five
+  | '6' -> six
+  | '7' -> seven
+  | '8' -> eight
+  | '9' -> nine
+  | '_' -> underscore
+  | _ -> underscore
+
+let rec string_t_of_chars (s: list char): Type0 =
+  match s with
+  | [] -> string_nil
+  | c :: s -> string_cons (char_t_of_char c) (string_t_of_chars s)
+
+let typedef_fields_of (fields: struct_fields) =
+  List.Tot.fold_right
+    (fun field fields' ->
+      struct_fields_cons
+        (string_t_of_chars (String.list_of_string field))
+        (fields.get_field field).view_type
+        fields')
+    fields.cfields
+    struct_fields_nil
+
+unfold let norm_typedef_list =
+  [delta_only
+   [`%typedef_fields_of;
+    `%List.Tot.fold_right;
+    `%string_t_of_chars;
+    `%char_t_of_char;
+    `%String.list_of_string;
+    `%Mktypedef?.view_type;
+    `%Mkstruct_fields?.get_field;
+    `%Mkstruct_fields?.cfields;
+   ];
+   iota; zeta; primops]
+
+let _ =
+  mk_c_typedef
+    point
+    (norm norm_typedef_list
+      (typedef_fields_of (fields_cons "test_field" c_point point_fields)))
+// TODO what effects?
 
 #push-options "--fuel 0"
 
@@ -62,16 +188,13 @@ let x_conn
 #push-options "--print_universes --print_implicits"
 // --z3rlimit 30"
 
-[@@c_typedef]
-noextract
-let point = struct "point" point_fields
-
 open Steel.C.Reference
 
+(*
 val swap (p: ref 'a point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
-    (fun _ -> (p `pts_to_view` point_view emptyset))
+    (fun _ -> p `pts_to_view` point_view emptyset)
     (requires fun _ -> True)
     (ensures fun h q h' ->
       //h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
@@ -91,6 +214,7 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
+  *)
 
 (*
 ref 'a (struct tag fields)
