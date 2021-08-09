@@ -14,8 +14,9 @@ open Steel.C.Opt
 
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
-
 open FStar.FSet
+
+module TS = Typestring
 
 (**** MOVE TO ChurchList *)
 
@@ -151,6 +152,30 @@ noeq type struct_fields = {
   // get_field_prf: forall field. has_field field == false ==> get_field field == trivial_typedef;
 }
 
+(* Begin for extraction *)
+
+val struct_fields_t_nil: Type0
+val struct_fields_t_cons
+  (field: Type0) (t: Type0) (fields: Type0)
+: Type0
+
+let struct_fields_t (fields: struct_fields) =
+  List.Tot.fold_right
+    (fun field fields' ->
+      struct_fields_t_cons
+        (TS.mk_string_t field)
+        (fields.get_field field).view_type
+        fields')
+    fields.cfields
+    struct_fields_t_nil
+
+val mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0
+
+let mk_c_struct (tag: Type0) (fields: struct_fields) =
+  mk_struct_def tag (struct_fields_t fields)
+
+(* End for extraction *)
+
 let trivial_typedef: typedef = {
   carrier = option unit;
   pcm = opt_pcm #unit;
@@ -174,27 +199,27 @@ let fields_cons (field: string) (td: typedef) (fields: struct_fields): struct_fi
   get_field = on_dom _ (fun field' -> if field = field' then td else fields.get_field field');
 }
 
-val struct' (tag: string) (fields: struct_fields) (excluded: set string): Type0
+val struct' (tag: Type0) (fields: struct_fields) (excluded: set string): Type0
 
-let struct (tag: string) (fields: struct_fields) = struct' tag fields emptyset
+let struct (tag: Type0) (fields: struct_fields) = struct' tag fields emptyset
 
-val mk_nil (tag: string): struct tag fields_nil
+val mk_nil (tag: Type0): struct tag fields_nil
 
-val mk_cons (tag: string) (fields: struct_fields)
+val mk_cons (tag: Type0) (fields: struct_fields)
   (field: string) (td: typedef) (x: td.view_type) (v: struct tag fields)
 : Pure (struct tag (fields_cons field td fields))
     (requires fields.has_field field == false)
     (ensures fun _ -> True)
 
-val struct_pcm_carrier (tag: string) (fields: struct_fields): Type0
+val struct_pcm_carrier (tag: Type0) (fields: struct_fields): Type0
 
-val struct_pcm (tag: string) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
+val struct_pcm (tag: Type0) (fields: struct_fields): pcm (struct_pcm_carrier tag fields)
 
 let field_of (fields: struct_fields) = field:string{fields.has_field field == true}
 
 /// Reading a struct field
 val struct_get
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded) (field: field_of fields)
 : Pure (fields.get_field field).view_type
     (requires excluded field == false)
@@ -202,7 +227,7 @@ val struct_get
 
 /// Writing a struct field
 val struct_put
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded)
   (field: field_of fields)
   (v: (fields.get_field field).view_type)
@@ -213,7 +238,7 @@ val struct_put
 /// For a fixed field name, struct_get and struct_put form a lens
 
 val struct_get_put 
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded)
   (field: field_of fields)
   (v: (fields.get_field field).view_type)
@@ -223,7 +248,7 @@ val struct_get_put
   [SMTPat (struct_put x field v `struct_get` field)]
 
 val struct_put_get
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded)
   (field: field_of fields)
 : Lemma
@@ -232,7 +257,7 @@ val struct_put_get
   [SMTPat (struct_put x field (x `struct_get` field))]
 
 val struct_put_put
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct tag fields)
   (field: field_of fields)
   (v w: (fields.get_field field).view_type)
@@ -242,7 +267,7 @@ val struct_put_put
 /// struct_get/struct_put pairs for different fields don't interfere with each other
 
 val struct_get_put_ne
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded)
   (field1: field_of fields)
   (field2: field_of fields)
@@ -253,7 +278,7 @@ val struct_get_put_ne
   [SMTPat (struct_put x field1 v `struct_get` field2)]
   
 val struct_put_put_ne
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (x: struct' tag fields excluded)
   (field1: field_of fields)
   (v: (fields.get_field field1).view_type)
@@ -265,19 +290,19 @@ val struct_put_put_ne
       struct_put (struct_put x field1 v) field2 w ==
       struct_put (struct_put x field2 w) field1 v)
 
-let struct_pcm_one (tag: string) (fields: struct_fields)
+let struct_pcm_one (tag: Type0) (fields: struct_fields)
 : struct_pcm_carrier tag fields
 = one (struct_pcm tag fields)
 
 /// Reading a pcm_struct_carrier field
 val struct_pcm_get
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields) (field: field_of fields)
 : (fields.get_field field).carrier
 
 /// Writing a struct_pcm_carrier field
 val struct_pcm_put
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field: field_of fields)
   (v: (fields.get_field field).carrier)
@@ -286,7 +311,7 @@ val struct_pcm_put
 /// For a fixed field name, struct_pcm_get and struct_pcm_put form a lens
 
 val struct_pcm_get_put 
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field: field_of fields)
   (v: (fields.get_field field).carrier)
@@ -294,14 +319,14 @@ val struct_pcm_get_put
   [SMTPat (struct_pcm_put x field v `struct_pcm_get` field)]
 
 val struct_pcm_put_get
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field: field_of fields)
 : Lemma (struct_pcm_put x field (x `struct_pcm_get` field) == x)
   [SMTPat (struct_pcm_put x field (x `struct_pcm_get` field))]
 
 val struct_pcm_put_put
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field: field_of fields)
   (v w: (fields.get_field field).carrier)
@@ -311,7 +336,7 @@ val struct_pcm_put_put
 /// struct_pcm_get/struct_pcm_put pairs for different fields don't interfere with each other
 
 val struct_pcm_get_put_ne
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field1: field_of fields)
   (field2: field_of fields)
@@ -322,7 +347,7 @@ val struct_pcm_get_put_ne
   [SMTPat (struct_pcm_put x field1 v `struct_pcm_get` field2)]
   
 val struct_pcm_put_put_ne
-  (#tag: string) (#fields: struct_fields)
+  (#tag: Type0) (#fields: struct_fields)
   (x: struct_pcm_carrier tag fields)
   (field1: field_of fields)
   (v: (fields.get_field field1).carrier)
@@ -334,15 +359,15 @@ val struct_pcm_put_put_ne
       struct_pcm_put (struct_pcm_put x field1 v) field2 w ==
       struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
-val struct_view (tag: string) (fields: struct_fields) (excluded: set string)
+val struct_view (tag: Type0) (fields: struct_fields) (excluded: set string)
 : sel_view (struct_pcm tag fields) (struct' tag fields excluded) false
 
 val struct_field
-  (tag: string) (fields: struct_fields) (field: field_of fields)
+  (tag: Type0) (fields: struct_fields) (field: field_of fields)
 : connection (struct_pcm tag fields) (fields.get_field field).pcm
 
 val extract_field
-  (tag: string) (fields: struct_fields) (excluded: set string)
+  (tag: Type0) (fields: struct_fields) (excluded: set string)
   (field: field_of fields)
   (v: struct' tag fields excluded)
 : Pure (struct' tag fields (insert field excluded) & (fields.get_field field).view_type)
@@ -350,7 +375,7 @@ val extract_field
     (ensures fun _ -> True)
     
 val extract_field_extracted
-  (tag: string) (fields: struct_fields) (excluded: set string)
+  (tag: Type0) (fields: struct_fields) (excluded: set string)
   (field: field_of fields)
   (v: struct' tag fields excluded)
 : Lemma
@@ -359,7 +384,7 @@ val extract_field_extracted
     [SMTPat (extract_field tag fields excluded field v)]
 
 val extract_field_unextracted
-  (tag: string) (fields: struct_fields) (excluded: set string)
+  (tag: Type0) (fields: struct_fields) (excluded: set string)
   (field: field_of fields)
   (field': field_of fields)
   (v: struct' tag fields excluded)
@@ -390,7 +415,7 @@ unfold let simplify_typedefs =
    iota; zeta; primops]
 
 val addr_of_struct_field_ref
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct_pcm tag fields))
 : Steel (ref 'a (fields.get_field field).pcm)
@@ -416,7 +441,7 @@ val addr_of_struct_field_ref
          h' (q `pts_to_view` (fields.get_field field).view)))
 
 val unaddr_of_struct_field_ref'
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct_pcm tag fields))
   (q: ref 'a (fields.get_field field).pcm)
@@ -436,7 +461,7 @@ val unaddr_of_struct_field_ref'
          h (q `pts_to_view` (fields.get_field field).view)))
 
 val unaddr_of_struct_field_ref
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct_pcm tag fields))
   (q: ref 'a (fields.get_field field).pcm)
@@ -465,7 +490,7 @@ val unaddr_of_struct_field_ref
 open Steel.C.Reference
 
 let addr_of_struct_field
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct tag fields) (struct_pcm tag fields))
 : Steel (ref 'a
@@ -496,7 +521,7 @@ let addr_of_struct_field
   addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
 let unaddr_of_struct_field
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: struct_fields) (#excluded: set string)
   (field: field_of fields)
   (p: ref 'a (struct tag fields) (struct_pcm tag fields))
   (q: ref 'a
@@ -528,7 +553,7 @@ let unaddr_of_struct_field
   unaddr_of_struct_field_ref' field p q
 
 [@@c_typedef]
-let typedef_struct (tag: string) (fields: struct_fields): typedef = {
+let typedef_struct (tag: Type0) (fields: struct_fields): typedef = {
   carrier = struct_pcm_carrier tag fields;
   pcm = struct_pcm tag fields;
   view_type = struct tag fields;

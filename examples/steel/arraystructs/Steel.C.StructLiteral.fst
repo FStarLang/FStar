@@ -15,6 +15,18 @@ open Steel.C.Opt
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
 
+(* Begin for extraction *)
+
+let struct_fields_t_nil: Type0 = unit
+let struct_fields_t_cons
+  (field: Type0) (t: Type0) (fields: Type0)
+: Type0
+= unit
+
+let mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0 = unit
+
+(* End for extraction *)
+
 let struct_dom (excluded: set string) = refine string (notin excluded)
 
 let struct_cod (fields: struct_fields) (excluded: set string) (field: struct_dom excluded) =
