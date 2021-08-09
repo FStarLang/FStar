@@ -189,6 +189,38 @@ let extract_field
     (ensures fun _ -> True)
 = (struct'_without_field tag fields excluded field v, v field)
 
+let extract_field_extracted
+  (tag: string) (fields: struct_fields) (excluded: set string)
+  (field: field_of fields)
+  (v: struct' tag fields excluded)
+= ()
+
+let extract_field_unextracted
+  (tag: string) (fields: struct_fields) (excluded: set string)
+  (field: field_of fields)
+  (field': field_of fields)
+  (v: struct' tag fields excluded)
+= ()
+
+val addr_of_struct_field_ref'
+  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+  (field: field_of fields)
+  (p: ref 'a (struct_pcm tag fields))
+: Steel (ref 'a (fields.get_field field).pcm)
+    (p `pts_to_view` struct_view tag fields excluded)
+    (fun q ->
+      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
+      (q `pts_to_view` (fields.get_field field).view))
+    (requires fun _ -> not (excluded field))
+    (ensures fun h q h' -> 
+      not (excluded field) /\
+      q == ref_focus p (struct_field tag fields field) /\
+      extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded))
+       ==
+        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
+         h' (q `pts_to_view` (fields.get_field field).view)))
+
 #push-options "--z3rlimit 30"
 let addr_of_struct_field_ref' #a #tag #fields #excluded field p =
   let v: Ghost.erased (struct' tag fields excluded) =

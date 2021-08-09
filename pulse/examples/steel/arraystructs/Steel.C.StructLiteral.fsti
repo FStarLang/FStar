@@ -348,25 +348,28 @@ val extract_field
 : Pure (struct' tag fields (insert field excluded) & (fields.get_field field).view_type)
     (requires not (excluded field))
     (ensures fun _ -> True)
-
-val addr_of_struct_field_ref'
-  (#tag: string) (#fields: struct_fields) (#excluded: set string)
+    
+val extract_field_extracted
+  (tag: string) (fields: struct_fields) (excluded: set string)
   (field: field_of fields)
-  (p: ref 'a (struct_pcm tag fields))
-: Steel (ref 'a (fields.get_field field).pcm)
-    (p `pts_to_view` struct_view tag fields excluded)
-    (fun q ->
-      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
-      (q `pts_to_view` (fields.get_field field).view))
-    (requires fun _ -> not (excluded field))
-    (ensures fun h q h' -> 
-      not (excluded field) /\
-      q == ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
-       ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+  (v: struct' tag fields excluded)
+: Lemma
+    (requires not (excluded field))
+    (ensures snd (extract_field tag fields excluded field v) == v `struct_get` field)
+    [SMTPat (extract_field tag fields excluded field v)]
+
+val extract_field_unextracted
+  (tag: string) (fields: struct_fields) (excluded: set string)
+  (field: field_of fields)
+  (field': field_of fields)
+  (v: struct' tag fields excluded)
+: Lemma
+    (requires not (excluded field) /\ not (excluded field') /\ (field =!= field'))
+    (ensures 
+      fst (extract_field tag fields excluded field v) `struct_get` field'
+      == v `struct_get` field')
+    [SMTPat (extract_field tag fields excluded field v);
+     SMTPat (has_type field' string)]
 
 irreducible let c_struct = 0
 
@@ -490,7 +493,7 @@ let addr_of_struct_field
          h' (q `pts_to_view` (fields.get_field field).view)))
 =         
 //let addr_of_struct_field #a #tag #fields #excluded field p =
-  addr_of_struct_field_ref' #'a #tag #fields #excluded field p
+  addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
 let unaddr_of_struct_field
   (#tag: string) (#fields: struct_fields) (#excluded: set string)

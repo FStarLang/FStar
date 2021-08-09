@@ -73,11 +73,12 @@ val swap (p: ref 'a point point_pcm)
     (p `pts_to_view` point_view emptyset)
     (fun _ -> (p `pts_to_view` point_view emptyset))
     (requires fun _ -> True)
-    (ensures fun h q h' -> True)
-      // h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
-      // == h (p `pts_to_view` point_view emptyset) `struct_get` "y" /\
-      // h' (p `pts_to_view` point_view emptyset) `struct_get` "y"
-      // == h (p `pts_to_view` point_view emptyset) `struct_get` "x")
+    (ensures fun h q h' ->
+      //h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
+      //== h (p `pts_to_view` point_view emptyset) `struct_get` "y" /\
+      //h' (p `pts_to_view` point_view emptyset) `struct_get` "y"
+      //== h (p `pts_to_view` point_view emptyset) `struct_get` "x")
+      True)
 
 let swap #a p =
   let q: ref _ int _ = addr_of_struct_field "x" p in
@@ -90,7 +91,7 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
-  
+
 (*
 ref 'a (struct tag fields)
 ref 'a (fields.get_field field).view_type
