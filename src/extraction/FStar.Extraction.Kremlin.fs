@@ -283,6 +283,43 @@ let is_op op =
 let is_machine_int m =
   mk_width m <> None
 
+(* TODO: in stdlib somewhere? *)
+let opt_bind (m: option<'a>) (k: 'a -> option<'b>): option<'b> =
+  match m with Some x -> k x | None -> None
+
+let char_of_typechar (t: mlty): option<char> =
+  match t with
+  | MLTY_Named ([], p) ->
+    let p = Syntax.string_of_mlpath p in
+    let n = FStar.String.strlen "Typestring.c" in
+    if FStar.String.strlen p > n &&
+       FStar.String.substring p 0 n = "Typestring.c"
+    then
+      Some (FStar.String.get p n)
+    else
+      None
+
+  | _ -> None
+
+let string_of_typestring (t: mlty): option<string> =
+  let rec go t: option<list<string>> =
+    match t with
+    | MLTY_Named ([], p)
+      when Syntax.string_of_mlpath p = "Typestring.string_nil"
+      ->
+      Some []
+
+    | MLTY_Named ([c; t], p)
+      when Syntax.string_of_mlpath p = "Typestring.string_cons"
+      ->
+      opt_bind (char_of_typechar c) (fun c' ->
+      opt_bind (go t) (fun s' ->
+      Some (String.make 1 c' :: s')))
+      
+    | _ -> None
+  in
+  opt_bind (go t) (fun ss -> Some (FStar.String.concat "" ss))
+
 (* Environments **************************************************************)
 
 type env = {
@@ -405,17 +442,6 @@ and translate_decl env d: list<decl> =
 
 and translate_let env flavor lb: option<decl> =
   match lb with
-  | {
-      mllb_tysc = Some (_, MLTY_Named ([MLTY_Named ([], view_type_name)], p));
-      mllb_def = {expr=MLE_Name typedef_name};
-    } when Syntax.string_of_mlpath p = "Steel.C.Typedef.register_typedef_of" ->
-      begin
-        BU.print2 "Found %s : register_typedef_of %s\n"
-          (Syntax.string_of_mlpath typedef_name)
-          (Syntax.string_of_mlpath view_type_name);
-        None
-      end
-
   | {
       mllb_tysc = Some (_, MLTY_Named ([MLTY_Named ([], view_type_name)], p));
       mllb_def = fields;
@@ -549,6 +575,56 @@ and translate_type_decl env ty: option<decl> =
     None
   else
     match ty with
+    | {tydecl_assumed=assumed;
+       tydecl_name=name;
+       tydecl_parameters=args;
+       tydecl_meta=flags;
+       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_c_struct"
+      ->
+      begin
+        (* TODO remove/improve these print commands *)
+        print_endline "Parsing struct definition.";
+        begin match string_of_typestring tag with
+        | None ->
+          BU.print1 "Failed to parse struct tag from %s.\n"
+            (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
+          None
+        | Some tag ->
+          let rec parse_fields (fields: mlty): option<list<_>> =
+            match fields with
+            | MLTY_Named ([], p)
+              when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.struct_fields_t_nil"
+              -> Some []
+              
+            | MLTY_Named ([field; t; fields], p)
+              when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.struct_fields_t_cons"
+              ->
+              opt_bind (string_of_typestring field) (fun field ->
+              opt_bind (parse_fields fields) (fun fields ->
+              Some ((field, t) :: fields)))
+
+            | _ -> None
+          in
+          match parse_fields fields with
+          | None ->
+            BU.print1 "Failed to parse struct fields from %s.\n"
+              (FStar.Extraction.ML.Code.string_of_mlty ([], "") fields);
+            None
+
+          | Some fields ->
+              BU.print1 "Got struct %s with following fields:\n" tag;
+              List.fold_left
+                (fun () (field, ty) ->
+                   BU.print2 "  %s : %s"
+                     field
+                     (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty))
+                ()
+                fields;
+              None // TODO return DTypeFlat(..)
+        end
+      end
+
     | {tydecl_assumed=assumed;
        tydecl_name=name;
        tydecl_parameters=args;

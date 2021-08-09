@@ -27,11 +27,10 @@ let c_int: typedef = {
 
 module T = FStar.Tactics
 
-irreducible
 inline_for_extraction
-//[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
-//     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let point_tag = normalize (mk_string_t "point")
+[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
+     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
+let point_tag = (mk_string_t "point")
 
 [@@c_struct]
 //noextract
