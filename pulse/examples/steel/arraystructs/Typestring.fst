@@ -1,0 +1,42 @@
+module Typestring
+
+let a: Type0 = unit
+let b: Type0 = unit
+let c: Type0 = unit
+let d: Type0 = unit
+let e: Type0 = unit
+let f: Type0 = unit
+let g: Type0 = unit
+let h: Type0 = unit
+let i: Type0 = unit
+let j: Type0 = unit
+let k: Type0 = unit
+let l: Type0 = unit
+let m: Type0 = unit
+let n: Type0 = unit
+let o: Type0 = unit
+let p: Type0 = unit
+let q: Type0 = unit
+let r: Type0 = unit
+let s: Type0 = unit
+let t: Type0 = unit
+let u: Type0 = unit
+let v: Type0 = unit
+let w: Type0 = unit
+let x: Type0 = unit
+let y: Type0 = unit
+let z: Type0 = unit
+let zero: Type0 = unit
+let one: Type0 = unit
+let two: Type0 = unit
+let three: Type0 = unit
+let four: Type0 = unit
+let five: Type0 = unit
+let six: Type0 = unit
+let seven: Type0 = unit
+let eight: Type0 = unit
+let nine: Type0 = unit
+let underscore: Type0 = unit
+
+let string_nil: Type0 = unit
+let string_cons (c: Type0) (s: Type0): Type0 = unit

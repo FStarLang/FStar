@@ -12,10 +12,8 @@ open Steel.Effect.Atomic
 open Steel.C.Ref
 
 open FStar.FSet
+open Typestring
 //open Steel.C.Reference
-
-let register_fields_of (_: Type0) = struct_fields
-let register_typedef_of (_: Type0) = typedef
 
 [@@c_typedef]
 //noextract
@@ -26,49 +24,50 @@ let c_int: typedef = {
   view_type = int;
   view = opt_view int;
 }
-let _: register_typedef_of int = c_int
+
+module T = FStar.Tactics
+
+irreducible
+inline_for_extraction
+//[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
+//     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
+let point_tag = normalize (mk_string_t "point")
 
 [@@c_struct]
 //noextract
 //inline_for_extraction
-let point_fields: struct_fields = 
+let point_fields: struct_fields =
   fields_cons "x" c_int (
   fields_cons "y" c_int (
   fields_nil))
 
 //noextract
-//inline_for_extraction
-let point = struct "point" point_fields
+inline_for_extraction
+let point = struct point_tag point_fields
 
 //noextract
 //inline_for_extraction
-let point_view = struct_view "point" point_fields
+let point_view = struct_view point_tag point_fields
 
-//let point = struct_pcm_carrier "point" point_fields
+//let point = struct_pcm_carrier point_tag point_fields
 
 //noextract
 //inline_for_extraction
-let point_pcm = struct_pcm "point" point_fields
+let point_pcm = struct_pcm point_tag point_fields
 
 [@@c_typedef]
 //noextract
 //inline_for_extraction
-let c_point: typedef = typedef_struct "point" point_fields
+let c_point: typedef = typedef_struct point_tag point_fields
 
-// Needed to emit the right DTypeFlat declaration
-let _: register_fields_of point = norm [delta_only [`%point_fields]] point_fields
-
-// Needed to associate struct fields with their types
-// (if c_point ever appears as a field of a struct, need to know what
-// its corresponding type is)
-let _: register_typedef_of point = c_point
+let _ = normalize (mk_c_struct point_tag point_fields)
 
 #push-options "--fuel 0"
 
 (*
 let x_conn
 : connection point_pcm (opt_pcm #int)
-= struct_field "point" point_fields "x"
+= struct_field point_tag point_fields "x"
 *)
 
 #push-options "--print_universes --print_implicits"
@@ -76,7 +75,6 @@ let x_conn
 
 open Steel.C.Reference
 
-(*
 val swap (p: ref 'a point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
@@ -100,7 +98,6 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
-  *)
 
 (*
 ref 'a (struct tag fields)
@@ -108,7 +105,7 @@ ref 'a (fields.get_field field).view_type
 ref 'a view_t ...
 
 struct: s:string -> x:Type{x == y:string{y == s}} -> struct_fields -> Type
-point = s:string{s == "point"}
+point = s:string{s == point_tag}
 
 [@@c_typedef]
 s = struct ..
@@ -117,7 +114,7 @@ s = struct ..
 point_fields = fields_cons "a" s
 
 [@@c_typedef]
-point = struct "point" point_fields
+point = struct point_tag point_fields
 
 mark get_field, view_type, ... c_struct
 
@@ -173,7 +170,7 @@ addr_of_struct_field "x" (p: ref 'a #(struct_pcm_carrier tag point_fields) (stru
 
 /// make pts_to_view stuff smt_fallback?
 let addr_of_x' #a p excluded =
-  let q = addr_of_struct_field #_ #"point" #point_fields #excluded "x" p in
+  let q = addr_of_struct_field #_ #point_tag #point_fields #excluded "x" p in
   //change_equal_slprop (q `pts_to_view` _) (q `pts_to_view` opt_view int);
   //change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` point_view (insert "x" excluded));
   //slassert ((p `pts_to_view` point_view (insert "x" excluded)) `star`
@@ -182,10 +179,10 @@ let addr_of_x' #a p excluded =
     (pts_to_view #a #(option int) #(opt_pcm #int) q #int #false (opt_view int));
   change_equal_slprop (p `pts_to_view` _)
     (pts_to_view #a #point #point_pcm p
-          #(struct' "point" point_fields (insert #string "x" excluded)) #false 
+          #(struct' point_tag point_fields (insert #string "x" excluded)) #false 
          (point_view (insert "x" excluded)));
   //slassert ((pts_to_view #a #point #point_pcm p
-  //        #(struct' "point" point_fields (insert #string "x" excluded)) #false 
+  //        #(struct' point_tag point_fields (insert #string "x" excluded)) #false 
   //       (point_view (insert "x" excluded))) `star`
   //     (pts_to_view #a #(option int) #(opt_pcm #int) q #int #false (opt_view int)));
   //sladmit();
