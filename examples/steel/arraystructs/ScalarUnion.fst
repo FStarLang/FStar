@@ -92,48 +92,26 @@ let switch_to_u16 p x =
   switch_union_field "as_u16" x p;
   return ()
 
-(*
-let generic_swap_sel (p:ref 'a 'c (opt_pcm #'c)) (q:ref 'b 'c (opt_pcm #'c))
+let zero_u32_ref (p:ref 'a U32.t (opt_pcm #U32.t))
 : Steel unit
-  ((p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
-  (fun _ -> (p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
-  (requires (fun _ -> True))
-  (ensures (fun h _ h' ->
-    h' (p `pts_to_view` opt_view _) == h (q `pts_to_view` opt_view _) /\
-    h' (q `pts_to_view` opt_view _) == h (p `pts_to_view` opt_view _)
-  ))
-= (* A tmp = *p; *)
-  let tmp = opt_read_sel p in
-  (* *p = *q; *)
-  let vy = opt_read_sel q in
-  opt_write_sel p vy;
-  (* *q = tmp *)
-  opt_write_sel q tmp;
-  return ()
-  *)
+  (p `pts_to_view` opt_view _)
+  (fun _ -> p `pts_to_view` opt_view _)
+  (requires fun _ -> True)
+  (ensures fun _ _ _ -> True)
+= opt_write_sel p U32.zero
 
-(*
-val swap' (p: ref unit u32_or_u16 u32_or_u16_pcm)
+val zero_u32_of_union (p: ref unit u32_or_u16 u32_or_u16_pcm)
 : Steel unit
     (p `pts_to_view` u32_or_u16_view)
     (fun _ -> p `pts_to_view` u32_or_u16_view)
-    (requires fun _ -> True)
-    (ensures fun h q h' ->
-      //h' (p `pts_to_view` u32_or_u16_view emptyset) `struct_get` "x"
-      //== h (p `pts_to_view` u32_or_u16_view emptyset) `struct_get` "y" /\
-      //h' (p `pts_to_view` u32_or_u16_view emptyset) `struct_get` "y"
-      //== h (p `pts_to_view` u32_or_u16_view emptyset) `struct_get` "x")
-      True)
+    (requires fun h -> dfst (dtuple2_of_union (h (p `pts_to_view` u32_or_u16_view))) == "as_u32")
+    (ensures fun h q h' -> True)
 
-let swap' p =
-  let q: ref _ int' _ = addr_of_struct_field "x" p in
-  let r: ref _ int' _ = addr_of_struct_field "y" p in
-  generic_swap_sel q r;
-  unaddr_of_struct_field "y" p r;
-  unaddr_of_struct_field "x" p q;
-  change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
+let zero_u32_of_union p =
+  let q: ref _ U32.t _ = addr_of_union_field "as_u32" p in
+  zero_u32_ref q;
+  unaddr_of_union_field "as_u32" p q;
   return ()
-  *)
 
 (*
 ref 'a (struct tag fields)
