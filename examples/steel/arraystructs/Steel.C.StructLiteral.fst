@@ -35,15 +35,62 @@ let mk_cons tag fields field td x v =
 
 let struct_pcm_carrier_cod (fields: c_fields) (field: string) =
   (fields.get_field field).carrier
-
-let struct_pcm_carrier tag fields =
-  restricted_t string (struct_pcm_carrier_cod fields)
   
 let struct_pcms (fields: c_fields) (field: string)
 : pcm (struct_pcm_carrier_cod fields field)
 = (fields.get_field field).pcm
 
-let struct_pcm tag fields = prod_pcm (struct_pcms fields)
+let struct_pcm_carrier_snd tag fields
+  (f:restricted_t string (struct_pcm_carrier_cod fields))
+= b:bool{b <==> f =!= one (prod_pcm (struct_pcms fields))}
+
+let struct_pcm_carrier tag fields =
+  dtuple2
+    (restricted_t string (struct_pcm_carrier_cod fields))
+    (struct_pcm_carrier_snd tag fields)
+
+module P = FStar.PCM
+
+let struct_comp tag (fields: c_fields)
+: P.symrel (struct_pcm_carrier tag fields)
+= fun (|x, _|) (|y, _|) -> composable (prod_pcm (struct_pcms fields)) x y
+
+let struct_op tag (fields: c_fields)
+: x:struct_pcm_carrier tag fields ->
+  y:struct_pcm_carrier tag fields{struct_comp tag fields x y} ->
+  struct_pcm_carrier tag fields
+= fun (|x, b|) (|y, c|) ->
+  assert (composable (prod_pcm (struct_pcms fields)) x y);
+  assert (prod_op (struct_pcms fields) x y == one (prod_pcm (struct_pcms fields))
+   ==> x == one (prod_pcm (struct_pcms fields)) /\ y == one (prod_pcm (struct_pcms fields)));
+  (|prod_op (struct_pcms fields) x y, b || c|)
+
+let fstar_struct_pcm tag (fields: c_fields)
+: P.pcm (struct_pcm_carrier tag fields)
+= let open P in {
+  p = {
+    composable = struct_comp tag fields;
+    op = struct_op tag fields;
+    one = (|prod_one (struct_pcms fields), false|);
+  };
+  comm = (fun (|x, _|) (|y, _|) -> prod_comm (struct_pcms fields) x y);
+  assoc = (fun (|x, _|) (|y, _|) (|z, _|) -> prod_assoc (struct_pcms fields) x y z);
+  assoc_r = (fun (|x, _|) (|y, _|) (|z, _|) -> prod_assoc_r (struct_pcms fields) x y z);
+  is_unit = (fun (|x, _|) -> prod_is_unit (struct_pcms fields) x);
+  refine = (fun (|x, _|) -> prod_refine (struct_pcms fields) x);
+}
+
+let struct_pcm' tag fields: pcm0 (struct_pcm_carrier tag fields) =
+  pcm_of_fstar_pcm (fstar_struct_pcm tag fields)
+
+let struct_pcm tag fields =
+  let p' = struct_pcm' tag fields in
+  assert (forall x y . (composable p' x y /\ op p' x y == one p') ==> (
+    dfst x `feq` dfst (one p') /\ dfst y `feq` dfst (one p')
+  ));
+  let p = struct_pcms fields in
+  assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
+  struct_pcm' tag fields
 
 let struct_get x field = x field
 let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
@@ -63,8 +110,11 @@ let struct_put_put_ne x field1 v field2 w =
     struct_put (struct_put x field1 v) field2 w `feq`
     struct_put (struct_put x field2 w) field1 v)
 
-let struct_pcm_get x field = x field
-let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
+let struct_pcm_get x field = dfst x field
+
+let struct_pcm_put #tag #fields (|x, b|) field v =
+  (|on_dom _ (fun field' -> if field = field' then v else x field'),
+    if (fields.get_field field).is_unit v then |)
 
 let struct_pcm_get_put x field v = ()
 
