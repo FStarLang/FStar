@@ -1127,6 +1127,32 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
+  (* Operations on Steel.C.Reference.ref *)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, _)
+    when string_of_mlpath p = "Steel.C.StructLiteral.unaddr_of_struct_field" ->
+      ESequence []
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; struct_name])},
+             [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
+    when string_of_mlpath p = "Steel.C.StructLiteral.addr_of_struct_field" ->
+      let struct_name = must (string_of_typestring struct_name) in
+      EAddrOf (EField (
+        TQualified (env.module_name, struct_name), // JL: TODO env.module_name or (fst p)?
+        EBufRead (translate_expr env r, EConstant (CInt, "0")), // JL: TODO what width is best?
+        field_name))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
+    when string_of_mlpath p = "Steel.C.Opt.opt_read_sel" ->
+      EBufRead (translate_expr env r, EConstant (CInt, "0")) // JL: TODO what width is best?
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; x])
+    when string_of_mlpath p = "Steel.C.Opt.opt_write_sel" ->
+      EAssign (
+        EBufRead (translate_expr env r, EConstant (CInt, "0")),
+        translate_expr env x)
+      // JL: TODO what width is best?
+      // JL: TODO alternatively, EBufWrite (<<r>>, 0, <<x>>)
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 

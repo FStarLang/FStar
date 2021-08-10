@@ -15,13 +15,17 @@ open FStar.FSet
 open Typestring
 //open Steel.C.Reference
 
+module U32 = FStar.UInt32
+
+unfold let int' = int // U32.t
+
 [@@c_typedef]
 noextract inline_for_extraction
-let c_int: typedef = {
-  carrier = option int;
-  pcm = opt_pcm #int;
-  view_type = int;
-  view = opt_view int;
+let c_int': typedef = {
+  carrier = option int';
+  pcm = opt_pcm #int';
+  view_type = int';
+  view = opt_view int';
 }
 
 module T = FStar.Tactics
@@ -34,24 +38,18 @@ let point_tag = normalize (mk_string_t "point")
 [@@c_struct]
 noextract inline_for_extraction
 let point_fields: struct_fields =
-  fields_cons "x" c_int (
-  fields_cons "y" c_int (
+  fields_cons "x" c_int' (
+  fields_cons "y" c_int' (
   fields_nil))
 
 noextract inline_for_extraction
 let point = struct point_tag point_fields
 
-(*
-//noextract
-//inline_for_extraction
+noextract inline_for_extraction
 let point_view = struct_view point_tag point_fields
 
-//let point = struct_pcm_carrier point_tag point_fields
-
-//noextract
-//inline_for_extraction
+noextract inline_for_extraction
 let point_pcm = struct_pcm point_tag point_fields
-*)
 
 [@@c_typedef]
 noextract inline_for_extraction
@@ -81,8 +79,7 @@ let x_conn
 
 open Steel.C.Reference
 
-(*
-val swap (p: ref 'a point point_pcm)
+val swap (p: ref (*'a*) unit point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
     (fun _ -> p `pts_to_view` point_view emptyset)
@@ -94,9 +91,9 @@ val swap (p: ref 'a point point_pcm)
       //== h (p `pts_to_view` point_view emptyset) `struct_get` "x")
       True)
 
-let swap #a p =
-  let q: ref _ int _ = addr_of_struct_field "x" p in
-  let r: ref _ int _ = addr_of_struct_field "y" p in
+let swap (*#a*) p =
+  let q: ref _ int' _ = addr_of_struct_field "x" p in
+  let r: ref _ int' _ = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
   let y = opt_read_sel r in
   q `opt_write_sel` y;
@@ -105,7 +102,6 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
-  *)
 
 (*
 ref 'a (struct tag fields)
