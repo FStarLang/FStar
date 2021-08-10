@@ -79,7 +79,7 @@ let x_conn
 
 open Steel.C.Reference
 
-val swap (p: ref (*'a*) unit point point_pcm)
+val swap (p: ref unit point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
     (fun _ -> p `pts_to_view` point_view emptyset)
@@ -91,13 +91,52 @@ val swap (p: ref (*'a*) unit point point_pcm)
       //== h (p `pts_to_view` point_view emptyset) `struct_get` "x")
       True)
 
-let swap (*#a*) p =
+let swap p =
   let q: ref _ int' _ = addr_of_struct_field "x" p in
   let r: ref _ int' _ = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
   let y = opt_read_sel r in
   q `opt_write_sel` y;
   r `opt_write_sel` x;
+  unaddr_of_struct_field "y" p r;
+  unaddr_of_struct_field "x" p q;
+  change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
+  return ()
+
+let generic_swap_sel (p:ref 'a 'c (opt_pcm #'c)) (q:ref 'b 'c (opt_pcm #'c))
+: Steel unit
+  ((p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
+  (fun _ -> (p `pts_to_view` opt_view _) `star` (q `pts_to_view` opt_view _))
+  (requires (fun _ -> True))
+  (ensures (fun h _ h' ->
+    h' (p `pts_to_view` opt_view _) == h (q `pts_to_view` opt_view _) /\
+    h' (q `pts_to_view` opt_view _) == h (p `pts_to_view` opt_view _)
+  ))
+= (* A tmp = *p; *)
+  let tmp = opt_read_sel p in
+  (* *p = *q; *)
+  let vy = opt_read_sel q in
+  opt_write_sel p vy;
+  (* *q = tmp *)
+  opt_write_sel q tmp;
+  return ()
+
+val swap' (p: ref unit point point_pcm)
+: Steel unit
+    (p `pts_to_view` point_view emptyset)
+    (fun _ -> p `pts_to_view` point_view emptyset)
+    (requires fun _ -> True)
+    (ensures fun h q h' ->
+      //h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
+      //== h (p `pts_to_view` point_view emptyset) `struct_get` "y" /\
+      //h' (p `pts_to_view` point_view emptyset) `struct_get` "y"
+      //== h (p `pts_to_view` point_view emptyset) `struct_get` "x")
+      True)
+
+let swap' p =
+  let q: ref _ int' _ = addr_of_struct_field "x" p in
+  let r: ref _ int' _ = addr_of_struct_field "y" p in
+  generic_swap_sel q r;
   unaddr_of_struct_field "y" p r;
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
