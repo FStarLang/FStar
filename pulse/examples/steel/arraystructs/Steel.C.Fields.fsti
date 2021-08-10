@@ -8,14 +8,24 @@ open Steel.C.Opt
 
 module TS = Typestring
 
+let trivial_typedef: typedef = {
+  carrier = option unit;
+  pcm = opt_pcm #unit;
+  view_type = unit;
+  view = opt_view unit;
+  is_unit = (fun o -> None? o);
+}
+
 //[@@__reduce__]
 noeq type c_fields = {
   //cfields: clist string;
   cfields: list string;
   has_field: set string;
-  //has_field_prf: squash (forall field. has_field field == field `mem` cfields);
+  has_field_mt: squash (has_field "" == true);
+  has_field_prf: squash (forall field. has_field field == field `List.Tot.mem` cfields);
   get_field: string ^-> typedef;
   // get_field_prf: forall field. has_field field == false ==> get_field field == trivial_typedef;
+  get_field_mt: squash (get_field "" == trivial_typedef);
 }
 
 (* Begin for extraction *)
@@ -37,31 +47,29 @@ let c_fields_t (fields: c_fields) =
 
 (* End for extraction *)
 
-let trivial_typedef: typedef = {
-  carrier = option unit;
-  pcm = opt_pcm #unit;
-  view_type = unit;
-  view = opt_view unit;
-  is_unit = (fun o -> None? o);
-}
-
 //[@@__reduce__]
 let fields_nil: c_fields = {
-  cfields = [];
-  has_field = emptyset;
+  cfields = [""];
+  has_field = insert "" emptyset;
+  has_field_mt = ();
+  has_field_prf = ();
   //has_field_prf = ();
   get_field = on_dom _ (fun _ -> trivial_typedef);
+  get_field_mt = ();
 }
 
 //[@@__reduce__]
-let fields_cons (field: string) (td: typedef) (fields: c_fields): c_fields = {
+let fields_cons (field: string{field =!= ""}) (td: typedef) (fields: c_fields): c_fields = {
   cfields = field :: fields.cfields;
   has_field = insert field fields.has_field;
-  //has_field_prf = ();
+  has_field_mt = fields.has_field_mt;
+  has_field_prf = fields.has_field_prf;
   get_field = on_dom _ (fun field' -> if field = field' then td else fields.get_field field');
+  get_field_mt = ();
 }
 
-let field_of (fields: c_fields) = field:string{fields.has_field field == true}
+let field_t = field:string{field =!= ""}
+let field_of (fields: c_fields) = field:string{fields.has_field field == true /\ field =!= ""}
 
 irreducible let c_struct = ()
 irreducible let c_union = ()
