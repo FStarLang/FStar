@@ -65,6 +65,18 @@ val union_field
   (tag: Type0) (fields: c_fields) (field: field_of fields)
 : connection (union_pcm tag fields) (fields.get_field field).pcm
 
+val union_is_unit (tag:Type0) (fields:c_fields) (v:union_pcm_carrier tag fields)
+: b:bool{b <==> v == one (union_pcm tag fields)}
+
+[@@c_typedef]
+let typedef_union (tag: Type0) (fields: nonempty_c_fields): typedef = {
+  carrier = union_pcm_carrier tag fields;
+  pcm = union_pcm tag fields;
+  view_type = union tag fields;
+  view = union_view tag fields;
+  is_unit = union_is_unit tag fields;
+}
+
 open Steel.C.Reference
 
 val addr_of_union_field
