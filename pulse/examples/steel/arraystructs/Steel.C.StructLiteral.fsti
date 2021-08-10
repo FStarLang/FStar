@@ -201,6 +201,7 @@ let fields_cons (field: string) (td: typedef) (fields: struct_fields): struct_fi
 
 val struct' (tag: Type0) (fields: struct_fields) (excluded: set string): Type0
 
+inline_for_extraction
 let struct (tag: Type0) (fields: struct_fields) = struct' tag fields emptyset
 
 val mk_nil (tag: Type0): struct tag fields_nil
