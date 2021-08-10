@@ -283,7 +283,7 @@ let is_op op =
 let is_machine_int m =
   mk_width m <> None
 
-(* TODO: in stdlib somewhere? *)
+(* JL: TODO: in stdlib somewhere? *)
 let opt_bind (m: option<'a>) (k: 'a -> option<'b>): option<'b> =
   match m with Some x -> k x | None -> None
 
@@ -291,11 +291,8 @@ let char_of_typechar (t: mlty): option<char> =
   match t with
   | MLTY_Named ([], p) ->
     let p = Syntax.string_of_mlpath p in
-    let n = FStar.String.strlen "Typestring.c" in
-    if FStar.String.strlen p > n &&
-       FStar.String.substring p 0 n = "Typestring.c"
-    then
-      Some (FStar.String.get p n)
+    if BU.starts_with p "Typestring.c" then
+      Some (FStar.String.get p (FStar.String.strlen "Typestring.c"))
     else
       None
 
@@ -575,15 +572,11 @@ and translate_type_decl env ty: option<decl> =
     None
   else
     match ty with
-    | {tydecl_assumed=assumed;
-       tydecl_name=name;
-       tydecl_parameters=args;
-       tydecl_meta=flags;
-       tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
-      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_c_struct"
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
       ->
       begin
-        (* TODO remove/improve these print commands *)
+        (* JL: TODO remove/improve these print commands *)
         print_endline "Parsing struct definition.";
         begin match string_of_typestring tag with
         | None ->
@@ -616,12 +609,19 @@ and translate_type_decl env ty: option<decl> =
               BU.print1 "Got struct %s with following fields:\n" tag;
               List.fold_left
                 (fun () (field, ty) ->
-                   BU.print2 "  %s : %s"
+                   BU.print2 "  %s : %s\n"
                      field
                      (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty))
                 ()
                 fields;
-              None // TODO return DTypeFlat(..)
+              // JL: TODO env.module_name or (fst p)?
+              Some (DTypeFlat ((env.module_name, tag), [], 0,
+                List.map
+                  (fun (field, ty) ->
+                     BU.print1 "Translating %s.\n"
+                       (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
+                     (field, (translate_type env ty, true)))
+                  fields))
         end
       end
 
@@ -690,11 +690,16 @@ and translate_type env t: typ =
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
 
-(* TODO
+  | MLTY_Named ([tag; _; _], p) when
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
+    ->
+      TQualified (env.module_name, must (string_of_typestring tag))
+      // JL: TODO env.module_name or (fst p)?
+
   | MLTY_Named ([_; arg; _; _], p) when
     Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
     ->
-      TBuf (translate_type env arg) *)
+      TBuf (translate_type env arg)
 
   | MLTY_Named ([_; arg; _], p) when
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||

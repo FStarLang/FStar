@@ -16,8 +16,7 @@ open Typestring
 //open Steel.C.Reference
 
 [@@c_typedef]
-//noextract
-//inline_for_extraction
+noextract inline_for_extraction
 let c_int: typedef = {
   carrier = option int;
   pcm = opt_pcm #int;
@@ -27,23 +26,22 @@ let c_int: typedef = {
 
 module T = FStar.Tactics
 
-inline_for_extraction
-[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
-     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let point_tag = (mk_string_t "point")
+noextract inline_for_extraction
+//[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
+//     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
+let point_tag = normalize (mk_string_t "point")
 
 [@@c_struct]
-//noextract
-//inline_for_extraction
+noextract inline_for_extraction
 let point_fields: struct_fields =
   fields_cons "x" c_int (
   fields_cons "y" c_int (
   fields_nil))
 
-//noextract
-inline_for_extraction
+noextract inline_for_extraction
 let point = struct point_tag point_fields
 
+(*
 //noextract
 //inline_for_extraction
 let point_view = struct_view point_tag point_fields
@@ -53,13 +51,22 @@ let point_view = struct_view point_tag point_fields
 //noextract
 //inline_for_extraction
 let point_pcm = struct_pcm point_tag point_fields
+*)
 
 [@@c_typedef]
-//noextract
-//inline_for_extraction
+noextract inline_for_extraction
 let c_point: typedef = typedef_struct point_tag point_fields
 
 let _ = normalize (mk_c_struct point_tag point_fields)
+
+noextract inline_for_extraction
+let line_fields_second_half: struct_fields =
+  fields_cons "second" c_point fields_nil
+
+noextract inline_for_extraction
+let line_tag = normalize (mk_string_t "line")
+
+let _ = normalize (mk_c_struct line_tag (fields_cons "first" c_point line_fields_second_half))
 
 #push-options "--fuel 0"
 
@@ -74,6 +81,7 @@ let x_conn
 
 open Steel.C.Reference
 
+(*
 val swap (p: ref 'a point point_pcm)
 : Steel unit
     (p `pts_to_view` point_view emptyset)
@@ -97,6 +105,7 @@ let swap #a p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
+  *)
 
 (*
 ref 'a (struct tag fields)
