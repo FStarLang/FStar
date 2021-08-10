@@ -344,24 +344,6 @@ val extract_field_unextracted
     [SMTPat (extract_field tag fields excluded field v);
      SMTPat (has_type field' string)]
 
-irreducible let c_struct = 0
-
-irreducible let c_typedef = 0
-
-unfold let unfold_typedefs = [delta_attr [`%c_typedef]]
-
-unfold let simplify_typedefs =
-  [delta_attr [`%c_struct];
-   delta_only
-    [`%fields_cons;
-     `%fields_nil;
-     `%Mkc_fields?.get_field;
-     `%Mktypedef?.carrier;
-     `%Mktypedef?.pcm;
-     `%Mktypedef?.view_type;
-     `%Mktypedef?.view];
-   iota; zeta; primops]
-
 val addr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: set string)
   (field: field_of fields)
