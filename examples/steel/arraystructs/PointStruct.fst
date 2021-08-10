@@ -9,11 +9,11 @@ open Steel.C.Typedef
 open FStar.FunctionalExtensionality
 open Steel.Effect
 open Steel.Effect.Atomic
-open Steel.C.Ref
+open Steel.C.Fields
+open Steel.C.Reference
 
 open FStar.FSet
 open Typestring
-//open Steel.C.Reference
 
 module U32 = FStar.UInt32
 
@@ -37,7 +37,7 @@ let point_tag = normalize (mk_string_t "point")
 
 [@@c_struct]
 noextract inline_for_extraction
-let point_fields: struct_fields =
+let point_fields: c_fields =
   fields_cons "x" c_int' (
   fields_cons "y" c_int' (
   fields_nil))
@@ -58,7 +58,7 @@ let c_point: typedef = typedef_struct point_tag point_fields
 let _ = normalize (mk_c_struct point_tag point_fields)
 
 noextract inline_for_extraction
-let line_fields_second_half: struct_fields =
+let line_fields_second_half: c_fields =
   fields_cons "second" c_point fields_nil
 
 noextract inline_for_extraction
@@ -147,7 +147,7 @@ ref 'a (struct tag fields)
 ref 'a (fields.get_field field).view_type
 ref 'a view_t ...
 
-struct: s:string -> x:Type{x == y:string{y == s}} -> struct_fields -> Type
+struct: s:string -> x:Type{x == y:string{y == s}} -> c_fields -> Type
 point = s:string{s == point_tag}
 
 [@@c_typedef]
