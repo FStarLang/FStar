@@ -116,12 +116,12 @@ let fact_valid_compat (#a:Type) (#pcm:pcm a)
 /// If property [fact] is stable with respect to the governing PCM,
 /// and if it is currently valid for any value that is compatible with
 /// our current knowledge [v], then we can witness the property
-val witness (#a:Type) (#pcm:pcm a)
+val witness (#inames: _) (#a:Type) (#pcm:pcm a)
             (r:ref a pcm)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : Steel unit (pts_to r v)
+  : SteelGhost unit inames (pts_to r v)
                (fun _ -> pts_to r v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> witnessed r fact)
@@ -129,11 +129,11 @@ val witness (#a:Type) (#pcm:pcm a)
 /// If we previously witnessed the validity of a predicate [fact],
 /// then we can recall this validity on the current value [v1], which
 /// is compatible with our previous knowledge [v]
-val recall (#a:Type u#1) (#pcm:pcm a)
+val recall (#inames: _) (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : Steel (erased a)
+  : SteelGhost (erased a) inames
           (pts_to r v)
           (fun v1 -> pts_to r v)
           (requires fun _ -> witnessed r fact)
