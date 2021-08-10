@@ -18,79 +18,35 @@ open FStar.FunctionalExtensionality
 
 let mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0 = unit
 
-let struct_dom (excluded: set string) = refine string (notin excluded)
+let field_of' (fields: c_fields) = field:string{fields.has_field field == true}
 
-let struct_cod (fields: c_fields) (excluded: set string) (field: struct_dom excluded) =
+let struct_dom (fields: c_fields) (excluded: excluded_fields) =
+  refine (field_of' fields) (notin excluded)
+
+let struct_cod (fields: c_fields) (excluded: excluded_fields) (field: struct_dom fields excluded) =
   (fields.get_field field).view_type
 
 let struct' tag fields excluded =
-  restricted_t (struct_dom excluded) (struct_cod fields excluded)
+  restricted_t (struct_dom fields excluded) (struct_cod fields excluded)
 
 let mk_nil tag = on_dom _ (fun _ -> ())
 
 let mk_cons tag fields field td x v =
-  on_dom (refine string (notin emptyset)) (fun field' ->
+  on_dom (struct_dom (fields_cons field td fields) emptyset) (fun field' ->
     if field = field' then x
     else v field' <: ((fields_cons field td fields).get_field field').view_type)
 
-let struct_pcm_carrier_cod (fields: c_fields) (field: string) =
+let struct_pcm_carrier_cod (fields: c_fields) (field: field_of' fields) =
   (fields.get_field field).carrier
-  
-let struct_pcms (fields: c_fields) (field: string)
+
+let struct_pcms (fields: c_fields) (field: field_of' fields)
 : pcm (struct_pcm_carrier_cod fields field)
 = (fields.get_field field).pcm
 
-let struct_pcm_carrier_snd tag fields
-  (f:restricted_t string (struct_pcm_carrier_cod fields))
-= b:bool{b <==> f =!= one (prod_pcm (struct_pcms fields))}
-
 let struct_pcm_carrier tag fields =
-  dtuple2
-    (restricted_t string (struct_pcm_carrier_cod fields))
-    (struct_pcm_carrier_snd tag fields)
+  restricted_t (field_of' fields) (struct_pcm_carrier_cod fields)
 
-module P = FStar.PCM
-
-let struct_comp tag (fields: c_fields)
-: P.symrel (struct_pcm_carrier tag fields)
-= fun (|x, _|) (|y, _|) -> composable (prod_pcm (struct_pcms fields)) x y
-
-let struct_op tag (fields: c_fields)
-: x:struct_pcm_carrier tag fields ->
-  y:struct_pcm_carrier tag fields{struct_comp tag fields x y} ->
-  struct_pcm_carrier tag fields
-= fun (|x, b|) (|y, c|) ->
-  assert (composable (prod_pcm (struct_pcms fields)) x y);
-  assert (prod_op (struct_pcms fields) x y == one (prod_pcm (struct_pcms fields))
-   ==> x == one (prod_pcm (struct_pcms fields)) /\ y == one (prod_pcm (struct_pcms fields)));
-  (|prod_op (struct_pcms fields) x y, b || c|)
-
-let fstar_struct_pcm tag (fields: c_fields)
-: P.pcm (struct_pcm_carrier tag fields)
-= let open P in {
-  p = {
-    composable = struct_comp tag fields;
-    op = struct_op tag fields;
-    one = (|prod_one (struct_pcms fields), false|);
-  };
-  comm = (fun (|x, _|) (|y, _|) -> prod_comm (struct_pcms fields) x y);
-  assoc = (fun (|x, _|) (|y, _|) (|z, _|) -> prod_assoc (struct_pcms fields) x y z);
-  assoc_r = (fun (|x, _|) (|y, _|) (|z, _|) -> prod_assoc_r (struct_pcms fields) x y z);
-  is_unit = (fun (|x, _|) -> prod_is_unit (struct_pcms fields) x);
-  refine = (fun (|x, _|) -> prod_refine (struct_pcms fields) x);
-}
-
-let struct_pcm' tag fields: pcm0 (struct_pcm_carrier tag fields) =
-  pcm_of_fstar_pcm (fstar_struct_pcm tag fields)
-
-let struct_pcm tag fields =
-  let p' = struct_pcm' tag fields in
-  assert (forall x y . (composable p' x y /\ op p' x y == one p') ==> (
-    dfst x `feq` dfst (one p') /\ dfst y `feq` dfst (one p')
-  ));
-  let p = struct_pcms fields in
-  assert (forall x frame . (prod_refine p x /\ prod_comp p x frame) ==> frame `feq` prod_one p);
-  struct_pcm' tag fields
+let struct_pcm tag fields = prod_pcm (struct_pcms fields)
 
 let struct_get x field = x field
 let struct_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
@@ -110,11 +66,8 @@ let struct_put_put_ne x field1 v field2 w =
     struct_put (struct_put x field1 v) field2 w `feq`
     struct_put (struct_put x field2 w) field1 v)
 
-let struct_pcm_get x field = dfst x field
-
-let struct_pcm_put #tag #fields (|x, b|) field v =
-  (|on_dom _ (fun field' -> if field = field' then v else x field'),
-    if (fields.get_field field).is_unit v then |)
+let struct_pcm_get x field = x field
+let struct_pcm_put x field v = on_dom _ (fun field' -> if field = field' then v else x field')
 
 let struct_pcm_get_put x field v = ()
 
@@ -131,30 +84,32 @@ let struct_pcm_put_put_ne x field1 v field2 w =
      struct_pcm_put (struct_pcm_put x field1 v) field2 w `feq`
      struct_pcm_put (struct_pcm_put x field2 w) field1 v)
 
-let struct_view_to_view_prop (tag: Type0) (fields: c_fields) (excluded: set string)
+let struct_view_to_view_prop (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
 : struct_pcm_carrier tag fields -> prop
-= fun x -> forall (field: struct_dom excluded).
+= fun x -> forall (field: struct_dom fields excluded).
   (fields.get_field field).view.to_view_prop (x field) /\
   (fields.has_field field == false ==> x field =!= one (fields.get_field field).pcm)
 
-let struct_view_to_view (tag: Type0) (fields: c_fields) (excluded: set string)
+let struct_view_to_view (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
 : refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields excluded) -> 
   struct' tag fields excluded
-= fun x -> on_dom (struct_dom excluded) (fun field -> (fields.get_field field).view.to_view (x field))
+= fun x -> on_dom (struct_dom fields excluded) (fun field -> (fields.get_field field).view.to_view (x field))
 
-let struct_view_to_carrier (tag: Type0) (fields: c_fields) (excluded: set string)
+let struct_view_to_carrier (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
 : struct' tag fields excluded ->
   refine (struct_pcm_carrier tag fields) (struct_view_to_view_prop tag fields excluded)
 = fun x ->
   let y: struct_pcm_carrier tag fields =
-    on_dom _ (fun field ->
+    on_dom (field_of' fields) (fun field ->
       if excluded field then one (fields.get_field field).pcm else
+      if field = "" then Some () else
       (fields.get_field field).view.to_carrier (x field)
       <: (fields.get_field field).carrier)
   in y
 
 module S = FStar.String
 
+(*
 let rec max_len (excluded: list string)
 : Ghost nat True (fun n -> forall s'. memP s' excluded ==> n >= S.strlen s')
 = match excluded with
@@ -162,21 +117,22 @@ let rec max_len (excluded: list string)
   | field :: excluded -> 
     let ih = max_len excluded in
     if S.strlen field > ih then S.strlen field else ih
-
+    
 let arbitrary_unexcluded_witness (excluded: list string)
 : Ghost string True (fun s -> forall s'. memP s' excluded ==> S.strlen s > S.strlen s')
 = S.make (max_len excluded + 1) ' '
 
-let arbitrary_unexcluded (excluded: set string): GTot (struct_dom excluded) =
+let arbitrary_unexcluded (excluded: excluded_fields): GTot (struct_dom fields excluded) =
   arbitrary_unexcluded_witness (set_as_list excluded)
+  *)
 
-let struct_view_to_carrier_not_one (tag: Type0) (fields: c_fields) (excluded: set string)
+let struct_view_to_carrier_not_one (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
 : Lemma 
     (~ (exists x. struct_view_to_carrier tag fields excluded x == one (struct_pcm tag fields)) /\
      ~ (struct_view_to_view_prop tag fields excluded (one (struct_pcm tag fields))))
-= (fields.get_field (arbitrary_unexcluded excluded)).view.to_carrier_not_one
+= (fields.get_field "").view.to_carrier_not_one
 
-let struct_view_to_view_frame (tag: Type0) (fields: c_fields) (excluded: set string)
+let struct_view_to_view_frame (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
 : (x: struct' tag fields excluded) ->
   (frame: struct_pcm_carrier tag fields) ->
   Lemma
@@ -189,7 +145,7 @@ let struct_view_to_view_frame (tag: Type0) (fields: c_fields) (excluded: set str
 = fun x frame ->
   let p = struct_pcms fields in
   Classical.forall_intro_2 (fun k -> is_unit (p k));
-  let aux (k:struct_dom excluded)
+  let aux (k:struct_dom fields excluded)
   : Lemma (
       (fields.get_field k).view.to_view_prop
         (op (p k) (struct_view_to_carrier tag fields excluded x k) (frame k)) /\
@@ -210,16 +166,35 @@ let struct_view tag fields excluded = {
   to_view_frame = struct_view_to_view_frame tag fields excluded;
 }
 
+let rec struct_is_unit_aux (tag: Type0) (fields: c_fields)
+  (fields_list: list string)
+  (v: struct_pcm_carrier tag fields)
+: Pure bool
+    (requires forall field. field `mem` fields_list ==> fields.has_field field == true)
+    (ensures fun b -> b <==> (forall (field: string). field `mem` fields_list ==> v field == one (struct_pcm tag fields) field))
+    (decreases fields_list)
+= match fields_list with
+  | [] -> true
+  | field :: fields_list ->
+    (fields.get_field field).is_unit (v field) &&
+    struct_is_unit_aux tag fields fields_list v
+
+let struct_is_unit tag fields v
+: b:bool{b <==> v == one (struct_pcm tag fields)}
+= let b = struct_is_unit_aux tag fields fields.cfields v in
+  assert (b <==> v `feq` one (struct_pcm tag fields));
+  b
+
 let struct_field tag fields field = struct_field (struct_pcms fields) field
 
 let struct'_without_field
-  (tag: Type0) (fields: c_fields) (excluded: set string) (field: string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields) (field: field_t)
   (v: struct' tag fields excluded)
 : struct' tag fields (insert field excluded)
-= on_dom (struct_dom (insert field excluded)) v
+= on_dom (struct_dom fields (insert field excluded)) v
 
 let struct_without_field_to_carrier
-  (tag: Type0) (fields: c_fields) (excluded: set string) (field: string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields) (field: field_of fields)
   (s: struct_pcm_carrier tag fields)
   (v: struct' tag fields excluded)
 : Lemma
@@ -234,7 +209,7 @@ let struct_without_field_to_carrier
          (struct'_without_field tag fields excluded field v))
 
 let extract_field
-  (tag: Type0) (fields: c_fields) (excluded: set string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
   (field: field_of fields)
   (v: struct' tag fields excluded)
 : Pure (struct' tag fields (insert field excluded) & (fields.get_field field).view_type)
@@ -243,20 +218,20 @@ let extract_field
 = (struct'_without_field tag fields excluded field v, v field)
 
 let extract_field_extracted
-  (tag: Type0) (fields: c_fields) (excluded: set string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
   (field: field_of fields)
   (v: struct' tag fields excluded)
 = ()
 
 let extract_field_unextracted
-  (tag: Type0) (fields: c_fields) (excluded: set string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
   (field: field_of fields)
   (field': field_of fields)
   (v: struct' tag fields excluded)
 = ()
 
 val addr_of_struct_field_ref'
-  (#tag: Type0) (#fields: c_fields) (#excluded: set string)
+  (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
   (p: ref 'a (struct_pcm tag fields))
 : Steel (ref 'a (fields.get_field field).pcm)
@@ -297,17 +272,17 @@ let addr_of_struct_field_ref #a #tag #fields #excluded field p =
   addr_of_struct_field_ref' field p
 
 let struct'_with_field
-  (tag: Type0) (fields: c_fields) (excluded: set string)
-  (field: string) (w: (fields.get_field field).view_type)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
+  (field: field_of fields) (w: (fields.get_field field).view_type)
   (v: struct' tag fields excluded)
 : Pure (struct' tag fields (remove field excluded))
     (requires excluded field == true)
     (ensures fun _ -> True)
-= on_dom (struct_dom (remove field excluded))
+= on_dom (struct_dom fields (remove field excluded))
     (fun field' -> if field = field' then w else v field')
 
 let struct_with_field_to_carrier'
-  (tag: Type0) (fields: c_fields) (excluded: set string) (field: string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields) (field: field_of fields)
   (s: struct_pcm_carrier tag fields)
   (t: (fields.get_field field).carrier)
   (v: struct' tag fields excluded)
@@ -325,7 +300,7 @@ let struct_with_field_to_carrier'
            (struct'_with_field tag fields excluded field w v))
 
 let extract_field_with_field
-  (tag: Type0) (fields: c_fields) (excluded: set string)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
   (field: field_of fields)
   (v: struct' tag fields excluded)
   (w: (fields.get_field field).view_type)
