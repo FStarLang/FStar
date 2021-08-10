@@ -61,3 +61,21 @@ let fields_cons (field: string) (td: typedef) (fields: c_fields): c_fields = {
 }
 
 let field_of (fields: c_fields) = field:string{fields.has_field field == true}
+
+irreducible let c_struct = ()
+irreducible let c_union = ()
+irreducible let c_typedef = ()
+
+unfold let unfold_typedefs = [delta_attr [`%c_typedef]]
+
+unfold let simplify_typedefs =
+  [delta_attr [`%c_struct; `%c_union];
+   delta_only
+    [`%fields_cons;
+     `%fields_nil;
+     `%Mkc_fields?.get_field;
+     `%Mktypedef?.carrier;
+     `%Mktypedef?.pcm;
+     `%Mktypedef?.view_type;
+     `%Mktypedef?.view];
+   iota; zeta; primops]
