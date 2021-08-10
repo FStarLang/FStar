@@ -107,6 +107,26 @@ let union_field
 : connection (union_pcm tag fields) (fields.get_field field).pcm
 = union_field (union_pcms fields) field
 
+let rec union_is_unit_aux (tag: Type0) (fields: c_fields)
+  (fields_list: list string)
+  (v: union_pcm_carrier tag fields)
+: Pure bool
+    (requires forall field. field `mem` fields_list ==> fields.has_field field == true)
+    (ensures fun b -> b <==> (forall (field: field_t). field `mem` fields_list ==> v field == one (union_pcm tag fields) field))
+    (decreases fields_list)
+= match fields_list with
+  | [] -> true
+  | field :: fields_list ->
+    if field = "" then union_is_unit_aux tag fields fields_list v else
+    (fields.get_field field).is_unit (v field) &&
+    union_is_unit_aux tag fields fields_list v
+
+let union_is_unit tag fields v
+: b:bool{b <==> v == one (union_pcm tag fields)}
+= let b = union_is_unit_aux tag fields fields.cfields v in
+  assert (b <==> v `feq` one (union_pcm tag fields));
+  b
+
 open Steel.C.Reference
 
 assume val addr_of_union_field
@@ -169,12 +189,3 @@ assume val switch_union_field
       exclusive (fields.get_field field).pcm ((fields.get_field field).view.to_carrier v))
     (ensures fun _ _ h' ->
       dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields)) == (|field, v|))
-
-[@@c_typedef]
-let typedef_union (tag: Type0) (fields: nonempty_c_fields): typedef = {
-  carrier = union_pcm_carrier tag fields;
-  pcm = union_pcm tag fields;
-  view_type = union tag fields;
-  view = union_view tag fields;
-  is_unit = admit();
-}
