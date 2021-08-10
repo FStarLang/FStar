@@ -14,6 +14,7 @@ noeq type typedef = {
   pcm: pcm carrier; 
   view_type: Type0; 
   view: sel_view pcm view_type false;
+  is_unit: x:carrier -> b:bool{b <==> x == one pcm};
 } 
 
 let register_typedef_of (_: Type0) = typedef

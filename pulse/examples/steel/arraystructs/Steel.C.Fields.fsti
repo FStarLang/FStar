@@ -42,6 +42,7 @@ let trivial_typedef: typedef = {
   pcm = opt_pcm #unit;
   view_type = unit;
   view = opt_view unit;
+  is_unit = (fun o -> None? o);
 }
 
 //[@@__reduce__]
