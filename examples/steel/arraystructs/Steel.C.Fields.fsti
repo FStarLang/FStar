@@ -26,6 +26,10 @@ noeq type c_fields = {
   get_field: string ^-> typedef;
   // get_field_prf: forall field. has_field field == false ==> get_field field == trivial_typedef;
   get_field_mt: squash (get_field "" == trivial_typedef);
+  nonempty_witness:
+    o:option string
+     {(None? o ==> cfields == [""]) /\
+      (Some? o ==> Some?.v o `List.Tot.mem` cfields /\ Some?.v o =!= "")};
 }
 
 (* Begin for extraction *)
@@ -56,19 +60,22 @@ let fields_nil: c_fields = {
   //has_field_prf = ();
   get_field = on_dom _ (fun _ -> trivial_typedef);
   get_field_mt = ();
+  nonempty_witness = None;
 }
 
+let field_t = field:string{field =!= ""}
+
 //[@@__reduce__]
-let fields_cons (field: string{field =!= ""}) (td: typedef) (fields: c_fields): c_fields = {
+let fields_cons (field: field_t) (td: typedef) (fields: c_fields): c_fields = {
   cfields = field :: fields.cfields;
   has_field = insert field fields.has_field;
   has_field_mt = fields.has_field_mt;
   has_field_prf = fields.has_field_prf;
   get_field = on_dom _ (fun field' -> if field = field' then td else fields.get_field field');
   get_field_mt = ();
+  nonempty_witness = Some field;
 }
 
-let field_t = field:string{field =!= ""}
 let field_of (fields: c_fields) = field:string{fields.has_field field == true /\ field =!= ""}
 
 irreducible let c_struct = ()
