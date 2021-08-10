@@ -17,7 +17,7 @@ open Typestring
 
 module U32 = FStar.UInt32
 
-unfold let int' = int // U32.t
+unfold let int' = FStar.UInt32.t
 
 [@@c_typedef]
 noextract inline_for_extraction

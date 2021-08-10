@@ -1126,11 +1126,16 @@ and translate_expr env e: expr =
         ECast (translate_expr env arg, TInt Int8)
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
+        
+  (* Misc. Steel operations *)
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
+    when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
+    translate_expr env e
 
   (* Operations on Steel.C.Reference.ref *)
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, _)
     when string_of_mlpath p = "Steel.C.StructLiteral.unaddr_of_struct_field" ->
-      ESequence []
+      EUnit
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; struct_name])},
              [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
@@ -1138,20 +1143,24 @@ and translate_expr env e: expr =
       let struct_name = must (string_of_typestring struct_name) in
       EAddrOf (EField (
         TQualified (env.module_name, struct_name), // JL: TODO env.module_name or (fst p)?
-        EBufRead (translate_expr env r, EConstant (CInt, "0")), // JL: TODO what width is best?
+        EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
     when string_of_mlpath p = "Steel.C.Opt.opt_read_sel" ->
-      EBufRead (translate_expr env r, EConstant (CInt, "0")) // JL: TODO what width is best?
+      EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; x])
     when string_of_mlpath p = "Steel.C.Opt.opt_write_sel" ->
       EAssign (
-        EBufRead (translate_expr env r, EConstant (CInt, "0")),
+        EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
-      // JL: TODO what width is best?
-      // JL: TODO alternatively, EBufWrite (<<r>>, 0, <<x>>)
+      (* JL: this doesn't seem to typecheck
+           EBufWrite (
+             translate_expr env r,
+             EConstant (UInt32, "0"),
+             translate_expr env x) *)
+      
 
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
