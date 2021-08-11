@@ -168,7 +168,7 @@ let addr_of_union_field'
   return q
 #pop-options
 
-let addr_of_union_field #a #tag #fields field p =
+let addr_of_union_field'' #a return_view_type return_carrier tag fields field p =
   addr_of_union_field' #a #tag #fields field p
 
 let unaddr_of_union_field'

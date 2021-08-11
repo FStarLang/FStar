@@ -79,12 +79,40 @@ let typedef_union (tag: Type0) (fields: nonempty_c_fields): typedef = {
 
 open Steel.C.Reference
 
-val addr_of_union_field
+val addr_of_union_field''
+  (return_view_type: Type0)
+  (return_carrier: Type0)
+  (tag: Type0) (fields: c_fields)
+  (field: field_of fields{
+    return_view_type == (fields.get_field field).view_type /\
+    return_carrier == (fields.get_field field).carrier})
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+: Steel (ref 'a return_view_type #return_carrier (fields.get_field field).pcm)
+    (p `pts_to_view` union_view tag fields)
+    (fun q ->
+      pts_to_view u#0
+                  #'a
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
+                  q
+                  (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view)))
+    (requires fun h ->
+       dfst (dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))) == field)
+    (ensures fun h q h' -> 
+      q == ref_focus p (union_field tag fields field) /\
+      dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+        == (|field, h' (q `pts_to_view` (fields.get_field field).view)|))
+
+inline_for_extraction noextract
+let addr_of_union_field
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel (ref 'a
           (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+          #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
           (fields.get_field field).pcm)
     (p `pts_to_view` union_view tag fields)
     (fun q ->
@@ -102,6 +130,10 @@ val addr_of_union_field
       q == ref_focus p (union_field tag fields field) /\
       dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
         == (|field, h' (q `pts_to_view` (fields.get_field field).view)|))
+= addr_of_union_field''
+    (normalize (fields.get_field field).view_type)
+    (normalize (fields.get_field field).carrier)
+    tag fields field p
 
 val unaddr_of_union_field
   (#tag: Type0) (#fields: c_fields)
