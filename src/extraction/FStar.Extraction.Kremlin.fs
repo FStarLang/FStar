@@ -1155,12 +1155,6 @@ and translate_expr env e: expr =
       EAssign (
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
-      (* JL: this doesn't seem to typecheck
-           EBufWrite (
-             translate_expr env r,
-             EConstant (UInt32, "0"),
-             translate_expr env x) *)
-      
 
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
