@@ -129,33 +129,49 @@ let union_is_unit tag fields v
 
 open Steel.C.Reference
 
-assume val addr_of_union_field
+#push-options "--z3rlimit 30"
+let addr_of_union_field'
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel (ref 'a
-          (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+          (fields.get_field field).view_type
           (fields.get_field field).pcm)
     (p `pts_to_view` union_view tag fields)
     (fun q ->
       pts_to_view u#0
                   #'a
-                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
-                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
-                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
-                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
+                  #(fields.get_field field).view_type
+                  #(fields.get_field field).view_type
+                  #(fields.get_field field).carrier
+                  #(fields.get_field field).pcm
                   q
-                  (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view)))
+                  (fields.get_field field).view)
     (requires fun h ->
        dfst (dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))) == field)
     (ensures fun h q h' -> 
       q == ref_focus p (union_field tag fields field) /\
-      dfst (dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))) == field /\
-      dsnd (dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields)))
-        ==
-        h' (q `pts_to_view` (fields.get_field field).view))
+      dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+        == (|field, h' (q `pts_to_view` (fields.get_field field).view)|))
+= let v: Ghost.erased (union tag fields) =
+    gget (p `pts_to_view` union_view tag fields)
+  in
+  let s: Ghost.erased (union_pcm_carrier tag fields) =
+    pts_to_view_elim p (union_view tag fields)
+  in
+  assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
+  let q = Steel.C.Union.addr_of_union_field #'a #_ #_ #(union_pcms fields) p field s in
+  pts_to_view_intro q (Ghost.reveal s field)
+    (fields.get_field field).view
+    (dsnd (Ghost.reveal v));
+  assert (Ghost.reveal v == (|field, dsnd (Ghost.reveal v)|));
+  return q
+#pop-options
 
-assume val unaddr_of_union_field
+let addr_of_union_field #a #tag #fields field p =
+  addr_of_union_field' #a #tag #fields field p
+
+let unaddr_of_union_field'
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
@@ -163,29 +179,107 @@ assume val unaddr_of_union_field
 : Steel unit
     (pts_to_view u#0
                  #'a
-                 #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
-                 #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
-                 #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
-                 #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
+                 #(fields.get_field field).view_type
+                 #(fields.get_field field).view_type
+                 #(fields.get_field field).carrier
+                 #(fields.get_field field).pcm
                  q
-                 (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view)))
+                 (fields.get_field field).view)
     (fun q -> p `pts_to_view` union_view tag fields)
     (requires fun _ -> q == ref_focus p (union_field tag fields field))
     (ensures fun h _ h' -> 
-      dfst (dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))) == field /\
-      dsnd (dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields)))
-        ==
-        h (q `pts_to_view` (fields.get_field field).view))
+      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
+        == (|field, h (q `pts_to_view` (fields.get_field field).view)|))
+= let v: Ghost.erased (fields.get_field field).view_type =
+    gget (q `pts_to_view` (fields.get_field field).view)
+  in
+  let s: Ghost.erased (fields.get_field field).carrier =
+    pts_to_view_elim q (fields.get_field field).view
+  in
+  Steel.C.Union.unaddr_of_union_field #_ #_ #_ #_ #(union_pcms fields) field q p s;
+  pts_to_view_intro p
+    (field_to_union_f (union_pcms fields) field s)
+    (union_view tag fields)
+    (|field, Ghost.reveal v|);
+  return ()
 
-assume val switch_union_field
+let unaddr_of_union_field #a #tag #fields field p q =
+  unaddr_of_union_field' #a #tag #fields field p q
+
+#restart-solver
+
+let exclusive_refine_union_field
+  (tag: Type0) (fields: c_fields)
+  (old_field new_field: field_of fields)
+  (old_value: (fields.get_field old_field).view_type)
+  (new_value: (fields.get_field new_field).view_type)
+: Lemma
+ (requires
+   exclusive (fields.get_field old_field).pcm ((fields.get_field old_field).view.to_carrier old_value) /\
+   p_refine (fields.get_field new_field).pcm ((fields.get_field new_field).view.to_carrier new_value))
+ (ensures
+   exclusive (union_pcm tag fields) ((union_view tag fields).to_carrier (|old_field, old_value|)) /\
+   p_refine (union_pcm tag fields) ((union_view tag fields).to_carrier (|new_field, new_value|)))
+= assert (
+    one (fields.get_field old_field).pcm =!=
+    (fields.get_field old_field).view.to_carrier old_value);
+  let aux frame
+  : Lemma
+    (requires 
+     Steel.C.PCM.composable
+      (union_pcm tag fields)
+      ((union_view tag fields).to_carrier (|old_field, old_value|))
+      frame)
+    (ensures frame == one (union_pcm tag fields))
+  = assert (frame old_field == one (fields.get_field old_field).pcm);
+    assert (frame `feq` one (union_pcm tag fields))
+  in
+  FStar.Classical.(forall_intro (move_requires aux))
+
+let switch_union_field
   (#tag: Type0) (#fields: c_fields)
-  (field: field_of fields) (v: (fields.get_field field).view_type)
+  (field: field_of fields) (new_value: (fields.get_field field).view_type)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)
     (requires fun h ->
-      let (|field, v|) = dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields)) in
-      exclusive (fields.get_field field).pcm ((fields.get_field field).view.to_carrier v))
+      let (|old_field, v|) =
+        dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+      in
+      exclusive (fields.get_field old_field).pcm ((fields.get_field old_field).view.to_carrier v) /\
+      p_refine (fields.get_field field).pcm ((fields.get_field field).view.to_carrier new_value)
+    )
     (ensures fun _ _ h' ->
-      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields)) == (|field, v|))
+      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
+        == (|field, new_value|))
+= let v: Ghost.erased (union tag fields) =
+    gget (p `pts_to_view` union_view tag fields)
+  in
+  let s: Ghost.erased (union_pcm_carrier tag fields) =
+    pts_to_view_elim p (union_view tag fields)
+  in
+  let s': Ghost.erased (union_pcm_carrier tag fields) =
+   Ghost.hide ((union_view tag fields).to_carrier (Ghost.reveal v))
+  in
+  assert (Ghost.reveal s == Ghost.reveal s');
+  let old_field: Ghost.erased (field_of fields) =
+    Ghost.hide (dfst (Ghost.reveal v))
+  in
+  let old_value: Ghost.erased (fields.get_field old_field).view_type =
+    Ghost.hide (dsnd (Ghost.reveal v))
+  in
+  let new_s: union_pcm_carrier tag fields =
+     (union_view tag fields).to_carrier (|field, new_value|)
+  in
+  exclusive_refine_union_field tag fields old_field field old_value new_value;
+  assert (exclusive (union_pcm tag fields) s);
+  assert (p_refine (union_pcm tag fields) new_s);
+  let upd: frame_preserving_upd (union_pcm tag fields) s new_s =
+    base_fpu (union_pcm tag fields) s new_s
+  in
+  Steel.C.Ref.ref_upd p s new_s upd;
+  pts_to_view_intro p new_s
+    (union_view tag fields)
+    (|field, new_value|);
+  return ()
