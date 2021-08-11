@@ -8,6 +8,7 @@ open Steel.C.Opt
 
 module TS = Typestring
 
+inline_for_extraction
 let trivial_typedef: typedef = {
   carrier = option unit;
   pcm = opt_pcm #unit;
@@ -17,6 +18,7 @@ let trivial_typedef: typedef = {
 }
 
 //[@@__reduce__]
+inline_for_extraction
 noeq type c_fields = {
   //cfields: clist string;
   cfields: list string;
@@ -52,6 +54,7 @@ let c_fields_t (fields: c_fields) =
 (* End for extraction *)
 
 //[@@__reduce__]
+inline_for_extraction
 let fields_nil: c_fields = {
   cfields = [""];
   has_field = insert "" emptyset;
@@ -66,6 +69,7 @@ let fields_nil: c_fields = {
 let field_t = field:string{field =!= ""}
 
 //[@@__reduce__]
+inline_for_extraction
 let fields_cons (field: field_t) (td: typedef) (fields: c_fields): c_fields = {
   cfields = field :: fields.cfields;
   has_field = insert field fields.has_field;

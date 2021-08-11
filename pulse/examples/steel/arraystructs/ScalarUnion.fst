@@ -25,6 +25,7 @@ let u32: typedef = {
   pcm = opt_pcm #U32.t;
   view_type = U32.t;
   view = opt_view U32.t;
+  is_unit = (fun x -> None? x);
 }
 
 [@@c_typedef]
@@ -34,6 +35,7 @@ let u16: typedef = {
   pcm = opt_pcm #U16.t;
   view_type = U16.t;
   view = opt_view U16.t;
+  is_unit = (fun x -> None? x);
 }
 
 module T = FStar.Tactics
