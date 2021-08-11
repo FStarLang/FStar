@@ -572,6 +572,47 @@ and translate_type_decl env ty: option<decl> =
   if List.mem Syntax.NoExtract ty.tydecl_meta then
     None
   else
+    // JL: TODO: hoist?
+    let parse_fields (fields: mlty): option<list<_>> =
+      let rec go fields =
+        match fields with
+        | MLTY_Named ([], p)
+          when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
+          -> Some []
+          
+        | MLTY_Named ([field; t; fields], p)
+          when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
+          ->
+          opt_bind (string_of_typestring field) (fun field ->
+          if field = "" then go fields else
+          opt_bind (go fields) (fun fields ->
+          Some ((field, t) :: fields)))
+  
+        | _ -> None
+      in
+      match go fields with
+      | None ->
+        BU.print1 "Failed to parse fields from %s.\n"
+          (FStar.Extraction.ML.Code.string_of_mlty ([], "") fields);
+        None
+
+      | Some fields ->
+          print_endline "Got fields:";
+          List.fold_left
+            (fun () (field, ty) ->
+               BU.print2 "  %s : %s\n"
+                 field
+                 (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty))
+            ()
+            fields;
+          Some (
+            List.map
+              (fun (field, ty) ->
+                 BU.print1 "Translating %s.\n"
+                   (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
+                 (field, (translate_type env ty, true)))
+              fields)
+    in
     match ty with
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
       when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.mk_struct_def"
@@ -585,44 +626,27 @@ and translate_type_decl env ty: option<decl> =
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
         | Some tag ->
-          let rec parse_fields (fields: mlty): option<list<_>> =
-            match fields with
-            | MLTY_Named ([], p)
-              when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
-              -> Some []
-              
-            | MLTY_Named ([field; t; fields], p)
-              when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
-              ->
-              opt_bind (string_of_typestring field) (fun field ->
-              opt_bind (parse_fields fields) (fun fields ->
-              Some ((field, t) :: fields)))
+          let fields = must (parse_fields fields) in
+          Some (DTypeFlat ((env.module_name, tag), [], 0, fields))
+          // JL: TODO: fix module name
+        end
+      end
 
-            | _ -> None
-          in
-          match parse_fields fields with
-          | None ->
-            BU.print1 "Failed to parse struct fields from %s.\n"
-              (FStar.Extraction.ML.Code.string_of_mlty ([], "") fields);
-            None
-
-          | Some fields ->
-              BU.print1 "Got struct %s with following fields:\n" tag;
-              List.fold_left
-                (fun () (field, ty) ->
-                   BU.print2 "  %s : %s\n"
-                     field
-                     (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty))
-                ()
-                fields;
-              // JL: TODO env.module_name or (fst p)?
-              Some (DTypeFlat ((env.module_name, tag), [], 0,
-                List.map
-                  (fun (field, ty) ->
-                     BU.print1 "Translating %s.\n"
-                       (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
-                     (field, (translate_type env ty, true)))
-                  fields))
+    | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields], p)))}
+      when Syntax.string_of_mlpath p = "Steel.C.UnionLiteral.mk_union_def"
+      ->
+      begin
+        (* JL: TODO remove/improve these print commands *)
+        print_endline "Parsing union definition.";
+        begin match string_of_typestring tag with
+        | None ->
+          BU.print1 "Failed to parse struct tag from %s.\n"
+            (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
+          None
+        | Some tag ->
+          let fields = must (parse_fields fields) in
+          Some (DTypeFlat ((env.module_name, tag), [], 0, fields))
+          // JL: TODO: fix module name
         end
       end
 
