@@ -405,6 +405,7 @@ val unaddr_of_struct_field_ref'
         (h (p `pts_to_view` struct_view tag fields excluded),
          h (q `pts_to_view` (fields.get_field field).view)))
 
+#push-options "--z3rlimit 30"
 val unaddr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -431,6 +432,7 @@ val unaddr_of_struct_field_ref
        ==
         (h (p `pts_to_view` struct_view tag fields excluded),
          h (q `pts_to_view` (fields.get_field field).view)))
+#pop-options
 
 open Steel.C.Reference
 
@@ -465,6 +467,7 @@ let addr_of_struct_field
 //let addr_of_struct_field #a #tag #fields #excluded field p =
   addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
+#push-options "--z3rlimit 30"
 let unaddr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -496,3 +499,4 @@ let unaddr_of_struct_field
 =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
+#pop-options

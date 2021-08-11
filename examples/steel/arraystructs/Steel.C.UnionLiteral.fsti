@@ -139,11 +139,3 @@ val switch_union_field
       exclusive (fields.get_field field).pcm ((fields.get_field field).view.to_carrier v))
     (ensures fun _ _ h' ->
       dtuple2_of_union (h' (p `pts_to_view` union_view tag fields)) == (|field, v|))
-
-[@@c_typedef]
-let typedef_union (tag: Type0) (fields: c_fields): typedef = {
-  carrier = union_pcm_carrier tag fields;
-  pcm = union_pcm tag fields;
-  view_type = union tag fields;
-  view = union_view tag fields;
-}
