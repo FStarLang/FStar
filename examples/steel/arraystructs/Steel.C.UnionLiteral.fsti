@@ -97,13 +97,11 @@ val addr_of_union_field
                   q
                   (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view)))
     (requires fun h ->
-       dfst (dtuple2_of_union (h (p `pts_to_view` union_view tag fields))) == field)
+       dfst (dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))) == field)
     (ensures fun h q h' -> 
       q == ref_focus p (union_field tag fields field) /\
-      dfst (dtuple2_of_union (h (p `pts_to_view` union_view tag fields))) == field /\
-      dsnd (dtuple2_of_union (h (p `pts_to_view` union_view tag fields)))
-        ==
-        h' (q `pts_to_view` (fields.get_field field).view))
+      dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+        == (|field, h' (q `pts_to_view` (fields.get_field field).view)|))
 
 val unaddr_of_union_field
   (#tag: Type0) (#fields: c_fields)
@@ -122,20 +120,23 @@ val unaddr_of_union_field
     (fun q -> p `pts_to_view` union_view tag fields)
     (requires fun _ -> q == ref_focus p (union_field tag fields field))
     (ensures fun h _ h' -> 
-      dfst (dtuple2_of_union (h' (p `pts_to_view` union_view tag fields))) == field /\
-      dsnd (dtuple2_of_union (h' (p `pts_to_view` union_view tag fields)))
-        ==
-        h (q `pts_to_view` (fields.get_field field).view))
+      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
+        == (|field, h (q `pts_to_view` (fields.get_field field).view)|))
 
 val switch_union_field
   (#tag: Type0) (#fields: c_fields)
-  (field: field_of fields) (v: (fields.get_field field).view_type)
+  (field: field_of fields) (new_value: (fields.get_field field).view_type)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)
     (requires fun h ->
-      let (|field, v|) = dtuple2_of_union (h (p `pts_to_view` union_view tag fields)) in
-      exclusive (fields.get_field field).pcm ((fields.get_field field).view.to_carrier v))
+      let (|old_field, v|) =
+        dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+      in
+      exclusive (fields.get_field old_field).pcm ((fields.get_field old_field).view.to_carrier v) /\
+      p_refine (fields.get_field field).pcm ((fields.get_field field).view.to_carrier new_value)
+    )
     (ensures fun _ _ h' ->
-      dtuple2_of_union (h' (p `pts_to_view` union_view tag fields)) == (|field, v|))
+      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
+        == (|field, new_value|))
