@@ -295,6 +295,7 @@ let union_field_lift_fpu0_prf1
 
 #push-options "--query_stats --fuel 2 --ifuel 4 --z3rlimit 16"
 
+#push-options "--z3rlimit 30"
 let union_field_lift_fpu0_prf2
   (#a: eqtype)
   (#b: a -> Type)
@@ -324,6 +325,7 @@ let union_field_lift_fpu0_prf2
       assert (composable (p k) x (frame k));
       assert (composable (p k) y (frame k))
   )
+#pop-options
 
 #restart-solver
 

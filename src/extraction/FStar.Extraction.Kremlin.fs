@@ -610,7 +610,7 @@ and translate_type_decl env ty: option<decl> =
               (fun (field, ty) ->
                  BU.print1 "Translating %s.\n"
                    (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
-                 (field, (translate_type env ty, true)))
+                 (field, translate_type env ty))
               fields)
     in
     match ty with
@@ -627,7 +627,8 @@ and translate_type_decl env ty: option<decl> =
           None
         | Some tag ->
           let fields = must (parse_fields fields) in
-          Some (DTypeFlat ((env.module_name, tag), [], 0, fields))
+          Some (DTypeFlat ((env.module_name, tag), [], 0,
+            List.map (fun (field, ty) -> (field, (ty, true))) fields))
           // JL: TODO: fix module name
         end
       end
@@ -645,7 +646,7 @@ and translate_type_decl env ty: option<decl> =
           None
         | Some tag ->
           let fields = must (parse_fields fields) in
-          Some (DTypeFlat ((env.module_name, tag), [], 0, fields))
+          Some (DUntaggedUnion ((env.module_name, tag), [], 0, fields))
           // JL: TODO: fix module name
         end
       end
@@ -717,6 +718,12 @@ and translate_type env t: typ =
 
   | MLTY_Named ([tag; _; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
+    ->
+      TQualified (env.module_name, must (string_of_typestring tag))
+      // JL: TODO env.module_name or (fst p)?
+
+  | MLTY_Named ([tag; _], p) when
+    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
     ->
       TQualified (env.module_name, must (string_of_typestring tag))
       // JL: TODO env.module_name or (fst p)?
@@ -1161,6 +1168,10 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, _)
     when string_of_mlpath p = "Steel.C.StructLiteral.unaddr_of_struct_field" ->
       EUnit
+      
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, _)
+    when string_of_mlpath p = "Steel.C.UnionLiteral.unaddr_of_union_field" ->
+      EUnit
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; struct_name])},
              [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
@@ -1170,6 +1181,26 @@ and translate_expr env e: expr =
         TQualified (env.module_name, struct_name), // JL: TODO env.module_name or (fst p)?
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; union_name])},
+             [_; {expr=MLE_Const (MLC_String field_name)}; r])
+    when string_of_mlpath p = "Steel.C.UnionLiteral.addr_of_union_field''" ->
+      let union_name = must (string_of_typestring union_name) in
+      EAddrOf (EField (
+        TQualified (env.module_name, union_name), // JL: TODO env.module_name or (fst p)?
+        EBufRead (translate_expr env r, EConstant (UInt32, "0")),
+        field_name))
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
+             [_; {expr=MLE_Const (MLC_String field_name)}; new_value; r])
+    when string_of_mlpath p = "Steel.C.UnionLiteral.switch_union_field'" ->
+      let union_name = must (string_of_typestring union_name) in
+      EAssign (
+        EField (
+          TQualified (env.module_name, union_name), // JL: TODO env.module_name or (fst p)?
+          EBufRead (translate_expr env r, EConstant (UInt32, "0")),
+          field_name),
+        translate_expr env new_value)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
     when string_of_mlpath p = "Steel.C.Opt.opt_read_sel" ->
