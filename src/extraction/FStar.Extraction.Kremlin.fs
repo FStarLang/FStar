@@ -587,11 +587,11 @@ and translate_type_decl env ty: option<decl> =
           let rec parse_fields (fields: mlty): option<list<_>> =
             match fields with
             | MLTY_Named ([], p)
-              when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.struct_fields_t_nil"
+              when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_nil"
               -> Some []
               
             | MLTY_Named ([field; t; fields], p)
-              when Syntax.string_of_mlpath p = "Steel.C.StructLiteral.struct_fields_t_cons"
+              when Syntax.string_of_mlpath p = "Steel.C.Fields.c_fields_t_cons"
               ->
               opt_bind (string_of_typestring field) (fun field ->
               opt_bind (parse_fields fields) (fun fields ->
@@ -1137,9 +1137,9 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.C.StructLiteral.unaddr_of_struct_field" ->
       EUnit
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; struct_name])},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; struct_name])},
              [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
-    when string_of_mlpath p = "Steel.C.StructLiteral.addr_of_struct_field" ->
+    when string_of_mlpath p = "Steel.C.StructLiteral.addr_of_struct_field''" ->
       let struct_name = must (string_of_typestring struct_name) in
       EAddrOf (EField (
         TQualified (env.module_name, struct_name), // JL: TODO env.module_name or (fst p)?

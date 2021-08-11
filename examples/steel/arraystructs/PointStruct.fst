@@ -93,8 +93,8 @@ val swap (p: ref unit point point_pcm)
       True)
 
 let swap p =
-  let q: ref _ int' _ = addr_of_struct_field "x" p in
-  let r: ref _ int' _ = addr_of_struct_field "y" p in
+  let q: ref _ _ _ = addr_of_struct_field "x" p in
+  let r: ref _ _ _ = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
   let y = opt_read_sel r in
   q `opt_write_sel` y;
@@ -103,6 +103,27 @@ let swap p =
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
   return ()
+
+(*
+assume val addr_of_struct_field_ref'
+  (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
+  (field: field_of fields)
+  (p: ref 'a (struct_pcm tag fields))
+: Steel (ref 'a (fields.get_field field).pcm)
+    (p `pts_to_view` struct_view tag fields excluded)
+    (fun q ->
+      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
+      (q `pts_to_view` (fields.get_field field).view))
+    (requires fun _ -> not (excluded field))
+    (ensures fun h q h' -> 
+      not (excluded field) /\
+      q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
+      extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded))
+       ==
+        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
+         h' (q `pts_to_view` (fields.get_field field).view)))
+*)
 
 (*
 let generic_swap_sel (p:ref 'a 'c (opt_pcm #'c)) (q:ref 'b 'c (opt_pcm #'c))

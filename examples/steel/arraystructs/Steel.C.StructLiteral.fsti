@@ -436,12 +436,46 @@ val unaddr_of_struct_field_ref
 
 open Steel.C.Reference
 
+(* TODO make abstract *)
+let addr_of_struct_field''
+  (return_view_type: Type0)
+  (return_carrier: Type0)
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
+  (field: field_of fields{
+    return_view_type == (fields.get_field field).view_type /\
+    return_carrier == (fields.get_field field).carrier})
+  (p: ref 'a (struct tag fields) (struct_pcm tag fields))
+: Steel (ref 'a return_view_type #return_carrier (fields.get_field field).pcm)
+    (p `pts_to_view` struct_view tag fields excluded)
+    (fun q ->
+      (p `pts_to_view` struct_view tag fields (insert field excluded)) `star`
+      (pts_to_view u#0
+                  #'a
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).carrier))
+                  #(norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).pcm))
+                  q
+                  (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view))))
+    (requires fun _ -> not (excluded field))
+    (ensures fun h q h' -> 
+      not (excluded field) /\
+      q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
+      extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded))
+       ==
+        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
+         h' (q `pts_to_view` (fields.get_field field).view)))
+= addr_of_struct_field_ref #'a #tag #fields #excluded field p
+
+inline_for_extraction noextract
 let addr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
   (p: ref 'a (struct tag fields) (struct_pcm tag fields))
 : Steel (ref 'a
-          (norm simplify_typedefs (norm unfold_typedefs (fields.get_field field).view_type))
+          (norm simplify_typedefs (fields.get_field field).view_type)
+          #(norm simplify_typedefs (fields.get_field field).carrier)
           (fields.get_field field).pcm)
     (p `pts_to_view` struct_view tag fields excluded)
     (fun q ->
@@ -457,15 +491,16 @@ let addr_of_struct_field
     (requires fun _ -> not (excluded field))
     (ensures fun h q h' -> 
       not (excluded field) /\
-      q == ref_focus p (struct_field tag fields field) /\
+      q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
       extract_field tag fields excluded field
         (h (p `pts_to_view` struct_view tag fields excluded))
        ==
         (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
          h' (q `pts_to_view` (fields.get_field field).view)))
-=         
-//let addr_of_struct_field #a #tag #fields #excluded field p =
-  addr_of_struct_field_ref #'a #tag #fields #excluded field p
+= addr_of_struct_field''
+    (normalize (fields.get_field field).view_type)
+    (normalize (fields.get_field field).carrier)
+    tag fields excluded field p
 
 #push-options "--z3rlimit 30"
 let unaddr_of_struct_field
