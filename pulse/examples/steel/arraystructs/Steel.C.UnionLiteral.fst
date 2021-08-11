@@ -236,7 +236,7 @@ let exclusive_refine_union_field
   in
   FStar.Classical.(forall_intro (move_requires aux))
 
-let switch_union_field
+let switch_union_field''
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields) (new_value: (fields.get_field field).view_type)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
@@ -283,3 +283,23 @@ let switch_union_field
     (union_view tag fields)
     (|field, new_value|);
   return ()
+
+let switch_union_field'
+  (new_value_ty: Type0) (tag: Type0) (fields: c_fields)
+  (field: field_of fields{new_value_ty == (fields.get_field field).view_type})
+  (new_value: new_value_ty)
+  (p: ref 'a (union tag fields) (union_pcm tag fields))
+: Steel unit
+    (p `pts_to_view` union_view tag fields)
+    (fun _ -> p `pts_to_view` union_view tag fields)
+    (requires fun h ->
+      let (|old_field, v|) =
+        dtuple2_of_union #tag #fields (h (p `pts_to_view` union_view tag fields))
+      in
+      exclusive (fields.get_field old_field).pcm ((fields.get_field old_field).view.to_carrier v) /\
+      p_refine (fields.get_field field).pcm ((fields.get_field field).view.to_carrier new_value)
+    )
+    (ensures fun _ _ h' ->
+      dtuple2_of_union #tag #fields (h' (p `pts_to_view` union_view tag fields))
+        == (|field, new_value|))
+= switch_union_field'' #'a #tag #fields field new_value p
