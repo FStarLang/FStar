@@ -356,8 +356,17 @@ val extract_field_unextracted
     (ensures 
       fst (extract_field tag fields excluded field v) `struct_get` field'
       == v `struct_get` field')
-    [SMTPat (extract_field tag fields excluded field v);
-     SMTPat (has_type field' string)]
+//    [SMTPat (extract_field tag fields excluded field v);
+//     SMTPat (has_type field' string)]
+     
+val extract_field_unextracted'
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
+  (field: field_of fields)
+  (v: struct' tag fields excluded)
+:  Lemma (forall (field': field_of fields).
+    (not (excluded field) /\ not (excluded field') /\ (field =!= field')) ==>
+    (fst (extract_field tag fields excluded field v) `struct_get` field' == v `struct_get` field'))
+    [SMTPat (extract_field tag fields excluded field v)]
 
 val addr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
@@ -379,11 +388,12 @@ val addr_of_struct_field_ref
     (ensures fun h q h' -> 
       not (excluded field) /\
       q == ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
-       ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+      fst (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
+        == h' (p `pts_to_view` struct_view tag fields (insert field excluded)) /\
+      snd (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
+        == h' (q `pts_to_view` (fields.get_field field).view))
 
 val unaddr_of_struct_field_ref'
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
@@ -399,11 +409,14 @@ val unaddr_of_struct_field_ref'
       q == ref_focus p (struct_field tag fields field))
     (ensures fun h _ h' -> 
       excluded field == true /\
-      extract_field tag fields (remove field excluded) field
-        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))
+      fst (extract_field tag fields (remove field excluded) field
+        (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
        ==
-        (h (p `pts_to_view` struct_view tag fields excluded),
-         h (q `pts_to_view` (fields.get_field field).view)))
+        h (p `pts_to_view` struct_view tag fields excluded) /\
+      snd (extract_field tag fields (remove field excluded) field
+        (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
+       ==
+         h (q `pts_to_view` (fields.get_field field).view))
 
 #push-options "--z3rlimit 30"
 val unaddr_of_struct_field_ref
@@ -427,11 +440,14 @@ val unaddr_of_struct_field_ref
       q == ref_focus p (struct_field tag fields field))
     (ensures fun h _ h' -> 
       excluded field == true /\
-      extract_field tag fields (remove field excluded) field
-        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))
-       ==
-        (h (p `pts_to_view` struct_view tag fields excluded),
-         h (q `pts_to_view` (fields.get_field field).view)))
+      fst 
+        (extract_field tag fields (remove field excluded) field
+          (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
+       == h (p `pts_to_view` struct_view tag fields excluded) /\
+      snd 
+        (extract_field tag fields (remove field excluded) field
+          (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
+      == h (q `pts_to_view` (fields.get_field field).view))
 #pop-options
 
 open Steel.C.Reference
@@ -461,11 +477,14 @@ let addr_of_struct_field''
     (ensures fun h q h' -> 
       not (excluded field) /\
       q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
+      fst (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
        ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+        h' (p `pts_to_view` struct_view tag fields (insert field excluded))
+        /\
+        snd (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded))) ==
+         h' (q `pts_to_view` (fields.get_field field).view))
 = addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
 inline_for_extraction noextract
@@ -492,11 +511,13 @@ let addr_of_struct_field
     (ensures fun h q h' -> 
       not (excluded field) /\
       q == Steel.C.Ref.ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
-       ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+      fst (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
+       == h' (p `pts_to_view` struct_view tag fields (insert field excluded))
+        /\ 
+        snd (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
+        == h' (q `pts_to_view` (fields.get_field field).view))
 = addr_of_struct_field''
     (normalize (fields.get_field field).view_type)
     (normalize (fields.get_field field).carrier)
@@ -526,11 +547,13 @@ let unaddr_of_struct_field
       q == ref_focus p (struct_field tag fields field))
     (ensures fun h _ h' -> 
       excluded field == true /\
-      extract_field tag fields (remove field excluded) field
-        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))
-       ==
-        (h (p `pts_to_view` struct_view tag fields excluded),
-         h (q `pts_to_view` (fields.get_field field).view)))
+      fst (extract_field tag fields (remove field excluded) field
+        (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
+       == h (p `pts_to_view` struct_view tag fields excluded)
+        /\
+        snd (extract_field tag fields (remove field excluded) field
+        (h' (p `pts_to_view` struct_view tag fields (remove field excluded)))) ==
+         h (q `pts_to_view` (fields.get_field field).view))
 =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
