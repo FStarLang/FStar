@@ -28,6 +28,10 @@ let array_elements_pcm
 
 let array_pcm t n = S.prod_pcm (array_elements_pcm t n)
 
+let array_view_type_sized t n' n = array_view_type t n
+
+let unfold_array_view_type_sized t n' n = ()
+
 [@"opaque_to_smt"]
 let rec raise_list_array_domain
   (t: Type u#0)
