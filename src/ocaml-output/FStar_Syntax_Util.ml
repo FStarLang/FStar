@@ -806,6 +806,8 @@ let (eq_lazy_kind :
           true
       | (FStar_Syntax_Syntax.Lazy_sigelt, FStar_Syntax_Syntax.Lazy_sigelt) ->
           true
+      | (FStar_Syntax_Syntax.Lazy_letbinding,
+         FStar_Syntax_Syntax.Lazy_letbinding) -> true
       | (FStar_Syntax_Syntax.Lazy_uvar, FStar_Syntax_Syntax.Lazy_uvar) ->
           true
       | uu___ -> false
