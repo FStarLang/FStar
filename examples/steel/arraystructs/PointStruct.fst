@@ -65,6 +65,16 @@ let line_fields_second_half: c_fields =
 noextract inline_for_extraction
 let line_tag = normalize (mk_string_t "line")
 
+unfold let norm_list =
+  [delta_only
+    [`%mk_c_struct;
+     `%c_fields_t;
+     `%List.Tot.fold_right;
+     `%Typestring.mk_string_t;
+     `%c_struct;
+     ];
+   iota; zeta; primops]
+
 let _ = normalize (mk_c_struct line_tag (fields_cons "first" c_point line_fields_second_half))
 
 #push-options "--fuel 0"
@@ -75,8 +85,7 @@ let x_conn
 = struct_field point_tag point_fields "x"
 *)
 
-#push-options "--print_universes --print_implicits"
-// --z3rlimit 30"
+#push-options "--print_universes --print_implicits --z3rlimit 100 --query_stats"
 
 open Steel.C.Reference
 
@@ -86,13 +95,14 @@ val swap (p: ref 'a point point_pcm)
     (fun _ -> p `pts_to_view` point_view emptyset)
     (requires fun _ -> True)
     (ensures fun h q h' ->
-      //h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
-      //== h (p `pts_to_view` point_view emptyset) `struct_get` "y" /\
-      //h' (p `pts_to_view` point_view emptyset) `struct_get` "y"
-      //== h (p `pts_to_view` point_view emptyset) `struct_get` "x")
-      True)
+      h' (p `pts_to_view` point_view emptyset) `struct_get` "x"
+      == h (p `pts_to_view` point_view emptyset) `struct_get` "y" /\
+      h' (p `pts_to_view` point_view emptyset) `struct_get` "y"
+      == h (p `pts_to_view` point_view emptyset) `struct_get` "x")
+      //True)
 
 let swap p =
+  let initial_point = gget (p `pts_to_view` point_view emptyset) in
   let q = addr_of_struct_field "x" p in
   let r = addr_of_struct_field "y" p in
   let x = opt_read_sel q in
@@ -101,7 +111,14 @@ let swap p =
   r `opt_write_sel` x;
   unaddr_of_struct_field "y" p r;
   unaddr_of_struct_field "x" p q;
-  change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
+  change_equal_slprop
+    (p `pts_to_view` point_view (remove "x" (remove "y" (insert "y" (insert "x" emptyset)))))
+    (p `pts_to_view` point_view emptyset);
+  let final_point = gget (p `pts_to_view` point_view emptyset) in
+  assert (struct_get #point_tag #point_fields #emptyset final_point "x" ==
+    struct_get #point_tag #point_fields #emptyset initial_point "y");
+  assert (struct_get #point_tag #point_fields #emptyset final_point "y" ==
+    struct_get #point_tag #point_fields #emptyset initial_point "x");
   return ()
 
 (*
