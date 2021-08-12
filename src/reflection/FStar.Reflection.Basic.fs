@@ -494,15 +494,15 @@ let embed_vconfig (vcfg : vconfig) : term =
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
-    | Sig_let ((r, [lb]), _) ->
-        let fv = match lb.lbname with
-                 | Inr fv -> fv
-                 | Inl _  -> failwith "impossible: global Sig_let has bv"
+    | Sig_let ((r, lbs), _) ->
+        let inspect_letbinding (lb:letbinding) =
+            let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
+            let s, us = SS.univ_var_opening us in
+            let typ = SS.subst s typ in
+            let def = SS.subst s def in
+            U.mk_letbinding nm us typ eff def attrs pos
         in
-        let s, us = SS.univ_var_opening lb.lbunivs in
-        let typ = SS.subst s lb.lbtyp in
-        let def = SS.subst s lb.lbdef in
-        Sg_Let (r, fv, us, typ, def)
+        Sg_Let (r, List.map inspect_letbinding lbs)
 
     | Sig_inductive_typ (lid, us, param_bs, ty, _mutual, c_lids) ->
         let nm = Ident.path_of_lid lid in
@@ -552,18 +552,29 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
-    | Sg_Let (r, fv, univs, typ, def) ->
-        let s = SS.univ_var_closing univs in
-        let typ = SS.subst s typ in
-        let def = SS.subst s def in
-        let lb = U.mk_letbinding (Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
-        mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
+    | Sg_Let (r, lbs) ->
+        let pack_letbinding (lb:letbinding) =
+	    let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos} = lb in
+            let lid = match nm with
+                      | Inr fv -> lid_of_fv fv
+                      | _ -> failwith
+                              "impossible: pack_sigelt: bv in toplevel let binding"
+            in
+            let s = SS.univ_var_closing us in
+            let typ = SS.subst s typ in
+            let def = SS.subst s def in
+            let lb = U.mk_letbinding nm us typ eff def attrs pos in
+            (lid, lb)
+        in
+	let packed = List.map pack_letbinding lbs in
+	let lbs = List.map snd packed in
+	let lids = List.map fst packed in
+        mk_sigelt <| Sig_let ((r, lbs), lids)
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
       let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
-
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
@@ -595,6 +606,23 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Unk ->
         failwith "packing Unk, sorry"
+
+let inspect_lb (lb:letbinding) : lb_view =
+    let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos}
+        = lb in
+    let s, us = SS.univ_var_opening us in
+    let typ = SS.subst s typ in
+    let def = SS.subst s def in
+    match nm with
+    | Inr fv -> {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def}
+    | _ -> failwith "Impossible: bv in top-level let binding"
+
+let pack_lb (lbv:lb_view) : letbinding =
+    let {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def} = lbv in
+    let s = SS.univ_var_closing us in
+    let typ = SS.subst s typ in
+    let def = SS.subst s def in
+    U.mk_letbinding (Inr fv) us typ PC.effect_Tot_lid def [] Range.dummyRange
 
 let inspect_bv (bv:bv) : bv_view =
     {

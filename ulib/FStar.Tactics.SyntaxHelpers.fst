@@ -57,3 +57,14 @@ let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with
     | [] -> cod
     | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) [])))
+
+let lookup_lb_view (lbs:list letbinding) (nm:name) : Tac lb_view =
+  let o = FStar.List.Tot.Base.find
+             (fun lb ->
+              let lbv = inspect_lb lb in
+              (inspect_fv lbv.lb_fv) = nm)
+             lbs
+  in
+  match o with
+  | Some lb -> inspect_lb lb
+  | None -> fail "lookup_lb_view: Name not in let group"

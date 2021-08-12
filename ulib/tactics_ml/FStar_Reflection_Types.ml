@@ -9,6 +9,7 @@ type comp    = FStar_Syntax_Syntax.comp
 type sigelt  = FStar_Syntax_Syntax.sigelt
 type ctx_uvar_and_subst = FStar_Syntax_Syntax.ctx_uvar_and_subst
 type optionstate = FStar_Options.optionstate
+type letbinding = FStar_Syntax_Syntax.letbinding
 
 type name        = string list
 type ident       = FStar_Compiler_Range.range * string

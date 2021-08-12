@@ -54,6 +54,9 @@ val pack_comp     : comp_view -> comp
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
+val inspect_lb     : letbinding -> lb_view
+val pack_lb        : lb_view -> letbinding
+
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
