@@ -190,6 +190,7 @@ and typ =
   | TApp of lident * list<typ>
   | TTuple of list<typ>
   | TConstBuf of typ
+  | TArray of typ * constant
 
 (** Versioned binary writing/reading of ASTs *)
 
@@ -598,6 +599,17 @@ and translate_type_decl env ty: option<decl> =
 
       | Some fields ->
           print_endline "Got fields:";
+          // Unlike in arguments, fixed-size arrays in structs do not decay to pointers
+          let rec translate_field_type env ty =
+            match ty with
+            | MLTY_Named ([t; n; _], p)
+              when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
+              // TODO add support for fixed-size arrays to Steel.C.Array.fsti
+              ->
+                let int_of_typenat s = failwith "unimplemented" in // TODO
+                TArray (translate_field_type env t, (UInt32, int_of_typenat n))
+            | t -> translate_type env t
+          in
           List.fold_left
             (fun () (field, ty) ->
                BU.print2 "  %s : %s\n"
@@ -610,7 +622,7 @@ and translate_type_decl env ty: option<decl> =
               (fun (field, ty) ->
                  BU.print1 "Translating %s.\n"
                    (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
-                 (field, translate_type env ty))
+                 (field, translate_field_type env ty))
               fields)
     in
     match ty with
@@ -730,6 +742,19 @@ and translate_type env t: typ =
 
   | MLTY_Named ([_; arg; _; _], p) when
     Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
+    ->
+      let rec skip_array_view_types ty =
+        match ty with
+        | MLTY_Named ([ty; _; _], p) when
+          Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
+          ->
+            skip_array_view_types ty
+        | _ -> ty
+      in
+      TBuf (translate_type env (skip_array_view_types arg))
+
+  | MLTY_Named ([_; arg], p) when
+    Syntax.string_of_mlpath p = "Steel.C.Array.array"
     ->
       TBuf (translate_type env arg)
 
@@ -1211,6 +1236,26 @@ and translate_expr env e: expr =
       EAssign (
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
+    when string_of_mlpath p = "Steel.C.Array.ref_of_array" ->
+      translate_expr env r
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
+    when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref" ->
+      translate_expr env r
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; r])
+    when string_of_mlpath p = "Steel.C.Array.intro_varray" ->
+      translate_expr env r
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; i])
+    when string_of_mlpath p = "Steel.C.Array.index" ->
+      EBufRead (translate_expr env r, translate_expr env i)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; i; x])
+    when string_of_mlpath p = "Steel.C.Array.upd" ->
+      EBufWrite (translate_expr env r, translate_expr env i, translate_expr env x)
 
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)

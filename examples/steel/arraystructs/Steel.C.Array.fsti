@@ -22,6 +22,10 @@ open Steel.Effect
 open FStar.Ghost
 open Steel.Effect.Atomic
 
+open Steel.C.Typedef
+open Steel.C.PCM
+open Typenat
+
 #set-options "--ide_id_info_off"
 
 /// A library for arrays in Steel
@@ -32,8 +36,19 @@ val array_pcm_carrier (t: Type u#0) (n: Ghost.erased size_t) : Type u#0
 val array_pcm (t: Type u#0) (n: Ghost.erased size_t) : Tot (Steel.C.PCM.pcm (array_pcm_carrier t n))
 
 // FIXME: how to produce array type t[n] as the type of some struct field?
-let array_view_type (t: Type u#0) (n: size_t) : Type u#0 =
+let array_view_type (t: Type u#0) (n: size_t)
+: Type u#0 =
   Seq.lseq t (size_v n)
+
+/// A variant of array_view_type, which records the length of the
+/// array in Type as a Typenat, for extraction
+let size_t_of (n': Type u#0) = n:size_t{n' == nat_t_of_nat (size_v n)}
+val array_view_type_sized (t: Type u#0) (n': Type u#0) (n: size_t_of n')
+: Type u#0
+val unfold_array_view_type_sized
+ (t: Type u#0) (n': Type u#0) (n: size_t_of n')
+: Lemma (array_view_type_sized t n' n == array_view_type t n)
+  [SMTPat (array_view_type_sized t n' n)]
 
 val array_view (t: Type u#0) (n: size_t)
   : Pure (Steel.C.Ref.sel_view (array_pcm t n) (array_view_type t n) false)
@@ -48,6 +63,18 @@ val array (base: Type u#0) (t:Type u#0) : Type u#0
 /// as modeled by the GTot effect
 val len (#base: Type) (#t: Type) (a: array base t) : GTot size_t
 let length (#base: Type) (#t: Type) (a: array base t) : GTot nat = size_v (len a)
+
+// TODO 
+val array_is_unit (t: Type0) (n: size_t) (a: array_pcm_carrier t n)
+: b:bool{b <==> a == one (array_pcm t n)}
+
+let array_typedef_sized (t: Type0) (n': Type0) (n: size_t_of n'{size_v n > 0}): typedef = {
+  carrier = array_pcm_carrier t n;
+  pcm = array_pcm t n;
+  view_type = array_view_type_sized t n' n;
+  view = array_view t n;
+  is_unit = array_is_unit t n;
+}
 
 /// Combining the elements above to create an array vprop
 /// TODO: generalize to any view
