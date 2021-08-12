@@ -8,6 +8,11 @@ open Steel.C.Opt
 
 module TS = Typestring
 
+irreducible let c_struct = ()
+irreducible let c_union = ()
+irreducible let c_typedef = ()
+
+[@@c_typedef]
 let trivial_typedef: typedef = {
   carrier = option unit;
   pcm = opt_pcm #unit;
@@ -77,10 +82,6 @@ let fields_cons (field: field_t) (td: typedef) (fields: c_fields): c_fields = {
 }
 
 let field_of (fields: c_fields) = field:string{fields.has_field field == true /\ field =!= ""}
-
-irreducible let c_struct = ()
-irreducible let c_union = ()
-irreducible let c_typedef = ()
 
 unfold let unfold_typedefs = [delta_attr [`%c_typedef]]
 

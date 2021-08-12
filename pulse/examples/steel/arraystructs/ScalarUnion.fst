@@ -3,6 +3,7 @@ module ScalarUnion
 open Steel.C.PCM
 open Steel.C.Opt
 open Steel.C.Connection
+open Steel.C.StructLiteral
 open Steel.C.UnionLiteral
 open Steel.C.Typedef
 open FStar.FunctionalExtensionality
@@ -14,6 +15,7 @@ open Steel.C.Reference
 
 open FStar.FSet
 open Typestring
+open Typenat
 
 module U32 = FStar.UInt32
 module U16 = FStar.UInt16
@@ -65,7 +67,27 @@ let u32_or_u16_pcm = union_pcm u32_or_u16_tag u32_or_u16_fields
 noextract inline_for_extraction
 let c_u32_or_u16: typedef = typedef_union u32_or_u16_tag u32_or_u16_fields
 
-let _ = normalize (mk_c_union u32_or_u16_tag u32_or_u16_fields)
+noextract
+unfold let norm_list =
+  [delta_only
+    [`%mk_c_union;
+     `%mk_c_struct;
+     `%c_fields_t;
+     `%List.Tot.fold_right;
+     `%Typestring.mk_string_t;
+     `%Typestring.string_t_of_chars;
+     `%Typestring.char_t_of_char;
+     `%Mkc_fields?.get_field;
+     `%Mkc_fields?.cfields;
+     `%Mktypedef?.view_type;
+     `%fields_cons;
+     `%fields_nil;
+     `%Typenat.nat_t_of_nat;
+     ];
+   delta_attr [`%c_struct; `%c_typedef];
+   iota; zeta; primops]
+
+let _ = norm norm_list (mk_c_union u32_or_u16_tag u32_or_u16_fields)
 
 #push-options "--fuel 0"
 
@@ -100,7 +122,7 @@ let zero_u32_ref (p:ref 'a U32.t (opt_pcm #U32.t))
   (fun _ -> p `pts_to_view` opt_view _)
   (requires fun _ -> True)
   (ensures fun _ _ _ -> True)
-= opt_write_sel p U32.zero
+= opt_write_sel p 0ul
 
 val zero_u32_of_union (p: ref unit u32_or_u16 u32_or_u16_pcm)
 : Steel unit
