@@ -306,7 +306,9 @@ val frame_preserving_upd_intro
     (requires (frame_preserving_upd_goal3_pre p x y f v frame))
     (ensures (frame_preserving_upd_goal3_post p x y f v frame))
   )
-: Tot (frame_preserving_upd p x y)
+: Pure (frame_preserving_upd p x y)
+  (requires True)
+  (ensures (fun f' -> f `feq` f'))
 
 val fstar_fpu_of_fpu
   (#a: Type u#a)
