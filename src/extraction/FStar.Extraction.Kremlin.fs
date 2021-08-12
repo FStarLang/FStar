@@ -319,6 +319,26 @@ let string_of_typestring (t: mlty): option<string> =
   in
   opt_bind (go t) (fun ss -> Some (FStar.String.concat "" ss))
 
+let int_of_typenat (t: mlty): option<int> =
+  let rec go t =
+    match t with
+    | MLTY_Named ([], p)
+      when Syntax.string_of_mlpath p = "Typenat.z"
+      ->
+      Some 0
+
+    | MLTY_Named ([t], p)
+      when Syntax.string_of_mlpath p = "Typenat.s"
+      ->
+      opt_bind (go t) (fun n -> Some (n + 1))
+
+    | _ ->
+      BU.print1 "int_of_typenat: got bad type %s\n"
+        (ML.Code.string_of_mlty ([], "") t); // JL: TODO: delete
+      None
+  in
+  go t
+
 (* Environments **************************************************************)
 
 type env = {
@@ -599,15 +619,18 @@ and translate_type_decl env ty: option<decl> =
 
       | Some fields ->
           print_endline "Got fields:";
-          // Unlike in arguments, fixed-size arrays in structs do not decay to pointers
+          // JL: TODO: deduplicate with translate_type, e.g. by making
+          // translate_type take extra argument indicating whether or
+          // not to decay outermost array type constructor application
           let rec translate_field_type env ty =
             match ty with
             | MLTY_Named ([t; n; _], p)
               when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
               // TODO add support for fixed-size arrays to Steel.C.Array.fsti
               ->
-                let int_of_typenat s = failwith "unimplemented" in // TODO
-                TArray (translate_field_type env t, (UInt32, int_of_typenat n))
+                TArray (
+                  translate_field_type env t,
+                  (UInt32, string_of_int (must (int_of_typenat n))))
             | t -> translate_type env t
           in
           List.fold_left
@@ -707,130 +730,150 @@ and translate_type_decl env ty: option<decl> =
         None
 
 and translate_type env t: typ =
+  let rec translate_type env t =
+    match t with
+    | MLTY_Tuple []
+    | MLTY_Top ->
+        TAny
+    | MLTY_Var name ->
+        TBound (find_t env name)
+    | MLTY_Fun (t1, _, t2) ->
+        TArrow (translate_type env t1, translate_type env t2)
+    | MLTY_Erased ->
+        TUnit
+    | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
+        TUnit
+    | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
+        TBool
+    | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
+        TInt (must (mk_width m))
+    | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
+        TInt (must (mk_width m))
+    | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
+        TUnit
+  
+    | MLTY_Named ([tag; _; _], p) when
+      BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
+      ->
+        TQualified (env.module_name, must (string_of_typestring tag))
+        // JL: TODO env.module_name or (fst p)?
+  
+    | MLTY_Named ([tag; _], p) when
+      BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
+      ->
+        TQualified (env.module_name, must (string_of_typestring tag))
+        // JL: TODO env.module_name or (fst p)?
+  
+    | MLTY_Named ([_; arg; _; _], p) when
+      Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
+      ->
+        TBuf (translate_type env arg)
+        
+    | MLTY_Named ([t; n; s], p)
+      when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
+      ->
+        print_endline "parsing int_of_typenat"; // JL: TODO: delete
+        BU.print1 "n = %s\n" (ML.Code.string_of_mlty ([], "") n); // JL: TODO: delete
+        BU.print1 "ty = %s\n" (ML.Code.string_of_mlty ([], "") (MLTY_Named ([t; n; s], p))); // JL: TODO: delete
+        let n' = (must (int_of_typenat n)) in
+        print_endline "got int: "; // JL: TODO: delete
+        print_endline (string_of_int n'); // JL: TODO: delete
+        TArray (
+          translate_type env t,
+          (UInt32, string_of_int (must (int_of_typenat n))))
+  
+    | MLTY_Named ([_; arg], p) when
+      Syntax.string_of_mlpath p = "Steel.C.Array.array"
+      ->
+        TBuf (translate_type env arg)
+  
+    | MLTY_Named ([_; arg; _], p) when
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"  ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.m_rref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
+      ->
+        TBuf (translate_type env arg)
+  
+    | MLTY_Named ([arg; _], p) when
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmstackref" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
+      Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mreference" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
+      ->
+        TBuf (translate_type env arg)
+  
+    | MLTY_Named ([arg; _; _], p) when
+      Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
+  
+    | MLTY_Named ([arg], p) when
+      Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
+  
+    | MLTY_Named ([arg], p) when
+      Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
+      Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
+      Syntax.string_of_mlpath p = "LowStar.ImmutableBuffer.ibuffer" ||
+      Syntax.string_of_mlpath p = "LowStar.UninitializedBuffer.ubuffer" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.reference" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.stackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.mmstackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.mmref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref" ||
+      Syntax.string_of_mlpath p = "Steel.Reference.ref" ||
+      Syntax.string_of_mlpath p = "Steel.Array.array"
+      ->
+        TBuf (translate_type env arg)
+  
+    | MLTY_Named ([_;arg], p) when
+      Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
+      Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
+      ->
+        TBuf (translate_type env arg)
+  
+    | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
+        TAny
+  
+    | MLTY_Named ([], (path, type_name)) ->
+        // Generate an unbound reference... to be filled in later by glue code.
+        TQualified (path, type_name)
+  
+    | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"; "Native"]) && BU.starts_with t "tuple" ->
+        TTuple (List.map (translate_type env) args)
+  
+    | MLTY_Named (args, lid) ->
+        if List.length args > 0 then
+          TApp (lid, List.map (translate_type env) args)
+        else
+          TQualified lid
+  
+    | MLTY_Tuple ts ->
+        TTuple (List.map (translate_type env) ts)
+  in
+  // The outermost array type constructor decays to pointer
   match t with
-  | MLTY_Tuple []
-  | MLTY_Top ->
-      TAny
-  | MLTY_Var name ->
-      TBound (find_t env name)
-  | MLTY_Fun (t1, _, t2) ->
-      TArrow (translate_type env t1, translate_type env t2)
-  | MLTY_Erased ->
-      TUnit
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
-      TUnit
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
-      TBool
-  | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
-      TInt (must (mk_width m))
-  | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
-      TInt (must (mk_width m))
-  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
-      TUnit
-
-  | MLTY_Named ([tag; _; _], p) when
-    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
+  | MLTY_Named ([t; _; _], p)
+    when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
     ->
-      TQualified (env.module_name, must (string_of_typestring tag))
-      // JL: TODO env.module_name or (fst p)?
-
-  | MLTY_Named ([tag; _], p) when
-    BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
+      TBuf (translate_type env t)
+      
+  | MLTY_Named ([t; _], p)
+    when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type"
     ->
-      TQualified (env.module_name, must (string_of_typestring tag))
-      // JL: TODO env.module_name or (fst p)?
-
-  | MLTY_Named ([_; arg; _; _], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
-    ->
-      let rec skip_array_view_types ty =
-        match ty with
-        | MLTY_Named ([ty; _; _], p) when
-          Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
-          ->
-            skip_array_view_types ty
-        | _ -> ty
-      in
-      TBuf (translate_type env (skip_array_view_types arg))
-
-  | MLTY_Named ([_; arg], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Array.array"
-    ->
-      TBuf (translate_type env arg)
-
-  | MLTY_Named ([_; arg; _], p) when
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.mrref"  ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.m_rref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_mref"
-    ->
-      TBuf (translate_type env arg)
-
-  | MLTY_Named ([arg; _], p) when
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mreference" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mstackref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmstackref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mreference" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmstackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmmref"
-    ->
-      TBuf (translate_type env arg)
-
-  | MLTY_Named ([arg; _; _], p) when
-    Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
-
-  | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
-
-  | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
-    Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
-    Syntax.string_of_mlpath p = "LowStar.ImmutableBuffer.ibuffer" ||
-    Syntax.string_of_mlpath p = "LowStar.UninitializedBuffer.ubuffer" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.reference" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.stackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.mmstackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.mmref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.reference" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref" ||
-    Syntax.string_of_mlpath p = "Steel.Reference.ref" ||
-    Syntax.string_of_mlpath p = "Steel.Array.array"
-    ->
-      TBuf (translate_type env arg)
-
-  | MLTY_Named ([_;arg], p) when
-    Syntax.string_of_mlpath p = "FStar.HyperStack.s_ref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
-    ->
-      TBuf (translate_type env arg)
-
-  | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
-      TAny
-
-  | MLTY_Named ([], (path, type_name)) ->
-      // Generate an unbound reference... to be filled in later by glue code.
-      TQualified (path, type_name)
-
-  | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"; "Native"]) && BU.starts_with t "tuple" ->
-      TTuple (List.map (translate_type env) args)
-
-  | MLTY_Named (args, lid) ->
-      if List.length args > 0 then
-        TApp (lid, List.map (translate_type env) args)
-      else
-        TQualified lid
-
-  | MLTY_Tuple ts ->
-      TTuple (List.map (translate_type env) ts)
+      TBuf (translate_type env t)
+      
+  | t -> translate_type env t
 
 and translate_binders env args =
   List.map (translate_binder env) args
@@ -1245,9 +1288,9 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref" ->
       translate_expr env r
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; r])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; r; _])
     when string_of_mlpath p = "Steel.C.Array.intro_varray" ->
-      translate_expr env r
+      EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; i])
     when string_of_mlpath p = "Steel.C.Array.index" ->

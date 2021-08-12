@@ -179,6 +179,7 @@ let switch_union_field
   (#tag: Type0) (#fields: c_fields)
   (field: field_of fields) (new_value: (fields.get_field field).view_type)
   (p: ref 'a (union tag fields) (union_pcm tag fields))
+  // TODO match order of c to get p->field = new_value
 : Steel unit
     (p `pts_to_view` union_view tag fields)
     (fun _ -> p `pts_to_view` union_view tag fields)

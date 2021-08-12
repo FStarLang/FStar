@@ -24,6 +24,7 @@ open Steel.Effect.Atomic
 
 open Steel.C.Typedef
 open Steel.C.PCM
+open Steel.C.Fields
 open Typenat
 
 #set-options "--ide_id_info_off"
@@ -43,12 +44,9 @@ let array_view_type (t: Type u#0) (n: size_t)
 /// A variant of array_view_type, which records the length of the
 /// array in Type as a Typenat, for extraction
 let size_t_of (n': Type u#0) = n:size_t{n' == nat_t_of_nat (size_v n)}
-val array_view_type_sized (t: Type u#0) (n': Type u#0) (n: size_t_of n')
+let array_view_type_sized (t: Type u#0) (n': Type u#0) (n: size_t_of n')
 : Type u#0
-val unfold_array_view_type_sized
- (t: Type u#0) (n': Type u#0) (n: size_t_of n')
-: Lemma (array_view_type_sized t n' n == array_view_type t n)
-  [SMTPat (array_view_type_sized t n' n)]
+= array_view_type t n
 
 val array_view (t: Type u#0) (n: size_t)
   : Pure (Steel.C.Ref.sel_view (array_pcm t n) (array_view_type t n) false)
@@ -68,6 +66,7 @@ let length (#base: Type) (#t: Type) (a: array base t) : GTot nat = size_v (len a
 val array_is_unit (t: Type0) (n: size_t) (a: array_pcm_carrier t n)
 : b:bool{b <==> a == one (array_pcm t n)}
 
+[@@c_struct]
 let array_typedef_sized (t: Type0) (n': Type0) (n: size_t_of n'{size_v n > 0}): typedef = {
   carrier = array_pcm_carrier t n;
   pcm = array_pcm t n;
