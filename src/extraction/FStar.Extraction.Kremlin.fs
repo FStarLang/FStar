@@ -349,8 +349,6 @@ let int_of_typenat (t: mlty): option<int> =
       opt_bind (go t) (fun n -> Some (n + 1))
 
     | _ ->
-      BU.print1 "int_of_typenat: got bad type %s\n"
-        (ML.Code.string_of_mlty ([], "") t); // JL: TODO: delete
       None
   in
   go t
@@ -769,12 +767,6 @@ and translate_type_without_decay env t: typ =
   | MLTY_Named ([t; n; s], p)
     when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
     ->
-      print_endline "parsing int_of_typenat"; // JL: TODO: delete
-      BU.print1 "n = %s\n" (ML.Code.string_of_mlty ([], "") n); // JL: TODO: delete
-      BU.print1 "ty = %s\n" (ML.Code.string_of_mlty ([], "") (MLTY_Named ([t; n; s], p))); // JL: TODO: delete
-      let n' = (must (int_of_typenat n)) in
-      print_endline "got int: "; // JL: TODO: delete
-      print_endline (string_of_int n'); // JL: TODO: delete
       TArray (
         translate_type_without_decay env t,
         (UInt32, string_of_int (must (int_of_typenat n))))
