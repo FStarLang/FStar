@@ -17,7 +17,7 @@ open FStar.List.Tot
 open FStar.FunctionalExtensionality
 open FStar.FSet
 
-module TS = Typestring
+module TS = Steel.C.Typestring
 
 (**** MOVE TO ChurchList *)
 

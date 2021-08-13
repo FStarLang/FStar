@@ -25,7 +25,7 @@ open Steel.Effect.Atomic
 open Steel.C.Typedef
 open Steel.C.PCM
 open Steel.C.Fields
-open Typenat
+open Steel.C.Typenat
 
 #set-options "--ide_id_info_off"
 
@@ -42,7 +42,7 @@ let array_view_type (t: Type u#0) (n: size_t)
   Seq.lseq t (size_v n)
 
 /// A variant of array_view_type, which records the length of the
-/// array in Type as a Typenat, for extraction
+/// array in Type as a Steel.C.Typenat, for extraction
 let size_t_of (n': Type u#0) = n:size_t{n' == nat_t_of_nat (size_v n)}
 let array_view_type_sized (t: Type u#0) (n': Type u#0) (n: size_t_of n')
 : Type u#0

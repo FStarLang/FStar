@@ -1,4 +1,4 @@
-module Typestring
+module Steel.C.Typestring
 
 val ca: Type0
 val cb: Type0

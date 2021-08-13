@@ -6,7 +6,7 @@ open FStar.FunctionalExtensionality
 open Steel.C.Typedef
 open Steel.C.Opt
 
-module TS = Typestring
+module TS = Steel.C.Typestring
 
 irreducible let c_struct = ()
 irreducible let c_union = ()
