@@ -35,7 +35,7 @@ module T = FStar.Tactics
 noextract inline_for_extraction
 //[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
 //     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let point_tag = normalize (mk_string_t "point")
+let point_tag = normalize (mk_string_t "PointStruct.point")
 
 [@@c_struct]
 noextract inline_for_extraction
@@ -64,7 +64,7 @@ let line_fields_second_half: c_fields =
   fields_cons "second" c_point fields_nil
 
 noextract inline_for_extraction
-let line_tag = normalize (mk_string_t "line")
+let line_tag = normalize (mk_string_t "PointStruct.line")
 
 let _ = norm norm_c_typedef (mk_c_struct line_tag (fields_cons "first" c_point line_fields_second_half))
 

@@ -46,7 +46,7 @@ module T = FStar.Tactics
 noextract inline_for_extraction
 //[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
 //     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let u32_or_u16_tag = normalize (mk_string_t "u32_or_u16")
+let u32_or_u16_tag = normalize (mk_string_t "ScalarUnion.u32_or_u16")
 
 [@@c_struct]
 noextract inline_for_extraction

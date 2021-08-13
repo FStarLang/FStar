@@ -293,7 +293,9 @@ let char_of_typechar (t: mlty): option<char> =
   match t with
   | MLTY_Named ([], p) ->
     let p = Syntax.string_of_mlpath p in
-    if BU.starts_with p "Typestring.c" then
+    if p = "Typestring.cdot" then
+      Some '.'
+    else if BU.starts_with p "Typestring.c" then
       Some (FStar.String.get p (FStar.String.strlen "Typestring.c"))
     else
       None
@@ -318,6 +320,20 @@ let string_of_typestring (t: mlty): option<string> =
     | _ -> None
   in
   opt_bind (go t) (fun ss -> Some (FStar.String.concat "" ss))
+
+let lident_of_string (s: string): option<lident> =
+  let path = FStar.String.split ['.'] s in
+  let rec go p =
+    match p with
+    | [] -> None
+    | [s] -> Some ([], s)
+    | s :: p ->
+      opt_bind (go p) (fun (names, name) ->
+      Some (s :: names, name))
+  in go path
+
+let lident_of_typestring (t: mlty): option<lident> =
+  opt_bind (string_of_typestring t) lident_of_string
 
 let int_of_typenat (t: mlty): option<int> =
   let rec go t =
@@ -641,16 +657,15 @@ and translate_type_decl env ty: option<decl> =
       begin
         (* JL: TODO remove/improve these print commands *)
         print_endline "Parsing struct definition.";
-        begin match string_of_typestring tag with
+        begin match lident_of_typestring tag with
         | None ->
           BU.print1 "Failed to parse struct tag from %s.\n"
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
-        | Some tag ->
+        | Some p ->
           let fields = must (parse_fields fields) in
-          Some (DTypeFlat ((env.module_name, tag), [], 0,
+          Some (DTypeFlat (p, [], 0,
             List.map (fun (field, ty) -> (field, (ty, true))) fields))
-          // JL: TODO: fix module name
         end
       end
 
@@ -660,15 +675,14 @@ and translate_type_decl env ty: option<decl> =
       begin
         (* JL: TODO remove/improve these print commands *)
         print_endline "Parsing union definition.";
-        begin match string_of_typestring tag with
+        begin match lident_of_typestring tag with
         | None ->
           BU.print1 "Failed to parse struct tag from %s.\n"
             (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
           None
-        | Some tag ->
+        | Some p ->
           let fields = must (parse_fields fields) in
-          Some (DUntaggedUnion ((env.module_name, tag), [], 0, fields))
-          // JL: TODO: fix module name
+          Some (DUntaggedUnion (p, [], 0, fields))
         end
       end
 
@@ -740,14 +754,12 @@ and translate_type_without_decay env t: typ =
   | MLTY_Named ([tag; _; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.StructLiteral.struct'"
     ->
-      TQualified (env.module_name, must (string_of_typestring tag))
-      // JL: TODO env.module_name or (fst p)?
+      TQualified (must (lident_of_typestring tag))
   
   | MLTY_Named ([tag; _], p) when
     BU.starts_with (Syntax.string_of_mlpath p) "Steel.C.UnionLiteral.union"
     ->
-      TQualified (env.module_name, must (string_of_typestring tag))
-      // JL: TODO env.module_name or (fst p)?
+      TQualified (must (lident_of_typestring tag))
   
   | MLTY_Named ([_; arg; _; _], p) when
     Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
@@ -1230,28 +1242,25 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; struct_name])},
              [_; _; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.StructLiteral.addr_of_struct_field''" ->
-      let struct_name = must (string_of_typestring struct_name) in
       EAddrOf (EField (
-        TQualified (env.module_name, struct_name), // JL: TODO env.module_name or (fst p)?
+        TQualified (must (lident_of_typestring struct_name)),
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.addr_of_union_field''" ->
-      let union_name = must (string_of_typestring union_name) in
       EAddrOf (EField (
-        TQualified (env.module_name, union_name), // JL: TODO env.module_name or (fst p)?
+        TQualified (must (lident_of_typestring union_name)),
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _; union_name])},
              [_; {expr=MLE_Const (MLC_String field_name)}; new_value; r])
     when string_of_mlpath p = "Steel.C.UnionLiteral.switch_union_field'" ->
-      let union_name = must (string_of_typestring union_name) in
       EAssign (
         EField (
-          TQualified (env.module_name, union_name), // JL: TODO env.module_name or (fst p)?
+          TQualified (must (lident_of_typestring union_name)),
           EBufRead (translate_expr env r, EConstant (UInt32, "0")),
           field_name),
         translate_expr env new_value)
@@ -1297,6 +1306,11 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; al; ar])
     when string_of_mlpath p = "Steel.C.Array.joinc" ->
       translate_expr env al
+
+  (* Operations on Steel.C.StdInt *)
+  | MLE_App ({expr=MLE_Name p}, [i])
+    when string_of_mlpath p = "Steel.C.StdInt.mk_size_t" ->
+      translate_expr env i
 
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
