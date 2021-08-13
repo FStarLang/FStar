@@ -16,8 +16,8 @@ open Steel.C.TypedefNorm
 open Steel.C.Array
 
 open FStar.FSet
-open Typenat
-open Typestring
+open Steel.C.Typenat
+open Steel.C.Typestring
 
 module U64 = FStar.UInt64
 

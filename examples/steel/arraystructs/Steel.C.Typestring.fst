@@ -1,4 +1,4 @@
-module Typestring
+module Steel.C.Typestring
 
 let ca: Type0 = unit
 let cb: Type0 = unit

@@ -178,7 +178,8 @@ let pts_to_view_explicit_witinv
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p)
   (#c: Type u#c)
-  (vw: sel_view p c)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
 : Lemma
   (M.is_witness_invariant (pts_to_view_explicit r vw))
 = let aux (x y : Ghost.erased c) (m:M.mem)

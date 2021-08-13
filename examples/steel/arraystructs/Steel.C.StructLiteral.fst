@@ -243,11 +243,15 @@ val addr_of_struct_field_ref'
     (ensures fun h q h' -> 
       not (excluded field) /\
       q == ref_focus p (struct_field tag fields field) /\
-      extract_field tag fields excluded field
-        (h (p `pts_to_view` struct_view tag fields excluded))
+      fst (extract_field tag fields excluded field
+        (h (p `pts_to_view` struct_view tag fields excluded)))
        ==
-        (h' (p `pts_to_view` struct_view tag fields (insert field excluded)),
-         h' (q `pts_to_view` (fields.get_field field).view)))
+        h' (p `pts_to_view` struct_view tag fields (insert field excluded)) /\
+      snd
+        (extract_field tag fields excluded field
+          (h (p `pts_to_view` struct_view tag fields excluded)))
+       ==
+        h' (q `pts_to_view` (fields.get_field field).view))
 
 #push-options "--z3rlimit 30"
 let addr_of_struct_field_ref' #a #tag #fields #excluded field p =

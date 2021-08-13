@@ -17,7 +17,7 @@ open FStar.List.Tot
 open FStar.FunctionalExtensionality
 open FStar.FSet
 
-module TS = Typestring
+module TS = Steel.C.Typestring
 
 let mk_union_def (tag: Type0) (field_descriptions: Type0): Type0 = unit
 

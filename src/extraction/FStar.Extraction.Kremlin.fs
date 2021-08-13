@@ -293,10 +293,10 @@ let char_of_typechar (t: mlty): option<char> =
   match t with
   | MLTY_Named ([], p) ->
     let p = Syntax.string_of_mlpath p in
-    if p = "Typestring.cdot" then
+    if p = "Steel.C.Typestring.cdot" then
       Some '.'
-    else if BU.starts_with p "Typestring.c" then
-      Some (FStar.String.get p (FStar.String.strlen "Typestring.c"))
+    else if BU.starts_with p "Steel.C.Typestring.c" then
+      Some (FStar.String.get p (FStar.String.strlen "Steel.C.Typestring.c"))
     else
       None
 
@@ -306,12 +306,12 @@ let string_of_typestring (t: mlty): option<string> =
   let rec go t: option<list<string>> =
     match t with
     | MLTY_Named ([], p)
-      when Syntax.string_of_mlpath p = "Typestring.string_nil"
+      when Syntax.string_of_mlpath p = "Steel.C.Typestring.string_nil"
       ->
       Some []
 
     | MLTY_Named ([c; t], p)
-      when Syntax.string_of_mlpath p = "Typestring.string_cons"
+      when Syntax.string_of_mlpath p = "Steel.C.Typestring.string_cons"
       ->
       opt_bind (char_of_typechar c) (fun c' ->
       opt_bind (go t) (fun s' ->
@@ -339,12 +339,12 @@ let int_of_typenat (t: mlty): option<int> =
   let rec go t =
     match t with
     | MLTY_Named ([], p)
-      when Syntax.string_of_mlpath p = "Typenat.z"
+      when Syntax.string_of_mlpath p = "Steel.C.Typenat.z"
       ->
       Some 0
 
     | MLTY_Named ([t], p)
-      when Syntax.string_of_mlpath p = "Typenat.s"
+      when Syntax.string_of_mlpath p = "Steel.C.Typenat.s"
       ->
       opt_bind (go t) (fun n -> Some (n + 1))
 

@@ -14,7 +14,7 @@ open Steel.C.Reference
 open Steel.C.TypedefNorm
 
 open FStar.FSet
-open Typestring
+open Steel.C.Typestring
 
 module U32 = FStar.UInt32
 
