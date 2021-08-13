@@ -3,11 +3,13 @@ module Steel.C.Frac
 open Steel.C.PCM
 open Steel.C.Ref
 open Steel.Effect
+open Steel.Effect.Atomic
   
 open Steel.FractionalPermission
 
 let frac_pcm_write r x y
-= ref_upd r x (Some (y, full_perm)) (frac_pcm_fpu x y)
+= ref_upd r x (Some (y, full_perm)) (frac_pcm_fpu x y);
+  change_equal_slprop (r `pts_to` _) (r `pts_to` _)
 
 let frac_pcm_read r x
 = let y' = ref_read r in
