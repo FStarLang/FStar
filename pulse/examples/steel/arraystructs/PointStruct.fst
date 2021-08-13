@@ -11,6 +11,7 @@ open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.C.Fields
 open Steel.C.Reference
+open Steel.C.TypedefNorm
 
 open FStar.FSet
 open Typestring
@@ -56,7 +57,7 @@ let point_pcm = struct_pcm point_tag point_fields
 noextract inline_for_extraction
 let c_point: typedef = typedef_struct point_tag point_fields
 
-let _ = normalize (mk_c_struct point_tag point_fields)
+let _ = norm norm_c_typedef (mk_c_struct point_tag point_fields)
 
 noextract inline_for_extraction
 let line_fields_second_half: c_fields =
@@ -65,17 +66,7 @@ let line_fields_second_half: c_fields =
 noextract inline_for_extraction
 let line_tag = normalize (mk_string_t "line")
 
-unfold let norm_list =
-  [delta_only
-    [`%mk_c_struct;
-     `%c_fields_t;
-     `%List.Tot.fold_right;
-     `%Typestring.mk_string_t;
-     `%c_struct;
-     ];
-   iota; zeta; primops]
-
-let _ = normalize (mk_c_struct line_tag (fields_cons "first" c_point line_fields_second_half))
+let _ = norm norm_c_typedef (mk_c_struct line_tag (fields_cons "first" c_point line_fields_second_half))
 
 #push-options "--fuel 0"
 

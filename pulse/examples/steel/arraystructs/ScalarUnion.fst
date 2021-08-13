@@ -12,6 +12,7 @@ open Steel.Effect.Atomic
 open Steel.C.Fields
 open Steel.C.Ref
 open Steel.C.Reference
+open Steel.C.TypedefNorm
 
 open FStar.FSet
 open Typestring
@@ -67,27 +68,7 @@ let u32_or_u16_pcm = union_pcm u32_or_u16_tag u32_or_u16_fields
 noextract inline_for_extraction
 let c_u32_or_u16: typedef = typedef_union u32_or_u16_tag u32_or_u16_fields
 
-noextract
-unfold let norm_list =
-  [delta_only
-    [`%mk_c_union;
-     `%mk_c_struct;
-     `%c_fields_t;
-     `%List.Tot.fold_right;
-     `%Typestring.mk_string_t;
-     `%Typestring.string_t_of_chars;
-     `%Typestring.char_t_of_char;
-     `%Mkc_fields?.get_field;
-     `%Mkc_fields?.cfields;
-     `%Mktypedef?.view_type;
-     `%fields_cons;
-     `%fields_nil;
-     `%Typenat.nat_t_of_nat;
-     ];
-   delta_attr [`%c_struct; `%c_typedef];
-   iota; zeta; primops]
-
-let _ = norm norm_list (mk_c_union u32_or_u16_tag u32_or_u16_fields)
+let _ = norm norm_c_typedef (mk_c_union u32_or_u16_tag u32_or_u16_fields)
 
 #push-options "--fuel 0"
 
