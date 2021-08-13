@@ -26,6 +26,32 @@ val cw: Type0
 val cx: Type0
 val cy: Type0
 val cz: Type0
+val cA: Type0
+val cB: Type0
+val cC: Type0
+val cD: Type0
+val cE: Type0
+val cF: Type0
+val cG: Type0
+val cH: Type0
+val cI: Type0
+val cJ: Type0
+val cK: Type0
+val cL: Type0
+val cM: Type0
+val cN: Type0
+val cO: Type0
+val cP: Type0
+val cQ: Type0
+val cR: Type0
+val cS: Type0
+val cT: Type0
+val cU: Type0
+val cV: Type0
+val cW: Type0
+val cX: Type0
+val cY: Type0
+val cZ: Type0
 val c0: Type0
 val c1: Type0
 val c2: Type0
@@ -37,6 +63,7 @@ val c7: Type0
 val c8: Type0
 val c9: Type0
 val c_: Type0
+val cdot: Type0
 
 val string_nil: Type0
 val string_cons (c: Type0) (s: Type0): Type0
@@ -71,6 +98,32 @@ let char_t_of_char (c: char): Type0 =
   | 'x' -> cx
   | 'y' -> cy
   | 'z' -> cz
+  | 'A' -> cA
+  | 'B' -> cB
+  | 'C' -> cC
+  | 'D' -> cD
+  | 'E' -> cE
+  | 'F' -> cF
+  | 'G' -> cG
+  | 'H' -> cH
+  | 'I' -> cI
+  | 'J' -> cJ
+  | 'K' -> cK
+  | 'L' -> cL
+  | 'M' -> cM
+  | 'N' -> cN
+  | 'O' -> cO
+  | 'P' -> cP
+  | 'Q' -> cQ
+  | 'R' -> cR
+  | 'S' -> cS
+  | 'T' -> cT
+  | 'U' -> cU
+  | 'V' -> cV
+  | 'W' -> cW
+  | 'X' -> cX
+  | 'Y' -> cY
+  | 'Z' -> cZ
   | '0' -> c0
   | '1' -> c1
   | '2' -> c2
@@ -82,6 +135,7 @@ let char_t_of_char (c: char): Type0 =
   | '8' -> c8
   | '9' -> c9
   | '_' -> c_
+  | '.' -> cdot
   | _ -> c_
   
 let rec string_t_of_chars (s: list char): Type0 =

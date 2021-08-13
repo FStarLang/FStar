@@ -4,15 +4,16 @@ open Steel.C.PCM
 open Steel.C.Opt
 open Steel.C.Connection
 open Steel.C.StructLiteral
-open Steel.C.Array
 open Steel.C.Typedef
 open FStar.FunctionalExtensionality
 open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.C.Fields
+open Steel.C.Opt
 open Steel.C.Ref
 open Steel.C.Reference
 open Steel.C.TypedefNorm
+open Steel.C.Array
 
 open FStar.FSet
 open Typenat
@@ -35,7 +36,7 @@ module T = FStar.Tactics
 noextract inline_for_extraction
 //[@@FStar.Tactics.Effect.postprocess_for_extraction_with(fun () ->
 //     T.norm [delta; iota; zeta_full; primops]; T.trefl ())]
-let comp_tag = normalize (mk_string_t "comp")
+let comp_tag = normalize (mk_string_t "HaclExample.comp")
 
 module U32 = FStar.UInt32
 
@@ -84,7 +85,14 @@ let do_something_with_limbs
     (fun _ -> varray a)
     (requires fun _ -> length a == 5)
     (ensures fun _ _ _ -> True)
-= return ()
+= // let alar = split a (mk_size_t (U32.uint_to_t 1)) in
+  // let q = split_left a (mk_size_t (U32.uint_to_t 1)) in
+  // let p = ref_of_array q in
+  // p `opt_write_sel` (U64.uint_to_t 0);
+  // array_of_ref q p;
+  // join' (GPair?.fst alar) (GPair?.snd alar);
+  upd a (mk_size_t (U32.uint_to_t 2)) (U64.uint_to_t 0);
+  return ()
 
 let do_something_with_precomp
   (a: array 'a U64.t)
@@ -93,18 +101,17 @@ let do_something_with_precomp
     (fun _ -> varray a)
     (requires fun _ -> length a == 20)
     (ensures fun _ _ _ -> True)
-= return ()
+= upd a (mk_size_t (U32.uint_to_t 19)) (U64.uint_to_t 0);
+  return ()
 
 #push-options "--fuel 0 --print_universes --print_implicits --z3rlimit 30"
 
 let test
-  (p: ref unit comp comp_pcm) // TODO unit
+  (p: ref 'a comp comp_pcm)
 : SteelT unit
     (p `pts_to_view` comp_view emptyset)
     (fun _ -> p `pts_to_view` comp_view emptyset)
-= let q = //: ref _ (array_view_type_sized U64.t five' five) _ =
-    addr_of_struct_field "limbs" p
-  in
+= let q = addr_of_struct_field "limbs" p in
   let a = intro_varray q () in
   let r = addr_of_struct_field "precomp" p in
   let b = intro_varray r () in
