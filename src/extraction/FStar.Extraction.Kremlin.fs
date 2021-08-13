@@ -131,6 +131,7 @@ and expr =
   | EAbortT of string * typ
   | EComment of string * expr * string
   | EStandaloneComment of string
+  | EAddrOf of expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
