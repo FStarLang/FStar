@@ -12,6 +12,7 @@ open Steel.Effect.Atomic
 open Steel.C.Fields
 open Steel.C.Ref
 open Steel.C.Reference
+open Steel.C.TypedefNorm
 
 open FStar.FSet
 open Typenat
@@ -73,27 +74,8 @@ let comp_pcm = struct_pcm comp_tag comp_fields
 noextract inline_for_extraction
 let c_comp: typedef = typedef_struct comp_tag comp_fields
 
-noextract
-unfold let norm_list =
-  [delta_only
-    [`%mk_c_struct;
-     `%c_fields_t;
-     `%List.Tot.fold_right;
-     `%Typestring.mk_string_t;
-     `%Typestring.string_t_of_chars;
-     `%Typestring.char_t_of_char;
-     `%Mkc_fields?.get_field;
-     `%Mkc_fields?.cfields;
-     `%Mktypedef?.view_type;
-     `%fields_cons;
-     `%fields_nil;
-     `%nat_t_of_nat;
-     ];
-   delta_attr [`%c_struct; `%c_typedef];
-   iota; zeta; primops]
-
 //let x : unit -> norm norm_list (mk_c_struct comp_tag comp_fields) = fun _ -> admit(); magic()
-let _ = norm norm_list (mk_c_struct comp_tag comp_fields)
+let _ = norm norm_c_typedef (mk_c_struct comp_tag comp_fields)
 
 let do_something_with_limbs
   (a: array 'a U64.t)
