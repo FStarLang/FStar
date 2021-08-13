@@ -193,6 +193,7 @@ let struct'_without_field
 : struct' tag fields (insert field excluded)
 = on_dom (struct_dom fields (insert field excluded)) v
 
+#push-options "--z3rlimit 30"
 let struct_without_field_to_carrier
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields) (field: field_of fields)
   (s: struct_pcm_carrier tag fields)
@@ -207,6 +208,7 @@ let struct_without_field_to_carrier
     struct_without_field (struct_pcms fields) field s
     `feq` (struct_view tag fields (insert field excluded)).to_carrier
          (struct'_without_field tag fields excluded field v))
+#pop-options
 
 let extract_field
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
@@ -229,6 +231,17 @@ let extract_field_unextracted
   (field': field_of fields)
   (v: struct' tag fields excluded)
 = ()
+
+let extract_field_unextracted'
+  (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
+  (field: field_of fields)
+  (v: struct' tag fields excluded)
+= let aux (field': field_of fields)
+  : Lemma ( (not (excluded field) /\ not (excluded field') /\ (field =!= field')) ==>
+    (fst (extract_field tag fields excluded field v) `struct_get` field' == v `struct_get` field'))
+  = Classical.move_requires (extract_field_unextracted tag fields excluded field field') v
+  in
+  Classical.forall_intro aux
 
 val addr_of_struct_field_ref'
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
@@ -318,6 +331,7 @@ let extract_field_with_field
     (struct'_with_field tag fields excluded field w v)
     `feq` v)
 
+#push-options "--z3rlimit 50"
 let unaddr_of_struct_field_ref' #a #tag #fields #excluded field p q =
   let v: Ghost.erased (struct' tag fields excluded) =
     gget (p `pts_to_view` struct_view tag fields excluded)
@@ -344,6 +358,14 @@ let unaddr_of_struct_field_ref' #a #tag #fields #excluded field p q =
     (struct'_with_field tag fields excluded field w v);
   extract_field_with_field tag fields excluded field (Ghost.reveal v) (Ghost.reveal w);
   return ()
+#pop-options
+
+#restart-solver
+
+#push-options "--admit_smt_queries true"
+
+let dummy_def = ()
 
 let unaddr_of_struct_field_ref #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
+#pop-options
