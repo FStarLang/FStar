@@ -1,5 +1,7 @@
 module Steel.C.StructLiteral
 
+#set-options "--z3rlimit 50"
+
 open Steel.Memory
 open Steel.Effect
 open Steel.Effect.Common
@@ -18,130 +20,6 @@ open FStar.FunctionalExtensionality
 open FStar.FSet
 
 module TS = Steel.C.Typestring
-
-(**** MOVE TO ChurchList *)
-
-let rec list_elim (xs: list 'a)
-  (b:(list 'a -> Type))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: b xs
-= match xs with
-  | [] -> base
-  | x :: xs -> ind x xs (list_elim xs b base ind)
-
-let elim_t (#a: Type u#a) (xs: list a): Tot (Type u#(max a (1 + b))) =
-  b:(list a -> Type u#b) ->
-  base:b [] ->
-  ind:(x:a -> xs:list a -> b xs -> b (x :: xs)) ->
-  b xs
-
-//[@@__reduce__]
-noeq type clist (a:Type u#a): Type = {
-  raw: list a;
-  elim0: elim_t u#_ u#0 raw;
-  elim1: elim_t u#_ u#1 raw;
-  elim2: elim_t u#_ u#2 raw;
-  elim3: elim_t u#_ u#3 raw;
-}
-
-//[@@__reduce__]
-let clist_elim0
-  (c: clist 'a)
-  (b:(list 'a -> Type0))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim0
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-//[@@__reduce__]
-let clist_elim1
-  (c: clist 'a)
-  (b:(list 'a -> Type u#1))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim1
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-//[@@__reduce__]
-let clist_elim2
-  (c: clist 'a)
-  (b:(list 'a -> Type u#2))
-  (base:b [])
-  (ind:(x:'a -> xs:list 'a -> b xs -> b (x :: xs)))
-: Pure (b c.raw)
-  (requires True)
-  (ensures (fun y -> y == list_elim c.raw b base ind))
-= let b' (l2: list 'a) : Type =
-    (x: b l2 { x == list_elim l2 b base ind })
-  in
-  c.elim2
-    b'
-    base
-    (fun x xs x' -> ind x xs x')
-
-#push-options "--print_universes --print_implicits"
-
-#push-options "--fuel 0"
-let mk_clist (xs: list 'a) = {
-  raw = xs;
-  elim0 = list_elim xs;
-  elim1 = list_elim xs;
-  elim2 = list_elim xs;
-  elim3 = list_elim xs;
-}
-let _ =
-  let xs = normalize_term (mk_clist [1; 2; 3; 4]) in
-  assert (clist_elim0 xs (fun _ -> int) 0 (fun x xs sum_xs -> x + sum_xs) == 10)
-#pop-options
-
-//[@@__reduce__]
-let nil (#a: Type u#a): clist u#a a = {
-  raw = [];
-  elim0 = (fun _ base _ -> base);
-  elim1 = (fun _ base _ -> base);
-  elim2 = (fun _ base _ -> base);
-  elim3 = (fun _ base _ -> base);
-}
-
-//[@@__reduce__]
-let cons (#a: Type u#a) (x: a) (xs: clist u#a a): clist u#a a = {
-  raw = x :: xs.raw;
-  elim0 = (fun b base ind -> ind x xs.raw (xs.elim0 b base ind));
-  elim1 = (fun b base ind -> ind x xs.raw (xs.elim1 b base ind));
-  elim2 = (fun b base ind -> ind x xs.raw (xs.elim2 b base ind));
-  elim3 = (fun b base ind -> ind x xs.raw (xs.elim3 b base ind));
-}
-
-//[@@__reduce__]
-let cmem (#a:eqtype) (#b: Type u#b) (x: a) (xs: clist u#0 a): bool
-= clist_elim0 xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur)
-
-//[@@__reduce__]
-let cmem_ok (#a:eqtype) (x: a) (xs: clist u#0 a)
-: Lemma (cmem x xs == mem x xs.raw)
-= let rec aux (xs: list a)
-  : Lemma (list_elim xs (fun _ -> bool) false (fun x' xs recur -> x = x' || recur) == mem x xs)
-  = match xs with [] -> () | x :: xs -> aux xs
-  in aux xs.raw
-
-(**** END MOVE TO ChurchList *)
 
 val mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0
 
@@ -354,6 +232,7 @@ val extract_field_unextracted
 : Lemma
     (requires not (excluded field) /\ not (excluded field') /\ (field =!= field'))
     (ensures 
+      not (excluded field) /\ not (excluded field') /\ (field =!= field') /\
       fst (extract_field tag fields excluded field v) `struct_get` field'
       == v `struct_get` field')
 //    [SMTPat (extract_field tag fields excluded field v);
@@ -418,7 +297,10 @@ val unaddr_of_struct_field_ref'
        ==
          h (q `pts_to_view` (fields.get_field field).view))
 
-#push-options "--z3rlimit 30"
+#restart-solver
+
+val dummy_def : unit
+
 val unaddr_of_struct_field_ref
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -448,7 +330,6 @@ val unaddr_of_struct_field_ref
         (extract_field tag fields (remove field excluded) field
           (h' (p `pts_to_view` struct_view tag fields (remove field excluded))))
       == h (q `pts_to_view` (fields.get_field field).view))
-#pop-options
 
 open Steel.C.Reference
 
@@ -523,7 +404,6 @@ let addr_of_struct_field
     (normalize (fields.get_field field).carrier)
     tag fields excluded field p
 
-#push-options "--z3rlimit 30"
 let unaddr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)
@@ -557,4 +437,3 @@ let unaddr_of_struct_field
 =
 //let unaddr_of_struct_field #a #tag #fields #excluded field p q =
   unaddr_of_struct_field_ref' field p q
-#pop-options
