@@ -200,7 +200,7 @@ val split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
             s == sl `Seq.append` sr
           )
 
-val split_left (#opened: _) (#base: _) (#t:Type) (a:array base t) (i:size_t)
+val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray a)
           (fun _ -> varray a)
@@ -211,7 +211,7 @@ val split_left (#opened: _) (#base: _) (#t:Type) (a:array base t) (i:size_t)
             res == fst (gsplit a i)
           )
 
-val split_right (#opened: _) (#base: _) (#t:Type) (a:array base t) (i:size_t)
+val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray a)
           (fun _ -> varray a)
@@ -233,7 +233,7 @@ val join' (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
             merge_into al ar a
           )
 
-val joinc (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
+val joinc (#base: _) (#t:Type) (#opened: _) (al ar:array base t)
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray al `star` varray ar)
           (fun a -> varray al `star` varray ar)
