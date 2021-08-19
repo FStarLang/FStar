@@ -13,6 +13,24 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Tactics
+  * Mutually recursive let bindings are now supported in the reflected syntax, using the
+    same constructor (`Tv_Let`) as before (https://github.com/FStarLang/FStar/pull/2291.
+    Inspection of a let binding now usually looks like this:
+    ```
+    match inspect_sigelt se with
+    | Sg_Let r lbs ->
+      let lbv = lookup_lb_view lbs (inspect_fv fv) in
+      lbv.lb_def
+    ```
+    Where `lookup_lb_view` looks for a `name` in a list of let bindings, returning the corresponding let binding view. In turn, packing a let binding usually takes the form:
+    ```
+     let lbv = {lb_fv=fv;lb_us=us;lb_typ=ty;lb_def=def} in
+     let lb = pack_lb lbv in
+     let se = pack_sigelt (Sg_Let false [lb]) in
+     ...
+    ```
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
