@@ -102,8 +102,18 @@ type comp_view =
     | C_Eff of list<unit> * name * term * list<argv>
 
 type ctor = name * typ
+
+type lb_view = {
+    lb_fv : fv;
+    lb_us : list<univ_name>;
+    lb_typ : typ;
+    lb_def : term;
+}
+
 type sigelt_view =
-    | Sg_Let of bool * fv * list<univ_name> * typ * term
+    | Sg_Let of bool * list<letbinding>
+        // The bool indicates if it's a let rec
+        // Non-empty list of (possibly) mutually recursive let-bindings
     | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
     | Sg_Val of name * list<univ_name> * typ
     | Unk
@@ -161,6 +171,7 @@ let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_
 let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
 let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
 let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+let fstar_refl_inspect_lb     , fstar_refl_pack_lb     = mk_inspect_pack_pair "_lb"
 
 (* assumed types *)
 let fstar_refl_env              = mk_refl_types_lid_as_term "env"
@@ -177,6 +188,8 @@ let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_sigelt_fv        = mk_refl_types_lid_as_fv   "sigelt"
 let fstar_refl_term             = mk_refl_types_lid_as_term "term"
 let fstar_refl_term_fv          = mk_refl_types_lid_as_fv   "term"
+let fstar_refl_letbinding       = mk_refl_types_lid_as_term "letbinding"
+let fstar_refl_letbinding_fv    = mk_refl_types_lid_as_fv   "letbinding"
 let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
 let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
@@ -199,6 +212,8 @@ let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
 let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv   "bv_view"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
 let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv   "vconst"
+let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
+let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
@@ -214,6 +229,20 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    let fv = lid_as_fv lid delta_constant (Some attr) in
+    { lid = lid
+    ; fv  = fv
+    ; t   = fv_to_tm fv
+    }
+
+let ref_Mk_lb =
+    let lid = fstar_refl_data_lid "Mklb_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "lb_view", [
+                                Ident.mk_ident ("lb_fv"  , Range.dummyRange);
+                                Ident.mk_ident ("lb_us"  , Range.dummyRange);
+				Ident.mk_ident ("lb_typ" , Range.dummyRange);
+                                Ident.mk_ident ("lb_def" , Range.dummyRange)
+                                ]) in
     let fv = lid_as_fv lid delta_constant (Some attr) in
     { lid = lid
     ; fv  = fv

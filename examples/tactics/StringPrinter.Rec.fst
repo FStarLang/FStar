@@ -196,7 +196,9 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
       begin match T.lookup_typ env n with
       | Some s ->
         begin match T.inspect_sigelt s with
-        | T.Sg_Let true _ _ ty tm ->
+        | T.Sg_Let true lbs ->
+          let lb = T.lookup_lb_view lbs n in
+          let ty, tm = T.(lb.lb_typ, lb.lb_def) in
           begin match T.inspect ty with
           | T.Tv_Arrow tin' tout' ->
             begin match T.inspect_comp tout' with

@@ -28,6 +28,8 @@ val e_aqualv      : embedding<aqualv>
 val e_argv        : embedding<argv>
 val e_order       : embedding<order>
 val e_sigelt      : embedding<sigelt>
+val e_letbinding  : embedding<letbinding>
+val e_lb_view     : embedding<lb_view>
 val e_sigelt_view : embedding<sigelt_view>
 val e_bv_view     : embedding<bv_view>
 val e_exp         : embedding<exp>
@@ -52,3 +54,4 @@ val unfold_lazy_optionstate : lazyinfo -> term
 val unfold_lazy_comp   : lazyinfo -> term
 val unfold_lazy_env    : lazyinfo -> term
 val unfold_lazy_sigelt : lazyinfo -> term
+val unfold_lazy_letbinding : lazyinfo -> term
