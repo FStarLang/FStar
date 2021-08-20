@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "77e0797537b79481eebd27728f9a970f"
+      "d51c88625e7bc09d73887b2de360c163"
     ],
     [
       "FStar.Tactics.CanonMonoid.__proj__Var__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_1b8c0e8daeec5941ba3da42d94dc0491"
       ],
       0,
-      "3959a2b8ffd76a665637bacbb1731c06"
+      "46f7cb495be7d4a3449055124f17f60a"
     ],
     [
       "FStar.Tactics.CanonMonoid.__proj__Mult__item___0",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_5bd5cc6aedaac7fb5df449a481b9a30f"
       ],
       0,
-      "b264d1f90defb0f460cf8ddff2d12c33"
+      "c91f3a4737f7add5bab90f87d9203b6e"
     ],
     [
       "FStar.Tactics.CanonMonoid.__proj__Mult__item___1",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_5bd5cc6aedaac7fb5df449a481b9a30f"
       ],
       0,
-      "17b15c492915505029e4c7cc679efcfd"
+      "b8758e43f9e24e739a461b38ce764658"
     ],
     [
       "FStar.Tactics.CanonMonoid.exp_to_string",
@@ -67,7 +67,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "6c87739bab0c40e1e730d014e16bb0a3"
+      "7e47f4eaf9ed4f5df9aef9587113e505"
     ],
     [
       "FStar.Tactics.CanonMonoid.mdenote",
@@ -89,7 +89,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "ea212521b8778044521e913f3597f455"
+      "6ec1a42716f8fb2cb26a8627f58fe772"
     ],
     [
       "FStar.Tactics.CanonMonoid.mldenote",
@@ -107,7 +107,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aa53b991cf1c2584ef618c56e8e05f1e"
+      "523c404badb69dce7207eb7cbf571b41"
     ],
     [
       "FStar.Tactics.CanonMonoid.flatten",
@@ -124,7 +124,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "069bccba2c7de755fc1d750d983220a9"
+      "1ecab510e456609d5022fe36469bb254"
     ],
     [
       "FStar.Tactics.CanonMonoid.flatten_correct_aux",
@@ -165,7 +165,7 @@
         "typing_FStar.Tactics.CanonMonoid.mldenote"
       ],
       0,
-      "268341cf6011d58d2cb0cfd10a54e4f0"
+      "f8a4557ad3629397a86aefdea71c0815"
     ],
     [
       "FStar.Tactics.CanonMonoid.flatten_correct",
@@ -208,7 +208,7 @@
         "typing_FStar.Tactics.CanonMonoid.flatten"
       ],
       0,
-      "84921c7a3b4aeffef46538312f22985b"
+      "e6f016d0bd0dce9a1a0747c00e1c9f82"
     ],
     [
       "FStar.Tactics.CanonMonoid.monoid_reflect",
@@ -221,7 +221,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c2da9debf0cb83f98bdfe6a40e812881"
+      "b4861513bce1ff1d0edccb82cd111ce1"
     ]
   ]
 ]
