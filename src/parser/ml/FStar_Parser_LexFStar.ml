@@ -98,14 +98,14 @@ let () =
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
   Hashtbl.add keywords "synth"         SYNTH       ;
   Hashtbl.add keywords "then"          THEN        ;
-  Hashtbl.add keywords "to"            TO          ;
+  Hashtbl.add keywords "_to_"          TO          ;
   Hashtbl.add keywords "total"         TOTAL       ;
   Hashtbl.add keywords "true"          TRUE        ;
   Hashtbl.add keywords "try"           TRY         ;
   Hashtbl.add keywords "type"          TYPE        ;
   Hashtbl.add keywords "unfold"        UNFOLD      ;
   Hashtbl.add keywords "unfoldable"    UNFOLDABLE  ;
-  Hashtbl.add keywords "using"         USING       ;
+  Hashtbl.add keywords "_using_"       USING       ;
   Hashtbl.add keywords "val"           VAL         ;
   Hashtbl.add keywords "when"          WHEN        ;
   Hashtbl.add keywords "with"          WITH        ;

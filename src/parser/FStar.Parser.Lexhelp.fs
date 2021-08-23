@@ -194,14 +194,14 @@ let keywords =
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "synth"      ,SYNTH;
     ALWAYS, "then"       ,THEN;
-    ALWAYS, "to"         ,TO;
+    ALWAYS, "_to_"       ,TO;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;
     ALWAYS, "unfoldable" ,UNFOLDABLE;
-    ALWAYS, "using"      ,USING;
+    ALWAYS, "_using_"    ,USING;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;
