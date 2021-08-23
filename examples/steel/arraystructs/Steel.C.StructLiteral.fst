@@ -275,6 +275,8 @@ let addr_of_struct_field_ref' #a #tag #fields #excluded field p =
     pts_to_view_elim p (struct_view tag fields excluded)
   in
   let q = addr_of_struct_field p field s in
+  change_equal_slprop (p `pts_to` _) (p `pts_to` _);
+  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   struct_without_field_to_carrier tag fields excluded field s v;
   pts_to_view_intro p (struct_without_field (struct_pcms fields) field s)
     (struct_view tag fields (insert field excluded))
