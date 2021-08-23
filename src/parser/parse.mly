@@ -62,7 +62,6 @@ let none_to_empty_list x =
 %token <char> CHAR
 %token <bool> LET
 
-%token AS
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
@@ -72,6 +71,7 @@ let none_to_empty_list x =
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
+%token ELIM_EXISTS USING TO
 %token INCLUDE
 %token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -112,7 +112,6 @@ let none_to_empty_list x =
 %left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
 %left     BACKTICK
-%left     BACKTICK_AT BACKTICK_HASH
 %right    OPINFIX4
 
 %start inputFragment
@@ -789,6 +788,13 @@ noSeqTerm:
    | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
      {
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
+     }
+
+   | ELIM_EXISTS bs=binders DOT p=noSeqTerm TO q=noSeqTerm USING y=binders DOT e=noSeqTerm
+     {
+         match y with
+         | [y] -> mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 8) Expr
+         | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 6)
      }
 
 calcRel:

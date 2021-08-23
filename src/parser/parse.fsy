@@ -44,7 +44,6 @@ let none_to_empty_list x =
 %start warn_error_list
 %token AMP
 %token AND
-%token AS
 %token ASSERT
 %token ASSUME
 %token ATTRIBUTES
@@ -77,6 +76,7 @@ let none_to_empty_list x =
 %token DOT_LENS_PAREN_LEFT
 %token DOT_LPAREN
 %token EFFECT
+%token ELIM_EXISTS
 %token ELSE
 %token END
 %token ENSURES
@@ -185,6 +185,7 @@ let none_to_empty_list x =
 %token SYNTH
 %token THEN
 %token <string> TILDE
+%token TO
 %token TOTAL
 %token TRUE
 %token TRY
@@ -201,6 +202,7 @@ let none_to_empty_list x =
 %token UNFOLDABLE
 %token UNIV_HASH
 %token UNOPTEQUALITY
+%token USING
 %token VAL
 %token WHEN
 %token WITH
@@ -218,7 +220,6 @@ let none_to_empty_list x =
 %left MINUS OPINFIX2 QUOTE
 %left OPINFIX3
 %left BACKTICK
-%left BACKTICK_AT BACKTICK_HASH
 %right OPINFIX4
 %type <inputFragment> inputFragment
 %type <ident> lident
@@ -1556,6 +1557,13 @@ let pbs =    ( List.rev xs ) in
      (
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
+| ELIM_EXISTS binders DOT noSeqTerm TO noSeqTerm USING binders DOT noSeqTerm
+    {let (_1, bs, _3, p, _5, q, _7, y, _9, e) = ((), $2, (), $4, (), $6, (), $8, (), $10) in
+     (
+         match y with
+         | [y] -> mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 8) Expr
+         | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 6)
+     )}
 
 calcRel:
   binop_name
@@ -2729,4 +2737,5 @@ in
    ( x :: xs )}
 
 %%
+
 

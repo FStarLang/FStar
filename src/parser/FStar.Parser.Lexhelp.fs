@@ -151,6 +151,7 @@ let keywords =
     ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
+    ALWAYS, "elim_exists",ELIM_EXISTS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -193,12 +194,14 @@ let keywords =
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "synth"      ,SYNTH;
     ALWAYS, "then"       ,THEN;
+    ALWAYS, "to"         ,TO;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;
     ALWAYS, "unfoldable" ,UNFOLDABLE;
+    ALWAYS, "using"      ,USING;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;

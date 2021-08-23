@@ -501,3 +501,9 @@ let (calc_init_lid : FStar_Ident.lid) = calc_lid "calc_init"
 let (calc_step_lid : FStar_Ident.lid) = calc_lid "calc_step"
 let (calc_finish_lid : FStar_Ident.lid) = calc_lid "calc_finish"
 let (calc_push_impl_lid : FStar_Ident.lid) = calc_lid "calc_push_impl"
+let (classical_lid : Prims.string -> FStar_Ident.lid) =
+  fun i ->
+    FStar_Ident.lid_of_path ["FStar"; "Classical"; i]
+      FStar_Compiler_Range.dummyRange
+let (bind_squash_exists_lid : FStar_Ident.lid) =
+  classical_lid "bind_squash_exists"

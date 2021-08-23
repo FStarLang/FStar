@@ -484,3 +484,7 @@ let calc_init_lid   = calc_lid "calc_init"
 let calc_step_lid   = calc_lid "calc_step"
 let calc_finish_lid = calc_lid "calc_finish"
 let calc_push_impl_lid = calc_lid "calc_push_impl"
+
+(* Classical proofs, from FStar.Classical *)
+let classical_lid i : lid = lid_of_path ["FStar"; "Classical"; i] FStar.Compiler.Range.dummyRange
+let bind_squash_exists_lid = classical_lid "bind_squash_exists"

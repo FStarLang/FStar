@@ -993,6 +993,13 @@ let collect_one
                 collect_term just;
                 collect_term next) steps
             end
+        | ElimExists(bs, p, q, b, e) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+           collect_binders bs;
+           collect_term p;
+           collect_term q;
+           collect_binder b;
+           collect_term e
 
       and collect_patterns ps =
         List.iter collect_pattern ps

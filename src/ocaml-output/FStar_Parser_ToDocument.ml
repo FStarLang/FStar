@@ -2731,6 +2731,51 @@ and (p_noSeqTerm' :
               FStar_Compiler_Effect.op_Less_Bar
                 (FStar_Pprint.nest (Prims.of_int (2))) uu___2 in
             FStar_Pprint.enclose head uu___ uu___1
+        | FStar_Parser_AST.ElimExists (bs, p, q, b, e1) ->
+            let head =
+              let uu___ = str "elim_exists" in
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = p_binders true bs in
+                  let uu___4 = str "." in
+                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+              FStar_Pprint.op_Hat_Hat uu___ uu___1 in
+            let p1 = p_noSeqTermAndComment false false p in
+            let q1 = p_noSeqTermAndComment false false q in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = str "to" in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            let uu___9 = str "using" in
+                            let uu___10 =
+                              let uu___11 =
+                                let uu___12 = p_binders true [b] in
+                                let uu___13 =
+                                  let uu___14 = str "." in
+                                  let uu___15 =
+                                    FStar_Pprint.op_Hat_Hat
+                                      FStar_Pprint.hardline e2 in
+                                  FStar_Pprint.op_Hat_Hat uu___14 uu___15 in
+                                FStar_Pprint.op_Hat_Hat uu___12 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___11 in
+                            FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___8 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___7 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
+                    FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
+                FStar_Pprint.op_Hat_Hat p1 uu___2 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
+            FStar_Pprint.op_Hat_Hat head uu___
         | uu___ -> p_typ ps pb e
 and (p_dec_wf :
   Prims.bool ->
@@ -4077,6 +4122,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Antiquote uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.CalcProof uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.ElimExists uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.LexList l ->
         let uu___ =

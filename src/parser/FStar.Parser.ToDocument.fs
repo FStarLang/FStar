@@ -1282,7 +1282,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
-          in 
+          in
           (match ret_opt with
            | None ->
              group (
@@ -1309,9 +1309,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "match")
                             ((p_noSeqTermAndComment false false e) ^/+^ (str "returns" ^/+^ p_tmIff ret))
                             (str "with")))
-        
+
       ^/^
-       
+
       separate_map_last hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       paren_if ps (
@@ -1377,6 +1377,17 @@ and p_noSeqTerm' ps pb e = match e.tm with
          (nest 2 <| hardline
                     ^^ p_noSeqTermAndComment false false init ^^ str ";" ^^ hardline
                     ^^ separate_map_last hardline p_calcStep steps)
+  | ElimExists (bs, p, q, b, e) ->
+    let head = str "elim_exists" ^^ space ^^ p_binders true bs ^^ str "." in
+    let p = p_noSeqTermAndComment false false p in
+    let q = p_noSeqTermAndComment false false q in
+    let e = p_noSeqTermAndComment false false e in
+      head ^^ hardline ^^
+      p ^^ hardline ^^
+      str "to" ^^ space ^^ q ^^ hardline ^^
+      str "using" ^^ space ^^ (p_binders true [b]) ^^ str "." ^^ hardline ^^
+      e
+
   | _ -> p_typ ps pb e
 
 and p_dec_wf ps pb rel e =
@@ -1947,6 +1958,7 @@ and p_projectionLHS e = match e.tm with
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
+  | ElimExists _
     -> soft_parens_with_nesting (p_term false false e)
   | LexList l -> group (str "%" ^^ p_term_list false false l)
   | WFOrder (rel, e) ->

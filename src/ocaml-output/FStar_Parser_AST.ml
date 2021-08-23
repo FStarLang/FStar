@@ -78,6 +78,7 @@ type term' =
   | Quote of (term * quote_kind) 
   | VQuote of term 
   | CalcProof of (term * term * calc_step Prims.list) 
+  | ElimExists of (binder Prims.list * term * term * binder * term) 
 and term = {
   tm: term' ;
   range: FStar_Compiler_Range.range ;
@@ -326,6 +327,12 @@ let (uu___is_CalcProof : term' -> Prims.bool) =
 let (__proj__CalcProof__item___0 :
   term' -> (term * term * calc_step Prims.list)) =
   fun projectee -> match projectee with | CalcProof _0 -> _0
+let (uu___is_ElimExists : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ElimExists _0 -> true | uu___ -> false
+let (__proj__ElimExists__item___0 :
+  term' -> (binder Prims.list * term * term * binder * term)) =
+  fun projectee -> match projectee with | ElimExists _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> tm
@@ -1720,6 +1727,20 @@ let rec (term_to_string : term -> Prims.string) =
           let uu___3 = FStar_Compiler_List.map calc_step_to_string steps in
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat " ") uu___3 in
         FStar_Compiler_Util.format3 "calc (%s) { %s %s }" uu___ uu___1 uu___2
+    | ElimExists (bs, p, q, b, e) ->
+        let uu___ = binders_to_string " " bs in
+        let uu___1 = term_to_string p in
+        let uu___2 = term_to_string q in
+        let uu___3 = binder_to_string b in
+        let uu___4 = term_to_string e in
+        FStar_Compiler_Util.format5
+          "elim_exists %s. %s to %s\n\tusing %s. %s" uu___ uu___1 uu___2
+          uu___3 uu___4
+and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
+  fun sep ->
+    fun bs ->
+      let uu___ = FStar_Compiler_List.map binder_to_string bs in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat sep)
 and (try_or_match_to_string :
   term ->
     term ->

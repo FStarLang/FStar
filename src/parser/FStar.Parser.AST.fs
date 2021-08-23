@@ -86,6 +86,7 @@ type term' =
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
   | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
+  | ElimExists of list<binder> * term * term * binder * term
 
 and term = {tm:term'; range:range; level:level}
 
@@ -655,6 +656,17 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format3 "calc (%s) { %s %s }" (term_to_string rel)
                                        (term_to_string init)
                                        (String.concat " " <| List.map calc_step_to_string steps)
+
+  | ElimExists(bs, p, q, b, e) ->
+    Util.format5 "elim_exists %s. %s to %s\n\tusing %s. %s"
+        (binders_to_string " " bs)
+        (term_to_string p)
+        (term_to_string q)
+        (binder_to_string b)
+        (term_to_string e)
+
+and binders_to_string sep bs =
+    List.map binder_to_string bs |> String.concat sep
 
 and try_or_match_to_string (x:term) scrutinee branches ret_opt =
   let s =

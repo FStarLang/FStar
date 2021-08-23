@@ -1526,6 +1526,18 @@ let (collect_one :
                            (collect_term rel1;
                             collect_term just;
                             collect_term next)) steps)
+             | FStar_Parser_AST.ElimExists (bs, p, q, b, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_binders bs;
+                  collect_term p;
+                  collect_term q;
+                  collect_binder b;
+                  collect_term e)
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
