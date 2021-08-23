@@ -54,7 +54,7 @@ let () =
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
-  Hashtbl.add keywords "elim_exists"   ELIM_EXISTS ;
+  Hashtbl.add keywords "_elim_exists_"   ELIM_EXISTS ;
   Hashtbl.add keywords "else"          ELSE        ;
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;

@@ -151,7 +151,7 @@ let keywords =
     ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
-    ALWAYS, "elim_exists",ELIM_EXISTS;
+    ALWAYS, "_elim_exists_",ELIM_EXISTS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
