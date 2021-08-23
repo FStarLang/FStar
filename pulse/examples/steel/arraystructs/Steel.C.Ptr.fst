@@ -152,41 +152,36 @@ let elim_pts_to_or_null_nullptr #a #b #_ #pb #v p =
     (vpure (Ghost.reveal v == None #b <==> p == None #(ref' a b)) `star` vpure True);
   elim_vpure True; elim_vpure _
 
-assume val elim_pts_to_or_null_nonnull_witness (#opened:inames)
+let elim_pts_to_or_null_nonnull_witness (#opened:inames)
   (#pb: pcm 'b) (#v: Ghost.erased (option 'b)) (p: ptr 'a 'b)
 : SteelGhost (Ghost.erased 'b) opened
     (pts_to_or_null p pb v)
     (fun w -> pts_to_or_null p pb (Some (Ghost.reveal w)))
     (requires fun _ -> p =!= nullptr)
     (ensures fun _ w _ -> Ghost.reveal v == Some (Ghost.reveal w))
-    (*
 = match Ghost.reveal v with
   | None -> 
     let prf = gget (pts_to_or_null p pb v) in
     let _: squash (Ghost.reveal v == None <==> p == None) = fst prf in
     assert (p == nullptr);
-    unreachable (fun w -> v == Some w)
+    unreachable (fun w -> Ghost.reveal v == Some (Ghost.reveal w))
   | Some w ->
     let prf = gget (pts_to_or_null p pb v) in
     let _: squash (Ghost.reveal v == None <==> p == None) = fst prf in
     assert (p =!= nullptr);
     change_equal_slprop (pts_to_or_null p pb v) (pts_to_or_null p pb (Some w));
-    sladmit();
     w
-    *)
 
 #set-options "--ide_id_info_off"
 
-let elim_pts_to_or_null = admit()
-(*
 let elim_pts_to_or_null #a #b #_ #pb #v p =
-  let w = elim_pts_to_or_null_nonnull_witness p in
-  unfold_pts_to_or_null pb p (Some w);
-  change_equal_slprop (pts_to_or_null p pb (Some w))
-    (vpure (Ghost.reveal (Some w) == None <==> p == None) `star` pts_to' p pb w);
-  elim_vpure (Ghost.reveal (Some w) == None <==> p == None);
+  let w: Ghost.erased _ = elim_pts_to_or_null_nonnull_witness p in
+  unfold_pts_to_or_null pb p (Some (Ghost.reveal w));
+  change_equal_slprop (pts_to_or_null p pb (Some (Ghost.reveal w)))
+    (vpure (Ghost.reveal (Ghost.hide (Some (Ghost.reveal w))) == None <==> p == None) `star`
+     pts_to' p pb (Ghost.reveal w));
+  elim_vpure (Ghost.reveal (Ghost.hide (Some (Ghost.reveal w))) == None <==> p == None);
   w
-  *)
   
 let is_null #a #b #pb #v p = return (None? p)
 
@@ -246,13 +241,16 @@ let unfocus #a #b #c #opened #p #q r r' l x =
   let r'' = intro_pts_to_ghost ref_r' in
   change_equal_slprop (pts_to r'' p _) (pts_to r' p _)
 
-let ptr_opt_write
-  (#a:Type) (#b:Type) (#x: Ghost.erased b)
-  (p: ptr a (option b)) (y: b)
-: SteelT unit
-    (pts_to p opt_pcm (some x))
-    (fun _ -> pts_to p opt_pcm (some (Ghost.hide y)))
-= let r = elim_pts_to p in
+let ptr_opt_write #a #b #x p y =
+  change_equal_slprop (pts_to p opt_pcm (Some #b (Ghost.reveal x)))
+    (pts_to p opt_pcm (Ghost.reveal (Ghost.hide (Some #b (Ghost.reveal x)))));
+  let r = elim_pts_to #a #_ #opt_pcm p in
+  change_equal_slprop
+    (r `R.pts_to` Ghost.reveal (Ghost.hide (Some #b (Ghost.reveal x))))
+    (r `R.pts_to` Some (Ghost.reveal x));
   r `opt_write` y;
+  change_equal_slprop (Steel.C.Ref.pts_to r _)
+    (Steel.C.Ref.pts_to r (Ghost.reveal (Ghost.hide (Some y))));
   let p' = intro_pts_to r in
-  change_equal_slprop (pts_to p' opt_pcm _) (pts_to p opt_pcm _)
+  change_equal_slprop (pts_to p' opt_pcm _) (pts_to p opt_pcm _);
+  return ()

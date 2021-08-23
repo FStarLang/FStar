@@ -466,7 +466,9 @@ let addr_of_union_field
     (ensures fun _ r' _ -> r' == ref_focus r (union_field p k))
 = union_peel p k xs;
   A.change_equal_slprop (r `pts_to` xs) (r `pts_to` _);
-  focus r (union_field p k) (field_to_union_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k)
+  let s = focus r (union_field p k) (field_to_union_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
+  A.change_equal_slprop (s `pts_to` _) (s `pts_to` _);
+  A.return s
 
 module M = Steel.Memory 
 let unaddr_of_union_field

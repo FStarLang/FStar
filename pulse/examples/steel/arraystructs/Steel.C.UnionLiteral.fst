@@ -161,6 +161,7 @@ let addr_of_union_field'
   in
   assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
   let q = Steel.C.Union.addr_of_union_field #'a #_ #_ #(union_pcms fields) p field s in
+  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   pts_to_view_intro q (Ghost.reveal s field)
     (fields.get_field field).view
     (dsnd (Ghost.reveal v));

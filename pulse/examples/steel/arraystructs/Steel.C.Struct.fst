@@ -311,7 +311,9 @@ let addr_of_struct_field
     (ensures fun _ r' _ -> r' == ref_focus r (struct_field p k))
 = struct_peel p k xs;
   split r xs (struct_without_field p k xs) (field_to_struct_f p k (Ghost.reveal xs k));
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   let r = focus r (struct_field p k) (field_to_struct_f p k (Ghost.reveal xs k)) (Ghost.reveal xs k) in
+  A.change_equal_slprop (r `pts_to` _) (r `pts_to` _);
   A.return r
 
 (*
