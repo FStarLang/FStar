@@ -2606,6 +2606,22 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                              ((EQualified (["FStar"; "Int"; "Cast"], c)),
                                uu___11) in
                            EApp uu___10)
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::uu___6::e1::[])
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Steel.Effect.Atomic.return" -> translate_expr env1 e1
       | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
           let uu___ =
             let uu___1 = translate_expr env1 head in
