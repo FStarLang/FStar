@@ -23,15 +23,28 @@ module TS = Steel.C.Typestring
 
 val mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0
 
+(** To declare a struct definition, one needs to write
+      let _ = norm norm_c_typedef (mk_c_struct <struct_tag> <struct_fields>).
+    This normalizes to a type (mk_struct_def t fs), where
+      t is an embedding of the struct tag name as a Type0 (see Steel.C.Typestring), and
+      fs is an embedding of the struct fields as a Type0
+    Kremlin then parses this embedding and emits a C struct definition. *)
 let mk_c_struct (tag: Type0) (fields: c_fields) =
   mk_struct_def tag (c_fields_t fields)
 
+(** When we take a pointer &p->foo, p loses access to field foo.
+    To record this fact, we explcitly track the set of excluded fields. *)
 let excluded_fields = s:set string{s "" == false}
 
+(** A [struct' tag fields excluded] is a view type for C structs with
+    tag [tag], fields [fields], and excluded fields [excluded]. *)
 val struct' (tag: Type0) (fields: c_fields) (excluded: excluded_fields): Type0
 
+(** A [struct tag fields] is a view type for C structs with tag [tag] and fields [fields]. *)
 inline_for_extraction
 let struct (tag: Type0) (fields: c_fields) = struct' tag fields emptyset
+
+(** Combinators for constructing struct literals *)
 
 val mk_nil (tag: Type0): struct tag fields_nil
 
@@ -41,8 +54,11 @@ val mk_cons (tag: Type0) (fields: c_fields)
     (requires fields.has_field field == false)
     (ensures fun _ -> True)
 
+(** [struct_pcm_carrier tag fields] is the carrier of the PCM which
+    models structs with tag [tag] and fields [fields]. *)
 val struct_pcm_carrier (tag: Type0) (fields: c_fields): Type0
 
+(** [struct_pcm] is the PCM that models structs with tag [tag] and fields [fields]. *)
 val struct_pcm (tag: Type0) (fields: c_fields): pcm (struct_pcm_carrier tag fields)
 
 /// Reading a struct field
@@ -203,10 +219,12 @@ let typedef_struct (tag: Type0) (fields: c_fields): typedef = {
   is_unit = struct_is_unit tag fields;
 }
 
+(** A connection from a struct to any of its fields *)
 val struct_field
   (tag: Type0) (fields: c_fields) (field: field_of fields)
 : connection (struct_pcm tag fields) (fields.get_field field).pcm
 
+(** extract_field tag fields excluded field v = (v without field field, v.field) *)
 val extract_field
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
   (field: field_of fields)
@@ -368,6 +386,18 @@ let addr_of_struct_field''
          h' (q `pts_to_view` (fields.get_field field).view))
 = addr_of_struct_field_ref #'a #tag #fields #excluded field p
 
+(** Take the address of a field of a struct.
+    The above definitions are set up so that calls to addr_of_struct_field are erased to calls to addr_of_struct_field'' with
+      (fields.get_field field).view_type
+    and
+      (fields.get_field field).carrier
+    fully normalized. This allows the extracted OCaml code to be
+    ML-typable, avoiding Obj.magic and the insertion of spurious casts
+    in the extracted C.
+
+    Calls to [norm] are used to compute the type of values pointed to
+    by the returned reference, and to ensure that the Steel tactic
+    will be able to unify vprops properly. *)
 inline_for_extraction noextract
 let addr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
@@ -404,6 +434,7 @@ let addr_of_struct_field
     (normalize (fields.get_field field).carrier)
     tag fields excluded field p
 
+(** Inverse of unaddr_of_struct_field. *)
 let unaddr_of_struct_field
   (#tag: Type0) (#fields: c_fields) (#excluded: excluded_fields)
   (field: field_of fields)

@@ -3,6 +3,8 @@ module Steel.C.Connection
 open Steel.C.PCM
 open FStar.FunctionalExtensionality
 
+(** PCM morphisms *)
+
 let morph_compose2 (pa: pcm 'a) (pb: pcm 'b) (morph: 'a -> 'b)
   (x1: 'a) (x2: 'a{composable pa x1 x2})
 = squash (
@@ -17,8 +19,10 @@ type morphism (#a #b: Type) (pa: pcm a) (pb: pcm b) = {
   morph: (a ^-> b);
   morph_unit: squash (morph (one pa) == one pb);
   morph_compose: restricted_t a (morph_compose1 pa pb morph);
+  (** Extensionality is needed to show that composition of morphism is associative *)
 }
 
+(** A smart constructor for extensional morphisms *)
 let mkmorphism (#pa: pcm 'a) (#pb: pcm 'b) (morph: 'a -> 'b)
   (morph_unit: squash (morph (one pa) == one pb))
   (morph_compose: (x1:'a -> x2:'a{composable pa x1 x2} -> morph_compose2 pa pb (on_dom 'a morph) x1 x2))
@@ -169,6 +173,15 @@ let fpu_lift_elim (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_s
   (f: frame_preserving_upd p_small x y)
 : Tot (frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y))
 = lift (| x, y, restricted_frame_preserving_upd_intro f |)
+
+(** A connection from a "large" PCM p_large to a "small" PCM p_small
+    is composed of an injective morphism small->large + the left inverse
+    that witnesses its injectivity, along with a way of lifting
+    frame-preserving updates on p_small to frame-preserving updates on
+    p_large.
+    
+    Like morphisms, we require connections be extensional in order to
+    prove the associativity of connection composition. *)
 
 noeq
 type connection (#t_large #t_small: Type) (p_large: pcm t_large) (p_small: pcm t_small) = {

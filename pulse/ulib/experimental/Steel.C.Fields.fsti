@@ -8,6 +8,7 @@ open Steel.C.Opt
 
 module TS = Steel.C.Typestring
 
+(** Used to control normalization *)
 irreducible let c_struct = ()
 irreducible let c_union = ()
 irreducible let c_typedef = ()
@@ -21,6 +22,19 @@ let trivial_typedef: typedef = {
   is_unit = (fun o -> None? o);
 }
 
+(** While possible to encode struct fields as a list of (field name,
+    typedef) pairs, such a representation does not play well with F*'s
+    normalizer due to the fact that many kinds of queries we would like to
+    perform on such lists of struct fields require recursion over that
+    list. This interacts poorly with Steel's normalization tactic, and
+    requires the user to increase fuel, which can be costly. To sidestep
+    this, we essentially encode a list of fields by all of the various
+    types at which we would like to eliminate that list, and build up each
+    elimination at "list"-construction time by exposing combinators
+    {c_fields_nil, c_fields_cons} which, rather than constructing a
+    list, just precompute all of the facts that we could ever need to
+    know in the future about it. All such facts are represented in
+    the following c_fields struct. *)
 //[@@__reduce__]
 noeq type c_fields = {
   //cfields: clist string;
@@ -38,6 +52,11 @@ noeq type c_fields = {
 }
 
 (* Begin for extraction *)
+
+(** The following combinators encode c_fields as a F* type, which
+    allows struct field information to stick around after erasure for
+    Kremlin. For more details about why we need this, see
+    Steel.C.Typestring.fsti and Steel.C.Typenat.fsti *)
 
 val c_fields_t_nil: Type0
 val c_fields_t_cons
@@ -82,6 +101,21 @@ let fields_cons (field: field_t) (td: typedef) (fields: c_fields): c_fields = {
 }
 
 let field_of (fields: c_fields) = field:string{fields.has_field field == true /\ field =!= ""}
+
+(** We divide normalization into two stages:
+      1) First, all typedefs (which ought to have been defined with attribute c_typedef) are unfolded.
+      2) Then, struct/union fields (which ought to have been defined
+         with attributes c_struct and c_union respectively) are unfolded
+         along with a number of helper definitions.
+    This two-step normalization process is used by
+    addr_of_struct_field and addr_of_union_field, and was developed to
+    ensure that, in the case where a struct has structs inside of it,
+    only the outermost typedef representing the outermost struct is
+    unfolded.
+    
+    In retrospect, it's unclear whether this is needed, or even
+    whether [norm] actually carries out such a 2-stage process.
+    TODO see if this can be simplified *)
 
 unfold let unfold_typedefs = [delta_attr [`%c_typedef]]
 

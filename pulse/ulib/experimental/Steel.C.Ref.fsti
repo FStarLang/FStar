@@ -5,20 +5,27 @@ open Steel.C.Connection
 
 #push-options "--print_universes"
 
+(** A [ref' a b] is a reference to some value of type b inside of a "base object" of type a. *)
 val ref' (a: Type u#0) (b: Type u#b) : Type u#b
 
+(** The PCM that governs the values pointed to by a ref' *)
 val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ref' a b) : GTot (pcm b)
 
+(** A [ref a #b q] is a [ref' a b] where the PCM inside the ref' is forced to be q *)
 let ref (a: Type u#0) (#b: Type u#b) (q: pcm b) : Type u#b =
   (r: ref' a b { pcm_of_ref' r == q })
 
 open Steel.Effect
 
+(** r points to PCM carrier value v *)
 val pts_to
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: ref a p) ([@@@smt_fallback] v: b)
 : vprop
 
+(** Given a reference to an element of PCM p and a connection l from p to q,
+    [ref_focus r l] is a reference to an element of q. The intuition is that
+    q represents a "part of" p (e.g. a struct field, union case, or array slice). *)
 val ref_focus
   (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
   (r: ref a p) (#q: pcm c) (l: connection p q)
@@ -39,6 +46,7 @@ val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
 
 module A = Steel.Effect.Atomic
 
+(** Allocate a reference containing value x. *)
 val ref_alloc
   (#a:Type0) (p: pcm a) (x: a)
 : Steel (ref a p)
@@ -47,6 +55,7 @@ val ref_alloc
     (requires fun _ -> p_refine p x)
     (ensures fun _ _ _ -> True)
 
+(** Take a pointer to a "substructure" of a reference. *)
 val focus (#p: pcm 'b) (r: ref 'a p)
   (#q: pcm 'c)
   (l: connection p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
@@ -58,6 +67,7 @@ val focus (#p: pcm 'b) (r: ref 'a p)
 
 module M = Steel.Memory
 
+(** Inverse of focus. *)
 val unfocus (#opened:M.inames)
   (#p: pcm 'b)
   (#q: pcm 'c)
@@ -69,6 +79,7 @@ val unfocus (#opened:M.inames)
     (requires fun _ -> r == ref_focus r' l)
     (ensures fun _ _ _ -> True)
 
+(** Split the permissions on a reference into two halves. *)
 val split (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (xy x y: Ghost.erased b)
 : Steel unit
     (r `pts_to` xy)
@@ -76,11 +87,13 @@ val split (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (xy x y: Ghost.erased b)
     (fun _ -> composable p x y /\ xy == Ghost.hide (op p x y))
     (fun _ _ _ -> True)
 
+(** Inverse of split. *)
 val gather (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (x y: Ghost.erased b)
 : SteelT (_:unit{composable p x y})
     ((r `pts_to` x) `star` (r `pts_to` y))
     (fun _ -> r `pts_to` op p x y)
 
+(** Read a PCM carrier value. *)
 val ref_read
   (#a:Type) (#b:Type) (#p: pcm b) (#x: Ghost.erased b) (r: ref a p)
 : Steel b
@@ -89,11 +102,13 @@ val ref_read
     (requires fun _ -> True)
     (ensures fun _ x' _ -> compatible p x x')
 
+(** Write a PCM carrier value. *)
 val ref_upd
   (#a:Type) (#b:Type) (#p: pcm b)
   (r: ref a p) (x: Ghost.erased b { ~ (Ghost.reveal x == one p) }) (y: Ghost.erased b) (f: frame_preserving_upd p x y)
 : SteelT unit (r `pts_to` x) (fun _ -> r `pts_to` y)
 
+(** Construct a write from a frame-preserving update. *)
 val base_fpu
   (#a: Type)
   (p: pcm a)
@@ -106,6 +121,10 @@ val base_fpu
 let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
   (x: a { p x })
 
+(** PCM carrier values are cumbersome to work with directly. To
+    abstract over them, we define "view"s, which are essentially
+    lossless partial functions from PCM carrier values to "view
+    types".  *)
 noeq
 type sel_view
   (#carrier: Type u#a)
@@ -113,11 +132,24 @@ type sel_view
   (view: Type u#b)
   (can_view_unit:bool)
 = {
+  (** When is a PCM carrier value viewable? *)
   to_view_prop: (carrier -> Tot prop);
   to_view: (refine carrier to_view_prop -> Tot view);
+  (** Construct a PCM carrier value from a view (used for writes) *)
   to_carrier: (view -> Tot (refine carrier to_view_prop));
+  (** If can_view_unit is false, then the unit of the PCM must be unviewable.
+      If can_view_unit is true, all bets are off.
+      This was originally used to allow viewing empty structs (which
+      would have can_view_unit := true).  Empty structs aren't useful
+      in C programming, but they can temporarily arise in our model
+      after one has taken pointers to every field of a nonempty
+      struct.
+      We eventually found a different way of coping with this
+      situation (see Steel.C.StructLiteral for details), so we in fact use (can_view_unit := false) everywhere
+      and we could get rid of can_view_unit entirely. *)
   to_carrier_not_one:
     squash (~ can_view_unit ==> ~ (exists x. to_carrier x == one p) /\ ~ (to_view_prop (one p)));
+  (** The PCM carrier value corresponding to a view must be stable under composition with surrounding frames. *)
   to_view_frame:
     (x: view) ->
     (frame: carrier) ->
@@ -125,6 +157,8 @@ type sel_view
     (requires (composable p (to_carrier x) frame))
     (ensures (to_view_prop (op p (to_carrier x) frame) /\ to_view (op p (to_carrier x) frame) == x));
 }
+
+(** Every sel_view gives rise to a selector, which we can use to hide even the view-type values. *)
 
 let weaken_view (#p: pcm 'a) (v: sel_view p 'b false): sel_view p 'b true = {
   to_view_prop = v.to_view_prop;
