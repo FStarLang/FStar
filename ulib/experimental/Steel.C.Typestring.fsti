@@ -1,5 +1,10 @@
 module Steel.C.Typestring
 
+(** Suppose [struct (t : string) (fields : struct_fields)] represents the type of struct values.
+    Then, when extracting values of type [ref (struct t fields)], the tag t is lost.
+    To make sure this information sticks around, this module provides
+    an encoding of strings like t as types. *)
+
 val ca: Type0
 val cb: Type0
 val cc: Type0
