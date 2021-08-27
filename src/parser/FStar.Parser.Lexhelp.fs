@@ -151,7 +151,7 @@ let keywords =
     ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
-    ALWAYS, "_elim_exists_",ELIM_EXISTS;
+    ALWAYS, "eliminate"  ,ELIM;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -168,6 +168,7 @@ let keywords =
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
     ALWAYS, "instance"   ,INSTANCE;
+    ALWAYS, "introduce"  ,INTRO;
     ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
@@ -194,14 +195,12 @@ let keywords =
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "synth"      ,SYNTH;
     ALWAYS, "then"       ,THEN;
-    ALWAYS, "_to_"       ,TO;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;
     ALWAYS, "unfoldable" ,UNFOLDABLE;
-    ALWAYS, "_using_"    ,USING;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;

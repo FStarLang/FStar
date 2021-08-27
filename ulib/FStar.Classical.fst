@@ -230,6 +230,28 @@ let and_elim
     bind_squash p_and_q (fun (And p q) ->
     f (return_squash p) (return_squash q)))
 
+let forall_intro_
+      (a:Type)
+      (p:a -> Type)
+      (f: (x:a -> Tot (squash (p x))))
+  : Tot (squash (forall x. p x))
+  = let open FStar.Squash in
+    let f' (x:a)
+      : GTot (squash (p x))
+      = f x
+    in
+    return_squash (squash_double_arrow (return_squash f'))
+
+let exists_intro_
+        (a:Type)
+        (p:a -> Type)
+        (v:a)
+        (x: squash (p v))
+  : Tot (squash (exists x. p x))
+  = let open FStar.Squash in
+    let p : (v:a & squash (p v)) = (| v, x |) in
+    squash_double_sum (return_squash p)
+
 let implies_intro
         (p:Type)
         (q:Type)
@@ -241,3 +263,25 @@ let implies_intro
       = f (return_squash x)
     in
     return_squash (squash_double_arrow (return_squash f'))
+
+let or_intro_left
+        (p:Type)
+        (q:Type)
+        (f:squash p)
+  : Tot (squash (p \/ q))
+  = ()
+
+let or_intro_right
+        (p:Type)
+        (q:Type)
+        (f:squash q)
+  : Tot (squash (p \/ q))
+  = ()
+
+let and_intro
+        (p:Type)
+        (q:Type)
+        (f:squash p)
+        (g:squash q)
+  : Tot (squash (p /\ q))
+  = ()
