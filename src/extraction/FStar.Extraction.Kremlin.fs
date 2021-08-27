@@ -1304,6 +1304,10 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.C.StdInt.mk_size_t" ->
       translate_expr env i
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
+    when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
+    translate_expr env e
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 

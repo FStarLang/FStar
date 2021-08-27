@@ -24,25 +24,26 @@ module U32 = FStar.UInt32
 /// TODO: Add fractional permissions to this array library
 
 /// The contents of an array of type [t] is a sequence of values of type [t]
-let contents (t:Type u#0) = FStar.Seq.seq t
-/// Returns the length of the array. Usable for specification and proof purposes,
-/// as modeled by the GTot effect
-let length #t (r:contents t) : GTot nat = Seq.length r
+let contents (t:Type u#0) (n:nat) = FStar.Seq.lseq t n
 
 /// Abstract datatype for a Steel array of type [t]
 val array (t:Type u#0) : Type u#0
+
+/// Returns the length of the array. Usable for specification and proof purposes,
+/// as modeled by the GTot effect
+val length (#t:_) (r:array t) : GTot nat
 
 /// Separation logic predicate indicating the validity of the array in the current memory
 val is_array (#a:Type0) (r:array a) : slprop u#1
 
 /// Selector for Steel arrays. It returns the contents in memory of the array
-val array_sel (#a:Type0) (r:array a) : selector (contents a) (is_array r)
+val array_sel (#a:Type0) (r:array a) : selector (contents a (length r)) (is_array r)
 
 /// Combining the elements above to create an array vprop
 [@@ __steel_reduce__]
 let varray' #a r : vprop' =
   {hp = is_array r;
-   t = Seq.seq a;
+   t = contents a (length r);
    sel = array_sel r}
 
 [@@ __steel_reduce__]
@@ -60,10 +61,12 @@ let asel (#a:Type) (#p:vprop) (r:array a)
 /// Allocates an array of length n, where all elements of the array initially are [x]
 val malloc (#t:Type) (x:t) (n:U32.t)
   : Steel (array t)
-             emp
-             (fun r -> varray r)
-             (requires fun _ -> True)
-             (ensures fun _ r h1 -> asel r h1 == Seq.create (U32.v n) x)
+          emp
+          (fun r -> varray r)
+          (requires fun _ -> True)
+          (ensures fun _ r h1 ->
+            length r == U32.v n /\
+            asel r h1 == Seq.create (U32.v n) x)
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
@@ -71,9 +74,9 @@ val index (#t:Type) (r:array t) (i:U32.t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
-             (requires fun h -> U32.v i < length (asel r h))
+             (requires fun h -> U32.v i < length r)
              (ensures fun h0 x h1 ->
-               U32.v i < length (asel r h1) /\
+               U32.v i < length r /\
                asel r h0 == asel r h1 /\
                x == Seq.index (asel r h1) (U32.v i))
 
@@ -83,9 +86,9 @@ val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
   : Steel unit
              (varray r)
              (fun _ -> varray r)
-             (requires fun h -> U32.v i < length (asel r h))
+             (requires fun h -> U32.v i < length r)
              (ensures fun h0 _ h1 ->
-               U32.v i < length (asel r h0) /\
+               U32.v i < length r /\
                asel r h1 == Seq.upd (asel r h0) (U32.v i) x)
 
 /// Frees array [r], as long as it initially was a valid array in memory

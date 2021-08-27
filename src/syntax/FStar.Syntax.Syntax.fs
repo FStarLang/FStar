@@ -22,7 +22,7 @@ open FStar.Compiler.List
 
 (* Prims is used for bootstrapping *)
 open Prims
-open FStar 
+open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Range
@@ -299,6 +299,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
+  | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t<term>
 
 and binding =
