@@ -4519,7 +4519,7 @@ and (desugar_term_maybe_top :
                       let head =
                         let uu___3 =
                           FStar_Syntax_Syntax.lid_as_fv
-                            FStar_Parser_Const.or_elim__lid
+                            FStar_Parser_Const.or_elim_lid
                             FStar_Syntax_Syntax.delta_equational
                             FStar_Pervasives_Native.None in
                         FStar_Syntax_Syntax.fv_to_tm uu___3 in

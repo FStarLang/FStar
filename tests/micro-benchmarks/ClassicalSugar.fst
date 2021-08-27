@@ -187,16 +187,30 @@ let test_forall_implies a (p:a -> Type) (q:a -> Type) (f: (x:a -> squash (p x) -
   : squash (forall x. p x ==> q x)
   = introduce forall x. p x ==> q x
     with introduce _ ==> _
-         with px. f x px
+         with px. (
+           f x px
+         )
 
 let test_forall_implies_2_1 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
   : Lemma (forall x. p x ==> q x)
   = introduce forall x. p x ==> q x
     with introduce _ ==> _
-         with _. f x
+         with _. (
+           assert (p x);
+           f x;
+           assert (q x)
+         )
 
 let test_forall_implies_2_2 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
   : Lemma (forall x. p x ==> q x)
   = introduce forall x. _
     with introduce p x ==> q x
          with _. f x
+
+let test_forall_implies_2_3 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
+  : Lemma (forall x. p x ==> q x)
+  = introduce forall x. _
+    with introduce p x ==> _
+         with _. (
+           f x <: squash (q x)
+         )

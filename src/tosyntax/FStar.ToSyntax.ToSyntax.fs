@@ -2003,7 +2003,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e1 = desugar_term env_x e1 in
       let env_y, [y] = desugar_binders env [y] in
       let e2 = desugar_term env_y e2 in
-      let head = S.fv_to_tm (S.lid_as_fv C.or_elim__lid S.delta_equational None) in
+      let head = S.fv_to_tm (S.lid_as_fv C.or_elim_lid S.delta_equational None) in
       let args = [(p, None);
                   (q, None);
                   (r, None);

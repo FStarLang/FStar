@@ -1529,7 +1529,8 @@ let (collect_one :
              | FStar_Parser_AST.IntroForall (bs, p, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1539,7 +1540,8 @@ let (collect_one :
              | FStar_Parser_AST.IntroExists (bs, t, vs, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1550,7 +1552,8 @@ let (collect_one :
              | FStar_Parser_AST.IntroImplies (p, q, x, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1561,7 +1564,8 @@ let (collect_one :
              | FStar_Parser_AST.IntroOr (b, p, q, r) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1571,7 +1575,8 @@ let (collect_one :
              | FStar_Parser_AST.IntroAnd (p, q, r, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1582,7 +1587,8 @@ let (collect_one :
              | FStar_Parser_AST.ElimForall (bs, p, vs) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1592,7 +1598,8 @@ let (collect_one :
              | FStar_Parser_AST.ElimExists (bs, p, q, b, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1604,7 +1611,8 @@ let (collect_one :
              | FStar_Parser_AST.ElimImplies (p, q, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1614,7 +1622,8 @@ let (collect_one :
              | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);
@@ -1627,7 +1636,8 @@ let (collect_one :
              | FStar_Parser_AST.ElimOr (p, q, r, x, e, y, e') ->
                  ((let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.lid_of_str "FStar.Classical" in
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
                        (false, uu___6) in
                      P_dep uu___5 in
                    add_to_parsing_data uu___4);

@@ -1137,6 +1137,8 @@ and p_binders_list (is_atomic: bool) (bs: list<binder>): list<document> = List.m
 
 and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow break1 (p_binders_list is_atomic bs)
 
+and p_binders_sep (bs: list<binder>): document = separate_map space (fun x -> x) (p_binders_list true bs)
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1377,16 +1379,96 @@ and p_noSeqTerm' ps pb e = match e.tm with
          (nest 2 <| hardline
                     ^^ p_noSeqTermAndComment false false init ^^ str ";" ^^ hardline
                     ^^ separate_map_last hardline p_calcStep steps)
+
+  | IntroForall (xs, p, e) ->
+    let p = p_noSeqTermAndComment false false p in
+    let e = p_noSeqTermAndComment false false e in
+    let xs = p_binders_sep xs in
+    str "introduce forall" ^^ space ^^ xs ^^ space ^^ str "." ^^ space ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ e
+
+  | IntroExists(xs, p, vs, e) ->
+    let p = p_noSeqTermAndComment false false p in
+    let e = p_noSeqTermAndComment false false e in
+    let xs = p_binders_sep xs in
+    str "introduce" ^^ space ^^ str "exists" ^^ space ^^ xs ^^ str "." ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ (separate_map space p_atomicTerm vs) ^^ hardline ^^
+    str "and" ^^ space ^^ e
+
+  | IntroImplies(p, q, x, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    let x = p_binders_sep [x] in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ x ^^ str "." ^^ space ^^ e
+
+  | IntroOr(b, p, q, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "\/" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ (if b then str "Left" else str "Right") ^^ space ^^ e
+
+  | IntroAnd(p, q, e1, e2) ->
+    let p = p_tmFormula p in
+    let q = p_tmTuple q in
+    let e1 = p_noSeqTermAndComment false false e1 in
+    let e2 = p_noSeqTermAndComment false false e2 in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ e1 ^^ hardline ^^
+    str "and" ^^ space ^^ e2
+
+  | ElimForall(xs, p, vs) ->
+    let xs = p_binders_sep xs in
+    let p = p_noSeqTermAndComment false false p in
+    let vs = separate_map space p_atomicTerm vs in
+    str "eliminate" ^^ space ^^ str "forall" ^^ space ^^ xs ^^ str "." ^^ space ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ vs
+
   | ElimExists (bs, p, q, b, e) ->
-    let head = str "elim_exists" ^^ space ^^ p_binders true bs ^^ str "." in
+    let head = str "eliminate exists" ^^ space ^^ p_binders_sep bs ^^ str "." in
     let p = p_noSeqTermAndComment false false p in
     let q = p_noSeqTermAndComment false false q in
     let e = p_noSeqTermAndComment false false e in
       head ^^ hardline ^^
       p ^^ hardline ^^
-      str "to" ^^ space ^^ q ^^ hardline ^^
-      str "using" ^^ space ^^ (p_binders true [b]) ^^ str "." ^^ hardline ^^
+      str "returns" ^^ space ^^ q ^^ hardline ^^
+      str "with" ^^ space ^^ (p_binders_sep [b]) ^^ str "." ^^ hardline ^^
       e
+
+  | ElimImplies(p, q, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ e
+
+  | ElimOr(p, q, r, x, e1, y, e2) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let r = p_noSeqTermAndComment false false r in
+    let x = p_binders_sep [x] in
+    let e1 = p_noSeqTermAndComment false false e1 in
+    let y = p_binders_sep [y] in
+    let e2 = p_noSeqTermAndComment false false e2 in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "\\/" ^^ space ^^ q ^^ hardline ^^
+    str "returns" ^^ space ^^ r ^^ hardline ^^
+    str "with" ^^ space ^^ x ^^ space ^^ str "." ^^ space ^^ e1 ^^ hardline ^^
+    str "and" ^^ space ^^ y ^^ space ^^ str "." ^^ space ^^ e2
+
+  | ElimAnd(p, q, r, x, y, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmTuple q in
+    let r = p_noSeqTermAndComment false false r in
+    let xy = p_binders_sep [x; y] in
+    let e = p_noSeqTermAndComment false false e in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
+    str "returns" ^^ space ^^ r ^^ hardline ^^
+    str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
 
   | _ -> p_typ ps pb e
 

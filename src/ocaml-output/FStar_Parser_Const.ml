@@ -501,19 +501,22 @@ let (calc_init_lid : FStar_Ident.lid) = calc_lid "calc_init"
 let (calc_step_lid : FStar_Ident.lid) = calc_lid "calc_step"
 let (calc_finish_lid : FStar_Ident.lid) = calc_lid "calc_finish"
 let (calc_push_impl_lid : FStar_Ident.lid) = calc_lid "calc_push_impl"
-let (classical_lid : Prims.string -> FStar_Ident.lid) =
+let (classical_sugar_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
-    FStar_Ident.lid_of_path ["FStar"; "Classical"; i]
+    FStar_Ident.lid_of_path ["FStar"; "Classical"; "Sugar"; i]
       FStar_Compiler_Range.dummyRange
-let (forall_intro_lid : FStar_Ident.lid) = classical_lid "forall_intro_"
-let (exists_intro_lid : FStar_Ident.lid) = classical_lid "exists_intro_"
-let (implies_intro_lid : FStar_Ident.lid) = classical_lid "implies_intro"
-let (or_intro_left_lid : FStar_Ident.lid) = classical_lid "or_intro_left"
-let (or_intro_right_lid : FStar_Ident.lid) = classical_lid "or_intro_right"
-let (and_intro_lid : FStar_Ident.lid) = classical_lid "and_intro"
-let (forall_elim_lid : FStar_Ident.lid) = classical_lid "forall_elim"
+let (forall_intro_lid : FStar_Ident.lid) = classical_sugar_lid "forall_intro"
+let (exists_intro_lid : FStar_Ident.lid) = classical_sugar_lid "exists_intro"
+let (implies_intro_lid : FStar_Ident.lid) =
+  classical_sugar_lid "implies_intro"
+let (or_intro_left_lid : FStar_Ident.lid) =
+  classical_sugar_lid "or_intro_left"
+let (or_intro_right_lid : FStar_Ident.lid) =
+  classical_sugar_lid "or_intro_right"
+let (and_intro_lid : FStar_Ident.lid) = classical_sugar_lid "and_intro"
+let (forall_elim_lid : FStar_Ident.lid) = classical_sugar_lid "forall_elim"
 let (bind_squash_exists_lid : FStar_Ident.lid) =
-  classical_lid "bind_squash_exists"
-let (implies_elim_lid : FStar_Ident.lid) = classical_lid "implies_elim"
-let (or_elim__lid : FStar_Ident.lid) = classical_lid "or_elim_"
-let (and_elim_lid : FStar_Ident.lid) = classical_lid "and_elim"
+  classical_sugar_lid "bind_squash_exists"
+let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
+let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
+let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"

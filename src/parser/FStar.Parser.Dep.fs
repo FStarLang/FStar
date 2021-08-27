@@ -995,46 +995,46 @@ let collect_one
             end
 
         | IntroForall (bs, p, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
           collect_binders bs;
           collect_term p;
           collect_term e
           
         | IntroExists(bs, t, vs, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
           collect_binders bs;
           collect_term t;
           List.iter collect_term vs;
           collect_term e
 
         | IntroImplies(p, q, x, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
           collect_term p;
           collect_term q;
           collect_binder x;
           collect_term e
           
         | IntroOr(b, p, q, r) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;          
           collect_term r
           
         | IntroAnd(p, q, r, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;          
           collect_term r;
           collect_term e          
 
         | ElimForall(bs, p, vs) ->
-           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
            collect_binders bs;
            collect_term p;
            List.iter collect_term vs
             
         | ElimExists(bs, p, q, b, e) ->
-           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
            collect_binders bs;
            collect_term p;
            collect_term q;
@@ -1042,13 +1042,13 @@ let collect_one
            collect_term e
 
         | ElimImplies(p, q, e) -> 
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));        
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
           collect_term p;
           collect_term q;
           collect_term e
 
         | ElimAnd(p, q, r, x, y, e) -> 
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
           collect_term r;          
@@ -1057,7 +1057,7 @@ let collect_one
           collect_term e
 
         | ElimOr(p, q, r, x, e, y, e') -> 
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical")));
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
           collect_term p;
           collect_term q;
           collect_term r;
