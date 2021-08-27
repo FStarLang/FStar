@@ -21,6 +21,15 @@ open Steel.C.Typestring
 
 module U64 = FStar.UInt64
 
+(** In this file we demonstrate how Steel could be used to manipulate the following data type used in Hacl*:
+      https://github.com/project-everest/hacl-star/blob/master/code/poly1305/Hacl.Impl.Poly1305.fsti#L18
+    This Low* definition amounts to the struct definition
+      struct poly1305_ctx { uint64_t limbs[5]; uint64_t precomp[20]; };
+    and, with our new model of structs and arrays and pointer-to-field, can be expresesd directly in Steel.
+
+    See PointStruct.fst for more detailed explanations of the various definitions needed below.
+*)
+
 [@@c_typedef]
 noextract inline_for_extraction
 let u64: typedef = {
@@ -47,13 +56,17 @@ noextract inline_for_extraction let twenty' = normalize (nat_t_of_nat 20)
 noextract inline_for_extraction let twenty: size_t_of twenty' = mk_size_t (U32.uint_to_t 20)
 #pop-options
 
+(** uint64_t[5] *)
 [@@c_struct]
 noextract inline_for_extraction
 let five_u64s: typedef = array_typedef_sized U64.t five' five
 
+(** uint64_t[20] *)
 [@@c_struct]
 noextract inline_for_extraction
 let twenty_u64s: typedef = array_typedef_sized U64.t twenty' twenty
+
+(** struct comp { uint64_t limbs[5]; uint64_t precomp[20]; }; *)
 
 [@@c_struct]//;c_typedef]
 noextract inline_for_extraction
@@ -75,8 +88,12 @@ let comp_pcm = struct_pcm comp_tag comp_fields
 noextract inline_for_extraction
 let c_comp: typedef = typedef_struct comp_tag comp_fields
 
-//let x : unit -> norm norm_list (mk_c_struct comp_tag comp_fields) = fun _ -> admit(); magic()
 let _ = norm norm_c_typedef (mk_c_struct comp_tag comp_fields)
+
+(** To demonstrate how our model could be used, we write a simple
+    function that takes pointers to the limbs and precomp fields and
+    passes them to helper functions (which in this case simply set on
+    element of the corresponding array to zero) *)
 
 let do_something_with_limbs
   (a: array 'a U64.t)
@@ -85,13 +102,7 @@ let do_something_with_limbs
     (fun _ -> varray a)
     (requires fun _ -> length a == 5)
     (ensures fun _ _ _ -> True)
-= // let alar = split a (mk_size_t (U32.uint_to_t 1)) in
-  // let q = split_left a (mk_size_t (U32.uint_to_t 1)) in
-  // let p = ref_of_array q in
-  // p `opt_write_sel` (U64.uint_to_t 0);
-  // array_of_ref q p;
-  // join' (GPair?.fst alar) (GPair?.snd alar);
-  upd a (mk_size_t (U32.uint_to_t 2)) (U64.uint_to_t 0);
+= upd a (mk_size_t (U32.uint_to_t 2)) (U64.uint_to_t 0);
   return ()
 
 let do_something_with_precomp
