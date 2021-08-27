@@ -2462,6 +2462,10 @@ let (tforall : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.forall_lid
     (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
+let (texists : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fvar FStar_Parser_Const.exists_lid
+    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
+    FStar_Pervasives_Native.None
 let (t_haseq : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.haseq_lid
     FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
@@ -2610,6 +2614,61 @@ let (close_forall_no_univs :
              if uu___
              then f1
              else mk_forall_no_univ b.FStar_Syntax_Syntax.binder_bv f1) bs f
+let (mk_exists_aux :
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.bv ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun fa ->
+    fun x ->
+      fun body ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStar_Syntax_Syntax.iarg x.FStar_Syntax_Syntax.sort in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStar_Syntax_Syntax.mk_binder x in
+                      [uu___8] in
+                    abs uu___7 body
+                      (FStar_Pervasives_Native.Some (residual_tot ktype0)) in
+                  FStar_Syntax_Syntax.as_arg uu___6 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            (fa, uu___2) in
+          FStar_Syntax_Syntax.Tm_app uu___1 in
+        FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
+let (mk_exists_no_univ :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+  = fun x -> fun body -> mk_exists_aux texists x body
+let (mk_exists :
+  FStar_Syntax_Syntax.universe ->
+    FStar_Syntax_Syntax.bv ->
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+  =
+  fun u ->
+    fun x ->
+      fun body ->
+        let texists1 = FStar_Syntax_Syntax.mk_Tm_uinst texists [u] in
+        mk_exists_aux texists1 x body
+let (close_exists_no_univs :
+  FStar_Syntax_Syntax.binder Prims.list ->
+    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+  =
+  fun bs ->
+    fun f ->
+      FStar_Compiler_List.fold_right
+        (fun b ->
+           fun f1 ->
+             let uu___ = FStar_Syntax_Syntax.is_null_binder b in
+             if uu___
+             then f1
+             else mk_exists_no_univ b.FStar_Syntax_Syntax.binder_bv f1) bs f
 let (is_wild_pat :
   FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t -> Prims.bool) =
   fun p ->
