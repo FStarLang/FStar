@@ -18,24 +18,28 @@ module Steel.Array
 
 open Steel.Effect.Atomic
 open Steel.Reference
+open FStar.Ghost
+let array t = l:erased nat & ref (Seq.lseq t l)
 
-let array t = ref (Seq.seq t)
+let length #t (x:array t) = dfst x
+let is_array r = ptr (dsnd r)
+let array_sel r = ptr_sel (dsnd r)
 
-let is_array r = ptr r
-let array_sel r = ptr_sel r
-
-let malloc x n =
-  let s = Seq.create (U32.v n) x in
-  malloc s
+let malloc #a x n =
+  let l : erased nat = hide (U32.v n) in
+  let s : Seq.lseq a l = Seq.create (U32.v n) x in
+  let p : ref (Seq.lseq a l) = malloc s in
+  let x : array a = (| l, p |) in
+  Steel.Effect.Atomic.return x
 
 let index r i =
   let h = get() in
-  let s = read r in
+  let s = read (dsnd r) in
   Seq.index s (U32.v i)
 
 let upd r i x =
-  let s = read r in
+  let s = read (dsnd r) in
   let s' = Seq.upd s (U32.v i) x in
-  write r s'
+  write (dsnd r) s'
 
-let free r = free r
+let free r = free (dsnd r)
