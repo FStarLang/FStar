@@ -195,6 +195,11 @@ Guidelines for the changelog:
 
 ## Syntax
 
+   * `eliminate` and `introduce` are now keywords. They are used to
+     implement sugar for manipulating classical logic connectives, as
+     documented here:
+     https://github.com/FStarLang/FStar/wiki/Sugar-for-manipulating-connectives-in-classical-logic
+
    * Record opening syntax: Inspired in part by Agda's records as
      modules, you can now write
 
