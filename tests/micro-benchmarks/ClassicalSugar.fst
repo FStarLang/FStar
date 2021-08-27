@@ -1,18 +1,9 @@
 module ClassicalSugar
-assume
-val p (x y:nat) : Type0
 
-assume
-val trans (x y z:nat)
-  : Lemma
-    (requires p x y /\ p y z)
-    (ensures p x z)
-
-assume
-val trans_squash (#x #y #z:nat) (_:squash (p x y /\ p y z))
-  : squash (p x z)
-
-let test_elim_exists_1 (x z:nat)
+let test_elim_exists_1 p (x z:nat)
+                       (trans: (x:nat -> y:nat -> z:nat -> 
+                                Lemma (requires p x y /\ p y z)
+                                      (ensures p x z)))
   : Lemma
     (requires
       (exists y. p x y /\ p y z))
@@ -24,16 +15,22 @@ let test_elim_exists_1 (x z:nat)
     with _.
        trans x y z
 
-let test_elim_exists_2 (x z:nat) (_:squash (exists y. p x y /\ p y z))
+let test_elim_exists_2 p x z
+                       (_:squash (exists y. p x y /\ p y z))
+                       (trans : (#x:_ -> #y:_ -> #z:_ -> squash (p x y /\ p y z) -> squash (p x z)))
   : squash (p x z)
   = eliminate exists (y:nat).
          p x y /\ p y z
     returns p x z
     with pf. (
-       trans_squash pf
+       trans pf
     )
 
-let test_elim_exists_3 (x z:nat)
+let test_elim_exists_3 p 
+                       (trans: (x:nat -> y:nat -> z:nat -> 
+                                Lemma (requires p x y /\ p y z)
+                                      (ensures p x z)))
+                       (x z:nat)
   : Lemma
     (requires
       (exists y0 y1. p x y0 /\ p y0 y1 /\ p y1 z))
@@ -47,7 +44,7 @@ let test_elim_exists_3 (x z:nat)
        trans x y0 z
     )
 
-let test_elim_forall_1 (_:squash (forall x y. p x y))
+let test_elim_forall_1 p (_:squash (forall x y. p x y))
   : squash (p 0 1)
   = eliminate forall x y. p x y
     with 0 1
