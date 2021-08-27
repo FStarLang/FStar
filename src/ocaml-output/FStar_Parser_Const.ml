@@ -505,5 +505,15 @@ let (classical_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
     FStar_Ident.lid_of_path ["FStar"; "Classical"; i]
       FStar_Compiler_Range.dummyRange
+let (forall_intro_lid : FStar_Ident.lid) = classical_lid "forall_intro_"
+let (exists_intro_lid : FStar_Ident.lid) = classical_lid "exists_intro_"
+let (implies_intro_lid : FStar_Ident.lid) = classical_lid "implies_intro"
+let (or_intro_left_lid : FStar_Ident.lid) = classical_lid "or_intro_left"
+let (or_intro_right_lid : FStar_Ident.lid) = classical_lid "or_intro_right"
+let (and_intro_lid : FStar_Ident.lid) = classical_lid "and_intro"
+let (forall_elim_lid : FStar_Ident.lid) = classical_lid "forall_elim"
 let (bind_squash_exists_lid : FStar_Ident.lid) =
   classical_lid "bind_squash_exists"
+let (implies_elim_lid : FStar_Ident.lid) = classical_lid "implies_elim"
+let (or_elim__lid : FStar_Ident.lid) = classical_lid "or_elim_"
+let (and_elim_lid : FStar_Ident.lid) = classical_lid "and_elim"

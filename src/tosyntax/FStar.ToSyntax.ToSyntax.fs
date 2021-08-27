@@ -223,6 +223,15 @@ let rec free_type_vars_b env binder = match binder.b with
     (env, [])
   | NoName t ->
     (env, free_type_vars env t)
+
+and free_type_vars_bs env binders =
+    List.fold_left
+      (fun (env, free) binder ->
+        let env, f = free_type_vars_b env binder in
+        env, f@free)
+      (env, [])
+      binders
+
 and free_type_vars env t = match (unparen t).tm with
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
@@ -275,9 +284,7 @@ and free_type_vars env t = match (unparen t).tm with
     free@free_type_vars env body
 
   | Product(binders, body) ->
-    let env, free = List.fold_left (fun (env, free) binder ->
-      let env, f = free_type_vars_b env binder in
-      env, f@free) (env, []) binders in
+    let env, free = free_type_vars_bs env binders in
     free@free_type_vars env body
 
   | Project(t, _) -> free_type_vars env t
@@ -294,16 +301,41 @@ and free_type_vars env t = match (unparen t).tm with
                             @ free_type_vars env just
                             @ free_type_vars env next) steps
 
+  | ElimForall  (bs, t, ts) ->
+    let env', free = free_type_vars_bs env bs in
+    free@
+    free_type_vars env' t@
+    List.collect (free_type_vars env') ts
+
   | ElimExists (binders, p, q, y, e) ->
-    let env', free = List.fold_left (fun (env, free) binder ->
-      let env, f = free_type_vars_b env binder in
-      env, f@free) (env, []) binders in
+    let env', free = free_type_vars_bs env binders in
     let env'', free' = free_type_vars_b env' y in
     free@
     free_type_vars env' p@
     free_type_vars env  q@
     free'@
     free_type_vars env'' e
+
+  | ElimImplies (p, q, e) ->
+    free_type_vars env p@
+    free_type_vars env q@
+    free_type_vars env e
+
+  | ElimOr(p, q, r, x, e, x', e') ->
+    free_type_vars env p@
+    free_type_vars env q@
+    free_type_vars env r@
+    (let env', free = free_type_vars_b env x in
+     free@free_type_vars env' e)@
+    (let env', free = free_type_vars_b env x' in
+     free@free_type_vars env' e')
+
+  | ElimAnd(p, q, r, x, y, e) ->
+    free_type_vars env p@
+    free_type_vars env q@
+    free_type_vars env r@
+    (let env', free = free_type_vars_bs env [x;y] in
+     free@free_type_vars env' e)
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
@@ -949,6 +981,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
   let noaqs = [] in
   let join_aqs aqs = List.flatten aqs in
   let setpos e = {e with pos=top.range} in
+  let desugar_binders env binders =
+      let env, bs_rev =
+          List.fold_left
+            (fun (env, bs) b ->
+              let bb = desugar_binder env b in
+              let b, env = as_binder env b.aqual bb in
+              env, b::bs)
+            (env, [])
+            binders
+      in
+      env, List.rev bs_rev
+  in
+  let unqual_bv_of_binder b =
+      match b with
+      | {binder_bv=x; binder_qual=None; binder_attrs=[]} -> x
+      | _ ->
+        raise_error (Fatal_UnexpectedTerm, "Unexpected qualified binder in ELIM_EXISTS") (range_of_bv b.binder_bv)
+  in
   begin match (unparen top).tm with
     | Wild -> setpos tun, noaqs
 
@@ -1718,19 +1768,151 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] top.range in
       desugar_term_maybe_top top_level env e
 
-    | ElimExists (binders, p, q, binder, e) -> (
-      let desugar_binders env binders =
-        let env, bs_rev =
-          List.fold_left
-            (fun (env, bs) b ->
-              let bb = desugar_binder env b in
-              let b, env = as_binder env b.aqual bb in
-              env, b::bs)
-            (env, [])
-            binders
-        in
-        env, List.rev bs_rev
+    | IntroForall (bs, p, e) ->
+      let env', bs = desugar_binders env bs in
+      let p = desugar_term env' p in
+      let e = desugar_term env' e in
+      (*
+         forall_intro a0 (fun x0 -> forall xs. p) (fun x0 ->
+         forall_intro a1 (fun x1 -> forall xs. p) (fun x1 ->
+         ...
+         forall_intro an (fun xn -> p) (fun xn -> e)))
+       *)
+      let mk_forall_intro t p pf =
+        let head = S.fv_to_tm (S.lid_as_fv C.forall_intro_lid S.delta_equational None) in
+        let args = [(t, None);
+                    (p, None);
+                    (pf, None)] in
+        S.mk_Tm_app head args top.range
       in
+      let rec aux bs =
+        match bs with
+        | [] ->
+          let sq_p = U.mk_squash U_unknown p in
+          U.ascribe e (Inl sq_p, None)
+
+        | b::bs ->
+          let tail = aux bs in
+          let x = unqual_bv_of_binder b in
+          mk_forall_intro
+            x.sort
+            (U.abs [b] (U.close_forall_no_univs bs p) None)
+            (U.abs [b] tail None)
+      in
+      aux bs, noaqs
+
+    | IntroExists (bs, p, vs, e) ->
+      let env', bs = desugar_binders env bs in
+      let p = desugar_term env' p in
+      let vs = List.map (desugar_term env) vs in
+      let e = desugar_term env e in
+      (*
+        (exists_intro a1 (fun x1 -> exists xs. p)
+         (exists_intro a2 (fun x2 -> exists xs.p[v1/x1])
+         ...
+          (exists_intro an (fun xn -> p[vs/xs]) vn e)))
+
+      *)
+      let mk_exists_intro t p v e =
+        let head = S.fv_to_tm (S.lid_as_fv C.exists_intro_lid S.delta_equational None) in
+        let args = [(t, None);
+                    (p, None);
+                    (v, None);
+                    (e, None)] in
+        S.mk_Tm_app head args top.range
+      in
+      let rec aux bs vs sub token =
+        match bs, vs with
+        | [], [] -> token
+        | b::bs, v::vs ->
+          let x = unqual_bv_of_binder b in
+          let token = aux bs vs (NT(x, v)::sub) token in
+          let token =
+            mk_exists_intro
+              x.sort
+              (U.abs [b] (close_exists_no_univs bs (SS.subst sub p)) None)
+              v
+              token
+          in
+          token
+        | _ ->
+          raise_error (Fatal_UnexpectedTerm, "Unexpected number of instantiations in _intro_ exists") top.range
+       in
+       aux bs vs [] e, noaqs
+
+    | IntroImplies (p, q, x, e) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let env', [x] = desugar_binders env [x] in
+      let e = desugar_term env' e in
+      let head = S.fv_to_tm (S.lid_as_fv C.implies_intro_lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (U.abs [x] e None, None)] in
+      S.mk_Tm_app head args top.range, noaqs
+
+
+    | IntroOr (lr, p, q, e) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let e = desugar_term env e in
+      let lid = if lr then C.or_intro_left_lid else C.or_intro_right_lid in
+      let head = S.fv_to_tm (S.lid_as_fv lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (e, None)] in
+      S.mk_Tm_app head args top.range, noaqs
+
+    | IntroAnd (p, q, e1, e2) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let e1 = desugar_term env e1 in
+      let e2 = desugar_term env e2 in
+      let head = S.fv_to_tm (S.lid_as_fv C.and_intro_lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (e1, None);
+                  (e2, None)] in
+      S.mk_Tm_app head args top.range, noaqs
+
+    | ElimForall (bs, p, vs) ->
+      let env', bs = desugar_binders env bs in
+      let p = desugar_term env' p in
+      let vs = List.map (desugar_term env) vs in
+      (*
+        (forall_elim #an #(fun xn -> p[vs/xs]) vn
+        ...
+         (forall_elim #a1 #(fun x1 -> forall xs. p[v0/x]) v1
+          (forall_elim #a0 #(fun x0 -> forall xs. p) v0 ())))
+      *)
+      let mk_forall_elim a p v t =
+        let head = S.fv_to_tm (S.lid_as_fv C.forall_elim_lid S.delta_equational None) in
+        let args = [(a, Some (S.Implicit false));
+                    (p, Some (S.Implicit false));
+                    (v, None);
+                    (t, None)] in
+        S.mk_Tm_app head args v.pos
+      in
+      let rec aux bs vs sub token : S.term =
+        match bs, vs with
+        | [], [] -> token
+        | b::bs, v::vs ->
+          let x = unqual_bv_of_binder b in
+          let token =
+            mk_forall_elim
+              x.sort
+              (U.abs [b] (U.close_forall_no_univs bs (SS.subst sub p)) None)
+              v
+              token
+          in
+          let sub = NT(x, v)::sub in
+          aux bs vs sub token
+        | _ ->
+          raise_error (Fatal_UnexpectedTerm, "Unexpected number of instantiations in _elim_forall_") top.range
+      in
+      aux bs vs [] U.exp_unit, noaqs
+
+    | ElimExists (binders, p, q, binder, e) -> (
       let env', bs = desugar_binders env binders in
       let p = desugar_term env' p in
       let q = desugar_term env q in
@@ -1758,17 +1940,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                     (f, None)] in
         mk_Tm_app head args r
       in
-      let bv_of_binder b =
-        match b with
-        | {binder_bv=x; binder_qual=None; binder_attrs=[]} -> x
-        | _ ->
-          raise_error (Fatal_UnexpectedTerm, "Unexpected qualified binder in ELIM_EXISTS") (range_of_bv b.binder_bv)
-      in
       let rec aux binders squash_token =
         match binders with
         | [] -> raise_error (Fatal_UnexpectedTerm, "Empty binders in ELIM_EXISTS") top.range
         | [b] ->
-          let x = bv_of_binder b in
+          let x = unqual_bv_of_binder b in
           (*
                bind_squash_exists
                   #(x.sort)
@@ -1790,7 +1966,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               S.tun
           in
           let k = aux bs (S.bv_to_name pf_i) in
-          let x = bv_of_binder b in
+          let x = unqual_bv_of_binder b in
           (*
              bind_squash_exists
                #(x.sort)
@@ -1807,6 +1983,48 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       in
       aux bs U.exp_unit, noaqs
       )
+
+    | ElimImplies (p, q, e) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let e = desugar_term env e in
+      let head = S.fv_to_tm (S.lid_as_fv C.implies_elim_lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (U.exp_unit, None);
+                  (e, None)] in
+      mk_Tm_app head args top.range, noaqs
+
+    | ElimOr(p, q, r, x, e1, y, e2) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let r = desugar_term env r in
+      let env_x, [x] = desugar_binders env [x] in
+      let e1 = desugar_term env_x e1 in
+      let env_y, [y] = desugar_binders env [y] in
+      let e2 = desugar_term env_y e2 in
+      let head = S.fv_to_tm (S.lid_as_fv C.or_elim__lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (r, None);
+                  (U.exp_unit, None);
+                  (U.abs [x] e1 None, None);
+                  (U.abs [y] e2 None, None)] in
+      mk_Tm_app head args top.range, noaqs
+
+    | ElimAnd(p, q, r, x, y, e) ->
+      let p = desugar_term env p in
+      let q = desugar_term env q in
+      let r = desugar_term env r in
+      let env', [x;y] = desugar_binders env [x;y] in
+      let e = desugar_term env' e in
+      let head = S.fv_to_tm (S.lid_as_fv C.and_elim_lid S.delta_equational None) in
+      let args = [(p, None);
+                  (q, None);
+                  (r, None);
+                  (U.exp_unit, None);
+                  (U.abs [x;y] e None, None)] in
+      mk_Tm_app head args top.range, noaqs
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 

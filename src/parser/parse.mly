@@ -71,7 +71,9 @@ let none_to_empty_list x =
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
-%token ELIM_EXISTS USING TO
+%token INTRO INTRO_FORALL INTRO_EXISTS INTRO_IMPLIES INTRO_OR_LEFT INTRO_OR_RIGHT INTRO_AND
+%token ELIM ELIM_FORALL ELIM_EXISTS ELIM_IMPLIES ELIM_OR ELIM_AND
+%token USING TO
 %token INCLUDE
 %token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -790,13 +792,72 @@ noSeqTerm:
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      }
 
-   | ELIM_EXISTS bs=binders DOT p=noSeqTerm TO q=noSeqTerm USING y=binders DOT e=noSeqTerm
+   | INTRO FORALL bs=binders DOT p=noSeqTerm WITH e=noSeqTerm
      {
-         match y with
-         | [y] -> mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 8) Expr
-         | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 6)
+        mk_term (IntroForall(bs, p, e)) (rhs2 parseState 1 7) Expr
      }
 
+   | INTRO EXISTS bs=binders DOT p=noSeqTerm USING vs=list(atomicTerm) WITH e=noSeqTerm
+     {
+        if List.length bs <> List.length vs
+        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rhs parseState 7)
+        else mk_term (IntroExists(bs, p, vs, e)) (rhs2 parseState 1 9) Expr
+     }    
+
+   | INTRO p=tmFormula IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
+     {
+        mk_term (IntroImplies(p, q, y, e)) (rhs2 parseState 1 8) Expr
+     }
+
+   | INTRO p=tmFormula DISJUNCTION q=tmConjunction USING lr=NAME WITH e=noSeqTerm
+     {
+        let b =
+            if lr = "Left" then true
+            else if lr = "Right" then false
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \/ expects either 'Left' or 'Right'") (rhs parseState 6)
+        in
+        mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
+     }
+
+   | INTRO p=tmConjunction CONJUNCTION q=tmTuple WITH e1=noSeqTerm AND e2=noSeqTerm
+     {
+        mk_term (IntroAnd(p, q, e1, e2))  (rhs2 parseState 1 8) Expr
+     }
+
+   | ELIM FORALL xs=binders DOT p=noSeqTerm USING vs=list(atomicTerm)
+     {
+        mk_term (ElimForall(xs, p, vs)) (rhs2 parseState 1 7) Expr
+     }
+     
+   | ELIM EXISTS bs=binders DOT p=noSeqTerm TO q=noSeqTerm WITH y=singleBinder DOT e=noSeqTerm
+     {
+        mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 11) Expr
+     }
+
+   | ELIM p=tmFormula IMPLIES q=tmFormula WITH e=noSeqTerm
+     {
+        mk_term (ElimImplies(p, q, e)) (rhs2 parseState 1 6) Expr
+     }
+
+   | ELIM p=tmFormula DISJUNCTION q=tmConjunction TO r=noSeqTerm WITH x=singleBinder DOT e1=noSeqTerm AND y=singleBinder DOT e2=noSeqTerm
+     {
+        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rhs2 parseState 1 14) Expr
+     }    
+
+   | ELIM p=tmConjunction CONJUNCTION q=tmTuple TO r=noSeqTerm WITH xs=binders DOT e=noSeqTerm
+     {
+        match xs with
+        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rhs2 parseState 1 10) Expr
+     }
+
+singleBinder:
+  | bs=binders
+    {
+       match bs with
+       | [b] -> b
+       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 1)
+    }
+    
 calcRel:
   | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
   | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }

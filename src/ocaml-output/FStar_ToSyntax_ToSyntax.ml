@@ -384,6 +384,22 @@ let rec (free_type_vars_b :
           (match uu___1 with | (env1, uu___2) -> (env1, []))
       | FStar_Parser_AST.NoName t ->
           let uu___ = free_type_vars env t in (env, uu___)
+and (free_type_vars_bs :
+  FStar_Syntax_DsEnv.env ->
+    FStar_Parser_AST.binder Prims.list ->
+      (FStar_Syntax_DsEnv.env * FStar_Ident.ident Prims.list))
+  =
+  fun env ->
+    fun binders ->
+      FStar_Compiler_List.fold_left
+        (fun uu___ ->
+           fun binder ->
+             match uu___ with
+             | (env1, free) ->
+                 let uu___1 = free_type_vars_b env1 binder in
+                 (match uu___1 with
+                  | (env2, f) -> (env2, (FStar_Compiler_List.op_At f free))))
+        (env, []) binders
 and (free_type_vars :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.term -> FStar_Ident.ident Prims.list)
@@ -462,17 +478,7 @@ and (free_type_vars :
                let uu___2 = free_type_vars env1 body in
                FStar_Compiler_List.op_At free uu___2)
       | FStar_Parser_AST.Product (binders, body) ->
-          let uu___1 =
-            FStar_Compiler_List.fold_left
-              (fun uu___2 ->
-                 fun binder ->
-                   match uu___2 with
-                   | (env1, free) ->
-                       let uu___3 = free_type_vars_b env1 binder in
-                       (match uu___3 with
-                        | (env2, f) ->
-                            (env2, (FStar_Compiler_List.op_At f free))))
-              (env, []) binders in
+          let uu___1 = free_type_vars_bs env binders in
           (match uu___1 with
            | (env1, free) ->
                let uu___2 = free_type_vars env1 body in
@@ -497,18 +503,18 @@ and (free_type_vars :
                        FStar_Compiler_List.op_At uu___6 uu___7) steps in
             FStar_Compiler_List.op_At uu___3 uu___4 in
           FStar_Compiler_List.op_At uu___1 uu___2
+      | FStar_Parser_AST.ElimForall (bs, t1, ts) ->
+          let uu___1 = free_type_vars_bs env bs in
+          (match uu___1 with
+           | (env', free) ->
+               let uu___2 =
+                 let uu___3 = free_type_vars env' t1 in
+                 let uu___4 =
+                   FStar_Compiler_List.collect (free_type_vars env') ts in
+                 FStar_Compiler_List.op_At uu___3 uu___4 in
+               FStar_Compiler_List.op_At free uu___2)
       | FStar_Parser_AST.ElimExists (binders, p, q, y, e) ->
-          let uu___1 =
-            FStar_Compiler_List.fold_left
-              (fun uu___2 ->
-                 fun binder ->
-                   match uu___2 with
-                   | (env1, free) ->
-                       let uu___3 = free_type_vars_b env1 binder in
-                       (match uu___3 with
-                        | (env2, f) ->
-                            (env2, (FStar_Compiler_List.op_At f free))))
-              (env, []) binders in
+          let uu___1 = free_type_vars_bs env binders in
           (match uu___1 with
            | (env', free) ->
                let uu___2 = free_type_vars_b env' y in
@@ -524,6 +530,51 @@ and (free_type_vars :
                         FStar_Compiler_List.op_At uu___6 uu___7 in
                       FStar_Compiler_List.op_At uu___4 uu___5 in
                     FStar_Compiler_List.op_At free uu___3))
+      | FStar_Parser_AST.ElimImplies (p, q, e) ->
+          let uu___1 = free_type_vars env p in
+          let uu___2 =
+            let uu___3 = free_type_vars env q in
+            let uu___4 = free_type_vars env e in
+            FStar_Compiler_List.op_At uu___3 uu___4 in
+          FStar_Compiler_List.op_At uu___1 uu___2
+      | FStar_Parser_AST.ElimOr (p, q, r, x, e, x', e') ->
+          let uu___1 = free_type_vars env p in
+          let uu___2 =
+            let uu___3 = free_type_vars env q in
+            let uu___4 =
+              let uu___5 = free_type_vars env r in
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 = free_type_vars_b env x in
+                  match uu___8 with
+                  | (env', free) ->
+                      let uu___9 = free_type_vars env' e in
+                      FStar_Compiler_List.op_At free uu___9 in
+                let uu___8 =
+                  let uu___9 = free_type_vars_b env x' in
+                  match uu___9 with
+                  | (env', free) ->
+                      let uu___10 = free_type_vars env' e' in
+                      FStar_Compiler_List.op_At free uu___10 in
+                FStar_Compiler_List.op_At uu___7 uu___8 in
+              FStar_Compiler_List.op_At uu___5 uu___6 in
+            FStar_Compiler_List.op_At uu___3 uu___4 in
+          FStar_Compiler_List.op_At uu___1 uu___2
+      | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
+          let uu___1 = free_type_vars env p in
+          let uu___2 =
+            let uu___3 = free_type_vars env q in
+            let uu___4 =
+              let uu___5 = free_type_vars env r in
+              let uu___6 =
+                let uu___7 = free_type_vars_bs env [x; y] in
+                match uu___7 with
+                | (env', free) ->
+                    let uu___8 = free_type_vars env' e in
+                    FStar_Compiler_List.op_At free uu___8 in
+              FStar_Compiler_List.op_At uu___5 uu___6 in
+            FStar_Compiler_List.op_At uu___3 uu___4 in
+          FStar_Compiler_List.op_At uu___1 uu___2
       | FStar_Parser_AST.Abs uu___1 -> []
       | FStar_Parser_AST.Let uu___1 -> []
       | FStar_Parser_AST.LetOpen uu___1 -> []
@@ -2139,6 +2190,32 @@ and (desugar_term_maybe_top :
             FStar_Syntax_Syntax.pos = (top.FStar_Parser_AST.range);
             FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
           } in
+        let desugar_binders env1 binders =
+          let uu___ =
+            FStar_Compiler_List.fold_left
+              (fun uu___1 ->
+                 fun b ->
+                   match uu___1 with
+                   | (env2, bs) ->
+                       let bb = desugar_binder env2 b in
+                       let uu___2 =
+                         as_binder env2 b.FStar_Parser_AST.aqual bb in
+                       (match uu___2 with | (b1, env3) -> (env3, (b1 :: bs))))
+              (env1, []) binders in
+          match uu___ with
+          | (env2, bs_rev) -> (env2, (FStar_Compiler_List.rev bs_rev)) in
+        let unqual_bv_of_binder b =
+          match b with
+          | { FStar_Syntax_Syntax.binder_bv = x;
+              FStar_Syntax_Syntax.binder_qual = FStar_Pervasives_Native.None;
+              FStar_Syntax_Syntax.binder_attrs = [];_} -> x
+          | uu___ ->
+              let uu___1 =
+                FStar_Syntax_Syntax.range_of_bv
+                  b.FStar_Syntax_Syntax.binder_bv in
+              FStar_Errors.raise_error
+                (FStar_Errors.Fatal_UnexpectedTerm,
+                  "Unexpected qualified binder in ELIM_EXISTS") uu___1 in
         let uu___ = let uu___1 = unparen top in uu___1.FStar_Parser_AST.tm in
         match uu___ with
         | FStar_Parser_AST.Wild -> ((setpos FStar_Syntax_Syntax.tun), noaqs)
@@ -4080,22 +4157,218 @@ and (desugar_term_maybe_top :
                    FStar_Parser_AST.mkApp finish uu___3
                      top.FStar_Parser_AST.range in
                  desugar_term_maybe_top top_level env e2)
-        | FStar_Parser_AST.ElimExists (binders, p, q, binder, e) ->
-            let desugar_binders env1 binders1 =
-              let uu___1 =
-                FStar_Compiler_List.fold_left
-                  (fun uu___2 ->
-                     fun b ->
-                       match uu___2 with
-                       | (env2, bs) ->
-                           let bb = desugar_binder env2 b in
+        | FStar_Parser_AST.IntroForall (bs, p, e) ->
+            let uu___1 = desugar_binders env bs in
+            (match uu___1 with
+             | (env', bs1) ->
+                 let p1 = desugar_term env' p in
+                 let e1 = desugar_term env' e in
+                 let mk_forall_intro t p2 pf =
+                   let head =
+                     let uu___2 =
+                       FStar_Syntax_Syntax.lid_as_fv
+                         FStar_Parser_Const.forall_intro_lid
+                         FStar_Syntax_Syntax.delta_equational
+                         FStar_Pervasives_Native.None in
+                     FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                   let args =
+                     [(t, FStar_Pervasives_Native.None);
+                     (p2, FStar_Pervasives_Native.None);
+                     (pf, FStar_Pervasives_Native.None)] in
+                   FStar_Syntax_Syntax.mk_Tm_app head args
+                     top.FStar_Parser_AST.range in
+                 let rec aux bs2 =
+                   match bs2 with
+                   | [] ->
+                       let sq_p =
+                         FStar_Syntax_Util.mk_squash
+                           FStar_Syntax_Syntax.U_unknown p1 in
+                       FStar_Syntax_Util.ascribe e1
+                         ((FStar_Pervasives.Inl sq_p),
+                           FStar_Pervasives_Native.None)
+                   | b::bs3 ->
+                       let tail = aux bs3 in
+                       let x = unqual_bv_of_binder b in
+                       let uu___2 =
+                         let uu___3 =
+                           FStar_Syntax_Util.close_forall_no_univs bs3 p1 in
+                         FStar_Syntax_Util.abs [b] uu___3
+                           FStar_Pervasives_Native.None in
+                       let uu___3 =
+                         FStar_Syntax_Util.abs [b] tail
+                           FStar_Pervasives_Native.None in
+                       mk_forall_intro x.FStar_Syntax_Syntax.sort uu___2
+                         uu___3 in
+                 let uu___2 = aux bs1 in (uu___2, noaqs))
+        | FStar_Parser_AST.IntroExists (bs, p, vs, e) ->
+            let uu___1 = desugar_binders env bs in
+            (match uu___1 with
+             | (env', bs1) ->
+                 let p1 = desugar_term env' p in
+                 let vs1 = FStar_Compiler_List.map (desugar_term env) vs in
+                 let e1 = desugar_term env e in
+                 let mk_exists_intro t p2 v e2 =
+                   let head =
+                     let uu___2 =
+                       FStar_Syntax_Syntax.lid_as_fv
+                         FStar_Parser_Const.exists_intro_lid
+                         FStar_Syntax_Syntax.delta_equational
+                         FStar_Pervasives_Native.None in
+                     FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                   let args =
+                     [(t, FStar_Pervasives_Native.None);
+                     (p2, FStar_Pervasives_Native.None);
+                     (v, FStar_Pervasives_Native.None);
+                     (e2, FStar_Pervasives_Native.None)] in
+                   FStar_Syntax_Syntax.mk_Tm_app head args
+                     top.FStar_Parser_AST.range in
+                 let rec aux bs2 vs2 sub token =
+                   match (bs2, vs2) with
+                   | ([], []) -> token
+                   | (b::bs3, v::vs3) ->
+                       let x = unqual_bv_of_binder b in
+                       let token1 =
+                         aux bs3 vs3 ((FStar_Syntax_Syntax.NT (x, v)) :: sub)
+                           token in
+                       let token2 =
+                         let uu___2 =
                            let uu___3 =
-                             as_binder env2 b.FStar_Parser_AST.aqual bb in
-                           (match uu___3 with
-                            | (b1, env3) -> (env3, (b1 :: bs)))) (env1, [])
-                  binders1 in
-              match uu___1 with
-              | (env2, bs_rev) -> (env2, (FStar_Compiler_List.rev bs_rev)) in
+                             let uu___4 = FStar_Syntax_Subst.subst sub p1 in
+                             FStar_Syntax_Util.close_exists_no_univs bs3
+                               uu___4 in
+                           FStar_Syntax_Util.abs [b] uu___3
+                             FStar_Pervasives_Native.None in
+                         mk_exists_intro x.FStar_Syntax_Syntax.sort uu___2 v
+                           token1 in
+                       token2
+                   | uu___2 ->
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_UnexpectedTerm,
+                           "Unexpected number of instantiations in _intro_ exists")
+                         top.FStar_Parser_AST.range in
+                 let uu___2 = aux bs1 vs1 [] e1 in (uu___2, noaqs))
+        | FStar_Parser_AST.IntroImplies (p, q, x, e) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let uu___1 = desugar_binders env [x] in
+            (match uu___1 with
+             | (env', x1::[]) ->
+                 let e1 = desugar_term env' e in
+                 let head =
+                   let uu___2 =
+                     FStar_Syntax_Syntax.lid_as_fv
+                       FStar_Parser_Const.implies_intro_lid
+                       FStar_Syntax_Syntax.delta_equational
+                       FStar_Pervasives_Native.None in
+                   FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                 let args =
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           FStar_Syntax_Util.abs [x1] e1
+                             FStar_Pervasives_Native.None in
+                         (uu___5, FStar_Pervasives_Native.None) in
+                       [uu___4] in
+                     (q1, FStar_Pervasives_Native.None) :: uu___3 in
+                   (p1, FStar_Pervasives_Native.None) :: uu___2 in
+                 let uu___2 =
+                   FStar_Syntax_Syntax.mk_Tm_app head args
+                     top.FStar_Parser_AST.range in
+                 (uu___2, noaqs))
+        | FStar_Parser_AST.IntroOr (lr, p, q, e) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let e1 = desugar_term env e in
+            let lid =
+              if lr
+              then FStar_Parser_Const.or_intro_left_lid
+              else FStar_Parser_Const.or_intro_right_lid in
+            let head =
+              let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv lid
+                  FStar_Syntax_Syntax.delta_equational
+                  FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.fv_to_tm uu___1 in
+            let args =
+              [(p1, FStar_Pervasives_Native.None);
+              (q1, FStar_Pervasives_Native.None);
+              (e1, FStar_Pervasives_Native.None)] in
+            let uu___1 =
+              FStar_Syntax_Syntax.mk_Tm_app head args
+                top.FStar_Parser_AST.range in
+            (uu___1, noaqs)
+        | FStar_Parser_AST.IntroAnd (p, q, e1, e2) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let e11 = desugar_term env e1 in
+            let e21 = desugar_term env e2 in
+            let head =
+              let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv
+                  FStar_Parser_Const.and_intro_lid
+                  FStar_Syntax_Syntax.delta_equational
+                  FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.fv_to_tm uu___1 in
+            let args =
+              [(p1, FStar_Pervasives_Native.None);
+              (q1, FStar_Pervasives_Native.None);
+              (e11, FStar_Pervasives_Native.None);
+              (e21, FStar_Pervasives_Native.None)] in
+            let uu___1 =
+              FStar_Syntax_Syntax.mk_Tm_app head args
+                top.FStar_Parser_AST.range in
+            (uu___1, noaqs)
+        | FStar_Parser_AST.ElimForall (bs, p, vs) ->
+            let uu___1 = desugar_binders env bs in
+            (match uu___1 with
+             | (env', bs1) ->
+                 let p1 = desugar_term env' p in
+                 let vs1 = FStar_Compiler_List.map (desugar_term env) vs in
+                 let mk_forall_elim a p2 v t =
+                   let head =
+                     let uu___2 =
+                       FStar_Syntax_Syntax.lid_as_fv
+                         FStar_Parser_Const.forall_elim_lid
+                         FStar_Syntax_Syntax.delta_equational
+                         FStar_Pervasives_Native.None in
+                     FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                   let args =
+                     [(a,
+                        (FStar_Pervasives_Native.Some
+                           (FStar_Syntax_Syntax.Implicit false)));
+                     (p2,
+                       (FStar_Pervasives_Native.Some
+                          (FStar_Syntax_Syntax.Implicit false)));
+                     (v, FStar_Pervasives_Native.None);
+                     (t, FStar_Pervasives_Native.None)] in
+                   FStar_Syntax_Syntax.mk_Tm_app head args
+                     v.FStar_Syntax_Syntax.pos in
+                 let rec aux bs2 vs2 sub token =
+                   match (bs2, vs2) with
+                   | ([], []) -> token
+                   | (b::bs3, v::vs3) ->
+                       let x = unqual_bv_of_binder b in
+                       let token1 =
+                         let uu___2 =
+                           let uu___3 =
+                             let uu___4 = FStar_Syntax_Subst.subst sub p1 in
+                             FStar_Syntax_Util.close_forall_no_univs bs3
+                               uu___4 in
+                           FStar_Syntax_Util.abs [b] uu___3
+                             FStar_Pervasives_Native.None in
+                         mk_forall_elim x.FStar_Syntax_Syntax.sort uu___2 v
+                           token in
+                       let sub1 = (FStar_Syntax_Syntax.NT (x, v)) :: sub in
+                       aux bs3 vs3 sub1 token1
+                   | uu___2 ->
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_UnexpectedTerm,
+                           "Unexpected number of instantiations in _elim_forall_")
+                         top.FStar_Parser_AST.range in
+                 let uu___2 = aux bs1 vs1 [] FStar_Syntax_Util.exp_unit in
+                 (uu___2, noaqs))
+        | FStar_Parser_AST.ElimExists (binders, p, q, binder, e) ->
             let uu___1 = desugar_binders env binders in
             (match uu___1 with
              | (env', bs) ->
@@ -4157,20 +4430,6 @@ and (desugar_term_maybe_top :
                           (s_ex_p, FStar_Pervasives_Native.None);
                           (f, FStar_Pervasives_Native.None)] in
                         FStar_Syntax_Syntax.mk_Tm_app head args r in
-                      let bv_of_binder b =
-                        match b with
-                        | { FStar_Syntax_Syntax.binder_bv = x;
-                            FStar_Syntax_Syntax.binder_qual =
-                              FStar_Pervasives_Native.None;
-                            FStar_Syntax_Syntax.binder_attrs = [];_} -> x
-                        | uu___3 ->
-                            let uu___4 =
-                              FStar_Syntax_Syntax.range_of_bv
-                                b.FStar_Syntax_Syntax.binder_bv in
-                            FStar_Errors.raise_error
-                              (FStar_Errors.Fatal_UnexpectedTerm,
-                                "Unexpected qualified binder in ELIM_EXISTS")
-                              uu___4 in
                       let rec aux binders1 squash_token =
                         match binders1 with
                         | [] ->
@@ -4179,7 +4438,7 @@ and (desugar_term_maybe_top :
                                 "Empty binders in ELIM_EXISTS")
                               top.FStar_Parser_AST.range
                         | b::[] ->
-                            let x = bv_of_binder b in
+                            let x = unqual_bv_of_binder b in
                             let uu___3 =
                               FStar_Syntax_Util.abs [b] p1
                                 FStar_Pervasives_Native.None in
@@ -4206,7 +4465,7 @@ and (desugar_term_maybe_top :
                               let uu___3 =
                                 FStar_Syntax_Syntax.bv_to_name pf_i in
                               aux bs1 uu___3 in
-                            let x = bv_of_binder b in
+                            let x = unqual_bv_of_binder b in
                             let uu___3 =
                               let uu___4 = mk_exists bs1 p1 in
                               FStar_Syntax_Util.abs [b] uu___4
@@ -4225,6 +4484,107 @@ and (desugar_term_maybe_top :
                               uu___3 squash_token uu___4 uu___5 in
                       let uu___3 = aux bs FStar_Syntax_Util.exp_unit in
                       (uu___3, noaqs)))
+        | FStar_Parser_AST.ElimImplies (p, q, e) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let e1 = desugar_term env e in
+            let head =
+              let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv
+                  FStar_Parser_Const.implies_elim_lid
+                  FStar_Syntax_Syntax.delta_equational
+                  FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.fv_to_tm uu___1 in
+            let args =
+              [(p1, FStar_Pervasives_Native.None);
+              (q1, FStar_Pervasives_Native.None);
+              (FStar_Syntax_Util.exp_unit, FStar_Pervasives_Native.None);
+              (e1, FStar_Pervasives_Native.None)] in
+            let uu___1 =
+              FStar_Syntax_Syntax.mk_Tm_app head args
+                top.FStar_Parser_AST.range in
+            (uu___1, noaqs)
+        | FStar_Parser_AST.ElimOr (p, q, r, x, e1, y, e2) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let r1 = desugar_term env r in
+            let uu___1 = desugar_binders env [x] in
+            (match uu___1 with
+             | (env_x, x1::[]) ->
+                 let e11 = desugar_term env_x e1 in
+                 let uu___2 = desugar_binders env [y] in
+                 (match uu___2 with
+                  | (env_y, y1::[]) ->
+                      let e21 = desugar_term env_y e2 in
+                      let head =
+                        let uu___3 =
+                          FStar_Syntax_Syntax.lid_as_fv
+                            FStar_Parser_Const.or_elim__lid
+                            FStar_Syntax_Syntax.delta_equational
+                            FStar_Pervasives_Native.None in
+                        FStar_Syntax_Syntax.fv_to_tm uu___3 in
+                      let args =
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 =
+                                let uu___7 =
+                                  let uu___8 =
+                                    FStar_Syntax_Util.abs [x1] e11
+                                      FStar_Pervasives_Native.None in
+                                  (uu___8, FStar_Pervasives_Native.None) in
+                                let uu___8 =
+                                  let uu___9 =
+                                    let uu___10 =
+                                      FStar_Syntax_Util.abs [y1] e21
+                                        FStar_Pervasives_Native.None in
+                                    (uu___10, FStar_Pervasives_Native.None) in
+                                  [uu___9] in
+                                uu___7 :: uu___8 in
+                              (FStar_Syntax_Util.exp_unit,
+                                FStar_Pervasives_Native.None) :: uu___6 in
+                            (r1, FStar_Pervasives_Native.None) :: uu___5 in
+                          (q1, FStar_Pervasives_Native.None) :: uu___4 in
+                        (p1, FStar_Pervasives_Native.None) :: uu___3 in
+                      let uu___3 =
+                        FStar_Syntax_Syntax.mk_Tm_app head args
+                          top.FStar_Parser_AST.range in
+                      (uu___3, noaqs)))
+        | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
+            let p1 = desugar_term env p in
+            let q1 = desugar_term env q in
+            let r1 = desugar_term env r in
+            let uu___1 = desugar_binders env [x; y] in
+            (match uu___1 with
+             | (env', x1::y1::[]) ->
+                 let e1 = desugar_term env' e in
+                 let head =
+                   let uu___2 =
+                     FStar_Syntax_Syntax.lid_as_fv
+                       FStar_Parser_Const.and_elim_lid
+                       FStar_Syntax_Syntax.delta_equational
+                       FStar_Pervasives_Native.None in
+                   FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                 let args =
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 =
+                               FStar_Syntax_Util.abs [x1; y1] e1
+                                 FStar_Pervasives_Native.None in
+                             (uu___7, FStar_Pervasives_Native.None) in
+                           [uu___6] in
+                         (FStar_Syntax_Util.exp_unit,
+                           FStar_Pervasives_Native.None) :: uu___5 in
+                       (r1, FStar_Pervasives_Native.None) :: uu___4 in
+                     (q1, FStar_Pervasives_Native.None) :: uu___3 in
+                   (p1, FStar_Pervasives_Native.None) :: uu___2 in
+                 let uu___2 =
+                   FStar_Syntax_Syntax.mk_Tm_app head args
+                     top.FStar_Parser_AST.range in
+                 (uu___2, noaqs))
         | uu___1 when top.FStar_Parser_AST.level = FStar_Parser_AST.Formula
             -> let uu___2 = desugar_formula env top in (uu___2, noaqs)
         | uu___1 ->

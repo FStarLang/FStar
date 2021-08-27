@@ -487,4 +487,16 @@ let calc_push_impl_lid = calc_lid "calc_push_impl"
 
 (* Classical proofs, from FStar.Classical *)
 let classical_lid i : lid = lid_of_path ["FStar"; "Classical"; i] FStar.Compiler.Range.dummyRange
+
+let forall_intro_lid = classical_lid "forall_intro_"
+let exists_intro_lid = classical_lid "exists_intro_"
+let implies_intro_lid = classical_lid "implies_intro"
+let or_intro_left_lid = classical_lid "or_intro_left"
+let or_intro_right_lid = classical_lid "or_intro_right"
+let and_intro_lid = classical_lid "and_intro"
+
+let forall_elim_lid = classical_lid "forall_elim"
 let bind_squash_exists_lid = classical_lid "bind_squash_exists"
+let implies_elim_lid = classical_lid "implies_elim"
+let or_elim__lid = classical_lid "or_elim_"
+let and_elim_lid = classical_lid "and_elim"

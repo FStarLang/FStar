@@ -316,6 +316,7 @@ val ghost_lemma
       ($_: (x: a -> Lemma (requires p x) (ensures (q x ()))))
     : Lemma (forall (x: a). p x ==> q x ())
 
+
 (**** Existential quantification *)
 
 (** The most basic way to introduce a squashed existential quantifier
@@ -368,14 +369,6 @@ val exists_elim
       (_: (x: a{p x} -> GTot (squash goal)))
     : Lemma goal
 
-val bind_squash_exists
-     (#t:Type)
-     (#p:t -> Type)
-     (#q:Type)
-     ($s_ex_p: squash (exists (x:t). p x))
-     (f: (x:t -> squash (p x) -> Tot (squash q)))
-  : Tot (squash q)
-
 
 (*** Disjunction *)
 
@@ -390,3 +383,83 @@ val or_elim
 
 (** The law of excluded middle: squashed types are classical *)
 val excluded_middle (p: Type) : Lemma (requires (True)) (ensures (p \/ ~p))
+
+(*** Combinators used by syntactic sugar ***)
+
+val forall_elim
+       (#a:Type)
+       (#p:a -> Type)
+       (v:a)
+       (f:squash (forall (x:a). p x))
+  : Tot (squash (p v))
+
+val bind_squash_exists
+     (#t:Type)
+     (#p:t -> Type)
+     (#q:Type)
+     ($s_ex_p: squash (exists (x:t). p x))
+     (f: (x:t -> squash (p x) -> Tot (squash q)))
+  : Tot (squash q)
+
+let implies_elim
+        (p:Type)
+        (q:Type)
+        (_:squash (p ==> q))
+        (_:squash p)
+  : squash q
+  = ()
+
+val or_elim_
+        (p:Type)
+        (q:Type)
+        (r:Type)
+        (_:squash (p \/ q))
+        (f:squash p -> Tot (squash r))
+        (g:squash q -> Tot (squash r))
+  : Tot (squash r)
+
+val and_elim
+        (p:Type)
+        (q:Type)
+        (r:Type)
+        (_:squash (p /\ q))
+        (f:squash p -> squash q -> Tot (squash r))
+  : Tot (squash r)
+
+val forall_intro_
+      (a:Type)
+      (p:a -> Type)
+      (f: (x:a -> Tot (squash (p x))))
+  : Tot (squash (forall x. p x))
+
+val exists_intro_
+        (a:Type)
+        (p:a -> Type)
+        (v:a)
+        (x: squash (p v))
+  : Tot (squash (exists x. p x))
+
+val implies_intro
+        (p:Type)
+        (q:Type)
+        (f:squash p -> Tot (squash q))
+  : Tot (squash (p ==> q))
+
+val or_intro_left
+        (p:Type)
+        (q:Type)
+        (f:squash p)
+  : Tot (squash (p \/ q))
+
+val or_intro_right
+        (p:Type)
+        (q:Type)
+        (f:squash q)
+  : Tot (squash (p \/ q))
+
+val and_intro
+        (p:Type)
+        (q:Type)
+        (f:squash p)
+        (g:squash q)
+  : Tot (squash (p /\ q))

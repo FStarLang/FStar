@@ -76,7 +76,11 @@ let none_to_empty_list x =
 %token DOT_LENS_PAREN_LEFT
 %token DOT_LPAREN
 %token EFFECT
+%token ELIM_AND
 %token ELIM_EXISTS
+%token ELIM_FORALL
+%token ELIM_IMPLIES
+%token ELIM_OR
 %token ELSE
 %token END
 %token ENSURES
@@ -105,6 +109,12 @@ let none_to_empty_list x =
 %token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT8
+%token INTRO_AND
+%token INTRO_EXISTS
+%token INTRO_FORALL
+%token INTRO_IMPLIES
+%token INTRO_OR_LEFT
+%token INTRO_OR_RIGHT
 %token IRREDUCIBLE
 %token LARROW
 %token LAYERED_EFFECT
@@ -1557,13 +1567,75 @@ let pbs =    ( List.rev xs ) in
      (
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
-| ELIM_EXISTS binders DOT noSeqTerm TO noSeqTerm USING binders DOT noSeqTerm
+| INTRO_FORALL binders DOT trigger noSeqTerm WITH noSeqTerm
+    {let (_1, bs, _3, trig, p, _6, e) = ((), $2, (), $4, $5, (), $7) in
+     (
+        let idents = idents_of_binders bs (rhs2 parseState 1 3) in
+        let pat = idents, trig in
+        mk_term (IntroForall(bs, pat, p, e)) (rhs2 parseState 1 7) Expr
+     )}
+| INTRO_EXISTS binders DOT noSeqTerm USING list_atomicTerm_ WITH noSeqTerm
+    {let (_1, bs, _3, p, _5, vs, _7, e) = ((), $2, (), $4, (), $6, (), $8) in
+     (
+        if List.length bs <> List.length vs
+        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rhs parseState 6)
+        else mk_term (IntroExists(bs, p, vs, e)) (rhs2 parseState 1 8) Expr
+     )}
+| INTRO_IMPLIES tmFormula IMPLIES tmFormula WITH singleBinder DOT noSeqTerm
+    {let (_1, p, _3, q, _5, y, _7, e) = ((), $2, (), $4, (), $6, (), $8) in
+     (
+        mk_term (IntroImplies(p, q, y, e)) (rhs2 parseState 1 7) Expr
+     )}
+| INTRO_OR_LEFT tmFormula DISJUNCTION tmConjunction WITH noSeqTerm
+    {let (_1, p, _3, q, _5, e) = ((), $2, (), $4, (), $6) in
+     (
+        mk_term (IntroOr(true, p, q, e))  (rhs2 parseState 1 5) Expr
+     )}
+| INTRO_OR_RIGHT tmFormula DISJUNCTION tmConjunction WITH noSeqTerm
+    {let (_1, p, _3, q, _5, e) = ((), $2, (), $4, (), $6) in
+     (
+        mk_term (IntroOr(false, p, q, e))  (rhs2 parseState 1 5) Expr
+     )}
+| INTRO_AND tmConjunction CONJUNCTION tmTuple WITH noSeqTerm AND noSeqTerm
+    {let (_1, p, _3, q, _5, e1, _7, e2) = ((), $2, (), $4, (), $6, (), $8) in
+     (
+        mk_term (IntroAnd(p, q, e1, e2))  (rhs2 parseState 1 6) Expr
+     )}
+| ELIM_FORALL binders DOT noSeqTerm USING list_atomicTerm_
+    {let (_1, xs, _3, p, _5, vs) = ((), $2, (), $4, (), $6) in
+     (
+        mk_term (ElimForall(xs, p, vs)) (rhs2 parseState 1 6) Expr
+     )}
+| ELIM_EXISTS binders DOT noSeqTerm TO noSeqTerm USING singleBinder DOT noSeqTerm
     {let (_1, bs, _3, p, _5, q, _7, y, _9, e) = ((), $2, (), $4, (), $6, (), $8, (), $10) in
      (
-         match y with
-         | [y] -> mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 8) Expr
-         | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 6)
+        mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 8) Expr
      )}
+| ELIM_IMPLIES tmFormula IMPLIES tmFormula WITH noSeqTerm
+    {let (_1, p, _3, q, _5, e) = ((), $2, (), $4, (), $6) in
+     (
+        mk_term (ElimImplies(p, q, e)) (rhs2 parseState 1 5) Expr
+     )}
+| ELIM_OR tmFormula DISJUNCTION tmConjunction TO noSeqTerm WITH singleBinder DOT noSeqTerm AND singleBinder DOT noSeqTerm
+    {let (_1, p, _3, q, _5, r, _7, x, _9, e1, _11, y, _13, e2) = ((), $2, (), $4, (), $6, (), $8, (), $10, (), $12, (), $14) in
+     (
+        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rhs2 parseState 1 13) Expr
+     )}
+| ELIM_AND tmConjunction CONJUNCTION tmTuple TO noSeqTerm WITH binders DOT noSeqTerm
+    {let (_1, p, _3, q, _5, r, _7, xs, _9, e) = ((), $2, (), $4, (), $6, (), $8, (), $10) in
+     (
+        match xs with
+        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rhs2 parseState 1 10) Expr
+     )}
+
+singleBinder:
+  binders
+    {let bs = $1 in
+    (
+       match bs with
+       | [b] -> b
+       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 1)
+    )}
 
 calcRel:
   binop_name

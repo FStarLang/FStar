@@ -176,6 +176,24 @@ let exists_elim goal #a #p have f =
         return_squash pf;
         f x)
 
+(*** Disjunction *)
+let or_elim #l #r #goal hl hr =
+  impl_intro_gen #l #(fun _ -> goal ()) hl;
+  impl_intro_gen #r #(fun _ -> goal ()) hr
+
+let excluded_middle (p: Type) = ()
+
+(** Sugar *)
+
+
+let forall_elim
+       (#a:Type)
+       (#p:a -> Type)
+       (v:a)
+       (f:squash (forall (x:a). p x))
+  : Tot (squash (p v))
+  = ()
+
 let bind_squash_exists #t #p #q s_ex_p f
   = let open FStar.Squash in
     bind_squash s_ex_p (fun ex_p ->
@@ -183,9 +201,43 @@ let bind_squash_exists #t #p #q s_ex_p f
     let (| x, px |) = sig_p in
     f x (return_squash px)))
 
-(*** Disjunction *)
-let or_elim #l #r #goal hl hr =
-  impl_intro_gen #l #(fun _ -> goal ()) hl;
-  impl_intro_gen #r #(fun _ -> goal ()) hr
+let or_elim_
+        (p:Type)
+        (q:Type)
+        (r:Type)
+        (x:squash (p \/ q))
+        (f:squash p -> Tot (squash r))
+        (g:squash q -> Tot (squash r))
+  : Tot (squash r)
+  = let open FStar.Squash in
+    bind_squash x (fun p_or_q ->
+    bind_squash p_or_q (fun p_cor_q ->
+    match p_cor_q with
+    | Left p ->
+      f (return_squash p)
+    | Right q ->
+      g (return_squash q)))
 
-let excluded_middle (p: Type) = ()
+let and_elim
+        (p:Type)
+        (q:Type)
+        (r:Type)
+        (x:squash (p /\ q))
+        (f:squash p -> squash q -> Tot (squash r))
+  : Tot (squash r)
+  = let open FStar.Squash in
+    bind_squash x (fun p_and_q ->
+    bind_squash p_and_q (fun (And p q) ->
+    f (return_squash p) (return_squash q)))
+
+let implies_intro
+        (p:Type)
+        (q:Type)
+        (f:squash p -> Tot (squash q))
+  : Tot (squash (p ==> q))
+  = let open FStar.Squash in
+    let f' (x:p)
+      : GTot (squash q)
+      = f (return_squash x)
+    in
+    return_squash (squash_double_arrow (return_squash f'))

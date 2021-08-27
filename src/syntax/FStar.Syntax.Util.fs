@@ -1255,6 +1255,7 @@ let mk_with_type u t e =
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
+let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
 let decidable_eq = fvar_const PC.op_Eq
@@ -1296,6 +1297,20 @@ let mk_forall (u:universe) (x:bv) (body:typ) : typ =
 
 let close_forall_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ b.binder_bv f) bs f
+
+let mk_exists_aux fa x body =
+  mk (Tm_app(fa, [ iarg (x.sort);
+                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) dummyRange
+
+let mk_exists_no_univ (x:bv) (body:typ) : typ =
+  mk_exists_aux texists x body
+
+let mk_exists (u:universe) (x:bv) (body:typ) : typ =
+  let texists = mk_Tm_uinst texists [u] in
+  mk_exists_aux texists x body
+
+let close_exists_no_univs bs f =
+  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_exists_no_univ b.binder_bv f) bs f
 
 let is_wild_pat p =
     match p.v with

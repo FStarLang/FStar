@@ -54,7 +54,12 @@ let () =
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
-  Hashtbl.add keywords "_elim_exists_"   ELIM_EXISTS ;
+  Hashtbl.add keywords "_elim_"        ELIM;
+  Hashtbl.add keywords "_elim_forall_" ELIM_FORALL ;
+  Hashtbl.add keywords "_elim_exists_" ELIM_EXISTS ;
+  Hashtbl.add keywords "_elim_implies_" ELIM_IMPLIES ;
+  Hashtbl.add keywords "_elim_or_"     ELIM_OR ;
+  Hashtbl.add keywords "_elim_and_"    ELIM_AND ;
   Hashtbl.add keywords "else"          ELSE        ;
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -72,6 +77,13 @@ let () =
   Hashtbl.add keywords "inline"        INLINE      ;
   Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
   Hashtbl.add keywords "instance"      INSTANCE    ;
+  Hashtbl.add keywords "_intro_"       INTRO ;
+  Hashtbl.add keywords "_intro_forall_"  INTRO_FORALL ;
+  Hashtbl.add keywords "_intro_exists_"  INTRO_EXISTS ;
+  Hashtbl.add keywords "_intro_implies_" INTRO_IMPLIES ;
+  Hashtbl.add keywords "_intro_or_left_"  INTRO_OR_LEFT ;
+  Hashtbl.add keywords "_intro_or_right_" INTRO_OR_RIGHT ;
+  Hashtbl.add keywords "_intro_and_"     INTRO_AND ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
   Hashtbl.add keywords "let"           (LET false) ;
   Hashtbl.add keywords "logic"         LOGIC       ;
