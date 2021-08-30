@@ -1,0 +1,18 @@
+[
+  "6±Y˛0äJ\u000fı^z®èfá\\",
+  [
+    [
+      "FStar.Classical.Sugar.implies_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "82e455ce77d7b72a6c7abc7c82b6cdee"
+    ]
+  ]
+]
