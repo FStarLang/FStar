@@ -3809,34 +3809,61 @@ and (desugar_term_maybe_top :
                                 let uu___5 = desugar_term_aq env e in
                                 (match uu___5 with
                                  | (e1, aq) ->
-                                     let x =
-                                       FStar_Ident.gen
-                                         e1.FStar_Syntax_Syntax.pos in
-                                     let uu___6 =
-                                       FStar_Syntax_DsEnv.push_bv env x in
-                                     (match uu___6 with
-                                      | (env', bv_x) ->
-                                          let nm =
-                                            FStar_Syntax_Syntax.bv_to_name
-                                              bv_x in
-                                          let body =
-                                            mk_result
-                                              ((nm,
-                                                 FStar_Pervasives_Native.None)
-                                              :: args) in
-                                          let lb =
-                                            mk_lb
-                                              ([],
-                                                (FStar_Pervasives.Inl bv_x),
-                                                FStar_Syntax_Syntax.tun, e1,
-                                                (e1.FStar_Syntax_Syntax.pos)) in
-                                          let uu___7 =
-                                            mk
-                                              (FStar_Syntax_Syntax.Tm_let
-                                                 ((false, [lb]), body)) in
-                                          (uu___7,
-                                            (FStar_Compiler_List.op_At aq
-                                               aqs1))))))))
+                                     let tm =
+                                       let uu___6 =
+                                         let uu___7 =
+                                           FStar_Syntax_Subst.compress e1 in
+                                         uu___7.FStar_Syntax_Syntax.n in
+                                       match uu___6 with
+                                       | FStar_Syntax_Syntax.Tm_name uu___7
+                                           ->
+                                           mk_result
+                                             ((e1,
+                                                FStar_Pervasives_Native.None)
+                                             :: args)
+                                       | FStar_Syntax_Syntax.Tm_fvar uu___7
+                                           ->
+                                           mk_result
+                                             ((e1,
+                                                FStar_Pervasives_Native.None)
+                                             :: args)
+                                       | uu___7 ->
+                                           let x =
+                                             FStar_Ident.gen
+                                               e1.FStar_Syntax_Syntax.pos in
+                                           let uu___8 =
+                                             FStar_Syntax_DsEnv.push_bv env x in
+                                           (match uu___8 with
+                                            | (env', bv_x) ->
+                                                let nm =
+                                                  FStar_Syntax_Syntax.bv_to_name
+                                                    bv_x in
+                                                let body =
+                                                  mk_result
+                                                    ((nm,
+                                                       FStar_Pervasives_Native.None)
+                                                    :: args) in
+                                                let body1 =
+                                                  let uu___9 =
+                                                    let uu___10 =
+                                                      FStar_Syntax_Syntax.mk_binder
+                                                        bv_x in
+                                                    [uu___10] in
+                                                  FStar_Syntax_Subst.close
+                                                    uu___9 body in
+                                                let lb =
+                                                  mk_lb
+                                                    ([],
+                                                      (FStar_Pervasives.Inl
+                                                         bv_x),
+                                                      FStar_Syntax_Syntax.tun,
+                                                      e1,
+                                                      (e1.FStar_Syntax_Syntax.pos)) in
+                                                mk
+                                                  (FStar_Syntax_Syntax.Tm_let
+                                                     ((false, [lb]), body1))) in
+                                     (tm,
+                                       (FStar_Compiler_List.op_At aq aqs1)))))))
         | FStar_Parser_AST.Project (e, f) ->
             let uu___1 =
               FStar_Syntax_DsEnv.fail_or env

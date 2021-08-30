@@ -509,7 +509,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         l, t', u_names
       in
       letrecs |> List.map guard_one_letrec
-      
+
 let wrap_guard_with_tactic_opt topt g =
    match topt with
    | None -> g
@@ -997,14 +997,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
        in
        S.fvar constrname delta_constant qual
     in
-    let mk_field_assignment i t =
-      match base_term with
-      | None -> t
-      | Some x ->
+    let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
         let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
-        let candidate = S.fvar (Ident.set_lid_range projname t.pos) (Delta_equational_at_level 1) qual in
-        S.mk_Tm_app candidate [(t, None)] t.pos
+        let candidate = S.fvar (Ident.set_lid_range projname x.pos) (Delta_equational_at_level 1) qual in
+        S.mk_Tm_app candidate [(x, None)] x.pos
     in
     let rest, args_rev =
       List.fold_left
@@ -1020,17 +1017,21 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
            in
            match matching with
            | [(_, t)] ->
-             let t = mk_field_assignment field_name t in
              rest, (t, None)::args_rev
 
-           | [] ->
-             raise_error
-               (Errors.Fatal_MissingFieldInRecord,
-                BU.format2 "Field %s of record type %s is missing"
-                  (string_of_id field_name)
-                  (string_of_lid rdc.DsEnv.typename))
-               top.pos
-
+           | [] -> (
+             match base_term with
+             | None ->
+               raise_error
+                 (Errors.Fatal_MissingFieldInRecord,
+                   BU.format2 "Field %s of record type %s is missing"
+                     (string_of_id field_name)
+                     (string_of_lid rdc.DsEnv.typename))
+                 top.pos
+             | Some x ->
+               let t = mk_field_projector field_name x in
+               rest, (t, None)::args_rev
+             )
 
            | _ ->
              raise_error
@@ -1060,13 +1061,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, [(e, None)]) ->
     (* type-directed elaboration of field projection *)
-    let fallback candidate = 
+    let fallback candidate =
       let term = S.mk_Tm_app candidate [(e, None)] top.pos in
       tc_term env term
     in
-    let _, lc, _ = 
+    let _, lc, _ =
       let env, _ = Env.clear_expected_typ env in
-      tc_term env e 
+      tc_term env e
     in
     begin
     let thead, _ = U.head_and_args lc.res_typ in
@@ -1076,19 +1077,19 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
       match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
       | None -> fallback candidate
-      | Some rdc -> 
-        let i = 
-          List.tryFind 
+      | Some rdc ->
+        let i =
+          List.tryFind
             (fun (i, _) -> Ident.string_of_id i = Ident.string_of_lid field_name)
             rdc.DsEnv.fields
         in
         match i with
         | None -> fallback candidate
-        | Some (i, _) -> 
+        | Some (i, _) ->
           let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
           let projname = mk_field_projector_name_from_ident constrname i in
           let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
-          let candidate = S.fvar (Ident.set_lid_range projname (Ident.range_of_lid field_name)) (Delta_equational_at_level 1) qual in 
+          let candidate = S.fvar (Ident.set_lid_range projname (Ident.range_of_lid field_name)) (Delta_equational_at_level 1) qual in
           fallback candidate
       )
     | _ -> fallback candidate
@@ -1270,7 +1271,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
                      erasable || erasable_branch)
                 t_eqns
                 ([], Env.trivial_guard, false) in
-      
+
       (* note that bind_cases adds an exhaustiveness check *)
       match ret_or_res_typ with
       | Inr res_t ->
@@ -1283,7 +1284,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let cases = List.map
           (fun (f, eff_label, cflags, c) ->
              (f, eff_label, cflags, (fun b -> TcComm.set_result_typ_lc (c b) t))) cases in
-        
+
         TcUtil.bind_cases env t cases guard_x, g, erasable
 
       | Inl (Inr c) ->  //a return annotation, with computation type
@@ -1461,7 +1462,7 @@ and tc_value env (e:term) : term
           let k, u = U.type_u () in
           TcUtil.new_implicit_var "type of user-provided implicit term" r env k
         | Some t -> t, [], Env.trivial_guard in
-    
+
     let e, _, g1 = TcUtil.new_implicit_var
           ("user-provided implicit term at " ^ (Range.string_of_range r))
           r env t in
@@ -1739,7 +1740,7 @@ and tc_universe env u : universe =
 
 (*
  * Called when typechecking a Tm_abs node
- * 
+ *
  * t0 is the expected type in the environment for the Tm_abs node
  *)
 and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
@@ -1896,13 +1897,13 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
         | None, Some Equality -> true
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
-  
+
         if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
         then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
         end;
-        
+
         (* since binders depend on previous ones, we accumulate a substitution *)
         let expected_t = SS.subst subst hd_expected.sort in
         let t, g_env =
@@ -1929,7 +1930,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
                     "Type annotation on parameter incompatible with the expected type"
                     g_env in
             t, Env.conj_guard g1_env g2_env in
-        
+
         let hd = {hd with sort=t} in
         let b = {binder_bv=hd;binder_qual=imp;binder_attrs=attrs} in
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
@@ -2008,7 +2009,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             (Tm_ascribed (body, (Inr (c_opt |> must), None), None))
             Range.dummyRange,
           false
-        else 
+        else
           envbody,
           body,
           (match c_opt, (SS.compress body).n with
@@ -2346,7 +2347,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
-            let ctx_uvar_meta, g_tau_or_attr = 
+            let ctx_uvar_meta, g_tau_or_attr =
                 match qual, attrs with
                 | Some (Meta tau), _ ->
                   let tau = SS.subst subst tau in
@@ -2367,7 +2368,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                            (Range.union_rng (Range.use_range head.pos)
                                                             (Range.use_range t.pos))
             in
-            let varg, _, implicits = 
+            let varg, _, implicits =
               new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
@@ -3141,7 +3142,7 @@ and tc_eqn scrutinee env ret_opt branch
      let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
 
      //g_branch is trivial, its logical content is now incorporated within c
-        
+
      let branch_has_layered_effect = c.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env in
 
      (* (b) *)
@@ -3194,7 +3195,7 @@ and tc_eqn scrutinee env ret_opt branch
 
          (*
           * AR: typecheck the pat_bv_tms, to resolve implicits etc.
-          * 
+          *
           * recall that pat_bv_tms are terms that are definitionally equal to the pat_bvs
           *   but are in terms of projectors on the scrutinee term
           * these will be used to substitute pat bvs in the computation type
@@ -3236,7 +3237,7 @@ and tc_eqn scrutinee env ret_opt branch
            then BU.print2 "tc_eqn: typechecked pat_bv_tms %s (pat_bvs : %s)\n"
                   (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
                   (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs) in
- 
+
          c_weak
          |> TcComm.apply_lcomp (fun c -> c) (fun g -> match eqs with
                                                | None -> g
@@ -3454,7 +3455,7 @@ and check_inner_let env e =
        //AR: TODO: FIXME: monadic annotations need to be adjusted for polymonadic binds
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-       let lb = 
+       let lb =
          let attrs =
            let add_inline_let =  //add inline_let if
              not is_inline_let &&  //the letbinding is not already inline_let, and
@@ -3663,8 +3664,8 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
-        let g, lbtyp = 
-            if not check_t 
+        let g, lbtyp =
+            if not check_t
             then g_acc, lbtyp
             else let _, g, t = check_annot univ_vars lbtyp in
                  Env.conj_guard g_acc g, t
@@ -3701,7 +3702,7 @@ and check_let_recs env lbts =
         let bs, t, lcomp = abs_formals lb.lbdef in
         //see issue #1017
         match bs with
-        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, 
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral,
                             BU.format2
                             "Only function literals may be defined recursively; %s is defined to be %s"
                                (Print.lbname_to_string lb.lbname)
@@ -4262,7 +4263,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
-  
+
   | Tm_name _ -> Const.effect_PURE_lid |> Some
   | Tm_lazy _ -> Const.effect_PURE_lid |> Some
   | Tm_fvar _ -> Const.effect_PURE_lid |> Some
@@ -4272,7 +4273,7 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
   | Tm_abs _ -> Const.effect_PURE_lid |> Some
   | Tm_arrow _ -> Const.effect_PURE_lid |> Some
   | Tm_refine _ -> Const.effect_PURE_lid |> Some
-  
+
   | Tm_app (hd, args) ->
     let join_effects eff1 eff2 =
       let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in

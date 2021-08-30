@@ -2917,30 +2917,26 @@ and (tc_maybe_toplevel_term :
                     else FStar_Pervasives_Native.None in
                   FStar_Syntax_Syntax.fvar constrname
                     FStar_Syntax_Syntax.delta_constant qual in
-                let mk_field_assignment i t =
-                  match base_term with
-                  | FStar_Pervasives_Native.None -> t
-                  | FStar_Pervasives_Native.Some x ->
-                      let projname =
-                        FStar_Syntax_Util.mk_field_projector_name_from_ident
-                          constrname i in
-                      let qual =
-                        if rdc.FStar_Syntax_DsEnv.is_record
-                        then
-                          FStar_Pervasives_Native.Some
-                            (FStar_Syntax_Syntax.Record_projector
-                               (constrname, i))
-                        else FStar_Pervasives_Native.None in
-                      let candidate1 =
-                        let uu___6 =
-                          FStar_Ident.set_lid_range projname
-                            t.FStar_Syntax_Syntax.pos in
-                        FStar_Syntax_Syntax.fvar uu___6
-                          (FStar_Syntax_Syntax.Delta_equational_at_level
-                             Prims.int_one) qual in
-                      FStar_Syntax_Syntax.mk_Tm_app candidate1
-                        [(t, FStar_Pervasives_Native.None)]
-                        t.FStar_Syntax_Syntax.pos in
+                let mk_field_projector i x =
+                  let projname =
+                    FStar_Syntax_Util.mk_field_projector_name_from_ident
+                      constrname i in
+                  let qual =
+                    if rdc.FStar_Syntax_DsEnv.is_record
+                    then
+                      FStar_Pervasives_Native.Some
+                        (FStar_Syntax_Syntax.Record_projector (constrname, i))
+                    else FStar_Pervasives_Native.None in
+                  let candidate1 =
+                    let uu___6 =
+                      FStar_Ident.set_lid_range projname
+                        x.FStar_Syntax_Syntax.pos in
+                    FStar_Syntax_Syntax.fvar uu___6
+                      (FStar_Syntax_Syntax.Delta_equational_at_level
+                         Prims.int_one) qual in
+                  FStar_Syntax_Syntax.mk_Tm_app candidate1
+                    [(x, FStar_Pervasives_Native.None)]
+                    x.FStar_Syntax_Syntax.pos in
                 let uu___6 =
                   FStar_Compiler_List.fold_left
                     (fun uu___7 ->
@@ -2974,27 +2970,34 @@ and (tc_maybe_toplevel_term :
                               | (matching, rest) ->
                                   (match matching with
                                    | (uu___11, t)::[] ->
-                                       let t1 =
-                                         mk_field_assignment field_name t in
                                        (rest,
-                                         ((t1, FStar_Pervasives_Native.None)
+                                         ((t, FStar_Pervasives_Native.None)
                                          :: args_rev))
                                    | [] ->
-                                       let uu___11 =
-                                         let uu___12 =
-                                           let uu___13 =
-                                             FStar_Ident.string_of_id
-                                               field_name in
-                                           let uu___14 =
-                                             FStar_Ident.string_of_lid
-                                               rdc.FStar_Syntax_DsEnv.typename in
-                                           FStar_Compiler_Util.format2
-                                             "Field %s of record type %s is missing"
-                                             uu___13 uu___14 in
-                                         (FStar_Errors.Fatal_MissingFieldInRecord,
-                                           uu___12) in
-                                       FStar_Errors.raise_error uu___11
-                                         top.FStar_Syntax_Syntax.pos
+                                       (match base_term with
+                                        | FStar_Pervasives_Native.None ->
+                                            let uu___11 =
+                                              let uu___12 =
+                                                let uu___13 =
+                                                  FStar_Ident.string_of_id
+                                                    field_name in
+                                                let uu___14 =
+                                                  FStar_Ident.string_of_lid
+                                                    rdc.FStar_Syntax_DsEnv.typename in
+                                                FStar_Compiler_Util.format2
+                                                  "Field %s of record type %s is missing"
+                                                  uu___13 uu___14 in
+                                              (FStar_Errors.Fatal_MissingFieldInRecord,
+                                                uu___12) in
+                                            FStar_Errors.raise_error uu___11
+                                              top.FStar_Syntax_Syntax.pos
+                                        | FStar_Pervasives_Native.Some x ->
+                                            let t =
+                                              mk_field_projector field_name x in
+                                            (rest,
+                                              ((t,
+                                                 FStar_Pervasives_Native.None)
+                                              :: args_rev)))
                                    | uu___11 ->
                                        let uu___12 =
                                          let uu___13 =

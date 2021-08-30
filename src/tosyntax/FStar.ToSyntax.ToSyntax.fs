@@ -1643,13 +1643,23 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       | None -> mk_result args, aqs
       | Some e ->
         let e, aq = desugar_term_aq env e in
-        let x = FStar.Ident.gen e.pos in
-        let env', bv_x = push_bv env x in
-        let nm = S.bv_to_name bv_x in
-        let body = mk_result ((nm, None)::args) in
-        let lb = mk_lb ([], Inl bv_x, S.tun, e, e.pos) in
-        mk (Tm_let((false, [lb]), body)),
-        (aq@aqs)
+        let tm =
+          match (SS.compress e).n with
+          | Tm_name _
+          | Tm_fvar _ ->
+            //no need to hoist
+            mk_result ((e, None)::args)
+          | _ ->
+            let x = FStar.Ident.gen e.pos in
+            let env', bv_x = push_bv env x in
+            let nm = S.bv_to_name bv_x in
+            let body = mk_result ((nm, None)::args) in
+            let body = SS.close [S.mk_binder bv_x] body in
+            let lb = mk_lb ([], Inl bv_x, S.tun, e, e.pos) in
+            mk (Tm_let((false, [lb]), body))
+        in
+        tm,
+        aq@aqs
       end
 
     | Project(e, f) ->
