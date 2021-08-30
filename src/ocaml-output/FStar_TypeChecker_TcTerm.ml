@@ -2812,6 +2812,97 @@ and (tc_maybe_toplevel_term :
                                               [g_e; g_repr; g_a; g_eq; g'] in
                                           (e5, c1, uu___13))))))))
        | FStar_Syntax_Syntax.Tm_app
+           ({
+              FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
+                {
+                  FStar_Syntax_Syntax.fv_name =
+                    { FStar_Syntax_Syntax.v = field_name;
+                      FStar_Syntax_Syntax.p = uu___1;_};
+                  FStar_Syntax_Syntax.fv_delta = uu___2;
+                  FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
+                    (FStar_Syntax_Syntax.Unresolved_projector candidate);_};
+              FStar_Syntax_Syntax.pos = uu___3;
+              FStar_Syntax_Syntax.vars = uu___4;_},
+            (e1, FStar_Pervasives_Native.None)::[])
+           ->
+           let fallback candidate1 =
+             let term =
+               FStar_Syntax_Syntax.mk_Tm_app candidate1
+                 [(e1, FStar_Pervasives_Native.None)]
+                 top.FStar_Syntax_Syntax.pos in
+             tc_term env1 term in
+           let uu___5 =
+             let uu___6 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+             match uu___6 with | (env2, uu___7) -> tc_term env2 e1 in
+           (match uu___5 with
+            | (uu___6, lc, uu___7) ->
+                let uu___8 =
+                  FStar_Syntax_Util.head_and_args
+                    lc.FStar_TypeChecker_Common.res_typ in
+                (match uu___8 with
+                 | (thead, uu___9) ->
+                     let thead1 =
+                       FStar_TypeChecker_Normalize.unfold_whnf env1 thead in
+                     let uu___10 =
+                       let uu___11 = FStar_Syntax_Subst.compress thead1 in
+                       uu___11.FStar_Syntax_Syntax.n in
+                     (match uu___10 with
+                      | FStar_Syntax_Syntax.Tm_fvar type_name ->
+                          let uu___11 =
+                            FStar_Syntax_DsEnv.try_lookup_record_type
+                              env1.FStar_TypeChecker_Env.dsenv
+                              (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                          (match uu___11 with
+                           | FStar_Pervasives_Native.None ->
+                               fallback candidate
+                           | FStar_Pervasives_Native.Some rdc ->
+                               let i =
+                                 FStar_Compiler_List.tryFind
+                                   (fun uu___12 ->
+                                      match uu___12 with
+                                      | (i1, uu___13) ->
+                                          let uu___14 =
+                                            FStar_Ident.string_of_id i1 in
+                                          let uu___15 =
+                                            FStar_Ident.string_of_lid
+                                              field_name in
+                                          uu___14 = uu___15)
+                                   rdc.FStar_Syntax_DsEnv.fields in
+                               (match i with
+                                | FStar_Pervasives_Native.None ->
+                                    fallback candidate
+                                | FStar_Pervasives_Native.Some (i1, uu___12)
+                                    ->
+                                    let constrname =
+                                      let uu___13 =
+                                        let uu___14 =
+                                          FStar_Ident.ns_of_lid
+                                            rdc.FStar_Syntax_DsEnv.typename in
+                                        FStar_Compiler_List.op_At uu___14
+                                          [rdc.FStar_Syntax_DsEnv.constrname] in
+                                      FStar_Ident.lid_of_ids uu___13 in
+                                    let projname =
+                                      FStar_Syntax_Util.mk_field_projector_name_from_ident
+                                        constrname i1 in
+                                    let qual =
+                                      if rdc.FStar_Syntax_DsEnv.is_record
+                                      then
+                                        FStar_Pervasives_Native.Some
+                                          (FStar_Syntax_Syntax.Record_projector
+                                             (constrname, i1))
+                                      else FStar_Pervasives_Native.None in
+                                    let candidate1 =
+                                      let uu___13 =
+                                        let uu___14 =
+                                          FStar_Ident.range_of_lid field_name in
+                                        FStar_Ident.set_lid_range projname
+                                          uu___14 in
+                                      FStar_Syntax_Syntax.fvar uu___13
+                                        (FStar_Syntax_Syntax.Delta_equational_at_level
+                                           Prims.int_one) qual in
+                                    fallback candidate1))
+                      | uu___11 -> fallback candidate)))
+       | FStar_Syntax_Syntax.Tm_app
            (head, (tau, FStar_Pervasives_Native.None)::[]) when
            (FStar_Syntax_Util.is_synth_by_tactic head) &&
              (Prims.op_Negation env1.FStar_TypeChecker_Env.phase1)

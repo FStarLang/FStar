@@ -941,6 +941,40 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
+  | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, [(e, None)]) ->
+    (* type-directed elaboration of field projection *)
+    let fallback candidate = 
+      let term = S.mk_Tm_app candidate [(e, None)] top.pos in
+      tc_term env term
+    in
+    let _, lc, _ = 
+      let env, _ = Env.clear_expected_typ env in
+      tc_term env e 
+    in
+    begin
+    let thead, _ = U.head_and_args lc.res_typ in
+    let thead = N.unfold_whnf env thead in
+    match (SS.compress thead).n with
+    | Tm_fvar type_name -> (
+      match DsEnv.try_lookup_record_type env.dsenv type_name.fv_name.v with
+      | None -> fallback candidate
+      | Some rdc -> 
+        let i = 
+          List.tryFind 
+            (fun (i, _) -> Ident.string_of_id i = Ident.string_of_lid field_name)
+            rdc.DsEnv.fields
+        in
+        match i with
+        | None -> fallback candidate
+        | Some (i, _) -> 
+          let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
+          let projname = mk_field_projector_name_from_ident constrname i in
+          let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
+          let candidate = S.fvar (Ident.set_lid_range projname (Ident.range_of_lid field_name)) (Delta_equational_at_level 1) qual in 
+          fallback candidate
+      )
+    | _ -> fallback candidate
+    end
   // If we're on the first phase, we don't synth, and just wait for the next phase
   | Tm_app (head, [(tau, None)])
   | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])

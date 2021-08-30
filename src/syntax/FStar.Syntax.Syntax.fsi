@@ -216,7 +216,8 @@ and meta_source_info =
   | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Unresolved_projector of term                (* desugaring leaves record projectors unresolved so that they can be resolved with type info later *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
   | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)

@@ -3901,16 +3901,24 @@ and (desugar_term_maybe_top :
                             FStar_Syntax_Syntax.Record_projector uu___4 in
                           FStar_Pervasives_Native.Some uu___3
                         else FStar_Pervasives_Native.None in
+                      let candidate_projector =
+                        let uu___3 =
+                          FStar_Ident.set_lid_range projname
+                            top.FStar_Parser_AST.range in
+                        FStar_Syntax_Syntax.fvar uu___3
+                          (FStar_Syntax_Syntax.Delta_equational_at_level
+                             Prims.int_one) qual in
+                      let qual1 =
+                        FStar_Syntax_Syntax.Unresolved_projector
+                          candidate_projector in
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
                             let uu___6 =
-                              let uu___7 =
-                                FStar_Ident.set_lid_range projname
-                                  top.FStar_Parser_AST.range in
-                              FStar_Syntax_Syntax.fvar uu___7
-                                (FStar_Syntax_Syntax.Delta_equational_at_level
-                                   Prims.int_one) qual in
+                              FStar_Syntax_Syntax.fvar f
+                                (FStar_Syntax_Syntax.Delta_constant_at_level
+                                   Prims.int_zero)
+                                (FStar_Pervasives_Native.Some qual1) in
                             let uu___7 =
                               let uu___8 = FStar_Syntax_Syntax.as_arg e1 in
                               [uu___8] in

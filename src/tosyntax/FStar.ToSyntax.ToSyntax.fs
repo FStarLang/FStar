@@ -1642,12 +1642,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Project(e, f) ->
-      let constrname, is_rec = fail_or env  (try_lookup_dc_by_field_name env) f in
+      let constrname, is_rec = fail_or env (try_lookup_dc_by_field_name env) f in
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
       let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
-                   [as_arg e]), s
+      let candidate_projector = S.fvar (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
+      let qual = Unresolved_projector candidate_projector in
+      mk <| Tm_app(S.fvar f (Delta_constant_at_level 0) (Some qual), [as_arg e]), s
 
     | NamedTyp(n, e) ->
       (* See issue #1905 *)
