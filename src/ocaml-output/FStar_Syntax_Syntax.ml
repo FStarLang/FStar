@@ -286,9 +286,15 @@ and meta_source_info =
   | Machine_integer of (FStar_Const.signedness * FStar_Const.width) 
 and fv_qual =
   | Data_ctor 
-  | Unresolved_projector of term' syntax 
   | Record_projector of (FStar_Ident.lident * FStar_Ident.ident) 
   | Record_ctor of (FStar_Ident.lident * FStar_Ident.ident Prims.list) 
+  | Unresolved_projector of term' syntax 
+  | Unresolved_constructor of unresolved_constructor 
+and unresolved_constructor =
+  {
+  uc_base_term: Prims.bool ;
+  uc_typename: FStar_Ident.lident ;
+  uc_fields: FStar_Ident.lident Prims.list }
 and subst_elt =
   | DB of (Prims.int * bv) 
   | NM of (bv * Prims.int) 
@@ -732,11 +738,6 @@ let (__proj__Machine_integer__item___0 :
   fun projectee -> match projectee with | Machine_integer _0 -> _0
 let (uu___is_Data_ctor : fv_qual -> Prims.bool) =
   fun projectee -> match projectee with | Data_ctor -> true | uu___ -> false
-let (uu___is_Unresolved_projector : fv_qual -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Unresolved_projector _0 -> true | uu___ -> false
-let (__proj__Unresolved_projector__item___0 : fv_qual -> term' syntax) =
-  fun projectee -> match projectee with | Unresolved_projector _0 -> _0
 let (uu___is_Record_projector : fv_qual -> Prims.bool) =
   fun projectee ->
     match projectee with | Record_projector _0 -> true | uu___ -> false
@@ -749,6 +750,32 @@ let (uu___is_Record_ctor : fv_qual -> Prims.bool) =
 let (__proj__Record_ctor__item___0 :
   fv_qual -> (FStar_Ident.lident * FStar_Ident.ident Prims.list)) =
   fun projectee -> match projectee with | Record_ctor _0 -> _0
+let (uu___is_Unresolved_projector : fv_qual -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unresolved_projector _0 -> true | uu___ -> false
+let (__proj__Unresolved_projector__item___0 : fv_qual -> term' syntax) =
+  fun projectee -> match projectee with | Unresolved_projector _0 -> _0
+let (uu___is_Unresolved_constructor : fv_qual -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unresolved_constructor _0 -> true | uu___ -> false
+let (__proj__Unresolved_constructor__item___0 :
+  fv_qual -> unresolved_constructor) =
+  fun projectee -> match projectee with | Unresolved_constructor _0 -> _0
+let (__proj__Mkunresolved_constructor__item__uc_base_term :
+  unresolved_constructor -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { uc_base_term; uc_typename; uc_fields;_} -> uc_base_term
+let (__proj__Mkunresolved_constructor__item__uc_typename :
+  unresolved_constructor -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { uc_base_term; uc_typename; uc_fields;_} -> uc_typename
+let (__proj__Mkunresolved_constructor__item__uc_fields :
+  unresolved_constructor -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { uc_base_term; uc_typename; uc_fields;_} -> uc_fields
 let (uu___is_DB : subst_elt -> Prims.bool) =
   fun projectee -> match projectee with | DB _0 -> true | uu___ -> false
 let (__proj__DB__item___0 : subst_elt -> (Prims.int * bv)) =

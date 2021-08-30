@@ -941,6 +941,123 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
+  | Tm_app ({n=Tm_fvar {fv_name={v=candidate}; fv_qual=Some (Unresolved_constructor uc)}}, args) ->
+    let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
+    let base_term, uc_fields =
+      let base, fields =
+        if uc.uc_base_term
+        then match args with
+             | (base, _)::rest -> Some base, rest
+             | _ -> failwith "Impossible"
+        else None, args
+      in
+      base, List.zip uc.uc_fields (List.map fst fields)
+    in
+    let default_rdc () =
+      let (fn, _) = List.hd uc_fields in
+      match DsEnv.try_lookup_record_type dsenv uc.uc_typename with
+      | Some rdc -> rdc
+      | None -> failwith "Impossible"
+    in
+    let find_record_or_dc t =
+        let thead, _ = U.head_and_args t in
+        let thead = N.unfold_whnf env thead in
+        match (SS.compress thead).n with
+        | Tm_fvar type_name ->
+          begin
+          match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
+          | None -> default_rdc ()
+          | Some r -> r
+          end
+        | _ -> default_rdc()
+    in
+    let rdc =
+      match Env.expected_typ env with
+      | Some t ->
+        find_record_or_dc t
+
+      | None ->
+        match base_term with
+        | None ->
+          default_rdc()
+
+        | Some e ->
+          let _, lc, _ = tc_term env e in
+          find_record_or_dc lc.res_typ
+    in
+    let constrname =
+       let name = lid_of_ids (ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
+       Ident.set_lid_range name top.pos
+    in
+    let constructor =
+       let qual =
+         if rdc.DsEnv.is_record
+         then (Some (Record_ctor(rdc.DsEnv.typename, rdc.DsEnv.fields |> List.map fst)))
+         else None
+       in
+       S.fvar constrname delta_constant qual
+    in
+    let mk_field_assignment i t =
+      match base_term with
+      | None -> t
+      | Some x ->
+        let projname = mk_field_projector_name_from_ident constrname i in
+        let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
+        let candidate = S.fvar (Ident.set_lid_range projname t.pos) (Delta_equational_at_level 1) qual in
+        S.mk_Tm_app candidate [(t, None)] t.pos
+    in
+    let rest, args_rev =
+      List.fold_left
+        (fun (fields, args_rev) (field_name, _) ->
+           let matching, rest =
+             List.partition
+               (fun (fn, t) ->
+                  Ident.ident_equals field_name (Ident.ident_of_lid fn) &&
+                  (if ns_of_lid fn <> []
+                   then nsstr fn = nsstr rdc.DsEnv.typename
+                   else true))
+               fields
+           in
+           match matching with
+           | [(_, t)] ->
+             let t = mk_field_assignment field_name t in
+             rest, (t, None)::args_rev
+
+           | [] ->
+             raise_error
+               (Errors.Fatal_MissingFieldInRecord,
+                BU.format2 "Field %s of record type %s is missing"
+                  (string_of_id field_name)
+                  (string_of_lid rdc.DsEnv.typename))
+               top.pos
+
+
+           | _ ->
+             raise_error
+               (Errors.Fatal_MissingFieldInRecord,
+                BU.format2 "Field %s of record type %s is given multiple assignments"
+                  (string_of_id field_name)
+                  (string_of_lid rdc.DsEnv.typename))
+               top.pos)
+        (uc_fields, [])
+        rdc.DsEnv.fields
+    in
+    let args = List.rev args_rev in
+    let _ =
+      match rest with
+      | [] -> ()
+      | (f, _)::_ ->
+        raise_error
+          (Errors.Fatal_MissingFieldInRecord,
+            BU.format2 "Field %s is redundant for type %s"
+                       (string_of_lid f)
+                       (string_of_lid rdc.DsEnv.typename))
+          top.pos
+    in
+    let term = S.mk_Tm_app constructor args top.pos in
+    tc_term env term
+
+
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, [(e, None)]) ->
     (* type-directed elaboration of field projection *)
     let fallback candidate = 
@@ -956,7 +1073,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let thead = N.unfold_whnf env thead in
     match (SS.compress thead).n with
     | Tm_fvar type_name -> (
-      match DsEnv.try_lookup_record_type env.dsenv type_name.fv_name.v with
+      let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
+      match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
       | None -> fallback candidate
       | Some rdc -> 
         let i = 

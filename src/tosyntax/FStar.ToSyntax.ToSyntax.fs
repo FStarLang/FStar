@@ -652,18 +652,17 @@ let check_fields env fields rg =
     let record = fail_or env (try_lookup_record_by_field_name env) f in
     let check_field (f', _) =
         if Env.belongs_to_record env f' record
-        then ()
+        then None
         else let msg = BU.format3
                        "Field %s belongs to record type %s, whereas field %s does not"
                        (string_of_lid f)
                        (string_of_lid record.typename)
                        (string_of_lid f')
              in
-             raise_error (Errors.Fatal_FieldsNotBelongToSameRecordType, msg) rg
+             Some (Errors.Fatal_FieldsNotBelongToSameRecordType, msg, rg)
     in
-    let () = List.iter check_field (List.tl fields)
-    in
-    record
+    let err = List.tryPick check_field (List.tl fields) in
+    record, err
 
 let check_linear_pattern_variables pats r =
   // returns the set of pattern variables
@@ -841,18 +840,26 @@ let rec desugar_data_pat
 
       | PatRecord (fields) ->
         (* elaborate into an application and recurse *)
-        let record = check_fields env fields p.prange in
-        let fields = fields |> List.map (fun (f, p) -> (ident_of_lid f, p)) in
-        let args = record.fields |> List.map (fun (f, _) ->
-          match fields |> List.tryFind (fun (g, _) -> (string_of_id f) = (string_of_id g)) with
+        let record, err_opt = check_fields env fields p.prange in
+        begin
+        match err_opt with
+        | Some (e, msg, r) -> FStar.Errors.raise_error (e, msg) r
+        | None ->
+          let fields = fields |> List.map (fun (f, p) -> (ident_of_lid f, p)) in
+          let args = record.fields |> List.map (fun (f, _) ->
+            match fields |> List.tryFind (fun (g, _) -> (string_of_id f) = (string_of_id g)) with
             | None -> mk_pattern (PatWild (None, [])) p.prange
-            | Some (_, p) -> p) in
-        let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (ns_of_lid record.typename @ [record.constrname]))) p.prange, args)) p.prange in
-        let env, e, b, p, annots = aux loc env app in
-        let p = match p.v with
+            | Some (_, p) -> p)
+          in
+          let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (ns_of_lid record.typename @ [record.constrname]))) p.prange, args)) p.prange in
+          let env, e, b, p, annots = aux loc env app in
+          let p =
+            match p.v with
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
-            | _ -> p in
-        env, e, b, p, annots
+            | _ -> p
+          in
+          env, e, b, p, annots
+        end
   and aux loc env p = aux' false loc env p
   in
 
@@ -1603,42 +1610,46 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       raise_error (Errors.Fatal_UnexpectedEmptyRecord, "Unexpected empty record") top.range
 
     | Record(eopt, fields) ->
-      let record = check_fields env fields top.range in
-      (* Namespace qualifier given by the user, needed to requalify fields in 'recterm' (MUST NOT be already resolved, since it will be re-resolved afterwards and thus may undergo rewriting e.g. by module abbrev *)
-      let user_ns = let (f, _) = List.hd fields in ns_of_lid f in
-      let get_field xopt f =
-        let found = fields |> BU.find_opt (fun (g, _) -> (string_of_id f) = (string_of_id (ident_of_lid g))) in
-        let fn = lid_of_ids (user_ns @ [f]) in
-        match found with
-          | Some (_, e) -> (fn, e)
-          | None ->
-            match xopt with
-              | None ->
-                raise_error (Errors.Fatal_MissingFieldInRecord, (BU.format2 "Field %s of record type %s is missing" (string_of_id f) (string_of_lid record.typename))) top.range
-              | Some x ->
-                (fn, mk_term (Project(x, fn)) x.range x.level) in
+      let (f, _) = List.hd fields in
+      let record = fail_or env (try_lookup_record_by_field_name env) f in
+      let candidate_constructor =
+          let name = lid_of_ids (ns_of_lid record.typename @ [record.constrname]) in
+          Ident.set_lid_range name top.range
+      in
+      let fields, aqs =
+          List.map
+              (fun (fn, fval) ->
+                let fval, aq = desugar_term_aq env fval in
+                (fn, fval), aq)
+              fields
+          |> List.unzip
+      in
 
-      let user_constrname = lid_of_ids (user_ns @ [record.constrname]) in
-      let recterm = match eopt with
-        | None ->
-          Construct(user_constrname,
-                    record.fields |> List.map (fun (f, _) ->
-                    snd <| get_field None f, Nothing))
-
-        | Some e ->
-          let x = FStar.Ident.gen e.range in
-          let xterm = mk_term (Var (lid_of_ids [x])) (range_of_id x) Expr in
-          let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(NoLetQualifier, [None, (mk_pattern (PatVar (x, None, [])) (range_of_id x), e)], mk_term record top.range top.level) in
-
-      let recterm = mk_term recterm top.range top.level in
-      let e, s = desugar_term_aq env recterm in
-      begin match e.n with
-        | Tm_app ({n=Tm_fvar fv}, args) ->
-          mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) delta_constant //NS:ok, record constructor
-                             (Some (Record_ctor(record.typename, record.fields |> List.map fst))),
-                      args), s
-        | _ -> e, s
+      let field_names, assignments = List.unzip fields in
+      let args = List.map (fun f -> f, None) assignments in
+      let aqs = List.flatten aqs in
+      let head =
+        S.fvar candidate_constructor
+               delta_constant
+               (Some
+                 (Unresolved_constructor
+                     ({ uc_base_term = Option.isSome eopt;
+                        uc_typename = record.typename;
+                        uc_fields = field_names })))
+      in
+      let mk_result args = S.mk_Tm_app head args top.range in
+      begin
+      match eopt with
+      | None -> mk_result args, aqs
+      | Some e ->
+        let e, aq = desugar_term_aq env e in
+        let x = FStar.Ident.gen e.pos in
+        let env', bv_x = push_bv env x in
+        let nm = S.bv_to_name bv_x in
+        let body = mk_result ((nm, None)::args) in
+        let lb = mk_lb ([], Inl bv_x, S.tun, e, e.pos) in
+        mk (Tm_let((false, [lb]), body)),
+        (aq@aqs)
       end
 
     | Project(e, f) ->
