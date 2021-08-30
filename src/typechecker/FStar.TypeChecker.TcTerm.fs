@@ -83,6 +83,101 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
+    let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
+    let default_rdc () =
+      match DsEnv.try_lookup_record_type dsenv uc.uc_typename with
+      | Some rdc -> rdc
+      | None -> failwith "Impossible"
+    in
+    let rdc =
+      match t with
+      | None -> default_rdc()
+      | Some t ->
+        let thead, _ = U.head_and_args t in
+        let thead = N.unfold_whnf env thead in
+        match (SS.compress thead).n with
+        | Tm_fvar type_name ->
+          begin
+          match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
+          | None -> default_rdc ()
+          | Some r -> r
+          end
+        | _ -> default_rdc()
+    in
+    let constrname =
+          let name = lid_of_ids (ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
+          Ident.set_lid_range name rng
+    in
+    let constructor =
+        let qual =
+          if rdc.DsEnv.is_record
+            then (Some (Record_ctor(rdc.DsEnv.typename, rdc.DsEnv.fields |> List.map fst)))
+          else None
+        in
+        S.lid_as_fv constrname delta_constant qual
+    in
+    rdc, constrname, constructor
+
+
+let make_record_fields_in_order
+       (rdc : DsEnv.record_or_dc)
+       (fas : list<(lident * 'a)>)
+       (not_found:ident -> option<'a>)
+       (rng : Range.range)
+  : list<'a>
+  = let rest, as_rev =
+      List.fold_left
+        (fun (fields, as_rev) (field_name, _) ->
+           let matching, rest =
+             List.partition
+               (fun (fn, t) ->
+                  Ident.ident_equals field_name (Ident.ident_of_lid fn) &&
+                  (if ns_of_lid fn <> []
+                   then nsstr fn = nsstr rdc.DsEnv.typename
+                   else true))
+               fields
+           in
+           match matching with
+           | [(_, a)] ->
+             rest, a::as_rev
+
+           | [] -> (
+             match not_found field_name with
+             | None ->
+               raise_error
+                 (Errors.Fatal_MissingFieldInRecord,
+                   BU.format2 "Field %s of record type %s is missing"
+                     (string_of_id field_name)
+                     (string_of_lid rdc.DsEnv.typename))
+                 rng
+             | Some a ->
+               rest, a::as_rev
+             )
+
+           | _ ->
+             raise_error
+               (Errors.Fatal_MissingFieldInRecord,
+                BU.format2 "Field %s of record type %s is given multiple assignments"
+                  (string_of_id field_name)
+                  (string_of_lid rdc.DsEnv.typename))
+               rng)
+        (fas, [])
+        rdc.DsEnv.fields
+    in
+    let _ =
+      match rest with
+      | [] -> ()
+      | (f, _)::_ ->
+        raise_error
+          (Errors.Fatal_MissingFieldInRecord,
+            BU.format2 "Field %s is redundant for type %s"
+                       (string_of_lid f)
+                       (string_of_lid rdc.DsEnv.typename))
+          rng
+    in
+    List.rev as_rev
+
 let push_binding env b =
   Env.push_bv env b.binder_bv
 
@@ -942,7 +1037,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     end
 
   | Tm_app ({n=Tm_fvar {fv_name={v=candidate}; fv_qual=Some (Unresolved_constructor uc)}}, args) ->
-    let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
     let base_term, uc_fields =
       let base, fields =
         if uc.uc_base_term
@@ -953,111 +1047,40 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       in
       base, List.zip uc.uc_fields (List.map fst fields)
     in
-    let default_rdc () =
-      let (fn, _) = List.hd uc_fields in
-      match DsEnv.try_lookup_record_type dsenv uc.uc_typename with
-      | Some rdc -> rdc
-      | None -> failwith "Impossible"
-    in
-    let find_record_or_dc t =
-        let thead, _ = U.head_and_args t in
-        let thead = N.unfold_whnf env thead in
-        match (SS.compress thead).n with
-        | Tm_fvar type_name ->
-          begin
-          match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
-          | None -> default_rdc ()
-          | Some r -> r
-          end
-        | _ -> default_rdc()
-    in
-    let rdc =
+    let rdc, constrname, constructor =
       match Env.expected_typ env with
       | Some t ->
-        find_record_or_dc t
+        find_record_or_dc_from_typ env (Some t) uc top.pos
 
       | None ->
         match base_term with
         | None ->
-          default_rdc()
+          find_record_or_dc_from_typ env None uc top.pos
 
         | Some e ->
           let _, lc, _ = tc_term env e in
-          find_record_or_dc lc.res_typ
+          find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos
     in
-    let constrname =
-       let name = lid_of_ids (ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
-       Ident.set_lid_range name top.pos
-    in
-    let constructor =
-       let qual =
-         if rdc.DsEnv.is_record
-         then (Some (Record_ctor(rdc.DsEnv.typename, rdc.DsEnv.fields |> List.map fst)))
-         else None
-       in
-       S.fvar constrname delta_constant qual
-    in
+    let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
         let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
         let candidate = S.fvar (Ident.set_lid_range projname x.pos) (Delta_equational_at_level 1) qual in
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
-    let rest, args_rev =
-      List.fold_left
-        (fun (fields, args_rev) (field_name, _) ->
-           let matching, rest =
-             List.partition
-               (fun (fn, t) ->
-                  Ident.ident_equals field_name (Ident.ident_of_lid fn) &&
-                  (if ns_of_lid fn <> []
-                   then nsstr fn = nsstr rdc.DsEnv.typename
-                   else true))
-               fields
-           in
-           match matching with
-           | [(_, t)] ->
-             rest, (t, None)::args_rev
-
-           | [] -> (
-             match base_term with
-             | None ->
-               raise_error
-                 (Errors.Fatal_MissingFieldInRecord,
-                   BU.format2 "Field %s of record type %s is missing"
-                     (string_of_id field_name)
-                     (string_of_lid rdc.DsEnv.typename))
-                 top.pos
-             | Some x ->
-               let t = mk_field_projector field_name x in
-               rest, (t, None)::args_rev
-             )
-
-           | _ ->
-             raise_error
-               (Errors.Fatal_MissingFieldInRecord,
-                BU.format2 "Field %s of record type %s is given multiple assignments"
-                  (string_of_id field_name)
-                  (string_of_lid rdc.DsEnv.typename))
-               top.pos)
-        (uc_fields, [])
-        rdc.DsEnv.fields
-    in
-    let args = List.rev args_rev in
-    let _ =
-      match rest with
-      | [] -> ()
-      | (f, _)::_ ->
-        raise_error
-          (Errors.Fatal_MissingFieldInRecord,
-            BU.format2 "Field %s is redundant for type %s"
-                       (string_of_lid f)
-                       (string_of_lid rdc.DsEnv.typename))
+    let fields =
+        make_record_fields_in_order
+          rdc
+          uc_fields
+          (fun field_name ->
+            match base_term with
+            | Some x -> Some (mk_field_projector field_name x)
+            | _ -> None)
           top.pos
     in
+    let args = List.map (fun x -> x, None) fields in
     let term = S.mk_Tm_app constructor args top.pos in
     tc_term env term
-
 
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, [(e, None)]) ->
     (* type-directed elaboration of field projection *)
@@ -2780,6 +2803,20 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           p,
           Env.trivial_guard,
           false
+
+        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
+          let rdc, _, constructor_fv = find_record_or_dc_from_typ env (Some pat_t) uc p.p in
+          let f_sub_pats = List.zip uc.uc_fields sub_pats in
+          let sub_pats =
+            make_record_fields_in_order rdc f_sub_pats
+              (fun _ ->
+                let x = S.new_bv None S.tun in
+                Some (S.withinfo (Pat_wild x) p.p, false))
+              p.p
+          in
+          let p = { p with v=Pat_cons(constructor_fv, sub_pats) } in
+          let p = PatternUtils.elaborate_pat env p in
+          check_nested_pattern env p t
 
         | Pat_cons(fv, sub_pats) ->
           let simple_pat =

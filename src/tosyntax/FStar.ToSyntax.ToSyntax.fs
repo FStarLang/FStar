@@ -840,26 +840,33 @@ let rec desugar_data_pat
 
       | PatRecord (fields) ->
         (* elaborate into an application and recurse *)
-        let record, err_opt = check_fields env fields p.prange in
-        begin
-        match err_opt with
-        | Some (e, msg, r) -> FStar.Errors.raise_error (e, msg) r
-        | None ->
-          let fields = fields |> List.map (fun (f, p) -> (ident_of_lid f, p)) in
-          let args = record.fields |> List.map (fun (f, _) ->
-            match fields |> List.tryFind (fun (g, _) -> (string_of_id f) = (string_of_id g)) with
-            | None -> mk_pattern (PatWild (None, [])) p.prange
-            | Some (_, p) -> p)
-          in
-          let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (ns_of_lid record.typename @ [record.constrname]))) p.prange, args)) p.prange in
-          let env, e, b, p, annots = aux loc env app in
-          let p =
-            match p.v with
-            | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
-            | _ -> p
-          in
-          env, e, b, p, annots
-        end
+        let (f, _) = List.hd fields in
+        let field_names, pats = List.unzip fields in
+        let record = fail_or env (try_lookup_record_by_field_name env) f in
+        let candidate_constructor =
+            let name = lid_of_ids (ns_of_lid record.typename @ [record.constrname]) in
+            let lid = Ident.set_lid_range name p.prange in
+            S.lid_as_fv
+              lid
+              delta_constant
+              (Some
+                 (Unresolved_constructor
+                     ({ uc_base_term = false;
+                        uc_typename = record.typename;
+                        uc_fields = field_names })))
+        in
+        let loc, env, annots, pats =
+          List.fold_left
+            (fun (loc, env, annots, pats) p ->
+              let loc, env, _, pat, ann = aux loc env p in
+              loc, env, ann@annots, (pat, false)::pats)
+            (loc, env, [], [])
+            pats
+        in
+        let pats = List.rev pats in
+        let pat = pos <| Pat_cons(candidate_constructor, pats) in
+        let x = S.new_bv (Some p.prange) (tun_r p.prange) in
+        loc, env, LocalBinder(x, None, []), pat, annots
   and aux loc env p = aux' false loc env p
   in
 

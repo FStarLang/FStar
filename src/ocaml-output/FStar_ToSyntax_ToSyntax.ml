@@ -1812,109 +1812,69 @@ let rec (desugar_data_pat :
                 (FStar_Errors.Fatal_UnexpectedPattern, "Unexpected pattern")
                 p1.FStar_Parser_AST.prange
           | FStar_Parser_AST.PatRecord fields ->
-              let uu___ = check_fields env1 fields p1.FStar_Parser_AST.prange in
+              let uu___ = FStar_Compiler_List.hd fields in
               (match uu___ with
-               | (record, err_opt) ->
-                   (match err_opt with
-                    | FStar_Pervasives_Native.Some (e, msg, r) ->
-                        FStar_Errors.raise_error (e, msg) r
-                    | FStar_Pervasives_Native.None ->
-                        let fields1 =
-                          FStar_Compiler_Effect.op_Bar_Greater fields
-                            (FStar_Compiler_List.map
-                               (fun uu___1 ->
-                                  match uu___1 with
-                                  | (f, p2) ->
-                                      let uu___2 = FStar_Ident.ident_of_lid f in
-                                      (uu___2, p2))) in
-                        let args =
-                          FStar_Compiler_Effect.op_Bar_Greater
-                            record.FStar_Syntax_DsEnv.fields
-                            (FStar_Compiler_List.map
-                               (fun uu___1 ->
-                                  match uu___1 with
-                                  | (f, uu___2) ->
-                                      let uu___3 =
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          fields1
-                                          (FStar_Compiler_List.tryFind
-                                             (fun uu___4 ->
-                                                match uu___4 with
-                                                | (g, uu___5) ->
-                                                    let uu___6 =
-                                                      FStar_Ident.string_of_id
-                                                        f in
-                                                    let uu___7 =
-                                                      FStar_Ident.string_of_id
-                                                        g in
-                                                    uu___6 = uu___7)) in
-                                      (match uu___3 with
-                                       | FStar_Pervasives_Native.None ->
-                                           FStar_Parser_AST.mk_pattern
-                                             (FStar_Parser_AST.PatWild
-                                                (FStar_Pervasives_Native.None,
-                                                  []))
-                                             p1.FStar_Parser_AST.prange
-                                       | FStar_Pervasives_Native.Some
-                                           (uu___4, p2) -> p2))) in
-                        let app =
-                          let uu___1 =
-                            let uu___2 =
-                              let uu___3 =
-                                let uu___4 =
-                                  let uu___5 =
-                                    let uu___6 =
-                                      let uu___7 =
-                                        FStar_Ident.ns_of_lid
-                                          record.FStar_Syntax_DsEnv.typename in
-                                      FStar_Compiler_List.op_At uu___7
-                                        [record.FStar_Syntax_DsEnv.constrname] in
-                                    FStar_Ident.lid_of_ids uu___6 in
-                                  FStar_Parser_AST.PatName uu___5 in
-                                FStar_Parser_AST.mk_pattern uu___4
-                                  p1.FStar_Parser_AST.prange in
-                              (uu___3, args) in
-                            FStar_Parser_AST.PatApp uu___2 in
-                          FStar_Parser_AST.mk_pattern uu___1
-                            p1.FStar_Parser_AST.prange in
-                        let uu___1 = aux loc env1 app in
-                        (match uu___1 with
-                         | (env2, e, b, p2, annots) ->
-                             let p3 =
-                               match p2.FStar_Syntax_Syntax.v with
-                               | FStar_Syntax_Syntax.Pat_cons (fv, args1) ->
-                                   let uu___2 =
-                                     let uu___3 =
-                                       let uu___4 =
-                                         let uu___5 = fv in
-                                         let uu___6 =
-                                           let uu___7 =
-                                             let uu___8 =
-                                               let uu___9 =
-                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                   record.FStar_Syntax_DsEnv.fields
-                                                   (FStar_Compiler_List.map
-                                                      FStar_Pervasives_Native.fst) in
-                                               ((record.FStar_Syntax_DsEnv.typename),
-                                                 uu___9) in
-                                             FStar_Syntax_Syntax.Record_ctor
-                                               uu___8 in
-                                           FStar_Pervasives_Native.Some
-                                             uu___7 in
-                                         {
-                                           FStar_Syntax_Syntax.fv_name =
-                                             (uu___5.FStar_Syntax_Syntax.fv_name);
-                                           FStar_Syntax_Syntax.fv_delta =
-                                             (uu___5.FStar_Syntax_Syntax.fv_delta);
-                                           FStar_Syntax_Syntax.fv_qual =
-                                             uu___6
-                                         } in
-                                       (uu___4, args1) in
-                                     FStar_Syntax_Syntax.Pat_cons uu___3 in
-                                   FStar_Compiler_Effect.op_Less_Bar pos
-                                     uu___2
-                               | uu___2 -> p2 in
-                             (env2, e, b, p3, annots))))
+               | (f, uu___1) ->
+                   let uu___2 = FStar_Compiler_List.unzip fields in
+                   (match uu___2 with
+                    | (field_names, pats) ->
+                        let record =
+                          FStar_Syntax_DsEnv.fail_or env1
+                            (FStar_Syntax_DsEnv.try_lookup_record_by_field_name
+                               env1) f in
+                        let candidate_constructor =
+                          let name =
+                            let uu___3 =
+                              let uu___4 =
+                                FStar_Ident.ns_of_lid
+                                  record.FStar_Syntax_DsEnv.typename in
+                              FStar_Compiler_List.op_At uu___4
+                                [record.FStar_Syntax_DsEnv.constrname] in
+                            FStar_Ident.lid_of_ids uu___3 in
+                          let lid =
+                            FStar_Ident.set_lid_range name
+                              p1.FStar_Parser_AST.prange in
+                          FStar_Syntax_Syntax.lid_as_fv lid
+                            FStar_Syntax_Syntax.delta_constant
+                            (FStar_Pervasives_Native.Some
+                               (FStar_Syntax_Syntax.Unresolved_constructor
+                                  {
+                                    FStar_Syntax_Syntax.uc_base_term = false;
+                                    FStar_Syntax_Syntax.uc_typename =
+                                      (record.FStar_Syntax_DsEnv.typename);
+                                    FStar_Syntax_Syntax.uc_fields =
+                                      field_names
+                                  })) in
+                        let uu___3 =
+                          FStar_Compiler_List.fold_left
+                            (fun uu___4 ->
+                               fun p2 ->
+                                 match uu___4 with
+                                 | (loc1, env2, annots, pats1) ->
+                                     let uu___5 = aux loc1 env2 p2 in
+                                     (match uu___5 with
+                                      | (loc2, env3, uu___6, pat, ann) ->
+                                          (loc2, env3,
+                                            (FStar_Compiler_List.op_At ann
+                                               annots), ((pat, false) ::
+                                            pats1)))) (loc, env1, [], [])
+                            pats in
+                        (match uu___3 with
+                         | (loc1, env2, annots, pats1) ->
+                             let pats2 = FStar_Compiler_List.rev pats1 in
+                             let pat =
+                               FStar_Compiler_Effect.op_Less_Bar pos
+                                 (FStar_Syntax_Syntax.Pat_cons
+                                    (candidate_constructor, pats2)) in
+                             let x =
+                               let uu___4 = tun_r p1.FStar_Parser_AST.prange in
+                               FStar_Syntax_Syntax.new_bv
+                                 (FStar_Pervasives_Native.Some
+                                    (p1.FStar_Parser_AST.prange)) uu___4 in
+                             (loc1, env2,
+                               (LocalBinder
+                                  (x, FStar_Pervasives_Native.None, [])),
+                               pat, annots))))
         and aux loc env1 p1 = aux' false loc env1 p1 in
         let aux_maybe_or env1 p1 =
           let loc = [] in
