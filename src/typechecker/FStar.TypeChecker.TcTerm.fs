@@ -93,7 +93,8 @@ let try_lookup_record_type env (typename:lident)
          | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
            let formals, c = U.arrow_formals t in
            if nparms < List.length formals
-           then let _, fields = List.splitAt nparms formals in
+           then let _, fields = List.splitAt nparms formals in //remove params
+                let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
                 let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
                 let is_rec = Env.is_record env typename in
                 let open FStar.Syntax.DsEnv in
