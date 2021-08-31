@@ -1542,9 +1542,8 @@ let (range_of_bv : bv -> FStar_Compiler_Range.range) =
 let (set_range_of_bv : bv -> FStar_Compiler_Range.range -> bv) =
   fun x ->
     fun r ->
-      let uu___ = x in
-      let uu___1 = FStar_Ident.set_id_range r x.ppname in
-      { ppname = uu___1; index = (uu___.index); sort = (uu___.sort) }
+      let uu___ = FStar_Ident.set_id_range r x.ppname in
+      { ppname = uu___; index = (x.index); sort = (x.sort) }
 let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
   fun f ->
     fun qi ->
@@ -1553,7 +1552,7 @@ let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
           (fun uu___ ->
              match uu___ with | (bv1, t) -> let uu___1 = f t in (bv1, uu___1))
           qi.antiquotes in
-      let uu___ = qi in { qkind = (uu___.qkind); antiquotes = aq }
+      { qkind = (qi.qkind); antiquotes = aq }
 let (lookup_aq : bv -> antiquotations -> term FStar_Pervasives_Native.option)
   =
   fun bv1 ->
@@ -1812,17 +1811,15 @@ let (freshen_bv : bv -> bv) =
         let uu___2 = range_of_bv bv1 in FStar_Pervasives_Native.Some uu___2 in
       new_bv uu___1 bv1.sort
     else
-      (let uu___2 = bv1 in
-       let uu___3 = FStar_Ident.next_id () in
-       { ppname = (uu___2.ppname); index = uu___3; sort = (uu___2.sort) })
+      (let uu___2 = FStar_Ident.next_id () in
+       { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
 let (freshen_binder : binder -> binder) =
   fun b ->
-    let uu___ = b in
-    let uu___1 = freshen_bv b.binder_bv in
+    let uu___ = freshen_bv b.binder_bv in
     {
-      binder_bv = uu___1;
-      binder_qual = (uu___.binder_qual);
-      binder_attrs = (uu___.binder_attrs)
+      binder_bv = uu___;
+      binder_qual = (b.binder_qual);
+      binder_attrs = (b.binder_attrs)
     }
 let (new_univ_name :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> univ_name) =
@@ -1853,9 +1850,8 @@ let (fv_eq_lid : fv -> FStar_Ident.lident -> Prims.bool) =
 let (set_bv_range : bv -> FStar_Compiler_Range.range -> bv) =
   fun bv1 ->
     fun r ->
-      let uu___ = bv1 in
-      let uu___1 = FStar_Ident.set_id_range r bv1.ppname in
-      { ppname = uu___1; index = (uu___.index); sort = (uu___.sort) }
+      let uu___ = FStar_Ident.set_id_range r bv1.ppname in
+      { ppname = uu___; index = (bv1.index); sort = (bv1.sort) }
 let (lid_as_fv :
   FStar_Ident.lident ->
     delta_depth -> fv_qual FStar_Pervasives_Native.option -> fv)
@@ -1882,17 +1878,12 @@ let (range_of_fv : fv -> FStar_Compiler_Range.range) =
 let (set_range_of_fv : fv -> FStar_Compiler_Range.range -> fv) =
   fun fv1 ->
     fun r ->
-      let uu___ = fv1 in
-      let uu___1 =
-        let uu___2 = fv1.fv_name in
-        let uu___3 =
-          let uu___4 = lid_of_fv fv1 in FStar_Ident.set_lid_range uu___4 r in
-        { v = uu___3; p = (uu___2.p) } in
-      {
-        fv_name = uu___1;
-        fv_delta = (uu___.fv_delta);
-        fv_qual = (uu___.fv_qual)
-      }
+      let uu___ =
+        let uu___1 = fv1.fv_name in
+        let uu___2 =
+          let uu___3 = lid_of_fv fv1 in FStar_Ident.set_lid_range uu___3 r in
+        { v = uu___2; p = (uu___1.p) } in
+      { fv_name = uu___; fv_delta = (fv1.fv_delta); fv_qual = (fv1.fv_qual) }
 let (has_simple_attribute : term Prims.list -> Prims.string -> Prims.bool) =
   fun l ->
     fun s ->

@@ -355,11 +355,10 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
           rng
     | FStar_Tactics_Common.EExn t ->
-        let uu___2 = t in
         {
-          FStar_Syntax_Syntax.n = (uu___2.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
         }
     | e1 ->
         let s =

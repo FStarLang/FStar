@@ -45,6 +45,17 @@ let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
 
+let qualify_field_names env field_names =
+    List.map
+      (fun l ->
+         match ns_of_lid l with
+         | [] -> l
+         | ns ->
+           match DsEnv.resolve_module_name env (lid_of_ids ns) true with
+           | None -> l
+           | Some l' -> Ident.qual_id l' (ident_of_lid l))
+      field_names
+
 let desugar_disjunctive_pattern annotated_pats when_opt branch =
     annotated_pats |> List.map (fun (pat, annots) ->
         let branch = List.fold_left (fun br (bv, ty, _) ->
@@ -853,7 +864,7 @@ let rec desugar_data_pat
                  (Unresolved_constructor
                      ({ uc_base_term = false;
                         uc_typename = record.typename;
-                        uc_fields = field_names })))
+                        uc_fields = qualify_field_names env field_names })))
         in
         let loc, env, annots, pats =
           List.fold_left
@@ -1642,7 +1653,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                  (Unresolved_constructor
                      ({ uc_base_term = Option.isSome eopt;
                         uc_typename = record.typename;
-                        uc_fields = field_names })))
+                        uc_fields = qualify_field_names env field_names })))
       in
       let mk_result args = S.mk_Tm_app head args top.range in
       begin

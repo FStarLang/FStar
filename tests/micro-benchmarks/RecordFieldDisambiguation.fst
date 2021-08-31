@@ -49,3 +49,9 @@ type db =
 
 let test_project_da (f:da) = f.x
 let test_project_db (f:db) = f.x
+
+noeq
+type recfun = { doit : unit -> unit }
+
+let call0 (r:recfun) = let f = r.doit in f()
+let call (r:recfun) = r.doit()

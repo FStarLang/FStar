@@ -83,10 +83,48 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+let try_lookup_record_type env (typename:lident)
+  : option<DsEnv.record_or_dc>
+  = try
+      match Env.datacons_of_typ env typename with
+      | _, [dc] ->
+        let se = Env.lookup_sigelt env dc in
+        (match se with
+         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
+           let formals, c = U.arrow_formals t in
+           if nparms < List.length formals
+           then let _, fields = List.splitAt nparms formals in
+                let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
+                let is_rec = Env.is_record env typename in
+                let open FStar.Syntax.DsEnv in
+                Some ({
+                  typename = typename;
+                  constrname = Ident.ident_of_lid dc;
+                  parms = [];
+                  fields = fields;
+                  is_private = false;
+                  is_record = is_rec
+                })
+
+           else (
+             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+               (string_of_int nparms)
+               (Print.term_to_string t)
+               (Print.binders_to_string ", " formals);
+             None
+           )
+         | _ ->
+           BU.print1 "Could not find %s\n" (string_of_lid dc);
+           None)
+      | _, dcs ->
+        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
+        None
+    with
+    | _ -> None
+
 let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
-    let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
     let default_rdc () =
-      match DsEnv.try_lookup_record_type dsenv uc.uc_typename with
+      match try_lookup_record_type env uc.uc_typename with
       | Some rdc -> rdc
       | None -> failwith "Impossible"
     in
@@ -99,7 +137,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
         match (SS.compress thead).n with
         | Tm_fvar type_name ->
           begin
-          match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
+          match try_lookup_record_type env type_name.fv_name.v with
           | None -> default_rdc ()
           | Some r -> r
           end
@@ -120,7 +158,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
     rdc, constrname, constructor
 
 
-let make_record_fields_in_order
+let make_record_fields_in_order uc env topt
        (rdc : DsEnv.record_or_dc)
        (fas : list<(lident * 'a)>)
        (not_found:ident -> option<'a>)
@@ -165,10 +203,37 @@ let make_record_fields_in_order
         (fas, [])
         rdc.DsEnv.fields
     in
+    let print_rdc rdc =
+      BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
+        (string_of_lid rdc.DsEnv.typename)
+        (string_of_id rdc.DsEnv.constrname)
+        (List.map (fun (i, _) -> string_of_id i) rdc.DsEnv.fields |> String.concat "; ")
+    in
+    let print_fas fas =
+        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
+    in
+    let print_topt topt =
+      match topt with
+      | None ->
+        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+        BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
+      | Some (Inl t) ->
+        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+        BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+      | Some (Inr t) ->
+        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+        BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+    in
     let _ =
       match rest with
       | [] -> ()
       | (f, _)::_ ->
+        BU.print5 "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+          (string_of_lid uc.uc_typename)
+          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (print_topt topt)
+          (print_rdc rdc)
+          (print_fas fas);
         raise_error
           (Errors.Fatal_MissingFieldInRecord,
             BU.format2 "Field %s is redundant for type %s"
@@ -1047,19 +1112,19 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       in
       base, List.zip uc.uc_fields (List.map fst fields)
     in
-    let rdc, constrname, constructor =
+    let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with
       | Some t ->
-        find_record_or_dc_from_typ env (Some t) uc top.pos
+        find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
 
       | None ->
         match base_term with
         | None ->
-          find_record_or_dc_from_typ env None uc top.pos
+          find_record_or_dc_from_typ env None uc top.pos, None
 
         | Some e ->
           let _, lc, _ = tc_term env e in
-          find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos
+          find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
     in
     let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
@@ -1069,7 +1134,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
     let fields =
-        make_record_fields_in_order
+        make_record_fields_in_order uc env topt
           rdc
           uc_fields
           (fun field_name ->
@@ -1082,10 +1147,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let term = S.mk_Tm_app constructor args top.pos in
     tc_term env term
 
-  | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, [(e, None)]) ->
+  | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, (e, None)::rest) ->
     (* type-directed elaboration of field projection *)
     let fallback candidate =
-      let term = S.mk_Tm_app candidate [(e, None)] top.pos in
+      let term = S.mk_Tm_app candidate ((e, None)::rest) top.pos in
       tc_term env term
     in
     let _, lc, _ =
@@ -1097,8 +1162,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let thead = N.unfold_whnf env thead in
     match (SS.compress thead).n with
     | Tm_fvar type_name -> (
-      let dsenv = DsEnv.set_current_module env.dsenv (Env.current_module env) in
-      match DsEnv.try_lookup_record_type dsenv type_name.fv_name.v with
+      match try_lookup_record_type env type_name.fv_name.v with
       | None -> fallback candidate
       | Some rdc ->
         let i =
@@ -2805,10 +2869,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           false
 
         | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
-          let rdc, _, constructor_fv = find_record_or_dc_from_typ env (Some pat_t) uc p.p in
+          let rdc, _, constructor_fv = find_record_or_dc_from_typ env (Some t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
-            make_record_fields_in_order rdc f_sub_pats
+            make_record_fields_in_order uc env (Some (Inl t)) rdc f_sub_pats
               (fun _ ->
                 let x = S.new_bv None S.tun in
                 Some (S.withinfo (Pat_wild x) p.p, false))

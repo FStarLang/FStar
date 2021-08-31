@@ -263,12 +263,11 @@ let (invoke_full_lax :
                       FStar_Pervasives_Native.Some uu___4) in
                  (diag1,
                    (FStar_Pervasives.Inl
-                      (let uu___3 = gst in
-                       {
-                         FStar_Interactive_JsonHelper.grepl_repls = repls;
-                         FStar_Interactive_JsonHelper.grepl_stdin =
-                           (uu___3.FStar_Interactive_JsonHelper.grepl_stdin)
-                       })))) in
+                      {
+                        FStar_Interactive_JsonHelper.grepl_repls = repls;
+                        FStar_Interactive_JsonHelper.grepl_stdin =
+                          (gst.FStar_Interactive_JsonHelper.grepl_stdin)
+                      }))) in
           let uu___ =
             FStar_Compiler_Util.psmap_try_find
               gst.FStar_Interactive_JsonHelper.grepl_repls fname in

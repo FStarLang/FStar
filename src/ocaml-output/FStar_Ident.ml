@@ -31,7 +31,7 @@ let (mk_ident : (Prims.string * FStar_Compiler_Range.range) -> ident) =
   fun uu___ ->
     match uu___ with | (text, range) -> { idText = text; idRange = range }
 let (set_id_range : FStar_Compiler_Range.range -> ident -> ident) =
-  fun r -> fun i -> let uu___ = i in { idText = (uu___.idText); idRange = r }
+  fun r -> fun i -> { idText = (i.idText); idRange = r }
 let (reserved_prefix : Prims.string) = "uu___"
 let (_gen : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Compiler_Util.mk_ref Prims.int_zero in
@@ -109,13 +109,12 @@ let (range_of_lid : lident -> FStar_Compiler_Range.range) =
 let (set_lid_range : lident -> FStar_Compiler_Range.range -> lident) =
   fun l ->
     fun r ->
-      let uu___ = l in
       {
-        ns = (uu___.ns);
+        ns = (l.ns);
         ident =
-          (let uu___1 = l.ident in { idText = (uu___1.idText); idRange = r });
-        nsstr = (uu___.nsstr);
-        str = (uu___.str)
+          (let uu___ = l.ident in { idText = (uu___.idText); idRange = r });
+        nsstr = (l.nsstr);
+        str = (l.str)
       }
 let (lid_add_suffix : lident -> Prims.string -> lident) =
   fun l ->

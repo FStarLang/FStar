@@ -441,9 +441,7 @@ let trie_mutate_leaf :
            fun uu___ ->
              fun uu___1 ->
                fun uu___2 ->
-                 fun namespaces ->
-                   let uu___3 = tr1 in
-                   { bindings = (uu___3.bindings); namespaces })
+                 fun namespaces -> { bindings = (tr1.bindings); namespaces })
 let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr ->
     fun ns_query ->
@@ -452,9 +450,8 @@ let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
           trie_mutate_leaf tr ns_query
             (fun tr1 ->
                fun uu___ ->
-                 let uu___1 = tr1 in
-                 let uu___2 = names_insert tr1.bindings id v in
-                 { bindings = uu___2; namespaces = (uu___1.namespaces) })
+                 let uu___1 = names_insert tr1.bindings id v in
+                 { bindings = uu___1; namespaces = (tr1.namespaces) })
 let trie_import :
   'a .
     'a trie ->
@@ -479,11 +476,10 @@ let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1 ->
              fun inc ->
                fun label ->
-                 let uu___ = tr1 in
                  {
                    bindings = ((ImportedNames (label, (inc.bindings))) ::
                      (tr1.bindings));
-                   namespaces = (uu___.namespaces)
+                   namespaces = (tr1.namespaces)
                  })
 let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
   fun tr ->
@@ -493,9 +489,8 @@ let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1 ->
              fun inc ->
                fun label ->
-                 let uu___ = tr1 in
                  {
-                   bindings = (uu___.bindings);
+                   bindings = (tr1.bindings);
                    namespaces = ((ImportedNames (label, (inc.namespaces))) ::
                      (tr1.namespaces))
                  })
@@ -684,25 +679,22 @@ let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
     fun host_query ->
       fun id ->
         fun c ->
-          let uu___ = tbl in
-          let uu___1 = trie_insert tbl.tbl_lids host_query id c in
-          { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
+          let uu___ = trie_insert tbl.tbl_lids host_query id c in
+          { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) }
 let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl ->
     fun key ->
       fun host_query ->
         fun included_query ->
-          let uu___ = tbl in
-          let uu___1 =
+          let uu___ =
             trie_add_alias tbl.tbl_lids key host_query included_query in
-          { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
+          { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) }
 let (register_include : table -> query -> query -> table) =
   fun tbl ->
     fun host_query ->
       fun included_query ->
-        let uu___ = tbl in
-        let uu___1 = trie_include tbl.tbl_lids host_query included_query in
-        { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
+        let uu___ = trie_include tbl.tbl_lids host_query included_query in
+        { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) }
 let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl ->
     fun is_module ->
@@ -711,10 +703,9 @@ let (register_open : table -> Prims.bool -> query -> query -> table) =
           if is_module
           then register_include tbl host_query included_query
           else
-            (let uu___1 = tbl in
-             let uu___2 =
+            (let uu___1 =
                trie_open_namespace tbl.tbl_lids host_query included_query in
-             { tbl_lids = uu___2; tbl_mods = (uu___1.tbl_mods) })
+             { tbl_lids = uu___1; tbl_mods = (tbl.tbl_mods) })
 let (register_module_path :
   table -> Prims.bool -> Prims.string -> query -> table) =
   fun tbl ->
@@ -748,19 +739,17 @@ let (register_module_path :
             match q with
             | [] -> ins_mod id bindings name loaded1
             | uu___ -> ins_ns id bindings name loaded1 in
-          let uu___ = tbl in
-          let uu___1 =
+          let uu___ =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr ->
                  fun id ->
                    fun q ->
                      fun revq ->
                        fun namespaces ->
-                         let uu___2 = tr in
-                         let uu___3 = ins id q revq tr.bindings loaded in
-                         { bindings = uu___3; namespaces })
-              (fun tr -> fun uu___2 -> tr) in
-          { tbl_lids = (uu___.tbl_lids); tbl_mods = uu___1 }
+                         let uu___1 = ins id q revq tr.bindings loaded in
+                         { bindings = uu___1; namespaces })
+              (fun tr -> fun uu___1 -> tr) in
+          { tbl_lids = (tbl.tbl_lids); tbl_mods = uu___ }
 let (string_of_path : path -> Prims.string) =
   fun path1 ->
     let uu___ =

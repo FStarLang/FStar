@@ -502,13 +502,12 @@ let (instantiate_maybe_partial :
                  else
                    (let ts = instantiate_tyscheme (vars, t) tyargs in
                     let tapp =
-                      let uu___2 = e in
                       {
                         FStar_Extraction_ML_Syntax.expr =
                           (FStar_Extraction_ML_Syntax.MLE_TApp (e, tyargs));
                         FStar_Extraction_ML_Syntax.mlty = ts;
                         FStar_Extraction_ML_Syntax.loc =
-                          (uu___2.FStar_Extraction_ML_Syntax.loc)
+                          (e.FStar_Extraction_ML_Syntax.loc)
                       } in
                     (tapp, FStar_Extraction_ML_Syntax.E_PURE, ts)))
               else
@@ -526,13 +525,12 @@ let (instantiate_maybe_partial :
                      FStar_Compiler_List.op_At tyargs extra_tyargs in
                    let ts = instantiate_tyscheme (vars, t) tyargs1 in
                    let tapp =
-                     let uu___2 = e in
                      {
                        FStar_Extraction_ML_Syntax.expr =
                          (FStar_Extraction_ML_Syntax.MLE_TApp (e, tyargs1));
                        FStar_Extraction_ML_Syntax.mlty = ts;
                        FStar_Extraction_ML_Syntax.loc =
-                         (uu___2.FStar_Extraction_ML_Syntax.loc)
+                         (e.FStar_Extraction_ML_Syntax.loc)
                      } in
                    let t1 =
                      FStar_Compiler_List.fold_left
@@ -900,23 +898,21 @@ let (comp_no_args :
                | (uu___1, aq) -> (FStar_Syntax_Syntax.t_unit, aq))
             ct.FStar_Syntax_Syntax.effect_args in
         let ct1 =
-          let uu___ = ct in
           {
             FStar_Syntax_Syntax.comp_univs =
-              (uu___.FStar_Syntax_Syntax.comp_univs);
+              (ct.FStar_Syntax_Syntax.comp_univs);
             FStar_Syntax_Syntax.effect_name =
-              (uu___.FStar_Syntax_Syntax.effect_name);
+              (ct.FStar_Syntax_Syntax.effect_name);
             FStar_Syntax_Syntax.result_typ =
-              (uu___.FStar_Syntax_Syntax.result_typ);
+              (ct.FStar_Syntax_Syntax.result_typ);
             FStar_Syntax_Syntax.effect_args = effect_args;
-            FStar_Syntax_Syntax.flags = (uu___.FStar_Syntax_Syntax.flags)
+            FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
           } in
         let c1 =
-          let uu___ = c in
           {
             FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
-            FStar_Syntax_Syntax.pos = (uu___.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+            FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
+            FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars)
           } in
         c1
 let maybe_reify_comp :
@@ -2460,22 +2456,20 @@ and (term_as_mlexpr' :
                        match uu___3 with
                        | (pat, when_opt, body) ->
                            (pat, when_opt,
-                             (let uu___4 = body in
-                              {
-                                FStar_Syntax_Syntax.n =
-                                  (FStar_Syntax_Syntax.Tm_app (body, args));
-                                FStar_Syntax_Syntax.pos =
-                                  (uu___4.FStar_Syntax_Syntax.pos);
-                                FStar_Syntax_Syntax.vars =
-                                  (uu___4.FStar_Syntax_Syntax.vars)
-                              })))) in
-             let uu___3 = head in
+                             {
+                               FStar_Syntax_Syntax.n =
+                                 (FStar_Syntax_Syntax.Tm_app (body, args));
+                               FStar_Syntax_Syntax.pos =
+                                 (body.FStar_Syntax_Syntax.pos);
+                               FStar_Syntax_Syntax.vars =
+                                 (body.FStar_Syntax_Syntax.vars)
+                             }))) in
              {
                FStar_Syntax_Syntax.n =
                  (FStar_Syntax_Syntax.Tm_match
                     (scrutinee, FStar_Pervasives_Native.None, branches1));
-               FStar_Syntax_Syntax.pos = (uu___3.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (uu___3.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.pos = (head.FStar_Syntax_Syntax.pos);
+               FStar_Syntax_Syntax.vars = (head.FStar_Syntax_Syntax.vars)
              }
          | uu___2 ->
              failwith
@@ -3443,22 +3437,21 @@ and (term_as_mlexpr' :
                         remove_attr lb.FStar_Syntax_Syntax.lbattrs in
                       FStar_Syntax_Syntax.Tm_let
                         ((false,
-                           [(let uu___4 = lb in
-                             {
-                               FStar_Syntax_Syntax.lbname =
-                                 (uu___4.FStar_Syntax_Syntax.lbname);
-                               FStar_Syntax_Syntax.lbunivs =
-                                 (uu___4.FStar_Syntax_Syntax.lbunivs);
-                               FStar_Syntax_Syntax.lbtyp =
-                                 (uu___4.FStar_Syntax_Syntax.lbtyp);
-                               FStar_Syntax_Syntax.lbeff =
-                                 (uu___4.FStar_Syntax_Syntax.lbeff);
-                               FStar_Syntax_Syntax.lbdef =
-                                 (uu___4.FStar_Syntax_Syntax.lbdef);
-                               FStar_Syntax_Syntax.lbattrs = other_attrs;
-                               FStar_Syntax_Syntax.lbpos =
-                                 (uu___4.FStar_Syntax_Syntax.lbpos)
-                             })]), e')
+                           [{
+                              FStar_Syntax_Syntax.lbname =
+                                (lb.FStar_Syntax_Syntax.lbname);
+                              FStar_Syntax_Syntax.lbunivs =
+                                (lb.FStar_Syntax_Syntax.lbunivs);
+                              FStar_Syntax_Syntax.lbtyp =
+                                (lb.FStar_Syntax_Syntax.lbtyp);
+                              FStar_Syntax_Syntax.lbeff =
+                                (lb.FStar_Syntax_Syntax.lbeff);
+                              FStar_Syntax_Syntax.lbdef =
+                                (lb.FStar_Syntax_Syntax.lbdef);
+                              FStar_Syntax_Syntax.lbattrs = other_attrs;
+                              FStar_Syntax_Syntax.lbpos =
+                                (lb.FStar_Syntax_Syntax.lbpos)
+                            }]), e')
                   | FStar_Pervasives_Native.Some y ->
                       let other_attrs =
                         remove_attr lb.FStar_Syntax_Syntax.lbattrs in
@@ -3476,31 +3469,28 @@ and (term_as_mlexpr' :
                         let uu___5 = FStar_Syntax_Subst.subst rename body in
                         FStar_Syntax_Subst.close uu___4 uu___5 in
                       let lb1 =
-                        let uu___4 = lb in
                         {
                           FStar_Syntax_Syntax.lbname =
                             (FStar_Pervasives.Inl y);
                           FStar_Syntax_Syntax.lbunivs =
-                            (uu___4.FStar_Syntax_Syntax.lbunivs);
+                            (lb.FStar_Syntax_Syntax.lbunivs);
                           FStar_Syntax_Syntax.lbtyp =
-                            (uu___4.FStar_Syntax_Syntax.lbtyp);
+                            (lb.FStar_Syntax_Syntax.lbtyp);
                           FStar_Syntax_Syntax.lbeff =
-                            (uu___4.FStar_Syntax_Syntax.lbeff);
+                            (lb.FStar_Syntax_Syntax.lbeff);
                           FStar_Syntax_Syntax.lbdef =
-                            (uu___4.FStar_Syntax_Syntax.lbdef);
+                            (lb.FStar_Syntax_Syntax.lbdef);
                           FStar_Syntax_Syntax.lbattrs = other_attrs;
                           FStar_Syntax_Syntax.lbpos =
-                            (uu___4.FStar_Syntax_Syntax.lbpos)
+                            (lb.FStar_Syntax_Syntax.lbpos)
                         } in
                       FStar_Syntax_Syntax.Tm_let ((false, [lb1]), body1) in
                 let top2 =
-                  let uu___4 = top1 in
                   {
                     FStar_Syntax_Syntax.n = maybe_rewritten_let;
-                    FStar_Syntax_Syntax.pos =
-                      (uu___4.FStar_Syntax_Syntax.pos);
+                    FStar_Syntax_Syntax.pos = (top1.FStar_Syntax_Syntax.pos);
                     FStar_Syntax_Syntax.vars =
-                      (uu___4.FStar_Syntax_Syntax.vars)
+                      (top1.FStar_Syntax_Syntax.vars)
                   } in
                 term_as_mlexpr' g top2)
        | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), e') ->
@@ -3519,21 +3509,20 @@ and (term_as_mlexpr' :
                        FStar_Compiler_Util.left lb.FStar_Syntax_Syntax.lbname in
                      FStar_Syntax_Syntax.freshen_bv uu___5 in
                    let lb1 =
-                     let uu___5 = lb in
                      {
                        FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);
                        FStar_Syntax_Syntax.lbunivs =
-                         (uu___5.FStar_Syntax_Syntax.lbunivs);
+                         (lb.FStar_Syntax_Syntax.lbunivs);
                        FStar_Syntax_Syntax.lbtyp =
-                         (uu___5.FStar_Syntax_Syntax.lbtyp);
+                         (lb.FStar_Syntax_Syntax.lbtyp);
                        FStar_Syntax_Syntax.lbeff =
-                         (uu___5.FStar_Syntax_Syntax.lbeff);
+                         (lb.FStar_Syntax_Syntax.lbeff);
                        FStar_Syntax_Syntax.lbdef =
-                         (uu___5.FStar_Syntax_Syntax.lbdef);
+                         (lb.FStar_Syntax_Syntax.lbdef);
                        FStar_Syntax_Syntax.lbattrs =
-                         (uu___5.FStar_Syntax_Syntax.lbattrs);
+                         (lb.FStar_Syntax_Syntax.lbattrs);
                        FStar_Syntax_Syntax.lbpos =
-                         (uu___5.FStar_Syntax_Syntax.lbpos)
+                         (lb.FStar_Syntax_Syntax.lbpos)
                      } in
                    let e'1 =
                      FStar_Syntax_Subst.subst
@@ -3610,21 +3599,20 @@ and (term_as_mlexpr' :
                                         "Normalized to %s\n" uu___7);
                                      a))
                                  else norm_call ()) in
-                            let uu___2 = lb in
                             {
                               FStar_Syntax_Syntax.lbname =
-                                (uu___2.FStar_Syntax_Syntax.lbname);
+                                (lb.FStar_Syntax_Syntax.lbname);
                               FStar_Syntax_Syntax.lbunivs =
-                                (uu___2.FStar_Syntax_Syntax.lbunivs);
+                                (lb.FStar_Syntax_Syntax.lbunivs);
                               FStar_Syntax_Syntax.lbtyp =
-                                (uu___2.FStar_Syntax_Syntax.lbtyp);
+                                (lb.FStar_Syntax_Syntax.lbtyp);
                               FStar_Syntax_Syntax.lbeff =
-                                (uu___2.FStar_Syntax_Syntax.lbeff);
+                                (lb.FStar_Syntax_Syntax.lbeff);
                               FStar_Syntax_Syntax.lbdef = lbdef;
                               FStar_Syntax_Syntax.lbattrs =
-                                (uu___2.FStar_Syntax_Syntax.lbattrs);
+                                (lb.FStar_Syntax_Syntax.lbattrs);
                               FStar_Syntax_Syntax.lbpos =
-                                (uu___2.FStar_Syntax_Syntax.lbpos)
+                                (lb.FStar_Syntax_Syntax.lbpos)
                             }))
                   else lbs1 in
                 let check_lb env uu___2 =
