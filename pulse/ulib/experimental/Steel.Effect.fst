@@ -176,7 +176,7 @@ let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_
         lemma_frame_equalities_refl p2 h2
 
 let return_ a x #p = fun _ ->
-      let m0 = nmst_get () in
+      let m0 = nmst_get #state () in
       let h0 = mk_rmem (p x) (core_mem m0) in
       lemma_frame_equalities_refl (p x) h0;
       x
@@ -222,7 +222,7 @@ val frame00 (#a:Type)
 
 let frame00 #a #framed #pre #post #req #ens f frame =
   fun frame' ->
-      let m0 = nmst_get () in
+      let m0 = nmst_get #state () in
 
       let snap:rmem frame = mk_rmem frame (core_mem m0) in
 
@@ -230,7 +230,7 @@ let frame00 #a #framed #pre #post #req #ens f frame =
 
       let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) (hp_of frame) (req_frame frame snap)) in
 
-      let m1 = nmst_get () in
+      let m1 = nmst_get #state () in
 
       can_be_split_star_r pre frame;
       focus_is_restrict_mk_rmem (pre `star` frame) frame (core_mem m0);
@@ -326,13 +326,13 @@ val bind_opaque (a:Type) (b:Type)
 #push-options "--z3rlimit 20"
 let bind_opaque a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g =
   fun frame ->
-    let m0 = nmst_get () in
+    let m0 = nmst_get #state () in
 
     let h0 = mk_rmem (pre_f `star` frame_f) (core_mem m0) in
 
     let x = frame00 f frame_f frame  in
 
-    let m1 = nmst_get () in
+    let m1 = nmst_get #state () in
 
     let h1 = mk_rmem (post_f x `star` frame_f) (core_mem m1) in
 
@@ -357,7 +357,7 @@ let bind_opaque a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #pos
 
     let y = frame00 (g x) (frame_g x) frame in
 
-    let m2 = nmst_get () in
+    let m2 = nmst_get #state () in
 
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
     can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
@@ -435,7 +435,7 @@ let lemma_unfold_subcomp_pre (#a:Type)
 
 let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
   fun frame ->
-    let m0 = nmst_get () in
+    let m0 = nmst_get #state () in
     let h0 = mk_rmem pre_g (core_mem m0) in
 
 
@@ -449,7 +449,7 @@ let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #r
 
     let x = frame00 f fr frame in
 
-    let m1 = nmst_get () in
+    let m1 = nmst_get #state () in
     let h1 = mk_rmem (post_g x) (core_mem m1) in
 
     can_be_split_trans (post_g x) (post_f x `star` fr) (post_f x);
