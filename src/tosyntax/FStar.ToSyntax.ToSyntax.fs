@@ -45,16 +45,39 @@ let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
 
-let qualify_field_names env field_names =
-    List.map
-      (fun l ->
-         match ns_of_lid l with
-         | [] -> l
-         | ns ->
-           match DsEnv.resolve_module_name env (lid_of_ids ns) true with
-           | None -> l
-           | Some l' -> Ident.qual_id l' (ident_of_lid l))
-      field_names
+let qualify_field_names record field_names =
+    let qualify_to_record l =
+        let ns = ns_of_lid record.typename in
+        Ident.lid_of_ns_and_id ns (ident_of_lid l)
+    in
+    let _, field_names_rev =
+      List.fold_left
+        (fun (ns_opt, out) l ->
+          match nsstr l with
+          | "" ->
+            if Option.isSome ns_opt
+            then (ns_opt, qualify_to_record l::out)
+            else (ns_opt, l::out)
+
+          | ns ->
+            match ns_opt with
+            | Some ns' ->
+              if ns <> ns'
+              then raise_error
+                   (Errors.Fatal_MissingFieldInRecord,
+                     BU.format2 "Field %s of record type was expected to be scoped to namespace %s"
+                       (string_of_lid l) ns')
+                   (range_of_lid l)
+              else (
+                ns_opt, qualify_to_record l :: out
+              )
+
+            | None ->
+              Some ns, qualify_to_record l :: out)
+        (None, [])
+        field_names
+    in
+    List.rev field_names_rev
 
 let desugar_disjunctive_pattern annotated_pats when_opt branch =
     annotated_pats |> List.map (fun (pat, annots) ->
@@ -864,7 +887,7 @@ let rec desugar_data_pat
                  (Unresolved_constructor
                      ({ uc_base_term = false;
                         uc_typename = record.typename;
-                        uc_fields = qualify_field_names env field_names })))
+                        uc_fields = qualify_field_names record field_names })))
         in
         let loc, env, annots, pats =
           List.fold_left
@@ -1653,7 +1676,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                  (Unresolved_constructor
                      ({ uc_base_term = Option.isSome eopt;
                         uc_typename = record.typename;
-                        uc_fields = qualify_field_names env field_names })))
+                        uc_fields = qualify_field_names record field_names })))
       in
       let mk_result args = S.mk_Tm_app head args top.range in
       begin

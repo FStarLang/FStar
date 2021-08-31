@@ -12,25 +12,58 @@ type annotated_pat =
     FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term Prims.list)
     Prims.list)
 let (qualify_field_names :
-  FStar_Syntax_DsEnv.env ->
+  FStar_Syntax_DsEnv.record_or_dc ->
     FStar_Ident.lident Prims.list -> FStar_Ident.lident Prims.list)
   =
-  fun env ->
+  fun record ->
     fun field_names ->
-      FStar_Compiler_List.map
-        (fun l ->
-           let uu___ = FStar_Ident.ns_of_lid l in
-           match uu___ with
-           | [] -> l
-           | ns ->
-               let uu___1 =
-                 let uu___2 = FStar_Ident.lid_of_ids ns in
-                 FStar_Syntax_DsEnv.resolve_module_name env uu___2 true in
-               (match uu___1 with
-                | FStar_Pervasives_Native.None -> l
-                | FStar_Pervasives_Native.Some l' ->
-                    let uu___2 = FStar_Ident.ident_of_lid l in
-                    FStar_Ident.qual_id l' uu___2)) field_names
+      let qualify_to_record l =
+        let ns = FStar_Ident.ns_of_lid record.FStar_Syntax_DsEnv.typename in
+        let uu___ = FStar_Ident.ident_of_lid l in
+        FStar_Ident.lid_of_ns_and_id ns uu___ in
+      let uu___ =
+        FStar_Compiler_List.fold_left
+          (fun uu___1 ->
+             fun l ->
+               match uu___1 with
+               | (ns_opt, out) ->
+                   let uu___2 = FStar_Ident.nsstr l in
+                   (match uu___2 with
+                    | "" ->
+                        if FStar_Compiler_Option.isSome ns_opt
+                        then
+                          let uu___3 =
+                            let uu___4 = qualify_to_record l in uu___4 :: out in
+                          (ns_opt, uu___3)
+                        else (ns_opt, (l :: out))
+                    | ns ->
+                        (match ns_opt with
+                         | FStar_Pervasives_Native.Some ns' ->
+                             if ns <> ns'
+                             then
+                               let uu___3 =
+                                 let uu___4 =
+                                   let uu___5 = FStar_Ident.string_of_lid l in
+                                   FStar_Compiler_Util.format2
+                                     "Field %s of record type was expected to be scoped to namespace %s"
+                                     uu___5 ns' in
+                                 (FStar_Errors.Fatal_MissingFieldInRecord,
+                                   uu___4) in
+                               let uu___4 = FStar_Ident.range_of_lid l in
+                               FStar_Errors.raise_error uu___3 uu___4
+                             else
+                               (let uu___4 =
+                                  let uu___5 = qualify_to_record l in uu___5
+                                    :: out in
+                                (ns_opt, uu___4))
+                         | FStar_Pervasives_Native.None ->
+                             let uu___3 =
+                               let uu___4 = qualify_to_record l in uu___4 ::
+                                 out in
+                             ((FStar_Pervasives_Native.Some ns), uu___3))))
+          (FStar_Pervasives_Native.None, []) field_names in
+      match uu___ with
+      | (uu___1, field_names_rev) -> FStar_Compiler_List.rev field_names_rev
 let desugar_disjunctive_pattern :
   'uuuuu .
     (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t *
@@ -1840,7 +1873,7 @@ let rec (desugar_data_pat :
                             let uu___4 =
                               let uu___5 =
                                 let uu___6 =
-                                  qualify_field_names env1 field_names in
+                                  qualify_field_names record field_names in
                                 {
                                   FStar_Syntax_Syntax.uc_base_term = false;
                                   FStar_Syntax_Syntax.uc_typename =
@@ -3741,7 +3774,7 @@ and (desugar_term_maybe_top :
                                let uu___6 =
                                  let uu___7 =
                                    let uu___8 =
-                                     qualify_field_names env field_names in
+                                     qualify_field_names record field_names in
                                    {
                                      FStar_Syntax_Syntax.uc_base_term =
                                        (FStar_Compiler_Option.isSome eopt);

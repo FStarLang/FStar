@@ -164,7 +164,36 @@ let make_record_fields_in_order uc env topt
        (not_found:ident -> option<'a>)
        (rng : Range.range)
   : list<'a>
-  = let rest, as_rev =
+  = let debug () =
+      let print_rdc rdc =
+        BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
+          (string_of_lid rdc.DsEnv.typename)
+          (string_of_id rdc.DsEnv.constrname)
+          (List.map (fun (i, _) -> string_of_id i) rdc.DsEnv.fields |> String.concat "; ")
+      in
+      let print_fas fas =
+        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
+      in
+      let print_topt topt =
+        match topt with
+        | None ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
+        | Some (Inl t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+        | Some (Inr t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+      in
+      BU.print5 "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+          (string_of_lid uc.uc_typename)
+          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (print_topt topt)
+          (print_rdc rdc)
+          (print_fas fas)
+    in
+    let rest, as_rev =
       List.fold_left
         (fun (fields, as_rev) (field_name, _) ->
            let matching, rest =
@@ -183,6 +212,7 @@ let make_record_fields_in_order uc env topt
            | [] -> (
              match not_found field_name with
              | None ->
+               debug();
                raise_error
                  (Errors.Fatal_MissingFieldInRecord,
                    BU.format2 "Field %s of record type %s is missing"
@@ -194,6 +224,7 @@ let make_record_fields_in_order uc env topt
              )
 
            | _ ->
+             debug();
              raise_error
                (Errors.Fatal_MissingFieldInRecord,
                 BU.format2 "Field %s of record type %s is given multiple assignments"
@@ -203,37 +234,11 @@ let make_record_fields_in_order uc env topt
         (fas, [])
         rdc.DsEnv.fields
     in
-    let print_rdc rdc =
-      BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
-        (string_of_lid rdc.DsEnv.typename)
-        (string_of_id rdc.DsEnv.constrname)
-        (List.map (fun (i, _) -> string_of_id i) rdc.DsEnv.fields |> String.concat "; ")
-    in
-    let print_fas fas =
-        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
-    in
-    let print_topt topt =
-      match topt with
-      | None ->
-        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-        BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
-      | Some (Inl t) ->
-        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-        BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-      | Some (Inr t) ->
-        let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-        BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-    in
     let _ =
       match rest with
       | [] -> ()
       | (f, _)::_ ->
-        BU.print5 "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
-          (string_of_lid uc.uc_typename)
-          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
-          (print_topt topt)
-          (print_rdc rdc)
-          (print_fas fas);
+        debug();
         raise_error
           (Errors.Fatal_MissingFieldInRecord,
             BU.format2 "Field %s is redundant for type %s"
