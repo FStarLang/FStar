@@ -15,7 +15,6 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
-open FStar.Syntax.DsEnv
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -942,7 +941,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
-  | Tm_app ({n=Tm_fvar {fv_name={v=candidate}; fv_qual=Some (Unresolved_constructor uc)}}, args) ->
+  | Tm_app ({n=Tm_fvar {fv_qual=Some (Unresolved_constructor uc)}}, args) ->
     (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
     let base_term, uc_fields =
       let base, fields =
@@ -972,6 +971,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           //Otherwise, no type info here, use what ToSyntax decided
           TcUtil.find_record_or_dc_from_typ env None uc top.pos, None
     in
+    let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
     let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
@@ -996,9 +996,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, (e, None)::rest) ->
     (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
     let proceed_with choice =
-      let f = S.fv_to_tm choice in
-      let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
-      tc_term env term
+      match choice with
+      | None ->
+        raise_error (Errors.Fatal_NameNotFound,
+                     BU.format1 "Field name %s could not be resolved"
+                                (string_of_lid field_name))
+                     (range_of_lid field_name)
+      | Some choice ->
+        let f = S.fv_to_tm choice in
+        let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
+        tc_term env term
     in
     //We have e.f, use the type of e to disambiguate
     let _, lc, _ =
@@ -1030,7 +1037,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               (Delta_equational_at_level 1)
               qual
           in
-          proceed_with choice
+          proceed_with (Some choice)
       )
     | _ -> proceed_with candidate
     end

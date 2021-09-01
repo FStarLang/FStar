@@ -887,19 +887,22 @@ let rec desugar_data_pat
         (* Record patterns have to wait for type information to be fully resolved *)
         let (f, _) = List.hd fields in
         let field_names, pats = List.unzip fields in
-        let record = fail_or env (try_lookup_record_by_field_name env) f in
+        let typename, field_names =
+          match try_lookup_record_by_field_name env f with
+          | None -> None, field_names
+          | Some r -> Some r.typename, qualify_field_names r.typename field_names
+        in
         (* Just build a candidate constructor, as we do for Record literals *)
         let candidate_constructor =
-            let name = lid_of_ids (ns_of_lid record.typename @ [record.constrname]) in
-            let lid = Ident.set_lid_range name p.prange in
+            let lid = lid_of_path ["__dummy__"] p.prange in
             S.lid_as_fv
               lid
               delta_constant
               (Some
                  (Unresolved_constructor
                      ({ uc_base_term = false;
-                        uc_typename = record.typename;
-                        uc_fields = qualify_field_names record.typename field_names })))
+                        uc_typename = typename;
+                        uc_fields = field_names })))
         in
         let loc, env, annots, pats =
           List.fold_left
@@ -1666,11 +1669,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Record(eopt, fields) ->
       (* Record literals have to wait for type information to be fully resolved *)
-      let (f, _) = List.hd fields in
-      let record = fail_or env (try_lookup_record_by_field_name env) f in
-      let candidate_constructor =
-          let name = lid_of_ids (ns_of_lid record.typename @ [record.constrname]) in
-          Ident.set_lid_range name top.range
+      let record_opt =
+        let (f, _) = List.hd fields in
+        try_lookup_record_by_field_name env f
       in
       let fields, aqs =
           List.map
@@ -1692,14 +1693,22 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let field_names, assignments = List.unzip fields in
       let args = List.map (fun f -> f, None) assignments in
       let aqs = List.flatten aqs in
+      let uc =
+        match record_opt with
+        | None ->
+          { uc_base_term = Option.isSome eopt;
+            uc_typename = None;
+            uc_fields = field_names }
+        | Some record ->
+          { uc_base_term = Option.isSome eopt;
+            uc_typename = Some record.typename;
+            uc_fields = qualify_field_names record.typename field_names }
+      in
       let head =
-        S.fvar candidate_constructor
-               delta_constant
-               (Some
-                 (Unresolved_constructor
-                     ({ uc_base_term = Option.isSome eopt;
-                        uc_typename = record.typename;
-                        uc_fields = qualify_field_names record.typename field_names })))
+          let lid = lid_of_path ["__dummy__"] top.range in
+          S.fvar lid
+                 delta_constant
+                 (Some (Unresolved_constructor uc))
       in
       let mk_result args = S.mk_Tm_app head args top.range in
       begin
@@ -1729,16 +1738,23 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Project(e, f) ->
       (* Projections have to wait for type information to be fully resolved *)
-      let constrname, is_rec = fail_or env (try_lookup_dc_by_field_name env) f in
       let e, s = desugar_term_aq env e in
-      let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
-      let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
-      let candidate_projector = S.lid_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
-      let qual = Unresolved_projector candidate_projector in
-      let f = List.hd (qualify_field_names constrname [f]) in
+      let head =
+        match try_lookup_dc_by_field_name env f with
+        | None ->
+          S.fvar f (Delta_equational_at_level 1) (Some (Unresolved_projector None))
+
+        | Some (constrname, is_rec) ->
+          let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
+          let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
+          let candidate_projector = S.lid_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
+          let qual = Unresolved_projector (Some candidate_projector) in
+          let f = List.hd (qualify_field_names constrname [f]) in
+          S.fvar f (Delta_equational_at_level 1) (Some qual)
+      in
       //The fvar at the head of the term just records the fieldname that the user wrote
       //and in TcTerm, we use that field name combined with type info to disambiguate
-      mk <| Tm_app(S.fvar f (Delta_equational_at_level 1) (Some qual), [as_arg e]), s
+      mk <| Tm_app(head, [as_arg e]), s
 
     | NamedTyp(n, e) ->
       (* See issue #1905 *)

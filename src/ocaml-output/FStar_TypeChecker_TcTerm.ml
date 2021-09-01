@@ -2794,10 +2794,7 @@ and (tc_maybe_toplevel_term :
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
-                {
-                  FStar_Syntax_Syntax.fv_name =
-                    { FStar_Syntax_Syntax.v = candidate;
-                      FStar_Syntax_Syntax.p = uu___1;_};
+                { FStar_Syntax_Syntax.fv_name = uu___1;
                   FStar_Syntax_Syntax.fv_delta = uu___2;
                   FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Unresolved_constructor uc);_};
@@ -2860,6 +2857,7 @@ and (tc_maybe_toplevel_term :
                            (uu___8, FStar_Pervasives_Native.None)) in
                 (match uu___6 with
                  | ((rdc, constrname, constructor), topt) ->
+                     let rdc1 = rdc in
                      let constructor1 =
                        FStar_Syntax_Syntax.fv_to_tm constructor in
                      let mk_field_projector i x =
@@ -2867,25 +2865,25 @@ and (tc_maybe_toplevel_term :
                          FStar_Syntax_Util.mk_field_projector_name_from_ident
                            constrname i in
                        let qual =
-                         if rdc.FStar_Syntax_DsEnv.is_record
+                         if rdc1.FStar_Syntax_DsEnv.is_record
                          then
                            FStar_Pervasives_Native.Some
                              (FStar_Syntax_Syntax.Record_projector
                                 (constrname, i))
                          else FStar_Pervasives_Native.None in
-                       let candidate1 =
+                       let candidate =
                          let uu___7 =
                            FStar_Ident.set_lid_range projname
                              x.FStar_Syntax_Syntax.pos in
                          FStar_Syntax_Syntax.fvar uu___7
                            (FStar_Syntax_Syntax.Delta_equational_at_level
                               Prims.int_one) qual in
-                       FStar_Syntax_Syntax.mk_Tm_app candidate1
+                       FStar_Syntax_Syntax.mk_Tm_app candidate
                          [(x, FStar_Pervasives_Native.None)]
                          x.FStar_Syntax_Syntax.pos in
                      let fields =
                        FStar_TypeChecker_Util.make_record_fields_in_order
-                         env1 uc topt rdc uc_fields
+                         env1 uc topt rdc1 uc_fields
                          (fun field_name ->
                             match base_term with
                             | FStar_Pervasives_Native.Some x ->
@@ -2915,12 +2913,23 @@ and (tc_maybe_toplevel_term :
             (e1, FStar_Pervasives_Native.None)::rest)
            ->
            let proceed_with choice =
-             let f = FStar_Syntax_Syntax.fv_to_tm choice in
-             let term =
-               FStar_Syntax_Syntax.mk_Tm_app f
-                 ((e1, FStar_Pervasives_Native.None) :: rest)
-                 top.FStar_Syntax_Syntax.pos in
-             tc_term env1 term in
+             match choice with
+             | FStar_Pervasives_Native.None ->
+                 let uu___5 =
+                   let uu___6 =
+                     let uu___7 = FStar_Ident.string_of_lid field_name in
+                     FStar_Compiler_Util.format1
+                       "Field name %s could not be resolved" uu___7 in
+                   (FStar_Errors.Fatal_NameNotFound, uu___6) in
+                 let uu___6 = FStar_Ident.range_of_lid field_name in
+                 FStar_Errors.raise_error uu___5 uu___6
+             | FStar_Pervasives_Native.Some choice1 ->
+                 let f = FStar_Syntax_Syntax.fv_to_tm choice1 in
+                 let term =
+                   FStar_Syntax_Syntax.mk_Tm_app f
+                     ((e1, FStar_Pervasives_Native.None) :: rest)
+                     top.FStar_Syntax_Syntax.pos in
+                 tc_term env1 term in
            let uu___5 =
              let uu___6 = FStar_TypeChecker_Env.clear_expected_typ env1 in
              match uu___6 with | (env2, uu___7) -> tc_term env2 e1 in
@@ -2986,7 +2995,8 @@ and (tc_maybe_toplevel_term :
                                       FStar_Syntax_Syntax.lid_as_fv uu___13
                                         (FStar_Syntax_Syntax.Delta_equational_at_level
                                            Prims.int_one) qual in
-                                    proceed_with choice))
+                                    proceed_with
+                                      (FStar_Pervasives_Native.Some choice)))
                       | uu___11 -> proceed_with candidate)))
        | FStar_Syntax_Syntax.Tm_app
            (head, (tau, FStar_Pervasives_Native.None)::[]) when

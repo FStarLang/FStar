@@ -288,12 +288,12 @@ and fv_qual =
   | Data_ctor 
   | Record_projector of (FStar_Ident.lident * FStar_Ident.ident) 
   | Record_ctor of (FStar_Ident.lident * FStar_Ident.ident Prims.list) 
-  | Unresolved_projector of fv 
+  | Unresolved_projector of fv FStar_Pervasives_Native.option 
   | Unresolved_constructor of unresolved_constructor 
 and unresolved_constructor =
   {
   uc_base_term: Prims.bool ;
-  uc_typename: FStar_Ident.lident ;
+  uc_typename: FStar_Ident.lident FStar_Pervasives_Native.option ;
   uc_fields: FStar_Ident.lident Prims.list }
 and subst_elt =
   | DB of (Prims.int * bv) 
@@ -753,7 +753,8 @@ let (__proj__Record_ctor__item___0 :
 let (uu___is_Unresolved_projector : fv_qual -> Prims.bool) =
   fun projectee ->
     match projectee with | Unresolved_projector _0 -> true | uu___ -> false
-let (__proj__Unresolved_projector__item___0 : fv_qual -> fv) =
+let (__proj__Unresolved_projector__item___0 :
+  fv_qual -> fv FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Unresolved_projector _0 -> _0
 let (uu___is_Unresolved_constructor : fv_qual -> Prims.bool) =
   fun projectee ->
@@ -767,7 +768,8 @@ let (__proj__Mkunresolved_constructor__item__uc_base_term :
     match projectee with
     | { uc_base_term; uc_typename; uc_fields;_} -> uc_base_term
 let (__proj__Mkunresolved_constructor__item__uc_typename :
-  unresolved_constructor -> FStar_Ident.lident) =
+  unresolved_constructor -> FStar_Ident.lident FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { uc_base_term; uc_typename; uc_fields;_} -> uc_typename

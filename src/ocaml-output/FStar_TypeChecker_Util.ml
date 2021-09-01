@@ -7119,22 +7119,31 @@ let (find_record_or_dc_from_typ :
       fun uc ->
         fun rng ->
           let default_rdc uu___ =
-            let uu___1 =
-              try_lookup_record_type env uc.FStar_Syntax_Syntax.uc_typename in
-            match uu___1 with
-            | FStar_Pervasives_Native.Some rdc -> rdc
+            match uc.FStar_Syntax_Syntax.uc_typename with
             | FStar_Pervasives_Native.None ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      FStar_Ident.string_of_lid
-                        uc.FStar_Syntax_Syntax.uc_typename in
-                    FStar_Compiler_Util.format1 "Record name %s not found"
-                      uu___4 in
-                  (FStar_Errors.Fatal_NameNotFound, uu___3) in
-                let uu___3 =
-                  FStar_Ident.range_of_lid uc.FStar_Syntax_Syntax.uc_typename in
-                FStar_Errors.raise_error uu___2 uu___3 in
+                let f =
+                  FStar_Compiler_List.hd uc.FStar_Syntax_Syntax.uc_fields in
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 = FStar_Ident.string_of_lid f in
+                    FStar_Compiler_Util.format1
+                      "Field name %s could not be resolved" uu___3 in
+                  (FStar_Errors.Fatal_NameNotFound, uu___2) in
+                let uu___2 = FStar_Ident.range_of_lid f in
+                FStar_Errors.raise_error uu___1 uu___2
+            | FStar_Pervasives_Native.Some tn ->
+                let uu___1 = try_lookup_record_type env tn in
+                (match uu___1 with
+                 | FStar_Pervasives_Native.Some rdc -> rdc
+                 | FStar_Pervasives_Native.None ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = FStar_Ident.string_of_lid tn in
+                         FStar_Compiler_Util.format1
+                           "Record name %s not found" uu___4 in
+                       (FStar_Errors.Fatal_NameNotFound, uu___3) in
+                     let uu___3 = FStar_Ident.range_of_lid tn in
+                     FStar_Errors.raise_error uu___2 uu___3) in
           let rdc =
             match t with
             | FStar_Pervasives_Native.None -> default_rdc ()
@@ -7279,8 +7288,10 @@ let make_record_fields_in_order :
                              FStar_Compiler_Util.format2
                                "topt=Some (Inr %s); rdc=%s" uu___4 uu___5) in
                   let uu___1 =
-                    FStar_Ident.string_of_lid
-                      uc.FStar_Syntax_Syntax.uc_typename in
+                    match uc.FStar_Syntax_Syntax.uc_typename with
+                    | FStar_Pervasives_Native.None -> "none"
+                    | FStar_Pervasives_Native.Some tn ->
+                        FStar_Ident.string_of_lid tn in
                   let uu___2 =
                     let uu___3 =
                       FStar_Compiler_List.map FStar_Ident.string_of_lid
@@ -7291,7 +7302,7 @@ let make_record_fields_in_order :
                   let uu___4 = print_rdc rdc in
                   let uu___5 = print_fas fas in
                   FStar_Compiler_Util.print5
-                    "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+                    "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
                     uu___1 uu___2 uu___3 uu___4 uu___5 in
                 let uu___ =
                   FStar_Compiler_List.fold_left

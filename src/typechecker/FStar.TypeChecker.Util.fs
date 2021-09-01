@@ -3143,13 +3143,20 @@ let try_lookup_record_type env (typename:lident)
  *)
 let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
     let default_rdc () =
-      match try_lookup_record_type env uc.uc_typename with
-      | Some rdc -> rdc
+      match uc.uc_typename with
       | None ->
+        let f = List.hd uc.uc_fields in
         raise_error (Errors.Fatal_NameNotFound,
-                     BU.format1 "Record name %s not found"
-                       (string_of_lid uc.uc_typename))
-                     (range_of_lid uc.uc_typename)
+                     BU.format1 "Field name %s could not be resolved"
+                                (string_of_lid f))
+                     (range_of_lid f)
+      | Some tn ->
+        match try_lookup_record_type env tn with
+        | Some rdc -> rdc
+        | None ->
+          raise_error (Errors.Fatal_NameNotFound,
+                       BU.format1 "Record name %s not found" (string_of_lid tn))
+                      (range_of_lid tn)
     in
     let rdc =
       match t with
@@ -3241,8 +3248,8 @@ let make_record_fields_in_order env uc topt
           let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
           BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
       in
-      BU.print5 "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
-          (string_of_lid uc.uc_typename)
+      BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+          (match uc.uc_typename with None -> "none" | Some tn -> string_of_lid tn)
           (List.map string_of_lid uc.uc_fields |> String.concat "; ")
           (print_topt topt)
           (print_rdc rdc)

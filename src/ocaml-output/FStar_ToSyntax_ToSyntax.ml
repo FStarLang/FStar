@@ -1812,70 +1812,69 @@ let rec (desugar_data_pat :
                    let uu___2 = FStar_Compiler_List.unzip fields in
                    (match uu___2 with
                     | (field_names, pats) ->
-                        let record =
-                          FStar_Syntax_DsEnv.fail_or env1
-                            (FStar_Syntax_DsEnv.try_lookup_record_by_field_name
-                               env1) f in
-                        let candidate_constructor =
-                          let name =
-                            let uu___3 =
-                              let uu___4 =
-                                FStar_Ident.ns_of_lid
-                                  record.FStar_Syntax_DsEnv.typename in
-                              FStar_Compiler_List.op_At uu___4
-                                [record.FStar_Syntax_DsEnv.constrname] in
-                            FStar_Ident.lid_of_ids uu___3 in
-                          let lid =
-                            FStar_Ident.set_lid_range name
-                              p1.FStar_Parser_AST.prange in
-                          let uu___3 =
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 =
-                                  qualify_field_names
-                                    record.FStar_Syntax_DsEnv.typename
-                                    field_names in
-                                {
-                                  FStar_Syntax_Syntax.uc_base_term = false;
-                                  FStar_Syntax_Syntax.uc_typename =
-                                    (record.FStar_Syntax_DsEnv.typename);
-                                  FStar_Syntax_Syntax.uc_fields = uu___6
-                                } in
-                              FStar_Syntax_Syntax.Unresolved_constructor
-                                uu___5 in
-                            FStar_Pervasives_Native.Some uu___4 in
-                          FStar_Syntax_Syntax.lid_as_fv lid
-                            FStar_Syntax_Syntax.delta_constant uu___3 in
                         let uu___3 =
-                          FStar_Compiler_List.fold_left
-                            (fun uu___4 ->
-                               fun p2 ->
-                                 match uu___4 with
-                                 | (loc1, env2, annots, pats1) ->
-                                     let uu___5 = aux loc1 env2 p2 in
-                                     (match uu___5 with
-                                      | (loc2, env3, uu___6, pat, ann) ->
-                                          (loc2, env3,
-                                            (FStar_Compiler_List.op_At ann
-                                               annots), ((pat, false) ::
-                                            pats1)))) (loc, env1, [], [])
-                            pats in
+                          let uu___4 =
+                            FStar_Syntax_DsEnv.try_lookup_record_by_field_name
+                              env1 f in
+                          match uu___4 with
+                          | FStar_Pervasives_Native.None ->
+                              (FStar_Pervasives_Native.None, field_names)
+                          | FStar_Pervasives_Native.Some r ->
+                              let uu___5 =
+                                qualify_field_names
+                                  r.FStar_Syntax_DsEnv.typename field_names in
+                              ((FStar_Pervasives_Native.Some
+                                  (r.FStar_Syntax_DsEnv.typename)), uu___5) in
                         (match uu___3 with
-                         | (loc1, env2, annots, pats1) ->
-                             let pats2 = FStar_Compiler_List.rev pats1 in
-                             let pat =
-                               FStar_Compiler_Effect.op_Less_Bar pos
-                                 (FStar_Syntax_Syntax.Pat_cons
-                                    (candidate_constructor, pats2)) in
-                             let x =
-                               let uu___4 = tun_r p1.FStar_Parser_AST.prange in
-                               FStar_Syntax_Syntax.new_bv
+                         | (typename, field_names1) ->
+                             let candidate_constructor =
+                               let lid =
+                                 FStar_Ident.lid_of_path ["__dummy__"]
+                                   p1.FStar_Parser_AST.prange in
+                               FStar_Syntax_Syntax.lid_as_fv lid
+                                 FStar_Syntax_Syntax.delta_constant
                                  (FStar_Pervasives_Native.Some
-                                    (p1.FStar_Parser_AST.prange)) uu___4 in
-                             (loc1, env2,
-                               (LocalBinder
-                                  (x, FStar_Pervasives_Native.None, [])),
-                               pat, annots))))
+                                    (FStar_Syntax_Syntax.Unresolved_constructor
+                                       {
+                                         FStar_Syntax_Syntax.uc_base_term =
+                                           false;
+                                         FStar_Syntax_Syntax.uc_typename =
+                                           typename;
+                                         FStar_Syntax_Syntax.uc_fields =
+                                           field_names1
+                                       })) in
+                             let uu___4 =
+                               FStar_Compiler_List.fold_left
+                                 (fun uu___5 ->
+                                    fun p2 ->
+                                      match uu___5 with
+                                      | (loc1, env2, annots, pats1) ->
+                                          let uu___6 = aux loc1 env2 p2 in
+                                          (match uu___6 with
+                                           | (loc2, env3, uu___7, pat, ann)
+                                               ->
+                                               (loc2, env3,
+                                                 (FStar_Compiler_List.op_At
+                                                    ann annots),
+                                                 ((pat, false) :: pats1))))
+                                 (loc, env1, [], []) pats in
+                             (match uu___4 with
+                              | (loc1, env2, annots, pats1) ->
+                                  let pats2 = FStar_Compiler_List.rev pats1 in
+                                  let pat =
+                                    FStar_Compiler_Effect.op_Less_Bar pos
+                                      (FStar_Syntax_Syntax.Pat_cons
+                                         (candidate_constructor, pats2)) in
+                                  let x =
+                                    let uu___5 =
+                                      tun_r p1.FStar_Parser_AST.prange in
+                                    FStar_Syntax_Syntax.new_bv
+                                      (FStar_Pervasives_Native.Some
+                                         (p1.FStar_Parser_AST.prange)) uu___5 in
+                                  (loc1, env2,
+                                    (LocalBinder
+                                       (x, FStar_Pervasives_Native.None, [])),
+                                    pat, annots)))))
         and aux loc env1 p1 = aux' false loc env1 p1 in
         let aux_maybe_or env1 p1 =
           let loc = [] in
@@ -3692,180 +3691,178 @@ and (desugar_term_maybe_top :
               (FStar_Errors.Fatal_UnexpectedEmptyRecord,
                 "Unexpected empty record") top.FStar_Parser_AST.range
         | FStar_Parser_AST.Record (eopt, fields) ->
-            let uu___1 = FStar_Compiler_List.hd fields in
-            (match uu___1 with
-             | (f, uu___2) ->
-                 let record =
-                   FStar_Syntax_DsEnv.fail_or env
-                     (FStar_Syntax_DsEnv.try_lookup_record_by_field_name env)
-                     f in
-                 let candidate_constructor =
-                   let name =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Ident.ns_of_lid
-                           record.FStar_Syntax_DsEnv.typename in
-                       FStar_Compiler_List.op_At uu___4
-                         [record.FStar_Syntax_DsEnv.constrname] in
-                     FStar_Ident.lid_of_ids uu___3 in
-                   FStar_Ident.set_lid_range name top.FStar_Parser_AST.range in
-                 let uu___3 =
-                   let uu___4 =
-                     FStar_Compiler_List.map
-                       (fun uu___5 ->
-                          match uu___5 with
-                          | (fn, fval) ->
-                              let uu___6 = desugar_term_aq env fval in
-                              (match uu___6 with
-                               | (fval1, aq) -> ((fn, fval1), aq))) fields in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___4
-                     FStar_Compiler_List.unzip in
-                 (match uu___3 with
-                  | (fields1, aqs) ->
-                      let uu___4 = FStar_Compiler_List.unzip fields1 in
-                      (match uu___4 with
-                       | (field_names, assignments) ->
-                           let args =
-                             FStar_Compiler_List.map
-                               (fun f1 -> (f1, FStar_Pervasives_Native.None))
-                               assignments in
-                           let aqs1 = FStar_Compiler_List.flatten aqs in
-                           let head =
-                             let uu___5 =
-                               let uu___6 =
-                                 let uu___7 =
-                                   let uu___8 =
-                                     qualify_field_names
-                                       record.FStar_Syntax_DsEnv.typename
-                                       field_names in
-                                   {
-                                     FStar_Syntax_Syntax.uc_base_term =
-                                       (FStar_Compiler_Option.isSome eopt);
-                                     FStar_Syntax_Syntax.uc_typename =
-                                       (record.FStar_Syntax_DsEnv.typename);
-                                     FStar_Syntax_Syntax.uc_fields = uu___8
-                                   } in
-                                 FStar_Syntax_Syntax.Unresolved_constructor
-                                   uu___7 in
-                               FStar_Pervasives_Native.Some uu___6 in
-                             FStar_Syntax_Syntax.fvar candidate_constructor
-                               FStar_Syntax_Syntax.delta_constant uu___5 in
-                           let mk_result args1 =
-                             FStar_Syntax_Syntax.mk_Tm_app head args1
-                               top.FStar_Parser_AST.range in
-                           (match eopt with
-                            | FStar_Pervasives_Native.None ->
-                                let uu___5 = mk_result args in (uu___5, aqs1)
-                            | FStar_Pervasives_Native.Some e ->
-                                let uu___5 = desugar_term_aq env e in
-                                (match uu___5 with
-                                 | (e1, aq) ->
-                                     let tm =
-                                       let uu___6 =
-                                         let uu___7 =
-                                           FStar_Syntax_Subst.compress e1 in
-                                         uu___7.FStar_Syntax_Syntax.n in
-                                       match uu___6 with
-                                       | FStar_Syntax_Syntax.Tm_name uu___7
-                                           ->
-                                           mk_result
-                                             ((e1,
-                                                FStar_Pervasives_Native.None)
-                                             :: args)
-                                       | FStar_Syntax_Syntax.Tm_fvar uu___7
-                                           ->
-                                           mk_result
-                                             ((e1,
-                                                FStar_Pervasives_Native.None)
-                                             :: args)
-                                       | uu___7 ->
-                                           let x =
-                                             FStar_Ident.gen
-                                               e1.FStar_Syntax_Syntax.pos in
-                                           let uu___8 =
-                                             FStar_Syntax_DsEnv.push_bv env x in
-                                           (match uu___8 with
-                                            | (env', bv_x) ->
-                                                let nm =
-                                                  FStar_Syntax_Syntax.bv_to_name
-                                                    bv_x in
-                                                let body =
-                                                  mk_result
-                                                    ((nm,
-                                                       FStar_Pervasives_Native.None)
-                                                    :: args) in
-                                                let body1 =
-                                                  let uu___9 =
-                                                    let uu___10 =
-                                                      FStar_Syntax_Syntax.mk_binder
-                                                        bv_x in
-                                                    [uu___10] in
-                                                  FStar_Syntax_Subst.close
-                                                    uu___9 body in
-                                                let lb =
-                                                  mk_lb
-                                                    ([],
-                                                      (FStar_Pervasives.Inl
-                                                         bv_x),
-                                                      FStar_Syntax_Syntax.tun,
-                                                      e1,
-                                                      (e1.FStar_Syntax_Syntax.pos)) in
-                                                mk
-                                                  (FStar_Syntax_Syntax.Tm_let
-                                                     ((false, [lb]), body1))) in
-                                     (tm,
-                                       (FStar_Compiler_List.op_At aq aqs1)))))))
-        | FStar_Parser_AST.Project (e, f) ->
+            let record_opt =
+              let uu___1 = FStar_Compiler_List.hd fields in
+              match uu___1 with
+              | (f, uu___2) ->
+                  FStar_Syntax_DsEnv.try_lookup_record_by_field_name env f in
             let uu___1 =
-              FStar_Syntax_DsEnv.fail_or env
-                (FStar_Syntax_DsEnv.try_lookup_dc_by_field_name env) f in
+              let uu___2 =
+                FStar_Compiler_List.map
+                  (fun uu___3 ->
+                     match uu___3 with
+                     | (fn, fval) ->
+                         let uu___4 = desugar_term_aq env fval in
+                         (match uu___4 with
+                          | (fval1, aq) -> ((fn, fval1), aq))) fields in
+              FStar_Compiler_Effect.op_Bar_Greater uu___2
+                FStar_Compiler_List.unzip in
             (match uu___1 with
-             | (constrname, is_rec) ->
-                 let uu___2 = desugar_term_aq env e in
+             | (fields1, aqs) ->
+                 let uu___2 = FStar_Compiler_List.unzip fields1 in
                  (match uu___2 with
-                  | (e1, s) ->
-                      let projname =
-                        let uu___3 = FStar_Ident.ident_of_lid f in
-                        FStar_Syntax_Util.mk_field_projector_name_from_ident
-                          constrname uu___3 in
-                      let qual =
-                        if is_rec
-                        then
-                          let uu___3 =
-                            let uu___4 =
-                              let uu___5 = FStar_Ident.ident_of_lid f in
-                              (constrname, uu___5) in
-                            FStar_Syntax_Syntax.Record_projector uu___4 in
-                          FStar_Pervasives_Native.Some uu___3
-                        else FStar_Pervasives_Native.None in
-                      let candidate_projector =
-                        let uu___3 =
-                          FStar_Ident.set_lid_range projname
+                  | (field_names, assignments) ->
+                      let args =
+                        FStar_Compiler_List.map
+                          (fun f -> (f, FStar_Pervasives_Native.None))
+                          assignments in
+                      let aqs1 = FStar_Compiler_List.flatten aqs in
+                      let uc =
+                        match record_opt with
+                        | FStar_Pervasives_Native.None ->
+                            {
+                              FStar_Syntax_Syntax.uc_base_term =
+                                (FStar_Compiler_Option.isSome eopt);
+                              FStar_Syntax_Syntax.uc_typename =
+                                FStar_Pervasives_Native.None;
+                              FStar_Syntax_Syntax.uc_fields = field_names
+                            }
+                        | FStar_Pervasives_Native.Some record ->
+                            let uu___3 =
+                              qualify_field_names
+                                record.FStar_Syntax_DsEnv.typename
+                                field_names in
+                            {
+                              FStar_Syntax_Syntax.uc_base_term =
+                                (FStar_Compiler_Option.isSome eopt);
+                              FStar_Syntax_Syntax.uc_typename =
+                                (FStar_Pervasives_Native.Some
+                                   (record.FStar_Syntax_DsEnv.typename));
+                              FStar_Syntax_Syntax.uc_fields = uu___3
+                            } in
+                      let head =
+                        let lid =
+                          FStar_Ident.lid_of_path ["__dummy__"]
                             top.FStar_Parser_AST.range in
-                        FStar_Syntax_Syntax.lid_as_fv uu___3
-                          (FStar_Syntax_Syntax.Delta_equational_at_level
-                             Prims.int_one) qual in
-                      let qual1 =
-                        FStar_Syntax_Syntax.Unresolved_projector
-                          candidate_projector in
-                      let f1 =
-                        let uu___3 = qualify_field_names constrname [f] in
-                        FStar_Compiler_List.hd uu___3 in
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 =
-                              FStar_Syntax_Syntax.fvar f1
-                                (FStar_Syntax_Syntax.Delta_equational_at_level
-                                   Prims.int_one)
-                                (FStar_Pervasives_Native.Some qual1) in
-                            let uu___7 =
-                              let uu___8 = FStar_Syntax_Syntax.as_arg e1 in
-                              [uu___8] in
-                            (uu___6, uu___7) in
-                          FStar_Syntax_Syntax.Tm_app uu___5 in
-                        FStar_Compiler_Effect.op_Less_Bar mk uu___4 in
-                      (uu___3, s)))
+                        FStar_Syntax_Syntax.fvar lid
+                          FStar_Syntax_Syntax.delta_constant
+                          (FStar_Pervasives_Native.Some
+                             (FStar_Syntax_Syntax.Unresolved_constructor uc)) in
+                      let mk_result args1 =
+                        FStar_Syntax_Syntax.mk_Tm_app head args1
+                          top.FStar_Parser_AST.range in
+                      (match eopt with
+                       | FStar_Pervasives_Native.None ->
+                           let uu___3 = mk_result args in (uu___3, aqs1)
+                       | FStar_Pervasives_Native.Some e ->
+                           let uu___3 = desugar_term_aq env e in
+                           (match uu___3 with
+                            | (e1, aq) ->
+                                let tm =
+                                  let uu___4 =
+                                    let uu___5 =
+                                      FStar_Syntax_Subst.compress e1 in
+                                    uu___5.FStar_Syntax_Syntax.n in
+                                  match uu___4 with
+                                  | FStar_Syntax_Syntax.Tm_name uu___5 ->
+                                      mk_result
+                                        ((e1, FStar_Pervasives_Native.None)
+                                        :: args)
+                                  | FStar_Syntax_Syntax.Tm_fvar uu___5 ->
+                                      mk_result
+                                        ((e1, FStar_Pervasives_Native.None)
+                                        :: args)
+                                  | uu___5 ->
+                                      let x =
+                                        FStar_Ident.gen
+                                          e1.FStar_Syntax_Syntax.pos in
+                                      let uu___6 =
+                                        FStar_Syntax_DsEnv.push_bv env x in
+                                      (match uu___6 with
+                                       | (env', bv_x) ->
+                                           let nm =
+                                             FStar_Syntax_Syntax.bv_to_name
+                                               bv_x in
+                                           let body =
+                                             mk_result
+                                               ((nm,
+                                                  FStar_Pervasives_Native.None)
+                                               :: args) in
+                                           let body1 =
+                                             let uu___7 =
+                                               let uu___8 =
+                                                 FStar_Syntax_Syntax.mk_binder
+                                                   bv_x in
+                                               [uu___8] in
+                                             FStar_Syntax_Subst.close uu___7
+                                               body in
+                                           let lb =
+                                             mk_lb
+                                               ([],
+                                                 (FStar_Pervasives.Inl bv_x),
+                                                 FStar_Syntax_Syntax.tun, e1,
+                                                 (e1.FStar_Syntax_Syntax.pos)) in
+                                           mk
+                                             (FStar_Syntax_Syntax.Tm_let
+                                                ((false, [lb]), body1))) in
+                                (tm, (FStar_Compiler_List.op_At aq aqs1))))))
+        | FStar_Parser_AST.Project (e, f) ->
+            let uu___1 = desugar_term_aq env e in
+            (match uu___1 with
+             | (e1, s) ->
+                 let head =
+                   let uu___2 =
+                     FStar_Syntax_DsEnv.try_lookup_dc_by_field_name env f in
+                   match uu___2 with
+                   | FStar_Pervasives_Native.None ->
+                       FStar_Syntax_Syntax.fvar f
+                         (FStar_Syntax_Syntax.Delta_equational_at_level
+                            Prims.int_one)
+                         (FStar_Pervasives_Native.Some
+                            (FStar_Syntax_Syntax.Unresolved_projector
+                               FStar_Pervasives_Native.None))
+                   | FStar_Pervasives_Native.Some (constrname, is_rec) ->
+                       let projname =
+                         let uu___3 = FStar_Ident.ident_of_lid f in
+                         FStar_Syntax_Util.mk_field_projector_name_from_ident
+                           constrname uu___3 in
+                       let qual =
+                         if is_rec
+                         then
+                           let uu___3 =
+                             let uu___4 =
+                               let uu___5 = FStar_Ident.ident_of_lid f in
+                               (constrname, uu___5) in
+                             FStar_Syntax_Syntax.Record_projector uu___4 in
+                           FStar_Pervasives_Native.Some uu___3
+                         else FStar_Pervasives_Native.None in
+                       let candidate_projector =
+                         let uu___3 =
+                           FStar_Ident.set_lid_range projname
+                             top.FStar_Parser_AST.range in
+                         FStar_Syntax_Syntax.lid_as_fv uu___3
+                           (FStar_Syntax_Syntax.Delta_equational_at_level
+                              Prims.int_one) qual in
+                       let qual1 =
+                         FStar_Syntax_Syntax.Unresolved_projector
+                           (FStar_Pervasives_Native.Some candidate_projector) in
+                       let f1 =
+                         let uu___3 = qualify_field_names constrname [f] in
+                         FStar_Compiler_List.hd uu___3 in
+                       FStar_Syntax_Syntax.fvar f1
+                         (FStar_Syntax_Syntax.Delta_equational_at_level
+                            Prims.int_one)
+                         (FStar_Pervasives_Native.Some qual1) in
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 = FStar_Syntax_Syntax.as_arg e1 in
+                         [uu___6] in
+                       (head, uu___5) in
+                     FStar_Syntax_Syntax.Tm_app uu___4 in
+                   FStar_Compiler_Effect.op_Less_Bar mk uu___3 in
+                 (uu___2, s))
         | FStar_Parser_AST.NamedTyp (n, e) ->
             ((let uu___2 = FStar_Ident.range_of_id n in
               FStar_Errors.log_issue uu___2
