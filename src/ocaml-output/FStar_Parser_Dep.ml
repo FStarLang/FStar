@@ -1463,9 +1463,11 @@ let (collect_one :
                  (FStar_Compiler_Util.iter_opt t collect_term;
                   FStar_Compiler_List.iter
                     (fun uu___4 ->
-                       match uu___4 with | (uu___5, t1) -> collect_term t1)
+                       match uu___4 with
+                       | (fn, t1) -> (collect_fieldname fn; collect_term t1))
                     idterms)
-             | FStar_Parser_AST.Project (t, uu___3) -> collect_term t
+             | FStar_Parser_AST.Project (t, f) ->
+                 (collect_term t; collect_fieldname f)
              | FStar_Parser_AST.Product (binders, t) ->
                  (collect_binders binders; collect_term t)
              | FStar_Parser_AST.Sum (binders, t) ->
@@ -1691,7 +1693,20 @@ let (collect_one :
              | (pat, t1, t2) ->
                  (collect_pattern pat;
                   FStar_Compiler_Util.iter_opt t1 collect_term;
-                  collect_term t2) in
+                  collect_term t2)
+           and collect_fieldname fn =
+             let uu___2 = let uu___3 = FStar_Ident.nsstr fn in uu___3 <> "" in
+             if uu___2
+             then
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Ident.ns_of_lid fn in
+                     FStar_Ident.lid_of_ids uu___6 in
+                   (false, uu___5) in
+                 P_dep uu___4 in
+               add_to_parsing_data uu___3
+             else () in
            let uu___2 = FStar_Parser_Driver.parse_file filename in
            match uu___2 with
            | (ast, uu___3) ->

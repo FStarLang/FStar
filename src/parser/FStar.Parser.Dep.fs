@@ -942,9 +942,14 @@ let collect_one
             collect_term tac
         | Record (t, idterms) ->
             iter_opt t collect_term;
-            List.iter (fun (_, t) -> collect_term t) idterms
-        | Project (t, _) ->
-            collect_term t
+            List.iter 
+              (fun (fn, t) -> 
+                collect_fieldname fn;
+                collect_term t)
+              idterms
+        | Project (t, f) ->
+            collect_term t;
+            collect_fieldname f
         | Product (binders, t) ->
           collect_binders binders;
           collect_term t
@@ -1109,6 +1114,10 @@ let collect_one
         collect_pattern pat;
         iter_opt t1 collect_term;
         collect_term t2
+
+      and collect_fieldname fn =
+          if nsstr fn <> ""
+          then add_to_parsing_data (P_dep (false, lid_of_ids (ns_of_lid fn)))
 
       in
       let ast, _ = Driver.parse_file filename in
