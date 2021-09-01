@@ -1,5 +1,10 @@
 module RecordFieldDisambiguation
 
+type tf0 = { f : bool }
+type tf1 = { f : bool }
+let test_tf0_1 (x:tf0) (y:tf1) = x.f && y.f
+let test_tf0_2 (x:tf0) : tf1 = { f = x.f }
+
 type r = { a:nat }
 type s = { a:bool }
 
