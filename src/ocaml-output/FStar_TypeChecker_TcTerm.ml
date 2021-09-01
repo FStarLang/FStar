@@ -2807,19 +2807,19 @@ and (tc_maybe_toplevel_term :
                if uc.FStar_Syntax_Syntax.uc_base_term
                then
                  match args with
-                 | (base, uu___7)::rest ->
-                     ((FStar_Pervasives_Native.Some base), rest)
+                 | (b, uu___7)::rest ->
+                     ((FStar_Pervasives_Native.Some b), rest)
                  | uu___7 -> failwith "Impossible"
                else (FStar_Pervasives_Native.None, args) in
              match uu___6 with
-             | (base, fields) ->
+             | (base_term, fields) ->
                  let uu___7 =
                    let uu___8 =
                      FStar_Compiler_List.map FStar_Pervasives_Native.fst
                        fields in
                    FStar_Compiler_List.zip uc.FStar_Syntax_Syntax.uc_fields
                      uu___8 in
-                 (base, uu___7) in
+                 (base_term, uu___7) in
            (match uu___5 with
             | (base_term, uc_fields) ->
                 let uu___6 =

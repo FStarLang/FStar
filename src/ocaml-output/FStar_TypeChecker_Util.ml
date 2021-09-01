@@ -7067,14 +7067,14 @@ let (try_lookup_record_type :
                                      let is_rec =
                                        FStar_TypeChecker_Env.is_record env
                                          typename in
-                                     let uu___15 =
-                                       let uu___16 =
+                                     let r =
+                                       let uu___15 =
                                          FStar_Ident.ident_of_lid dc in
                                        {
                                          FStar_Syntax_DsEnv.typename =
                                            typename;
                                          FStar_Syntax_DsEnv.constrname =
-                                           uu___16;
+                                           uu___15;
                                          FStar_Syntax_DsEnv.parms = [];
                                          FStar_Syntax_DsEnv.fields = fields2;
                                          FStar_Syntax_DsEnv.is_private =
@@ -7082,7 +7082,7 @@ let (try_lookup_record_type :
                                          FStar_Syntax_DsEnv.is_record =
                                            is_rec
                                        } in
-                                     FStar_Pervasives_Native.Some uu___15)
+                                     FStar_Pervasives_Native.Some r)
                               else
                                 ((let uu___15 =
                                     FStar_Compiler_Util.string_of_int nparms in

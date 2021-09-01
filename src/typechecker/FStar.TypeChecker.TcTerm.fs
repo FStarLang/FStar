@@ -944,14 +944,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app ({n=Tm_fvar {fv_qual=Some (Unresolved_constructor uc)}}, args) ->
     (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
     let base_term, uc_fields =
-      let base, fields =
+      let base_term, fields =
         if uc.uc_base_term
         then match args with
-             | (base, _)::rest -> Some base, rest
+             | (b, _)::rest -> Some b, rest
              | _ -> failwith "Impossible"
         else None, args
       in
-      base, List.zip uc.uc_fields (List.map fst fields)
+      base_term, List.zip uc.uc_fields (List.map fst fields)
     in
     let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with

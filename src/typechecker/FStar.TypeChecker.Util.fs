@@ -3107,15 +3107,17 @@ let try_lookup_record_type env (typename:lident)
                 let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
                 let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
                 let is_rec = Env.is_record env typename in
-                let open FStar.Syntax.DsEnv in
-                Some ({
-                  typename = typename;
-                  constrname = Ident.ident_of_lid dc;
-                  parms = [];
-                  fields = fields;
-                  is_private = false;
-                  is_record = is_rec
-                })
+                let r : DsEnv.record_or_dc =
+                  {
+                    typename = typename;
+                    constrname = Ident.ident_of_lid dc;
+                    parms = [];
+                    fields = fields;
+                    is_private = false;
+                    is_record = is_rec
+                  }
+                in
+                Some r
 
            else (
              BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
@@ -3158,7 +3160,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
                        BU.format1 "Record name %s not found" (string_of_lid tn))
                       (range_of_lid tn)
     in
-    let rdc =
+    let rdc : DsEnv.record_or_dc =
       match t with
       | None -> default_rdc()
       | Some t ->
@@ -3174,13 +3176,13 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
         | _ -> default_rdc()
     in
     let constrname =
-          let name = lid_of_ids (ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
+          let name = lid_of_ids (ns_of_lid rdc.typename @ [rdc.constrname]) in
           Ident.set_lid_range name rng
     in
     let constructor =
         let qual =
-          if rdc.DsEnv.is_record
-            then (Some (Record_ctor(rdc.DsEnv.typename, rdc.DsEnv.fields |> List.map fst)))
+          if rdc.is_record
+            then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
           else None
         in
         S.lid_as_fv constrname delta_constant qual
@@ -3203,7 +3205,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
 let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) =
     Ident.ident_equals field (Ident.ident_of_lid field_name) &&
     (if ns_of_lid field_name <> []
-     then nsstr field_name = nsstr rdc.DsEnv.typename
+     then nsstr field_name = nsstr rdc.typename
      else true)
 
 (*
@@ -3227,11 +3229,11 @@ let make_record_fields_in_order env uc topt
        (rng : Range.range)
   : list<'a>
   = let debug () =
-      let print_rdc rdc =
+      let print_rdc (rdc:DsEnv.record_or_dc) =
         BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
-          (string_of_lid rdc.DsEnv.typename)
-          (string_of_id rdc.DsEnv.constrname)
-          (List.map (fun (i, _) -> string_of_id i) rdc.DsEnv.fields |> String.concat "; ")
+          (string_of_lid rdc.typename)
+          (string_of_id rdc.constrname)
+          (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
       in
       let print_fas fas =
         List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
@@ -3275,7 +3277,7 @@ let make_record_fields_in_order env uc topt
                  (Errors.Fatal_MissingFieldInRecord,
                    BU.format2 "Field %s of record type %s is missing"
                      (string_of_id field_name)
-                     (string_of_lid rdc.DsEnv.typename))
+                     (string_of_lid rdc.typename))
                  rng
              | Some a ->
                rest, a::as_rev
@@ -3287,10 +3289,10 @@ let make_record_fields_in_order env uc topt
                (Errors.Fatal_MissingFieldInRecord,
                 BU.format2 "Field %s of record type %s is given multiple assignments"
                   (string_of_id field_name)
-                  (string_of_lid rdc.DsEnv.typename))
+                  (string_of_lid rdc.typename))
                rng)
         (fas, [])
-        rdc.DsEnv.fields
+        rdc.fields
     in
     let _ =
       match rest with
@@ -3301,7 +3303,7 @@ let make_record_fields_in_order env uc topt
           (Errors.Fatal_MissingFieldInRecord,
             BU.format2 "Field %s is redundant for type %s"
                        (string_of_lid f)
-                       (string_of_lid rdc.DsEnv.typename))
+                       (string_of_lid rdc.typename))
           rng
     in
     List.rev as_rev
