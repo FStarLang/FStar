@@ -341,9 +341,8 @@ let (id_info__insert :
           | FStar_Pervasives.Inr uu___ -> info.identifier_ty
           | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
         let info1 =
-          let uu___ = info in
           {
-            identifier = (uu___.identifier);
+            identifier = (info.identifier);
             identifier_ty = id_ty;
             identifier_range = use_range
           } in
@@ -377,10 +376,9 @@ let (id_info_insert :
         fun range ->
           let info =
             { identifier = id; identifier_ty = ty; identifier_range = range } in
-          let uu___ = table in
           {
-            id_info_enabled = (uu___.id_info_enabled);
-            id_info_db = (uu___.id_info_db);
+            id_info_enabled = (table.id_info_enabled);
+            id_info_db = (table.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
 let (id_info_insert_bv :
@@ -410,11 +408,10 @@ let (id_info_insert_fv :
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table ->
     fun enabled ->
-      let uu___ = table in
       {
         id_info_enabled = enabled;
-        id_info_db = (uu___.id_info_db);
-        id_info_buffer = (uu___.id_info_buffer)
+        id_info_db = (table.id_info_db);
+        id_info_buffer = (table.id_info_buffer)
       }
 let (id_info_promote :
   id_info_table ->
@@ -422,13 +419,12 @@ let (id_info_promote :
   =
   fun table ->
     fun ty_map ->
-      let uu___ = table in
-      let uu___1 =
+      let uu___ =
         FStar_Compiler_List.fold_left (id_info__insert ty_map)
           table.id_info_db table.id_info_buffer in
       {
-        id_info_enabled = (uu___.id_info_enabled);
-        id_info_db = uu___1;
+        id_info_enabled = (table.id_info_enabled);
+        id_info_db = uu___;
         id_info_buffer = []
       }
 let (id_info_at_pos :
@@ -653,16 +649,15 @@ let (weaken_guard_formula : guard_t -> FStar_Syntax_Syntax.typ -> guard_t) =
       match g.guard_f with
       | Trivial -> g
       | NonTrivial f ->
-          let uu___ = g in
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Util.mk_imp fml f in
-            check_trivial uu___2 in
+          let uu___ =
+            let uu___1 = FStar_Syntax_Util.mk_imp fml f in
+            check_trivial uu___1 in
           {
-            guard_f = uu___1;
-            deferred_to_tac = (uu___.deferred_to_tac);
-            deferred = (uu___.deferred);
-            univ_ineqs = (uu___.univ_ineqs);
-            implicits = (uu___.implicits)
+            guard_f = uu___;
+            deferred_to_tac = (g.deferred_to_tac);
+            deferred = (g.deferred);
+            univ_ineqs = (g.univ_ineqs);
+            implicits = (g.implicits)
           }
 type lcomp =
   {
@@ -756,23 +751,21 @@ let (lcomp_set_flags :
         | FStar_Syntax_Syntax.GTotal uu___ -> c
         | FStar_Syntax_Syntax.Comp ct ->
             let ct1 =
-              let uu___ = ct in
               {
                 FStar_Syntax_Syntax.comp_univs =
-                  (uu___.FStar_Syntax_Syntax.comp_univs);
+                  (ct.FStar_Syntax_Syntax.comp_univs);
                 FStar_Syntax_Syntax.effect_name =
-                  (uu___.FStar_Syntax_Syntax.effect_name);
+                  (ct.FStar_Syntax_Syntax.effect_name);
                 FStar_Syntax_Syntax.result_typ =
-                  (uu___.FStar_Syntax_Syntax.result_typ);
+                  (ct.FStar_Syntax_Syntax.result_typ);
                 FStar_Syntax_Syntax.effect_args =
-                  (uu___.FStar_Syntax_Syntax.effect_args);
+                  (ct.FStar_Syntax_Syntax.effect_args);
                 FStar_Syntax_Syntax.flags = fs
               } in
-            let uu___ = c in
             {
               FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
-              FStar_Syntax_Syntax.pos = (uu___.FStar_Syntax_Syntax.pos);
-              FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+              FStar_Syntax_Syntax.pos = (c.FStar_Syntax_Syntax.pos);
+              FStar_Syntax_Syntax.vars = (c.FStar_Syntax_Syntax.vars)
             } in
       mk_lcomp lc.eff_name lc.res_typ fs
         (fun uu___ ->
@@ -868,11 +861,10 @@ let (simplify :
   fun debug ->
     fun tm ->
       let w t =
-        let uu___ = t in
         {
-          FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (tm.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
         } in
       let simp_t t =
         let uu___ =

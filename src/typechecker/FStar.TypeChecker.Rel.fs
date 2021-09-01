@@ -3324,9 +3324,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug env (Options.Other "Rel")
-             then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
-                                 (Print.term_to_string head1)
-                                 (Print.term_to_string head2)
+             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+               [(string_of_int problem.pid);
+                (string_of_bool wl.smt_ok);
+                (Print.term_to_string head1);
+                (string_of_bool (Env.is_interpreted env head1));
+                (string_of_bool (no_free_uvars t1));
+                (Print.term_to_string head2);
+                (string_of_bool (Env.is_interpreted env head2));
+                (string_of_bool (no_free_uvars t2))]
          in
          let equal t1 t2 =
             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in

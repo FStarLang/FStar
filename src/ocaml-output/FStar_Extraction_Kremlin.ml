@@ -689,20 +689,18 @@ let (empty : Prims.string Prims.list -> env) =
 let (extend : env -> Prims.string -> env) =
   fun env1 ->
     fun x ->
-      let uu___ = env1 in
       {
         names = ({ pretty = x } :: (env1.names));
-        names_t = (uu___.names_t);
-        module_name = (uu___.module_name)
+        names_t = (env1.names_t);
+        module_name = (env1.module_name)
       }
 let (extend_t : env -> Prims.string -> env) =
   fun env1 ->
     fun x ->
-      let uu___ = env1 in
       {
-        names = (uu___.names);
+        names = (env1.names);
         names_t = (x :: (env1.names_t));
-        module_name = (uu___.module_name)
+        module_name = (env1.module_name)
       }
 let (find_name : env -> Prims.string -> name) =
   fun env1 ->

@@ -27,13 +27,12 @@ let (extend_env :
   fun env ->
     fun i ->
       fun e ->
-        let uu___ = env in
-        let uu___1 =
-          let uu___2 =
+        let uu___ =
+          let uu___1 =
             FStar_Extraction_ML_Syntax.string_of_mlpath
               ((env.current_module), i) in
-          FStar_Compiler_Util.psmap_add env.tydef_map uu___2 e in
-        { current_module = (uu___.current_module); tydef_map = uu___1 }
+          FStar_Compiler_Util.psmap_add env.tydef_map uu___1 e in
+        { current_module = (env.current_module); tydef_map = uu___ }
 let (lookup_tyname :
   env_t ->
     FStar_Extraction_ML_Syntax.mlpath -> entry FStar_Pervasives_Native.option)
@@ -212,18 +211,17 @@ and (elim_letbinding :
                    | (vars, t) ->
                        let uu___2 = elim_mlty env t in (vars, uu___2)) in
             let expr = elim_mlexpr env lb.FStar_Extraction_ML_Syntax.mllb_def in
-            let uu___1 = lb in
             {
               FStar_Extraction_ML_Syntax.mllb_name =
-                (uu___1.FStar_Extraction_ML_Syntax.mllb_name);
+                (lb.FStar_Extraction_ML_Syntax.mllb_name);
               FStar_Extraction_ML_Syntax.mllb_tysc = ts;
               FStar_Extraction_ML_Syntax.mllb_add_unit =
-                (uu___1.FStar_Extraction_ML_Syntax.mllb_add_unit);
+                (lb.FStar_Extraction_ML_Syntax.mllb_add_unit);
               FStar_Extraction_ML_Syntax.mllb_def = expr;
               FStar_Extraction_ML_Syntax.mllb_meta =
-                (uu___1.FStar_Extraction_ML_Syntax.mllb_meta);
+                (lb.FStar_Extraction_ML_Syntax.mllb_meta);
               FStar_Extraction_ML_Syntax.print_typ =
-                (uu___1.FStar_Extraction_ML_Syntax.print_typ)
+                (lb.FStar_Extraction_ML_Syntax.print_typ)
             } in
           let uu___1 = FStar_Compiler_List.map elim_one_lb lbs in
           (flavor, uu___1)
@@ -247,14 +245,12 @@ and (elim_mlexpr :
   =
   fun env ->
     fun e ->
-      let uu___ = e in
-      let uu___1 = elim_mlexpr' env e.FStar_Extraction_ML_Syntax.expr in
-      let uu___2 = elim_mlty env e.FStar_Extraction_ML_Syntax.mlty in
+      let uu___ = elim_mlexpr' env e.FStar_Extraction_ML_Syntax.expr in
+      let uu___1 = elim_mlty env e.FStar_Extraction_ML_Syntax.mlty in
       {
-        FStar_Extraction_ML_Syntax.expr = uu___1;
-        FStar_Extraction_ML_Syntax.mlty = uu___2;
-        FStar_Extraction_ML_Syntax.loc =
-          (uu___.FStar_Extraction_ML_Syntax.loc)
+        FStar_Extraction_ML_Syntax.expr = uu___;
+        FStar_Extraction_ML_Syntax.mlty = uu___1;
+        FStar_Extraction_ML_Syntax.loc = (e.FStar_Extraction_ML_Syntax.loc)
       }
 type tydef =
   (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.metadata
@@ -496,20 +492,18 @@ let (elim_one_mltydecl :
           (match uu___3 with
            | (env1, parameters1, body1) ->
                (env1,
-                 (let uu___4 = td in
-                  {
-                    FStar_Extraction_ML_Syntax.tydecl_assumed =
-                      (uu___4.FStar_Extraction_ML_Syntax.tydecl_assumed);
-                    FStar_Extraction_ML_Syntax.tydecl_name =
-                      (uu___4.FStar_Extraction_ML_Syntax.tydecl_name);
-                    FStar_Extraction_ML_Syntax.tydecl_ignored =
-                      (uu___4.FStar_Extraction_ML_Syntax.tydecl_ignored);
-                    FStar_Extraction_ML_Syntax.tydecl_parameters =
-                      parameters1;
-                    FStar_Extraction_ML_Syntax.tydecl_meta =
-                      (uu___4.FStar_Extraction_ML_Syntax.tydecl_meta);
-                    FStar_Extraction_ML_Syntax.tydecl_defn = body1
-                  })))
+                 {
+                   FStar_Extraction_ML_Syntax.tydecl_assumed =
+                     (td.FStar_Extraction_ML_Syntax.tydecl_assumed);
+                   FStar_Extraction_ML_Syntax.tydecl_name =
+                     (td.FStar_Extraction_ML_Syntax.tydecl_name);
+                   FStar_Extraction_ML_Syntax.tydecl_ignored =
+                     (td.FStar_Extraction_ML_Syntax.tydecl_ignored);
+                   FStar_Extraction_ML_Syntax.tydecl_parameters = parameters1;
+                   FStar_Extraction_ML_Syntax.tydecl_meta =
+                     (td.FStar_Extraction_ML_Syntax.tydecl_meta);
+                   FStar_Extraction_ML_Syntax.tydecl_defn = body1
+                 }))
 let (elim_module :
   env_t ->
     FStar_Extraction_ML_Syntax.mlmodule1 Prims.list ->
@@ -570,8 +564,7 @@ let (set_current_module :
       let curmod =
         FStar_Compiler_List.op_At (FStar_Pervasives_Native.fst n)
           [FStar_Pervasives_Native.snd n] in
-      let uu___ = e in
-      { current_module = curmod; tydef_map = (uu___.tydef_map) }
+      { current_module = curmod; tydef_map = (e.tydef_map) }
 let (elim_mllib :
   env_t ->
     FStar_Extraction_ML_Syntax.mllib ->

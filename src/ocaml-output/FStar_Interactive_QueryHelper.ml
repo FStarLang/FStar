@@ -157,16 +157,15 @@ let mod_filter :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              let uu___4 = md in
-              let uu___5 =
-                let uu___6 = FStar_Interactive_CompletionTable.mod_name md in
-                Prims.op_Hat uu___6 "." in
+              let uu___4 =
+                let uu___5 = FStar_Interactive_CompletionTable.mod_name md in
+                Prims.op_Hat uu___5 "." in
               {
-                FStar_Interactive_CompletionTable.mod_name = uu___5;
+                FStar_Interactive_CompletionTable.mod_name = uu___4;
                 FStar_Interactive_CompletionTable.mod_path =
-                  (uu___4.FStar_Interactive_CompletionTable.mod_path);
+                  (md.FStar_Interactive_CompletionTable.mod_path);
                 FStar_Interactive_CompletionTable.mod_loaded =
-                  (uu___4.FStar_Interactive_CompletionTable.mod_loaded)
+                  (md.FStar_Interactive_CompletionTable.mod_loaded)
               } in
             FStar_Interactive_CompletionTable.Module uu___3 in
           (pth, uu___2) in

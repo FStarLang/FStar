@@ -43,17 +43,17 @@ Guidelines for the changelog:
 
 ## Core typechecker
   * F* now supports accessibility predicates based termination proofs. When writing a recursive function
-    
+
     ```
     let rec x_i : Tot t = ...
     ```
-    
+
     The decreases metric may be specified as:
-    
+
     ```
     let rec x_i : Tot t (decreses {:well-founded rel e}) = ...
     ```
-    
+
     where `rel` is a well-founded relation and `e` is an expression that decreases according to the relation in the recursive calls. See [this PR](https://github.com/FStarLang/FStar/pull/2307) for more details.
 
   * Since 2686888aab7e8fa7059b61c161ad7a2f867ee1f8, F* no longer
@@ -194,6 +194,20 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * Type-based disambiguation for projectors and record
+     constructors. You can now write:
+
+     ```
+     type t = { f : bool }
+     type s = { f : bool }
+     let test1 (x:t) (y:s) = x.f && y.f
+     let test2 (x:t) : s = { f = x.f }
+     ```
+
+     Where types are used to disambiguate the field names of `t` and
+     `s`. See tests/micro-benchmarks/RecordFieldDisambiguation.fst for
+     more examples.
 
    * `eliminate` and `introduce` are now keywords. They are used to
      implement sugar for manipulating classical logic connectives, as
