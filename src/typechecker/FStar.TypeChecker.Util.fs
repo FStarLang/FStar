@@ -3181,6 +3181,24 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
     rdc, constrname, constructor
 
 
+(* Check if a user provided `field_name` in a constructor or projector
+   matches `field` in `rdc`.
+
+   The main subtlety is that if `field_name` is unqualified, then it only
+   has to match `field`.
+
+   Otherwise, its namespace also has to match the module name of `rdc`.
+
+   This ensures that if the user wrote a qualified field name, then it
+   has to resolve to a field in the unambiguous module reference in
+   the qualifier.
+*)
+let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) =
+    Ident.ident_equals field (Ident.ident_of_lid field_name) &&
+    (if ns_of_lid field_name <> []
+     then nsstr field_name = nsstr rdc.DsEnv.typename
+     else true)
+
 (*
   The field assignments of a record constructor can be given out of
   order.
@@ -3235,11 +3253,7 @@ let make_record_fields_in_order env uc topt
         (fun (fields, as_rev) (field_name, _) ->
            let matching, rest =
              List.partition
-               (fun (fn, t) ->
-                  Ident.ident_equals field_name (Ident.ident_of_lid fn) &&
-                  (if ns_of_lid fn <> []
-                   then nsstr fn = nsstr rdc.DsEnv.typename
-                   else true))
+               (fun (fn, _) -> field_name_matches fn rdc field_name)
                fields
            in
            match matching with

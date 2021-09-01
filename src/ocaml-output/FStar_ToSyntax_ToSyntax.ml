@@ -3848,11 +3848,14 @@ and (desugar_term_maybe_top :
                       let qual1 =
                         FStar_Syntax_Syntax.Unresolved_projector
                           candidate_projector in
+                      let f1 =
+                        let uu___3 = qualify_field_names constrname [f] in
+                        FStar_Compiler_List.hd uu___3 in
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
                             let uu___6 =
-                              FStar_Syntax_Syntax.fvar f
+                              FStar_Syntax_Syntax.fvar f1
                                 (FStar_Syntax_Syntax.Delta_equational_at_level
                                    Prims.int_one)
                                 (FStar_Pervasives_Native.Some qual1) in

@@ -2914,10 +2914,10 @@ and (tc_maybe_toplevel_term :
               FStar_Syntax_Syntax.vars = uu___4;_},
             (e1, FStar_Pervasives_Native.None)::rest)
            ->
-           let fallback candidate1 =
-             let candidate2 = FStar_Syntax_Syntax.fv_to_tm candidate1 in
+           let proceed_with choice =
+             let f = FStar_Syntax_Syntax.fv_to_tm choice in
              let term =
-               FStar_Syntax_Syntax.mk_Tm_app candidate2
+               FStar_Syntax_Syntax.mk_Tm_app f
                  ((e1, FStar_Pervasives_Native.None) :: rest)
                  top.FStar_Syntax_Syntax.pos in
              tc_term env1 term in
@@ -2944,23 +2944,19 @@ and (tc_maybe_toplevel_term :
                               (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                           (match uu___11 with
                            | FStar_Pervasives_Native.None ->
-                               fallback candidate
+                               proceed_with candidate
                            | FStar_Pervasives_Native.Some rdc ->
                                let i =
                                  FStar_Compiler_List.tryFind
                                    (fun uu___12 ->
                                       match uu___12 with
                                       | (i1, uu___13) ->
-                                          let uu___14 =
-                                            FStar_Ident.string_of_id i1 in
-                                          let uu___15 =
-                                            FStar_Ident.string_of_lid
-                                              field_name in
-                                          uu___14 = uu___15)
+                                          FStar_TypeChecker_Util.field_name_matches
+                                            field_name rdc i1)
                                    rdc.FStar_Syntax_DsEnv.fields in
                                (match i with
                                 | FStar_Pervasives_Native.None ->
-                                    fallback candidate
+                                    proceed_with candidate
                                 | FStar_Pervasives_Native.Some (i1, uu___12)
                                     ->
                                     let constrname =
@@ -2981,7 +2977,7 @@ and (tc_maybe_toplevel_term :
                                           (FStar_Syntax_Syntax.Record_projector
                                              (constrname, i1))
                                       else FStar_Pervasives_Native.None in
-                                    let candidate1 =
+                                    let choice =
                                       let uu___13 =
                                         let uu___14 =
                                           FStar_Ident.range_of_lid field_name in
@@ -2990,8 +2986,8 @@ and (tc_maybe_toplevel_term :
                                       FStar_Syntax_Syntax.lid_as_fv uu___13
                                         (FStar_Syntax_Syntax.Delta_equational_at_level
                                            Prims.int_one) qual in
-                                    fallback candidate1))
-                      | uu___11 -> fallback candidate)))
+                                    proceed_with choice))
+                      | uu___11 -> proceed_with candidate)))
        | FStar_Syntax_Syntax.Tm_app
            (head, (tau, FStar_Pervasives_Native.None)::[]) when
            (FStar_Syntax_Util.is_synth_by_tactic head) &&

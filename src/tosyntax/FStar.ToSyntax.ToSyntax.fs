@@ -1735,6 +1735,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
       let candidate_projector = S.lid_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
       let qual = Unresolved_projector candidate_projector in
+      let f = List.hd (qualify_field_names constrname [f]) in
       //The fvar at the head of the term just records the fieldname that the user wrote
       //and in TcTerm, we use that field name combined with type info to disambiguate
       mk <| Tm_app(S.fvar f (Delta_equational_at_level 1) (Some qual), [as_arg e]), s

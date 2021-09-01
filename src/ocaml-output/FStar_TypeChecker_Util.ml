@@ -7182,6 +7182,23 @@ let (find_record_or_dc_from_typ :
             FStar_Syntax_Syntax.lid_as_fv constrname
               FStar_Syntax_Syntax.delta_constant qual in
           (rdc, constrname, constructor)
+let (field_name_matches :
+  FStar_Ident.lident ->
+    FStar_Syntax_DsEnv.record_or_dc -> FStar_Ident.ident -> Prims.bool)
+  =
+  fun field_name ->
+    fun rdc ->
+      fun field ->
+        (let uu___ = FStar_Ident.ident_of_lid field_name in
+         FStar_Ident.ident_equals field uu___) &&
+          (let uu___ =
+             let uu___1 = FStar_Ident.ns_of_lid field_name in uu___1 <> [] in
+           if uu___
+           then
+             let uu___1 = FStar_Ident.nsstr field_name in
+             let uu___2 = FStar_Ident.nsstr rdc.FStar_Syntax_DsEnv.typename in
+             uu___1 = uu___2
+           else true)
 let make_record_fields_in_order :
   'a .
     FStar_TypeChecker_Env.env ->
@@ -7286,25 +7303,9 @@ let make_record_fields_in_order :
                                FStar_Compiler_List.partition
                                  (fun uu___5 ->
                                     match uu___5 with
-                                    | (fn, t) ->
-                                        (let uu___6 =
-                                           FStar_Ident.ident_of_lid fn in
-                                         FStar_Ident.ident_equals field_name
-                                           uu___6)
-                                          &&
-                                          (let uu___6 =
-                                             let uu___7 =
-                                               FStar_Ident.ns_of_lid fn in
-                                             uu___7 <> [] in
-                                           if uu___6
-                                           then
-                                             let uu___7 =
-                                               FStar_Ident.nsstr fn in
-                                             let uu___8 =
-                                               FStar_Ident.nsstr
-                                                 rdc.FStar_Syntax_DsEnv.typename in
-                                             uu___7 = uu___8
-                                           else true)) fields in
+                                    | (fn, uu___6) ->
+                                        field_name_matches fn rdc field_name)
+                                 fields in
                              (match uu___4 with
                               | (matching, rest) ->
                                   (match matching with

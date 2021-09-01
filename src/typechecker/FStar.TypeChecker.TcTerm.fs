@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.Syntax.DsEnv
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -974,7 +975,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
-        let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
+        let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
         let candidate = S.fvar (Ident.set_lid_range projname x.pos) (Delta_equational_at_level 1) qual in
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
@@ -994,9 +995,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, (e, None)::rest) ->
     (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
-    let fallback candidate =
-      let candidate = S.fv_to_tm candidate in
-      let term = S.mk_Tm_app candidate ((e, None)::rest) top.pos in
+    let proceed_with choice =
+      let f = S.fv_to_tm choice in
+      let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
       tc_term env term
     in
     //We have e.f, use the type of e to disambiguate
@@ -1010,28 +1011,28 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     match (SS.compress thead).n with
     | Tm_fvar type_name -> (
       match TcUtil.try_lookup_record_type env type_name.fv_name.v with
-      | None -> fallback candidate
+      | None -> proceed_with candidate
       | Some rdc ->
         let i =
           List.tryFind
-            (fun (i, _) -> Ident.string_of_id i = Ident.string_of_lid field_name)
-            rdc.DsEnv.fields
+            (fun (i, _) -> TcUtil.field_name_matches field_name rdc i)
+            rdc.fields
         in
         match i with
-        | None -> fallback candidate
+        | None -> proceed_with candidate
         | Some (i, _) ->
-          let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
+          let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.typename @ [rdc.constrname]) in
           let projname = mk_field_projector_name_from_ident constrname i in
-          let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
-          let candidate =
+          let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
+          let choice =
             S.lid_as_fv
               (Ident.set_lid_range projname (Ident.range_of_lid field_name))
               (Delta_equational_at_level 1)
               qual
           in
-          fallback candidate
+          proceed_with choice
       )
-    | _ -> fallback candidate
+    | _ -> proceed_with candidate
     end
 
   // If we're on the first phase, we don't synth, and just wait for the next phase

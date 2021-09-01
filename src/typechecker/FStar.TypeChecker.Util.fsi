@@ -158,6 +158,7 @@ val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -
 
 val try_lookup_record_type : env -> lident -> option<DsEnv.record_or_dc>
 val find_record_or_dc_from_typ : env -> option<typ> -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc * lident * fv
+val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
 val make_record_fields_in_order : env -> unresolved_constructor -> option<either<typ,typ>> ->
                                 DsEnv.record_or_dc ->
                                 list<(lident * 'a)> ->
