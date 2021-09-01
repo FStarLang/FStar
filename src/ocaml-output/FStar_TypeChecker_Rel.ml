@@ -8419,13 +8419,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8500,13 +8538,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8581,13 +8657,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8662,13 +8776,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8743,13 +8895,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8824,13 +9014,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8905,13 +9133,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -8986,13 +9252,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -9067,13 +9371,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -9148,13 +9490,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -9229,13 +9609,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =
@@ -9310,13 +9728,51 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                     if uu___10
                     then
                       let uu___11 =
-                        FStar_Compiler_Util.string_of_int
-                          problem.FStar_TypeChecker_Common.pid in
-                      let uu___12 = FStar_Syntax_Print.term_to_string head1 in
-                      let uu___13 = FStar_Syntax_Print.term_to_string head2 in
-                      FStar_Compiler_Util.print3
-                        ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" uu___11
-                        uu___12 uu___13
+                        let uu___12 =
+                          FStar_Compiler_Util.string_of_int
+                            problem.FStar_TypeChecker_Common.pid in
+                        let uu___13 =
+                          let uu___14 =
+                            FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Syntax_Print.term_to_string head1 in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  FStar_TypeChecker_Env.is_interpreted env
+                                    head1 in
+                                FStar_Compiler_Util.string_of_bool uu___19 in
+                              let uu___19 =
+                                let uu___20 =
+                                  let uu___21 = no_free_uvars t1 in
+                                  FStar_Compiler_Util.string_of_bool uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    FStar_Syntax_Print.term_to_string head2 in
+                                  let uu___23 =
+                                    let uu___24 =
+                                      let uu___25 =
+                                        FStar_TypeChecker_Env.is_interpreted
+                                          env head2 in
+                                      FStar_Compiler_Util.string_of_bool
+                                        uu___25 in
+                                    let uu___25 =
+                                      let uu___26 =
+                                        let uu___27 = no_free_uvars t2 in
+                                        FStar_Compiler_Util.string_of_bool
+                                          uu___27 in
+                                      [uu___26] in
+                                    uu___24 :: uu___25 in
+                                  uu___22 :: uu___23 in
+                                uu___20 :: uu___21 in
+                              uu___18 :: uu___19 in
+                            uu___16 :: uu___17 in
+                          uu___14 :: uu___15 in
+                        uu___12 :: uu___13 in
+                      FStar_Compiler_Util.print
+                        ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                        uu___11
                     else ());
                    (let equal t11 t21 =
                       let t12 =

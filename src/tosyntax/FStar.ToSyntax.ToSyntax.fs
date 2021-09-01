@@ -1710,7 +1710,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
       let candidate_projector = S.fvar (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
       let qual = Unresolved_projector candidate_projector in
-      mk <| Tm_app(S.fvar f (Delta_constant_at_level 0) (Some qual), [as_arg e]), s
+      mk <| Tm_app(S.fvar f (Delta_equational_at_level 1) (Some qual), [as_arg e]), s
 
     | NamedTyp(n, e) ->
       (* See issue #1905 *)

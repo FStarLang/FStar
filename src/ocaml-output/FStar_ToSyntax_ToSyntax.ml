@@ -3890,8 +3890,8 @@ and (desugar_term_maybe_top :
                           let uu___5 =
                             let uu___6 =
                               FStar_Syntax_Syntax.fvar f
-                                (FStar_Syntax_Syntax.Delta_constant_at_level
-                                   Prims.int_zero)
+                                (FStar_Syntax_Syntax.Delta_equational_at_level
+                                   Prims.int_one)
                                 (FStar_Pervasives_Native.Some qual1) in
                             let uu___7 =
                               let uu___8 = FStar_Syntax_Syntax.as_arg e1 in
