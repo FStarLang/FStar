@@ -12,13 +12,13 @@ type annotated_pat =
     FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term Prims.list)
     Prims.list)
 let (qualify_field_names :
-  FStar_Syntax_DsEnv.record_or_dc ->
+  FStar_Ident.lident ->
     FStar_Ident.lident Prims.list -> FStar_Ident.lident Prims.list)
   =
-  fun record ->
+  fun record_or_dc_lid ->
     fun field_names ->
       let qualify_to_record l =
-        let ns = FStar_Ident.ns_of_lid record.FStar_Syntax_DsEnv.typename in
+        let ns = FStar_Ident.ns_of_lid record_or_dc_lid in
         let uu___ = FStar_Ident.ident_of_lid l in
         FStar_Ident.lid_of_ns_and_id ns uu___ in
       let uu___ =
@@ -1428,47 +1428,6 @@ let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
               uu___3 in
           (FStar_Errors.Fatal_UnexpectedAntiquotation, uu___2) in
         FStar_Errors.raise_error uu___1 e.FStar_Syntax_Syntax.pos
-let check_fields :
-  'uuuuu 'uuuuu1 .
-    FStar_Syntax_DsEnv.env ->
-      (FStar_Ident.lident * 'uuuuu) Prims.list ->
-        'uuuuu1 ->
-          (FStar_Syntax_DsEnv.record_or_dc * (FStar_Errors.raw_error *
-            Prims.string * 'uuuuu1) FStar_Pervasives_Native.option)
-  =
-  fun env ->
-    fun fields ->
-      fun rg ->
-        let uu___ = FStar_Compiler_List.hd fields in
-        match uu___ with
-        | (f, uu___1) ->
-            let record =
-              FStar_Syntax_DsEnv.fail_or env
-                (FStar_Syntax_DsEnv.try_lookup_record_by_field_name env) f in
-            let check_field uu___2 =
-              match uu___2 with
-              | (f', uu___3) ->
-                  let uu___4 =
-                    FStar_Syntax_DsEnv.belongs_to_record env f' record in
-                  if uu___4
-                  then FStar_Pervasives_Native.None
-                  else
-                    (let msg =
-                       let uu___6 = FStar_Ident.string_of_lid f in
-                       let uu___7 =
-                         FStar_Ident.string_of_lid
-                           record.FStar_Syntax_DsEnv.typename in
-                       let uu___8 = FStar_Ident.string_of_lid f' in
-                       FStar_Compiler_Util.format3
-                         "Field %s belongs to record type %s, whereas field %s does not"
-                         uu___6 uu___7 uu___8 in
-                     FStar_Pervasives_Native.Some
-                       (FStar_Errors.Fatal_FieldsNotBelongToSameRecordType,
-                         msg, rg)) in
-            let err =
-              let uu___2 = FStar_Compiler_List.tl fields in
-              FStar_Compiler_List.tryPick check_field uu___2 in
-            (record, err)
 let (check_linear_pattern_variables :
   FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t Prims.list ->
     FStar_Compiler_Range.range -> unit)
@@ -1873,7 +1832,9 @@ let rec (desugar_data_pat :
                             let uu___4 =
                               let uu___5 =
                                 let uu___6 =
-                                  qualify_field_names record field_names in
+                                  qualify_field_names
+                                    record.FStar_Syntax_DsEnv.typename
+                                    field_names in
                                 {
                                   FStar_Syntax_Syntax.uc_base_term = false;
                                   FStar_Syntax_Syntax.uc_typename =
@@ -3774,7 +3735,9 @@ and (desugar_term_maybe_top :
                                let uu___6 =
                                  let uu___7 =
                                    let uu___8 =
-                                     qualify_field_names record field_names in
+                                     qualify_field_names
+                                       record.FStar_Syntax_DsEnv.typename
+                                       field_names in
                                    {
                                      FStar_Syntax_Syntax.uc_base_term =
                                        (FStar_Compiler_Option.isSome eopt);
@@ -3879,7 +3842,7 @@ and (desugar_term_maybe_top :
                         let uu___3 =
                           FStar_Ident.set_lid_range projname
                             top.FStar_Parser_AST.range in
-                        FStar_Syntax_Syntax.fvar uu___3
+                        FStar_Syntax_Syntax.lid_as_fv uu___3
                           (FStar_Syntax_Syntax.Delta_equational_at_level
                              Prims.int_one) qual in
                       let qual1 =

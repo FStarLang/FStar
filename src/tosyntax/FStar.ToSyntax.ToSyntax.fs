@@ -45,9 +45,39 @@ let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
 
-let qualify_field_names record field_names =
+(*
+   If the user wrote { f1=v1; ...; fn=vn }, where `field_names` [f1;..;fn]
+   then we resolve this, using scoping rules only, to `record`.
+
+   The choice of `record` is not settled, however, since type information
+   later can be used to resolve any ambiguity.
+
+   However, if any of the field_names, f1...fn, are qualified field names,
+   like `A.B.f`, then, at this stage, we
+
+   1. Check that all the field names, if qualified, are qualified in
+      the same way. I.e., it's ok to write
+
+       { A.f1 = v1; f2 = v2; ... }
+
+      But not
+
+       { A.f1 = v1; B.f2 = v2; ... }
+
+      even if A and B are module aliases.
+
+   2. If any of the field names are qualified, then qualify all the
+      field_names to the module in which `record` is defined, since
+      that's the user-provided qualifier already determines that.
+
+      This is important because at this stage, A, B etc. can refer to
+      module aliases, included modules, etc. and as we pass the term
+      to the typechecker, all those module aliases have to be fully
+      resolved.
+*)
+let qualify_field_names record_or_dc_lid field_names =
     let qualify_to_record l =
-        let ns = ns_of_lid record.typename in
+        let ns = ns_of_lid record_or_dc_lid in
         Ident.lid_of_ns_and_id ns (ident_of_lid l)
     in
     let _, field_names_rev =
@@ -679,25 +709,6 @@ let check_no_aq (aq : antiquotations) : unit =
         raise_error (Errors.Fatal_UnexpectedAntiquotation,
                       BU.format1 "Unexpected antiquotation: `#(%s)" (Print.term_to_string e)) e.pos
 
-(* issue 769: check that other fields are also of the same record. If
-   so, then return the record found by field name resolution. *)
-let check_fields env fields rg =
-    let (f, _) = List.hd fields in
-    let record = fail_or env (try_lookup_record_by_field_name env) f in
-    let check_field (f', _) =
-        if Env.belongs_to_record env f' record
-        then None
-        else let msg = BU.format3
-                       "Field %s belongs to record type %s, whereas field %s does not"
-                       (string_of_lid f)
-                       (string_of_lid record.typename)
-                       (string_of_lid f')
-             in
-             Some (Errors.Fatal_FieldsNotBelongToSameRecordType, msg, rg)
-    in
-    let err = List.tryPick check_field (List.tl fields) in
-    record, err
-
 let check_linear_pattern_variables pats r =
   // returns the set of pattern variables
   let rec pat_vars p = match p.v with
@@ -873,10 +884,11 @@ let rec desugar_data_pat
         raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
 
       | PatRecord (fields) ->
-        (* elaborate into an application and recurse *)
+        (* Record patterns have to wait for type information to be fully resolved *)
         let (f, _) = List.hd fields in
         let field_names, pats = List.unzip fields in
         let record = fail_or env (try_lookup_record_by_field_name env) f in
+        (* Just build a candidate constructor, as we do for Record literals *)
         let candidate_constructor =
             let name = lid_of_ids (ns_of_lid record.typename @ [record.constrname]) in
             let lid = Ident.set_lid_range name p.prange in
@@ -887,7 +899,7 @@ let rec desugar_data_pat
                  (Unresolved_constructor
                      ({ uc_base_term = false;
                         uc_typename = record.typename;
-                        uc_fields = qualify_field_names record field_names })))
+                        uc_fields = qualify_field_names record.typename field_names })))
         in
         let loc, env, annots, pats =
           List.fold_left
@@ -898,6 +910,8 @@ let rec desugar_data_pat
             pats
         in
         let pats = List.rev pats in
+        (* TcTerm will look for the Unresolved_constructor qualifier
+           and resolve the pattern fully in tc_pat *)
         let pat = pos <| Pat_cons(candidate_constructor, pats) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pat, annots
@@ -1651,6 +1665,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       raise_error (Errors.Fatal_UnexpectedEmptyRecord, "Unexpected empty record") top.range
 
     | Record(eopt, fields) ->
+      (* Record literals have to wait for type information to be fully resolved *)
       let (f, _) = List.hd fields in
       let record = fail_or env (try_lookup_record_by_field_name env) f in
       let candidate_constructor =
@@ -1665,7 +1680,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               fields
           |> List.unzip
       in
+      (* Note, we have to unzip the fields and maintain the field
+         names in the qualifier and the field assignments in the term.
 
+         This is because the qualifiers intentionally are not meant to
+         contain terms (only lidents, fv etc.).
+
+         If they did contain terms, then we'd have to substitute in
+         them, close, open etc. which I wanted to avoid.
+      *)
       let field_names, assignments = List.unzip fields in
       let args = List.map (fun f -> f, None) assignments in
       let aqs = List.flatten aqs in
@@ -1676,7 +1699,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                  (Unresolved_constructor
                      ({ uc_base_term = Option.isSome eopt;
                         uc_typename = record.typename;
-                        uc_fields = qualify_field_names record field_names })))
+                        uc_fields = qualify_field_names record.typename field_names })))
       in
       let mk_result args = S.mk_Tm_app head args top.range in
       begin
@@ -1691,6 +1714,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             //no need to hoist
             mk_result ((e, None)::args)
           | _ ->
+            (* If the base term is not a name, we hoist it *)
             let x = FStar.Ident.gen e.pos in
             let env', bv_x = push_bv env x in
             let nm = S.bv_to_name bv_x in
@@ -1704,12 +1728,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Project(e, f) ->
+      (* Projections have to wait for type information to be fully resolved *)
       let constrname, is_rec = fail_or env (try_lookup_dc_by_field_name env) f in
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
       let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
-      let candidate_projector = S.fvar (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
+      let candidate_projector = S.lid_as_fv (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual in //NS delta: ok, projector
       let qual = Unresolved_projector candidate_projector in
+      //The fvar at the head of the term just records the fieldname that the user wrote
+      //and in TcTerm, we use that field name combined with type info to disambiguate
       mk <| Tm_app(S.fvar f (Delta_equational_at_level 1) (Some qual), [as_arg e]), s
 
     | NamedTyp(n, e) ->

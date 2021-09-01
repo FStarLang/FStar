@@ -288,7 +288,7 @@ and fv_qual =
   | Data_ctor 
   | Record_projector of (FStar_Ident.lident * FStar_Ident.ident) 
   | Record_ctor of (FStar_Ident.lident * FStar_Ident.ident Prims.list) 
-  | Unresolved_projector of term' syntax 
+  | Unresolved_projector of fv 
   | Unresolved_constructor of unresolved_constructor 
 and unresolved_constructor =
   {
@@ -753,7 +753,7 @@ let (__proj__Record_ctor__item___0 :
 let (uu___is_Unresolved_projector : fv_qual -> Prims.bool) =
   fun projectee ->
     match projectee with | Unresolved_projector _0 -> true | uu___ -> false
-let (__proj__Unresolved_projector__item___0 : fv_qual -> term' syntax) =
+let (__proj__Unresolved_projector__item___0 : fv_qual -> fv) =
   fun projectee -> match projectee with | Unresolved_projector _0 -> _0
 let (uu___is_Unresolved_constructor : fv_qual -> Prims.bool) =
   fun projectee ->

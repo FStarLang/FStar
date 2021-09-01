@@ -83,172 +83,6 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
-let try_lookup_record_type env (typename:lident)
-  : option<DsEnv.record_or_dc>
-  = try
-      match Env.datacons_of_typ env typename with
-      | _, [dc] ->
-        let se = Env.lookup_sigelt env dc in
-        (match se with
-         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
-           let formals, c = U.arrow_formals t in
-           if nparms < List.length formals
-           then let _, fields = List.splitAt nparms formals in //remove params
-                let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
-                let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
-                let is_rec = Env.is_record env typename in
-                let open FStar.Syntax.DsEnv in
-                Some ({
-                  typename = typename;
-                  constrname = Ident.ident_of_lid dc;
-                  parms = [];
-                  fields = fields;
-                  is_private = false;
-                  is_record = is_rec
-                })
-
-           else (
-             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-               (string_of_int nparms)
-               (Print.term_to_string t)
-               (Print.binders_to_string ", " formals);
-             None
-           )
-         | _ ->
-           BU.print1 "Could not find %s\n" (string_of_lid dc);
-           None)
-      | _, dcs ->
-        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
-        None
-    with
-    | _ -> None
-
-let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
-    let default_rdc () =
-      match try_lookup_record_type env uc.uc_typename with
-      | Some rdc -> rdc
-      | None -> failwith "Impossible"
-    in
-    let rdc =
-      match t with
-      | None -> default_rdc()
-      | Some t ->
-        let thead, _ = U.head_and_args t in
-        let thead = N.unfold_whnf env thead in
-        match (SS.compress thead).n with
-        | Tm_fvar type_name ->
-          begin
-          match try_lookup_record_type env type_name.fv_name.v with
-          | None -> default_rdc ()
-          | Some r -> r
-          end
-        | _ -> default_rdc()
-    in
-    let constrname =
-          let name = lid_of_ids (ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
-          Ident.set_lid_range name rng
-    in
-    let constructor =
-        let qual =
-          if rdc.DsEnv.is_record
-            then (Some (Record_ctor(rdc.DsEnv.typename, rdc.DsEnv.fields |> List.map fst)))
-          else None
-        in
-        S.lid_as_fv constrname delta_constant qual
-    in
-    rdc, constrname, constructor
-
-
-let make_record_fields_in_order uc env topt
-       (rdc : DsEnv.record_or_dc)
-       (fas : list<(lident * 'a)>)
-       (not_found:ident -> option<'a>)
-       (rng : Range.range)
-  : list<'a>
-  = let debug () =
-      let print_rdc rdc =
-        BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
-          (string_of_lid rdc.DsEnv.typename)
-          (string_of_id rdc.DsEnv.constrname)
-          (List.map (fun (i, _) -> string_of_id i) rdc.DsEnv.fields |> String.concat "; ")
-      in
-      let print_fas fas =
-        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
-      in
-      let print_topt topt =
-        match topt with
-        | None ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
-        | Some (Inl t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-        | Some (Inr t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-      in
-      BU.print5 "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
-          (string_of_lid uc.uc_typename)
-          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
-          (print_topt topt)
-          (print_rdc rdc)
-          (print_fas fas)
-    in
-    let rest, as_rev =
-      List.fold_left
-        (fun (fields, as_rev) (field_name, _) ->
-           let matching, rest =
-             List.partition
-               (fun (fn, t) ->
-                  Ident.ident_equals field_name (Ident.ident_of_lid fn) &&
-                  (if ns_of_lid fn <> []
-                   then nsstr fn = nsstr rdc.DsEnv.typename
-                   else true))
-               fields
-           in
-           match matching with
-           | [(_, a)] ->
-             rest, a::as_rev
-
-           | [] -> (
-             match not_found field_name with
-             | None ->
-               debug();
-               raise_error
-                 (Errors.Fatal_MissingFieldInRecord,
-                   BU.format2 "Field %s of record type %s is missing"
-                     (string_of_id field_name)
-                     (string_of_lid rdc.DsEnv.typename))
-                 rng
-             | Some a ->
-               rest, a::as_rev
-             )
-
-           | _ ->
-             debug();
-             raise_error
-               (Errors.Fatal_MissingFieldInRecord,
-                BU.format2 "Field %s of record type %s is given multiple assignments"
-                  (string_of_id field_name)
-                  (string_of_lid rdc.DsEnv.typename))
-               rng)
-        (fas, [])
-        rdc.DsEnv.fields
-    in
-    let _ =
-      match rest with
-      | [] -> ()
-      | (f, _)::_ ->
-        debug();
-        raise_error
-          (Errors.Fatal_MissingFieldInRecord,
-            BU.format2 "Field %s is redundant for type %s"
-                       (string_of_lid f)
-                       (string_of_lid rdc.DsEnv.typename))
-          rng
-    in
-    List.rev as_rev
-
 let push_binding env b =
   Env.push_bv env b.binder_bv
 
@@ -1108,6 +942,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     end
 
   | Tm_app ({n=Tm_fvar {fv_name={v=candidate}; fv_qual=Some (Unresolved_constructor uc)}}, args) ->
+    (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
     let base_term, uc_fields =
       let base, fields =
         if uc.uc_base_term
@@ -1121,16 +956,20 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with
       | Some t ->
-        find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
+        //first, prefer the expected type from the context, if any
+        TcUtil.find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
 
       | None ->
         match base_term with
-        | None ->
-          find_record_or_dc_from_typ env None uc top.pos, None
-
         | Some e ->
+          //Otherwise, if we have an {e with ...}, compute the type of e and use it
+          //(there's no expected type anyway from the context, so no need to clear it check e)
           let _, lc, _ = tc_term env e in
-          find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
+          TcUtil.find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
+
+        | None ->
+          //Otherwise, no type info here, use what ToSyntax decided
+          TcUtil.find_record_or_dc_from_typ env None uc top.pos, None
     in
     let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
@@ -1140,7 +979,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
     let fields =
-        make_record_fields_in_order uc env topt
+        TcUtil.make_record_fields_in_order env uc topt
           rdc
           uc_fields
           (fun field_name ->
@@ -1154,11 +993,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     tc_term env term
 
   | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, (e, None)::rest) ->
-    (* type-directed elaboration of field projection *)
+    (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
     let fallback candidate =
+      let candidate = S.fv_to_tm candidate in
       let term = S.mk_Tm_app candidate ((e, None)::rest) top.pos in
       tc_term env term
     in
+    //We have e.f, use the type of e to disambiguate
     let _, lc, _ =
       let env, _ = Env.clear_expected_typ env in
       tc_term env e
@@ -1168,7 +1009,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let thead = N.unfold_whnf env thead in
     match (SS.compress thead).n with
     | Tm_fvar type_name -> (
-      match try_lookup_record_type env type_name.fv_name.v with
+      match TcUtil.try_lookup_record_type env type_name.fv_name.v with
       | None -> fallback candidate
       | Some rdc ->
         let i =
@@ -1182,11 +1023,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.DsEnv.typename @ [rdc.DsEnv.constrname]) in
           let projname = mk_field_projector_name_from_ident constrname i in
           let qual = if rdc.DsEnv.is_record then Some (Record_projector (constrname, i)) else None in
-          let candidate = S.fvar (Ident.set_lid_range projname (Ident.range_of_lid field_name)) (Delta_equational_at_level 1) qual in
+          let candidate =
+            S.lid_as_fv
+              (Ident.set_lid_range projname (Ident.range_of_lid field_name))
+              (Delta_equational_at_level 1)
+              qual
+          in
           fallback candidate
       )
     | _ -> fallback candidate
     end
+
   // If we're on the first phase, we don't synth, and just wait for the next phase
   | Tm_app (head, [(tau, None)])
   | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])
@@ -2875,10 +2722,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           false
 
         | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
-          let rdc, _, constructor_fv = find_record_or_dc_from_typ env (Some t) uc p.p in
+          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
-            make_record_fields_in_order uc env (Some (Inl t)) rdc f_sub_pats
+            TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
               (fun _ ->
                 let x = S.new_bv None S.tun in
                 Some (S.withinfo (Pat_wild x) p.p, false))

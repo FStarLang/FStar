@@ -7011,3 +7011,356 @@ let (update_env_polymonadic_bind :
                        fun flags ->
                          fun r ->
                            mk_indexed_bind env1 m n p ty c1 bv_opt c2 flags r)
+let (try_lookup_record_type :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident ->
+      FStar_Syntax_DsEnv.record_or_dc FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun typename ->
+      try
+        (fun uu___ ->
+           match () with
+           | () ->
+               let uu___1 =
+                 FStar_TypeChecker_Env.datacons_of_typ env typename in
+               (match uu___1 with
+                | (uu___2, dc::[]) ->
+                    let se = FStar_TypeChecker_Env.lookup_sigelt env dc in
+                    (match se with
+                     | FStar_Pervasives_Native.Some
+                         {
+                           FStar_Syntax_Syntax.sigel =
+                             FStar_Syntax_Syntax.Sig_datacon
+                             (uu___3, uu___4, t, uu___5, nparms, uu___6);
+                           FStar_Syntax_Syntax.sigrng = uu___7;
+                           FStar_Syntax_Syntax.sigquals = uu___8;
+                           FStar_Syntax_Syntax.sigmeta = uu___9;
+                           FStar_Syntax_Syntax.sigattrs = uu___10;
+                           FStar_Syntax_Syntax.sigopts = uu___11;_}
+                         ->
+                         let uu___12 = FStar_Syntax_Util.arrow_formals t in
+                         (match uu___12 with
+                          | (formals, c) ->
+                              if
+                                nparms < (FStar_Compiler_List.length formals)
+                              then
+                                let uu___13 =
+                                  FStar_Compiler_List.splitAt nparms formals in
+                                (match uu___13 with
+                                 | (uu___14, fields) ->
+                                     let fields1 =
+                                       FStar_Compiler_List.filter
+                                         (fun b ->
+                                            match b.FStar_Syntax_Syntax.binder_qual
+                                            with
+                                            | FStar_Pervasives_Native.Some
+                                                (FStar_Syntax_Syntax.Implicit
+                                                uu___15) -> false
+                                            | uu___15 -> true) fields in
+                                     let fields2 =
+                                       FStar_Compiler_List.map
+                                         (fun b ->
+                                            (((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname),
+                                              ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)))
+                                         fields1 in
+                                     let is_rec =
+                                       FStar_TypeChecker_Env.is_record env
+                                         typename in
+                                     let uu___15 =
+                                       let uu___16 =
+                                         FStar_Ident.ident_of_lid dc in
+                                       {
+                                         FStar_Syntax_DsEnv.typename =
+                                           typename;
+                                         FStar_Syntax_DsEnv.constrname =
+                                           uu___16;
+                                         FStar_Syntax_DsEnv.parms = [];
+                                         FStar_Syntax_DsEnv.fields = fields2;
+                                         FStar_Syntax_DsEnv.is_private =
+                                           false;
+                                         FStar_Syntax_DsEnv.is_record =
+                                           is_rec
+                                       } in
+                                     FStar_Pervasives_Native.Some uu___15)
+                              else
+                                ((let uu___15 =
+                                    FStar_Compiler_Util.string_of_int nparms in
+                                  let uu___16 =
+                                    FStar_Syntax_Print.term_to_string t in
+                                  let uu___17 =
+                                    FStar_Syntax_Print.binders_to_string ", "
+                                      formals in
+                                  FStar_Compiler_Util.print3
+                                    "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+                                    uu___15 uu___16 uu___17);
+                                 FStar_Pervasives_Native.None))
+                     | uu___3 ->
+                         ((let uu___5 = FStar_Ident.string_of_lid dc in
+                           FStar_Compiler_Util.print1 "Could not find %s\n"
+                             uu___5);
+                          FStar_Pervasives_Native.None))
+                | (uu___2, dcs) ->
+                    ((let uu___4 = FStar_Ident.string_of_lid typename in
+                      FStar_Compiler_Util.print1
+                        "Could not find type %s ... Got %s\n" uu___4);
+                     FStar_Pervasives_Native.None))) ()
+      with | uu___ -> FStar_Pervasives_Native.None
+let (find_record_or_dc_from_typ :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.unresolved_constructor ->
+        FStar_Compiler_Range.range ->
+          (FStar_Syntax_DsEnv.record_or_dc * FStar_Ident.lident *
+            FStar_Syntax_Syntax.fv))
+  =
+  fun env ->
+    fun t ->
+      fun uc ->
+        fun rng ->
+          let default_rdc uu___ =
+            let uu___1 =
+              try_lookup_record_type env uc.FStar_Syntax_Syntax.uc_typename in
+            match uu___1 with
+            | FStar_Pervasives_Native.Some rdc -> rdc
+            | FStar_Pervasives_Native.None ->
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      FStar_Ident.string_of_lid
+                        uc.FStar_Syntax_Syntax.uc_typename in
+                    FStar_Compiler_Util.format1 "Record name %s not found"
+                      uu___4 in
+                  (FStar_Errors.Fatal_NameNotFound, uu___3) in
+                let uu___3 =
+                  FStar_Ident.range_of_lid uc.FStar_Syntax_Syntax.uc_typename in
+                FStar_Errors.raise_error uu___2 uu___3 in
+          let rdc =
+            match t with
+            | FStar_Pervasives_Native.None -> default_rdc ()
+            | FStar_Pervasives_Native.Some t1 ->
+                let uu___ = FStar_Syntax_Util.head_and_args t1 in
+                (match uu___ with
+                 | (thead, uu___1) ->
+                     let thead1 =
+                       FStar_TypeChecker_Normalize.unfold_whnf env thead in
+                     let uu___2 =
+                       let uu___3 = FStar_Syntax_Subst.compress thead1 in
+                       uu___3.FStar_Syntax_Syntax.n in
+                     (match uu___2 with
+                      | FStar_Syntax_Syntax.Tm_fvar type_name ->
+                          let uu___3 =
+                            try_lookup_record_type env
+                              (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                          (match uu___3 with
+                           | FStar_Pervasives_Native.None -> default_rdc ()
+                           | FStar_Pervasives_Native.Some r -> r)
+                      | uu___3 -> default_rdc ())) in
+          let constrname =
+            let name =
+              let uu___ =
+                let uu___1 =
+                  FStar_Ident.ns_of_lid rdc.FStar_Syntax_DsEnv.typename in
+                FStar_Compiler_List.op_At uu___1
+                  [rdc.FStar_Syntax_DsEnv.constrname] in
+              FStar_Ident.lid_of_ids uu___ in
+            FStar_Ident.set_lid_range name rng in
+          let constructor =
+            let qual =
+              if rdc.FStar_Syntax_DsEnv.is_record
+              then
+                let uu___ =
+                  let uu___1 =
+                    let uu___2 =
+                      FStar_Compiler_Effect.op_Bar_Greater
+                        rdc.FStar_Syntax_DsEnv.fields
+                        (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
+                    ((rdc.FStar_Syntax_DsEnv.typename), uu___2) in
+                  FStar_Syntax_Syntax.Record_ctor uu___1 in
+                FStar_Pervasives_Native.Some uu___
+              else FStar_Pervasives_Native.None in
+            FStar_Syntax_Syntax.lid_as_fv constrname
+              FStar_Syntax_Syntax.delta_constant qual in
+          (rdc, constrname, constructor)
+let make_record_fields_in_order :
+  'a .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.unresolved_constructor ->
+        (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.typ)
+          FStar_Pervasives.either FStar_Pervasives_Native.option ->
+          FStar_Syntax_DsEnv.record_or_dc ->
+            (FStar_Ident.lident * 'a) Prims.list ->
+              (FStar_Ident.ident -> 'a FStar_Pervasives_Native.option) ->
+                FStar_Compiler_Range.range -> 'a Prims.list
+  =
+  fun env ->
+    fun uc ->
+      fun topt ->
+        fun rdc ->
+          fun fas ->
+            fun not_found ->
+              fun rng ->
+                let debug uu___ =
+                  let print_rdc rdc1 =
+                    let uu___1 =
+                      FStar_Ident.string_of_lid
+                        rdc1.FStar_Syntax_DsEnv.typename in
+                    let uu___2 =
+                      FStar_Ident.string_of_id
+                        rdc1.FStar_Syntax_DsEnv.constrname in
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_Compiler_List.map
+                          (fun uu___5 ->
+                             match uu___5 with
+                             | (i, uu___6) -> FStar_Ident.string_of_id i)
+                          rdc1.FStar_Syntax_DsEnv.fields in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___4
+                        (FStar_String.concat "; ") in
+                    FStar_Compiler_Util.format3
+                      "{typename=%s; constrname=%s; fields=[%s]}" uu___1
+                      uu___2 uu___3 in
+                  let print_fas fas1 =
+                    let uu___1 =
+                      FStar_Compiler_List.map
+                        (fun uu___2 ->
+                           match uu___2 with
+                           | (i, uu___3) -> FStar_Ident.string_of_lid i) fas1 in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___1
+                      (FStar_String.concat "; ") in
+                  let print_topt topt1 =
+                    match topt1 with
+                    | FStar_Pervasives_Native.None ->
+                        let uu___1 =
+                          find_record_or_dc_from_typ env
+                            FStar_Pervasives_Native.None uc rng in
+                        (match uu___1 with
+                         | (rdc1, uu___2, uu___3) ->
+                             let uu___4 = print_rdc rdc1 in
+                             FStar_Compiler_Util.format1 "topt=None; rdc=%s"
+                               uu___4)
+                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl t)
+                        ->
+                        let uu___1 =
+                          find_record_or_dc_from_typ env
+                            FStar_Pervasives_Native.None uc rng in
+                        (match uu___1 with
+                         | (rdc1, uu___2, uu___3) ->
+                             let uu___4 = FStar_Syntax_Print.term_to_string t in
+                             let uu___5 = print_rdc rdc1 in
+                             FStar_Compiler_Util.format2
+                               "topt=Some (Inl %s); rdc=%s" uu___4 uu___5)
+                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr t)
+                        ->
+                        let uu___1 =
+                          find_record_or_dc_from_typ env
+                            FStar_Pervasives_Native.None uc rng in
+                        (match uu___1 with
+                         | (rdc1, uu___2, uu___3) ->
+                             let uu___4 = FStar_Syntax_Print.term_to_string t in
+                             let uu___5 = print_rdc rdc1 in
+                             FStar_Compiler_Util.format2
+                               "topt=Some (Inr %s); rdc=%s" uu___4 uu___5) in
+                  let uu___1 =
+                    FStar_Ident.string_of_lid
+                      uc.FStar_Syntax_Syntax.uc_typename in
+                  let uu___2 =
+                    let uu___3 =
+                      FStar_Compiler_List.map FStar_Ident.string_of_lid
+                        uc.FStar_Syntax_Syntax.uc_fields in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___3
+                      (FStar_String.concat "; ") in
+                  let uu___3 = print_topt topt in
+                  let uu___4 = print_rdc rdc in
+                  let uu___5 = print_fas fas in
+                  FStar_Compiler_Util.print5
+                    "Resolved uc={typeame=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+                    uu___1 uu___2 uu___3 uu___4 uu___5 in
+                let uu___ =
+                  FStar_Compiler_List.fold_left
+                    (fun uu___1 ->
+                       fun uu___2 ->
+                         match (uu___1, uu___2) with
+                         | ((fields, as_rev), (field_name, uu___3)) ->
+                             let uu___4 =
+                               FStar_Compiler_List.partition
+                                 (fun uu___5 ->
+                                    match uu___5 with
+                                    | (fn, t) ->
+                                        (let uu___6 =
+                                           FStar_Ident.ident_of_lid fn in
+                                         FStar_Ident.ident_equals field_name
+                                           uu___6)
+                                          &&
+                                          (let uu___6 =
+                                             let uu___7 =
+                                               FStar_Ident.ns_of_lid fn in
+                                             uu___7 <> [] in
+                                           if uu___6
+                                           then
+                                             let uu___7 =
+                                               FStar_Ident.nsstr fn in
+                                             let uu___8 =
+                                               FStar_Ident.nsstr
+                                                 rdc.FStar_Syntax_DsEnv.typename in
+                                             uu___7 = uu___8
+                                           else true)) fields in
+                             (match uu___4 with
+                              | (matching, rest) ->
+                                  (match matching with
+                                   | (uu___5, a1)::[] ->
+                                       (rest, (a1 :: as_rev))
+                                   | [] ->
+                                       let uu___5 = not_found field_name in
+                                       (match uu___5 with
+                                        | FStar_Pervasives_Native.None ->
+                                            let uu___6 =
+                                              let uu___7 =
+                                                let uu___8 =
+                                                  FStar_Ident.string_of_id
+                                                    field_name in
+                                                let uu___9 =
+                                                  FStar_Ident.string_of_lid
+                                                    rdc.FStar_Syntax_DsEnv.typename in
+                                                FStar_Compiler_Util.format2
+                                                  "Field %s of record type %s is missing"
+                                                  uu___8 uu___9 in
+                                              (FStar_Errors.Fatal_MissingFieldInRecord,
+                                                uu___7) in
+                                            FStar_Errors.raise_error uu___6
+                                              rng
+                                        | FStar_Pervasives_Native.Some a1 ->
+                                            (rest, (a1 :: as_rev)))
+                                   | uu___5 ->
+                                       let uu___6 =
+                                         let uu___7 =
+                                           let uu___8 =
+                                             FStar_Ident.string_of_id
+                                               field_name in
+                                           let uu___9 =
+                                             FStar_Ident.string_of_lid
+                                               rdc.FStar_Syntax_DsEnv.typename in
+                                           FStar_Compiler_Util.format2
+                                             "Field %s of record type %s is given multiple assignments"
+                                             uu___8 uu___9 in
+                                         (FStar_Errors.Fatal_MissingFieldInRecord,
+                                           uu___7) in
+                                       FStar_Errors.raise_error uu___6 rng)))
+                    (fas, []) rdc.FStar_Syntax_DsEnv.fields in
+                match uu___ with
+                | (rest, as_rev) ->
+                    ((match rest with
+                      | [] -> ()
+                      | (f, uu___2)::uu___3 ->
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 = FStar_Ident.string_of_lid f in
+                              let uu___7 =
+                                FStar_Ident.string_of_lid
+                                  rdc.FStar_Syntax_DsEnv.typename in
+                              FStar_Compiler_Util.format2
+                                "Field %s is redundant for type %s" uu___6
+                                uu___7 in
+                            (FStar_Errors.Fatal_MissingFieldInRecord, uu___5) in
+                          FStar_Errors.raise_error uu___4 rng);
+                     FStar_Compiler_List.rev as_rev)
