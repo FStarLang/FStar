@@ -998,7 +998,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let proceed_with choice =
       match choice with
       | None ->
-        raise_error (Errors.Fatal_NameNotFound,
+        raise_error (Errors.Fatal_IdentifierNotFound,
                      BU.format1 "Field name %s could not be resolved"
                                 (string_of_lid field_name))
                      (range_of_lid field_name)

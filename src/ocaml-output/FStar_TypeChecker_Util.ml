@@ -7128,7 +7128,7 @@ let (find_record_or_dc_from_typ :
                     let uu___3 = FStar_Ident.string_of_lid f in
                     FStar_Compiler_Util.format1
                       "Field name %s could not be resolved" uu___3 in
-                  (FStar_Errors.Fatal_NameNotFound, uu___2) in
+                  (FStar_Errors.Fatal_IdentifierNotFound, uu___2) in
                 let uu___2 = FStar_Ident.range_of_lid f in
                 FStar_Errors.raise_error uu___1 uu___2
             | FStar_Pervasives_Native.Some tn ->

@@ -3146,7 +3146,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
       match uc.uc_typename with
       | None ->
         let f = List.hd uc.uc_fields in
-        raise_error (Errors.Fatal_NameNotFound,
+        raise_error (Errors.Fatal_IdentifierNotFound,
                      BU.format1 "Field name %s could not be resolved"
                                 (string_of_lid f))
                      (range_of_lid f)

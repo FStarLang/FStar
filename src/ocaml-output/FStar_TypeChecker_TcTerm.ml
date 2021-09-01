@@ -2920,7 +2920,7 @@ and (tc_maybe_toplevel_term :
                      let uu___7 = FStar_Ident.string_of_lid field_name in
                      FStar_Compiler_Util.format1
                        "Field name %s could not be resolved" uu___7 in
-                   (FStar_Errors.Fatal_NameNotFound, uu___6) in
+                   (FStar_Errors.Fatal_IdentifierNotFound, uu___6) in
                  let uu___6 = FStar_Ident.range_of_lid field_name in
                  FStar_Errors.raise_error uu___5 uu___6
              | FStar_Pervasives_Native.Some choice1 ->

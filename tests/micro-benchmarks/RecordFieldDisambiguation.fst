@@ -17,7 +17,7 @@ let test_project_r2 (x:r) = x.a
 [@@expect_failure]
 let test_project_r3 x : nat = x.a
 
-let test_construct_s (x:bool) = { a = x }
+let test_construct_s x = { a = x }
 let test_construct_s2 x : s = { a = x }
 let test_construct_r2 x : r = { a = x }
 
