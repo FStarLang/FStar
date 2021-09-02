@@ -47,7 +47,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "e49ec6c872a82e7f2e2f6a4b0bdcf471"
+      "342430048e782025f09ef66de553cc61"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -90,7 +90,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
       ],
       0,
-      "644882fba2ff41a42a55a45025f0b88f"
+      "4f0796bab654899a125c24a1ad93b988"
     ],
     [
       "OWGCounter.lock_inv_equiv_lemma",
@@ -133,7 +133,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
       ],
       0,
-      "594d5a79224f4ed450a679c2d76d7595"
+      "bba526451a3e0faa784b441daa4d05bc"
     ],
     [
       "OWGCounter.og_acquire",
@@ -158,7 +158,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "6d1d330d8e23c4019f2029452159d8da"
+      "7d51a027fff72e919e9f0c5c05ce76bf"
     ],
     [
       "OWGCounter.og_release",
@@ -183,7 +183,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "670cc0cd64002c9fc6b76e0e06190691"
+      "24facde5a49dfa2700c35a0eafbf4ae4"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -200,7 +200,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "90f3f4b3ecbfe1eb8390c389bd6c6f70"
+      "e5fd4f744f31a19990aa5a33d5917ce6"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -222,7 +222,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "d4eac88ec96a68596f971b2a01b475a5"
+      "7cacb63d636bef90c25fad86952a6ed8"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -254,7 +254,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "674c6dfa5043c3db894f0c3c5753ccf1"
+      "70831ace685634fdc08d9377fe838e36"
     ],
     [
       "OWGCounter.incr",
@@ -278,7 +278,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "cd31ff4500df26d6d8bdbf34d46ecc32"
+      "b24553f6af2a0050d96949cd7db13721"
     ],
     [
       "OWGCounter.incr_main",
@@ -325,7 +325,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "7b64f0f597a40fe537b773f8b961ca62"
+      "9cd077689590df42203c0c013fd05610"
     ]
   ]
 ]
