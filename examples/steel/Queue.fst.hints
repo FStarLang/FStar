@@ -47,7 +47,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "bbe8641ebd15ba8b03be53deaa326ff8"
+      "6d9dd66736f6786d91d4ed4f67349125"
     ],
     [
       "Queue.next_last",
@@ -170,7 +170,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "a0db2e442ec78a72e004f9d95a4b9f03"
+      "b685911fcda63d774f3fca27c1155dc9"
     ],
     [
       "Queue.fragment_append",
@@ -391,7 +391,7 @@
         "typing_Steel.Reference.null"
       ],
       0,
-      "e3b2c6aad1a5a416f294e538b94a409e"
+      "c5def56218ee1c6191d1cd8c2c0515a2"
     ],
     [
       "Queue.witness_h_exists_erased",
@@ -693,7 +693,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "0a9f2697c98d724f87d21be4e4c01a89"
+      "e3f8e209def252ab0afb6c07d9ca62e5"
     ],
     [
       "Queue.dequeue_post_success",
