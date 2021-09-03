@@ -143,4 +143,4 @@ let and_intro
         (f:unit -> squash p)
         (g:squash p -> squash (q()))
   : Tot (squash (p /\ q()))
-  = let _ = f() in g()
+  = f(); g()

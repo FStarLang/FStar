@@ -264,51 +264,44 @@ let admit_implies_elim_fail p q r (_:squash (p ==> q))
     assert r
 
 let admit_or_intro_left p q
-  = let _ = introduce p \/ q
-            with Left admit()
-    in
+  = introduce p \/ q
+    with Left admit();
     assert (p \/ q)
 
 let admit_or_intro_right p q
-  = let _ = introduce p \/ q
-            with Right admit()
-    in
+  = introduce p \/ q
+    with Right admit();
     assert (p \/ q)
 
 [@@expect_failure [19]]
 let admit_or_intro_left_fail p q r
-  = let _ = introduce p \/ q
-            with Left admit()
-    in
+  = introduce p \/ q
+    with Left admit();
     assert r
 
 [@@expect_failure [19]]
 let admit_or_intro_right_fail p q r
-  = let _ = introduce p \/ q
-            with Right admit()
-    in
+  = introduce p \/ q
+    with Right admit();
     assert r
 
 
 let admit_and_intro p q
-  = let _ = introduce p /\ q
-            with admit()
-            and admit()
-    in
+  = introduce p /\ q
+    with admit()
+    and admit();
     assert (p /\ q)
 
 [@@expect_failure [19]]
 let admit_and_intro_fail p q r
-  = let _ = introduce p /\ q
-            with admit()
-            and admit()
-    in
+  = introduce p /\ q
+    with admit()
+    and admit();
     assert r
 
 [@@expect_failure [19]]
 let admit_and_intro_fail_branch p q
-  = let _ = introduce p /\ q
-            with admit() //this admit does't pollute the other branch
-            and ()
-    in
+  = introduce p /\ q
+    with admit() //this admit does't pollute the other branch
+    and ();
     assert (p /\ q)
