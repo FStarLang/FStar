@@ -45,6 +45,10 @@ let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
 
+let mk_thunk e =
+  let b = S.mk_binder (S.new_bv None S.tun) in
+  U.abs [b] e None
+
 (*
    If the user wrote { f1=v1; ...; fn=vn }, where `field_names` [f1;..;fn]
    then we resolve this, using scoping rules only, to `record`.
@@ -1925,7 +1929,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let args = [(t, None);
                     (p, None);
                     (v, None);
-                    (e, None)] in
+                    (mk_thunk e, None)] in
         S.mk_Tm_app head args top.range
       in
       let rec aux bs vs sub token =
@@ -1954,7 +1958,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e = desugar_term env' e in
       let head = S.fv_to_tm (S.lid_as_fv C.implies_intro_lid S.delta_equational None) in
       let args = [(p, None);
-                  (q, None);
+                  (mk_thunk q, None);
                   (U.abs [x] e None, None)] in
       S.mk_Tm_app head args top.range, noaqs
 
@@ -1963,11 +1967,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let p = desugar_term env p in
       let q = desugar_term env q in
       let e = desugar_term env e in
-      let lid = if lr then C.or_intro_left_lid else C.or_intro_right_lid in
+      let lid =
+        if lr
+        then C.or_intro_left_lid
+        else C.or_intro_right_lid
+      in
       let head = S.fv_to_tm (S.lid_as_fv lid S.delta_equational None) in
       let args = [(p, None);
-                  (q, None);
-                  (e, None)] in
+                  (mk_thunk q, None);
+                  (mk_thunk e, None)] in
       S.mk_Tm_app head args top.range, noaqs
 
     | IntroAnd (p, q, e1, e2) ->
@@ -1977,9 +1985,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e2 = desugar_term env e2 in
       let head = S.fv_to_tm (S.lid_as_fv C.and_intro_lid S.delta_equational None) in
       let args = [(p, None);
-                  (q, None);
-                  (e1, None);
-                  (e2, None)] in
+                  (mk_thunk q, None);
+                  (mk_thunk e1, None);
+                  (mk_thunk e2, None)] in
       S.mk_Tm_app head args top.range, noaqs
 
     | ElimForall (bs, p, vs) ->
@@ -2039,8 +2047,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           let body = mk_exists bs p in
           mk_exists [b] body
       in
-      let mk_bind_squash_exists t x_p s_ex_p f r =
-        let head = S.fv_to_tm (S.lid_as_fv C.bind_squash_exists_lid S.delta_equational None) in
+      let mk_exists_elim t x_p s_ex_p f r =
+        let head = S.fv_to_tm (S.lid_as_fv C.exists_elim_lid S.delta_equational None) in
         let args = [(t, Some (S.Implicit false));
                     (x_p, Some (S.Implicit false));
                     (s_ex_p, None);
@@ -2053,13 +2061,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | [b] ->
           let x = unqual_bv_of_binder b in
           (*
-               bind_squash_exists
+               exists_elim
                   #(x.sort)
                   #(fun b -> p)
                   squash_token
                   (fun b pf_p -> e)
           *)
-          mk_bind_squash_exists
+          mk_exists_elim
               x.sort
               (U.abs [b] p None)
               squash_token
@@ -2075,13 +2083,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           let k = aux bs (S.bv_to_name pf_i) in
           let x = unqual_bv_of_binder b in
           (*
-             bind_squash_exists
+             exists_elim
                #(x.sort)
                #(fun b -> exists bs. p)
                squash_token
                (fun b pf_i -> k)
           *)
-          mk_bind_squash_exists
+          mk_exists_elim
             x.sort
             (U.abs [b] (mk_exists bs p) None)
             squash_token
@@ -2099,7 +2107,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let args = [(p, None);
                   (q, None);
                   (U.exp_unit, None);
-                  (e, None)] in
+                  (mk_thunk e, None)] in
       mk_Tm_app head args top.range, noaqs
 
     | ElimOr(p, q, r, x, e1, y, e2) ->
@@ -2111,12 +2119,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let env_y, [y] = desugar_binders env [y] in
       let e2 = desugar_term env_y e2 in
       let head = S.fv_to_tm (S.lid_as_fv C.or_elim_lid S.delta_equational None) in
+      let extra_binder = S.mk_binder (S.new_bv None S.tun) in
       let args = [(p, None);
-                  (q, None);
+                  (mk_thunk q, None);
                   (r, None);
                   (U.exp_unit, None);
                   (U.abs [x] e1 None, None);
-                  (U.abs [y] e2 None, None)] in
+                  (U.abs [extra_binder; y] e2 None, None)] in
       mk_Tm_app head args top.range, noaqs
 
     | ElimAnd(p, q, r, x, y, e) ->
@@ -2127,7 +2136,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e = desugar_term env' e in
       let head = S.fv_to_tm (S.lid_as_fv C.and_elim_lid S.delta_equational None) in
       let args = [(p, None);
-                  (q, None);
+                  (mk_thunk q, None);
                   (r, None);
                   (U.exp_unit, None);
                   (U.abs [x;y] e None, None)] in

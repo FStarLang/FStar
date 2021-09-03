@@ -18,9 +18,6 @@ module FStar.Classical.Sugar
 /// This module provides a few combinators that are targeted
 /// by the desugaring phase of the F* front end
 
-(** Sugar *)
-
-
 let forall_elim
        (#a:Type)
        (#p:a -> Type)
@@ -29,14 +26,14 @@ let forall_elim
   : Tot (squash (p v))
   = ()
 
-let bind_squash_exists #t #p #q s_ex_p f
+let exists_elim #t #p #q s_ex_p f
   = let open FStar.Squash in
     bind_squash s_ex_p (fun ex_p ->
     bind_squash ex_p (fun (sig_p: (x:t & p x)) ->
     let (| x, px |) = sig_p in
     f x (return_squash px)))
 
-let or_elim
+let or_elim_simple
         (p:Type)
         (q:Type)
         (r:Type)
@@ -53,12 +50,26 @@ let or_elim
     | Right q ->
       g (return_squash q)))
 
-let and_elim
+let or_elim
         (p:Type)
-        (q:Type)
+        (q:squash (~p) -> Type)
         (r:Type)
-        (x:squash (p /\ q))
-        (f:squash p -> squash q -> Tot (squash r))
+        (p_or:squash (p \/ q()))
+        (left:squash p -> Tot (squash r))
+        (right:squash (~p) -> squash (q()) -> Tot (squash r))
+  : Tot (squash r)
+  = or_elim_simple p (~p) r ()
+            (fun (s:squash p) -> left s)
+            (fun (np:squash (~p)) ->
+              or_elim_simple p (q ()) r p_or
+                (fun (pf_p:squash p) -> left pf_p)
+                (fun (pf_q:squash (q())) -> right np pf_q))
+
+let and_elim (p:Type)
+             (q:squash p -> Type)
+             (r:Type)
+             (x:squash (p /\ q()))
+             (f:squash p -> squash (q()) -> Tot (squash r))
   : Tot (squash r)
   = let open FStar.Squash in
     bind_squash x (fun p_and_q ->
@@ -77,46 +88,59 @@ let forall_intro
     in
     return_squash (squash_double_arrow (return_squash f'))
 
+let exists_intro_simple
+        (a:Type)
+        (p:a -> Type)
+        (v:a)
+        (f: squash (p v))
+  : Tot (squash (exists x. p x))
+  = let open FStar.Squash in
+    let p = (| v, f |) in
+    squash_double_sum (return_squash p)
+
 let exists_intro
         (a:Type)
         (p:a -> Type)
         (v:a)
-        (x: squash (p v))
+        (f: unit -> squash (p v))
   : Tot (squash (exists x. p x))
-  = let open FStar.Squash in
-    let p : (v:a & squash (p v)) = (| v, x |) in
-    squash_double_sum (return_squash p)
+  = exists_intro_simple a p v (f())
+
 
 let implies_intro
         (p:Type)
-        (q:Type)
-        (f:squash p -> Tot (squash q))
-  : Tot (squash (p ==> q))
+        (q:squash p -> Type)
+        (f:(squash p -> Tot (squash (q()))))
+  : Tot (squash (p ==> q()))
   = let open FStar.Squash in
     let f' (x:p)
-      : GTot (squash q)
+      : GTot (squash (q ()))
       = f (return_squash x)
     in
     return_squash (squash_double_arrow (return_squash f'))
 
 let or_intro_left
         (p:Type)
-        (q:Type)
-        (f:squash p)
-  : Tot (squash (p \/ q))
-  = ()
+        (q:squash (~p) -> Type)
+        (f:unit -> squash p)
+  : Tot (squash (p \/ q()))
+  = f()
 
 let or_intro_right
         (p:Type)
-        (q:Type)
-        (f:squash q)
-  : Tot (squash (p \/ q))
-  = ()
+        (q:squash (~p) -> Type)
+        (f:squash (~p) -> squash (q()))
+  : Tot (squash (p \/ q()))
+  = or_elim_simple p (~p)
+                  (p \/ q())
+                  ()
+                  (fun s_p -> or_intro_left p q (fun _ -> s_p))
+                  (fun s_np -> f s_np)
 
 let and_intro
         (p:Type)
-        (q:Type)
-        (f:squash p)
-        (g:squash q)
-  : Tot (squash (p /\ q))
-  = ()
+        (q:squash p -> Type)
+        (f:unit -> squash p)
+        (g:squash p -> squash (q()))
+  : Tot (squash (p /\ q()))
+  = let _ = f() in g()

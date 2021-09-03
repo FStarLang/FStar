@@ -1,7 +1,7 @@
 module ClassicalSugar
 
 let test_elim_exists_1 p (x z:nat)
-                       (trans: (x:nat -> y:nat -> z:nat -> 
+                       (trans: (x:nat -> y:nat -> z:nat ->
                                 Lemma (requires p x y /\ p y z)
                                       (ensures p x z)))
   : Lemma
@@ -26,8 +26,8 @@ let test_elim_exists_2 p x z
        trans pf
     )
 
-let test_elim_exists_3 p 
-                       (trans: (x:nat -> y:nat -> z:nat -> 
+let test_elim_exists_3 p
+                       (trans: (x:nat -> y:nat -> z:nat ->
                                 Lemma (requires p x y /\ p y z)
                                       (ensures p x z)))
                        (x z:nat)
@@ -50,7 +50,7 @@ let test_elim_forall_1 p (_:squash (forall x y. p x y))
     with 0 1
 
 let test_elim_forall_2 (p: nat -> nat -> Type)
-  : Lemma 
+  : Lemma
     (requires (forall x y. p x y))
     (ensures p 0 1)
   = eliminate forall x y. p x y
@@ -74,9 +74,9 @@ let test_elim_or_1 p q r (_:squash (p \/ q))  (f: squash p -> squash r) (g:squas
     with pf_p. f pf_p
     and  pf_q. g pf_q
 
-let test_elim_or_2 p q r 
+let test_elim_or_2 p q r
                    (f: unit -> Lemma (requires p) (ensures r))
-                   (g: unit -> Lemma (requires q) (ensures r))                   
+                   (g: unit -> Lemma (requires q) (ensures r))
   : Lemma (requires p \/ q)
           (ensures r)
   = eliminate p \/ q
@@ -91,7 +91,7 @@ let test_elim_and_1 p q r (_:squash (p /\ q))  (f: squash p -> squash q -> squas
     with pf_p pf_q. f pf_p pf_q
 
 let test_elim_and_2 p q r (f: squash p -> squash q -> Lemma r)
-  : Lemma 
+  : Lemma
     (requires p /\ q)
     (ensures r)
   = eliminate p /\ q
@@ -108,7 +108,7 @@ let test_forall_intro_1 #a #b #c (p: a -> b -> c -> Type)
 let test_forall_intro_2 #a #b #c (p: a -> b -> c -> Type)
                       (f:(x:a -> y:b -> z:c -> Lemma (p x y z)))
   : Lemma (forall x y z. p x y z)
-  = introduce 
+  = introduce
     forall x y z. p x y z
         with f x y z
 
@@ -171,9 +171,9 @@ let test_and_intro_2 p q (f:unit -> Lemma p) (g:unit -> Lemma q)
 ////////////////////////////////////////////////////////////////////////////////
 //derived forms
 ////////////////////////////////////////////////////////////////////////////////
-let test_excluded_middle p r 
+let test_excluded_middle p r
                    (f: unit -> Lemma (requires p) (ensures r))
-                   (g: unit -> Lemma (requires ~p) (ensures r))                   
+                   (g: unit -> Lemma (requires ~p) (ensures r))
   : Lemma r
   = eliminate p \/ ~p
     returns r
@@ -211,3 +211,104 @@ let test_forall_implies_2_3 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (req
          with _. (
            f x <: squash (q x)
          )
+
+////////////////////////////////////////////////////////////////////////////////
+// Some more tests, checking that the L-to-R well-typedness bias is preserved
+////////////////////////////////////////////////////////////////////////////////
+let test_bias_implies (f: nat -> nat { forall x. f x = x + 1 })
+                      (x: int)
+  : Lemma (ensures x >= 0 ==> f x == x + 1) =
+    introduce x >= 0 ==> f x == x + 1
+    with _. ()
+
+[@@"opaque_to_smt"]
+let is_nat (x:int) = x >= 0
+let test_bias_and (f: nat -> nat { forall x. f x = x + 1 })
+                  (x: int)
+  : Lemma
+    (requires is_nat x)
+    (ensures x >= 0 /\ f x == x + 1)
+  = introduce x >= 0 /\ f x == x + 1
+    with reveal_opaque (`%is_nat) is_nat
+    and ()
+
+let test_bias_or (f: nat -> nat { forall x. f x = x + 1 })
+                 (x: int)
+  : Lemma (x < 0 \/ f x = x + 1)
+  = eliminate (x < 0) \/ (x >= 0)
+    returns (x < 0 \/ f x = x + 1)
+    with _. introduce _ \/ _ with Left ()
+    and _. introduce _ \/ _ with Right ()
+
+let test_bias_or_alt (f: nat -> nat { forall x. f x = x + 1 })
+                 (x: int)
+  : Lemma (x < 0 \/ f x = x + 1)
+  = eliminate ~(is_nat x) \/ is_nat x
+    returns (x < 0 \/ f x = x + 1)
+    with _. introduce _ \/ _ with Left (reveal_opaque (`%is_nat) is_nat)
+    and _. introduce _ \/ _ with Right (reveal_opaque (`%is_nat) is_nat)
+
+////////////////////////////////////////////////////////////////////////////////
+// Some more tests, checking that admits don't discard the continuation
+////////////////////////////////////////////////////////////////////////////////
+
+let admit_implies_elim p q (_:squash (p ==> q))
+  = eliminate p ==> q
+    with admit();
+    assert q
+
+[@@expect_failure [19]]
+let admit_implies_elim_fail p q r (_:squash (p ==> q))
+  = eliminate p ==> q
+    with admit();
+    assert r
+
+let admit_or_intro_left p q
+  = let _ = introduce p \/ q
+            with Left admit()
+    in
+    assert (p \/ q)
+
+let admit_or_intro_right p q
+  = let _ = introduce p \/ q
+            with Right admit()
+    in
+    assert (p \/ q)
+
+[@@expect_failure [19]]
+let admit_or_intro_left_fail p q r
+  = let _ = introduce p \/ q
+            with Left admit()
+    in
+    assert r
+
+[@@expect_failure [19]]
+let admit_or_intro_right_fail p q r
+  = let _ = introduce p \/ q
+            with Right admit()
+    in
+    assert r
+
+
+let admit_and_intro p q
+  = let _ = introduce p /\ q
+            with admit()
+            and admit()
+    in
+    assert (p /\ q)
+
+[@@expect_failure [19]]
+let admit_and_intro_fail p q r
+  = let _ = introduce p /\ q
+            with admit()
+            and admit()
+    in
+    assert r
+
+[@@expect_failure [19]]
+let admit_and_intro_fail_branch p q
+  = let _ = introduce p /\ q
+            with admit() //this admit does't pollute the other branch
+            and ()
+    in
+    assert (p /\ q)

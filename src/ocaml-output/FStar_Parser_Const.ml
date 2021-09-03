@@ -515,8 +515,7 @@ let (or_intro_right_lid : FStar_Ident.lid) =
   classical_sugar_lid "or_intro_right"
 let (and_intro_lid : FStar_Ident.lid) = classical_sugar_lid "and_intro"
 let (forall_elim_lid : FStar_Ident.lid) = classical_sugar_lid "forall_elim"
-let (bind_squash_exists_lid : FStar_Ident.lid) =
-  classical_sugar_lid "bind_squash_exists"
+let (exists_elim_lid : FStar_Ident.lid) = classical_sugar_lid "exists_elim"
 let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
 let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
