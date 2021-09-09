@@ -7154,7 +7154,9 @@ let (find_record_or_dc_from_typ :
                      let thead1 =
                        FStar_TypeChecker_Normalize.unfold_whnf env thead in
                      let uu___2 =
-                       let uu___3 = FStar_Syntax_Subst.compress thead1 in
+                       let uu___3 =
+                         let uu___4 = FStar_Syntax_Util.un_uinst thead1 in
+                         FStar_Syntax_Subst.compress uu___4 in
                        uu___3.FStar_Syntax_Syntax.n in
                      (match uu___2 with
                       | FStar_Syntax_Syntax.Tm_fvar type_name ->

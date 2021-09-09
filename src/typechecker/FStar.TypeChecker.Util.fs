@@ -3166,7 +3166,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
       | Some t ->
         let thead, _ = U.head_and_args t in
         let thead = N.unfold_whnf env thead in
-        match (SS.compress thead).n with
+        match (SS.compress (U.un_uinst thead)).n with
         | Tm_fvar type_name ->
           begin
           match try_lookup_record_type env type_name.fv_name.v with

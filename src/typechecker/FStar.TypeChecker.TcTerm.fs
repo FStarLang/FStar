@@ -1015,7 +1015,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     begin
     let thead, _ = U.head_and_args lc.res_typ in
     let thead = N.unfold_whnf env thead in
-    match (SS.compress thead).n with
+    match (SS.compress (U.un_uinst thead)).n with
     | Tm_fvar type_name -> (
       match TcUtil.try_lookup_record_type env type_name.fv_name.v with
       | None -> proceed_with candidate

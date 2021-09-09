@@ -2943,7 +2943,9 @@ and (tc_maybe_toplevel_term :
                      let thead1 =
                        FStar_TypeChecker_Normalize.unfold_whnf env1 thead in
                      let uu___10 =
-                       let uu___11 = FStar_Syntax_Subst.compress thead1 in
+                       let uu___11 =
+                         let uu___12 = FStar_Syntax_Util.un_uinst thead1 in
+                         FStar_Syntax_Subst.compress uu___12 in
                        uu___11.FStar_Syntax_Syntax.n in
                      (match uu___10 with
                       | FStar_Syntax_Syntax.Tm_fvar type_name ->

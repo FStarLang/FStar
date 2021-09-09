@@ -60,3 +60,23 @@ type recfun = { doit : unit -> unit }
 
 let call0 (r:recfun) = let f = r.doit in f()
 let call (r:recfun) = r.doit()
+
+////////////////////////////////////////////////////////////////////////////////
+//Universe polymorphic records
+////////////////////////////////////////////////////////////////////////////////
+noeq
+type upoly_t = {
+  actions: Type u#a
+}
+
+type aaa = {
+  actions:bool
+}
+
+let mk_upoly_t (a:Type) : upoly_t = { actions = a }
+let proj_upoly_t (prog: upoly_t) : Type = prog.actions
+let match_upoly_t (p:upoly_t) = let { actions = t } = p in t
+
+let mk_aaa (a:bool) : aaa = { actions = a }
+let proj_aaa (prog: aaa) : bool = prog.actions
+let match_aaa (p:aaa) = let { actions = t } = p in t
