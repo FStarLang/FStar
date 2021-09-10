@@ -7148,14 +7148,14 @@ let (find_record_or_dc_from_typ :
             match t with
             | FStar_Pervasives_Native.None -> default_rdc ()
             | FStar_Pervasives_Native.Some t1 ->
-                let uu___ = FStar_Syntax_Util.head_and_args t1 in
+                let uu___ =
+                  let uu___1 = FStar_TypeChecker_Normalize.unfold_whnf env t1 in
+                  FStar_Syntax_Util.head_and_args uu___1 in
                 (match uu___ with
                  | (thead, uu___1) ->
-                     let thead1 =
-                       FStar_TypeChecker_Normalize.unfold_whnf env thead in
                      let uu___2 =
                        let uu___3 =
-                         let uu___4 = FStar_Syntax_Util.un_uinst thead1 in
+                         let uu___4 = FStar_Syntax_Util.un_uinst thead in
                          FStar_Syntax_Subst.compress uu___4 in
                        uu___3.FStar_Syntax_Syntax.n in
                      (match uu___2 with

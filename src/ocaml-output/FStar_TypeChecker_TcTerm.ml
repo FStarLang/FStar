@@ -2936,15 +2936,15 @@ and (tc_maybe_toplevel_term :
            (match uu___5 with
             | (uu___6, lc, uu___7) ->
                 let uu___8 =
-                  FStar_Syntax_Util.head_and_args
-                    lc.FStar_TypeChecker_Common.res_typ in
+                  let uu___9 =
+                    FStar_TypeChecker_Normalize.unfold_whnf env1
+                      lc.FStar_TypeChecker_Common.res_typ in
+                  FStar_Syntax_Util.head_and_args uu___9 in
                 (match uu___8 with
                  | (thead, uu___9) ->
-                     let thead1 =
-                       FStar_TypeChecker_Normalize.unfold_whnf env1 thead in
                      let uu___10 =
                        let uu___11 =
-                         let uu___12 = FStar_Syntax_Util.un_uinst thead1 in
+                         let uu___12 = FStar_Syntax_Util.un_uinst thead in
                          FStar_Syntax_Subst.compress uu___12 in
                        uu___11.FStar_Syntax_Syntax.n in
                      (match uu___10 with

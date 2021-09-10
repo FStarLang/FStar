@@ -3164,8 +3164,7 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
       match t with
       | None -> default_rdc()
       | Some t ->
-        let thead, _ = U.head_and_args t in
-        let thead = N.unfold_whnf env thead in
+        let thead, _ = U.head_and_args (N.unfold_whnf env t) in
         match (SS.compress (U.un_uinst thead)).n with
         | Tm_fvar type_name ->
           begin
