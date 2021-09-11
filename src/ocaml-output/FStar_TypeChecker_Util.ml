@@ -1169,8 +1169,17 @@ let (close_wp_comp :
                     FStar_TypeChecker_Env.get_effect_decl env
                       c1.FStar_Syntax_Syntax.effect_name in
                   let wp1 = close_wp u_res_t md res_t bvs wp in
+                  let uu___5 =
+                    FStar_Compiler_Effect.op_Bar_Greater
+                      c1.FStar_Syntax_Syntax.flags
+                      (FStar_Compiler_List.filter
+                         (fun uu___6 ->
+                            match uu___6 with
+                            | FStar_Syntax_Syntax.MLEFFECT -> true
+                            | FStar_Syntax_Syntax.SHOULD_NOT_INLINE -> true
+                            | uu___7 -> false)) in
                   mk_comp md u_res_t c1.FStar_Syntax_Syntax.result_typ wp1
-                    c1.FStar_Syntax_Syntax.flags))
+                    uu___5))
 let (close_wp_lcomp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
