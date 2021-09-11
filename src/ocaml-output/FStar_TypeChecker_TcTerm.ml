@@ -2935,71 +2935,89 @@ and (tc_maybe_toplevel_term :
              match uu___6 with | (env2, uu___7) -> tc_term env2 e1 in
            (match uu___5 with
             | (uu___6, lc, uu___7) ->
+                let t0 =
+                  FStar_TypeChecker_Normalize.unfold_whnf env1
+                    lc.FStar_TypeChecker_Common.res_typ in
                 let uu___8 =
-                  let uu___9 =
-                    FStar_TypeChecker_Normalize.unfold_whnf env1
-                      lc.FStar_TypeChecker_Common.res_typ in
+                  let uu___9 = FStar_Syntax_Util.unmeta t0 in
                   FStar_Syntax_Util.head_and_args uu___9 in
                 (match uu___8 with
                  | (thead, uu___9) ->
-                     let uu___10 =
-                       let uu___11 =
-                         let uu___12 = FStar_Syntax_Util.un_uinst thead in
-                         FStar_Syntax_Subst.compress uu___12 in
-                       uu___11.FStar_Syntax_Syntax.n in
-                     (match uu___10 with
-                      | FStar_Syntax_Syntax.Tm_fvar type_name ->
-                          let uu___11 =
-                            FStar_TypeChecker_Util.try_lookup_record_type
-                              env1
-                              (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                          (match uu___11 with
-                           | FStar_Pervasives_Native.None ->
-                               proceed_with candidate
-                           | FStar_Pervasives_Native.Some rdc ->
-                               let i =
-                                 FStar_Compiler_List.tryFind
-                                   (fun uu___12 ->
-                                      match uu___12 with
-                                      | (i1, uu___13) ->
-                                          FStar_TypeChecker_Util.field_name_matches
-                                            field_name rdc i1)
-                                   rdc.FStar_Syntax_DsEnv.fields in
-                               (match i with
-                                | FStar_Pervasives_Native.None ->
-                                    proceed_with candidate
-                                | FStar_Pervasives_Native.Some (i1, uu___12)
-                                    ->
-                                    let constrname =
-                                      let uu___13 =
-                                        let uu___14 =
-                                          FStar_Ident.ns_of_lid
-                                            rdc.FStar_Syntax_DsEnv.typename in
-                                        FStar_Compiler_List.op_At uu___14
-                                          [rdc.FStar_Syntax_DsEnv.constrname] in
-                                      FStar_Ident.lid_of_ids uu___13 in
-                                    let projname =
-                                      FStar_Syntax_Util.mk_field_projector_name_from_ident
-                                        constrname i1 in
-                                    let qual =
-                                      if rdc.FStar_Syntax_DsEnv.is_record
-                                      then
-                                        FStar_Pervasives_Native.Some
-                                          (FStar_Syntax_Syntax.Record_projector
-                                             (constrname, i1))
-                                      else FStar_Pervasives_Native.None in
-                                    let choice =
-                                      let uu___13 =
-                                        let uu___14 =
-                                          FStar_Ident.range_of_lid field_name in
-                                        FStar_Ident.set_lid_range projname
-                                          uu___14 in
-                                      FStar_Syntax_Syntax.lid_as_fv uu___13
-                                        (FStar_Syntax_Syntax.Delta_equational_at_level
-                                           Prims.int_one) qual in
-                                    proceed_with
-                                      (FStar_Pervasives_Native.Some choice)))
-                      | uu___11 -> proceed_with candidate)))
+                     ((let uu___11 =
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (FStar_TypeChecker_Env.debug env1)
+                           (FStar_Options.Other "RFD") in
+                       if uu___11
+                       then
+                         let uu___12 =
+                           FStar_Syntax_Print.term_to_string
+                             lc.FStar_TypeChecker_Common.res_typ in
+                         let uu___13 = FStar_Syntax_Print.term_to_string t0 in
+                         let uu___14 =
+                           FStar_Syntax_Print.term_to_string thead in
+                         FStar_Compiler_Util.print3
+                           "Got lc.res_typ=%s; t0 = %s; thead = %s\n" uu___12
+                           uu___13 uu___14
+                       else ());
+                      (let uu___11 =
+                         let uu___12 =
+                           let uu___13 = FStar_Syntax_Util.un_uinst thead in
+                           FStar_Syntax_Subst.compress uu___13 in
+                         uu___12.FStar_Syntax_Syntax.n in
+                       match uu___11 with
+                       | FStar_Syntax_Syntax.Tm_fvar type_name ->
+                           let uu___12 =
+                             FStar_TypeChecker_Util.try_lookup_record_type
+                               env1
+                               (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                           (match uu___12 with
+                            | FStar_Pervasives_Native.None ->
+                                proceed_with candidate
+                            | FStar_Pervasives_Native.Some rdc ->
+                                let i =
+                                  FStar_Compiler_List.tryFind
+                                    (fun uu___13 ->
+                                       match uu___13 with
+                                       | (i1, uu___14) ->
+                                           FStar_TypeChecker_Util.field_name_matches
+                                             field_name rdc i1)
+                                    rdc.FStar_Syntax_DsEnv.fields in
+                                (match i with
+                                 | FStar_Pervasives_Native.None ->
+                                     proceed_with candidate
+                                 | FStar_Pervasives_Native.Some (i1, uu___13)
+                                     ->
+                                     let constrname =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_Ident.ns_of_lid
+                                             rdc.FStar_Syntax_DsEnv.typename in
+                                         FStar_Compiler_List.op_At uu___15
+                                           [rdc.FStar_Syntax_DsEnv.constrname] in
+                                       FStar_Ident.lid_of_ids uu___14 in
+                                     let projname =
+                                       FStar_Syntax_Util.mk_field_projector_name_from_ident
+                                         constrname i1 in
+                                     let qual =
+                                       if rdc.FStar_Syntax_DsEnv.is_record
+                                       then
+                                         FStar_Pervasives_Native.Some
+                                           (FStar_Syntax_Syntax.Record_projector
+                                              (constrname, i1))
+                                       else FStar_Pervasives_Native.None in
+                                     let choice =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_Ident.range_of_lid
+                                             field_name in
+                                         FStar_Ident.set_lid_range projname
+                                           uu___15 in
+                                       FStar_Syntax_Syntax.lid_as_fv uu___14
+                                         (FStar_Syntax_Syntax.Delta_equational_at_level
+                                            Prims.int_one) qual in
+                                     proceed_with
+                                       (FStar_Pervasives_Native.Some choice)))
+                       | uu___12 -> proceed_with candidate))))
        | FStar_Syntax_Syntax.Tm_app
            (head, (tau, FStar_Pervasives_Native.None)::[]) when
            (FStar_Syntax_Util.is_synth_by_tactic head) &&

@@ -1013,7 +1013,15 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       tc_term env e
     in
     begin
-    let thead, _ = U.head_and_args (N.unfold_whnf env lc.res_typ) in
+    let t0 = N.unfold_whnf env lc.res_typ in
+    let thead, _ = U.head_and_args (U.unmeta t0) in
+    if Env.debug env <| Options.Other "RFD"
+    then (
+      BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
+        (Print.term_to_string lc.res_typ)
+        (Print.term_to_string t0)
+        (Print.term_to_string thead)
+    );
     match (SS.compress (U.un_uinst thead)).n with
     | Tm_fvar type_name -> (
       match TcUtil.try_lookup_record_type env type_name.fv_name.v with
