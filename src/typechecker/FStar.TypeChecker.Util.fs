@@ -681,7 +681,22 @@ let close_wp_comp env bvs (c:comp) =
             let u_res_t, res_t, wp = destruct_wp_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
-            mk_comp md u_res_t c.result_typ wp c.flags
+            (*
+             * AR: a note re. comp flags:
+             *     earlier this code was setting the flags of the closed computation as c.flags
+             *
+             *     cf. #2352, when this code was called from
+             *       weaken_result_typ -> bind -> maybe_capture_unit_refinement,
+             *     the input comp was Tot had RETURN flag set, which means the closed comp also had RETURN
+             *
+             *     so when this closed computation was later `bind` with another comp,
+             *       we simply dropped the it (see code path in bind under U.is_trivial_wp)
+             *     thereby losing the captured refinement
+             *
+             *     in general, comp flags need some cleanup
+             *)
+            mk_comp md u_res_t c.result_typ wp
+              (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
 let close_wp_lcomp env bvs (lc:lcomp) =
