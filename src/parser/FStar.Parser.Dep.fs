@@ -942,9 +942,14 @@ let collect_one
             collect_term tac
         | Record (t, idterms) ->
             iter_opt t collect_term;
-            List.iter (fun (_, t) -> collect_term t) idterms
-        | Project (t, _) ->
-            collect_term t
+            List.iter 
+              (fun (fn, t) -> 
+                collect_fieldname fn;
+                collect_term t)
+              idterms
+        | Project (t, f) ->
+            collect_term t;
+            collect_fieldname f
         | Product (binders, t) ->
           collect_binders binders;
           collect_term t
@@ -994,6 +999,78 @@ let collect_one
                 collect_term next) steps
             end
 
+        | IntroForall (bs, p, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term p;
+          collect_term e
+          
+        | IntroExists(bs, t, vs, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term t;
+          List.iter collect_term vs;
+          collect_term e
+
+        | IntroImplies(p, q, x, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_binder x;
+          collect_term e
+          
+        | IntroOr(b, p, q, r) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r
+          
+        | IntroAnd(p, q, r, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r;
+          collect_term e          
+
+        | ElimForall(bs, p, vs) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           List.iter collect_term vs
+            
+        | ElimExists(bs, p, q, b, e) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           collect_term q;
+           collect_binder b;
+           collect_term e
+
+        | ElimImplies(p, q, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_term e
+
+        | ElimAnd(p, q, r, x, y, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;          
+          collect_binder x;
+          collect_binder y;
+          collect_term e
+
+        | ElimOr(p, q, r, x, e, y, e') -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;
+          collect_binder x;
+          collect_binder y;
+          collect_term e;
+          collect_term e'          
+
       and collect_patterns ps =
         List.iter collect_pattern ps
 
@@ -1037,6 +1114,10 @@ let collect_one
         collect_pattern pat;
         iter_opt t1 collect_term;
         collect_term t2
+
+      and collect_fieldname fn =
+          if nsstr fn <> ""
+          then add_to_parsing_data (P_dep (false, lid_of_ids (ns_of_lid fn)))
 
       in
       let ast, _ = Driver.parse_file filename in

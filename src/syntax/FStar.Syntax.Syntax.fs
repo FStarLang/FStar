@@ -233,8 +233,15 @@ and meta_source_info =
   | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
   | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Unresolved_projector of option<fv>          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
+  | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
+and unresolved_constructor = {
+  uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
+  uc_typename: option<lident>;      // The constructed type, as determined by the ToSyntax's scoping rules
+  uc_fields : list<lident>  // The fields names as written in the source
+}
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)

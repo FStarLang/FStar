@@ -180,11 +180,10 @@ let (e_aqualv :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_Q_Meta.FStar_Reflection_Data.t uu___
             FStar_Compiler_Range.dummyRange in
-    let uu___ = r in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars)
     } in
   let unembed_aqualv w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -368,11 +367,10 @@ let (e_const :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_C_Reflect.FStar_Reflection_Data.t uu___
             FStar_Compiler_Range.dummyRange in
-    let uu___ = r in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars)
     } in
   let unembed_const w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1410,11 +1408,10 @@ let (e_order : FStar_Order.order FStar_Syntax_Embeddings.embedding) =
       | FStar_Order.Lt -> FStar_Reflection_Data.ord_Lt
       | FStar_Order.Eq -> FStar_Reflection_Data.ord_Eq
       | FStar_Order.Gt -> FStar_Reflection_Data.ord_Gt in
-    let uu___ = r in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars)
     } in
   let unembed_order w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1819,11 +1816,10 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_E_Mult.FStar_Reflection_Data.t uu___
             FStar_Compiler_Range.dummyRange in
-    let uu___ = r in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars)
     } in
   let rec unembed_exp w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1997,11 +1993,10 @@ let (e_qualifier :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Data.ref_qual_RecordConstructor.FStar_Reflection_Data.t
             uu___ FStar_Compiler_Range.dummyRange in
-    let uu___ = r in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars)
     } in
   let unembed w t =
     let t1 = FStar_Syntax_Util.unascribe t in

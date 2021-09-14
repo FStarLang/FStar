@@ -594,14 +594,13 @@ let (set_sigelt_attrs :
   =
   fun attrs ->
     fun se ->
-      let uu___ = se in
       {
-        FStar_Syntax_Syntax.sigel = (uu___.FStar_Syntax_Syntax.sigel);
-        FStar_Syntax_Syntax.sigrng = (uu___.FStar_Syntax_Syntax.sigrng);
-        FStar_Syntax_Syntax.sigquals = (uu___.FStar_Syntax_Syntax.sigquals);
-        FStar_Syntax_Syntax.sigmeta = (uu___.FStar_Syntax_Syntax.sigmeta);
+        FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
+        FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
+        FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = attrs;
-        FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
+        FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
 let (rd_to_syntax_qual :
   FStar_Reflection_Data.qualifier -> FStar_Syntax_Syntax.qualifier) =
@@ -688,15 +687,14 @@ let (set_sigelt_quals :
   =
   fun quals ->
     fun se ->
-      let uu___ = se in
-      let uu___1 = FStar_Compiler_List.map rd_to_syntax_qual quals in
+      let uu___ = FStar_Compiler_List.map rd_to_syntax_qual quals in
       {
-        FStar_Syntax_Syntax.sigel = (uu___.FStar_Syntax_Syntax.sigel);
-        FStar_Syntax_Syntax.sigrng = (uu___.FStar_Syntax_Syntax.sigrng);
-        FStar_Syntax_Syntax.sigquals = uu___1;
-        FStar_Syntax_Syntax.sigmeta = (uu___.FStar_Syntax_Syntax.sigmeta);
-        FStar_Syntax_Syntax.sigattrs = (uu___.FStar_Syntax_Syntax.sigattrs);
-        FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
+        FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
+        FStar_Syntax_Syntax.sigquals = uu___;
+        FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
+        FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+        FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
 let (sigelt_opts :
   FStar_Syntax_Syntax.sigelt ->
@@ -883,15 +881,14 @@ let (pack_sigelt :
           FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
             (FStar_Syntax_Syntax.Sig_bundle
                ((ind_se :: ctor_ses), (ind_lid :: c_lids))) in
-        let uu___ = se in
         {
-          FStar_Syntax_Syntax.sigel = (uu___.FStar_Syntax_Syntax.sigel);
-          FStar_Syntax_Syntax.sigrng = (uu___.FStar_Syntax_Syntax.sigrng);
+          FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
+          FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals = (FStar_Syntax_Syntax.Noeq ::
             (se.FStar_Syntax_Syntax.sigquals));
-          FStar_Syntax_Syntax.sigmeta = (uu___.FStar_Syntax_Syntax.sigmeta);
-          FStar_Syntax_Syntax.sigattrs = (uu___.FStar_Syntax_Syntax.sigattrs);
-          FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
+          FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
+          FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+          FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
         }
     | FStar_Reflection_Data.Sg_Val (nm, us_names, ty) ->
         let val_lid =

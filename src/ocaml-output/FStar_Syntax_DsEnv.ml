@@ -309,70 +309,67 @@ let (__proj__Eff_name__item___0 :
 let (set_iface : env -> Prims.bool -> env) =
   fun env1 ->
     fun b ->
-      let uu___ = env1 in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
+        curmodule = (env1.curmodule);
+        curmonad = (env1.curmonad);
+        modules = (env1.modules);
+        scope_mods = (env1.scope_mods);
+        exported_ids = (env1.exported_ids);
+        trans_exported_ids = (env1.trans_exported_ids);
+        includes = (env1.includes);
+        sigaccum = (env1.sigaccum);
+        sigmap = (env1.sigmap);
         iface = b;
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        admitted_iface = (env1.admitted_iface);
+        expect_typ = (env1.expect_typ);
+        remaining_iface_decls = (env1.remaining_iface_decls);
+        syntax_only = (env1.syntax_only);
+        ds_hooks = (env1.ds_hooks);
+        dep_graph = (env1.dep_graph)
       }
 let (iface : env -> Prims.bool) = fun e -> e.iface
 let (set_admitted_iface : env -> Prims.bool -> env) =
   fun e ->
     fun b ->
-      let uu___ = e in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
+        curmodule = (e.curmodule);
+        curmonad = (e.curmonad);
+        modules = (e.modules);
+        scope_mods = (e.scope_mods);
+        exported_ids = (e.exported_ids);
+        trans_exported_ids = (e.trans_exported_ids);
+        includes = (e.includes);
+        sigaccum = (e.sigaccum);
+        sigmap = (e.sigmap);
+        iface = (e.iface);
         admitted_iface = b;
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        expect_typ = (e.expect_typ);
+        remaining_iface_decls = (e.remaining_iface_decls);
+        syntax_only = (e.syntax_only);
+        ds_hooks = (e.ds_hooks);
+        dep_graph = (e.dep_graph)
       }
 let (admitted_iface : env -> Prims.bool) = fun e -> e.admitted_iface
 let (set_expect_typ : env -> Prims.bool -> env) =
   fun e ->
     fun b ->
-      let uu___ = e in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
+        curmodule = (e.curmodule);
+        curmonad = (e.curmonad);
+        modules = (e.modules);
+        scope_mods = (e.scope_mods);
+        exported_ids = (e.exported_ids);
+        trans_exported_ids = (e.trans_exported_ids);
+        includes = (e.includes);
+        sigaccum = (e.sigaccum);
+        sigmap = (e.sigmap);
+        iface = (e.iface);
+        admitted_iface = (e.admitted_iface);
         expect_typ = b;
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        remaining_iface_decls = (e.remaining_iface_decls);
+        syntax_only = (e.syntax_only);
+        ds_hooks = (e.ds_hooks);
+        dep_graph = (e.dep_graph)
       }
 let (expect_typ : env -> Prims.bool) = fun e -> e.expect_typ
 let (all_exported_id_kinds : exported_id_kind Prims.list) =
@@ -406,24 +403,23 @@ let (open_modules_and_namespaces : env -> FStar_Ident.lident Prims.list) =
 let (set_current_module : env -> FStar_Ident.lident -> env) =
   fun e ->
     fun l ->
-      let uu___ = e in
       {
         curmodule = (FStar_Pervasives_Native.Some l);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        curmonad = (e.curmonad);
+        modules = (e.modules);
+        scope_mods = (e.scope_mods);
+        exported_ids = (e.exported_ids);
+        trans_exported_ids = (e.trans_exported_ids);
+        includes = (e.includes);
+        sigaccum = (e.sigaccum);
+        sigmap = (e.sigmap);
+        iface = (e.iface);
+        admitted_iface = (e.admitted_iface);
+        expect_typ = (e.expect_typ);
+        remaining_iface_decls = (e.remaining_iface_decls);
+        syntax_only = (e.syntax_only);
+        ds_hooks = (e.ds_hooks);
+        dep_graph = (e.dep_graph)
       }
 let (current_module : env -> FStar_Ident.lident) =
   fun env1 ->
@@ -458,24 +454,23 @@ let (set_iface_decls :
             env1.remaining_iface_decls in
         match uu___ with
         | (uu___1, rest) ->
-            let uu___2 = env1 in
             {
-              curmodule = (uu___2.curmodule);
-              curmonad = (uu___2.curmonad);
-              modules = (uu___2.modules);
-              scope_mods = (uu___2.scope_mods);
-              exported_ids = (uu___2.exported_ids);
-              trans_exported_ids = (uu___2.trans_exported_ids);
-              includes = (uu___2.includes);
-              sigaccum = (uu___2.sigaccum);
-              sigmap = (uu___2.sigmap);
-              iface = (uu___2.iface);
-              admitted_iface = (uu___2.admitted_iface);
-              expect_typ = (uu___2.expect_typ);
+              curmodule = (env1.curmodule);
+              curmonad = (env1.curmonad);
+              modules = (env1.modules);
+              scope_mods = (env1.scope_mods);
+              exported_ids = (env1.exported_ids);
+              trans_exported_ids = (env1.trans_exported_ids);
+              includes = (env1.includes);
+              sigaccum = (env1.sigaccum);
+              sigmap = (env1.sigmap);
+              iface = (env1.iface);
+              admitted_iface = (env1.admitted_iface);
+              expect_typ = (env1.expect_typ);
               remaining_iface_decls = ((l, ds) :: rest);
-              syntax_only = (uu___2.syntax_only);
-              ds_hooks = (uu___2.ds_hooks);
-              dep_graph = (uu___2.dep_graph)
+              syntax_only = (env1.syntax_only);
+              ds_hooks = (env1.ds_hooks);
+              dep_graph = (env1.dep_graph)
             }
 let (qual : FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident) =
   FStar_Ident.qual_id
@@ -492,47 +487,45 @@ let (syntax_only : env -> Prims.bool) = fun env1 -> env1.syntax_only
 let (set_syntax_only : env -> Prims.bool -> env) =
   fun env1 ->
     fun b ->
-      let uu___ = env1 in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
+        curmodule = (env1.curmodule);
+        curmonad = (env1.curmonad);
+        modules = (env1.modules);
+        scope_mods = (env1.scope_mods);
+        exported_ids = (env1.exported_ids);
+        trans_exported_ids = (env1.trans_exported_ids);
+        includes = (env1.includes);
+        sigaccum = (env1.sigaccum);
+        sigmap = (env1.sigmap);
+        iface = (env1.iface);
+        admitted_iface = (env1.admitted_iface);
+        expect_typ = (env1.expect_typ);
+        remaining_iface_decls = (env1.remaining_iface_decls);
         syntax_only = b;
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        ds_hooks = (env1.ds_hooks);
+        dep_graph = (env1.dep_graph)
       }
 let (ds_hooks : env -> dsenv_hooks) = fun env1 -> env1.ds_hooks
 let (set_ds_hooks : env -> dsenv_hooks -> env) =
   fun env1 ->
     fun hooks ->
-      let uu___ = env1 in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
+        curmodule = (env1.curmodule);
+        curmonad = (env1.curmonad);
+        modules = (env1.modules);
+        scope_mods = (env1.scope_mods);
+        exported_ids = (env1.exported_ids);
+        trans_exported_ids = (env1.trans_exported_ids);
+        includes = (env1.includes);
+        sigaccum = (env1.sigaccum);
+        sigmap = (env1.sigmap);
+        iface = (env1.iface);
+        admitted_iface = (env1.admitted_iface);
+        expect_typ = (env1.expect_typ);
+        remaining_iface_decls = (env1.remaining_iface_decls);
+        syntax_only = (env1.syntax_only);
         ds_hooks = hooks;
-        dep_graph = (uu___.dep_graph)
+        dep_graph = (env1.dep_graph)
       }
 let new_sigmap : 'uuuuu . unit -> 'uuuuu FStar_Compiler_Util.smap =
   fun uu___ -> FStar_Compiler_Util.smap_create (Prims.of_int (100))
@@ -564,23 +557,22 @@ let (dep_graph : env -> FStar_Parser_Dep.deps) = fun env1 -> env1.dep_graph
 let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
   fun env1 ->
     fun ds ->
-      let uu___ = env1 in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
-        scope_mods = (uu___.scope_mods);
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
+        curmodule = (env1.curmodule);
+        curmonad = (env1.curmonad);
+        modules = (env1.modules);
+        scope_mods = (env1.scope_mods);
+        exported_ids = (env1.exported_ids);
+        trans_exported_ids = (env1.trans_exported_ids);
+        includes = (env1.includes);
+        sigaccum = (env1.sigaccum);
+        sigmap = (env1.sigmap);
+        iface = (env1.iface);
+        admitted_iface = (env1.admitted_iface);
+        expect_typ = (env1.expect_typ);
+        remaining_iface_decls = (env1.remaining_iface_decls);
+        syntax_only = (env1.syntax_only);
+        ds_hooks = (env1.ds_hooks);
         dep_graph = ds
       }
 let (sigmap :
@@ -600,11 +592,10 @@ let (set_bv_range :
   fun bv ->
     fun r ->
       let id = FStar_Ident.set_id_range r bv.FStar_Syntax_Syntax.ppname in
-      let uu___ = bv in
       {
         FStar_Syntax_Syntax.ppname = id;
-        FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
-        FStar_Syntax_Syntax.sort = (uu___.FStar_Syntax_Syntax.sort)
+        FStar_Syntax_Syntax.index = (bv.FStar_Syntax_Syntax.index);
+        FStar_Syntax_Syntax.sort = (bv.FStar_Syntax_Syntax.sort)
       }
 let (bv_to_name :
   FStar_Syntax_Syntax.bv ->
@@ -1716,24 +1707,23 @@ let (try_lookup_lid_with_attributes_no_resolve :
   fun env1 ->
     fun l ->
       let env' =
-        let uu___ = env1 in
         {
-          curmodule = (uu___.curmodule);
-          curmonad = (uu___.curmonad);
-          modules = (uu___.modules);
+          curmodule = (env1.curmodule);
+          curmonad = (env1.curmonad);
+          modules = (env1.modules);
           scope_mods = [];
           exported_ids = empty_exported_id_smap;
-          trans_exported_ids = (uu___.trans_exported_ids);
+          trans_exported_ids = (env1.trans_exported_ids);
           includes = empty_include_smap;
-          sigaccum = (uu___.sigaccum);
-          sigmap = (uu___.sigmap);
-          iface = (uu___.iface);
-          admitted_iface = (uu___.admitted_iface);
-          expect_typ = (uu___.expect_typ);
-          remaining_iface_decls = (uu___.remaining_iface_decls);
-          syntax_only = (uu___.syntax_only);
-          ds_hooks = (uu___.ds_hooks);
-          dep_graph = (uu___.dep_graph)
+          sigaccum = (env1.sigaccum);
+          sigmap = (env1.sigmap);
+          iface = (env1.iface);
+          admitted_iface = (env1.admitted_iface);
+          expect_typ = (env1.expect_typ);
+          remaining_iface_decls = (env1.remaining_iface_decls);
+          syntax_only = (env1.syntax_only);
+          ds_hooks = (env1.ds_hooks);
+          dep_graph = (env1.dep_graph)
         } in
       try_lookup_lid_with_attributes env' l
 let (try_lookup_lid_no_resolve :
@@ -2214,26 +2204,25 @@ let (unique :
           let filter_scope_mods uu___ =
             match uu___ with | Rec_binding uu___1 -> true | uu___1 -> false in
           let this_env =
-            let uu___ = env1 in
-            let uu___1 =
+            let uu___ =
               FStar_Compiler_List.filter filter_scope_mods env1.scope_mods in
             {
-              curmodule = (uu___.curmodule);
-              curmonad = (uu___.curmonad);
-              modules = (uu___.modules);
-              scope_mods = uu___1;
+              curmodule = (env1.curmodule);
+              curmonad = (env1.curmonad);
+              modules = (env1.modules);
+              scope_mods = uu___;
               exported_ids = empty_exported_id_smap;
-              trans_exported_ids = (uu___.trans_exported_ids);
+              trans_exported_ids = (env1.trans_exported_ids);
               includes = empty_include_smap;
-              sigaccum = (uu___.sigaccum);
-              sigmap = (uu___.sigmap);
-              iface = (uu___.iface);
-              admitted_iface = (uu___.admitted_iface);
-              expect_typ = (uu___.expect_typ);
-              remaining_iface_decls = (uu___.remaining_iface_decls);
-              syntax_only = (uu___.syntax_only);
-              ds_hooks = (uu___.ds_hooks);
-              dep_graph = (uu___.dep_graph)
+              sigaccum = (env1.sigaccum);
+              sigmap = (env1.sigmap);
+              iface = (env1.iface);
+              admitted_iface = (env1.admitted_iface);
+              expect_typ = (env1.expect_typ);
+              remaining_iface_decls = (env1.remaining_iface_decls);
+              syntax_only = (env1.syntax_only);
+              ds_hooks = (env1.ds_hooks);
+              dep_graph = (env1.dep_graph)
             } in
           let uu___ = try_lookup_lid' any_val exclude_interface this_env lid in
           match uu___ with
@@ -2242,24 +2231,23 @@ let (unique :
 let (push_scope_mod : env -> scope_mod -> env) =
   fun env1 ->
     fun scope_mod1 ->
-      let uu___ = env1 in
       {
-        curmodule = (uu___.curmodule);
-        curmonad = (uu___.curmonad);
-        modules = (uu___.modules);
+        curmodule = (env1.curmodule);
+        curmonad = (env1.curmonad);
+        modules = (env1.modules);
         scope_mods = (scope_mod1 :: (env1.scope_mods));
-        exported_ids = (uu___.exported_ids);
-        trans_exported_ids = (uu___.trans_exported_ids);
-        includes = (uu___.includes);
-        sigaccum = (uu___.sigaccum);
-        sigmap = (uu___.sigmap);
-        iface = (uu___.iface);
-        admitted_iface = (uu___.admitted_iface);
-        expect_typ = (uu___.expect_typ);
-        remaining_iface_decls = (uu___.remaining_iface_decls);
-        syntax_only = (uu___.syntax_only);
-        ds_hooks = (uu___.ds_hooks);
-        dep_graph = (uu___.dep_graph)
+        exported_ids = (env1.exported_ids);
+        trans_exported_ids = (env1.trans_exported_ids);
+        includes = (env1.includes);
+        sigaccum = (env1.sigaccum);
+        sigmap = (env1.sigmap);
+        iface = (env1.iface);
+        admitted_iface = (env1.admitted_iface);
+        expect_typ = (env1.expect_typ);
+        remaining_iface_decls = (env1.remaining_iface_decls);
+        syntax_only = (env1.syntax_only);
+        ds_hooks = (env1.ds_hooks);
+        dep_graph = (env1.dep_graph)
       }
 let (push_bv' :
   env -> FStar_Ident.ident -> (env * FStar_Syntax_Syntax.bv * used_marker)) =
@@ -2269,12 +2257,13 @@ let (push_bv' :
       let bv =
         let uu___ = FStar_Ident.string_of_id x in
         FStar_Syntax_Syntax.gen_bv uu___ (FStar_Pervasives_Native.Some r)
-          (let uu___1 = FStar_Syntax_Syntax.tun in
-           {
-             FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
-             FStar_Syntax_Syntax.pos = r;
-             FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
-           }) in
+          {
+            FStar_Syntax_Syntax.n =
+              (FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n);
+            FStar_Syntax_Syntax.pos = r;
+            FStar_Syntax_Syntax.vars =
+              (FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.vars)
+          } in
       let used_marker1 = FStar_Compiler_Util.mk_ref false in
       ((push_scope_mod env1 (Local_binding (x, bv, used_marker1))), bv,
         used_marker1)
@@ -2361,45 +2350,43 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                | FStar_Pervasives_Native.Some l when fail_on_dup -> err l
                | uu___2 ->
                    (extract_record env1 globals s;
-                    (let uu___4 = env1 in
-                     {
-                       curmodule = (uu___4.curmodule);
-                       curmonad = (uu___4.curmonad);
-                       modules = (uu___4.modules);
-                       scope_mods = (uu___4.scope_mods);
-                       exported_ids = (uu___4.exported_ids);
-                       trans_exported_ids = (uu___4.trans_exported_ids);
-                       includes = (uu___4.includes);
-                       sigaccum = (s :: (env1.sigaccum));
-                       sigmap = (uu___4.sigmap);
-                       iface = (uu___4.iface);
-                       admitted_iface = (uu___4.admitted_iface);
-                       expect_typ = (uu___4.expect_typ);
-                       remaining_iface_decls = (uu___4.remaining_iface_decls);
-                       syntax_only = (uu___4.syntax_only);
-                       ds_hooks = (uu___4.ds_hooks);
-                       dep_graph = (uu___4.dep_graph)
-                     }))) in
+                    {
+                      curmodule = (env1.curmodule);
+                      curmonad = (env1.curmonad);
+                      modules = (env1.modules);
+                      scope_mods = (env1.scope_mods);
+                      exported_ids = (env1.exported_ids);
+                      trans_exported_ids = (env1.trans_exported_ids);
+                      includes = (env1.includes);
+                      sigaccum = (s :: (env1.sigaccum));
+                      sigmap = (env1.sigmap);
+                      iface = (env1.iface);
+                      admitted_iface = (env1.admitted_iface);
+                      expect_typ = (env1.expect_typ);
+                      remaining_iface_decls = (env1.remaining_iface_decls);
+                      syntax_only = (env1.syntax_only);
+                      ds_hooks = (env1.ds_hooks);
+                      dep_graph = (env1.dep_graph)
+                    })) in
         let env3 =
-          let uu___ = env2 in
-          let uu___1 = FStar_Compiler_Effect.op_Bang globals in
+          let uu___ = FStar_Compiler_Effect.op_Bang globals in
           {
-            curmodule = (uu___.curmodule);
-            curmonad = (uu___.curmonad);
-            modules = (uu___.modules);
-            scope_mods = uu___1;
-            exported_ids = (uu___.exported_ids);
-            trans_exported_ids = (uu___.trans_exported_ids);
-            includes = (uu___.includes);
-            sigaccum = (uu___.sigaccum);
-            sigmap = (uu___.sigmap);
-            iface = (uu___.iface);
-            admitted_iface = (uu___.admitted_iface);
-            expect_typ = (uu___.expect_typ);
-            remaining_iface_decls = (uu___.remaining_iface_decls);
-            syntax_only = (uu___.syntax_only);
-            ds_hooks = (uu___.ds_hooks);
-            dep_graph = (uu___.dep_graph)
+            curmodule = (env2.curmodule);
+            curmonad = (env2.curmonad);
+            modules = (env2.modules);
+            scope_mods = uu___;
+            exported_ids = (env2.exported_ids);
+            trans_exported_ids = (env2.trans_exported_ids);
+            includes = (env2.includes);
+            sigaccum = (env2.sigaccum);
+            sigmap = (env2.sigmap);
+            iface = (env2.iface);
+            admitted_iface = (env2.admitted_iface);
+            expect_typ = (env2.expect_typ);
+            remaining_iface_decls = (env2.remaining_iface_decls);
+            syntax_only = (env2.syntax_only);
+            ds_hooks = (env2.ds_hooks);
+            dep_graph = (env2.dep_graph)
           } in
         let uu___ =
           match s.FStar_Syntax_Syntax.sigel with
@@ -2473,25 +2460,24 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                                                    (Prims.op_Negation
                                                       env4.admitted_iface))))))))));
              (let env5 =
-                let uu___2 = env4 in
-                let uu___3 = FStar_Compiler_Effect.op_Bang globals in
+                let uu___2 = FStar_Compiler_Effect.op_Bang globals in
                 {
-                  curmodule = (uu___2.curmodule);
-                  curmonad = (uu___2.curmonad);
-                  modules = (uu___2.modules);
-                  scope_mods = uu___3;
-                  exported_ids = (uu___2.exported_ids);
-                  trans_exported_ids = (uu___2.trans_exported_ids);
-                  includes = (uu___2.includes);
-                  sigaccum = (uu___2.sigaccum);
-                  sigmap = (uu___2.sigmap);
-                  iface = (uu___2.iface);
-                  admitted_iface = (uu___2.admitted_iface);
-                  expect_typ = (uu___2.expect_typ);
-                  remaining_iface_decls = (uu___2.remaining_iface_decls);
-                  syntax_only = (uu___2.syntax_only);
-                  ds_hooks = (uu___2.ds_hooks);
-                  dep_graph = (uu___2.dep_graph)
+                  curmodule = (env4.curmodule);
+                  curmonad = (env4.curmonad);
+                  modules = (env4.modules);
+                  scope_mods = uu___2;
+                  exported_ids = (env4.exported_ids);
+                  trans_exported_ids = (env4.trans_exported_ids);
+                  includes = (env4.includes);
+                  sigaccum = (env4.sigaccum);
+                  sigmap = (env4.sigmap);
+                  iface = (env4.iface);
+                  admitted_iface = (env4.admitted_iface);
+                  expect_typ = (env4.expect_typ);
+                  remaining_iface_decls = (env4.remaining_iface_decls);
+                  syntax_only = (env4.syntax_only);
+                  ds_hooks = (env4.ds_hooks);
+                  dep_graph = (env4.dep_graph)
                 } in
               env5))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
@@ -2700,59 +2686,56 @@ let (check_admits :
                              (let uu___4 = FStar_Ident.string_of_lid l in
                               FStar_Compiler_Util.smap_add (sigmap env1)
                                 uu___4
-                                ((let uu___5 = se in
-                                  {
-                                    FStar_Syntax_Syntax.sigel =
-                                      (uu___5.FStar_Syntax_Syntax.sigel);
-                                    FStar_Syntax_Syntax.sigrng =
-                                      (uu___5.FStar_Syntax_Syntax.sigrng);
-                                    FStar_Syntax_Syntax.sigquals = quals;
-                                    FStar_Syntax_Syntax.sigmeta =
-                                      (uu___5.FStar_Syntax_Syntax.sigmeta);
-                                    FStar_Syntax_Syntax.sigattrs =
-                                      (uu___5.FStar_Syntax_Syntax.sigattrs);
-                                    FStar_Syntax_Syntax.sigopts =
-                                      (uu___5.FStar_Syntax_Syntax.sigopts)
-                                  }), false));
+                                ({
+                                   FStar_Syntax_Syntax.sigel =
+                                     (se.FStar_Syntax_Syntax.sigel);
+                                   FStar_Syntax_Syntax.sigrng =
+                                     (se.FStar_Syntax_Syntax.sigrng);
+                                   FStar_Syntax_Syntax.sigquals = quals;
+                                   FStar_Syntax_Syntax.sigmeta =
+                                     (se.FStar_Syntax_Syntax.sigmeta);
+                                   FStar_Syntax_Syntax.sigattrs =
+                                     (se.FStar_Syntax_Syntax.sigattrs);
+                                   FStar_Syntax_Syntax.sigopts =
+                                     (se.FStar_Syntax_Syntax.sigopts)
+                                 }, false));
                              l
                              ::
                              lids)))
                   | uu___ -> lids) []) in
-      let uu___ = m in
-      let uu___1 =
+      let uu___ =
         FStar_Compiler_Effect.op_Bar_Greater
           m.FStar_Syntax_Syntax.declarations
           (FStar_Compiler_List.map
              (fun s ->
                 match s.FStar_Syntax_Syntax.sigel with
-                | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___2, uu___3)
+                | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___1, uu___2)
                     when
                     FStar_Compiler_List.existsb
                       (fun l -> FStar_Ident.lid_equals l lid)
                       admitted_sig_lids
                     ->
-                    let uu___4 = s in
                     {
                       FStar_Syntax_Syntax.sigel =
-                        (uu___4.FStar_Syntax_Syntax.sigel);
+                        (s.FStar_Syntax_Syntax.sigel);
                       FStar_Syntax_Syntax.sigrng =
-                        (uu___4.FStar_Syntax_Syntax.sigrng);
+                        (s.FStar_Syntax_Syntax.sigrng);
                       FStar_Syntax_Syntax.sigquals =
                         (FStar_Syntax_Syntax.Assumption ::
                         (s.FStar_Syntax_Syntax.sigquals));
                       FStar_Syntax_Syntax.sigmeta =
-                        (uu___4.FStar_Syntax_Syntax.sigmeta);
+                        (s.FStar_Syntax_Syntax.sigmeta);
                       FStar_Syntax_Syntax.sigattrs =
-                        (uu___4.FStar_Syntax_Syntax.sigattrs);
+                        (s.FStar_Syntax_Syntax.sigattrs);
                       FStar_Syntax_Syntax.sigopts =
-                        (uu___4.FStar_Syntax_Syntax.sigopts)
+                        (s.FStar_Syntax_Syntax.sigopts)
                     }
-                | uu___2 -> s)) in
+                | uu___1 -> s)) in
       {
-        FStar_Syntax_Syntax.name = (uu___.FStar_Syntax_Syntax.name);
-        FStar_Syntax_Syntax.declarations = uu___1;
+        FStar_Syntax_Syntax.name = (m.FStar_Syntax_Syntax.name);
+        FStar_Syntax_Syntax.declarations = uu___;
         FStar_Syntax_Syntax.is_interface =
-          (uu___.FStar_Syntax_Syntax.is_interface)
+          (m.FStar_Syntax_Syntax.is_interface)
       }
 let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
   fun env1 ->
@@ -2809,20 +2792,19 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
                                       FStar_Syntax_Syntax.Sig_declare_typ
                                         uu___5 in
                                     let se2 =
-                                      let uu___5 = se1 in
                                       {
                                         FStar_Syntax_Syntax.sigel = sigel;
                                         FStar_Syntax_Syntax.sigrng =
-                                          (uu___5.FStar_Syntax_Syntax.sigrng);
+                                          (se1.FStar_Syntax_Syntax.sigrng);
                                         FStar_Syntax_Syntax.sigquals =
                                           (FStar_Syntax_Syntax.Assumption ::
                                           quals);
                                         FStar_Syntax_Syntax.sigmeta =
-                                          (uu___5.FStar_Syntax_Syntax.sigmeta);
+                                          (se1.FStar_Syntax_Syntax.sigmeta);
                                         FStar_Syntax_Syntax.sigattrs =
-                                          (uu___5.FStar_Syntax_Syntax.sigattrs);
+                                          (se1.FStar_Syntax_Syntax.sigattrs);
                                         FStar_Syntax_Syntax.sigopts =
-                                          (uu___5.FStar_Syntax_Syntax.sigopts)
+                                          (se1.FStar_Syntax_Syntax.sigopts)
                                       } in
                                     let uu___5 =
                                       FStar_Ident.string_of_lid lid in
@@ -2887,25 +2869,24 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
             (filter_record_cache ();
              (match () with
               | () ->
-                  let uu___3 = env1 in
                   {
                     curmodule = FStar_Pervasives_Native.None;
-                    curmonad = (uu___3.curmonad);
+                    curmonad = (env1.curmonad);
                     modules = (((modul.FStar_Syntax_Syntax.name), modul) ::
                       (env1.modules));
                     scope_mods = [];
-                    exported_ids = (uu___3.exported_ids);
-                    trans_exported_ids = (uu___3.trans_exported_ids);
-                    includes = (uu___3.includes);
+                    exported_ids = (env1.exported_ids);
+                    trans_exported_ids = (env1.trans_exported_ids);
+                    includes = (env1.includes);
                     sigaccum = [];
-                    sigmap = (uu___3.sigmap);
-                    iface = (uu___3.iface);
-                    admitted_iface = (uu___3.admitted_iface);
-                    expect_typ = (uu___3.expect_typ);
-                    remaining_iface_decls = (uu___3.remaining_iface_decls);
-                    syntax_only = (uu___3.syntax_only);
-                    ds_hooks = (uu___3.ds_hooks);
-                    dep_graph = (uu___3.dep_graph)
+                    sigmap = (env1.sigmap);
+                    iface = (env1.iface);
+                    admitted_iface = (env1.admitted_iface);
+                    expect_typ = (env1.expect_typ);
+                    remaining_iface_decls = (env1.remaining_iface_decls);
+                    syntax_only = (env1.syntax_only);
+                    ds_hooks = (env1.ds_hooks);
+                    dep_graph = (env1.dep_graph)
                   }))))
 let (stack : env Prims.list FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref []
@@ -2918,28 +2899,27 @@ let (push : env -> env) =
             let uu___4 = FStar_Compiler_Effect.op_Bang stack in env1 ::
               uu___4 in
           FStar_Compiler_Effect.op_Colon_Equals stack uu___3);
-         (let uu___3 = env1 in
-          let uu___4 = FStar_Compiler_Util.smap_copy env1.exported_ids in
-          let uu___5 = FStar_Compiler_Util.smap_copy env1.trans_exported_ids in
-          let uu___6 = FStar_Compiler_Util.smap_copy env1.includes in
-          let uu___7 = FStar_Compiler_Util.smap_copy env1.sigmap in
+         (let uu___3 = FStar_Compiler_Util.smap_copy env1.exported_ids in
+          let uu___4 = FStar_Compiler_Util.smap_copy env1.trans_exported_ids in
+          let uu___5 = FStar_Compiler_Util.smap_copy env1.includes in
+          let uu___6 = FStar_Compiler_Util.smap_copy env1.sigmap in
           {
-            curmodule = (uu___3.curmodule);
-            curmonad = (uu___3.curmonad);
-            modules = (uu___3.modules);
-            scope_mods = (uu___3.scope_mods);
-            exported_ids = uu___4;
-            trans_exported_ids = uu___5;
-            includes = uu___6;
-            sigaccum = (uu___3.sigaccum);
-            sigmap = uu___7;
-            iface = (uu___3.iface);
-            admitted_iface = (uu___3.admitted_iface);
-            expect_typ = (uu___3.expect_typ);
-            remaining_iface_decls = (uu___3.remaining_iface_decls);
-            syntax_only = (uu___3.syntax_only);
-            ds_hooks = (uu___3.ds_hooks);
-            dep_graph = (uu___3.dep_graph)
+            curmodule = (env1.curmodule);
+            curmonad = (env1.curmonad);
+            modules = (env1.modules);
+            scope_mods = (env1.scope_mods);
+            exported_ids = uu___3;
+            trans_exported_ids = uu___4;
+            includes = uu___5;
+            sigaccum = (env1.sigaccum);
+            sigmap = uu___6;
+            iface = (env1.iface);
+            admitted_iface = (env1.admitted_iface);
+            expect_typ = (env1.expect_typ);
+            remaining_iface_decls = (env1.remaining_iface_decls);
+            syntax_only = (env1.syntax_only);
+            ds_hooks = (env1.ds_hooks);
+            dep_graph = (env1.dep_graph)
           }))
 let (pop : unit -> env) =
   fun uu___ ->
@@ -2980,21 +2960,20 @@ let (export_interface : FStar_Ident.lident -> env -> env) =
                    (let se1 =
                       match se.FStar_Syntax_Syntax.sigel with
                       | FStar_Syntax_Syntax.Sig_declare_typ (l, u, t) ->
-                          let uu___3 = se in
                           {
                             FStar_Syntax_Syntax.sigel =
-                              (uu___3.FStar_Syntax_Syntax.sigel);
+                              (se.FStar_Syntax_Syntax.sigel);
                             FStar_Syntax_Syntax.sigrng =
-                              (uu___3.FStar_Syntax_Syntax.sigrng);
+                              (se.FStar_Syntax_Syntax.sigrng);
                             FStar_Syntax_Syntax.sigquals =
                               (FStar_Syntax_Syntax.Assumption ::
                               (se.FStar_Syntax_Syntax.sigquals));
                             FStar_Syntax_Syntax.sigmeta =
-                              (uu___3.FStar_Syntax_Syntax.sigmeta);
+                              (se.FStar_Syntax_Syntax.sigmeta);
                             FStar_Syntax_Syntax.sigattrs =
-                              (uu___3.FStar_Syntax_Syntax.sigattrs);
+                              (se.FStar_Syntax_Syntax.sigattrs);
                             FStar_Syntax_Syntax.sigopts =
-                              (uu___3.FStar_Syntax_Syntax.sigopts)
+                              (se.FStar_Syntax_Syntax.sigopts)
                           }
                       | uu___3 -> se in
                     FStar_Compiler_Util.smap_add sm' k (se1, false)))
@@ -3180,31 +3159,30 @@ let (prepare_module_or_interface :
                           (match () with
                            | () ->
                                let env' =
-                                 let uu___3 = env2 in
-                                 let uu___4 =
+                                 let uu___3 =
                                    FStar_Compiler_List.map
                                      (fun x -> Open_module_or_namespace x)
                                      auto_open2 in
                                  {
                                    curmodule =
                                      (FStar_Pervasives_Native.Some mname);
-                                   curmonad = (uu___3.curmonad);
-                                   modules = (uu___3.modules);
-                                   scope_mods = uu___4;
-                                   exported_ids = (uu___3.exported_ids);
+                                   curmonad = (env2.curmonad);
+                                   modules = (env2.modules);
+                                   scope_mods = uu___3;
+                                   exported_ids = (env2.exported_ids);
                                    trans_exported_ids =
-                                     (uu___3.trans_exported_ids);
-                                   includes = (uu___3.includes);
-                                   sigaccum = (uu___3.sigaccum);
+                                     (env2.trans_exported_ids);
+                                   includes = (env2.includes);
+                                   sigaccum = (env2.sigaccum);
                                    sigmap = (env2.sigmap);
                                    iface = intf;
                                    admitted_iface = admitted;
-                                   expect_typ = (uu___3.expect_typ);
+                                   expect_typ = (env2.expect_typ);
                                    remaining_iface_decls =
-                                     (uu___3.remaining_iface_decls);
-                                   syntax_only = (uu___3.syntax_only);
-                                   ds_hooks = (uu___3.ds_hooks);
-                                   dep_graph = (uu___3.dep_graph)
+                                     (env2.remaining_iface_decls);
+                                   syntax_only = (env2.syntax_only);
+                                   ds_hooks = (env2.ds_hooks);
+                                   dep_graph = (env2.dep_graph)
                                  } in
                                (FStar_Compiler_List.iter
                                   (fun op ->
@@ -3258,24 +3236,23 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
           let uu___1 = FStar_Ident.range_of_id mname in
           FStar_Errors.raise_error uu___ uu___1
       | FStar_Pervasives_Native.None ->
-          let uu___ = env1 in
           {
-            curmodule = (uu___.curmodule);
+            curmodule = (env1.curmodule);
             curmonad = (FStar_Pervasives_Native.Some mname);
-            modules = (uu___.modules);
-            scope_mods = (uu___.scope_mods);
-            exported_ids = (uu___.exported_ids);
-            trans_exported_ids = (uu___.trans_exported_ids);
-            includes = (uu___.includes);
-            sigaccum = (uu___.sigaccum);
-            sigmap = (uu___.sigmap);
-            iface = (uu___.iface);
-            admitted_iface = (uu___.admitted_iface);
-            expect_typ = (uu___.expect_typ);
-            remaining_iface_decls = (uu___.remaining_iface_decls);
-            syntax_only = (uu___.syntax_only);
-            ds_hooks = (uu___.ds_hooks);
-            dep_graph = (uu___.dep_graph)
+            modules = (env1.modules);
+            scope_mods = (env1.scope_mods);
+            exported_ids = (env1.exported_ids);
+            trans_exported_ids = (env1.trans_exported_ids);
+            includes = (env1.includes);
+            sigaccum = (env1.sigaccum);
+            sigmap = (env1.sigmap);
+            iface = (env1.iface);
+            admitted_iface = (env1.admitted_iface);
+            expect_typ = (env1.expect_typ);
+            remaining_iface_decls = (env1.remaining_iface_decls);
+            syntax_only = (env1.syntax_only);
+            ds_hooks = (env1.ds_hooks);
+            dep_graph = (env1.dep_graph)
           }
 let fail_or :
   'a .
