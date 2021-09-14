@@ -132,7 +132,7 @@ let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun
   collect_app_ref t
 
 val as_arith_expr : term -> tm expr
-#push-options "--initial_fuel 4 --max_fuel 4"
+#push-options "--initial_fuel 4 --max_fuel 4 --admit_smt_queries true"
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
     let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
