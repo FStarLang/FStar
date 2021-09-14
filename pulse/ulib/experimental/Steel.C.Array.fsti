@@ -85,11 +85,12 @@ let array_typedef_sized (t: Type0) (n': Type0) (n: size_t_of n'{size_v n > 0}): 
 // let varray (#base: Type) (#t: Type) (x: array base t) : Tot vprop
 // = Steel.C.Ref.pts_to_view (g_array_as_ref x) (array_view t (len x))
 
-val varray_hp (#base: Type) (#t: Type) (x: array base t) : Tot (slprop u#1)
-val varray_sel (#base: Type) (#t: Type) (x: array base t) : Tot (selector (array_view_type t (len x)) (varray_hp x))
+val varray_hp (#base: Type0) (#t: Type0) (x: array base t) : Tot (slprop u#1)
+
+val varray_sel (#base: Type0) (#t: Type0) (x: array base t) : GTot (selector (array_view_type t (len x)) (varray_hp x))
 
 [@@ __steel_reduce__ ]
-let varray' (#base: Type) (#t: Type) (x: array base t) : Tot vprop' = {
+let varray' (#base: Type) (#t: Type) (x: array base t) : GTot vprop' = {
   hp = varray_hp x;
   t = array_view_type t (len x);
   sel = varray_sel x;
@@ -124,7 +125,6 @@ val elim_varray (#inames: _) (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: S
     a == g_mk_array r /\
     h (varray a) == h' (Steel.C.Ref.pts_to_view r (array_view t n))
   ))
-
 
 /// Splitting an array into subarrays
 
