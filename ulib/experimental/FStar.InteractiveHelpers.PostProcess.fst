@@ -610,6 +610,7 @@ let rec strip_implicit_parameters tm =
     if Q_Implicit? qualif then strip_implicit_parameters hd else tm
   | _ -> tm
 
+#push-options "--admit_smt_queries true"
 val unfold_in_assert_or_assume : bool -> exploration_result term -> Tac unit
 let unfold_in_assert_or_assume dbg ares =
   print_dbg dbg ("[> unfold_in_assert_or_assume:\n" ^ term_to_string ares.res);
@@ -747,6 +748,7 @@ let unfold_in_assert_or_assume dbg ares =
   let ge3, asserts = subst_shadowed_with_abs_in_assertions dbg ge2 None asserts in
   (* Output *)
   printout_success ge3 asserts
+#pop-options
 
 [@plugin]
 val pp_unfold_in_assert_or_assume : bool -> unit -> Tac unit

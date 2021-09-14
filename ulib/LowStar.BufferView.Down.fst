@@ -227,6 +227,8 @@ val as_seq'_sel' (#a #b: _)
 #set-options "--smtencoding.nl_arith_repr wrapped"
 #set-options "--z3rlimit_factor 10" //just being conservative
 #set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
+
+#push-options "--admit_smt_queries true"
 let rec as_seq'_sel' #a #b v as i =
   as_seq'_len as v;
   let n : pos = View?.n v in
@@ -251,6 +253,8 @@ let rec as_seq'_sel' #a #b v as i =
                    Seq.index (as_seq' as' v) j);
            sel'_tail v as i
          end
+#pop-options
+
 #reset-options
 
 let as_seq_sel #b h vb i =

@@ -204,6 +204,7 @@ val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma
 let is_gcd_prime_aux p a d = ()
 
 val is_gcd_prime (p:int{is_prime p}) (a:pos{a < p}) : Lemma (is_gcd p a 1)
+#push-options "--admit_smt_queries true"
 let is_gcd_prime p a =
   Classical.forall_intro_2 (Classical.move_requires_2 divides_minus);
   Classical.forall_intro (Classical.move_requires (is_gcd_prime_aux p a));
@@ -273,3 +274,4 @@ let euclid_prime p a b =
     divides_opp (-p) a;
     divides_mod a p
     end
+#pop-options

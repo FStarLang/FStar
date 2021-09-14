@@ -24,6 +24,8 @@ open FStar.PCM
 
 (* Some abbreviations and helpers to operate on natural numbers *)
 
+#set-options "--admit_smt_queries true"
+
 let even = n:nat{n % 2 == 0}
 let odd = n:nat{n % 2 <> 0}
 

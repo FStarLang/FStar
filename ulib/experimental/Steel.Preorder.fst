@@ -227,15 +227,18 @@ let frame_preserving_q (#a: Type u#a) (q:preorder a) (x y:vhist q)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
   = ()
 
+#push-options "--admit_smt_queries true"
 (** Still given a frame-preserving update from [x] to [y], this update extends the history *)
 let frame_preserving_extends (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> y `extends` z))
   = ()
+#pop-options
 
 (** Helper function that flips a preoder *)
 let flip (#a: Type u#a) (p:preorder a) : preorder a = fun x y -> p y x
 
+#push-options "--admit_smt_queries true"
 (**
   What is the preorder induced from the PCM induced by preorder [q]? It turns out that
   it is the flipped of [q], reversed extension.
@@ -245,6 +248,7 @@ let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> z `flip extends` y))
           [SMTPat (frame_preserving (pcm_of_preorder q) x y)]
   = ()
+#pop-options
 
 #push-options "--warn_error -271"
 let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
