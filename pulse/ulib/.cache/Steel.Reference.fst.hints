@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Reference.null" ],
       0,
-      "797d9eaca47073633d88a1a37510e9e1"
+      "f7cdf58299a8c1ab44f163ad59d0fbaa"
     ],
     [
       "Steel.Reference.raise_val_inj",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "f00263a2ffa9f30464e280961843acf0"
+      "7ad19e4727b24bbee12f58d8105b87c5"
     ],
     [
       "Steel.Reference.pts_to_ref_injective",
@@ -31,7 +31,7 @@
         "typing_FStar.Universe.raise_val"
       ],
       0,
-      "93be9c058faa8c7c107a39c34eae442b"
+      "fa27dd217a9aa4130a58c3777336dc1f"
     ],
     [
       "Steel.Reference.pts_to_not_null",
@@ -43,7 +43,7 @@
         "equation_Steel.Reference.pts_to_sl"
       ],
       0,
-      "e09b449b64e0a485bd61e0062e6715e0"
+      "04d10cbdc9e243c2722c06fe732d8fd6"
     ],
     [
       "Steel.Reference.pts_to_witinv",
@@ -62,7 +62,7 @@
         "typing_FStar.Universe.raise_val"
       ],
       0,
-      "505bdb786dc0b97565b7b0830467b54e"
+      "ebca057e098df4d86e8998f3dcf4d122"
     ],
     [
       "Steel.Reference.pts_to_injective_eq",
@@ -78,7 +78,7 @@
         "true_interp"
       ],
       0,
-      "96ef4089d861c7cd0cd85ce902e479b6"
+      "1b4c74c98699a204dd983eb9ea40ad2c"
     ],
     [
       "Steel.Reference.alloc_pt",
@@ -93,7 +93,7 @@
         "lemma_FStar.Ghost.reveal_hide", "true_interp"
       ],
       0,
-      "a5ad06247b50097b72d9a4f83f849005"
+      "75b0fd9a5d13d909cdaf64aee412998e"
     ],
     [
       "Steel.Reference.read_pt",
@@ -111,7 +111,7 @@
         "typing_FStar.Universe.raise_t", "typing_FStar.Universe.raise_val"
       ],
       0,
-      "4b4d3704d3c2ab37499366f8866b5a98"
+      "41006cf3619342f906adca29170d830e"
     ],
     [
       "Steel.Reference.read_refine_pt",
@@ -162,7 +162,7 @@
         "typing_Tm_abs_a05e8e2409858884eacfbce00c99155c"
       ],
       0,
-      "e36c685d3cc5979a5646a95591526b69"
+      "b050181be5b5ae1a08c80895492284b7"
     ],
     [
       "Steel.Reference.write_pt",
@@ -176,7 +176,7 @@
         "lemma_FStar.Ghost.reveal_hide", "true_interp"
       ],
       0,
-      "487d46cde9371224d9b5ae1242edbefa"
+      "f9c07913bca89008da670e333e1c4941"
     ],
     [
       "Steel.Reference.free_pt",
@@ -188,7 +188,7 @@
         "equation_Steel.Reference.pts_to_sl", "true_interp"
       ],
       0,
-      "50ef28356139230a6d67a750f17e8cc3"
+      "1a84fbb4181d55257b470ea78baa7867"
     ],
     [
       "Steel.Reference.share_pt",
@@ -204,7 +204,7 @@
         "true_interp"
       ],
       0,
-      "cdf3866ff0ec5836b95fd847faa9903d"
+      "db97cc7fab4231fc218642cb7ccef22b"
     ],
     [
       "Steel.Reference.hide_raise_reveal",
@@ -219,7 +219,7 @@
         "typing_FStar.Universe.raise_val"
       ],
       0,
-      "561c1f6b49e737d4009b114357bb2108"
+      "9c8445adb65841aaa2d0e0e3a4abed27"
     ],
     [
       "Steel.Reference.gather_pt",
@@ -235,7 +235,7 @@
         "lemma_Steel.Reference.hide_raise_reveal", "true_interp"
       ],
       0,
-      "3a3e36dfe5fffcfe17d841422844bd8f"
+      "62619c8781e0cd24ebe1fc5f7d620439"
     ],
     [
       "Steel.Reference.raise_equiv",
@@ -244,7 +244,7 @@
       1,
       [ "@query", "lemma_FStar.Universe.downgrade_val_raise_val" ],
       0,
-      "cfb148b302322045d8a07d5663f9da9d"
+      "40a46fb0be43560e7a7bf75a465e6144"
     ],
     [
       "Steel.Reference.downgrade_equiv",
@@ -253,7 +253,7 @@
       1,
       [ "@query", "lemma_FStar.Universe.raise_val_downgrade_val" ],
       0,
-      "83f183c9efa6a692ebc23ef93eb051b8"
+      "cb98c53907ac376a411ead036d14fffb"
     ],
     [
       "Steel.Reference.lift_eq",
@@ -262,7 +262,7 @@
       1,
       [ "@query" ],
       0,
-      "1d70d8d58ae42140f23b980157321658"
+      "47739bfac8d0ee0b1dd79013ab42b24d"
     ],
     [
       "Steel.Reference.cas_action",
@@ -287,7 +287,7 @@
         "unit_typing"
       ],
       0,
-      "9690b32d70e4f03bcdd401ab4ebb6d73"
+      "ed70b341432d37cc50c4d40cb156a4ae"
     ],
     [
       "Steel.Reference.cas_pt",
@@ -304,7 +304,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "25f3aa0d919dac92762f765ecf38c59d"
+      "2484c5ff0c2040233c5706d8af4ac259"
     ],
     [
       "Steel.Reference.ptr_sel'",
@@ -317,7 +317,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "59f9b6ba022fbcbbdd6fe480f045be81"
+      "49057522756ef8ac87901b893efd122e"
     ],
     [
       "Steel.Reference.ptr_sel_depends_only_on",
@@ -337,7 +337,7 @@
         "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "13c55a4bd482d68b7de7e058decf9aba"
+      "8d65a0ab6aabf44292a5c631f8c951a9"
     ],
     [
       "Steel.Reference.ptr_sel_depends_only_on_core",
@@ -359,7 +359,7 @@
         "typing_Steel.Reference.pts_to_sl"
       ],
       0,
-      "15643ff96b1d109053e891a007ce399b"
+      "aa3a3fcf83e73438cf9c1d92c562549c"
     ],
     [
       "Steel.Reference.ptrp_sel",
@@ -379,7 +379,7 @@
         "typing_Steel.Reference.ptrp"
       ],
       0,
-      "08819405d3167af5182c84095a3badaa"
+      "9f6fa32d93e1517861dbb4d0882155b0"
     ],
     [
       "Steel.Reference.ptrp_sel_interp",
@@ -391,7 +391,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c2e60293b9b4a38956dcbebb56644f4c"
+      "b5eabf48e17abd62b0c4a49b684b9ca5"
     ],
     [
       "Steel.Reference.ptrp_sel_interp",
@@ -414,7 +414,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "3acbb00cb290280b8d311aae0c8680fd"
+      "8714a688538f086ca50d6828b109eb1a"
     ],
     [
       "Steel.Reference.ptr_sel_interp",
@@ -426,7 +426,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "23ad47acd5ba41b03ed6516d72465f67"
+      "c74fd0c8b7cf4834a4099d5c6b6158d7"
     ],
     [
       "Steel.Reference.intro_ptrp_interp",
@@ -435,7 +435,7 @@
       1,
       [ "@query", "equation_Steel.Reference.ptrp" ],
       0,
-      "61df0a1b8647a1131893616f8b9abdbb"
+      "b8c0b73c29ae4dcfa2d2bd64685a5174"
     ],
     [
       "Steel.Reference.sel",
@@ -452,7 +452,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "50ebb6d36de53fe3db26d6a46fc30ba2"
+      "21c71965e0d18430f7ed28a76d2de6f1"
     ],
     [
       "Steel.Reference.intro_vptr_lemma",
@@ -475,7 +475,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "1f18978d878bbc9bc308680a1f746040"
+      "75285acbacf11d39f302cf562a9c2d2f"
     ],
     [
       "Steel.Reference.elim_vptr_lemma",
@@ -498,7 +498,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "c780cc3338c0e876f68704d10175ad9f"
+      "52995d17e8a98505ae6b3028106e8f85"
     ],
     [
       "Steel.Reference.intro_vptr",
@@ -513,7 +513,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "5fdc9a99ecbd990e976eac69099b5298"
+      "d51d642bd5b6c4f027151b058481d697"
     ],
     [
       "Steel.Reference.elim_vptr",
@@ -531,7 +531,7 @@
         "typing_Steel.Reference.vptr_", "unit_typing"
       ],
       0,
-      "be2cdb7cb80cc153a38fcc0b1622063a"
+      "b614659a7f2d57c3524852f8abeca01e"
     ],
     [
       "Steel.Reference.malloc",
@@ -540,7 +540,7 @@
       1,
       [ "@query" ],
       0,
-      "a2550e4473914c98b24d4b61d5549d4c"
+      "058da2a71efb1ed28c3a6b6f75f5ed22"
     ],
     [
       "Steel.Reference.malloc",
@@ -554,7 +554,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "6701c9fc35633f3205a4cf5c5e4806f8"
+      "c2cabdc215b96e284f2ccc4a2a7896d1"
     ],
     [
       "Steel.Reference.free",
@@ -566,7 +566,7 @@
         "equation_Steel.Reference.pts_to", "true_interp"
       ],
       0,
-      "143d6fac408792fb408f0e6571693850"
+      "76cc99ad624baafe4bd511907236a2a0"
     ],
     [
       "Steel.Reference.readp",
@@ -581,7 +581,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "5bbde6fc769564c4e884028a9d5bb21a"
+      "6116889600d1c843758857c54e92e26c"
     ],
     [
       "Steel.Reference.readp",
@@ -590,7 +590,7 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "0db50489f83ae92bf3cf832bdd0b6540"
+      "bbf148a278706535d4888fcc4bcf9e6f"
     ],
     [
       "Steel.Reference.read",
@@ -612,7 +612,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "d5962c687b8b3b8bfcaf1d2cfc7065a7"
+      "10a556a4536efa3cc8d2563518abf042"
     ],
     [
       "Steel.Reference.write",
@@ -626,7 +626,7 @@
         "true_interp"
       ],
       0,
-      "48d2c1baa15de975c2688261c6984af0"
+      "9b8d700dce8398990fe9556d107975ec"
     ],
     [
       "Steel.Reference.write",
@@ -640,7 +640,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "1370a0dc7d9325514c96dfad30af08aa"
+      "a146b8648e0df1c06d8de089ed20cf30"
     ],
     [
       "Steel.Reference.share",
@@ -657,7 +657,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "80795f4a7a919da4339b01371eed7362"
+      "553fa224b0a8d7888866799af91c79b7"
     ],
     [
       "Steel.Reference.share",
@@ -666,7 +666,7 @@
       1,
       [ "@query" ],
       0,
-      "91918a0067369aac6c55a97cb2219554"
+      "fbf606db21503584bb6566a8f23aef83"
     ],
     [
       "Steel.Reference.gather_gen",
@@ -683,7 +683,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "8ac366eb41e929214299b112ba32cd8c"
+      "ac88d308224f2d6581d3497bf2a817ea"
     ],
     [
       "Steel.Reference.gather_gen",
@@ -695,7 +695,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "e9c1deffb7338f907da2e0ffb2043840"
+      "d0e5af50a5d74f9d95728166b33f8efc"
     ],
     [
       "Steel.Reference.gather",
@@ -724,7 +724,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "67e91ce568bb0e43a836387e3190e76a"
+      "b69083169bc03d1285a12e00353680d8"
     ],
     [
       "Steel.Reference.vptrp_not_null",
@@ -739,7 +739,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "bb3b2106a93192dd30c315bc88dec737"
+      "cfef2f19007273d436622ec7ab46a1c0"
     ],
     [
       "Steel.Reference.vptrp_not_null",
@@ -771,7 +771,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "2044dc5633f7f5b8aa591eec171f52f6"
+      "8fcf6145fa0e36e57b92c939c723f57b"
     ],
     [
       "Steel.Reference.vptr_not_null",
@@ -807,7 +807,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "a58003792ee920f5fc59722557aab835"
+      "9782a4b455d22e7cecfa4d80ca01eaa0"
     ],
     [
       "Steel.Reference.ghost_pts_to_witinv",
@@ -828,7 +828,7 @@
         "typing_Steel.Reference.raise_erased"
       ],
       0,
-      "095a78877778ca2ceb12bab8469c3720"
+      "ec8ed2d2aede7a7735e147a7fa652917"
     ],
     [
       "Steel.Reference.ghost_alloc_pt",
@@ -837,7 +837,7 @@
       1,
       [ "@query" ],
       0,
-      "0531f74f3ebe28213cf3e8d05e687ec1"
+      "49de19c3fc1e6b62780117faa0e8b755"
     ],
     [
       "Steel.Reference.ghost_free_pt",
@@ -846,7 +846,7 @@
       1,
       [ "@query" ],
       0,
-      "aef261ed14afbc055699faa88ff6105e"
+      "fe8183593062bff0c3c4d08e82f96271"
     ],
     [
       "Steel.Reference.ghost_share_pt",
@@ -855,7 +855,7 @@
       1,
       [ "@query" ],
       0,
-      "1a3eb4acb53682b90a306f256c5c2db0"
+      "6c12c0f002991d289e6272c7ca102cfa"
     ],
     [
       "Steel.Reference.ghost_gather_pt",
@@ -867,7 +867,7 @@
         "lemma_Steel.Reference.hide_raise_reveal"
       ],
       0,
-      "fd02825e7053702174525f9dde97a5c5"
+      "a5bc1ff5ce59e57de3e2d40bce7364c1"
     ],
     [
       "Steel.Reference.ghost_pts_to_injective_eq",
@@ -879,7 +879,7 @@
         "lemma_Steel.Reference.hide_raise_reveal"
       ],
       0,
-      "73f8ed875e5f71cc460732b00a509c5d"
+      "b4f4bc4037816099294f4b9eff8e4084"
     ],
     [
       "Steel.Reference.ghost_read_pt",
@@ -898,7 +898,7 @@
         "typing_FStar.Universe.raise_t", "typing_FStar.Universe.raise_val"
       ],
       0,
-      "93f9e26c3573a38aa46f7d6718cbc495"
+      "96ada844104b03926a45500af53710a8"
     ],
     [
       "Steel.Reference.ghost_write_pt",
@@ -907,7 +907,7 @@
       1,
       [ "@query" ],
       0,
-      "9d20ae4c5416dc38f6f1b8296f5bf9b5"
+      "a5bfb15b579bfcf584890892f7572c52"
     ],
     [
       "Steel.Reference.ghost_ptr_sel'",
@@ -920,7 +920,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "c254491b0355e0579616f94685dc5d5c"
+      "3e874399e0de27960d98d20923f198ba"
     ],
     [
       "Steel.Reference.ghost_ptr_sel_depends_only_on",
@@ -941,7 +941,7 @@
         "typing_Steel.Reference.ghost_pts_to_sl"
       ],
       0,
-      "74092db64fc7cc53ebb9aec65a8d2f5b"
+      "03bd73738630b6d8754b511689eb85cb"
     ],
     [
       "Steel.Reference.ghost_ptr_sel_depends_only_on_core",
@@ -964,7 +964,7 @@
         "typing_Steel.Reference.ghost_pts_to_sl"
       ],
       0,
-      "7556554e8fbeb87e39b89a9f920af36e"
+      "9d32da98b519676cdafd88eca5b2f6f4"
     ],
     [
       "Steel.Reference.ghost_ptrp_sel",
@@ -984,7 +984,7 @@
         "typing_Steel.Reference.ghost_ptrp"
       ],
       0,
-      "efdebd224b8bfad262859c7fcd375401"
+      "27cd40a425f7ad6364e06e7f1628fb54"
     ],
     [
       "Steel.Reference.ghost_ptrp_sel_interp",
@@ -996,7 +996,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "cbff94b5bedb7862d1e41f044040627c"
+      "de36aa41fb9490d280882725f90b211f"
     ],
     [
       "Steel.Reference.ghost_ptrp_sel_interp",
@@ -1020,7 +1020,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "818a1eeb2589c64fe48c187817e6771a"
+      "01eaf84fc264bf8694acc0fba1cb56ce"
     ],
     [
       "Steel.Reference.ghost_ptr_sel_interp",
@@ -1035,7 +1035,7 @@
         "token_correspondence_Steel.Reference.ghost_ptrp_sel"
       ],
       0,
-      "2607aa3adde006b27664a541f47a63d5"
+      "66ef51153a5527ba99cf0647791cb1c1"
     ],
     [
       "Steel.Reference.ghost_sel",
@@ -1052,7 +1052,7 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e193c14207f3aedb4d34cf8026a62cc9"
+      "548ef397cb4b281e310837ed9d1093b5"
     ],
     [
       "Steel.Reference.intro_ghost_vptr_lemma",
@@ -1076,7 +1076,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "6f52156c617d2d320ba307e3599ad33e"
+      "b9be8ef9a91b66a36da66776e173820e"
     ],
     [
       "Steel.Reference.elim_ghost_vptr_lemma",
@@ -1100,7 +1100,7 @@
         "typing_Steel.Memory.id_elim_exists"
       ],
       0,
-      "122c051ef0a9071553b85c4901796784"
+      "244b6b4cae95d5d769b2dc89889162d1"
     ],
     [
       "Steel.Reference.intro_ghost_vptr",
@@ -1115,7 +1115,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "107d389587e98e7c99392ee44a0e9661"
+      "2744f6d1707e567dd6fd2f6457c106ff"
     ],
     [
       "Steel.Reference.elim_ghost_vptr",
@@ -1133,7 +1133,7 @@
         "typing_Steel.Reference.ghost_vptr_", "unit_typing"
       ],
       0,
-      "ddca4dcee2ef075f85b7ed7a671a7c71"
+      "31ff9e63a75290b5f71c500651d86bbc"
     ],
     [
       "Steel.Reference.ghost_alloc",
@@ -1155,7 +1155,7 @@
         "true_interp"
       ],
       0,
-      "c96bf375bef3b4491005f1db910aa2f7"
+      "9b92652a69b34c9cc84cf16ec679a5de"
     ],
     [
       "Steel.Reference.ghost_alloc",
@@ -1169,7 +1169,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "59b5a808807cc825e8ae558323460854"
+      "1724872cf54077f8dc4d9f248c554959"
     ],
     [
       "Steel.Reference.ghost_free",
@@ -1178,7 +1178,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "86f598b2ba8e43958328fbba4c80a0ff"
+      "5bb1ec9c612a3579ef793d667ec06914"
     ],
     [
       "Steel.Reference.ghost_readp",
@@ -1193,7 +1193,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "e3785ec62f5e6554155089c79cd947cb"
+      "acafb3eeeb35f41f817513cddb7eae6a"
     ],
     [
       "Steel.Reference.ghost_readp",
@@ -1202,7 +1202,7 @@
       1,
       [ "@query" ],
       0,
-      "bf6c372c879723c8e2ac5f32826953b6"
+      "bfdcb25128b12bc17cbdf751d31ed170"
     ],
     [
       "Steel.Reference.ghost_read",
@@ -1217,7 +1217,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "6082a0a4ba344bcb36754eb09736e676"
+      "ca96a32bac2bc31c0bfd23c6ceb8fc32"
     ],
     [
       "Steel.Reference.ghost_write",
@@ -1232,7 +1232,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "76affaf4b25a6819485a05872cf62b14"
+      "faa0ae241003b12306693cef0abfd964"
     ],
     [
       "Steel.Reference.ghost_write",
@@ -1245,7 +1245,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "d744bab872dbc16cc54ac18b87e5f34b"
+      "6cf13ed76668cbef90721ad3b6c09f73"
     ],
     [
       "Steel.Reference.ghost_share",
@@ -1262,7 +1262,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "e3bf2625f2c50d99bb8baf26a9c0fd99"
+      "d7b8d191a7c7a796fe0e7031a7a233e2"
     ],
     [
       "Steel.Reference.ghost_share",
@@ -1271,7 +1271,7 @@
       1,
       [ "@query" ],
       0,
-      "7b6fe623bd8900ca1c12d5cd311ea50a"
+      "a14f88c44db59d51c666ca7e0c31fa07"
     ],
     [
       "Steel.Reference.ghost_gather_gen",
@@ -1288,7 +1288,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "b6fa52a0ce3a47c6b10262a9f6038dc9"
+      "66633d1cc855d40a6fd151c1cb51ce1e"
     ],
     [
       "Steel.Reference.ghost_gather_gen",
@@ -1297,7 +1297,7 @@
       1,
       [ "@query" ],
       0,
-      "e6e977d2507c944fd2f26b18bbd34482"
+      "42132c84436c09521b93c47daf6ac1ab"
     ],
     [
       "Steel.Reference.ghost_gather",
