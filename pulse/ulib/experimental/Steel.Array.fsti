@@ -17,6 +17,7 @@
 module Steel.Array
 open Steel.Memory
 open Steel.Effect
+open Steel.Effect.Atomic
 open FStar.Ghost
 module U32 = FStar.UInt32
 
@@ -57,6 +58,41 @@ let varray r = VUnit (varray' r)
 let asel (#a:Type) (#p:vprop) (r:array a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (varray r) /\ True)})
   = h (varray r)
+
+/// We also provide an indexed assertion to represent an array
+/// without a selector
+///
+///   - I would like to remove the erased here, but doing that would
+///     be much more convenient once we merge the reveal/hide rewrites
+///     in the normalizer
+let elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
+
+/// The main indexed assertion
+val varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
+  : vprop
+
+/// Converting a `varray` into a `varray_pts_to`
+val intro_varray_pts_to (#t:_)
+                        (#opened:inames)
+                        (a:array t)
+  : SteelGhost (elseq t (length a)) opened
+    (varray a)
+    (fun x -> varray_pts_to a x)
+    (requires fun _ -> True)
+    (ensures fun h0 x h1 ->
+      Ghost.reveal x == asel a h0)
+
+/// Converting a `varray_pts_to` to a `varray`
+val elim_varray_pts_to (#t:_)
+                       (#opened:inames)
+                       (a:array t)
+                       (c:elseq t (length a))
+  : SteelGhost unit opened
+    (varray_pts_to a c)
+    (fun _ -> varray a)
+    (requires fun _ -> True)
+    (ensures fun _ _ h1 ->
+      asel a h1 == Ghost.reveal c)
 
 /// Allocates an array of length n, where all elements of the array initially are [x]
 val malloc (#t:Type) (x:t) (n:U32.t)
@@ -99,65 +135,20 @@ val free (#t:Type) (r:array t)
              (requires fun _ -> True)
              (ensures fun _ _ _ -> True)
 
-////////////////////////////////////////////////////////////////////////////////
 
-module AT = Steel.Effect.Atomic
-
-let elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
-
-val varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a)) : vprop
-
-val intro_varray_pts_to (#t:_)
-                        (#opened:inames)
-                        (a:array t)
-  : AT.SteelGhost (elseq t (length a)) opened
-    (varray a)
-    (fun x -> varray_pts_to a x)
-    (requires fun _ -> True)
-    (ensures fun h0 x h1 ->
-      Ghost.reveal x == asel a h0)
-
-val elim_varray_pts_to (#t:_)
-                       (#opened:inames)
-                       (a:array t)
-                       (c:elseq t (length a))
-  : AT.SteelGhost unit opened
-    (varray_pts_to a c)
-    (fun _ -> varray a)
-    (requires fun _ -> True)
-    (ensures fun _ _ h1 ->
-      asel a h1 == Ghost.reveal c)
-
-val read_pt (#t:_)
-            (a:array t)
-            (#r:elseq t (length a))
-            (i:U32.t { U32.v i < length a })
-  : Steel t
-    (varray_pts_to a r)
-    (fun _ -> varray_pts_to a r)
-    (requires fun _ -> True)
-    (ensures fun h0 v h1 ->
-      v == Seq.index r (U32.v i))
-
-val write_pt (#t:_)
-            (a:array t)
-            (#r:elseq t (length a))
-            (i:U32.t { U32.v i < length a })
-            (v:t)
-  : SteelT unit
-    (varray_pts_to a r)
-    (fun _ -> varray_pts_to a (Seq.upd r (U32.v i) v))
-
-let coerce #t (#l0 #l1:_) (e:elseq t l0 { l0 = l1}) : elseq t l1 = e
-
+/// Copies the contents of a0 to a1
 val memcpy (#t:_)
            (a0 a1:array t)
-           (#e0:elseq t (length a0))
-           (#e1:elseq t (length a1))
-           (i:U32.t{ U32.v i == length a0 /\ length a0 == length a1 })
-  : SteelT unit
-    (varray_pts_to a0 e0 `star` varray_pts_to a1 e1)
-    (fun _ -> varray_pts_to a0 e0 `star` varray_pts_to a1 (coerce e0))
+           (i:U32.t)
+  : Steel unit
+    (varray a0 `star` varray a1)
+    (fun _ -> varray a0  `star` varray a1)
+    (requires fun _ ->
+       U32.v i == length a0 /\ length a0 == length a1)
+    (ensures fun h0 _ h1 ->
+      length a0 == length a1 /\
+      asel a0 h0 == asel a0 h1 /\
+      asel a1 h1 == asel a0 h1)
 
 
 (* AF: Non-selector version of the Array module, currently unused in Steel
