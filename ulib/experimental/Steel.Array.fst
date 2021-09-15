@@ -25,6 +25,27 @@ let length #t (x:array t) = dfst x
 let is_array r = ptr (dsnd r)
 let array_sel r = ptr_sel (dsnd r)
 
+let varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
+  : vprop
+  = Steel.Reference.pts_to (dsnd a) Steel.FractionalPermission.full_perm x
+
+let intro_varray_pts_to (#t:_)
+                        (#opened:inames)
+                        (a:array t)
+  = Steel.Reference.elim_vptr (dsnd a) Steel.FractionalPermission.full_perm
+
+let elim_varray_pts_to (#t:_)
+                       (#opened:inames)
+                       (a:array t)
+                       (c:elseq t (length a))
+  : SteelGhost unit opened
+    (varray_pts_to a c)
+    (fun _ -> varray a)
+    (requires fun _ -> True)
+    (ensures fun _ _ h1 ->
+      asel a h1 == Ghost.reveal c)
+  = Steel.Reference.intro_vptr (dsnd a) Steel.FractionalPermission.full_perm c
+
 let malloc #a x n =
   let l : erased nat = hide (U32.v n) in
   let s : Seq.lseq a l = Seq.create (U32.v n) x in
@@ -44,44 +65,25 @@ let upd r i x =
 
 let free r = free (dsnd r)
 
-let varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
-  : vprop
-  = Steel.Reference.pts_to (dsnd a) Steel.FractionalPermission.full_perm x
+////////////////////////////////////////////////////////////////////////////////
 
-
-let intro_varray_pts_to (#t:_)
-                        (#opened:inames)
-                        (a:array t)
-  : AT.SteelGhost (elseq t (length a)) opened
-    (varray a)
-    (fun x -> varray_pts_to a x)
-    (requires fun _ -> True)
-    (ensures fun h0 x h1 ->
-      Ghost.reveal x == asel a h0)
-  = Steel.Reference.elim_vptr (dsnd a) Steel.FractionalPermission.full_perm
-
-let elim_varray_pts_to (#t:_)
-                       (#opened:inames)
-                       (a:array t)
-                       (c:elseq t (length a))
-  : AT.SteelGhost unit opened
-    (varray_pts_to a c)
-    (fun _ -> varray a)
-    (requires fun _ -> True)
-    (ensures fun _ _ h1 ->
-      asel a h1 == Ghost.reveal c)
-  = Steel.Reference.intro_vptr (dsnd a) Steel.FractionalPermission.full_perm c
-
+module AT = Steel.Effect.Atomic
 
 let read_pt (#t:_)
             (a:array t)
             (#r:elseq t (length a))
             (i:U32.t { U32.v i < length a })
+  : Steel t
+    (varray_pts_to a r)
+    (fun _ -> varray_pts_to a r)
+    (requires fun _ -> True)
+    (ensures fun h0 v h1 ->
+      v == Seq.index r (U32.v i))
   = elim_varray_pts_to a r;
     let x = index a i in
     let _ = intro_varray_pts_to a in
-    AT.change_equal_slprop (varray_pts_to _ _)
-                           (varray_pts_to a r);
+    change_equal_slprop (varray_pts_to _ _)
+                         (varray_pts_to a r);
     AT.return x
 
 
@@ -90,6 +92,9 @@ let write_pt (#t:_)
             (#r:elseq t (length a))
             (i:U32.t { U32.v i < length a })
             (v:t)
+  : SteelT unit
+    (varray_pts_to a r)
+    (fun _ -> varray_pts_to a (Seq.upd r (U32.v i) v))
   = elim_varray_pts_to a r;
     let x = upd a i v in
     let _ = intro_varray_pts_to a in
@@ -104,6 +109,8 @@ let prefix_copied #t #l0 #l1
    : elseq t l1
    = (Seq.append (Seq.slice e0 0 i) (Seq.slice e1 i (Seq.length e1)))
 
+let coerce #t (#l0 #l1:_) (e:elseq t l0 { l0 = l1}) : elseq t l1 = e
+
 let slice_lem (#t:_)
               (#l0 #l1:_)
               (e0:elseq t l0)
@@ -116,7 +123,14 @@ let slice_lem (#t:_)
 
 module Loops = Steel.Loops
 
-let memcpy #t a0 a1 #e0 #e1 i
+let memcpy_pt (#t:_)
+              (a0 a1:array t)
+              (#e0:elseq t (length a0))
+              (#e1:elseq t (length a1))
+              (i:U32.t{ U32.v i == length a0 /\ length a0 == length a1 })
+  : SteelT unit
+    (varray_pts_to a0 e0 `star` varray_pts_to a1 e1)
+    (fun _ -> varray_pts_to a0 e0 `star` varray_pts_to a1 (coerce e0))
   = let inv (j:Loops.nat_at_most i)
       : vprop
       = varray_pts_to a0 e0 `star`
@@ -152,3 +166,11 @@ let memcpy #t a0 a1 #e0 #e1 i
     AT.change_equal_slprop (varray_pts_to a1 (prefix_copied e0 e1 (U32.v i)))
                            (varray_pts_to a1 (coerce e0));
     AT.return ()
+
+let memcpy #t a0 a1 i
+  = let _ : squash (length a0 == length a1) = () in
+    let _ = intro_varray_pts_to a0 in
+    let _ = intro_varray_pts_to a1 in
+    memcpy_pt a0 a1 i;
+    elim_varray_pts_to a0 _;
+    elim_varray_pts_to a1 _
