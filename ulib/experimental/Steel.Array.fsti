@@ -99,6 +99,66 @@ val free (#t:Type) (r:array t)
              (requires fun _ -> True)
              (ensures fun _ _ _ -> True)
 
+////////////////////////////////////////////////////////////////////////////////
+
+module AT = Steel.Effect.Atomic
+
+let elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
+
+val varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a)) : vprop
+
+val intro_varray_pts_to (#t:_)
+                        (#opened:inames)
+                        (a:array t)
+  : AT.SteelGhost (elseq t (length a)) opened
+    (varray a)
+    (fun x -> varray_pts_to a x)
+    (requires fun _ -> True)
+    (ensures fun h0 x h1 ->
+      Ghost.reveal x == asel a h0)
+
+val elim_varray_pts_to (#t:_)
+                       (#opened:inames)
+                       (a:array t)
+                       (c:elseq t (length a))
+  : AT.SteelGhost unit opened
+    (varray_pts_to a c)
+    (fun _ -> varray a)
+    (requires fun _ -> True)
+    (ensures fun _ _ h1 ->
+      asel a h1 == Ghost.reveal c)
+
+val read_pt (#t:_)
+            (a:array t)
+            (#r:elseq t (length a))
+            (i:U32.t { U32.v i < length a })
+  : Steel t
+    (varray_pts_to a r)
+    (fun _ -> varray_pts_to a r)
+    (requires fun _ -> True)
+    (ensures fun h0 v h1 ->
+      v == Seq.index r (U32.v i))
+
+val write_pt (#t:_)
+            (a:array t)
+            (#r:elseq t (length a))
+            (i:U32.t { U32.v i < length a })
+            (v:t)
+  : SteelT unit
+    (varray_pts_to a r)
+    (fun _ -> varray_pts_to a (Seq.upd r (U32.v i) v))
+
+let coerce #t (#l0 #l1:_) (e:elseq t l0 { l0 = l1}) : elseq t l1 = e
+
+val memcpy (#t:_)
+           (a0 a1:array t)
+           (#e0:elseq t (length a0))
+           (#e1:elseq t (length a1))
+           (i:U32.t{ U32.v i == length a0 /\ length a0 == length a1 })
+  : SteelT unit
+    (varray_pts_to a0 e0 `star` varray_pts_to a1 e1)
+    (fun _ -> varray_pts_to a0 e0 `star` varray_pts_to a1 (coerce e0))
+
 
 (* AF: Non-selector version of the Array module, currently unused in Steel
    TODO: Port this to the selector version
