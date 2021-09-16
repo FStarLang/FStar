@@ -1,5 +1,5 @@
 [
-  " {<ï/¶\u0012¡\u0018~\u007f×\u0012þî",
+  "/»\tÜNŠ0Ž÷ÛÐ‚\u0019Œ\u0003p",
   [
     [
       "Steel.Array.asel",
@@ -16,7 +16,37 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a7a402d5b945c93ca0b1ed6bb869425d"
+      "bf780fa8e644115c3c2aeab5cf77ac01"
+    ],
+    [
+      "Steel.Array.intro_varray_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.lseq",
+        "equation_Steel.Array.contents",
+        "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
+      ],
+      0,
+      "0e2a22e85a5770feeb24bfb978ef9f23"
+    ],
+    [
+      "Steel.Array.elim_varray_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.lseq", "equation_Prims.nat",
+        "equation_Steel.Array.contents", "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
+        "typing_Steel.Array.length"
+      ],
+      0,
+      "7c75596b7be8e0b4408cb637e50a30e5"
     ],
     [
       "Steel.Array.malloc",
@@ -30,7 +60,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "47741a7f03d5d92f36f8077fc66823d5"
+      "29770f45be7b0094698e9e3c219c2dd3"
     ],
     [
       "Steel.Array.index",
@@ -47,7 +77,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "22ed4c466d62e3c1035d5a40fdf1b150"
+      "100ca7a033ff952617bb85c4739ce1fa"
     ],
     [
       "Steel.Array.upd",
@@ -64,7 +94,16 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "851d0be9d92be0e11fc463e4ad2b809d"
+      "d8ece623df25ee93c8ddddfe9716d8b7"
+    ],
+    [
+      "Steel.Array.memcpy",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "86ae960f2e5db9b04062399b499e6712"
     ]
   ]
 ]
