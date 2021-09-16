@@ -515,28 +515,29 @@ let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
   = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
-of [l] sorted along the comparison function [compare], in such a way
-that if [compare x y > 0], then [x] appears before [y] in
-[l']. Requires, at type-checking time, [compare] to be a pure total
-function. *)
+    of [l] sorted along the comparison function [compare], in such a
+    way that if [compare x y > 0], then [x] appears before [y] in
+    [l']. Sorts in ascending order *)
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
-     let hi, lo  = partition (bool_of_compare f pivot) tl in
+     let lo, hi = partition (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
 
-(** A l1 is a strict prefix of l2. *)
-
-let rec strict_prefix_of (#a: Type) (l1 l2: list a)
+(** A l1 is a strict suffix of l2. *)
+let rec strict_suffix_of (#a: Type) (l1 l2: list a)
 : Pure Type0
   (requires True)
   (ensures (fun _ -> True))
   (decreases l2)
 = match l2 with
   | [] -> False
-  | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
+  | _ :: q -> l1 == q \/ l1 `strict_suffix_of` q
+
+[@@deprecated "This function was misnamed: Please use 'strict_suffix_of'"]
+let strict_prefix_of = strict_suffix_of
 
 val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =
