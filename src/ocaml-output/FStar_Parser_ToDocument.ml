@@ -2162,6 +2162,11 @@ and (p_binders :
     fun bs ->
       let uu___ = p_binders_list is_atomic bs in
       separate_or_flow break1 uu___
+and (p_binders_sep :
+  FStar_Parser_AST.binder Prims.list -> FStar_Pprint.document) =
+  fun bs ->
+    let uu___ = p_binders_list true bs in
+    FStar_Pprint.separate_map FStar_Pprint.space (fun x -> x) uu___
 and (string_of_id_or_underscore : FStar_Ident.ident -> FStar_Pprint.document)
   =
   fun lid ->
@@ -2731,6 +2736,431 @@ and (p_noSeqTerm' :
               FStar_Compiler_Effect.op_Less_Bar
                 (FStar_Pprint.nest (Prims.of_int (2))) uu___2 in
             FStar_Pprint.enclose head uu___ uu___1
+        | FStar_Parser_AST.IntroForall (xs, p, e1) ->
+            let p1 = p_noSeqTermAndComment false false p in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let xs1 = p_binders_sep xs in
+            let uu___ = str "introduce forall" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "." in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "with" in
+                            let uu___11 =
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat p1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat xs1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.IntroExists (xs, p, vs, e1) ->
+            let p1 = p_noSeqTermAndComment false false p in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let xs1 = p_binders_sep xs in
+            let uu___ = str "introduce" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = str "exists" in
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = str "." in
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 = str "with" in
+                            let uu___12 =
+                              let uu___13 =
+                                let uu___14 =
+                                  FStar_Pprint.separate_map
+                                    FStar_Pprint.space p_atomicTerm vs in
+                                let uu___15 =
+                                  let uu___16 =
+                                    let uu___17 = str "and" in
+                                    let uu___18 =
+                                      FStar_Pprint.op_Hat_Hat
+                                        FStar_Pprint.space e2 in
+                                    FStar_Pprint.op_Hat_Hat uu___17 uu___18 in
+                                  FStar_Pprint.op_Hat_Hat
+                                    FStar_Pprint.hardline uu___16 in
+                                FStar_Pprint.op_Hat_Hat uu___14 uu___15 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___13 in
+                            FStar_Pprint.op_Hat_Hat uu___11 uu___12 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___10 in
+                        FStar_Pprint.op_Hat_Hat p1 uu___9 in
+                      FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                    FStar_Pprint.op_Hat_Hat xs1 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
+                FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.IntroImplies (p, q, x, e1) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmFormula q in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let x1 = p_binders_sep [x] in
+            let uu___ = str "introduce" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "==>" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "with" in
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 = str "." in
+                                  let uu___15 =
+                                    FStar_Pprint.op_Hat_Hat
+                                      FStar_Pprint.space e2 in
+                                  FStar_Pprint.op_Hat_Hat uu___14 uu___15 in
+                                FStar_Pprint.op_Hat_Hat x1 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.IntroOr (b, p, q, e1) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmFormula q in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let uu___ = str "introduce" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "\\/" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "with" in
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
+                                  if b then str "Left" else str "Right" in
+                                let uu___14 =
+                                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                    e2 in
+                                FStar_Pprint.op_Hat_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.IntroAnd (p, q, e1, e2) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmTuple q in
+            let e11 = p_noSeqTermAndComment false false e1 in
+            let e21 = p_noSeqTermAndComment false false e2 in
+            let uu___ = str "introduce" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "/\\" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "with" in
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 =
+                                    let uu___15 = str "and" in
+                                    let uu___16 =
+                                      FStar_Pprint.op_Hat_Hat
+                                        FStar_Pprint.space e21 in
+                                    FStar_Pprint.op_Hat_Hat uu___15 uu___16 in
+                                  FStar_Pprint.op_Hat_Hat
+                                    FStar_Pprint.hardline uu___14 in
+                                FStar_Pprint.op_Hat_Hat e11 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.ElimForall (xs, p, vs) ->
+            let xs1 = p_binders_sep xs in
+            let p1 = p_noSeqTermAndComment false false p in
+            let vs1 =
+              FStar_Pprint.separate_map FStar_Pprint.space p_atomicTerm vs in
+            let uu___ = str "eliminate" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = str "forall" in
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = str "." in
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 =
+                              let uu___12 = str "with" in
+                              let uu___13 =
+                                FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                  vs1 in
+                              FStar_Pprint.op_Hat_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                              uu___11 in
+                          FStar_Pprint.op_Hat_Hat p1 uu___10 in
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___9 in
+                      FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                    FStar_Pprint.op_Hat_Hat xs1 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
+                FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.ElimExists (bs, p, q, b, e1) ->
+            let head =
+              let uu___ = str "eliminate exists" in
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = p_binders_sep bs in
+                  let uu___4 = str "." in
+                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+              FStar_Pprint.op_Hat_Hat uu___ uu___1 in
+            let p1 = p_noSeqTermAndComment false false p in
+            let q1 = p_noSeqTermAndComment false false q in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = str "returns" in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            let uu___9 = str "with" in
+                            let uu___10 =
+                              let uu___11 =
+                                let uu___12 = p_binders_sep [b] in
+                                let uu___13 =
+                                  let uu___14 = str "." in
+                                  let uu___15 =
+                                    FStar_Pprint.op_Hat_Hat
+                                      FStar_Pprint.hardline e2 in
+                                  FStar_Pprint.op_Hat_Hat uu___14 uu___15 in
+                                FStar_Pprint.op_Hat_Hat uu___12 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___11 in
+                            FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___8 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___7 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
+                    FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
+                FStar_Pprint.op_Hat_Hat p1 uu___2 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
+            FStar_Pprint.op_Hat_Hat head uu___
+        | FStar_Parser_AST.ElimImplies (p, q, e1) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmFormula q in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let uu___ = str "eliminate" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "==>" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "with" in
+                            let uu___11 =
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.ElimOr (p, q, r, x, e1, y, e2) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmFormula q in
+            let r1 = p_noSeqTermAndComment false false r in
+            let x1 = p_binders_sep [x] in
+            let e11 = p_noSeqTermAndComment false false e1 in
+            let y1 = p_binders_sep [y] in
+            let e21 = p_noSeqTermAndComment false false e2 in
+            let uu___ = str "eliminate" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "\\/" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "returns" in
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 =
+                                    let uu___15 = str "with" in
+                                    let uu___16 =
+                                      let uu___17 =
+                                        let uu___18 =
+                                          let uu___19 =
+                                            let uu___20 = str "." in
+                                            let uu___21 =
+                                              let uu___22 =
+                                                let uu___23 =
+                                                  let uu___24 =
+                                                    let uu___25 = str "and" in
+                                                    let uu___26 =
+                                                      let uu___27 =
+                                                        let uu___28 =
+                                                          let uu___29 =
+                                                            let uu___30 =
+                                                              str "." in
+                                                            let uu___31 =
+                                                              FStar_Pprint.op_Hat_Hat
+                                                                FStar_Pprint.space
+                                                                e21 in
+                                                            FStar_Pprint.op_Hat_Hat
+                                                              uu___30 uu___31 in
+                                                          FStar_Pprint.op_Hat_Hat
+                                                            FStar_Pprint.space
+                                                            uu___29 in
+                                                        FStar_Pprint.op_Hat_Hat
+                                                          y1 uu___28 in
+                                                      FStar_Pprint.op_Hat_Hat
+                                                        FStar_Pprint.space
+                                                        uu___27 in
+                                                    FStar_Pprint.op_Hat_Hat
+                                                      uu___25 uu___26 in
+                                                  FStar_Pprint.op_Hat_Hat
+                                                    FStar_Pprint.hardline
+                                                    uu___24 in
+                                                FStar_Pprint.op_Hat_Hat e11
+                                                  uu___23 in
+                                              FStar_Pprint.op_Hat_Hat
+                                                FStar_Pprint.space uu___22 in
+                                            FStar_Pprint.op_Hat_Hat uu___20
+                                              uu___21 in
+                                          FStar_Pprint.op_Hat_Hat
+                                            FStar_Pprint.space uu___19 in
+                                        FStar_Pprint.op_Hat_Hat x1 uu___18 in
+                                      FStar_Pprint.op_Hat_Hat
+                                        FStar_Pprint.space uu___17 in
+                                    FStar_Pprint.op_Hat_Hat uu___15 uu___16 in
+                                  FStar_Pprint.op_Hat_Hat
+                                    FStar_Pprint.hardline uu___14 in
+                                FStar_Pprint.op_Hat_Hat r1 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e1) ->
+            let p1 = p_tmFormula p in
+            let q1 = p_tmTuple q in
+            let r1 = p_noSeqTermAndComment false false r in
+            let xy = p_binders_sep [x; y] in
+            let e2 = p_noSeqTermAndComment false false e1 in
+            let uu___ = str "eliminate" in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = str "/\\" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 = str "returns" in
+                            let uu___11 =
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 =
+                                    let uu___15 = str "with" in
+                                    let uu___16 =
+                                      let uu___17 =
+                                        let uu___18 =
+                                          let uu___19 =
+                                            let uu___20 = str "." in
+                                            let uu___21 =
+                                              FStar_Pprint.op_Hat_Hat
+                                                FStar_Pprint.space e2 in
+                                            FStar_Pprint.op_Hat_Hat uu___20
+                                              uu___21 in
+                                          FStar_Pprint.op_Hat_Hat
+                                            FStar_Pprint.space uu___19 in
+                                        FStar_Pprint.op_Hat_Hat xy uu___18 in
+                                      FStar_Pprint.op_Hat_Hat
+                                        FStar_Pprint.space uu___17 in
+                                    FStar_Pprint.op_Hat_Hat uu___15 uu___16 in
+                                  FStar_Pprint.op_Hat_Hat
+                                    FStar_Pprint.hardline uu___14 in
+                                FStar_Pprint.op_Hat_Hat r1 uu___13 in
+                              FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                                uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                            uu___9 in
+                        FStar_Pprint.op_Hat_Hat q1 uu___8 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___7 in
+                    FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___4 in
+                FStar_Pprint.op_Hat_Hat p1 uu___3 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+            FStar_Pprint.op_Hat_Hat uu___ uu___1
         | uu___ -> p_typ ps pb e
 and (p_dec_wf :
   Prims.bool ->
@@ -4077,6 +4507,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Antiquote uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.CalcProof uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.ElimExists uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.LexList l ->
         let uu___ =

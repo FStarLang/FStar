@@ -39,7 +39,10 @@ let def_of (#t:Type) (x:t) : Tac term =
              | Some se -> se
     in
     match inspect_sigelt se with
-    | Sg_Let _ _ _ _ def -> def
+    | Sg_Let _ lbs -> begin
+      let lbv = lookup_lb_view lbs (inspect_fv fv) in
+      lbv.lb_def
+      end
     | _ -> fail "not a sig_let"
     end
   | _ -> fail "not an fvar"

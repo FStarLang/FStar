@@ -831,12 +831,21 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
 
 let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   let find_in_cache fieldname =
-//BU.print_string (BU.format1 "Trying field %s\n" (string_of_lid fieldname));
     let ns, id = ns_of_lid fieldname, ident_of_lid fieldname in
-    BU.find_map (peek_record_cache()) (fun record ->
-      option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r))
-    ) in
-  resolve_in_open_namespaces'' env fieldname Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun fn -> cont_of_option Cont_ignore (find_in_cache fn)) (fun k _ -> k)
+    BU.find_map
+      (peek_record_cache())
+      (fun record ->
+        option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r)))
+  in
+  resolve_in_open_namespaces''
+    env
+    fieldname
+    Exported_id_field
+    (fun _ -> Cont_ignore)
+    (fun _ -> Cont_ignore)
+    (fun r -> Cont_ok r)
+    (fun fn -> cont_of_option Cont_ignore (find_in_cache fn))
+    (fun k _ -> k)
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with

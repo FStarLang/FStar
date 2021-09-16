@@ -265,6 +265,8 @@ let (lazy_chooser :
           FStar_Reflection_Embeddings.unfold_lazy_bv i
       | FStar_Syntax_Syntax.Lazy_binder ->
           FStar_Reflection_Embeddings.unfold_lazy_binder i
+      | FStar_Syntax_Syntax.Lazy_letbinding ->
+          FStar_Reflection_Embeddings.unfold_lazy_letbinding i
       | FStar_Syntax_Syntax.Lazy_optionstate ->
           FStar_Reflection_Embeddings.unfold_lazy_optionstate i
       | FStar_Syntax_Syntax.Lazy_fvar ->
