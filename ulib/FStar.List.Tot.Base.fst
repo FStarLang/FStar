@@ -488,14 +488,15 @@ let rec partition_length f l = match l with
   | hd::tl -> partition_length f tl
 
 (** [bool_of_compare] turns a comparison function into a strict
-order. More precisely, [bool_of_compare compare x y] returns true if,
-and only if, [compare x y] is positive. Inspired from OCaml, where
-polymorphic comparison using both the [compare] function and the (>)
-infix operator are such that [compare x y] is positive if, and only
-if, x > y. Requires, at type-checking time, [compare] to be a pure
-total function. *)
+    order. More precisely, [bool_of_compare compare x y] returns true
+    if, and only if, [compare x y] is negative, meaning [x] precedes
+    [y] in the ordering defined by compare.
+
+    This is used in sorting, and is defined to be consistent with
+    OCaml and F#, where sorting is performed in ascending order.
+*)
 val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
-let bool_of_compare #a f x y = f x y > 0
+let bool_of_compare #a f x y = f x y < 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -506,9 +507,9 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-    if x `rel` y  then 1
+    if x `rel` y  then -1
     else if x = y then 0
-    else 0-1
+    else 1
 
 let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
   : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
@@ -522,7 +523,7 @@ val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (le
 let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
-     let lo, hi = partition (bool_of_compare f pivot) tl in
+     let hi, lo = partition (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
 
