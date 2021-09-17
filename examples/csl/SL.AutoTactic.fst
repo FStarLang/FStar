@@ -145,7 +145,7 @@ let compare_b (n1, t1) (n2, t2) : int =
   else FStar.Order.int_of_order (compare_term t1 t2)
 
 let compare_v #a (vm : vmap a bdata) (v1 v2 : var) =
-    compare_b (select_extra v1 vm) (select_extra v2 vm)
+    compare_b (select_extra v2 vm) (select_extra v1 vm)
 
 (* `a` will be instantiated with `memory`, which is a `Type u#1` *)
 let sort_sl : permute bdata =
