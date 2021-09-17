@@ -31,6 +31,11 @@ val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate *
 (* Helper *)
 val focus                  : tac<'a> -> tac<'a>
 
+(* This is a trusted primitive;
+   It is not exposed to user-facing tactic programs,
+   but is used by other primitives in the compiler *)
+val solve : goal -> term -> tac<unit>
+
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStar.Tactics.Builtins.fst` *)
 

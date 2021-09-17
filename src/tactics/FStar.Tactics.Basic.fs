@@ -275,7 +275,6 @@ let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify (goal_env goal) solution (goal_witness goal)
 
 let solve (goal : goal) (solution : term) : tac<unit> =
-    let e = goal_env goal in
     mlog (fun () -> BU.print2 "solve %s := %s\n" (Print.term_to_string (goal_witness goal))
                                                  (Print.term_to_string solution)) (fun () ->
     bind (trysolve goal solution) (fun b ->
