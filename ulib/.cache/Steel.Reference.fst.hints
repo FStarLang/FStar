@@ -528,7 +528,7 @@
         "typing_FStar.Ghost.reveal", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "34644660a8019c5eef50b726b502bb28"
+      "332b4f52b2f5dd2a5e3e1bd8133b60d3"
     ],
     [
       "Steel.Reference.elim_vptr",
@@ -564,7 +564,7 @@
         "typing_Steel.Reference.vptr_", "unit_typing"
       ],
       0,
-      "9234ddef18225a946911d2d582dcbfdd"
+      "1dbb9bf21eecd1de3279a907d736472c"
     ],
     [
       "Steel.Reference.malloc",
@@ -757,7 +757,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "523dbb678036e881a596ce1a15f9f200"
+      "57e12d766d16850d18224a778844a597"
     ],
     [
       "Steel.Reference.vptrp_not_null",
