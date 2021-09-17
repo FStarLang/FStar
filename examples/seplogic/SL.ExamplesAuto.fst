@@ -106,12 +106,12 @@ let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   | _, _ -> "2" // have to accept at least Tv_Uvar _ here
 
 let sort_sl : permute string = fun (a:Type u#1) (vm:vmap a string) (xs:list var) ->
-  let sortf x y = FStar.String.compare (select_extra y vm) (select_extra x vm) in
+  let sortf x y = FStar.String.compare (select_extra x vm) (select_extra y vm) in
   List.Tot.sortWith #var sortf xs
 
 let sort_sl_correct : permute_correct sort_sl =
   fun #a m vm xs ->
-    let sortf x y = FStar.String.compare (select_extra y vm) (select_extra x vm) in
+    let sortf x y = FStar.String.compare (select_extra x vm) (select_extra y vm) in
     sortWith_correct sortf #a m vm xs
 
 let canon_monoid_sl (fp:list term) : Tac unit =

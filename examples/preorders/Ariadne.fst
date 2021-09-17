@@ -89,10 +89,10 @@ let saved_backup (c:ctr) (s:record) : (f:(heap -> Type0){FStar.ST.stable f}) =
 
 type backup (c:ctr) = s:record{witnessed (saved_backup c s)}
 
-let prefix_of (#c:ctr) (l1:list (backup c)) (l2:list (backup c)) =
-  l1 == l2 \/ strict_prefix_of l1 l2
+let suffix_of (#c:ctr) (l1:list (backup c)) (l2:list (backup c)) =
+  l1 == l2 \/ strict_suffix_of l1 l2
   
-let log_pre' (c:ctr) :relation (list (backup c)) = fun l1 l2 -> l1 `prefix_of` l2
+let log_pre' (c:ctr) :relation (list (backup c)) = fun l1 l2 -> l1 `suffix_of` l2
 let log_pre (c:ctr) :preorder (list (backup c)) = log_pre' c
 
 type log (c:ctr) = mref (list (backup c)) (log_pre c) 

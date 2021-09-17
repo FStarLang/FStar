@@ -839,7 +839,7 @@
       "e9b17576fe3e7887cdca13a9e84e8005"
     ],
     [
-      "FStar.List.Tot.Base.strict_prefix_of",
+      "FStar.List.Tot.Base.strict_suffix_of",
       1,
       2,
       1,
