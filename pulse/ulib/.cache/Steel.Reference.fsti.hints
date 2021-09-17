@@ -55,7 +55,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "377e451263796fbb4472a7b297562503"
+      "995a4d5af23864773f997eb1f5954e25"
     ],
     [
       "Steel.Reference.elim_vptr",
@@ -70,7 +70,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "a121c1a00dd24c66b2716dd80d4fd189"
+      "174bac5e301ac613c9ebbe5caf73d76b"
     ],
     [
       "Steel.Reference.malloc",
@@ -187,7 +187,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "faa3a01bfa6d0f664ae0214a2458b44f"
+      "4782c3abbfeccc7df3ed671ff16dd659"
     ],
     [
       "Steel.Reference.vptrp_not_null",
