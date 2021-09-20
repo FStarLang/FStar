@@ -744,3 +744,14 @@ let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
   perm_len s s';
   sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
   s'
+
+let rec foldr (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else f (head s) (foldr f (tail s) init)
+
+let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else let s, last = un_snoc s in
+         f last (foldr_snoc f s init)
