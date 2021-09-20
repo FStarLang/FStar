@@ -72,7 +72,7 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_app(t, args) ->
         mk (Tm_app(inst s t, inst_args s args))
 
-      | Tm_match(t, asc_opt, pats) ->
+      | Tm_match(t, asc_opt, pats, lopt) ->
         let pats = pats |> List.map (fun (p, wopt, t) ->
             let wopt = match wopt with
                 | None ->   None
@@ -80,7 +80,7 @@ let rec inst (s:term -> fv -> term) t =
             let t = inst s t in
             (p, wopt, t)) in
         let asc_opt = U.map_opt asc_opt (inst_ascription s) in
-        mk (Tm_match(inst s t, asc_opt, pats))
+        mk (Tm_match(inst s t, asc_opt, pats, lopt))
 
       | Tm_ascribed(t1, asc, f) ->
         mk (Tm_ascribed(inst s t1, inst_ascription s asc, f))
