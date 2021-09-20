@@ -209,6 +209,18 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
   = h (vptr r)
 
+/// Moving from indexed pts_to assertions to selector-based vprops and back
+val intro_vptr (#a:Type) (#opened:inames) (r:ref a) (p: perm) (v:erased a)
+  : SteelGhost unit opened (pts_to r p v) (fun _ -> vptrp r p)
+                       (requires fun _ -> True)
+                       (ensures fun _ _ h1 -> h1 (vptrp r p)  == reveal v)
+
+val elim_vptr (#a:Type) (#opened:inames) (r:ref a) (p: perm)
+  : SteelGhost (erased a) opened (vptrp r p) (fun v -> pts_to r p v)
+                       (requires fun _ -> True)
+                       (ensures fun h0 v _ -> reveal v == h0 (vptrp r p))
+
+
 /// Allocates a reference with value [x].
 val malloc (#a:Type0) (x:a) : Steel (ref a)
   emp (fun r -> vptr r)
