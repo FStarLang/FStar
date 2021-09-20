@@ -855,12 +855,6 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
                   check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
                 in
-                if g_typ.guard_f <> Trivial
-                then
-                BU.print3 "Checking for lemma implicit resolved to %s at type %s resulted in this guard: %s\n\n"
-                  (Print.term_to_string term)
-                  (Print.term_to_string ctx_uvar.ctx_uvar_typ)
-                  (Rel.guard_to_string env g_typ);
                 bind (proc_guard
                        (if ps.tac_verb_dbg
                         then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)

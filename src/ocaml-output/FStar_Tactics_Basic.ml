@@ -2712,65 +2712,40 @@ let (t_apply_lemma :
                                                                     check_lemma_implicits_solution
                                                                     env1 term
                                                                     ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                                    if
-                                                                    g_typ.FStar_TypeChecker_Common.guard_f
-                                                                    <>
-                                                                    FStar_TypeChecker_Common.Trivial
-                                                                    then
-                                                                    (let uu___21
+                                                                    let uu___20
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    term in
-                                                                    let uu___22
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                                    let uu___23
-                                                                    =
-                                                                    FStar_TypeChecker_Rel.guard_to_string
-                                                                    env1
-                                                                    g_typ in
-                                                                    FStar_Compiler_Util.print3
-                                                                    "Checking for lemma implicit resolved to %s at type %s resulted in this guard: %s\n\n"
-                                                                    uu___21
-                                                                    uu___22
-                                                                    uu___23)
-                                                                    else ();
-                                                                    (
                                                                     let uu___21
-                                                                    =
-                                                                    let uu___22
                                                                     =
                                                                     if
                                                                     ps.FStar_Tactics_Types.tac_verb_dbg
                                                                     then
-                                                                    let uu___23
+                                                                    let uu___22
                                                                     =
                                                                     FStar_Syntax_Print.ctx_uvar_to_string
                                                                     ctx_uvar in
-                                                                    let uu___24
+                                                                    let uu___23
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     term in
                                                                     FStar_Compiler_Util.format2
                                                                     "apply_lemma solved arg %s to %s\n"
+                                                                    uu___22
                                                                     uu___23
-                                                                    uu___24
                                                                     else
                                                                     "apply_lemma solved arg" in
                                                                     proc_guard
-                                                                    uu___22
+                                                                    uu___21
                                                                     env1
                                                                     g_typ
                                                                     (rangeof
                                                                     goal) in
                                                                     FStar_Tactics_Monad.bind
-                                                                    uu___21
+                                                                    uu___20
                                                                     (fun
-                                                                    uu___22
+                                                                    uu___21
                                                                     ->
                                                                     FStar_Tactics_Monad.ret
-                                                                    []))))))) in
+                                                                    [])))))) in
                                                                     FStar_Tactics_Monad.bind
                                                                     uu___13
                                                                     (fun
