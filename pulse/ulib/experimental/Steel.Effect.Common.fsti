@@ -309,9 +309,6 @@ let focus_rmem_refl (r:vprop) (h:rmem r)
 
 open FStar.Tactics
 
-let print_smt_goals (s:string) =
-  print ("Num smt goals (" ^ s ^ ") = " ^ (string_of_int (List.length (smt_goals ()))))
-
 /// State that all "atomic" subresources have the same selectors on both views.
 /// The predicate has the __steel_reduce__ attribute, ensuring that VC normalization
 /// will reduce it to a conjunction of equalities on atomic subresources
@@ -1575,7 +1572,6 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
 // Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
-  print_smt_goals "canon_l_r.1";
   let l1_raw, l2_raw, emp_frame, uvar_terms =
     try
       let res = equivalent_lists use_smt (flatten r1_raw) (flatten r2_raw) am in
@@ -1585,34 +1581,20 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
     | _ -> fail "uncaught exception in equivalent_lists"
   in
 
-  print_smt_goals "canon_l_r.2";
   let am = convert_am am in
-  print_smt_goals "canon_l_r.2.1";
   let r1 = quote_exp r1_raw in
-  print_smt_goals "canon_l_r.2.2";
   let r2 = quote_exp r2_raw in
-  print_smt_goals "canon_l_r.2.3";
   let l1 = quote_atoms l1_raw in
-  print_smt_goals "canon_l_r.2.4";
   let l2 = quote_atoms l2_raw in
-  print_smt_goals "canon_l_r.2.5";
-  dump "canon_l_r_2.5";
   change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `CE.EQ?.eq (`#eq)`
                mdenote (`#eq) (`#m) (`#am) (`#r2))));
-  dump "canon_l_r.3";
-  print_smt_goals "canon_l_r.3";
   apply_lemma (`normal_elim);
 
-  print_smt_goals "canon_l_r.4";
   apply (`monoid_reflect );
 
 
-  print_smt_goals "canon_l_r.5";
-  dump "canon_l_r.5";
   apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
-  dump "canon_l_r.6";
-  print_smt_goals "canon_l_r.6";
   let g = goals () in
   if List.Tot.Base.length g = 0 then
     // The application of equivalent_sorted seems to sometimes solve
@@ -1639,32 +1621,19 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
     or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
     or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
-    print_smt_goals "canon_l_r.7";
     match uvar_terms with
     | [] -> // Closing unneded prop uvar
             if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
-            print_smt_goals "canon_l_r.8";
-            if emp_frame then begin
-              apply_lemma (`identity_left (`#eq) (`#m));
-              print_smt_goals "canon_l_r.9"
-            end
-            else begin
-              apply_lemma (`(CE.EQ?.reflexivity (`#eq)));
-              print_smt_goals "canon_l_r.10"
-            end
+            if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+            else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
     | l -> if emp_frame then (
-             apply_lemma (`identity_left_smt (`#eq) (`#m));
-             print_smt_goals "canon_l_r.11"
+             apply_lemma (`identity_left_smt (`#eq) (`#m))
            ) else (
-             apply_lemma (`smt_reflexivity (`#eq));
-             print_smt_goals "canon_l_r.12"
+             apply_lemma (`smt_reflexivity (`#eq))
            );
            t_trefl true;
-           print_smt_goals "canon_l_r.13";
            close_equality_typ (cur_goal());
-           print_smt_goals "canon_l_r.14";
-           exact (`(FStar.Squash.return_squash (`#pr_bind)));
-           print_smt_goals "canon_l_r.15"
+           exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
 /// Wrapper around the tactic above
@@ -2027,21 +1996,6 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         fail (loc ^ " goal in unexpected position")
     | _ -> fail (loc ^ " unexpected goal")
 
-let try_solve (hd:term) (args:list argv) : Tac bool =
-  let apply (s:string) (f:list argv -> Tac bool) (args:list argv) : Tac bool =
-    let b = f args in
-    print_smt_goals s;
-    b in
-  if term_eq hd (`can_be_split) then apply "1" solve_can_be_split args
-  else if term_eq hd (`can_be_split_forall) then apply "2" solve_can_be_split_forall args
-  else if term_eq hd (`equiv_forall) then apply "3" solve_equiv_forall args
-  else if term_eq hd (`can_be_split_post) then apply "4" solve_can_be_split_post args
-  else if term_eq hd (`equiv) then apply "5" solve_equiv args
-  else if term_eq hd (`can_be_split_dep) then apply "6" solve_can_be_split_dep args
-  else if term_eq hd (`can_be_split_forall_dep) then apply "7" solve_can_be_split_forall_dep args
-  else false
-  
-
 /// Returns true if the goal has been solved, false if it should be delayed
 let solve_or_delay (g:goal) : Tac bool =
   // Beta-reduce the goal first if possible
@@ -2050,15 +2004,14 @@ let solve_or_delay (g:goal) : Tac bool =
   match f with
   | App _ t ->
       let hd, args = collect_app t in
-      try_solve hd args
-      // if term_eq hd (`can_be_split) then solve_can_be_split args
-      // else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
-      // else if term_eq hd (`equiv_forall) then solve_equiv_forall args
-      // else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
-      // else if term_eq hd (`equiv) then solve_equiv args
-      // else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
-      // else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
-      // else false
+      if term_eq hd (`can_be_split) then solve_can_be_split args
+      else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
+      else if term_eq hd (`equiv_forall) then solve_equiv_forall args
+      else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
+      else if term_eq hd (`equiv) then solve_equiv args
+      else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
+      else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
+      else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
     let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
@@ -2155,6 +2108,7 @@ let rec norm_return_pre (l:list goal) : Tac unit =
   | [] -> ()
   | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
 
+/// The entry point of the frame inference tactic:
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
 /// The `plugin` attribute ensures that this tactic is compiled, and executed natively for performance reasons
@@ -2162,7 +2116,6 @@ let rec norm_return_pre (l:list goal) : Tac unit =
 let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
-
   let slgs, loggs = filter_goals (goals()) in
 
   // We first solve the slprops
@@ -2196,7 +2149,6 @@ let init_resolve_tac () : Tac unit =
   set_goals loggs;
 
   resolve_tac_logical ()
-
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
