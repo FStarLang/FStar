@@ -40,7 +40,13 @@ let raise_pl
 let pts_to r v =
   r.r `mpts_to` (raise_pl r).conn_small_to_large.morph v
 
-let ref_focus r #q l = {p = r.p; pl = connection_compose r.pl l; r = r.r; q = q}
+let t_ref_focus
+  (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
+  (r: ref a p) (#q: pcm c) (l: connection p q)
+: Tot (ref a q)
+= {p = r.p; pl = connection_compose r.pl l; r = r.r; q = q}
+
+let ref_focus r l = t_ref_focus r l
 
 let ref_focus_id r = connection_compose_id_right r.pl
 
@@ -73,11 +79,17 @@ let ref_alloc #a p x =
 
 #pop-options
 
-let focus r l s x =
-  let r' = ref_focus r l in
+let gfocus r l s x =
   connection_compose_assoc (lower_conn r) r.pl l;
   A.change_equal_slprop
     (r `pts_to` s)
+    (ref_focus r l `pts_to` x)
+
+let focus r l s x =
+  let r' = t_ref_focus r l in
+  gfocus r l s x;
+  A.change_equal_slprop
+    (ref_focus r l `pts_to` x)
     (r' `pts_to` x);
   A.return r'
 

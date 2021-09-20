@@ -29,7 +29,7 @@ val pts_to
 val ref_focus
   (#a:Type) (#b:Type) (#c:Type) (#p: pcm b)
   (r: ref a p) (#q: pcm c) (l: connection p q)
-: ref a q
+: GTot (ref a q)
 
 val ref_focus_id
   (#a:Type) (#b:Type) (#p: pcm b)
@@ -56,6 +56,15 @@ val ref_alloc
     (ensures fun _ _ _ -> True)
 
 (** Take a pointer to a "substructure" of a reference. *)
+val gfocus (#inames: _) (#p: pcm 'b) (r: ref 'a p)
+  (#q: pcm 'c)
+  (l: connection p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
+: A.SteelGhost unit inames
+    (r `pts_to` s)
+    (fun _ -> ref_focus r l `pts_to` x)
+    (fun _ -> Ghost.reveal s == l.conn_small_to_large.morph x)
+    (fun _ _ _ -> True)
+
 val focus (#p: pcm 'b) (r: ref 'a p)
   (#q: pcm 'c)
   (l: connection p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
