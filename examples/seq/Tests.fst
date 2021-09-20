@@ -69,7 +69,7 @@ private let test2 () : Lemma (True) =
   assert ((seq_update s5 3 7) $@ 3 == 7);
   assert (seq_length (seq_slice s5 1 3) == 2)
 
-(** test3 establishes that appending a take to a drop with the same index produces the same sequence **)
+(** test3 establishes that appending a take and a drop with the same index produces the same sequence **)
 private let test3 (s: seq int) (n: nat{n <= seq_length s})
   : Lemma (s $== ((seq_take s n) $+ (seq_drop s n))) =
   ()
