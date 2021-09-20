@@ -108,14 +108,14 @@ let split r xy x y =
     (r `pts_to` y)
 
 let mgather
-  (#a:Type) (#p:P.pcm a)
+  (#inames: _) (#a:Type) (#p:P.pcm a)
   (r:Steel.Memory.ref a p) (v0:Ghost.erased a) (v1:Ghost.erased a)
-: SteelT (_:unit{P.composable p v0 v1})
+: A.SteelGhostT (_:unit{P.composable p v0 v1}) inames
     (mpts_to r v0 `star` mpts_to r v1)
     (fun _ -> mpts_to r (P.op p v0 v1))
 = Steel.PCMReference.gather r v0 v1
 
-let gather #a #b #p r x y =
+let gather #inames #a #b #p r x y =
   let c = raise_pl r in
   let x2 = Ghost.hide (c.conn_small_to_large.morph x) in
   let y2 = Ghost.hide (c.conn_small_to_large.morph y) in

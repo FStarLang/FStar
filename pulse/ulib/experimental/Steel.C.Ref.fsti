@@ -80,16 +80,16 @@ val unfocus (#opened:M.inames)
     (ensures fun _ _ _ -> True)
 
 (** Split the permissions on a reference into two halves. *)
-val split (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (xy x y: Ghost.erased b)
-: Steel unit
+val split (#inames: _) (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (xy x y: Ghost.erased b)
+: A.SteelGhost unit inames
     (r `pts_to` xy)
     (fun _ -> (r `pts_to` x) `star` (r `pts_to` y))
     (fun _ -> composable p x y /\ xy == Ghost.hide (op p x y))
     (fun _ _ _ -> True)
 
 (** Inverse of split. *)
-val gather (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (x y: Ghost.erased b)
-: SteelT (_:unit{composable p x y})
+val gather (#inames: _) (#a:Type) (#b:Type) (#p: pcm b) (r: ref a p) (x y: Ghost.erased b)
+: A.SteelGhostT (_:unit{composable p x y}) inames
     ((r `pts_to` x) `star` (r `pts_to` y))
     (fun _ -> r `pts_to` op p x y)
 
