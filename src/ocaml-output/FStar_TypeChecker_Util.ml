@@ -4143,40 +4143,40 @@ let rec (check_erased :
                 -> Yes a
             | (FStar_Syntax_Syntax.Tm_uvar uu___2, uu___3) -> Maybe
             | (FStar_Syntax_Syntax.Tm_unknown, uu___2) -> Maybe
-            | (FStar_Syntax_Syntax.Tm_match (uu___2, uu___3, branches),
-               uu___4) ->
+            | (FStar_Syntax_Syntax.Tm_match
+               (uu___2, uu___3, branches, uu___4), uu___5) ->
                 FStar_Compiler_Effect.op_Bar_Greater branches
                   (FStar_Compiler_List.fold_left
                      (fun acc ->
                         fun br ->
                           match acc with
-                          | Yes uu___5 -> Maybe
+                          | Yes uu___6 -> Maybe
                           | Maybe -> Maybe
                           | No ->
-                              let uu___5 = FStar_Syntax_Subst.open_branch br in
-                              (match uu___5 with
-                               | (uu___6, uu___7, br_body) ->
-                                   let uu___8 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
+                              let uu___6 = FStar_Syntax_Subst.open_branch br in
+                              (match uu___6 with
+                               | (uu___7, uu___8, br_body) ->
+                                   let uu___9 =
+                                     let uu___10 =
+                                       let uu___11 =
+                                         let uu___12 =
+                                           let uu___13 =
                                              FStar_Compiler_Effect.op_Bar_Greater
                                                br_body
                                                FStar_Syntax_Free.names in
                                            FStar_Compiler_Effect.op_Bar_Greater
-                                             uu___12
+                                             uu___13
                                              FStar_Compiler_Util.set_elements in
                                          FStar_Compiler_Effect.op_Bar_Greater
-                                           uu___11
+                                           uu___12
                                            (FStar_TypeChecker_Env.push_bvs
                                               env) in
-                                       check_erased uu___10 in
+                                       check_erased uu___11 in
                                      FStar_Compiler_Effect.op_Bar_Greater
-                                       br_body uu___9 in
-                                   (match uu___8 with
+                                       br_body uu___10 in
+                                   (match uu___9 with
                                     | No -> No
-                                    | uu___9 -> Maybe))) No)
+                                    | uu___10 -> Maybe))) No)
             | uu___2 -> No in
           r
 let (maybe_coerce_lc :
