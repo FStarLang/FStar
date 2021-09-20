@@ -715,6 +715,13 @@ private let drop_commutes_with_build_lemma (ty: Type) (s: seq ty) (v: ty) (n: na
   assert (seq_length (seq_build s v) = 1 + seq_length s); // triggers build_increments_length_lemma
   drop_commutes_with_build_helper s v n
 
+/// We prove, and make ambient, the definition of `seq_rank`.
+
+private let seq_rank_def_lemma (ty: Type) (v: ty)
+  : Lemma (seq_rank v == v)
+  [SMTPat (seq_rank v)] =
+  reveal_seq_rank ty
+
 /// We prove, and make ambient, the following Dafny axiom with `element_ranks_less_lemma`.
 ///
 /// axiom (forall s: Seq Box, i: int ::
@@ -724,9 +731,7 @@ private let drop_commutes_with_build_lemma (ty: Type) (s: seq ty) (v: ty) (n: na
 private let element_ranks_less_lemma (ty: Type) (s: seq ty) (i: nat)
   : Lemma (requires i < seq_length s)
           (ensures  seq_rank (seq_index s i) << seq_rank s)
-          [SMTPat (seq_index s i); SMTPat (seq_rank s)] =
-  reveal_seq_rank ty;
-  reveal_seq_rank (seq ty);
+          [SMTPat (seq_rank (seq_index s i))] =
   reveal_seq_index ty;
   reveal_seq_contains ty;
   assert (seq_contains s (seq_index s i));
@@ -750,7 +755,6 @@ private let drop_ranks_less_lemma (ty: Type) (s: seq ty) (i: nat)
           (ensures  seq_rank (seq_drop s i) << seq_rank s)
           [SMTPat (seq_rank (seq_drop s i))] =
   reveal_seq_drop ty;
-  reveal_seq_rank (seq ty);
   reveal_seq_length ty;
   drop_ranks_less_helper ty s i
 

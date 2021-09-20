@@ -109,7 +109,8 @@ private let test6 () : Lemma (True) =
             n <= seq_length s ==> seq_length (seq_take s n) = n);
   assert (forall (ty: Type) (s: seq ty) (n: nat). {:pattern seq_length (seq_drop s n)}
             n <= seq_length s ==> seq_length (seq_drop s n) = seq_length s - n);
-  assert (forall (ty: Type) (s: seq ty) (i: nat).{:pattern seq_index s i; seq_rank s}
+  assert (forall (ty: Type) (v: ty).{:pattern seq_rank v} seq_rank v == v);
+  assert (forall (ty: Type) (s: seq ty) (i: nat).{:pattern seq_rank (seq_index s i)}
             i < seq_length s ==> seq_rank (seq_index s i) << seq_rank s);
   assert (forall (ty: Type) (s: seq ty) (i: nat).{:pattern seq_rank (seq_drop s i)}
             0 < i && i <= seq_length s ==> seq_rank (seq_drop s i) << seq_rank s);

@@ -950,6 +950,15 @@ private let drop_commutes_with_build_lemma ()
       drop_commutes_with_build_helper s v n
     )
 
+/// We prove, and make ambient, the definition of `seq_rank`.
+
+private let seq_rank_def_fact =
+  forall (ty: Type) (v: ty).{:pattern seq_rank v} seq_rank v == v
+
+private let seq_rank_def_lemma () : Lemma (seq_rank_def_fact) =
+  introduce forall (ty: Type) (v: ty). seq_rank v == v
+  with reveal_seq_rank ty
+
 /// We represent the following Dafny axiom with `element_ranks_less_fact`.
 ///
 /// axiom (forall s: Seq Box, i: int ::
@@ -957,7 +966,7 @@ private let drop_commutes_with_build_lemma ()
 ///         0 <= i && i < Seq#Length(s) ==> DtRank($Unbox(Seq#Index(s, i)): DatatypeType) < Seq#Rank(s) );
 
 private let element_ranks_less_fact =
-  forall (ty: Type) (s: seq ty) (i: nat).{:pattern seq_index s i; seq_rank s}
+  forall (ty: Type) (s: seq ty) (i: nat).{:pattern seq_rank (seq_index s i)}
     i < seq_length s ==> seq_rank (seq_index s i) << seq_rank s
 
 private let element_ranks_less_lemma () : Lemma (element_ranks_less_fact) =
@@ -1155,6 +1164,7 @@ private let all_dafny_seq_facts =
   /\ drop_commutes_with_in_range_update_fact ()
   /\ drop_ignores_out_of_range_update_fact ()
   /\ drop_commutes_with_build_fact ()
+  /\ seq_rank_def_fact
   /\ element_ranks_less_fact
   /\ drop_ranks_less_fact
   /\ take_ranks_less_fact
@@ -1193,6 +1203,7 @@ let all_dafny_seq_facts_lemma () : Lemma (all_dafny_seq_facts) =
   drop_commutes_with_in_range_update_lemma ();
   drop_ignores_out_of_range_update_lemma ();
   drop_commutes_with_build_lemma ();
+  seq_rank_def_lemma ();
   element_ranks_less_lemma ();
   drop_ranks_less_lemma ();
   take_ranks_less_lemma ();
