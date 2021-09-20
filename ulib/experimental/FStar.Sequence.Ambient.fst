@@ -42,7 +42,7 @@ open FStar.Sequence.Base
 let all_dafny_seq_facts_ambient : (squash all_dafny_seq_facts) =
   all_dafny_seq_facts_lemma ()
 
-/// For convenience, we define `seq_slice` to represent Dafny sequence slices.
+/// For convenience, we define `slice` to represent Dafny sequence slices.
 
-let seq_slice (#ty: Type) (s: seq ty) (i: nat) (j: nat{j >= i && j <= seq_length s}) : seq ty =
-  seq_drop (seq_take s j) i
+let slice (#ty: Type) (s: seq ty) (i: nat) (j: nat{j >= i && j <= length s}) : seq ty =
+  drop (take s j) i
