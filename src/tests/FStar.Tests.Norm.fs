@@ -58,7 +58,7 @@ open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =
     let branches = branches |> List.map U.branch in
-    mk (Tm_match(h, None, branches)) dummyRange
+    mk (Tm_match(h, None, branches, None)) dummyRange
 let pred_nat s  =
     let zbranch = pat (Pat_cons(znat_l, [])),
                   None,

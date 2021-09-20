@@ -855,6 +855,12 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
                   check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
                 in
+                if g_typ.guard_f <> Trivial
+                then
+                BU.print3 "Checking for lemma implicit resolved to %s at type %s resulted in this guard: %s\n\n"
+                  (Print.term_to_string term)
+                  (Print.term_to_string ctx_uvar.ctx_uvar_typ)
+                  (Rel.guard_to_string env g_typ);
                 bind (proc_guard
                        (if ps.tac_verb_dbg
                         then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)
@@ -1470,7 +1476,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, None, brs)) s_tm.pos in
+      let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos)))))
@@ -1586,7 +1592,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, ret_opt, brs) ->
+    | Tm_match (t, ret_opt, brs, _) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -1663,7 +1669,7 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
+        ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
         ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
@@ -1697,9 +1703,9 @@ let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" 
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, asc_opt, brs) ->
+    | Tm_match (e, asc_opt, brs, lopt) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, asc_opt, brs')) l.pos in
+      let l' = mk (Tm_match (e, asc_opt, brs', lopt)) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->

@@ -209,7 +209,7 @@ let rec inspect_ln (t:term) : term_view =
         | Inl bv -> Tv_Let (true, lb.lbattrs, bv, lb.lbdef, t2)
         end
 
-    | Tm_match (t, ret_opt, brs) ->
+    | Tm_match (t, ret_opt, brs, _) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -368,7 +368,7 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
+        S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
         S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
