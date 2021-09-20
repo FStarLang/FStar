@@ -38,17 +38,19 @@ let alloc x = rewrite_slprop emp (to_vprop Mem.emp) (fun _ -> reveal_emp ());
 
 let free r x = as_action (free_action FStar.Set.empty r x)
 
-val split' (#a:Type)
+val split'
+          (#inames: _)
+          (#a:Type)
           (#p:pcm a)
           (r:ref a p)
           (v0:erased a)
           (v1:erased a{composable p v0 v1})
-  : SteelT unit (pts_to r (op p v0 v1))
+  : SteelGhostT unit inames (pts_to r (op p v0 v1))
                 (fun _ -> to_vprop Mem.(pts_to r v0 `star` pts_to r v1))
 
-let split' #a #p r v0 v1 = as_action (split_action FStar.Set.empty r v0 v1)
+let split' #inames #a #p r v0 v1 = as_atomic_action_ghost (split_action inames r v0 v1)
 
-let split #a #p r v v0 v1 =
+let split #_ #a #p r v v0 v1 =
   let _:squash (composable p v0 v1) = () in
   rewrite_slprop (pts_to r v) (pts_to r (op p v0 v1)) (fun _ -> ());
   split' r v0 v1;
@@ -56,16 +58,18 @@ let split #a #p r v v0 v1 =
                  (pts_to r v0 `star` pts_to r v1)
                  (fun _ -> ())
 
-val gather' (#a:Type)
+val gather'
+           (#inames: _)
+           (#a:Type)
            (#p:FStar.PCM.pcm a)
            (r:ref a p)
            (v0:erased a)
            (v1:erased a)
-  : SteelT (_:unit{composable p v0 v1})
+  : SteelGhostT (_:unit{composable p v0 v1}) inames
            (to_vprop Mem.(pts_to r v0 `star` pts_to r v1))
            (fun _ -> pts_to r (op p v0 v1))
 
-let gather' r v0 v1 = as_action (gather_action FStar.Set.empty r v0 v1)
+let gather' #inames r v0 v1 = as_atomic_action_ghost (gather_action inames r v0 v1)
 
 let gather r v0 v1 =
   rewrite_slprop (pts_to r v0 `star` pts_to r v1)
@@ -73,15 +77,15 @@ let gather r v0 v1 =
                  (fun _ -> ());
   gather' r v0 v1
 
-val witness' (#a:Type) (#pcm:pcm a)
+val witness' (#inames: _) (#a:Type) (#pcm:pcm a)
             (r:ref a pcm)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelT unit (pts_to r v)
+  : SteelGhostT unit inames (pts_to r v)
                 (fun _ -> to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
 
-let witness' r fact v _ = as_action (Steel.Memory.witness FStar.Set.empty r fact v ())
+let witness' #inames r fact v _ = as_atomic_action_ghost (Steel.Memory.witness inames r fact v ())
 
 let witness r fact v s =
   witness' r fact v s;
@@ -90,16 +94,16 @@ let witness r fact v s =
                  (fun _ -> ());
   elim_pure (witnessed r fact)
 
-val recall' (#a:Type u#1) (#pcm:pcm a) (fact:property a)
+val recall' (#inames: _) (#a:Type u#1) (#pcm:pcm a) (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelT (v1:erased a{compatible pcm v v1})
+  : SteelGhostT (v1:erased a{compatible pcm v v1}) inames
            (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))
            (fun v1 -> to_vprop Mem.(pts_to r v `star` pure (fact v1)))
 
-let recall' #a #pcm fact r v = as_action (Steel.Memory.recall #a #pcm #fact FStar.Set.empty r v)
+let recall' #inames #a #pcm fact r v = as_atomic_action_ghost (Steel.Memory.recall #a #pcm #fact inames r v)
 
-let recall #a #pcm fact r v =
+let recall #inames #a #pcm fact r v =
   intro_pure (witnessed r fact);
   rewrite_slprop (pts_to r v `star` pure (witnessed r fact))
                  (to_vprop Mem.(pts_to r v `star` pure (witnessed r fact)))

@@ -507,7 +507,8 @@ let rec sortWith_permutation #a f l = match l with
        append_count_forall (sortWith f lo) (pivot::sortWith f hi)
 
 (** [sorted f l] holds if, and only if, any two consecutive elements
-[x], [y] of [l] are such that [f x y] holds. *)
+    [x], [y] of [l] are such that [f x y] holds
+ *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
@@ -876,79 +877,79 @@ let index_extensionality
   (ensures (l1 == l2))
 = index_extensionality_aux l1 l2 () (fun i -> ())
 
-(** Properties of [strict_prefix_of] *)
+(** Properties of [strict_suffix_of] *)
 
-let rec strict_prefix_of_nil (#a: Type) (x: a) (l: list a)
+let rec strict_suffix_of_nil (#a: Type) (x: a) (l: list a)
 : Lemma
   (requires True)
-  (ensures (strict_prefix_of [] (x::l)))
+  (ensures (strict_suffix_of [] (x::l)))
   (decreases l)
 = match l with
   | [] -> ()
-  | a' :: q -> strict_prefix_of_nil a' q
+  | a' :: q -> strict_suffix_of_nil a' q
 
-let strict_prefix_of_or_eq_nil (#a: Type) (l: list a)
+let strict_suffix_of_or_eq_nil (#a: Type) (l: list a)
 : Lemma
-  (ensures (strict_prefix_of [] l \/ l == []))
+  (ensures (strict_suffix_of [] l \/ l == []))
 = match l with
   | [] -> ()
-  | a :: q -> strict_prefix_of_nil a q
+  | a :: q -> strict_suffix_of_nil a q
 
-let strict_prefix_of_cons (#a: Type) (x: a) (l: list a) :
+let strict_suffix_of_cons (#a: Type) (x: a) (l: list a) :
   Lemma
-  (ensures (strict_prefix_of l (x::l)))
+  (ensures (strict_suffix_of l (x::l)))
 = ()
 
-let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
+let rec strict_suffix_of_trans (#a: Type) (l1 l2 l3: list a)
 : Lemma
   (requires True)
-  (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
+  (ensures ((strict_suffix_of l1 l2 /\ strict_suffix_of l2 l3) ==> strict_suffix_of l1 l3))
   (decreases l3)
-  [SMTPat (strict_prefix_of l1 l2); SMTPat (strict_prefix_of l2 l3)]
+  [SMTPat (strict_suffix_of l1 l2); SMTPat (strict_suffix_of l2 l3)]
 = match l3 with
   | [] -> ()
-  | _ :: q -> strict_prefix_of_trans l1 l2 q
+  | _ :: q -> strict_suffix_of_trans l1 l2 q
 
-let rec strict_prefix_of_correct (#a) (l1 l2: list a)
+let rec strict_suffix_of_correct (#a) (l1 l2: list a)
 : Lemma
   (requires True)
-  (ensures (strict_prefix_of l1 l2 ==> l1 << l2))
+  (ensures (strict_suffix_of l1 l2 ==> l1 << l2))
   (decreases l2)
 = match l2 with
   | [] -> ()
   | _ :: q ->
-    strict_prefix_of_correct l1 q
+    strict_suffix_of_correct l1 q
 
-let rec map_strict_prefix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
+let rec map_strict_suffix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
  Lemma
  (requires True)
- (ensures (strict_prefix_of l1 l2 ==> strict_prefix_of (map f l1) (map f l2)))
+ (ensures (strict_suffix_of l1 l2 ==> strict_suffix_of (map f l1) (map f l2)))
  (decreases l2)
 = match l2 with
   | [] -> ()
   | a::q ->
-    map_strict_prefix_of f l1 q
+    map_strict_suffix_of f l1 q
 
-let rec mem_strict_prefix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
+let rec mem_strict_suffix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
 : Lemma
   (requires True)
-  (ensures ((mem m l1 /\ strict_prefix_of l1 l2) ==> mem m l2))
+  (ensures ((mem m l1 /\ strict_suffix_of l1 l2) ==> mem m l2))
 = match l2 with
   | [] -> ()
   | a :: q ->
-    mem_strict_prefix_of l1 m q
+    mem_strict_suffix_of l1 m q
 
-let rec strict_prefix_of_exists_append
+let rec strict_suffix_of_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures (strict_prefix_of l1 l2 ==> (exists l3 . l2 == append l3 l1)))
+  (ensures (strict_suffix_of l1 l2 ==> (exists l3 . l2 == append l3 l1)))
 = match l2 with
   | [] -> ()
   | a :: q ->
     FStar.Classical.or_elim
       #(l1 == q)
-      #(strict_prefix_of l1 q)
+      #(strict_suffix_of l1 q)
       #(fun _ -> exists l3 . l2 == append l3 l1)
       (fun _ ->
 	FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
@@ -957,22 +958,22 @@ let rec strict_prefix_of_exists_append
 	  (exists l3 . l2 == append l3 l1)
 	  #_
 	  #(fun l3 -> q == append l3 l1)
-	  (strict_prefix_of_exists_append l1 q)
+	  (strict_suffix_of_exists_append l1 q)
 	  (fun l3 ->
 	     FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
 	     ))
 
-let strict_prefix_of_or_eq_exists_append
+let strict_suffix_of_or_eq_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures ((strict_prefix_of l1 l2 \/ l1 == l2) ==> (exists l3 . l2 == append l3 l1)))
+  (ensures ((strict_suffix_of l1 l2 \/ l1 == l2) ==> (exists l3 . l2 == append l3 l1)))
 = FStar.Classical.or_elim
-    #(strict_prefix_of l1 l2)
+    #(strict_suffix_of l1 l2)
     #(l1 == l2)
     #(fun _ -> exists l3 . l2 == append l3 l1)
     (fun _ ->
-      strict_prefix_of_exists_append l1 l2)
+      strict_suffix_of_exists_append l1 l2)
     (fun _ ->
 	FStar.Classical.exists_intro
 	  (fun l3 -> l2 == append l3 l1)

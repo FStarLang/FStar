@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "ad16194a6f99daf3934788c33b34097e"
+      "88c06be52ba1ca4e4636ca97fa099d3b"
     ],
     [
       "NewCanon.test1",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "f4942f9d4c54b67adc53d779b0411dee"
+      "b1693234a0dc5fc7e9f0d73c6b13081b"
     ],
     [
       "NewCanon.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b6d1a6474b778976be63e02e0a5e8128"
+      "20bb4ed4d12195bb787f4f6ea9ef22a7"
     ],
     [
       "NewCanon.test3",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "09abcc78753770cac494ac6402b6fbe8"
+      "1c2140f3a4be4626a68833ade16c7f16"
     ],
     [
       "NewCanon.test4",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "b0bcbedb08e6b1fa7523e4fdefb51258"
+      "0ab5016174e539f15f7cbbd7ddfe2010"
     ],
     [
       "NewCanon.test5",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3d8d5e66dc927ce12e861c010b6789f6"
+      "3270ca57657f39036d0b0541e5af9b36"
     ],
     [
       "NewCanon.test6",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "976e8d1b9d9d3bcc1060e7e968d92f31"
+      "4a61f54b8cbeef4045e9d472a4815136"
     ],
     [
       "NewCanon.test7",
@@ -71,7 +71,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "ef3987f71d07acbc3ef79f7265730b34"
+      "819a15dcc614d3b12d909095c060a618"
     ],
     [
       "NewCanon.test8",
@@ -80,7 +80,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "8fc739af5375c3e71a258c4145701dbb"
+      "ca8b1dd9d24358f101f3c148d32f24e4"
     ],
     [
       "NewCanon.test_dep_frame",
@@ -89,7 +89,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "217e1ea124ce110593c838c77bda25fe"
+      "e5733604d1e4b11002c765e92f1d568c"
     ],
     [
       "NewCanon.read_write",
@@ -98,7 +98,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "c2f4ad9ba712dea0a3214d9504615974"
+      "816617686d104e828277bf0a8b05b590"
     ],
     [
       "NewCanon.swap",
@@ -107,7 +107,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "5757d23c34492b2c1a7359882bfcd6e4"
+      "f18b64f949e33885e1eeaa6e21e9fc12"
     ],
     [
       "NewCanon.swap2",
@@ -122,7 +122,7 @@
         "true_interp"
       ],
       0,
-      "0fd82494b0bbd0b2776b26c9d34e7e9a"
+      "51a1b98034041674cb8350f4267e293e"
     ],
     [
       "NewCanon.test21",
@@ -134,7 +134,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "657ba21a84630f07c630cc524db55323"
+      "55e75db64826f7b217bff66fe0280bb5"
     ],
     [
       "NewCanon.test23",
@@ -143,7 +143,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "30c8e95366c7a13653adb1f12a98d84c"
+      "1d9c9b3c191f72e6a37253189d2d7c5b"
     ],
     [
       "NewCanon.test24",
@@ -155,7 +155,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "9032c97472608caa4b45f1ab1d243083"
+      "6091816a3d6b0f60a01bc94e7d2e1f87"
     ],
     [
       "NewCanon.test25",
@@ -167,7 +167,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "6e08198cf2d5bc944f4164518db708b9"
+      "5a3c0c5a9a5b2dd86493287fad039f7e"
     ],
     [
       "NewCanon.test26",
@@ -176,7 +176,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3306272e80e82ea040065cf3a63c37e3"
+      "99507460fe1fc0bd95d35a8b1bb4ae1c"
     ],
     [
       "NewCanon.test27",
@@ -188,7 +188,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "680c3ff6c1d8d5522a0285f9969df774"
+      "d7ed637dbcece7204c066722469d7c5d"
     ]
   ]
 ]

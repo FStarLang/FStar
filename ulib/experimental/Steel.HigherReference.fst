@@ -212,24 +212,23 @@ let free (#a:Type) (#v:erased a) (r:ref a)
     RP.free r v_old;
     drop (RP.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
 
-(* move these to Mem *)
-#push-options "--z3rlimit 20 --retry 2"
-let mem_share_atomic_raw (#a:Type) (#uses:_) (#p:perm{perm_ok p}) (r:ref a)
-                         (v0:erased a)
-  : action_except unit uses (pts_to_raw_sl r p v0)
-                            (fun _ -> pts_to_raw_sl r (half_perm p) v0 `Mem.star` pts_to_raw_sl r (half_perm p) v0)
-  = let v = Ghost.hide (Some (Ghost.reveal v0, half_perm p)) in
-    Mem.split_action uses r v v
-#pop-options
-
 let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
   : SteelGhostT unit uses
                 (pts_to_raw r p v0)
                 (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
-  = as_atomic_action_ghost (mem_share_atomic_raw r v0);
-    rewrite_slprop (to_vprop (pts_to_raw_sl r (half_perm p) v0 `Mem.star` pts_to_raw_sl r (half_perm p) v0))
-                   (pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
-                   (fun _ -> ())
+  = rewrite_slprop
+      (pts_to_raw r p v0)
+      (RP.pts_to r _)
+      (fun _ -> ());
+    RP.split r (Some (Ghost.reveal v0, p)) (Some (Ghost.reveal v0, half_perm p)) (Some (Ghost.reveal v0, half_perm p));
+    rewrite_slprop
+      (RP.pts_to r _)
+      (pts_to_raw r (half_perm p) v0)
+      (fun _ -> ());
+    rewrite_slprop
+      (RP.pts_to r _)
+      (pts_to_raw r (half_perm p) v0)
+      (fun _ -> ())
 
 let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
   : SteelGhostT unit uses
@@ -245,22 +244,24 @@ let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
     intro_pts_to (half_perm p) r;
     intro_pts_to (half_perm p) r
 
-let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
-  : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
-                  (pts_to_raw_sl r p0 v0 `Mem.star` pts_to_raw_sl r p1 v1)
-                  (fun _ -> pts_to_raw_sl r (sum_perm p0 p1) v0)
-  = let v0 = Ghost.hide (Some (Ghost.reveal v0, p0)) in
-    let v1 = Ghost.hide (Some (Ghost.reveal v1, p1)) in
-    Mem.gather_action uses r v0 v1
-
 let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : SteelGhostT (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
                  (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
                  (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
-  = rewrite_slprop (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
-      (to_vprop (pts_to_raw_sl r p0 v0 `Mem.star` pts_to_raw_sl r p1 v1))
+  = 
+    rewrite_slprop
+      (pts_to_raw r p0 v0)
+      (RP.pts_to r (Ghost.reveal (Some (Ghost.reveal v0, p0))))
       (fun _ -> ());
-    as_atomic_action_ghost (mem_gather_atomic_raw r v0 v1)
+    rewrite_slprop
+      (pts_to_raw r p1 v1)
+      (RP.pts_to r (Ghost.reveal (Some (Ghost.reveal v1, p1))))
+      (fun _ -> ());
+    RP.gather r (Some (Ghost.reveal v0, p0)) (Some (Ghost.reveal v1, p1));
+    rewrite_slprop
+      (RP.pts_to r _)
+      (pts_to_raw r (sum_perm p0 p1) v0)
+      (fun _ -> ())
 
 let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   = let v0_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v0, p0)) in

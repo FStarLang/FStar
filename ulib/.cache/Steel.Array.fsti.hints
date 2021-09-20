@@ -1,5 +1,5 @@
 [
-  " {<ï/¶\u0012¡\u0018~\u007f×\u0012þî",
+  "/»\tÜNŠ0Ž÷ÛÐ‚\u0019Œ\u0003p",
   [
     [
       "Steel.Array.asel",
@@ -16,7 +16,37 @@
         "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a7a402d5b945c93ca0b1ed6bb869425d"
+      "af7f42e21822046b520b72a69f3acda6"
+    ],
+    [
+      "Steel.Array.intro_varray_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.lseq",
+        "equation_Steel.Array.contents",
+        "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
+      ],
+      0,
+      "8cdf33ae0c48819e006d96b3ffab2c03"
+    ],
+    [
+      "Steel.Array.elim_varray_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.lseq", "equation_Prims.nat",
+        "equation_Steel.Array.contents", "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
+        "typing_Steel.Array.length"
+      ],
+      0,
+      "ea0f35b785823cb936fe20bb845c0e56"
     ],
     [
       "Steel.Array.malloc",
@@ -30,7 +60,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "47741a7f03d5d92f36f8077fc66823d5"
+      "f587701230888dc57f647c64d130132b"
     ],
     [
       "Steel.Array.index",
@@ -47,7 +77,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "22ed4c466d62e3c1035d5a40fdf1b150"
+      "67c10a4639601df5c01b5ecab4d8d2a3"
     ],
     [
       "Steel.Array.upd",
@@ -64,7 +94,16 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "851d0be9d92be0e11fc463e4ad2b809d"
+      "b7adb5882e76b55f187255557138160c"
+    ],
+    [
+      "Steel.Array.memcpy",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "69c5b73e0a701c6af63ec4033b4efae4"
     ]
   ]
 ]
