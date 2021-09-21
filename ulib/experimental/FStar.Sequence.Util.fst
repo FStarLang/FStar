@@ -81,3 +81,13 @@ let rec lemma_append_count_aux (#a:eqtype) (x:a) (lo hi:seq a)
       lemma_append_count_aux x (tail lo) hi;
       assert (append (tail lo) hi `equal` tail (append lo hi))
     )
+
+
+/// Folding a function over a sequence, starting from its
+/// last element, hence fold_back
+let rec fold_back (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else let last  = s $@ (length s - 1) in
+         let s = take s (length s - 1) in
+         f last (fold_back f s init)

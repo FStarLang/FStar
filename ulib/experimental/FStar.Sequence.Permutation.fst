@@ -165,65 +165,65 @@ let elim_monoid_laws #a (m:CM.cm a)
 
 
 #push-options "--fuel 1 --ifuel 0"
-let rec foldm_snoc_append #a (m:CM.cm a) (s1 s2: seq a)
+let rec foldm_back_append #a (m:CM.cm a) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == m.mult (foldm_snoc m s1) (foldm_snoc m s2))
+    (ensures foldm_back m (append s1 s2) == m.mult (foldm_back m s1) (foldm_back m s2))
     (decreases (S.length s2))
   = elim_monoid_laws m;
     if S.length s2 = 0
     then (
       assert (S.append s1 s2 `S.equal` s1);
-      assert (foldm_snoc m s2 == m.unit)
+      assert (foldm_back m s2 == m.unit)
     )
     else (
       let s2', last = un_build s2 in
       calc (==)
       {
-        foldm_snoc m (append s1 s2);
+        foldm_back m (append s1 s2);
         (==) { assert (S.equal (append s1 s2)
                                  (S.build (append s1 s2') last)) }
-        foldm_snoc m (S.build (append s1 s2') last);
+        foldm_back m (S.build (append s1 s2') last);
         (==) { assert (S.equal (fst (un_build (append s1 s2))) (append s1 s2')) }
-        m.mult last (foldm_snoc m (append s1 s2'));
-        (==) { foldm_snoc_append m s1 s2' }
-        m.mult last (m.mult (foldm_snoc m s1) (foldm_snoc m s2'));
+        m.mult last (foldm_back m (append s1 s2'));
+        (==) { foldm_back_append m s1 s2' }
+        m.mult last (m.mult (foldm_back m s1) (foldm_back m s2'));
         (==) { }
-        m.mult (foldm_snoc m s1) (m.mult last (foldm_snoc m s2'));
+        m.mult (foldm_back m s1) (m.mult last (foldm_back m s2'));
         (==) { }
-        m.mult (foldm_snoc m s1) (foldm_snoc m s2);
+        m.mult (foldm_back m s1) (foldm_back m s2);
       }
     )
 
-let foldm_snoc_sym #a (m:CM.cm a) (s1 s2: seq a)
+let foldm_back_sym #a (m:CM.cm a) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == foldm_snoc m (append s2 s1))
+    (ensures foldm_back m (append s1 s2) == foldm_back m (append s2 s1))
   = elim_monoid_laws m;
-    foldm_snoc_append m s1 s2;
-    foldm_snoc_append m s2 s1
+    foldm_back_append m s1 s2;
+    foldm_back_append m s2 s1
 
 #push-options "--fuel 2"
-let foldm_snoc_singleton (#a:_) (m:CM.cm a) (x:a)
-  : Lemma (foldm_snoc m (singleton x) == x)
+let foldm_back_singleton (#a:_) (m:CM.cm a) (x:a)
+  : Lemma (foldm_back m (singleton x) == x)
   = elim_monoid_laws m
 #pop-options
 
 #push-options "--fuel 0"
-let foldm_snoc3 #a (m:CM.cm a) (s1:seq a) (x:a) (s2:seq a)
-  : Lemma (foldm_snoc m (S.append s1 (cons x s2)) ==
-           m.mult x (foldm_snoc m (S.append s1 s2)))
+let foldm_back3 #a (m:CM.cm a) (s1:seq a) (x:a) (s2:seq a)
+  : Lemma (foldm_back m (S.append s1 (cons x s2)) ==
+           m.mult x (foldm_back m (S.append s1 s2)))
   = calc (==)
     {
-      foldm_snoc m (S.append s1 (cons x s2));
-      (==) { foldm_snoc_append m s1 (cons x s2) }
-      m.mult (foldm_snoc m s1) (foldm_snoc m (cons x s2));
-      (==) { foldm_snoc_append m (singleton x) s2 }
-      m.mult (foldm_snoc m s1) (m.mult (foldm_snoc m (singleton x)) (foldm_snoc m s2));
-      (==) { foldm_snoc_singleton m x }
-      m.mult (foldm_snoc m s1) (m.mult x (foldm_snoc m s2));
+      foldm_back m (S.append s1 (cons x s2));
+      (==) { foldm_back_append m s1 (cons x s2) }
+      m.mult (foldm_back m s1) (foldm_back m (cons x s2));
+      (==) { foldm_back_append m (singleton x) s2 }
+      m.mult (foldm_back m s1) (m.mult (foldm_back m (singleton x)) (foldm_back m s2));
+      (==) { foldm_back_singleton m x }
+      m.mult (foldm_back m s1) (m.mult x (foldm_back m s2));
       (==) { elim_monoid_laws m }
-      m.mult x (m.mult (foldm_snoc m s1) (foldm_snoc m s2));
-      (==) { foldm_snoc_append m s1 s2 }
-      m.mult x (foldm_snoc m (S.append s1 s2));
+      m.mult x (m.mult (foldm_back m s1) (foldm_back m s2));
+      (==) { foldm_back_append m s1 s2 }
+      m.mult x (foldm_back m (S.append s1 s2));
     }
 #pop-options
 
@@ -269,9 +269,9 @@ let seqperm_len #a (s0 s1:seq a)
     (ensures S.length s0 == S.length s1)
   = reveal_is_permutation s0 s1 p
 
-let rec foldm_snoc_perm #a m s0 s1 p
+let rec foldm_back_perm #a m s0 s1 p
   : Lemma
-    (ensures foldm_snoc m s0  == foldm_snoc m s1)
+    (ensures foldm_back m s0  == foldm_back m s1)
     (decreases (S.length s0))
   = seqperm_len s0 s1 p;
     if S.length s0 = 0 then (
@@ -288,16 +288,16 @@ let rec foldm_snoc_perm #a m s0 s1 p
       calc
       (==)
       {
-        foldm_snoc m s1;
+        foldm_back m s1;
         (==) { assert (s1 `S.equal` S.append prefix' (cons last' suffix')) }
-        foldm_snoc m (S.append prefix' (cons last' suffix'));
-        (==) { foldm_snoc3 m prefix' last' suffix' }
-        m.mult last' (foldm_snoc m (append prefix' suffix'));
+        foldm_back m (S.append prefix' (cons last' suffix'));
+        (==) { foldm_back3 m prefix' last' suffix' }
+        m.mult last' (foldm_back m (append prefix' suffix'));
         (==) { assert (S.equal (append prefix' suffix') s1') }
-        m.mult last' (foldm_snoc m s1');
-        (==) { foldm_snoc_perm m prefix s1' p' }
-        m.mult last' (foldm_snoc m prefix);
+        m.mult last' (foldm_back m s1');
+        (==) { foldm_back_perm m prefix s1' p' }
+        m.mult last' (foldm_back m prefix);
         (==) { }
-        foldm_snoc m s0;
+        foldm_back m s0;
       }
     )

@@ -69,34 +69,26 @@ val permutation_from_equal_counts
 
 module CM = FStar.Algebra.CommMonoid
 
-
-let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
-  : Tot a (decreases (length s))
-  = if length s = 0 then init
-    else let last  = s $@ (length s - 1) in
-         let s = take s (length s - 1) in
-         f last (foldr_snoc f s init)
-
 (* folding a m.mult over a sequence *)
-let foldm_snoc (#a:Type) (m:CM.cm a) (s:seq a) = foldr_snoc m.mult s m.unit
+let foldm_back (#a:Type) (m:CM.cm a) (s:seq a) = fold_back m.mult s m.unit
 
 (* folding m over the concatenation of s1 and s2
    can be decomposed into a fold over s1 and a fold over s2 *)
-val foldm_snoc_append (#a:Type) (m:CM.cm a) (s1 s2: seq a)
+val foldm_back_append (#a:Type) (m:CM.cm a) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == m.mult (foldm_snoc m s1) (foldm_snoc m s2))
+    (ensures foldm_back m (append s1 s2) == m.mult (foldm_back m s1) (foldm_back m s2))
 
 (* folds over concatenated lists can is symmetric *)
-val foldm_snoc_sym (#a:Type) (m:CM.cm a) (s1 s2: seq a)
+val foldm_back_sym (#a:Type) (m:CM.cm a) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == foldm_snoc m (append s2 s1))
+    (ensures foldm_back m (append s1 s2) == foldm_back m (append s2 s1))
 
 (* And, finally, if s0 and s1 are permutations,
    then folding m over them is identical *)
-val foldm_snoc_perm (#a:_)
+val foldm_back_perm (#a:_)
                (m:CM.cm a)
                (s0:seq a)
                (s1:seq a)
                (p:seqperm s0 s1)
   : Lemma
-    (ensures foldm_snoc m s0  == foldm_snoc m s1)
+    (ensures foldm_back m s0  == foldm_back m s1)
