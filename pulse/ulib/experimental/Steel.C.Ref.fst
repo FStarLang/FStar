@@ -168,7 +168,7 @@ let ref_upd_act (r: ref 'a 'p) (x: Ghost.erased 'b { ~ (Ghost.reveal x == one 'p
 = let c = raise_pl r in
   let x' = Ghost.hide (c.conn_small_to_large.morph x) in
   let y' = Ghost.hide (c.conn_small_to_large.morph y) in
-  M.upd_gen Set.empty r.r x' y' (fstar_fpu_of_fpu (raise_p r) x' y' (c.conn_lift_frame_preserving_upd (|x, y, restricted_frame_preserving_upd_intro f|) ))
+  M.upd_gen Set.empty r.r x' y' (fstar_fpu_of_fpu (raise_p r) x' y' (mk_restricted_frame_preserving_upd (c.conn_lift_frame_preserving_upd (|x, y, restricted_frame_preserving_upd_intro f|) )))
 
 let as_action (#p:vprop)
               (#q:vprop)
