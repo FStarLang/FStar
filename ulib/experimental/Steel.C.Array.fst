@@ -278,10 +278,10 @@ let array_small_to_large_to_small
 #push-options "--z3rlimit 32 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false"
 #restart-solver
 
-assume
-val size_sub' (x y: size_t) (sq: squash (size_v x >= size_v y)) : Pure size_t
+let size_sub' (x y: size_t) (sq: squash (size_v x >= size_v y)) : Pure size_t
   (requires True)
   (ensures (fun z -> size_v z == size_v x - size_v y))
+= size_sub x y
 
 #restart-solver
 
@@ -440,12 +440,19 @@ let to_view_array_conn
 
 #pop-options
 
+let array_as_ref_conn
+  (#base: Type)
+  (#t: Type)
+  (a: array base t)
+: GTot (Steel.C.Connection.connection (array_pcm t a.base_len) (array_pcm t (len a)))
+= array_conn t a.base_len a.from a.to a.prf
+
 let array_as_ref
   (#base: Type)
   (#t: Type)
   (a: array base t)
 : GTot (Steel.C.Reference.ref base (array_view_type t (len a)) (array_pcm t (len a)))
-= Steel.C.Ref.ref_focus a.base_ref (array_conn t a.base_len a.from a.to a.prf)
+= Steel.C.Ref.ref_focus a.base_ref (array_as_ref_conn a)
 
 [@@__steel_reduce__]
 let varray0
@@ -608,9 +615,10 @@ let tsplit r i =
     prf = ()
   })
 
-let gsplit r i = tsplit r i
+let gsplit r i = 
+  let (rl, rr) = tsplit r i in
+  GPair rl rr
 
-assume
 val pts_to_split
   (t: Type)
   (n: size_t)
@@ -626,11 +634,87 @@ val pts_to_split
     op (array_pcm t n) xl xr == x
   ))
 
-(*TODO: split focus into gfocus + tfocus *)
+let pts_to_split t n x i =
+  let z = mk_size_t 0ul in
+  let xl = array_small_to_large_f t n z i () (array_large_to_small_f t n z i () x) in
+  let xr = array_small_to_large_f t n i n () (array_large_to_small_f t n i n () x) in
+  assert (composable (array_pcm t n) xl xr);
+  assert (op (array_pcm t n) xl xr `feq` x)
 
-let split
+val to_carrier_split
+  (t: Type)
+  (n: size_t)
+  (x: array_pcm_carrier t n)
+  (v: array_view_type t n)
+  (i: size_t)
+: Lemma
+  (requires (
+    size_v i <= size_v n /\
+    (array_view' t n).Steel.C.Ref.to_carrier v == x
+  ))
+  (ensures (
+    let z = mk_size_t 0ul in
+    let xl = (array_large_to_small_f t n z i () x) in
+    let xr = (array_large_to_small_f t n i n () x) in
+    (array_view' t i).Steel.C.Ref.to_carrier (Seq.slice v 0 (size_v i)) == xl /\
+    (array_view' t (n `size_sub` i)).Steel.C.Ref.to_carrier (Seq.slice v (size_v i) (size_v n)) == xr
+  ))
+
+#push-options "--z3rlimit 32"
+#restart-solver
+
+let to_carrier_split t n x v i =
+    let z = mk_size_t 0ul in
+    let xl = (array_large_to_small_f t n z i () x) in
+    let xr = (array_large_to_small_f t n i n () x) in
+    assert ((array_view' t i).Steel.C.Ref.to_carrier (Seq.slice v 0 (size_v i)) `feq` xl);
+    assert ((array_view' t (n `size_sub` i)).Steel.C.Ref.to_carrier (Seq.slice v (size_v i) (size_v n)) `feq` xr)
+
+let array_as_ref_split_left
+  (base: Type)
+  (t: Type)
+  (x: array base t)
+  (i: size_t)
+: Lemma
+  (requires (size_v i <= length x))
+  (ensures (
+    array_as_ref (fst (tsplit x i)) == Steel.C.Ref.ref_focus (array_as_ref x) (array_conn t (len x) zero_size i ())
+  ))
+= array_conn_compose t x.base_len x.from x.to zero_size i;
+  Steel.C.Ref.ref_focus_comp x.base_ref (array_as_ref_conn x) (array_conn t (len x) zero_size i ())
+
+let array_as_ref_split_right
+  (base: Type)
+  (t: Type)
+  (x: array base t)
+  (i: size_t)
+: Lemma
+  (requires (size_v i <= length x))
+  (ensures (
+    array_as_ref (snd (tsplit x i)) == Steel.C.Ref.ref_focus (array_as_ref x) (array_conn t (len x) i (len x) ())
+  ))
+= array_conn_compose t x.base_len x.from x.to i (len x);
+  Steel.C.Ref.ref_focus_comp x.base_ref (array_as_ref_conn x) (array_conn t (len x) i (len x) ())
+
+val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
+  : SteelGhost (array base t `gpair` array base t) opened
+          (varray a)
+          (fun res -> varray (GPair?.fst res) `star` varray (GPair?.snd res))
+          (fun _ -> size_v i <= length a)
+          (fun h res h' ->
+            let s = h (varray a) in
+            let sl = h' (varray (GPair?.fst res)) in
+            let sr = h' (varray (GPair?.snd res)) in
+            size_v i <= length a /\
+            res == gsplit a i /\
+            sl == Seq.slice s 0 (size_v i) /\
+            sr == Seq.slice s (size_v i) (length a)
+          )
+
+let split'
   #j #base #t x i
 =
+  let gv = gget (varray x) in
   elim_varray1 x;
   let v = Steel.C.Ref.pts_to_view_elim
     #j
@@ -642,18 +726,117 @@ let split
     #(size_v (len x) = 0)
     (array_view' t (len x))
   in
+  pts_to_split t (len x) v i;
+  let (xl, xr) = tsplit x i in
   let n = len x in
-  pts_to_split t n v i;
   let z = mk_size_t 0ul in
-  let vl = array_small_to_large_f t n z i () (array_large_to_small_f t n z i () v) in
-  let vr = array_small_to_large_f t n i n () (array_large_to_small_f t n i n () v) in
-  
-  sladmit ();
-  magic ()
-  
-  
+  let vl' : array_pcm_carrier t (len xl) = array_large_to_small_f t n z i () v in
+  let vl : array_pcm_carrier t (len x) = array_small_to_large_f t n z i () vl' in
+  let vr' : array_pcm_carrier t (len xr) = array_large_to_small_f t n i n () v in
+  let vr : array_pcm_carrier t (len x) = array_small_to_large_f t n i n () vr' in
+  Steel.C.Ref.split
+    (array_as_ref #base #t x)
+    v
+    vl
+    vr;
+  let cl : (cl: Steel.C.Connection.connection
+    (array_pcm t (len x))
+    (array_pcm t (len xl)) {
+      cl === array_conn t n z i ()
+    })
+  = magic () // array_conn t n z i ()  // FIXME: WHY WHY WHY does this send F* off rails (> 35 GB RAM consumption and going)
+  in
+  Steel.C.Ref.gfocus
+    (array_as_ref #base #t x)
+    cl
+    vl
+    vl';
+  array_as_ref_split_left _ t x i;
+  assert (array_as_ref xl == Steel.C.Ref.ref_focus (array_as_ref x) cl);
+  change_equal_slprop
+    (_ `Steel.C.Ref.pts_to` vl')
+    (array_as_ref xl `Steel.C.Ref.pts_to` vl');
+  to_carrier_split t n v gv i;
+  let gvl : array_view_type t (len xl) = Seq.slice gv 0 (size_v i) in
+  Steel.C.Ref.pts_to_view_intro
+    #j
+    #base
+    #(array_pcm_carrier t (len xl))
+    #(array_pcm t (len xl))
+    (array_as_ref xl)
+    vl'
+    #(array_view_type t (len xl))
+    #(size_v (len xl) = 0)
+    (array_view' t (len xl))
+    gvl;
+  change_equal_slprop // necessary, otherwise F* goes off rails
+    (array_as_ref xl `Steel.C.Ref.pts_to_view` _)
+    (varray0 xl);
+  intro_varray1 xl;
+  let cr : (cr: Steel.C.Connection.connection
+    (array_pcm t (len x))
+    (array_pcm t (len xr)) {
+      cr === array_conn t n i n ()
+    })
+  = magic () // array_conn t n i n ()  // FIXME: WHY WHY WHY does this send F* off rails (> 35 GB RAM consumption and going)
+  in
+  Steel.C.Ref.gfocus
+    (array_as_ref #base #t x)
+    cr
+    vr
+    vr';
+  array_as_ref_split_right _ t x i;
+  assert (array_as_ref xr == Steel.C.Ref.ref_focus (array_as_ref x) cr);
+  change_equal_slprop
+    (_ `Steel.C.Ref.pts_to` vr')
+    (array_as_ref xr `Steel.C.Ref.pts_to` vr');
+  let gvr : array_view_type t (len xr) = Seq.slice gv (size_v i) (size_v n) in
+//  let _ : squash ((Ghost.reveal gv <: Seq.seq t) == gvl `Seq.append` gvr) =
+//    Seq.lemma_split gv (size_v i)
+//  in
+  Steel.C.Ref.pts_to_view_intro
+    #j
+    #base
+    #(array_pcm_carrier t (len xr))
+    #(array_pcm t (len xr))
+    (array_as_ref xr)
+    vr'
+    #(array_view_type t (len xr))
+    #(size_v (len xr) = 0)
+    (array_view' t (len xr))
+    gvr;
+  change_equal_slprop // necessary, otherwise F* goes off rails
+    (array_as_ref xr `Steel.C.Ref.pts_to_view` _)
+    (varray0 xr);
+  intro_varray1 xr;
+  let res = GPair xl xr in
+  change_equal_slprop
+    (varray xl)
+    (varray (GPair?.fst res));
+  change_equal_slprop
+    (varray xr)
+    (varray (GPair?.snd res));
+  res
+
+let split
+  #_ #_ #t a i
+=
+  let g = gget (varray a) in
+  Seq.lemma_split #t (Ghost.reveal g) (size_v i);
+  split' a i
+
 
 (*
+
+    #j
+    #base
+    #(array_pcm_carrier t (len x))
+    #(array_pcm t (len x))
+    (array_as_ref #base #t x)
+    #(array_view_type t (len x))
+    #(size_v (len x) = 0)
+    (array_view' t (len x))
+
 
 noeq
 type array base t = {
