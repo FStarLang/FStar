@@ -16,10 +16,16 @@
    Author: N. Swamy
 *)
 
-(** This module provides some utilities on top of FStar.Sequence
-    that match some of what FStar.Seq provides *)
+(** This module provides some utilities on top of FStar.Sequence *)
 module FStar.Sequence.Util
-open FStar.Sequence
+open FStar.Sequence.Base
+
+
+/// For convenience, we define `slice` to represent Dafny sequence slices.
+let slice (#ty: Type) (s: seq ty) (i: nat) (j: nat{j >= i && j <= length s})
+  : seq ty
+  = all_seq_facts_lemma();
+    drop (take s j) i
 
 let cons #a (x:a) (s:seq a) = singleton x `append` s
 
@@ -43,7 +49,8 @@ let split #a (s:seq a) (i:nat{ i <= length s})
 /// satisfy the predicate [f]
 let rec count_matches (#a:Type) (f:a -> bool) (s:seq a)
   : Tot nat (decreases (length s))
-  = if length s = 0 then 0
+  = all_seq_facts_lemma();
+    if length s = 0 then 0
     else if f (head s) then 1 + count_matches f (tail s)
     else count_matches f (tail s)
 
@@ -74,7 +81,8 @@ let rec lemma_append_count_aux (#a:eqtype) (x:a) (lo hi:seq a)
   : Lemma
     (ensures (count x (append lo hi) = (count x lo + count x hi)))
     (decreases (length lo))
-  = reveal_opaque (`%count) (count #a);
+  = all_seq_facts_lemma();
+    reveal_opaque (`%count) (count #a);
     if length lo = 0
     then assert (append lo hi `equal` hi)
     else (
@@ -87,7 +95,8 @@ let rec lemma_append_count_aux (#a:eqtype) (x:a) (lo hi:seq a)
 /// last element, hence fold_back
 let rec fold_back (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
   : Tot a (decreases (length s))
-  = if length s = 0 then init
+  = all_seq_facts_lemma();
+    if length s = 0 then init
     else let last  = s $@ (length s - 1) in
          let s = take s (length s - 1) in
          f last (fold_back f s init)

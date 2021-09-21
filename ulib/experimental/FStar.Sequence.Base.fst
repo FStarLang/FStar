@@ -31,7 +31,7 @@
 (**
 This module declares a type and functions used for modeling sequences
 as they're modeled in Dafny. It also states and proves some properties
-about sequences, and provides a lemma `all_dafny_seq_facts_lemma` one
+about sequences, and provides a lemma `all_seq_facts_lemma` one
 can call to bring them into context.  The properties are modeled after
 those in the Dafny sequence axioms, with patterns for quantifiers
 chosen as in those axioms.
@@ -142,7 +142,7 @@ let is_prefix (#ty: Type) (s0: seq ty) (s1: seq ty) : Type0 =
 
 let rank (#ty: Type) (v: ty) = v
 
-/// We now prove each of the facts that comprise `all_dafny_seq_facts`.
+/// We now prove each of the facts that comprise `all_seq_facts`.
 /// For fact `xxx_fact`, we prove it with `xxx_lemma`.  Sometimes, that
 /// requires a helper lemma, which we call `xxx_helper`.  In some cases,
 /// we need multiple helpers, so we suffix their names with integers.
@@ -687,10 +687,10 @@ private let drop_then_drop_lemma () : Lemma (requires drop_length_fact) (ensures
     )
 
 /// Finally, we use all the lemmas for all the facts to establish
-/// `all_dafny_seq_facts`.  To get all those facts in scope, one can
-/// invoke `all_dafny_seq_facts_lemma`.
+/// `all_seq_facts`.  To get all those facts in scope, one can
+/// invoke `all_seq_facts_lemma`.
 
-let all_dafny_seq_facts_lemma () : Lemma (all_dafny_seq_facts) =
+let all_seq_facts_lemma () : Lemma (all_seq_facts) =
   length_of_empty_is_zero_lemma ();
   length_zero_implies_empty_lemma ();
   singleton_length_one_lemma ();

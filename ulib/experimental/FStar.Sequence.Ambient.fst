@@ -39,10 +39,5 @@ module FStar.Sequence.Ambient
 
 open FStar.Sequence.Base
 
-let all_dafny_seq_facts_ambient : (squash all_dafny_seq_facts) =
-  all_dafny_seq_facts_lemma ()
-
-/// For convenience, we define `slice` to represent Dafny sequence slices.
-
-let slice (#ty: Type) (s: seq ty) (i: nat) (j: nat{j >= i && j <= length s}) : seq ty =
-  drop (take s j) i
+let all_seq_facts_ambient : (squash all_seq_facts) =
+  all_seq_facts_lemma ()

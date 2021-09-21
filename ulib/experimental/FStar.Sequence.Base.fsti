@@ -561,7 +561,7 @@ private let drop_then_drop_fact (_: squash drop_length_fact) =
   One can bring all these facts into scope with `all_dafny_seq_facts_lemma ()`.
 **)
 
-let all_dafny_seq_facts =
+let all_seq_facts =
     length_of_empty_is_zero_fact
   /\ length_zero_implies_empty_fact
   /\ singleton_length_one_fact
@@ -600,4 +600,4 @@ let all_dafny_seq_facts =
   /\ take_zero_fact
   /\ drop_then_drop_fact ()
 
-val all_dafny_seq_facts_lemma : unit -> Lemma (all_dafny_seq_facts)
+val all_seq_facts_lemma : unit -> Lemma (all_seq_facts)
