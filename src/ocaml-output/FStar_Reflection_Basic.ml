@@ -27,7 +27,7 @@ let (inspect_aqual :
         { FStar_Syntax_Syntax.aqual_implicit = true;
           FStar_Syntax_Syntax.aqual_attributes = uu___;_}
         -> FStar_Reflection_Data.Q_Implicit
-    | FStar_Pervasives_Native.None -> FStar_Reflection_Data.Q_Explicit
+    | uu___ -> FStar_Reflection_Data.Q_Explicit
 let (pack_bqual : FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.bqual)
   =
   fun aqv ->

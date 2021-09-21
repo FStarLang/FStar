@@ -75,7 +75,7 @@ let inspect_bqual (bq : bqual) : aqualv =
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some ({ aqual_implicit = true }) -> Data.Q_Implicit
-    | None -> Data.Q_Explicit
+    | _ -> Data.Q_Explicit
 
 (* private *)
 let pack_bqual (aqv : aqualv) : bqual =
