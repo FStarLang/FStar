@@ -147,6 +147,20 @@ let restricted_frame_preserving_upd_elim
 : Tot (frame_preserving_upd p x y)
 = f
 
+noeq
+type fpu_t
+  (#a:Type u#a) (p:pcm a) (x y: Ghost.erased a)
+= {
+  fpu_f: (frame_preserving_upd_dom p x ^-> a);
+  fpu_prf: squash (forall (v: frame_preserving_upd_dom p x) . frame_preserving_upd_post p x y v (fpu_f v));
+}
+
+let mk_restricted_frame_preserving_upd
+  (#a:Type u#a) (#p:pcm a) (#x #y: Ghost.erased a)
+  (phi: fpu_t p x y)
+: Tot (restricted_frame_preserving_upd p x y)
+= restricted_frame_preserving_upd_intro #_ #p #x #y (fun v -> phi.fpu_f v)
+
 let fpu_lift_dom (#t_small: Type) (p_small: pcm t_small)
 = (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) &
    y:Ghost.erased t_small &
@@ -156,7 +170,7 @@ let fpu_lift_cod (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_sm
   (conn_small_to_large: morphism p_small p_large)
 : fpu_lift_dom p_small -> Type
 = fun (|x, y, f|) ->
-  restricted_frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)
+  fpu_t p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)
 
 let fpu_lift (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
   (conn_small_to_large: morphism p_small p_large)
@@ -172,7 +186,8 @@ let fpu_lift_elim (#t_large:Type) (#t_small: Type) (#p_large: pcm t_large) (#p_s
   (y: Ghost.erased t_small)
   (f: frame_preserving_upd p_small x y)
 : Tot (frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y))
-= lift (| x, y, restricted_frame_preserving_upd_intro f |)
+= let phi = lift (| x, y, restricted_frame_preserving_upd_intro f |) in
+  (fun v -> phi.fpu_f v)
 
 (** A connection from a "large" PCM p_large to a "small" PCM p_small
     is composed of an injective morphism small->large + the left inverse
@@ -191,26 +206,47 @@ type connection (#t_large #t_small: Type) (p_large: pcm t_large) (p_small: pcm t
   conn_lift_frame_preserving_upd: fpu_lift conn_small_to_large;
 }
 
-let mkconnection0 (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
+let on_dom_nondep
+  (a #b: Type)
+  (f: a -> b)
+: Tot (a ^-> b)
+= on_dom a f
+
+let mkconnection1
+ (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
   (conn_small_to_large: morphism p_small p_large)
   (conn_large_to_small: morphism p_large p_small)
   (conn_small_to_large_inv:
     squash (conn_large_to_small.morph `is_inverse_of` conn_small_to_large.morph))
-  (conn_lift_frame_preserving_upd:
+  (conn_lift_frame_preserving_upd_f:
     (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) ->
      y:Ghost.erased t_small ->
      restricted_frame_preserving_upd p_small x y ->
-     restricted_frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)))
+     v:frame_preserving_upd_dom p_large (conn_small_to_large.morph x) ->
+     t_large
+  ))
+  (conn_lift_frame_preserving_upd_prf:
+    (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) ->
+     y:Ghost.erased t_small ->
+     f: restricted_frame_preserving_upd p_small x y ->
+     v:frame_preserving_upd_dom p_large (conn_small_to_large.morph x) ->
+     Lemma
+     (frame_preserving_upd_post p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y) v (conn_lift_frame_preserving_upd_f x y f v))
+  ))
 : connection p_large p_small = {
   conn_small_to_large = conn_small_to_large;
   conn_large_to_small = conn_large_to_small;
   conn_small_to_large_inv = conn_small_to_large_inv;
   conn_lift_frame_preserving_upd =
-    on_domain
+    on_dom
       (fpu_lift_dom p_small)
       (fun (z: fpu_lift_dom p_small) ->
-        let (|x, y, f|) = z in
-	conn_lift_frame_preserving_upd x y f <: fpu_lift_cod conn_small_to_large z)
+        (let (|x, y, f|) = z in {
+        fpu_f = on_dom_nondep
+          (frame_preserving_upd_dom p_large (Ghost.reveal (Ghost.hide (conn_small_to_large.morph x))))
+          (conn_lift_frame_preserving_upd_f x y f);
+        fpu_prf = Classical.forall_intro (conn_lift_frame_preserving_upd_prf x y f)
+      } <: fpu_t p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)) <: fpu_lift_cod conn_small_to_large z);
 }
 
 let mkconnection (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
@@ -221,17 +257,17 @@ let mkconnection (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pc
   (conn_lift_frame_preserving_upd:
     (x:(x:Ghost.erased t_small{~ (Ghost.reveal x == (one p_small))}) ->
      y:Ghost.erased t_small ->
-     frame_preserving_upd p_small x y ->
+     restricted_frame_preserving_upd p_small x y ->
      frame_preserving_upd p_large (conn_small_to_large.morph x) (conn_small_to_large.morph y)))
 : connection p_large p_small =
-  mkconnection0
+  mkconnection1
     conn_small_to_large
     conn_large_to_small
     conn_small_to_large_inv
-    (fun x y f ->
-      restricted_frame_preserving_upd_intro (conn_lift_frame_preserving_upd x y f))
+    conn_lift_frame_preserving_upd
+    (fun x y f v -> ())
 
-let connection_eq #a (#p: pcm a) #b (#q: pcm b) (l m: p `connection` q)
+let connection_eq' #a (#p: pcm a) #b (#q: pcm b) (l m: p `connection` q)
 : Lemma
     (requires l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph /\
               l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph /\
@@ -239,8 +275,54 @@ let connection_eq #a (#p: pcm a) #b (#q: pcm b) (l m: p `connection` q)
     (ensures l == m)
 = ()
 
+let extensionality (a: Type) (b: (a -> Type)) (f g: restricted_t a b)
+    : Lemma (ensures (feq #a #b f g <==> f == g))
+= FStar.FunctionalExtensionality.extensionality a b f g
+
+let extensionality_nondep (a0 a1 a2: Type) (b: Type)
+  (f: a1 ^-> b)
+  (g: a2 ^-> b)
+: Lemma
+  (requires (a0 == a1 /\ a0 == a2))
+  (ensures (feq f g <==> f == g))
+= extensionality _ _ f g
+
+let connection_eq_gen
+  #a (#p: pcm a) #b (#q: pcm b) (l m: p `connection` q)
+  (sq: squash (
+    l.conn_small_to_large.morph `feq` m.conn_small_to_large.morph /\
+    l.conn_large_to_small.morph `feq` m.conn_large_to_small.morph
+  ))
+  (phi:
+    (x: Ghost.erased b { ~ (Ghost.reveal x == one q) }) ->
+    (y: Ghost.erased b) ->
+    (f: restricted_frame_preserving_upd q x y) ->
+    (v: frame_preserving_upd_dom p (l.conn_small_to_large.morph x)) ->
+    Lemma
+    ((l.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f v == (m.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f v)
+  )
+: Lemma
+  (l == m)
+= let psi
+    (x: Ghost.erased b { ~ (Ghost.reveal x == one q) })
+    (y: Ghost.erased b)
+    (f: restricted_frame_preserving_upd q x y)
+  : Lemma
+    ((l.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f == (m.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f)
+  = Classical.forall_intro (phi x y f);
+    extensionality_nondep
+      (frame_preserving_upd_dom p (l.conn_small_to_large.morph x))
+      (frame_preserving_upd_dom p (Ghost.reveal (Ghost.hide (l.conn_small_to_large.morph x))))
+      (frame_preserving_upd_dom p (Ghost.reveal (Ghost.hide (m.conn_small_to_large.morph x))))
+      a
+      (l.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f 
+      (m.conn_lift_frame_preserving_upd (| x, y, f |)).fpu_f
+  in
+  Classical.forall_intro_3 psi;
+  connection_eq' l m
+
 let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: connection pa pb) (fbc: connection pb pc) : Tot (connection pa pc) =
-  mkconnection0
+  mkconnection
     (fbc.conn_small_to_large `morphism_compose` fab.conn_small_to_large)
     (fab.conn_large_to_small `morphism_compose` fbc.conn_large_to_small)
     ()
@@ -248,13 +330,13 @@ let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (
     let xb = Ghost.hide (fbc.conn_small_to_large.morph xc) in
     let yb = Ghost.hide (fbc.conn_small_to_large.morph yc) in
     let fb = fbc.conn_lift_frame_preserving_upd (| xc, yc, f |) in
-    fab.conn_lift_frame_preserving_upd (| xb, yb, fb |) )
+    mk_restricted_frame_preserving_upd (fab.conn_lift_frame_preserving_upd (| xb, yb, mk_restricted_frame_preserving_upd fb |) ))
 
 let connection_id
   (#a: Type)
   (p: pcm a)
 : Tot (connection p p)
-= mkconnection0
+= mkconnection
     (morphism_id p)
     (morphism_id p)
     ()
@@ -265,16 +347,22 @@ let connection_compose_id_left
   (c: connection p_large p_small)
 : Lemma
   (connection_id p_large `connection_compose` c == c)
-= connection_eq (connection_id p_large `connection_compose` c) c
+= connection_eq_gen
+    (connection_id p_large `connection_compose` c) c
+    ()
+    (fun x y f v -> ())
 
 let connection_compose_id_right
   (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
   (c: connection p_large p_small)
 : Lemma
   (c `connection_compose` connection_id p_small == c)
-= connection_eq (c `connection_compose` connection_id p_small) c
+= connection_eq_gen
+    (c `connection_compose` connection_id p_small) c
+    ()
+    (fun x y f v -> ())
 
-#push-options "--z3rlimit 32"
+#push-options "--z3rlimit 16"
 
 let connection_compose_assoc
   (#t1 #t2 #t3 #t4: Type)
@@ -288,7 +376,11 @@ let connection_compose_assoc
 : Lemma
   ((c12 `connection_compose` c23) `connection_compose` c34 == c12 `connection_compose` (c23 `connection_compose` c34))
 =
-  ((c12 `connection_compose` c23) `connection_compose` c34) `connection_eq` (c12 `connection_compose` (c23 `connection_compose` c34))
+  connection_eq_gen
+    ((c12 `connection_compose` c23) `connection_compose` c34)
+    (c12 `connection_compose` (c23 `connection_compose` c34))
+    ()
+    (fun x y f v -> ())
 
 #pop-options
 
@@ -490,7 +582,7 @@ let connection_of_isomorphism
   (#p2: pcm t2)
   (i: isomorphism p1 p2)
 : Tot (connection p1 p2)
-= mkconnection0
+= mkconnection
     i.iso_2_1
     i.iso_1_2
     i.iso_1_2_inv_2_1
@@ -504,7 +596,11 @@ let connection_of_isomorphism_inverse_left
 : Lemma
   (connection_of_isomorphism (isomorphism_inverse i) `connection_compose` connection_of_isomorphism i == connection_id _)
 = Classical.forall_intro_3 (connection_of_isomorphism_fpu_inverse i);
-  (connection_of_isomorphism (isomorphism_inverse i) `connection_compose` connection_of_isomorphism i) `connection_eq` connection_id _
+  connection_eq_gen
+    (connection_of_isomorphism (isomorphism_inverse i) `connection_compose` connection_of_isomorphism i)
+    (connection_id _)
+    ()
+    (fun x y f v -> ())
 
 let connection_of_isomorphism_inverse_right
   (#t1 #t2: Type)

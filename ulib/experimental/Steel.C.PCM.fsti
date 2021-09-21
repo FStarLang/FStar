@@ -198,16 +198,23 @@ let frame_preserving_upd_dom
     compatible p x v
   }
 
-let frame_preserving_upd_codom
+let frame_preserving_upd_post
   (#a:Type u#a) (p:pcm0 a) (x y:a)
   (v: frame_preserving_upd_dom p x)
+  (v_new: a)
+: Tot prop
 =
-  v_new:a{
     p_refine p v_new /\
     compatible p y v_new /\
     (forall (frame:a{composable p x frame}).{:pattern composable p x frame}
        composable p y frame /\
-       (op p x frame == v ==> op p y frame == v_new))}
+       (op p x frame == v ==> op p y frame == v_new))
+
+let frame_preserving_upd_codom
+  (#a:Type u#a) (p:pcm0 a) (x y:a)
+  (v: frame_preserving_upd_dom p x)
+=
+  v_new:a{frame_preserving_upd_post p x y v v_new}
 
 type frame_preserving_upd (#a:Type u#a) (p:pcm0 a) (x y:a) =
   v: frame_preserving_upd_dom p x ->
