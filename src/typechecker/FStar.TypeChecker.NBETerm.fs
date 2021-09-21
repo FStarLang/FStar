@@ -402,7 +402,7 @@ let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
 let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
     mkFV (lid_as_fv l S.delta_constant None) us args
 
-let as_iarg (a:t) : arg = (a, Some S.imp_tag)
+let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
 let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
@@ -622,7 +622,7 @@ let e_list (ea:embedding<'a>) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
-        | Construct (fv, _, [(tl, None); (hd, None); (_, Some (Implicit _))])
+        | Construct (fv, _, [(tl, None); (hd, None); (_, Some ({ aqual_implicit = true }))])
           // Zoe: Not sure why this case is need; following Emdeddings.fs
           // GM: Maybe it's not, but I'm unsure on whether we can rely on all these terms being type-correct
         | Construct (fv, _, [(tl, None); (hd, None)])

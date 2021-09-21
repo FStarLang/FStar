@@ -83,6 +83,21 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+let check_expected_aqual_for_binder aq b pos =
+    let expected_aq = U.aqual_of_binder b in
+    match aq, expected_aq with
+    | None, None -> aq
+    | None, Some eaq ->
+      if eaq.aqual_implicit //programmer should have written #
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      else expected_aq //keep the attributes
+    | Some aq, None ->
+      raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+    | Some aq, Some eaq ->
+      if aq.aqual_implicit <> eaq.aqual_implicit
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      else expected_aq //keep the attributes
+
 let push_binding env b =
   Env.push_bv env b.binder_bv
 
@@ -266,7 +281,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
       then BU.as_set all Syntax.order_bv
       else BU.new_set Syntax.order_bv
 
-  | Tm_fvar fv, [(_, Some (Implicit _)); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
+  | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
       (* The head is not under the scope of the SMTPatOr, consider
         * SMTPatOr [ [SMTPat p1; SMTPat p2] ; ... ]
         * we should take the union of fv(p1) and fv(p2) *)
@@ -277,7 +292,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
       then BU.set_intersect hdvs tlvs
       else BU.set_union     hdvs tlvs
 
-  | Tm_fvar fv, [(_, Some (Implicit _)); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
+  | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
       Free.names pat
 
   | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
@@ -1051,7 +1066,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   // If we're on the first phase, we don't synth, and just wait for the next phase
   | Tm_app (head, [(tau, None)])
-  | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])
+  | Tm_app (head, [(_, Some ({ aqual_implicit = true })); (tau, None)])
         when U.is_synth_by_tactic head && not env.phase1 ->
     (* Got an application of synth_by_tactic, process it *)
 
@@ -1066,8 +1081,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         match args with
         | (tau, None)::rest ->
             [(tau, None)], rest
-        | (a, Some (Implicit b)) :: (tau, None) :: rest ->
-            [(a, Some (Implicit b)); (tau, None)], rest
+        | (a, Some aq) :: (tau, None) :: rest
+          when aq.aqual_implicit ->
+          [(a, Some aq); (tau, None)], rest
         | _ ->
             raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") top.pos
     in
@@ -1322,7 +1338,7 @@ and tc_synth head env args rng =
     match args with
     | (tau, None)::[] ->
         tau, None
-    | (a, Some (Implicit _)) :: (tau, None) :: [] ->
+    | (a, Some ({ aqual_implicit = true })) :: (tau, None) :: [] ->
         tau, Some a
     | _ ->
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
@@ -1838,7 +1854,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
     | [], [] -> env, [], None, Env.trivial_guard, subst
 
     | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_attrs=attrs})::_
-      when S.is_implicit_or_meta q ->
+      when S.is_bqual_implicit_or_meta q ->
       (* When an implicit is expected, but the user provided an
        * explicit binder, insert a nameless implicit binder. *)
       let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
@@ -1853,7 +1869,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
 
-        if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
+        if not (special imp imp') && U.eq_bqual imp imp' <> U.Equal
         then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
@@ -2285,7 +2301,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             in
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" r env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
-            let arg = varg, as_implicit true in
+            let arg = varg, S.as_aqual_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
@@ -2327,29 +2343,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
-            let arg = varg, as_implicit true in
+            let aq = U.aqual_of_binder (List.hd bs) in
+            let arg = varg, aq in
             let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
-        | ({binder_bv=x;binder_qual=aqual})::rest, (e, aq)::rest' -> (* a concrete argument *)
-            let _ =
-                match aqual, aq with
-                | _, Some (Meta _) ->
-                    raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                                  "Inconsistent implicit qualifier; cannot apply meta arguments, just use #") e.pos
-
-                | Some (Meta _), Some (Implicit _)
-                | Some (Implicit _), Some (Implicit _)
-                | None, None
-                | Some Equality, None -> ()
-                | _ -> raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                                     (BU.format4 "Inconsistent implicit qualifier; expected `%s` got `%s` for bvar %s and term %s"
-                                               (Print.aqual_to_string aqual)
-                                               (Print.aqual_to_string aq)
-                                               (Print.bv_to_string x)
-                                               (Print.term_to_string e))) e.pos in
+        | ({binder_bv=x;binder_qual=bqual;binder_attrs=b_attrs})::rest, (e, aq)::rest' -> (* a concrete argument *)
+            let aq = check_expected_aqual_for_binder aq (List.hd bs) e.pos in
             let targ = SS.subst subst x.sort in
-            let aqual = SS.subst_imp subst aqual in
+            let bqual = SS.subst_bqual subst bqual in
             let x = {x with sort=targ} in
             if debug env Options.Extreme
             then BU.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
@@ -2360,7 +2362,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                            (Print.term_to_string targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ env targ in
-            let env = {env with use_eq=is_eq aqual} in
+            let env = {env with use_eq=is_eq bqual} in
             if debug env Options.High
             then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
                    (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ) (string_of_bool env.use_eq);
@@ -2368,7 +2370,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let g = Env.conj_guard g_ex <| Env.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
-            let xterm = (fst (S.as_arg (S.bv_to_name x)), aq) in  //AR: fix for #1123, we were dropping the qualifiers
+            let xterm = S.bv_to_name x, aq in  //AR: fix for #1123, we were dropping the qualifiers
             if TcComm.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
             || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
@@ -2476,17 +2478,22 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
     match tf.n with
         | Tm_arrow(bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in
-          let args, guard, ghost = List.fold_left2 (fun (seen, guard, ghost) (e, aq) ({binder_bv=b;binder_qual=aq'}) ->
-                if eq_aqual aq aq' <> Equal
-                then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
-                let e, c, g = tc_check_tot_or_gtot_term env e b.sort
+          let args, guard, ghost =
+            List.fold_left2
+              (fun (seen, guard, ghost) (e, aq) b ->
+                let aq = check_expected_aqual_for_binder aq b e.pos in
+                let e, c, g = tc_check_tot_or_gtot_term env e b.binder_bv.sort
                   "arguments to short circuiting operators must be pure or ghost" in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in
                 let g = Env.imp_guard (Env.guard_of_guard_formula short) g in
                 let ghost = ghost
                           || (not (TcComm.is_total_lcomp c)
                               && not (TcUtil.is_pure_effect env c.eff_name)) in
-                seen@[as_arg e], Env.conj_guard guard g, ghost) ([], g_head, false) args bs in
+                seen@[e,aq], Env.conj_guard guard g, ghost)
+              ([], g_head, false)
+              args
+              bs
+          in
           let e = mk_Tm_app head args r  in
           let c = if ghost then S.mk_GTotal res_t |> TcComm.lcomp_of_comp else TcComm.lcomp_of_comp c in
           //NS: maybe redundant strengthen

@@ -65,20 +65,30 @@ let get_env () : Env.env =
   | Some e -> e
 
 (* private *)
-let inspect_aqual (aq : aqual) : aqualv =
-    match aq with
+let inspect_bqual (bq : bqual) : aqualv =
+    match bq with
     | Some (Implicit _) -> Data.Q_Implicit
     | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
+let inspect_aqual (aq : aqual) : aqualv =
+    match aq with
+    | Some ({ aqual_implicit = true }) -> Data.Q_Implicit
+    | None -> Data.Q_Explicit
+
 (* private *)
-let pack_aqual (aqv : aqualv) : aqual =
+let pack_bqual (aqv : aqualv) : bqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
     | Data.Q_Meta t   -> Some (Meta t)
 
+let pack_aqual (aqv : aqualv) : aqual =
+    match aqv with
+    | Data.Q_Implicit -> S.as_aqual_implicit true
+    | _ -> None
+    
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
@@ -639,10 +649,10 @@ let pack_bv (bvv:bv_view) : bv =
     }
 
 let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
-    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
+    b.binder_bv, (inspect_bqual (b.binder_qual), b.binder_attrs)
 
 let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
-    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
+    { binder_bv=bv; binder_qual=pack_bqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =

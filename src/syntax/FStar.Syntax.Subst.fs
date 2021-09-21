@@ -239,10 +239,15 @@ let subst_flags' s flags =
         | DECREASES dec_order -> DECREASES (subst_dec_order' s dec_order)
         | f -> f)
 
-let subst_imp' s i =
+let subst_bqual' s i =
   match i with
   | Some (Meta t) -> Some (Meta (subst' s t))
   | _ -> i
+
+let subst_aqual' s (i:aqual) : aqual =
+  match i with
+  | None -> None
+  | Some a -> Some ({a with aqual_attributes = List.map (subst' s) a.aqual_attributes })
 
 let subst_comp_typ' s t =
   match s with
@@ -253,7 +258,7 @@ let subst_comp_typ' s t =
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, subst_imp' s imp) t.effect_args}
+            effect_args=List.map (fun (t, imp) -> subst' s t, subst_aqual' s imp) t.effect_args}
 
 let subst_comp' s t =
   match s with
@@ -283,7 +288,7 @@ let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
 let subst_binder' s b =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
-    (subst_imp' s b.binder_qual)
+    (subst_bqual' s b.binder_qual)
     (b.binder_attrs |> List.map (subst' s))
 
 
@@ -515,7 +520,8 @@ and compress (t:term) =
 let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
-let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
+let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
+let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
 let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
 let closing_subst (bs:binders) =
@@ -525,7 +531,7 @@ let open_binders' bs =
         | [] -> [], o
         | b::bs' ->
           let x' = {freshen_bv b.binder_bv with sort=subst o b.binder_bv.sort} in
-          let imp = subst_imp o b.binder_qual in
+          let imp = subst_bqual o b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
@@ -589,7 +595,7 @@ let close_binders (bs:binders) : binders =
         | [] -> []
         | b::tl ->
           let x = {b.binder_bv with sort=subst s b.binder_bv.sort} in
-          let imp = subst_imp s b.binder_qual in
+          let imp = subst_bqual s b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
           (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
@@ -979,16 +985,23 @@ and deep_compress_args args =
             let q = deep_compress_aqual q in // this should be useless
             t, q) args
 
-and deep_compress_aqual (q:aqual) : aqual =
+and deep_compress_bqual (q:bqual) : bqual =
   match q with
   | Some (S.Meta t) ->
     Some (S.Meta (deep_compress t))
 
   | _ -> q
 
+and deep_compress_aqual (q:aqual) : aqual =
+  match q with
+  | Some a ->
+    Some ({a with aqual_attributes = List.map deep_compress a.aqual_attributes })
+
+  | _ -> q
+
 and deep_compress_binders bs =
     List.map (fun b ->
                 let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
-                let q = deep_compress_aqual b.binder_qual in
+                let q = deep_compress_bqual b.binder_qual in
                 let attrs = b.binder_attrs |> List.map deep_compress in
                 (S.mk_binder_with_attrs x q attrs)) bs

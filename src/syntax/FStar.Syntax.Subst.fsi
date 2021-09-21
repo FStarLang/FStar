@@ -28,7 +28,8 @@ val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
 val subst':             subst_ts -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
-val subst_imp:          list<subst_elt> -> aqual -> aqual
+val subst_bqual:        list<subst_elt> -> bqual -> bqual
+val subst_aqual:        list<subst_elt> -> aqual -> aqual
 val subst_ascription:   list<subst_elt> -> ascription -> ascription
 val subst_decreasing_order:
                         list<subst_elt> -> decreases_order -> decreases_order

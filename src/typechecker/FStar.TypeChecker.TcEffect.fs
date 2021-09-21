@@ -674,20 +674,6 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
-    (*
-     * In constructing the application nodes for subcomp and if_then_else,
-     *   we need to adjust the qualifiers
-     *
-     * Implicits remain implicits, but meta_attr or meta_arg just become implicits
-     *
-     * Don't think the boolean false below matters, but is perhaps safer (see Syntax.fsi)
-     *)
-    let binder_aq_to_arg_aq (aq, attrs) =
-      match aq, attrs with
-      | Some (Implicit _), _ -> aq
-      | Some (Meta _), _ -> Some (Implicit false)
-      | _ -> None in
-
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
@@ -703,7 +689,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let env =  Env.push_binders (Env.push_univ_vars env0 us) bs in
         env,
         S.mk_Tm_app ite_t
-          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
+          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, U.aqual_of_binder b))
           r |> N.normalize [Env.Beta] env,  //beta-reduce
         bs |> List.hd, f_b, g_b, (S.bv_to_name p_b.binder_bv)
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in

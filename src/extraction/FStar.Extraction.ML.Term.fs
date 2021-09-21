@@ -1472,7 +1472,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     match is_data with
                     | Some (Record_projector _) ->
                       let rec remove_implicits args f t = match args, t with
-                        | (a0, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
+                        | (a0, Some ({ aqual_implicit = true }))::args, MLTY_Fun(_, f', t) ->
                           remove_implicits args (join a0.pos f f') t
 
                         | _ -> args, f, t in

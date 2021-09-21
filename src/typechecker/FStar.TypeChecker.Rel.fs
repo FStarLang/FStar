@@ -760,7 +760,7 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         in
 
         (* Solve the old variable *)
-        let args_sol = List.map (fun ({binder_bv=x;binder_qual=i}) -> S.bv_to_name x, i) dom_binders in
+        let args_sol = List.map U.arg_of_non_null_binder dom_binders in
         let sol = S.mk_Tm_app t_v args_sol t0.pos in
         U.set_uvar uv.ctx_uvar_head sol;
 
@@ -861,7 +861,9 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         args |>
         List.collect (fun (a, i) ->
             match (SS.compress a).n with
-            | Tm_name x -> [S.mk_binder_with_attrs x i []]
+            | Tm_name x ->
+              let q, attrs = U.bqual_and_attrs_of_aqual i in
+              [S.mk_binder_with_attrs x q attrs]
             | _ ->
               fail();
               [])
@@ -1033,7 +1035,8 @@ let pat_vars env ctx args : option<binders> =
           if name_exists_in_binders a seen
           ||  name_exists_in_binders a ctx
           then None
-          else aux ((S.mk_binder_with_attrs a i [])::seen) args
+          else let bq, attrs = U.bqual_and_attrs_of_aqual i in
+               aux ((S.mk_binder_with_attrs a bq attrs)::seen) args
         | _ -> None
     in
     aux [] args
@@ -1636,9 +1639,10 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
                         let subst = [NT(formal, S.bv_to_name x)] in
                         let formals = SS.subst_binders subst formals in
                         let t_res = SS.subst subst t_res in
+                        let q, _ = U.bqual_and_attrs_of_aqual a_imp in
                         aux ((S.mk_binder_with_attrs
                                ({x with sort=formal.sort})
-                               a_imp
+                               q
                                fml.binder_attrs) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
             aux (fml :: pat_binders) formals t_res args
@@ -2142,7 +2146,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
-              aux (bs@[S.mk_binder_with_attrs y imp attrs]) (bs_terms@[S.bv_to_name y, imp]) formals wl
+              let b = S.mk_binder_with_attrs y imp attrs in
+              aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in
          if not occurs_ok
@@ -2181,7 +2186,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           env, Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (U.eq_aqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys when (U.eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -2278,6 +2283,16 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let bv_not_free_in_args x args =
               BU.for_all (bv_not_free_in_arg x) args
           in
+          let binder_matches_aqual b aq =
+            match b.binder_qual, aq with
+            | None, None -> true
+            | Some (Implicit _), Some a ->
+              a.aqual_implicit &&
+              U.eqlist (fun x y -> U.eq_tm x y = U.Equal)
+                       b.binder_attrs
+                       a.aqual_attributes
+            | _ -> false
+          in
           let rec remove_matching_prefix lhs_binders rhs_args =
             match lhs_binders, rhs_args with
             | [], _
@@ -2287,7 +2302,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               match (SS.compress t).n with
               | Tm_name x
                 when bv_eq b.binder_bv x
-                  && U.eq_aqual b.binder_qual aq = U.Equal
+                  && binder_matches_aqual b aq
                   && bv_not_free_in_args b.binder_bv rhs_tl ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
@@ -2866,7 +2881,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 //
                 let payload_of_hide_reveal h args =
                     match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some (Implicit _)); (t, _)]
+                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)]
                       when is_flex t ->
                       Some (u, ty, t)
                     | _ -> None
@@ -2904,25 +2919,25 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Some (Inl (u, ty, lhs)), None ->
                   // reveal / _
                   //add hide to both sides to simplify
-                  let rhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inl (u, ty, rhs)) ->
                   // _ / reveal
                   //add hide to both sides to simplify
-                  let lhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
                 | Some (Inr (u, ty, lhs)), None ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let rhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inr (u, ty, rhs)) ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let lhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
             in
             begin

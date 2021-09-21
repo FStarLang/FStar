@@ -466,9 +466,10 @@ let (gen :
                                                   kres)) in
                                     FStar_Syntax_Util.set_uvar
                                       u.FStar_Syntax_Syntax.ctx_uvar_head t;
-                                    (a,
-                                      (FStar_Pervasives_Native.Some
-                                         FStar_Syntax_Syntax.imp_tag))))))) in
+                                    (let uu___8 =
+                                       FStar_Syntax_Syntax.as_bqual_implicit
+                                         true in
+                                     (a, uu___8))))))) in
                let gen_univs1 = gen_univs env univs in
                let gen_tvars = gen_types uvs in
                let ecs =

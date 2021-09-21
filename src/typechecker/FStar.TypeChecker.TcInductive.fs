@@ -604,9 +604,9 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder ibs) Range.dummyRange in
   //haseq of ind
   let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
   //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
@@ -829,9 +829,9 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map U.arg_of_non_null_binder ibs) Range.dummyRange in
   //haseq of ind applied to all bs and ibs
   let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
 
@@ -1073,7 +1073,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
         let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc delta_constant None), inst_univs)) p in
-        let args = tps@indices |> List.map (fun ({binder_bv=x;binder_qual=imp}) -> S.bv_to_name x,imp) in
+        let args = tps@indices |> List.map U.arg_of_non_null_binder in
         S.mk_Tm_app inst_tc args p
     in
     let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
@@ -1146,7 +1146,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     then U.exp_true_bool   // If we have at most one constructor
                     else
                         let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
-                            let b = S.is_implicit imp in
+                            let b = S.is_bqual_implicit imp in
                             if b && j < ntps
                             then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
                             else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
@@ -1240,7 +1240,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           else
               let projection = S.gen_bv (string_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
-                  let b = S.is_implicit imp in
+                  let b = S.is_bqual_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps

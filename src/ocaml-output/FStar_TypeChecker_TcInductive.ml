@@ -1654,29 +1654,13 @@ let (get_optimized_haseq_axiom :
                    let ind1 =
                      let uu___2 =
                        FStar_Compiler_List.map
-                         (fun uu___3 ->
-                            match uu___3 with
-                            | { FStar_Syntax_Syntax.binder_bv = bv;
-                                FStar_Syntax_Syntax.binder_qual = aq;
-                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}
-                                ->
-                                let uu___5 =
-                                  FStar_Syntax_Syntax.bv_to_name bv in
-                                (uu___5, aq)) bs2 in
+                         FStar_Syntax_Util.arg_of_non_null_binder bs2 in
                      FStar_Syntax_Syntax.mk_Tm_app ind uu___2
                        FStar_Compiler_Range.dummyRange in
                    let ind2 =
                      let uu___2 =
                        FStar_Compiler_List.map
-                         (fun uu___3 ->
-                            match uu___3 with
-                            | { FStar_Syntax_Syntax.binder_bv = bv;
-                                FStar_Syntax_Syntax.binder_qual = aq;
-                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}
-                                ->
-                                let uu___5 =
-                                  FStar_Syntax_Syntax.bv_to_name bv in
-                                (uu___5, aq)) ibs1 in
+                         FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
                      FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
                        FStar_Compiler_Range.dummyRange in
                    let haseq_ind =
@@ -2158,29 +2142,13 @@ let (unoptimized_haseq_ty :
                        let ind1 =
                          let uu___2 =
                            FStar_Compiler_List.map
-                             (fun uu___3 ->
-                                match uu___3 with
-                                | { FStar_Syntax_Syntax.binder_bv = bv;
-                                    FStar_Syntax_Syntax.binder_qual = aq;
-                                    FStar_Syntax_Syntax.binder_attrs = uu___4;_}
-                                    ->
-                                    let uu___5 =
-                                      FStar_Syntax_Syntax.bv_to_name bv in
-                                    (uu___5, aq)) bs2 in
+                             FStar_Syntax_Util.arg_of_non_null_binder bs2 in
                          FStar_Syntax_Syntax.mk_Tm_app ind uu___2
                            FStar_Compiler_Range.dummyRange in
                        let ind2 =
                          let uu___2 =
                            FStar_Compiler_List.map
-                             (fun uu___3 ->
-                                match uu___3 with
-                                | { FStar_Syntax_Syntax.binder_bv = bv;
-                                    FStar_Syntax_Syntax.binder_qual = aq;
-                                    FStar_Syntax_Syntax.binder_attrs = uu___4;_}
-                                    ->
-                                    let uu___5 =
-                                      FStar_Syntax_Syntax.bv_to_name bv in
-                                    (uu___5, aq)) ibs1 in
+                             FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
                          FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
                            FStar_Compiler_Range.dummyRange in
                        let haseq_ind =
@@ -2641,17 +2609,7 @@ let (mk_discriminator_and_indexed_projectors :
                               FStar_Compiler_Effect.op_Bar_Greater
                                 (FStar_Compiler_List.op_At tps indices)
                                 (FStar_Compiler_List.map
-                                   (fun uu___ ->
-                                      match uu___ with
-                                      | { FStar_Syntax_Syntax.binder_bv = x;
-                                          FStar_Syntax_Syntax.binder_qual =
-                                            imp;
-                                          FStar_Syntax_Syntax.binder_attrs =
-                                            uu___1;_}
-                                          ->
-                                          let uu___2 =
-                                            FStar_Syntax_Syntax.bv_to_name x in
-                                          (uu___2, imp))) in
+                                   FStar_Syntax_Util.arg_of_non_null_binder) in
                             FStar_Syntax_Syntax.mk_Tm_app inst_tc args p in
                           let unrefined_arg_binder =
                             let uu___ = projectee arg_typ in
@@ -2842,7 +2800,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                          = uu___5;_}
                                                        ->
                                                        let b =
-                                                         FStar_Syntax_Syntax.is_implicit
+                                                         FStar_Syntax_Syntax.is_bqual_implicit
                                                            imp in
                                                        if b && (j < ntps)
                                                        then
@@ -3175,7 +3133,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                   = uu___7;_}
                                                                 ->
                                                                 let b =
-                                                                  FStar_Syntax_Syntax.is_implicit
+                                                                  FStar_Syntax_Syntax.is_bqual_implicit
                                                                     imp in
                                                                 if
                                                                   (i + ntps)

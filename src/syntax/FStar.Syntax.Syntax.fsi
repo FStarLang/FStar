@@ -181,7 +181,7 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = {
   binder_bv    : bv;
-  binder_qual  : aqual;
+  binder_qual  : bqual;
   binder_attrs : list<attribute>
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
@@ -301,10 +301,15 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
-and arg_qualifier =
+and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term  //meta-argument that specifies a tactic term
+  | Meta of term     //meta-argument that specifies a tactic term
   | Equality
+and bqual = option<binder_qualifier>
+and arg_qualifier = {
+  aqual_implicit : bool;
+  aqual_attributes : list<attribute>
+}
 and aqual = option<arg_qualifier>
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
@@ -597,19 +602,21 @@ val binders_of_list:      list<bv> -> binders
 
 val null_bv:        term -> bv
 val mk_binder_with_attrs
-           :        bv -> aqual -> list<attribute> -> binder
+           :        bv -> bqual -> list<attribute> -> binder
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg
-val imp_tag:        arg_qualifier
+val imp_tag:        binder_qualifier
 val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
-val is_implicit:    aqual -> bool
-val is_implicit_or_meta: aqual -> bool
-val as_implicit:    bool -> aqual
+val is_bqual_implicit:    bqual -> bool
+val is_aqual_implicit:    aqual -> bool
+val is_bqual_implicit_or_meta: bqual -> bool
+val as_bqual_implicit:    bool -> bqual
+val as_aqual_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 
 (* gensym *)

@@ -415,7 +415,8 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
-        vars, (te, as_implicit i) in
+        vars, (te, S.as_aqual_implicit i)
+    in
     match pat.v with
     | Pat_constant c ->
         [], mk (Tm_constant c)
@@ -2265,8 +2266,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
-                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
-                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
+                              let req = mk_Tm_app as_req [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
+                              let ens = mk_Tm_app as_ens [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                   end
@@ -2345,7 +2346,7 @@ let maybe_instantiate (env:Env.env) e t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -2384,8 +2385,9 @@ let maybe_instantiate (env:Env.env) e t =
                         BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
+                      let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                      (v, aq)::args, bs, subst, Env.conj_guard g g'
 
                   | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
                     when maybe_implicit_with_meta_or_attr qual attrs ->
@@ -2405,8 +2407,9 @@ let maybe_instantiate (env:Env.env) e t =
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
+                      let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                      (v, aq)::args, bs, subst, Env.conj_guard g g'
 
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
@@ -2866,7 +2869,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
-          let is_args = List.map2 (fun i ({binder_qual=aqual}) -> (i, aqual)) is bs in
+          let is_args = List.map2 (fun i b -> (i, U.aqual_of_binder b)) is bs in
           S.mk_Tm_app
             repr
             (S.as_arg a_tm::is_args)

@@ -1862,19 +1862,6 @@ let (tc_layered_eff_decl :
                               FStar_Compiler_Effect.op_Bar_Greater uu___12
                                 FStar_Pervasives_Native.snd in
                             uu___11.FStar_Syntax_Syntax.pos in
-                          let binder_aq_to_arg_aq uu___11 =
-                            match uu___11 with
-                            | (aq, attrs1) ->
-                                (match (aq, attrs1) with
-                                 | (FStar_Pervasives_Native.Some
-                                    (FStar_Syntax_Syntax.Implicit uu___12),
-                                    uu___13) -> aq
-                                 | (FStar_Pervasives_Native.Some
-                                    (FStar_Syntax_Syntax.Meta uu___12),
-                                    uu___13) ->
-                                     FStar_Pervasives_Native.Some
-                                       (FStar_Syntax_Syntax.Implicit false)
-                                 | uu___12 -> FStar_Pervasives_Native.None) in
                           let uu___11 = if_then_else in
                           match uu___11 with
                           | (ite_us, ite_t, uu___12) ->
@@ -1929,10 +1916,11 @@ let (tc_layered_eff_decl :
                                                             let uu___22 =
                                                               FStar_Syntax_Syntax.bv_to_name
                                                                 b.FStar_Syntax_Syntax.binder_bv in
+                                                            let uu___23 =
+                                                              FStar_Syntax_Util.aqual_of_binder
+                                                                b in
                                                             (uu___22,
-                                                              (binder_aq_to_arg_aq
-                                                                 ((b.FStar_Syntax_Syntax.binder_qual),
-                                                                   (b.FStar_Syntax_Syntax.binder_attrs)))))) in
+                                                              uu___23))) in
                                                   FStar_Syntax_Syntax.mk_Tm_app
                                                     ite_t1 uu___21 r in
                                                 FStar_Compiler_Effect.op_Bar_Greater
