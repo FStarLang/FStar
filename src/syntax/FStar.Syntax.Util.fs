@@ -739,6 +739,8 @@ let eq_aqual a1 a2 =
            a1.aqual_attributes
            a2.aqual_attributes
     else NotEqual
+  | None, None ->
+    Equal
   | _ ->
     NotEqual
 

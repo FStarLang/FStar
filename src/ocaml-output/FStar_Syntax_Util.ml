@@ -1247,6 +1247,7 @@ let (eq_aqual :
               a11.FStar_Syntax_Syntax.aqual_attributes
               a21.FStar_Syntax_Syntax.aqual_attributes
           else NotEqual
+      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Equal
       | uu___ -> NotEqual
 let rec (unrefine : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->

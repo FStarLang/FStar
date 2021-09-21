@@ -248,6 +248,8 @@ let run_either i r expected normalizer =
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
+    Options.set_option "ugly" (Options.Bool true);
+    Options.set_option "print_bound_var_types" (Options.Bool true);
     // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 

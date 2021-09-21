@@ -100,5 +100,7 @@ let rec term_eq' t1 t2 =
 let term_eq t1 t2 =
 //    BU.print2 "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
     let b = term_eq' t1 t2 in
-    if not b then BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    if not b then (
+      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2)
+    );
     b

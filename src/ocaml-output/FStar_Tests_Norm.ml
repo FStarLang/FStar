@@ -1241,10 +1241,13 @@ let run_either :
               (FStar_Options.Bool true);
             FStar_Options.set_option "print_implicits"
               (FStar_Options.Bool true);
-            (let uu___5 =
-               let uu___6 = FStar_Syntax_Util.unascribe x in
-               FStar_Tests_Util.term_eq uu___6 expected in
-             FStar_Tests_Util.always i uu___5)))
+            FStar_Options.set_option "ugly" (FStar_Options.Bool true);
+            FStar_Options.set_option "print_bound_var_types"
+              (FStar_Options.Bool true);
+            (let uu___7 =
+               let uu___8 = FStar_Syntax_Util.unascribe x in
+               FStar_Tests_Util.term_eq uu___8 expected in
+             FStar_Tests_Util.always i uu___7)))
 let (run_interpreter :
   Prims.int ->
     FStar_Syntax_Syntax.term ->
