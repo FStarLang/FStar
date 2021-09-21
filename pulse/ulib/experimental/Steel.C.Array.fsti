@@ -167,21 +167,21 @@ val merge_assoc
   ))
   [SMTPat (merge (merge r1 r2) r3)]
 
+[@erasable]
+noeq
+type gpair (a b: Type) = | GPair: (fst: a) -> (snd: b) -> gpair a b
+
 val gsplit
   (#base: Type)
   (#t: Type)
   (r: array base t)
   (i: size_t)
-: Ghost (array base t & array base t)
+: Ghost (array base t `gpair` array base t)
   (requires (size_v i <= length r))
-  (ensures (fun (rl, rr) ->
+  (ensures (fun (GPair rl rr) ->
     merge_into rl rr r /\
     length rl == size_v i
   ))
-
-[@erasable]
-noeq
-type gpair (a b: Type) = | GPair: (fst: a) -> (snd: b) -> gpair a b
 
 val split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
   : SteelGhost (array base t `gpair` array base t) opened
@@ -193,8 +193,7 @@ val split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
             let sl = h' (varray (GPair?.fst res)) in
             let sr = h' (varray (GPair?.snd res)) in
             size_v i <= length a /\
-            GPair?.fst res == fst (gsplit a i) /\
-            GPair?.snd res == snd (gsplit a i) /\
+            res == gsplit a i /\
             sl == Seq.slice s 0 (size_v i) /\
             sr == Seq.slice s (size_v i) (length a) /\
             s == sl `Seq.append` sr
@@ -208,7 +207,7 @@ val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
           (fun h res h' ->
             h' (varray a) == h (varray a) /\
             size_v i <= length a /\
-            res == fst (gsplit a i)
+            res == GPair?.fst (gsplit a i)
           )
 
 val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
@@ -219,7 +218,7 @@ val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
           (fun h res h' ->
             h' (varray a) == h (varray a) /\
             size_v i <= length a /\
-            res == snd (gsplit a i)
+            res == GPair?.snd (gsplit a i)
           )
 
 val join' (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
