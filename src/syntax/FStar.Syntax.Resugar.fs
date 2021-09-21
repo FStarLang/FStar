@@ -284,8 +284,6 @@ let maybe_shorten_fv env fv =
   let lid = fv.fv_name.v in
   if may_shorten lid then DsEnv.shorten_lid env lid else lid
 
-#push-options "--print_full_names --ugly"
-
 let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
