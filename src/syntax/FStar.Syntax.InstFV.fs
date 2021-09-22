@@ -80,7 +80,7 @@ let rec inst (s:term -> fv -> term) t =
             let t = inst s t in
             (p, wopt, t)) in
         let asc_opt = U.map_opt asc_opt (inst_ascription s) in
-        mk (Tm_match(inst s t, asc_opt, pats, lopt))
+        mk (Tm_match(inst s t, asc_opt, pats, inst_lcomp_opt s lopt))
 
       | Tm_ascribed(t1, asc, f) ->
         mk (Tm_ascribed(inst s t1, inst_ascription s asc, f))
