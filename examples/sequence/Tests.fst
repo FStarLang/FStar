@@ -36,6 +36,7 @@ This module includes tests of sequence proprties.
 module Tests
 
 open FStar.Sequence
+open FStar.Sequence.Util
 
 (** test1 asserts various statements that trivially follow from the ambient sequence facts **)
 private let test1 () : Lemma (True) =
