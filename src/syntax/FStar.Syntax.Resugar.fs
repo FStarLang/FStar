@@ -576,13 +576,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
-          let rec uncurry xs pats (t:A.term) = match t.tm with
-            | A.QExists(xs', (_, pats'), body)
-            | A.QForall(xs', (_, pats'), body) ->
-                uncurry (xs@xs') (pats@pats') body
-            | _ ->
-                xs, pats, t
-          in
+          // let rec uncurry xs pats (t:A.term) = match t.tm with
+          //   | A.QExists(xs', (_, pats'), body)
+          //   | A.QForall(xs', (_, pats'), body) ->
+          //       uncurry (xs@xs') (pats@pats') body
+          //   | _ ->
+          //       xs, pats, t
+          // in
           let resugar_forall_body body = match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
@@ -606,7 +606,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                     pats, body
                   | _ -> [], resugar_term' env body
                 in
-                let xs, pats, body = uncurry xs pats body in
+                //let xs, pats, body = uncurry xs pats body in
                 if op = "forall"
                 then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
                 else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
