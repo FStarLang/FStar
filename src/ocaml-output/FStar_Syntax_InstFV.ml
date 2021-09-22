@@ -74,7 +74,9 @@ let rec (inst :
             FStar_Compiler_Util.map_opt asc_opt (inst_ascription s) in
           let uu___ =
             let uu___1 =
-              let uu___2 = inst s t2 in (uu___2, asc_opt1, pats1, lopt) in
+              let uu___2 = inst s t2 in
+              let uu___3 = inst_lcomp_opt s lopt in
+              (uu___2, asc_opt1, pats1, uu___3) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_ascribed (t11, asc, f) ->
