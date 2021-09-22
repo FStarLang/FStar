@@ -347,7 +347,7 @@ and term_to_string x =
             U.format1 " (residual_comp:%s)"
               (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
           | _ -> "" in
-        U.format4 "(match %s %swith\n\t| %s%s"
+        U.format4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
           (match asc_opt with
            | None -> ""
