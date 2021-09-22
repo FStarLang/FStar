@@ -277,6 +277,37 @@ let (check_expected_aqual_for_binder :
                 (FStar_Errors.Fatal_InconsistentImplicitQualifier,
                   "Inconsistent implicit qualifiers") pos
             else expected_aq
+let (check_erasable_binder_attributes :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list ->
+      FStar_Syntax_Syntax.typ -> unit)
+  =
+  fun env ->
+    fun attrs ->
+      fun binder_ty ->
+        let is_attr_erasable attr =
+          let uu___ =
+            let uu___1 = FStar_Syntax_Subst.compress attr in
+            uu___1.FStar_Syntax_Syntax.n in
+          match uu___ with
+          | FStar_Syntax_Syntax.Tm_fvar fv ->
+              FStar_Syntax_Syntax.fv_eq_lid fv
+                FStar_Parser_Const.erasable_attr
+          | uu___1 -> false in
+        FStar_Compiler_List.iter
+          (fun attr ->
+             let uu___ =
+               (is_attr_erasable attr) &&
+                 (let uu___1 =
+                    FStar_TypeChecker_Env.non_informative env binder_ty in
+                  Prims.op_Negation uu___1) in
+             if uu___
+             then
+               FStar_Errors.raise_error
+                 (FStar_Errors.Fatal_QulifierListNotPermitted,
+                   "Incompatible attributes:an erasable attribute on a binder must bind a name at an non-informative type")
+                 attr.FStar_Syntax_Syntax.pos
+             else ()) attrs
 let (push_binding :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
@@ -5421,25 +5452,27 @@ and (tc_abs_check_binders :
                              FStar_Syntax_Syntax.binder_qual = imp;
                              FStar_Syntax_Syntax.binder_attrs = attrs
                            } in
-                         let b_expected =
-                           {
-                             FStar_Syntax_Syntax.binder_bv = hd_expected;
-                             FStar_Syntax_Syntax.binder_qual = imp';
-                             FStar_Syntax_Syntax.binder_attrs = attrs'
-                           } in
-                         let env_b = push_binding env1 b in
-                         let subst1 =
-                           let uu___3 = FStar_Syntax_Syntax.bv_to_name hd1 in
-                           maybe_extend_subst subst b_expected uu___3 in
-                         let uu___3 = aux (env_b, subst1) bs2 bs_expected2 in
-                         (match uu___3 with
-                          | (env_bs, bs3, rest, g'_env_b, subst2) ->
-                              let g'_env =
-                                FStar_TypeChecker_Env.close_guard env_bs 
-                                  [b] g'_env_b in
-                              let uu___4 =
-                                FStar_TypeChecker_Env.conj_guard g_env g'_env in
-                              (env_bs, (b :: bs3), rest, uu___4, subst2))))
+                         (check_erasable_binder_attributes env1 attrs t;
+                          (let b_expected =
+                             {
+                               FStar_Syntax_Syntax.binder_bv = hd_expected;
+                               FStar_Syntax_Syntax.binder_qual = imp';
+                               FStar_Syntax_Syntax.binder_attrs = attrs'
+                             } in
+                           let env_b = push_binding env1 b in
+                           let subst1 =
+                             let uu___4 = FStar_Syntax_Syntax.bv_to_name hd1 in
+                             maybe_extend_subst subst b_expected uu___4 in
+                           let uu___4 = aux (env_b, subst1) bs2 bs_expected2 in
+                           match uu___4 with
+                           | (env_bs, bs3, rest, g'_env_b, subst2) ->
+                               let g'_env =
+                                 FStar_TypeChecker_Env.close_guard env_bs 
+                                   [b] g'_env_b in
+                               let uu___5 =
+                                 FStar_TypeChecker_Env.conj_guard g_env
+                                   g'_env in
+                               (env_bs, (b :: bs3), rest, uu___5, subst2)))))
                | (rest, []) ->
                    (env1, [],
                      (FStar_Pervasives_Native.Some
@@ -10991,31 +11024,32 @@ and (tc_binder :
                                         FStar_Syntax_Syntax.t_unit "" in
                                     match uu___6 with
                                     | (attr1, uu___7, uu___8) -> attr1)) in
-                          let x1 =
-                            FStar_Syntax_Syntax.mk_binder_with_attrs
-                              {
-                                FStar_Syntax_Syntax.ppname =
-                                  (x.FStar_Syntax_Syntax.ppname);
-                                FStar_Syntax_Syntax.index =
-                                  (x.FStar_Syntax_Syntax.index);
-                                FStar_Syntax_Syntax.sort = t
-                              } imp1 attrs1 in
-                          ((let uu___7 =
-                              FStar_TypeChecker_Env.debug env
-                                FStar_Options.High in
-                            if uu___7
-                            then
-                              let uu___8 =
-                                FStar_Syntax_Print.bv_to_string
-                                  x1.FStar_Syntax_Syntax.binder_bv in
-                              let uu___9 =
-                                FStar_Syntax_Print.term_to_string t in
-                              FStar_Compiler_Util.print2
-                                "Pushing binder %s at type %s\n" uu___8
-                                uu___9
-                            else ());
-                           (let uu___7 = push_binding env x1 in
-                            (x1, uu___7, g, u)))))))
+                          (check_erasable_binder_attributes env attrs1 t;
+                           (let x1 =
+                              FStar_Syntax_Syntax.mk_binder_with_attrs
+                                {
+                                  FStar_Syntax_Syntax.ppname =
+                                    (x.FStar_Syntax_Syntax.ppname);
+                                  FStar_Syntax_Syntax.index =
+                                    (x.FStar_Syntax_Syntax.index);
+                                  FStar_Syntax_Syntax.sort = t
+                                } imp1 attrs1 in
+                            (let uu___8 =
+                               FStar_TypeChecker_Env.debug env
+                                 FStar_Options.High in
+                             if uu___8
+                             then
+                               let uu___9 =
+                                 FStar_Syntax_Print.bv_to_string
+                                   x1.FStar_Syntax_Syntax.binder_bv in
+                               let uu___10 =
+                                 FStar_Syntax_Print.term_to_string t in
+                               FStar_Compiler_Util.print2
+                                 "Pushing binder %s at type %s\n" uu___9
+                                 uu___10
+                             else ());
+                            (let uu___8 = push_binding env x1 in
+                             (x1, uu___8, g, u))))))))
 and (tc_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->

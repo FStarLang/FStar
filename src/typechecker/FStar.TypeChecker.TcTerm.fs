@@ -98,6 +98,23 @@ let check_expected_aqual_for_binder aq b pos =
       then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
       else expected_aq //keep the attributes
 
+let check_erasable_binder_attributes env attrs (binder_ty:typ) =
+    let is_attr_erasable attr =
+        match (SS.compress attr).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv Const.erasable_attr
+        | _ -> false
+    in
+    List.iter
+      (fun attr ->
+        if is_attr_erasable attr
+        && not (Env.non_informative env binder_ty)
+        then raise_error (Errors.Fatal_QulifierListNotPermitted,
+                          "Incompatible attributes:\
+                           an erasable attribute on a binder must bind a name at an non-informative type")
+                         attr.pos)
+     attrs
+
+
 let push_binding env b =
   Env.push_bv env b.binder_bv
 
@@ -1904,6 +1921,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
 
         let hd = {hd with sort=t} in
         let b = {binder_bv=hd;binder_qual=imp;binder_attrs=attrs} in
+        check_erasable_binder_attributes env attrs t;
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
@@ -3812,9 +3830,12 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
         | _ -> imp, Env.trivial_guard
     in
     let attrs =
-      attrs |> List.map (fun attr ->
+      attrs |> List.map
+      (fun attr ->
         let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
-        attr) in
+        attr)
+    in
+    check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string x.binder_bv) (Print.term_to_string t);
