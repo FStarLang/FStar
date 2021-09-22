@@ -945,7 +945,7 @@ let rec non_informative env t =
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
       //It would be sound to also add this disjunct below,
       //But, it leads to regressions in examples/rel/Benton2004.fst
-      //|| is_ghost_effect (comp_effect_name c)
+      || is_ghost_effect (comp_effect_name c)
     | _ -> false
 
 let fv_has_strict_args env fv =

@@ -3379,8 +3379,11 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
           non_informative env1 head
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
       | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
-          (FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-            (non_informative env1 (FStar_Syntax_Util.comp_result c))
+          ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+             (non_informative env1 (FStar_Syntax_Util.comp_result c)))
+            ||
+            (FStar_Syntax_Util.is_ghost_effect
+               (FStar_Syntax_Util.comp_effect_name c))
       | uu___1 -> false
 let (fv_has_strict_args :
   env ->
