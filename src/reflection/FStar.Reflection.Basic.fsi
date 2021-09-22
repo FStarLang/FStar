@@ -67,6 +67,7 @@ val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
 
 val subst          : bv -> term -> term -> term
+val close_term     : binder -> term -> term
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)
