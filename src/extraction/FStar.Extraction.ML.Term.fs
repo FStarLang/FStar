@@ -184,7 +184,7 @@ let rec is_arity env t =
     | Tm_abs(_, body, _)
     | Tm_let(_, body) ->
       is_arity env body
-    | Tm_match(_, _, branches) ->
+    | Tm_match(_, _, branches, _) ->
       begin match branches with
         | (_, _, e)::_ -> is_arity env e
         | _ -> false
@@ -242,7 +242,7 @@ let rec is_type_aux env t =
       let _, body = SS.open_let_rec lbs body in
       is_type_aux env body
 
-    | Tm_match(_, _, branches) ->
+    | Tm_match(_, _, branches, _) ->
       begin match branches with
         | b::_ ->
           let _, _, e = SS.open_branch b in
@@ -1205,12 +1205,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     //precondition: is_match head = true
     let apply_to_match_branches head args =
       match (head |> SS.compress |> U.unascribe).n with
-      | Tm_match (scrutinee, _, branches) ->
+      | Tm_match (scrutinee, _, branches, _) ->
         let branches =
           branches |> List.map (fun (pat, when_opt, body) ->
             pat, when_opt, { body with n = Tm_app (body, args) }
           ) in
-        { head with n = Tm_match (scrutinee, None, branches) }  //AR: dropping the return annotation, should be fine?
+        { head with n = Tm_match (scrutinee, None, branches, None) }  //AR: dropping the return annotation and rc
       | _ -> failwith "Impossible! cannot apply args to match branches if head is not a match" in
 
     let t = SS.compress top in
@@ -1733,7 +1733,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
-      | Tm_match(scrutinee, _, pats) ->
+      | Tm_match(scrutinee, _, pats, _) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
         let b, then_e, else_e = check_pats_for_ite pats in
         let no_lift : mlexpr -> mlty -> mlexpr = fun x t -> x in

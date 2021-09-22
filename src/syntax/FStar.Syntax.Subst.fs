@@ -417,17 +417,17 @@ let rec push_subst s t =
         let phi = subst' (shift_subst' 1 s) phi in
         mk (Tm_refine(x, phi))
 
-    | Tm_match(t0, asc_opt, pats) ->
+    | Tm_match(t0, asc_opt, pats, lopt) ->
         let t0 = subst' s t0 in
         let pats = pats |> List.map (fun (pat, wopt, branch) ->
-        let pat, n = subst_pat' s pat in
-        let s = shift_subst' n s in
-        let wopt = match wopt with
+          let pat, n = subst_pat' s pat in
+          let s = shift_subst' n s in
+          let wopt = match wopt with
             | None -> None
             | Some w -> Some (subst' s w) in
-        let branch = subst' s branch in
-        (pat, wopt, branch)) in
-        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats))
+          let branch = subst' s branch in
+          (pat, wopt, branch)) in
+        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats, push_subst_lcomp s lopt))
 
     | Tm_let((is_rec, lbs), body) ->
         let n = List.length lbs in
@@ -814,12 +814,6 @@ let rec deep_compress (t:term) : term =
       deep_compress t
 
     | Tm_abs(bs, t, rc_opt) ->
-      let elim_rc (rc:residual_comp) : residual_comp = {
-        residual_effect = rc.residual_effect;
-        residual_typ    = map_opt rc.residual_typ deep_compress;
-        residual_flags  = deep_compress_cflags rc.residual_flags
-      }
-      in
       mk (Tm_abs (deep_compress_binders bs,
                   deep_compress t,
                   map_opt rc_opt elim_rc))
@@ -833,7 +827,7 @@ let rec deep_compress (t:term) : term =
     | Tm_app(t, args) ->
       mk (Tm_app(deep_compress t, deep_compress_args args))
 
-    | Tm_match(t, asc_opt, branches) ->
+    | Tm_match(t, asc_opt, branches, rc_opt) ->
       let rec elim_pat (p:pat) =
         match p.v with
         | Pat_var x ->
@@ -854,7 +848,7 @@ let rec deep_compress (t:term) : term =
            map_opt wopt deep_compress,
            deep_compress t)
       in
-      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches))
+      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches, map_opt rc_opt elim_rc))
 
     | Tm_ascribed(t, a, lopt) ->
       mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
@@ -895,6 +889,12 @@ and elim_ascription (tc, topt) =
    | Inl t -> Inl (deep_compress t)
    | Inr c -> Inr (deep_compress_comp c)),
   map_opt topt deep_compress
+
+and elim_rc (rc:residual_comp) : residual_comp = {
+  residual_effect = rc.residual_effect;
+  residual_typ    = map_opt rc.residual_typ deep_compress;
+  residual_flags  = deep_compress_cflags rc.residual_flags
+}
 
 and deep_compress_dec_order = function
   | Decreases_lex l -> Decreases_lex (l |> List.map deep_compress)
