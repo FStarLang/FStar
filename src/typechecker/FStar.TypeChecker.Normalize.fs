@@ -58,6 +58,11 @@ module TcComm = FStar.TypeChecker.Common
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
+let aqual_is_erasable (aq:aqual) =
+  match aq with
+  | None -> false
+  | Some aq -> BU.for_some (U.is_fvar PC.erasable_attr) aq.aqual_attributes
+
 let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option<(term * BU.time)>) =
   if cfg.debug.print_normalized
   then match dbg with
@@ -1334,7 +1339,20 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin
             match strict_args with
             | None ->
-              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              let stack =
+                List.fold_right
+                  (fun (a, aq) stack ->
+                    let a =
+                      if (cfg.steps.for_extraction ||
+                          cfg.debug.erase_erasable_args) //just for experimentation
+                      && aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
+                      then S.tun
+                      else a
+                    in
+                    Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                  args
+                  stack
+              in
               log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack head
 

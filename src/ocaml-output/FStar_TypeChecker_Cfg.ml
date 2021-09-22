@@ -1521,61 +1521,70 @@ type debug_switches =
   wpe: Prims.bool ;
   norm_delayed: Prims.bool ;
   print_normalized: Prims.bool ;
-  debug_nbe: Prims.bool }
+  debug_nbe: Prims.bool ;
+  erase_erasable_args: Prims.bool }
 let (__proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> gen
+        print_normalized; debug_nbe; erase_erasable_args;_} -> gen
 let (__proj__Mkdebug_switches__item__top : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> top
+        print_normalized; debug_nbe; erase_erasable_args;_} -> top
 let (__proj__Mkdebug_switches__item__cfg : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> cfg
+        print_normalized; debug_nbe; erase_erasable_args;_} -> cfg
 let (__proj__Mkdebug_switches__item__primop : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> primop
+        print_normalized; debug_nbe; erase_erasable_args;_} -> primop
 let (__proj__Mkdebug_switches__item__unfolding :
   debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> unfolding
+        print_normalized; debug_nbe; erase_erasable_args;_} -> unfolding
 let (__proj__Mkdebug_switches__item__b380 : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> b380
+        print_normalized; debug_nbe; erase_erasable_args;_} -> b380
 let (__proj__Mkdebug_switches__item__wpe : debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> wpe
+        print_normalized; debug_nbe; erase_erasable_args;_} -> wpe
 let (__proj__Mkdebug_switches__item__norm_delayed :
   debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> norm_delayed
+        print_normalized; debug_nbe; erase_erasable_args;_} -> norm_delayed
 let (__proj__Mkdebug_switches__item__print_normalized :
   debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> print_normalized
+        print_normalized; debug_nbe; erase_erasable_args;_} ->
+        print_normalized
 let (__proj__Mkdebug_switches__item__debug_nbe :
   debug_switches -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe;_} -> debug_nbe
+        print_normalized; debug_nbe; erase_erasable_args;_} -> debug_nbe
+let (__proj__Mkdebug_switches__item__erase_erasable_args :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} ->
+        erase_erasable_args
 let (no_debug_switches : debug_switches) =
   {
     gen = false;
@@ -1587,7 +1596,8 @@ let (no_debug_switches : debug_switches) =
     wpe = false;
     norm_delayed = false;
     print_normalized = false;
-    debug_nbe = false
+    debug_nbe = false;
+    erase_erasable_args = false
   }
 type primitive_step =
   {
@@ -3305,6 +3315,9 @@ let (config' :
                 (FStar_Options.Other "print_normalized_terms") in
             let uu___11 =
               FStar_TypeChecker_Env.debug e (FStar_Options.Other "NBE") in
+            let uu___12 =
+              FStar_TypeChecker_Env.debug e
+                (FStar_Options.Other "EraseErasableArgs") in
             {
               gen = uu___2;
               top = uu___3;
@@ -3315,7 +3328,8 @@ let (config' :
               wpe = uu___8;
               norm_delayed = uu___9;
               print_normalized = uu___10;
-              debug_nbe = uu___11
+              debug_nbe = uu___11;
+              erase_erasable_args = uu___12
             }
           else no_debug_switches in
         let uu___1 =

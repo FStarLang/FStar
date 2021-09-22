@@ -213,6 +213,7 @@ type debug_switches = {
     norm_delayed     : bool;
     print_normalized : bool;
     debug_nbe        : bool;
+    erase_erasable_args: bool
 }
 
 let no_debug_switches = {
@@ -226,6 +227,7 @@ let no_debug_switches = {
     norm_delayed     = false;
     print_normalized = false;
     debug_nbe        = false;
+    erase_erasable_args = false;
 }
 
 type primitive_step = {
@@ -1155,7 +1157,8 @@ let config' psteps s e =
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
-             ; debug_nbe = Env.debug e (Options.Other "NBE")}
+             ; debug_nbe = Env.debug e (Options.Other "NBE")
+             ; erase_erasable_args = Env.debug e (Options.Other "EraseErasableArgs")}
             else no_debug_switches
       ;
      steps = steps;

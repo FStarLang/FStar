@@ -92,6 +92,7 @@ type debug_switches = {
     norm_delayed     : bool;
     print_normalized : bool;
     debug_nbe        : bool;
+    erase_erasable_args: bool;
 }
 
 type cfg = {

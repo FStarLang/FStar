@@ -1,4 +1,12 @@
 open Prims
+let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
+  fun aq ->
+    match aq with
+    | FStar_Pervasives_Native.None -> false
+    | FStar_Pervasives_Native.Some aq1 ->
+        FStar_Compiler_Util.for_some
+          (FStar_Syntax_Util.is_fvar FStar_Parser_Const.erasable_attr)
+          aq1.FStar_Syntax_Syntax.aqual_attributes
 let (maybe_debug :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_Syntax_Syntax.term ->
@@ -3822,25 +3830,33 @@ let rec (norm :
                (match strict_args with
                 | FStar_Pervasives_Native.None ->
                     let stack2 =
-                      FStar_Compiler_Effect.op_Bar_Greater stack1
-                        (FStar_Compiler_List.fold_right
-                           (fun uu___2 ->
-                              fun stack3 ->
-                                match uu___2 with
-                                | (a, aq) ->
-                                    let uu___3 =
-                                      let uu___4 =
-                                        let uu___5 =
-                                          let uu___6 =
-                                            let uu___7 =
-                                              FStar_Compiler_Util.mk_ref
-                                                FStar_Pervasives_Native.None in
-                                            (env1, a, uu___7, false) in
-                                          Clos uu___6 in
-                                        (uu___5, aq,
-                                          (t1.FStar_Syntax_Syntax.pos)) in
-                                      Arg uu___4 in
-                                    uu___3 :: stack3) args) in
+                      FStar_Compiler_List.fold_right
+                        (fun uu___2 ->
+                           fun stack3 ->
+                             match uu___2 with
+                             | (a, aq) ->
+                                 let a1 =
+                                   let uu___3 =
+                                     ((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                                        ||
+                                        (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args)
+                                       && (aqual_is_erasable aq) in
+                                   if uu___3
+                                   then FStar_Syntax_Syntax.tun
+                                   else a in
+                                 let uu___3 =
+                                   let uu___4 =
+                                     let uu___5 =
+                                       let uu___6 =
+                                         let uu___7 =
+                                           FStar_Compiler_Util.mk_ref
+                                             FStar_Pervasives_Native.None in
+                                         (env1, a1, uu___7, false) in
+                                       Clos uu___6 in
+                                     (uu___5, aq,
+                                       (t1.FStar_Syntax_Syntax.pos)) in
+                                   Arg uu___4 in
+                                 uu___3 :: stack3) args stack1 in
                     (FStar_TypeChecker_Cfg.log cfg
                        (fun uu___3 ->
                           let uu___4 =
