@@ -33,7 +33,8 @@ calc \
 steel \
 steel_tutorial \
 layeredeffects \
-misc
+misc \
+sequence
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
