@@ -340,8 +340,14 @@ and term_to_string x =
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
         U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
-      | Tm_match(head, asc_opt, branches) ->
-        U.format3 "(match %s %swith\n\t| %s)"
+      | Tm_match(head, asc_opt, branches, lc) ->
+        let lc_str =
+          match lc with
+          | Some lc when (Options.print_implicits ()) ->
+            U.format1 " (residual_comp:%s)"
+              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
+          | _ -> "" in
+        U.format4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
           (match asc_opt with
            | None -> ""
@@ -354,6 +360,7 @@ and term_to_string x =
                 | None -> ""
                 | Some tac -> U.format1 " by %s" (term_to_string tac)))
           (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
+          lc_str
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)

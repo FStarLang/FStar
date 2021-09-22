@@ -55,7 +55,7 @@ let rec (inst :
               let uu___3 = inst_args s args in (uu___2, uu___3) in
             FStar_Syntax_Syntax.Tm_app uu___1 in
           mk1 uu___
-      | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, pats) ->
+      | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, pats, lopt) ->
           let pats1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.map
@@ -73,7 +73,10 @@ let rec (inst :
           let asc_opt1 =
             FStar_Compiler_Util.map_opt asc_opt (inst_ascription s) in
           let uu___ =
-            let uu___1 = let uu___2 = inst s t2 in (uu___2, asc_opt1, pats1) in
+            let uu___1 =
+              let uu___2 = inst s t2 in
+              let uu___3 = inst_lcomp_opt s lopt in
+              (uu___2, asc_opt1, pats1, uu___3) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk1 uu___
       | FStar_Syntax_Syntax.Tm_ascribed (t11, asc, f) ->

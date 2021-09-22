@@ -343,7 +343,7 @@ let is_lemma t =
 let rec head_of (t : term) : term =
     match (compress t).n with
     | Tm_app (t, _)
-    | Tm_match (t, _, _)
+    | Tm_match (t, _, _, _)
     | Tm_abs (_, t, _)
     | Tm_ascribed (t, _, _)
     | Tm_meta (t, _) -> head_of t
@@ -610,7 +610,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
-    | Tm_match (t1, None, bs1), Tm_match (t2, None, bs2) ->  //AR: note: no return annotations
+    | Tm_match (t1, None, bs1, _), Tm_match (t2, None, bs2, _) ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
                              (List.zip bs1 bs2)
@@ -1320,7 +1320,7 @@ let is_wild_pat p =
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
-    mk (Tm_match(b, None, [then_branch; else_branch])) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
+    mk (Tm_match(b, None, [then_branch; else_branch], None)) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
@@ -1747,7 +1747,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
 
-  | Tm_match (t1,None,bs1), Tm_match (t2,None,bs2) ->  //AR: note: no return annotations
+  | Tm_match (t1,None,bs1,_), Tm_match (t2,None,bs2,_) ->  //AR: note: no return annotations
     (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
 
@@ -1978,7 +1978,7 @@ let rec unbound_variables tm :  list<bv> =
         List.collect (fun (x, _) -> unbound_variables x) args
         @ unbound_variables t
 
-      | Tm_match(t, asc_opt, pats) ->
+      | Tm_match(t, asc_opt, pats, _) ->
         unbound_variables t
         @ (match asc_opt with
            | None -> []
