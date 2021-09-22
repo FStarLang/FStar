@@ -328,26 +328,6 @@ let array_conn_fpu_f
   in
   v'
 
-let array_conn_fpu
-  (t: Type0)
-  (base_len: Ghost.erased size_t)
-  (from: size_t)
-  (to: size_t)
-  (sq: squash (
-    size_v from <= size_v to /\
-    size_v to <= size_v base_len
-  ))
-  (x: Ghost.erased (array_pcm_carrier t (to `size_sub` from)) { ~ (Ghost.reveal x == one (array_pcm t (to `size_sub` from))) })
-  (y: Ghost.erased (array_pcm_carrier t (to `size_sub` from)))
-  (f: frame_preserving_upd (array_pcm t (to `size_sub` from)) x y)
-: Tot (frame_preserving_upd (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x) (array_small_to_large_f t base_len from to sq y))
-= frame_preserving_upd_intro
-    (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x) (array_small_to_large_f t base_len from to sq y)
-    (array_conn_fpu_f t base_len from to sq x y f)
-    (fun _ -> assume False)
-    (fun _ _ -> assume False)
-    (fun _ _ -> assume False)
-
 #pop-options
 
 let array_conn
@@ -363,11 +343,12 @@ let array_conn
     (array_pcm t base_len)
     (array_pcm t (to `size_sub` from))
 =
-  Steel.C.Connection.mkconnection
+  Steel.C.Connection.mkconnection1
     (array_small_to_large t base_len from to sq)
     (array_large_to_small t base_len from to sq)
     (array_small_to_large_to_small t base_len from to sq)
-    (array_conn_fpu t base_len from to sq)
+    (array_conn_fpu_f t base_len from to sq)
+    (fun x y f v -> assume False)
 
 #push-options "--z3rlimit 64 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false"
 #restart-solver
@@ -380,11 +361,56 @@ let array_conn_id
 =
   let z = mk_size_t (FStar.UInt32.uint_to_t 0) in
   assert (forall x . array_small_to_large_f t base_len z base_len () x `feq` x);
-  assume (forall (x: Ghost.erased (array_pcm_carrier t (base_len `size_sub` z)) { ~ (Ghost.reveal x == one (array_pcm t (base_len `size_sub` z))) }) y (f: frame_preserving_upd (array_pcm t (base_len `size_sub` z)) x y) v . array_conn_fpu_f t base_len z base_len () x y f v `feq` f v);
-  assert (forall x y f . array_conn_fpu_f t base_len z base_len () x y f `feq` f);
-  assume ((array_conn t base_len (mk_size_t (FStar.UInt32.uint_to_t 0)) base_len ()).Steel.C.Connection.conn_lift_frame_preserving_upd === (Steel.C.Connection.connection_id (array_pcm t base_len)).Steel.C.Connection.conn_lift_frame_preserving_upd);
-  array_conn t base_len (mk_size_t (FStar.UInt32.uint_to_t 0)) base_len () `Steel.C.Connection.connection_eq` Steel.C.Connection.connection_id _
+  assert (forall x . array_small_to_large_f t base_len z base_len () x == x);
+  assert (forall x . array_large_to_small_f t base_len z base_len () x `feq` x);
+  assert (forall x . array_large_to_small_f t base_len z base_len () x == x);
+  let c = array_conn t base_len z base_len () in
+  Steel.C.Connection.connection_eq_gen
+    c
+    (Steel.C.Connection.connection_id _)
+    ()
+    (fun x y f v ->
+      assume (array_conn_fpu_f t base_len z base_len () x y f v `feq` f v);
+      assert (array_conn_fpu_f t base_len z base_len () x y f v == f v);
+      assert ((c.Steel.C.Connection.conn_lift_frame_preserving_upd (| x, y, f |)).Steel.C.Connection.fpu_f v == array_conn_fpu_f t base_len z base_len () x y f v);
+      assert (((Steel.C.Connection.connection_id _).conn_lift_frame_preserving_upd (| x, y, f |)).Steel.C.Connection.fpu_f v == f v);
+      ()
+    )
 
+#restart-solver
+
+let connection_eq_gen
+  #a (#p: pcm a) #b1 (#q1: pcm b1) (c1: p `Steel.C.Connection.connection` q1)
+  #b2 (#q2: pcm b2) (c2: p `Steel.C.Connection.connection` q2)
+  (sq: squash (
+    b1 == b2 /\
+    q1 == q2 /\
+    c1.conn_small_to_large.morph `feq` c2.conn_small_to_large.morph /\
+    c1.conn_large_to_small.morph `feq` c2.conn_large_to_small.morph
+  ))
+  (phi:
+    (x1: Ghost.erased b1 { ~ (Ghost.reveal x1 == one q1) }) ->
+    (y1: Ghost.erased b1) ->
+    (f1: Steel.C.Connection.restricted_frame_preserving_upd q1 x1 y1) ->
+    (v1: frame_preserving_upd_dom p (c1.conn_small_to_large.morph x1)) ->
+    (x2: Ghost.erased b2 { ~ (Ghost.reveal x2 == one q2) }) ->
+    (y2: Ghost.erased b2) ->
+    (f2: Steel.C.Connection.restricted_frame_preserving_upd q2 x2 y2) ->
+    (v2: frame_preserving_upd_dom p (c2.conn_small_to_large.morph x2)) ->
+    (sq': squash (
+      x1 == x2 /\
+      y1 == y2 /\
+      f1 == f2 /\
+      v1 == v2
+    )) ->
+    Tot
+    (squash ((c1.conn_lift_frame_preserving_upd (| x1, y1, f1 |)).fpu_f v1 == (c2.conn_lift_frame_preserving_upd (| x2, y2, f2 |)).fpu_f v2))
+  )
+: Lemma
+  (c1 == c2)
+= Steel.C.Connection.connection_eq_gen c1 c2 () (fun x y f v -> phi x y f v x y f v ())
+
+#set-options "--print_implicits"
 #restart-solver
 
 let array_conn_compose
@@ -407,15 +433,30 @@ let array_conn_compose
   ))
 =
   let z = to1 `size_sub` from1 in
+  let sz = size_sub (size_add from1 to2) (size_add from1 from2) in
+  let _ : squash (sz == size_sub to2 from2) = () in
   assert (forall x . array_small_to_large_f t base_len from1 to1 () (array_small_to_large_f t z from2 to2 ()  x) `feq` array_small_to_large_f t base_len (from1 `size_add` from2) (from1 `size_add` to2) () x);
   assert (forall x . array_large_to_small_f t z from2 to2 () (array_large_to_small_f t base_len from1 to1 () x) `feq` array_large_to_small_f t base_len (from1 `size_add` from2) (from1 `size_add` to2) () x);
   let cc = array_conn t base_len from1 to1 () `Steel.C.Connection.connection_compose` array_conn t z from2 to2 () in
   let c = array_conn t base_len (from1 `size_add` from2) (from1 `size_add` to2) () in
-  assume (
-    cc.Steel.C.Connection.conn_lift_frame_preserving_upd ===
-    c.Steel.C.Connection.conn_lift_frame_preserving_upd
-  );
-  cc `Steel.C.Connection.connection_eq` c
+  let sq : squash (
+      cc.conn_small_to_large.morph `feq` c.conn_small_to_large.morph /\
+      cc.conn_large_to_small.morph `feq` c.conn_large_to_small.morph
+  ) = () in
+  let prf
+    (x: Ghost.erased (array_pcm_carrier t (to2 `size_sub` from2)) { ~ (Ghost.reveal x == one (array_pcm t (to2 `size_sub` from2))) })
+    (y: Ghost.erased (array_pcm_carrier t (to2 `size_sub` from2)))
+    (f: Steel.C.Connection.restricted_frame_preserving_upd (array_pcm t (to2 `size_sub` from2)) x y)
+    (v: frame_preserving_upd_dom (array_pcm t base_len) (cc.Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph x))
+  : Tot (squash (
+//    let x' : (x': Ghost.erased (array_pcm_carrier t sz) { ~ (Ghost.reveal x' == one (array_pcm t sz)) }) = x in
+//    let y' : Ghost.erased (array_pcm_carrier t sz) = y in
+//    let f' : Steel.C.Connection.restricted_frame_preserving_upd (array_pcm t sz) x' y' = f in
+//    let v' : frame_preserving_upd_dom (array_pcm t base_len) (c.Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph x') = v in
+    ((cc.Steel.C.Connection.conn_lift_frame_preserving_upd (| x, y, f |)).Steel.C.Connection.fpu_f v == (c.Steel.C.Connection.conn_lift_frame_preserving_upd (| x, y, f |)).Steel.C.Connection.fpu_f v)))
+  = assume False
+  in
+  connection_eq_gen cc c sq (fun x1 y1 f1 v1 x2 y2 f2 v2 sq' -> prf x1 y1 f1 v1)
 
 let to_view_array_conn
   (t: Type0)
