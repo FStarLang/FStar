@@ -1558,6 +1558,60 @@ let close_equality_typ' (t:term) : Tac unit =
 let close_equality_typ (t:term) : Tac unit =
   visit_tm close_equality_typ' t
 
+
+let inst_bv (#a:Type) (#p:a -> Type0) (#q:Type0) (x:a) (_:squash (p x ==> q))
+  : Lemma ((forall (x:a). p x) ==> q) = ()
+
+let modus_ponens (#p #q:Type0) (_:squash p)
+  : Lemma ((p ==> q) ==> q)
+  = ()
+
+let cut (p q:Type0) : Lemma (requires p /\ (p ==> q)) (ensures q) = ()
+
+type bv_map_t = list (atom & bv)
+
+let bvs_of_bv_map (rm:bv_map_t) : list bv = List.Tot.map snd rm
+
+let rec build_bv_map_aux (am:list (atom & term)) (n:int) : Tac bv_map_t =
+  match am with
+  | [] -> []
+  | (a, t)::tl ->
+    let bv = fresh_bv_named ("x" ^ (string_of_int n)) (Tv_FVar (pack_fv [`%vprop])) in
+    (a, bv)::(build_bv_map_aux tl (n+1))
+
+let build_bv_map am = build_bv_map_aux am 0
+
+let atom_to_bv_term (a:atom) (rm:bv_map_t) : Tac term =
+  match List.Tot.assoc a rm with
+  | None -> fail "atom_to_renaming_term"
+  | Some bv -> pack (Tv_Var bv)
+
+let rec exp_to_bv_term (mult unit:term) (rm:bv_map_t) (e:exp) : Tac term =
+  match e with
+  | Unit -> unit
+  | Mult e1 e2 ->
+    let t1 = exp_to_bv_term mult unit rm e1 in
+    let t2 = exp_to_bv_term mult unit rm e2 in
+    pack (Tv_App (pack (Tv_App mult (t1, Q_Explicit))) (t2, Q_Explicit))
+  | Atom a -> atom_to_bv_term a rm
+
+let rec atom_list_to_bv_term (mult unit:term) (rm:bv_map_t) (l:list atom) : Tac term =
+  match l with
+  | [] -> unit
+  | [a] -> atom_to_bv_term a rm
+  | a::tl ->
+    let t_a = atom_to_bv_term a rm in
+    let t_tl = atom_list_to_bv_term mult unit rm tl in
+    pack (Tv_App (pack (Tv_App mult (t_a, Q_Explicit))) (t_tl, Q_Explicit))
+
+let close_and_forall_quantify (bvs:list bv) (t:term) : Tac term =
+  fold_left (fun t bv ->
+    let b = pack_binder bv Q_Explicit [] in
+    let t_closed = close_term b t in
+    let t = pack_ln (Tv_Abs b t_closed) in
+    pack (Tv_App (pack (Tv_FVar (pack_fv forall_qn))) (t, Q_Explicit))) t bvs
+
+
 /// Core unification tactic.
 /// Transforms terms into their atom representations,
 /// Tries to find a solution to AC-unification, and if so,
@@ -1565,8 +1619,11 @@ let close_equality_typ (t:term) : Tac unit =
 /// to check the validity of the provided solution.
 /// In the case where SMT rewriting was needed, equalities abduction is performed by instantiating the
 /// abduction prop unification variable with the corresponding guard
-let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
+
+let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) (rel:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CE.CM?.unit (`#m)) in
+  let m_mult = norm_term [iota; zeta; delta] (`CE.CM?.mult (`#m)) in
+  
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
@@ -1581,60 +1638,93 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
     | _ -> fail "uncaught exception in equivalent_lists"
   in
 
-  let am = convert_am am in
-  let r1 = quote_exp r1_raw in
-  let r2 = quote_exp r2_raw in
-  let l1 = quote_atoms l1_raw in
-  let l2 = quote_atoms l2_raw in
-  change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
-                 `CE.EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2))));
-  apply_lemma (`normal_elim);
+  let rm0 = build_bv_map (fst am) in
 
-  apply (`monoid_reflect );
+  let x_lhs = exp_to_bv_term m_mult m_unit rm0 r1_raw in
+  let x_rhs = exp_to_bv_term m_mult m_unit rm0 r2_raw in
 
+  let x_sorted_lhs = atom_list_to_bv_term m_mult m_unit rm0 l1_raw in
+  let x_sorted_rhs = atom_list_to_bv_term m_mult m_unit rm0 l2_raw in
 
-  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
-  let g = goals () in
-  if List.Tot.Base.length g = 0 then
-    // The application of equivalent_sorted seems to sometimes solve
-    // all goals
-    ()
-  else (
-    norm [primops; iota; zeta; delta_only
-      [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-        `%flatten; `%sort;
-        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
-        `%fst; `%__proj__Mktuple2__item___1;
-        `%snd; `%__proj__Mktuple2__item___2;
-        `%CE.__proj__CM__item__unit;
-        `%CE.__proj__CM__item__mult;
-        `%rm
+  let x_goal = pack (Tv_App (pack (Tv_App rel (x_lhs, Q_Explicit))) (x_rhs, Q_Explicit)) in
+  let x_sorted = pack (Tv_App (pack (Tv_App rel (x_sorted_lhs, Q_Explicit))) (x_sorted_rhs, Q_Explicit)) in
 
-        ]];
+  let x_body = pack (Tv_App (pack (Tv_App (pack (Tv_FVar (pack_fv imp_qn))) (x_sorted, Q_Explicit))) (x_goal, Q_Explicit)) in
 
-    split();
-    split();
-    // equivalent_lists should have built valid permutations.
-    // If that's not the case, it is a bug in equivalent_lists
-    or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
-    or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
+  let t = close_and_forall_quantify (bvs_of_bv_map rm0) x_body in
 
-    match uvar_terms with
-    | [] -> // Closing unneded prop uvar
-            if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
-            if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
-            else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
-    | l -> if emp_frame then (
-             apply_lemma (`identity_left_smt (`#eq) (`#m))
-           ) else (
-             apply_lemma (`smt_reflexivity (`#eq))
-           );
-           t_trefl true;
-           close_equality_typ (cur_goal());
-           exact (`(FStar.Squash.return_squash (`#pr_bind)))
- )
+  // print ("Cur goal after forall: " ^ (term_to_string t));
+  
+  apply_lemma (`cut (`#t));
+  split ();
+
+  focus (fun _ ->
+    let rm_with_intro_bvs = fold_left (fun rm (a, _) ->
+      let b = forall_intro () in
+      let bv, _ = inspect_binder b in
+      (a, bv)::rm) [] (List.Tot.rev rm0) in
+
+    let b = implies_intro () in
+    let am0 = map (fun (a, bv) -> a, pack (Tv_Var bv)) rm_with_intro_bvs, snd am in
+
+    let am0 = convert_am am0 in
+    let r1 = quote_exp r1_raw in
+    let r2 = quote_exp r2_raw in
+
+    change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am0) (`#r1)
+                   `CE.EQ?.eq (`#eq)`
+                 mdenote (`#eq) (`#m) (`#am0) (`#r2))));
+
+    apply_lemma (`normal_elim);
+    apply (`monoid_reflect );
+
+    let l1 = quote_atoms l1_raw in
+    let l2 = quote_atoms l2_raw in
+
+    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am0) (`#l1) (`#l2));
+
+    if List.Tot.length (goals ()) = 0 then ()
+    else begin
+      norm [primops; iota; zeta; delta_only
+        [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+         `%flatten; `%sort;
+         `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+         `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+         `%fst; `%__proj__Mktuple2__item___1;
+         `%snd; `%__proj__Mktuple2__item___2;
+         `%CE.__proj__CM__item__unit;
+         `%CE.__proj__CM__item__mult;
+         `%rm;
+         `%CE.__proj__EQ__item__eq;
+         `%req;
+         `%star;]
+      ];
+
+      split ();
+      split ();
+      trefl ();
+      trefl ();
+      apply (`FStar.Squash.return_squash);
+      exact (binder_to_term b)
+    end);
+
+  ignore (repeatn (List.Tot.length rm0) (fun _ -> apply_lemma (`inst_bv)));
+  apply_lemma (`modus_ponens);
+
+  match uvar_terms with
+  | [] -> // Closing unneded prop uvar
+    if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
+    if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+    else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
+  | l ->
+    if emp_frame then (
+      apply_lemma (`identity_left_smt (`#eq) (`#m))
+    ) else (
+      apply_lemma (`smt_reflexivity (`#eq))
+    );
+    t_trefl true;
+    close_equality_typ (cur_goal());
+    exact (`(FStar.Squash.return_squash (`#pr_bind)))
 
 /// Wrapper around the tactic above
 /// The constraint should be of the shape `squash (equiv lhs rhs)`
@@ -1652,7 +1742,7 @@ let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Ta
        then (
          match index xy (length xy - 2) , index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           canon_l_r use_smt eq m pr pr_bind lhs rhs
+           canon_l_r use_smt eq m pr pr_bind lhs rhs rel
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )
        else (
