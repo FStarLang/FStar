@@ -19,6 +19,20 @@ open FStar.FunctionalExtensionality
 
 let array_pcm_carrier t n = restricted_t (array_domain t n) (array_range t n)
 
+let array_pcm_carrier_ext
+  (t: Type)
+  (n: size_t)
+  (x1 x2: array_pcm_carrier t n)
+  (f: (
+    (i: array_domain t n) ->
+    Lemma
+    (x1 i == x2 i)
+  ))
+: Lemma
+  (ensures (x1 == x2))
+= Classical.forall_intro f;
+  assert (x1 `feq` x2)
+
 let array_elements_pcm
   (t: Type u#0)
   (n: Ghost.erased size_t)
@@ -275,7 +289,7 @@ let array_small_to_large_to_small
   (array_large_to_small_f t base_len from to sq `Steel.C.Connection.is_inverse_of` array_small_to_large_f t base_len from to sq)
 = assert (forall x . array_large_to_small_f t base_len from to sq (array_small_to_large_f t base_len from to sq x) `feq` x)
 
-#push-options "--z3rlimit 32 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false"
+#push-options "--z3rlimit 64 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false"
 #restart-solver
 
 let size_sub' (x y: size_t) (sq: squash (size_v x >= size_v y)) : Pure size_t
@@ -284,6 +298,66 @@ let size_sub' (x y: size_t) (sq: squash (size_v x >= size_v y)) : Pure size_t
 = size_sub x y
 
 #restart-solver
+
+let array_conn_fpu_compatible
+  (t: Type0)
+  (base_len: Ghost.erased size_t)
+  (from: size_t)
+  (to: size_t)
+  (sq: squash (
+    size_v from <= size_v to /\
+    size_v to <= size_v base_len
+  ))
+  (x: Ghost.erased (array_pcm_carrier t (to `size_sub` from)) { ~ (Ghost.reveal x == one (array_pcm t (to `size_sub` from))) })
+  (v: frame_preserving_upd_dom (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x))
+: Lemma
+  (
+    let z = size_sub to from in
+    let v_small : array_pcm_carrier t z = array_large_to_small_f t base_len from to sq v in
+    compatible (array_pcm t z) x v_small
+  )
+=
+  let z = size_sub to from in
+  let v_small : array_pcm_carrier t z = array_large_to_small_f t base_len from to sq v in
+  let frame : Ghost.erased (array_pcm_carrier t base_len) = Ghost.hide (compatible_elim (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x) v) in
+  let frame_small : Ghost.erased (array_pcm_carrier t (z)) = Ghost.hide (array_large_to_small_f t base_len from to sq (Ghost.reveal frame)) in
+  S.prod_pcm_composable_intro
+    (array_elements_pcm t z)
+    x
+    frame_small
+    (fun h ->
+      assert (composable (Steel.C.Opt.opt_pcm #t) (array_small_to_large_f t base_len from to sq x (from `size_add` h)) (Ghost.reveal frame (from `size_add` h))
+      )
+    );
+  assert (composable (array_pcm t (z)) x frame_small);
+  array_pcm_carrier_ext t z (op (array_pcm t (z)) x frame_small) v_small (fun i ->
+    assert (op (Steel.C.Opt.opt_pcm #t) (array_small_to_large_f t base_len from to sq x (from `size_add` i)) (Ghost.reveal frame (from `size_add` i)) == v (from `size_add` i))
+  );
+  compatible_intro (array_pcm t (z)) x v_small frame_small
+
+let array_conn_fpu_refine
+  (t: Type0)
+  (base_len: Ghost.erased size_t)
+  (from: size_t)
+  (to: size_t)
+  (sq: squash (
+    size_v from <= size_v to /\
+    size_v to <= size_v base_len
+  ))
+  (x: Ghost.erased (array_pcm_carrier t (to `size_sub` from)) { ~ (Ghost.reveal x == one (array_pcm t (to `size_sub` from))) })
+  (v: frame_preserving_upd_dom (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x))
+: Lemma
+  (
+    let z = size_sub to from in
+    let v_small : array_pcm_carrier t z = array_large_to_small_f t base_len from to sq v in
+    p_refine (array_pcm t (z)) v_small
+  )
+=
+  let z = size_sub to from in
+  let v_small : array_pcm_carrier t z = array_large_to_small_f t base_len from to sq v in
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (exists (x: array_domain t z) . True)
+  then ()
+  else assert (Ghost.reveal x `feq` one (array_pcm t z))
 
 let array_conn_fpu_f
   (t: Type0)
@@ -302,19 +376,8 @@ let array_conn_fpu_f
 = let sq0 : squash (size_v to >= size_v from) = () in
   let z : size_t = size_sub' to from sq0 in
   let v_small : array_pcm_carrier t z = array_large_to_small_f t base_len from to sq v in
-  // let frame : Ghost.erased (array_pcm_carrier t base_len) = Ghost.hide (compatible_elim (array_pcm t base_len) (array_small_to_large_f t base_len from to sq x) v) in
-  // let frame_small : Ghost.erased (array_pcm_carrier t (z)) = Ghost.hide (array_large_to_small_f t base_len from to sq (Ghost.reveal frame)) in
-  // S.prod_pcm_composable_intro
-  //   (array_elements_pcm t z)
-  //   x
-  //   frame_small
-  //   (fun h -> assume False);
-  // assert (composable (array_pcm t (z)) x frame_small);
-  // op_comm (array_pcm t (z)) x frame_small;
-  // assert (op (array_pcm t (z)) frame_small x `feq` v_small);
-  // compatible_intro (array_pcm t (z)) x v_small frame_small;
-  assume (compatible (array_pcm t (z)) x v_small);
-  assume (p_refine (array_pcm t (z)) v_small); // TODO: remove p_refine from Steel.C.PCM
+  array_conn_fpu_compatible t base_len from to sq x v;
+  array_conn_fpu_refine t base_len from to sq x v;
   let v_small' : array_pcm_carrier t z = f v_small in
   let v' : array_pcm_carrier t base_len =
     on_dom (array_domain t base_len) (fun (k: array_domain t base_len) ->
