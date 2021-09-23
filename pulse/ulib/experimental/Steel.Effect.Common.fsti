@@ -1891,6 +1891,7 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
           let p_bind = implies_intro () in
           apply_lemma (`equiv_can_be_split);
           or_else (fun _ -> flip()) (fun _ -> ());
+          let pr = norm_term [] pr in
           or_else
             (fun _ ->
               let b = unify pr (`true_p) in
