@@ -485,7 +485,7 @@ let array_as_ref_conn
   (#base: Type)
   (#t: Type)
   (a: array base t)
-: GTot (Steel.C.Connection.connection (array_pcm t a.base_len) (array_pcm t (len a)))
+: Tot (Steel.C.Connection.connection (array_pcm t a.base_len) (array_pcm t (len a)))
 = array_conn t a.base_len a.from a.to a.prf
 
 let array_as_ref
@@ -866,28 +866,131 @@ let split
   Seq.lemma_split #t (Ghost.reveal g) (size_v i);
   split' a i
 
+let split_left
+  a i
+=
+  return (fst (tsplit a i))
 
-(*
+let split_right
+  a i
+=
+  return (snd (tsplit a i))
 
-    #j
-    #base
-    #(array_pcm_carrier t (len x))
-    #(array_pcm t (len x))
-    (array_as_ref #base #t x)
-    #(array_view_type t (len x))
-    #(size_v (len x) = 0)
-    (array_view' t (len x))
+let join' = admit ()
 
+let joinc
+  al ar
+=
+  return (t_merge al ar)
 
-noeq
-type array base t = {
-  base_len: Ghost.erased size_t;
-  base_ref: Steel.C.Reference.ref base (array_view_type t base_len) (array_pcm t base_len);
-  from: size_t;
-  to: size_t; // must be Tot because of array_small_to_large below
-  prf: squash (
-    size_v base_len >= 0 /\
-    size_v from <= size_v to /\
-    size_v to <= size_v base_len
-  );
-}
+let array_as_one_ref_conn
+  (#base: Type)
+  (#t: Type)
+  (a: array base t)
+: Pure (Steel.C.Connection.connection (array_pcm t a.base_len) (Steel.C.Opt.opt_pcm #t))
+  (requires (length a == 1))
+  (ensures (fun _ -> True))
+=
+  Steel.C.Struct.struct_field
+    (array_elements_pcm t a.base_len)
+    a.from
+
+let g_ref_of_array
+  r
+=
+  r.base_ref `Steel.C.Ref.ref_focus` array_as_one_ref_conn r
+
+let ref_of_array_ghost = admit ()
+
+let ref_of_array = admit ()
+
+let array_of_ref = admit ()
+
+let mk_array_of_ref = admit ()
+
+let seq_equal_1
+  (t: Type)
+  (s1 s2: Seq.seq t)
+: Lemma
+  (requires (
+    Seq.length s1 == 1 /\
+    Seq.length s2 == 1 /\
+    Seq.index s1 0 == Seq.index s2 0
+  ))
+  (ensures (s1 == s2))
+= assert (s1 `Seq.equal` s2)
+
+#push-options "--z3rlimit 128 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false"
+#restart-solver
+
+let index
+  #_ #t r i
+=
+  let rr = split_right r i in
+  let rs = split r i in
+  change_equal_slprop
+    (varray (GPair?.snd rs))
+    (varray rr);
+  let rrl = split_left rr one_size in
+  let rrs = split rr one_size in
+  change_equal_slprop
+    (varray (GPair?.fst rrs))
+    (varray rrl);
+  let grl = gget (varray rrl) in
+  let r0 = ref_of_array rrl in
+  let res = Steel.C.Opt.ref_opt_read r0 in
+  array_of_ref rrl r0;
+  let grl' = gget (varray rrl) in
+  seq_equal_1 t (Ghost.reveal grl) (Ghost.reveal grl');
+  let rr' = join' rrl (GPair?.snd rrs) in
+  let r' = join' (GPair?.fst rs) rr' in
+  change_equal_slprop
+    (varray r')
+    (varray r);
+  return res
+
+let seq_append_append_upd
+  (t: Type)
+  (i: nat)
+  (x: t)
+  (s1 s2 s2' s3: Seq.seq t)
+: Lemma
+  (requires (
+    Seq.length s1 == i /\
+    Seq.length s2 == 1 /\
+    Seq.length s2' == 1 /\
+    Seq.index s2' 0 == x
+  ))
+  (ensures (
+    s1 `Seq.append` (s2' `Seq.append` s3) == Seq.upd (s1 `Seq.append` (s2 `Seq.append` s3)) i x
+  ))
+= assert (
+    (s1 `Seq.append` (s2' `Seq.append` s3)) `Seq.equal` (Seq.upd (s1 `Seq.append` (s2 `Seq.append` s3)) i x)
+  )
+
+let upd
+  #_ #t r i x
+=
+  let rr = split_right r i in
+  let rs = split r i in
+  let s1 = gget (varray (GPair?.fst rs)) in
+  change_equal_slprop
+    (varray (GPair?.snd rs))
+    (varray rr);
+  let rrl = split_left rr one_size in
+  let rrs = split rr one_size in
+  let s3 = gget (varray (GPair?.snd rrs)) in
+  change_equal_slprop
+    (varray (GPair?.fst rrs))
+    (varray rrl);
+  let s2 = gget (varray rrl) in
+  let r0 = ref_of_array rrl in
+  Steel.C.Opt.ref_opt_write r0 x;
+  array_of_ref rrl r0;
+  let s2' = gget (varray rrl) in
+  seq_append_append_upd t (size_v i) x s1 s2 s2' s3;
+  let rr' = join' rrl (GPair?.snd rrs) in
+  let r' = join' (GPair?.fst rs) rr' in
+  change_equal_slprop
+    (varray r')
+    (varray r)

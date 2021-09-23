@@ -271,6 +271,18 @@ val g_ref_of_array
   (requires (length r == 1))
   (ensures (fun _ -> True))
 
+val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
+  : SteelGhost unit inames
+             (varray r)
+             (fun _ -> Steel.C.Ref.pts_to_view (g_ref_of_array r) (Steel.C.Opt.opt_view t))
+             (requires fun _ -> True)
+             (ensures fun h0 _ h1 ->
+               let r' = g_ref_of_array r in
+               let s = h0 (varray r) in
+               Seq.length s == 1 /\
+               h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
+             )
+
 val ref_of_array (#base: Type) (#t:Type0) (r:array base t)
   : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
              (varray r)
