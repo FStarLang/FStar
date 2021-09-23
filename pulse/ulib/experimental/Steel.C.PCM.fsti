@@ -116,7 +116,7 @@ let exclusive (#a:Type u#a) (p:pcm0 a) (x:a) =
 
 let compatible (#a: Type u#a) (pcm:pcm0 a) (x y:a) =
   (exists (frame:a).
-    composable pcm x frame /\ op pcm frame x == y
+    composable pcm x frame /\ op pcm x frame == y
   )
 
 val is_unit (#a: Type u#a) (p:pcm0 a)
@@ -137,7 +137,7 @@ val compatible_intro
   (x y: a)
   (frame: a)
 : Lemma
-  (requires (composable pcm x frame /\ op pcm frame x == y))
+  (requires (composable pcm x frame /\ op pcm x frame == y))
   (ensures (compatible pcm x y))
 
 val compatible_elim
@@ -148,7 +148,7 @@ val compatible_elim
   (requires (compatible pcm x y))
   (ensures (fun frame ->
     composable pcm x frame /\
-    op pcm frame x == y
+    op pcm x frame == y
   ))
 
 val compatible_refl
