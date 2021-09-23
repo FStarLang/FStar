@@ -681,7 +681,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    FStar_Compiler_Effect.op_Bar_Greater branches
                      (FStar_Compiler_List.map branch_to_string) in
                  FStar_Compiler_Util.concat_l "\n\t|" uu___6 in
-               FStar_Compiler_Util.format4 "(match %s %swith\n\t| %s%s"
+               FStar_Compiler_Util.format4 "(match %s %swith\n\t| %s%s)"
                  uu___3 uu___4 uu___5 lc_str
            | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
                let uu___3 = FStar_Options.print_universes () in
