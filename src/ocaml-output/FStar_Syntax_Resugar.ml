@@ -979,6 +979,15 @@ let rec (resugar_term' :
                -> resugar_as_app e args1
            | FStar_Pervasives_Native.Some (op, uu___2) when
                (op = "forall") || (op = "exists") ->
+               let rec uncurry xs pats t1 =
+                 match t1.FStar_Parser_AST.tm with
+                 | FStar_Parser_AST.QExists (xs', (uu___3, pats'), body) ->
+                     uncurry (FStar_Compiler_List.op_At xs xs')
+                       (FStar_Compiler_List.op_At pats pats') body
+                 | FStar_Parser_AST.QForall (xs', (uu___3, pats'), body) ->
+                     uncurry (FStar_Compiler_List.op_At xs xs')
+                       (FStar_Compiler_List.op_At pats pats') body
+                 | uu___3 -> (xs, pats, t1) in
                let resugar_forall_body body =
                  let uu___3 =
                    let uu___4 = FStar_Syntax_Subst.compress body in
@@ -1037,29 +1046,33 @@ let rec (resugar_term' :
                                 ([], uu___9) in
                           (match uu___6 with
                            | (pats, body3) ->
-                               if op = "forall"
-                               then
-                                 let uu___7 =
-                                   let uu___8 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStar_Parser_AST.idents_of_binders
-                                           xs3 t.FStar_Syntax_Syntax.pos in
-                                       (uu___10, pats) in
-                                     (xs3, uu___9, body3) in
-                                   FStar_Parser_AST.QForall uu___8 in
-                                 mk uu___7
-                               else
-                                 (let uu___8 =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        let uu___11 =
-                                          FStar_Parser_AST.idents_of_binders
-                                            xs3 t.FStar_Syntax_Syntax.pos in
-                                        (uu___11, pats) in
-                                      (xs3, uu___10, body3) in
-                                    FStar_Parser_AST.QExists uu___9 in
-                                  mk uu___8)))
+                               let uu___7 = uncurry xs3 pats body3 in
+                               (match uu___7 with
+                                | (xs4, pats1, body4) ->
+                                    if op = "forall"
+                                    then
+                                      let uu___8 =
+                                        let uu___9 =
+                                          let uu___10 =
+                                            let uu___11 =
+                                              FStar_Parser_AST.idents_of_binders
+                                                xs4 t.FStar_Syntax_Syntax.pos in
+                                            (uu___11, pats1) in
+                                          (xs4, uu___10, body4) in
+                                        FStar_Parser_AST.QForall uu___9 in
+                                      mk uu___8
+                                    else
+                                      (let uu___9 =
+                                         let uu___10 =
+                                           let uu___11 =
+                                             let uu___12 =
+                                               FStar_Parser_AST.idents_of_binders
+                                                 xs4
+                                                 t.FStar_Syntax_Syntax.pos in
+                                             (uu___12, pats1) in
+                                           (xs4, uu___11, body4) in
+                                         FStar_Parser_AST.QExists uu___10 in
+                                       mk uu___9))))
                  | uu___4 ->
                      if op = "forall"
                      then
