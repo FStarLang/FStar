@@ -184,6 +184,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
                                 subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;
 
+    mk2 "close_term"            close_term            E.e_binder          E.e_term           E.e_term
+                                close_term            NRE.e_binder        NRE.e_term         NRE.e_term;
+
     mk2 "compare_bv"            compare_bv            E.e_bv              E.e_bv             E.e_order
                                 compare_bv            NRE.e_bv            NRE.e_bv           NRE.e_order;
 
