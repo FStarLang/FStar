@@ -343,6 +343,17 @@ let connection_id
     ()
     (fun _ _ f -> f)
 
+let connection_id_fpu
+  (#a: Type)
+  (p: pcm a)
+  (x: Ghost.erased a { ~ (Ghost.reveal x == one p) })
+  (y: Ghost.erased a)
+  (f: restricted_frame_preserving_upd p x y)
+  (v: frame_preserving_upd_dom p x)
+: Lemma
+  (((connection_id p).conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f })).fpu_f v == f v)
+= ()
+
 let connection_compose_id_left
   (#t_large #t_small: Type) (#p_large: pcm t_large) (#p_small: pcm t_small)
   (c: connection p_large p_small)
