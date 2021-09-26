@@ -15,7 +15,7 @@
 *)
 
 module Steel.Effect.Common
-let ( @ ) x y = FStar.List.Tot.( x@y )
+let ( @ ) x y = FStar.List.Tot.append x y
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
@@ -1053,13 +1053,11 @@ let rec xsdenote_gen (#a:Type) (unit:a) (mult:a -> a -> a) (am:amap a) (xs:list 
   | [x] -> select x am
   | x::xs' -> mult (select x am) (xsdenote_gen unit mult am xs')
 
-[@@__reduce__; __steel_reduce__]
 unfold
 let mdenote (#a:Type u#aa) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:exp) : a =
   let open FStar.Algebra.CommMonoid.Equiv in
   mdenote_gen (CM?.unit m) (CM?.mult m) am e
 
-[@@__reduce__; __steel_reduce__]
 unfold
 let xsdenote (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs:list atom) : a =
   let open FStar.Algebra.CommMonoid.Equiv in
@@ -1537,7 +1535,8 @@ let rec quote_atoms (l:list atom) = match l with
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
 /// In particular, all the sorting/list functions are entirely reduced
 let normal_tac_steps = [primops; iota; zeta; delta_only [
-          `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%mdenote; `%select;
+          `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
           `%flatten; `%sort;
           `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
           `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
@@ -1747,7 +1746,8 @@ let canon_l_r (use_smt:bool)
     if List.Tot.length (goals ()) = 0 then ()
     else begin
       norm [primops; iota; zeta; delta_only
-        [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+        [`%xsdenote; `%select;
+         `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
          `%flatten; `%sort;
          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
