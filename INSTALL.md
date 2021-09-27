@@ -259,7 +259,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex=2.3 ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
   ```
 
   **Note:** This list of opam packages is longer than the list in the
