@@ -22,7 +22,7 @@
         "unit_typing"
       ],
       0,
-      "4b57017a559012d0fe5d575a2bfbf3a5"
+      "47a0ccc0b1ec51ed77095918124ad441"
     ],
     [
       "Steel.Channel.Simplex.step",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_Steel.Channel.Protocol.more" ],
       0,
-      "412889a4c9fa2902ab9d46911342f828"
+      "58982150710b82d0bd37ef1edba450a6"
     ],
     [
       "Steel.Channel.Simplex.chan_inv_step_p",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7e5037344663e01158ed38a533d5d82f"
+      "46ac07ad0f580fd4384fa5ab7301c8f8"
     ],
     [
       "Steel.Channel.Simplex.chan_inv_cond",
@@ -68,7 +68,7 @@
         "unit_typing"
       ],
       0,
-      "3ea39afd44540260d674249a2d548454"
+      "be15ea58b5d5f4d0826ff5f98c7afb44"
     ],
     [
       "Steel.Channel.Simplex.trace_until_prop",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f3375c82651a059db1fb3fff5f47d0a8"
+      "058b329bcd01c98116368115c552e34a"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_eqT",
@@ -107,7 +107,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "8b75ca806cd362c49bc19a530d309bac"
+      "e8529dcc8616813641fdc3676a4b50ea"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_cond_stepT",
@@ -133,7 +133,7 @@
         "typing_Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_prot"
       ],
       0,
-      "750ff32304272de294c46a1084fa7b29"
+      "9e8ac76991f320d3933d0c6755e31a41"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_auxT",
@@ -145,7 +145,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "e8da1fe7781fae60689a1f201dbe5224"
+      "13250555d6a69a79490f0398186383b9"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_stepT",
@@ -154,7 +154,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a0faf82b59a34e5759598ab8b649be2a"
+      "557ba3365c6560cff2360fc79e9bb1bc"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv_eqT",
@@ -163,7 +163,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "c45bba34b554be4de126cce5528195d4"
+      "b6b9b48473f3c227c0354862f55dddc2"
     ],
     [
       "Steel.Channel.Simplex.__proj__Mkchan__item__chan_lock",
@@ -175,7 +175,7 @@
         "projection_inverse_Steel.Channel.Simplex.Mkchan_chan_chan"
       ],
       0,
-      "e97da603566693c87fd709929a12b060"
+      "39ec96b329837a2abfa56b78ff4f698c"
     ],
     [
       "Steel.Channel.Simplex.in_state_prop",
@@ -190,7 +190,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "eada6164bcf1e7b4c41ada9afc94879e"
+      "dd7edb4317d7b3db6db872db27e170bb"
     ],
     [
       "Steel.Channel.Simplex.next_chan_val",
@@ -226,7 +226,7 @@
         "unit_typing"
       ],
       0,
-      "b03cf7de761c25a9acf449cc04475074"
+      "83d907ed7e94659e75c617810436e21e"
     ],
     [
       "Steel.Channel.Simplex.intro_chan_inv",
@@ -235,7 +235,7 @@
       1,
       [ "@query" ],
       0,
-      "0e16d79960c6736ab927e2e7499f9edf"
+      "05e9f39b0901c77282de34ff45518deb"
     ],
     [
       "Steel.Channel.Simplex.intro_in_state",
@@ -251,7 +251,7 @@
         "true_interp"
       ],
       0,
-      "6b3ea63390933b144334f92d676c8385"
+      "5e1aa02889326eae70e88b619a3b642d"
     ],
     [
       "Steel.Channel.Simplex.initial_trace",
@@ -264,7 +264,7 @@
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to"
       ],
       0,
-      "b9a00bd5370234fa4c7d95e8801cbd1e"
+      "2ea577a5f1f463ab2d09cf6858659984"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until",
@@ -283,7 +283,7 @@
         "unit_typing"
       ],
       0,
-      "139c0501d2a3c287d15a28368f0f595c"
+      "c56f24a27acdfd0d8febaef2b6a6065a"
     ],
     [
       "Steel.Channel.Simplex.intro_trace_until_init",
@@ -321,7 +321,7 @@
         "typing_Steel.Channel.Simplex.initial_trace"
       ],
       0,
-      "5ad5ff2054beb6f710105a3c6ce5fde5"
+      "2768d25f448cd568f09173a7332d277d"
     ],
     [
       "Steel.Channel.Simplex.mk_chan",
@@ -340,7 +340,7 @@
         "true_interp"
       ],
       0,
-      "02f82f57d21f9b3db6c16bca09cbcff8"
+      "501dd0d44f8cfa171808b332e44898e2"
     ],
     [
       "Steel.Channel.Simplex.new_chan",
@@ -404,7 +404,7 @@
         "typing_Steel.Channel.Simplex.msg", "unit_typing"
       ],
       0,
-      "0075b6beddae5099900c22a15f3184a4"
+      "b9f5d1e052b5a80197ca084f946b2875"
     ],
     [
       "Steel.Channel.Simplex.send_recv_in_sync",
@@ -418,7 +418,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b2808b054df7865a0a827af35198cb64"
+      "7402998a17310b03829aa7191c7b1c34"
     ],
     [
       "Steel.Channel.Simplex.update_channel",
@@ -436,7 +436,7 @@
         "true_interp"
       ],
       0,
-      "7a6bdfc3b5f75597b2e6b788f391bd06"
+      "2666a77c90e3573f750e8c0866bcafe3"
     ],
     [
       "Steel.Channel.Simplex.gather_r",
@@ -474,7 +474,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "e8ab27d286ed81eb6f2fa1e838017545"
+      "c2f292e05b816a04ce1d05aedc795b19"
     ],
     [
       "Steel.Channel.Simplex.send_available",
@@ -494,7 +494,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "1b78b54639a766f1030e313135214042"
+      "3318055789e2aa7ff1896c88deadc5a5"
     ],
     [
       "Steel.Channel.Simplex.next_trace",
@@ -529,7 +529,7 @@
         "typing_Steel.Channel.Simplex.step"
       ],
       0,
-      "c1ff213b09fd7b33df1e0c168d21b2c7"
+      "497bffd9673ed417ddfa69daeae370f3"
     ],
     [
       "Steel.Channel.Simplex.next_trace_st",
@@ -568,7 +568,7 @@
         "typing_Steel.Channel.Simplex.__proj__Mkchan_val__item__chan_msg"
       ],
       0,
-      "30ad3f45da81a2c774f44826075a637c"
+      "b0bf3531da7ffce70b53927fed735e19"
     ],
     [
       "Steel.Channel.Simplex.update_trace",
@@ -590,7 +590,7 @@
         "refinement_interpretation_Tm_refine_ba72deea9da94251027c5adf5de75bac"
       ],
       0,
-      "cd2666cb6d8a12965574f989b480750d"
+      "1aa4069fe57baa630f096f7bb05aa66d"
     ],
     [
       "Steel.Channel.Simplex.recv_availableT",
@@ -617,7 +617,7 @@
         "typing_Steel.Channel.Simplex.step"
       ],
       0,
-      "314469383ad965ba0f875fbd007f444d"
+      "96a62fcaf312556f1ee048f1323c641b"
     ],
     [
       "Steel.Channel.Simplex.send_receive_prelude",
@@ -632,7 +632,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "ec98e2050600a1f08aa6824c3ef26529"
+      "cfec2ccd52706c9d1b285f7a18a95fe8"
     ],
     [
       "Steel.Channel.Simplex.send",
@@ -660,7 +660,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b098fc7970193b15b60f76603530976c"
+      "91be6aa87502cbdecdde331c0bc60c1c"
     ],
     [
       "Steel.Channel.Simplex.recv",
@@ -688,7 +688,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "53959d774b9696192b051cbcfded2a36"
+      "413ae2b8ce7b526da210cae3af872375"
     ],
     [
       "Steel.Channel.Simplex.history_p'",
@@ -702,7 +702,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1663d6e62447a48560e8d315f3a74020"
+      "70d3d85715a061b986b8aa936d54d799"
     ],
     [
       "Steel.Channel.Simplex.history_p",
@@ -724,7 +724,7 @@
         "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "677754d8df48d1934b51d52e1dcb3387"
+      "b4067600daef5c073ad76c10f8e48149"
     ],
     [
       "Steel.Channel.Simplex.recall_trace_ref",
@@ -748,7 +748,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "b5477edd53e8170c974a2d2b1ae8f957"
+      "38850ae4584c60c6d9312819d996974b"
     ],
     [
       "Steel.Channel.Simplex.prot_equals",
@@ -780,7 +780,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "dcf7ccb712dc9dc6ad954bd0760f924b"
+      "94026d133b1eecea29a754e5b376ddd0"
     ],
     [
       "Steel.Channel.Simplex.witness_trace_until",
@@ -809,7 +809,7 @@
         "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "23590267174755a8a432d76431bc0f32"
+      "eccb137fa4a7fd22ca3143f366c8a9dd"
     ],
     [
       "Steel.Channel.Simplex.trace",
@@ -823,7 +823,7 @@
         "fuel_guarded_inversion_Steel.Channel.Simplex.chan", "true_interp"
       ],
       0,
-      "82555819d35bde8889e8d729a500edda"
+      "06d5d35a5b3f50e1835bcbe7bec809df"
     ],
     [
       "Steel.Channel.Simplex.extend_history",
@@ -854,7 +854,7 @@
         "typing_Steel.Channel.Protocol.extended_to"
       ],
       0,
-      "25e00b4933efb79e2764ba394f31bb94"
+      "2b99d45a3df7a2a06419d0c795a5d003"
     ],
     [
       "Steel.Channel.Simplex.extend_trace",
@@ -863,7 +863,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3b9da4eb2eee74914218fc7419d0af86"
+      "b0cd16ba0a4e0bb822740a327e07021e"
     ]
   ]
 ]

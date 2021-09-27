@@ -47,7 +47,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "a7978c3df896923c5a8411b3916fa6a7"
+      "f2e1107f281e9c2a0616dd1bed8236ff"
     ],
     [
       "OWGCounter.og_acquire",
@@ -72,7 +72,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "0814291e1ca1f92c653197e0835e48a2"
+      "a788d2c3262a962c691ae227c1dfe2bf"
     ],
     [
       "OWGCounter.og_release",
@@ -97,7 +97,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "349b8c9508e68814eb37a4605c7cc337"
+      "044f0f23796eb4a6cab71d31cc0a5964"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -114,7 +114,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "26ecb912a66ee92f84faf5a7bf9689d0"
+      "52e0c47e66d0b7d682ce99d7ec33a139"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -136,7 +136,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "7ab2da3b9cdf43fa73caf25dd6523ebd"
+      "f6e0bf2deefb53275b940ea081548a58"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -168,7 +168,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "6e6125e7d0276bb81892f121babe16ee"
+      "f081326d8d847303dd0535d9c52b5690"
     ],
     [
       "OWGCounter.incr",
@@ -192,7 +192,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "d403e139ca462830f5f89ca37a0ca2e5"
+      "6d2701998c2e0390cf76ae7eff09cd56"
     ],
     [
       "OWGCounter.incr_main",
@@ -239,7 +239,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "abe6c034f47d60adaca288c7d161f452"
+      "aa4d2c45ca555d6724c971a821fd0823"
     ]
   ]
 ]
