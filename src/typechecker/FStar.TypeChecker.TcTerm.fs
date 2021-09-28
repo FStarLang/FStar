@@ -539,7 +539,6 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
    | _ -> None
 
 
-
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -1891,7 +1890,13 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
             t, Env.conj_guard g1_env g2_env in
 
         let hd = {hd with sort=t} in
-        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=attrs} in
+        let combine_attrs (attrs:list<S.attribute>) (attrs':list<S.attribute>) : list<S.attribute> =
+          let diff = List.filter (fun attr' ->
+            not (List.existsb (fun attr -> U.eq_tm attr attr' = U.Equal) attrs)
+          ) attrs' in
+          attrs@diff
+        in
+        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=combine_attrs attrs attrs'} in
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
@@ -2007,6 +2012,23 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
+
+    (*
+     * AR: Check strictly_positive annotations on the binders, if any
+     *
+     *     To do so, we use the same routine as used for inductive types,
+     *       after substituting the bv name with a fresh lid fv in the function body
+     *)
+    List.iter (fun b ->
+      if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
+      then let r = TcUtil.name_strictly_positive_in_type env b.binder_bv body in
+           if not r
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
+                               (Print.binder_to_string b)) (S.range_of_bv b.binder_bv)
+           else ()
+      else ()) bs;
+
     (*
      * AR: there are three types in the code above now:
      *     topt : option<term> -- the original annotation
