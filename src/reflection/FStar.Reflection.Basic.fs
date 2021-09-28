@@ -665,3 +665,5 @@ let push_binder e b = Env.push_binders e [b]
 
 let subst (x:bv) (n:term) (m:term) : term =
   SS.subst [NT(x,n)] m
+
+let close_term (b:binder) (t:term) : term = SS.close [b] t

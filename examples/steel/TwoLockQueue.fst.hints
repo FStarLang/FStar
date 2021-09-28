@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "7c56193f9dd92f9a27b0f8aac163dcaa"
+      "edc454d9115009cda58fa4eb7a6f1ba9"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "5cd1c2125b4a7df6f6e7c1c532f72860"
+      "966ccecfb3c1d5feb4d58cf379b430b2"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,7 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "5ec9c1e91da2069a503c09d25a3b8208"
+      "3f1b667e1dd27af6820eabf33d23f706"
     ],
     [
       "TwoLockQueue.open_exists",
@@ -70,7 +70,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "3379ffc9fdb6e5a81542b63769e88552"
+      "e9d8ab0dfde3e7fa521af28e179f6ef1"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,7 +84,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "10068d747436bb622905e66f4f3539df"
+      "afb4532151fc16af0cc851304b08bda4"
     ],
     [
       "TwoLockQueue.__proj__Mkq_ptr__item__lock",
@@ -98,7 +98,7 @@
         "projection_inverse_TwoLockQueue.Mkq_ptr_ptr"
       ],
       0,
-      "a170cb815aecaa9e42cf98e4255053de"
+      "0bc5e69dd78203d8b360e28894cfa4d2"
     ],
     [
       "TwoLockQueue.pack_queue_invariant",
@@ -107,7 +107,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "a75444a918fbd74c48df3e50b86bf02f"
+      "cd4144754d2b893afd4ef160f9e447e3"
     ],
     [
       "TwoLockQueue.__proj__Mkt__item__inv",
@@ -121,7 +121,7 @@
         "projection_inverse_TwoLockQueue.Mkt_tail"
       ],
       0,
-      "01c10294a57943a8ad654a173142eb49"
+      "61df8be9a46042047b5bd0ece185c47a"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -130,7 +130,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "1955aae1c3edeb017cee4135153429ad"
+      "5e002599fa4a5de2ea02dc22ddea65b1"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -183,7 +183,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "767c0f1f44a6731d20834bf616299003"
+      "b292c45a2181656cf9084277170faccb"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -194,77 +194,11 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "0f5f4532ad4a7effd11fb8cd797fd872"
+      "a4072a2ca45afddef8313a50a5fe10d3"
     ],
     [
       "TwoLockQueue.dequeue_core",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "lemma_FStar.Ghost.reveal_hide",
-        "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_Queue.Def.t"
-      ],
-      0,
-      "9fd0d0b01d5881dd2ba08500e19af37e"
-    ],
-    [
-      "TwoLockQueue.dequeue_core",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "fuel_guarded_inversion_TwoLockQueue.t",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "1c0ccdac7702ebae0d62501aafae00a1"
-    ],
-    [
-      "TwoLockQueue.dequeue_core",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "lemma_FStar.Ghost.reveal_hide",
-        "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_Queue.Def.t"
-      ],
-      0,
-      "4c4929e1f3e5cefc747e88c4688d243f"
-    ],
-    [
-      "TwoLockQueue.dequeue_core",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "fuel_guarded_inversion_TwoLockQueue.t",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "proj_equation_Queue.Def.Mkcell_next",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "2edc79de02e9c75e0f3c832f9f41fe59"
-    ],
-    [
-      "TwoLockQueue.dequeue_core",
-      5,
       2,
       1,
       [
@@ -333,7 +267,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "83cf2d5a4bd46284c9d0179e90cf04d3"
+      "9769abc98c146a9a8e5f03edd6a1e0a2"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -414,7 +348,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "d3dba54776ce6ad9d698b2ff8babac05"
+      "a05752d979b2e8ddd3f2985ddf65abe5"
     ]
   ]
 ]

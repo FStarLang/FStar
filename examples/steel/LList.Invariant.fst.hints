@@ -15,7 +15,7 @@
         "projection_inverse_LList.Invariant.Mkcell_next"
       ],
       0,
-      "320f569c3b4c7e6ba6b66e2c21cf947c"
+      "4a721c48aba547e741175f6277ce600b"
     ],
     [
       "LList.Invariant.llist'",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "40f5358c44eca7d6940891fea9f57b85"
+      "c54e61708f48241f8e993e609e33e5e9"
     ],
     [
       "LList.Invariant.intro_llist_nil",
@@ -64,50 +64,11 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "100bfc844598aa7c1dd1975629f7c453"
+      "7949c4b3ea591e04ff33db843ab3179c"
     ],
     [
       "LList.Invariant.intro_llist_cons",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_False",
-        "equation_Prims.l_True", "equation_Prims.l_imp",
-        "equation_Prims.l_not", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "fuel_guarded_inversion_LList.Invariant.cell",
-        "fuel_guarded_inversion_Prims.list",
-        "interpretation_Tm_abs_aed53fcaf0bf10e19fdebfdf2549a18a",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp", "typing_tok_Prims.T@tok"
-      ],
-      0,
-      "ce7aac8ce617f5d9db7a3efb74f9b244"
-    ],
-    [
-      "LList.Invariant.intro_llist_cons",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.l_False", "equation_Prims.l_imp",
-        "equation_Prims.l_not", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "4d2c8a341e8fa650f5c7916d5d9535c4"
-    ],
-    [
-      "LList.Invariant.intro_llist_cons",
-      3,
       2,
       1,
       [
@@ -122,7 +83,6 @@
         "equation_Prims.eq2", "equation_Prims.l_False",
         "equation_Prims.l_imp", "equation_Prims.l_not",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.true_p",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "fuel_guarded_inversion_LList.Invariant.cell",
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
@@ -135,47 +95,15 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_7c3576760aabe55bd452e0ed74e31d09",
-        "true_interp", "typing_LList.Invariant.llist",
-        "typing_LList.Invariant.next", "typing_Steel.Reference.is_null"
+        "typing_LList.Invariant.llist", "typing_LList.Invariant.next",
+        "typing_Steel.Reference.is_null"
       ],
       0,
-      "21d559a60e6a8ffd6ba3b7ff8cf2770b"
+      "1b4d418446544fc2c5f0da8e143c5d2d"
     ],
     [
       "LList.Invariant.elim_llist_cons",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.l_False", "equation_Prims.l_imp",
-        "equation_Prims.l_not", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "28df80ae1d16d65dd474f65aa3cc0d90"
-    ],
-    [
-      "LList.Invariant.elim_llist_cons",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_LList.Invariant.t",
-        "equation_Prims.eq2", "equation_Prims.l_False",
-        "equation_Prims.l_imp", "equation_Prims.l_not",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "395a7f45f4fd5ac658179712ec81b003"
-    ],
-    [
-      "LList.Invariant.elim_llist_cons",
-      3,
       2,
       1,
       [
@@ -218,7 +146,7 @@
         "typing_Steel.Memory.pure", "typing_Steel.Reference.pts_to"
       ],
       0,
-      "b6edb69d14fcb9fa67c1a33f6766334f"
+      "5ab9b36e48f6bf5108e9c34d4f32a437"
     ]
   ]
 ]

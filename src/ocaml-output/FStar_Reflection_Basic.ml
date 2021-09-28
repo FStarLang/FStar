@@ -1024,3 +1024,7 @@ let (subst :
   fun x ->
     fun n ->
       fun m -> FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (x, n)] m
+let (close_term :
+  FStar_Syntax_Syntax.binder ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  = fun b -> fun t -> FStar_Syntax_Subst.close [b] t
