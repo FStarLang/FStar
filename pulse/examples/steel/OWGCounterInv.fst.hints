@@ -29,7 +29,7 @@
         "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "9cd41c6d35ad303939a023dfd4aef72a"
+      "556513ad531659f7e0c9785f68edb2d2"
     ],
     [
       "OWGCounterInv.ghost_share",
@@ -49,7 +49,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "5f9f218c93eb9359c7e30643e56b08b7"
+      "96f0e12a8b9082d66977d16e500af71e"
     ],
     [
       "OWGCounterInv.gather_invariant",
@@ -70,7 +70,7 @@
         "real_inversion", "typing_FStar.Real.one"
       ],
       0,
-      "8da54d0f23d3e006184d1e7c51c97438"
+      "610cc078ab2b533c597d09e9f1761351"
     ],
     [
       "OWGCounterInv.with_invariant",
@@ -95,7 +95,7 @@
         "typing_Steel.Effect.Atomic.set_add", "typing_Steel.Memory.iname"
       ],
       0,
-      "0c5fc2a611e7c7887b73f2970127bcd1"
+      "f1dc3c609facf75cc63509d29c7c0fd0"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -136,87 +136,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "a0045aaed8530deee17841bf496d83aa"
-    ],
-    [
-      "OWGCounterInv.inv_equiv_lemma",
-      2,
-      1,
-      0,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_OWGCounterInv.half_perm",
-        "equation_OWGCounterInv.inv_slprop", "equation_Prims.eqtype",
-        "equation_Steel.Effect.Common.sel_depends_only_on",
-        "equation_Steel.Effect.Common.sel_depends_only_on_core",
-        "equation_Steel.Effect.Common.to_vprop_",
-        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int",
-        "interpretation_Tm_abs_3fe15317d8acebbcf49c9b78c8172157",
-        "interpretation_Tm_abs_5ecc11fe4ed759f03966f7193ecd6a1d",
-        "interpretation_Tm_abs_e35a862dd37c7364f234db4d124f43c3",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_529e62cb1cf439fde47a1e8042317490",
-        "refinement_interpretation_Tm_refine_8e28a5ca7230a70278b3387b147d761c",
-        "refinement_interpretation_Tm_refine_f9444fda8e4a4f170aab8d7f7e495338",
-        "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
-        "typing_OWGCounterInv.inv_slprop"
-      ],
-      0,
-      "ed6f0558805422f1b7a29963c096251f"
-    ],
-    [
-      "OWGCounterInv.inv_equiv_lemma",
-      3,
-      1,
-      0,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_OWGCounterInv.half_perm",
-        "equation_OWGCounterInv.inv_slprop", "equation_Prims.eqtype",
-        "equation_Steel.Effect.Common.sel_depends_only_on",
-        "equation_Steel.Effect.Common.sel_depends_only_on_core",
-        "equation_Steel.Effect.Common.to_vprop_",
-        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int",
-        "interpretation_Tm_abs_3fe15317d8acebbcf49c9b78c8172157",
-        "interpretation_Tm_abs_5ecc11fe4ed759f03966f7193ecd6a1d",
-        "interpretation_Tm_abs_e35a862dd37c7364f234db4d124f43c3",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_529e62cb1cf439fde47a1e8042317490",
-        "refinement_interpretation_Tm_refine_8e28a5ca7230a70278b3387b147d761c",
-        "refinement_interpretation_Tm_refine_f9444fda8e4a4f170aab8d7f7e495338",
-        "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
-        "typing_OWGCounterInv.inv_slprop"
-      ],
-      0,
-      "b3d20d39a898d55219102d0bb904f131"
+      "37afac4c16b741a56b24d28631c79e25"
     ],
     [
       "OWGCounterInv.incr_ghost_contrib",
@@ -237,7 +157,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "85c0d0595a108fa92421086c20aa0ef9"
+      "886363adcbf56d59720c18aef4dab120"
     ],
     [
       "OWGCounterInv.incr_with_inv_slprop",
@@ -273,7 +193,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "755c151c0654d69d946075f1f280ace4"
+      "86556aa413f2dec3799bf36851c94671"
     ],
     [
       "OWGCounterInv.incr_with_invariant",
@@ -282,7 +202,7 @@
       0,
       [ "@query" ],
       0,
-      "0dde5dc43d85f29b8b4c42dd355676df"
+      "2cf285261dbf7832ca149889d31c7402"
     ],
     [
       "OWGCounterInv.incr_main",
@@ -322,7 +242,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "92ae960e90d171cf7d40b4ad4bd1bfe3"
+      "39cffc6e7baf2d57ca5d1691c6d26a67"
     ]
   ]
 ]
