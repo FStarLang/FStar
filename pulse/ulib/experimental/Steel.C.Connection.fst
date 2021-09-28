@@ -280,11 +280,11 @@ let extensionality (a: Type) (b: (a -> Type)) (f g: restricted_t a b)
     : Lemma (ensures (feq #a #b f g <==> f == g))
 = FStar.FunctionalExtensionality.extensionality a b f g
 
-let extensionality_nondep (a0 a1 a2: Type) (b: Type)
+let extensionality_nondep (a1 a2: Type) (b: Type)
   (f: a1 ^-> b)
   (g: a2 ^-> b)
 : Lemma
-  (requires (a0 == a1 /\ a0 == a2))
+  (requires (a1 == a2))
   (ensures (feq f g <==> f == g))
 = extensionality _ _ f g
 
@@ -312,7 +312,6 @@ let connection_eq_gen
     ((l.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f == (m.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f)
   = Classical.forall_intro (phi x y f);
     extensionality_nondep
-      (frame_preserving_upd_dom p (l.conn_small_to_large.morph x))
       (frame_preserving_upd_dom p (Ghost.reveal (Ghost.hide (l.conn_small_to_large.morph x))))
       (frame_preserving_upd_dom p (Ghost.reveal (Ghost.hide (m.conn_small_to_large.morph x))))
       a
@@ -332,6 +331,29 @@ let connection_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (
     let yb = Ghost.hide (fbc.conn_small_to_large.morph yc) in
     let fb = fbc.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = xc; fpu_lift_dom_y = yc; fpu_lift_dom_f = f }) in
     mk_restricted_frame_preserving_upd (fab.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = xb; fpu_lift_dom_y = yb; fpu_lift_dom_f = mk_restricted_frame_preserving_upd fb }) ))
+
+let connection_compose_fpu (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: connection pa pb) (fbc: connection pb pc)
+  (xc: Ghost.erased c { ~ (Ghost.reveal xc == one pc) })
+  (yc: Ghost.erased c)
+  (fc: restricted_frame_preserving_upd pc xc yc)
+  (fb: restricted_frame_preserving_upd pb (Ghost.hide (fbc.conn_small_to_large.morph xc)) (Ghost.hide (fbc.conn_small_to_large.morph yc)))
+: Lemma
+  (requires (
+    fb `feq` mk_restricted_frame_preserving_upd (fbc.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = xc; fpu_lift_dom_y = yc; fpu_lift_dom_f = fc; }))
+  ))
+  (ensures (
+    (connection_compose fab fbc).conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = xc; fpu_lift_dom_y = yc; fpu_lift_dom_f = fc; }) ==
+    fab.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = Ghost.hide (fbc.conn_small_to_large.morph xc); fpu_lift_dom_y = Ghost.hide (fbc.conn_small_to_large.morph yc); fpu_lift_dom_f = fb; }))
+  )
+= let c = connection_compose fab fbc in
+  let f1 = c.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = xc; fpu_lift_dom_y = yc; fpu_lift_dom_f = fc; }) in
+  let f2 = fab.conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = Ghost.hide (fbc.conn_small_to_large.morph xc); fpu_lift_dom_y = Ghost.hide (fbc.conn_small_to_large.morph yc); fpu_lift_dom_f = fb; }) in
+  extensionality_nondep 
+    (frame_preserving_upd_dom pa (Ghost.hide (c.conn_small_to_large.morph xc)))
+    (frame_preserving_upd_dom pa (Ghost.hide (fab.conn_small_to_large.morph (Ghost.hide (fbc.conn_small_to_large.morph xc)))))
+    a
+    f1.fpu_f
+    f2.fpu_f
 
 let connection_id
   (#a: Type)
