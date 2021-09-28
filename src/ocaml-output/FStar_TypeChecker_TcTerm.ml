@@ -5394,11 +5394,25 @@ and (tc_abs_check_binders :
                                (hd.FStar_Syntax_Syntax.index);
                              FStar_Syntax_Syntax.sort = t
                            } in
+                         let combine_attrs attrs1 attrs'1 =
+                           let diff =
+                             FStar_Compiler_List.filter
+                               (fun attr' ->
+                                  let uu___3 =
+                                    FStar_Compiler_List.existsb
+                                      (fun attr ->
+                                         let uu___4 =
+                                           FStar_Syntax_Util.eq_tm attr attr' in
+                                         uu___4 = FStar_Syntax_Util.Equal)
+                                      attrs1 in
+                                  Prims.op_Negation uu___3) attrs'1 in
+                           FStar_Compiler_List.op_At attrs1 diff in
                          let b =
+                           let uu___3 = combine_attrs attrs attrs' in
                            {
                              FStar_Syntax_Syntax.binder_bv = hd1;
                              FStar_Syntax_Syntax.binder_qual = imp;
-                             FStar_Syntax_Syntax.binder_attrs = attrs
+                             FStar_Syntax_Syntax.binder_attrs = uu___3
                            } in
                          let b_expected =
                            {
@@ -5882,48 +5896,78 @@ and (tc_abs :
                               (FStar_Pervasives_Native.Some
                                  (FStar_Syntax_Util.residual_comp_of_comp
                                     (FStar_Compiler_Util.dflt cbody c_opt))) in
-                          let uu___6 =
-                            match tfun_opt with
-                            | FStar_Pervasives_Native.Some t ->
-                                let t1 = FStar_Syntax_Subst.compress t in
-                                let t_annot =
-                                  match topt with
-                                  | FStar_Pervasives_Native.Some t2 -> t2
-                                  | FStar_Pervasives_Native.None ->
-                                      failwith
-                                        "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some" in
-                                (match t1.FStar_Syntax_Syntax.n with
-                                 | FStar_Syntax_Syntax.Tm_arrow uu___7 ->
-                                     (e, t_annot, guard1)
-                                 | uu___7 ->
-                                     let lc =
-                                       let uu___8 =
-                                         FStar_Syntax_Syntax.mk_Total
-                                           tfun_computed in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___8
-                                         FStar_TypeChecker_Common.lcomp_of_comp in
+                          (FStar_Compiler_List.iter
+                             (fun b ->
+                                let uu___7 =
+                                  FStar_Syntax_Util.has_attribute
+                                    b.FStar_Syntax_Syntax.binder_attrs
+                                    FStar_Parser_Const.binder_strictly_positive_attr in
+                                if uu___7
+                                then
+                                  let r =
+                                    FStar_TypeChecker_Util.name_strictly_positive_in_type
+                                      env1 b.FStar_Syntax_Syntax.binder_bv
+                                      body2 in
+                                  (if Prims.op_Negation r
+                                   then
                                      let uu___8 =
-                                       FStar_TypeChecker_Util.check_has_type_maybe_coerce
-                                         env1 e lc t1 in
-                                     (match uu___8 with
-                                      | (e1, uu___9, guard') ->
-                                          let uu___10 =
-                                            FStar_TypeChecker_Env.conj_guard
-                                              guard1 guard' in
-                                          (e1, t_annot, uu___10)))
-                            | FStar_Pervasives_Native.None ->
-                                (e, tfun_computed, guard1) in
-                          (match uu___6 with
-                           | (e1, tfun, guard2) ->
-                               let c = FStar_Syntax_Syntax.mk_Total tfun in
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStar_TypeChecker_Common.lcomp_of_comp c in
-                                 FStar_TypeChecker_Util.strengthen_precondition
-                                   FStar_Pervasives_Native.None env1 e1
-                                   uu___8 guard2 in
-                               (match uu___7 with | (c1, g) -> (e1, c1, g)))))))
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Syntax_Print.binder_to_string
+                                             b in
+                                         FStar_Compiler_Util.format1
+                                           "Binder %s is marked strictly positive, but its use in the definition is not"
+                                           uu___10 in
+                                       (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                                         uu___9) in
+                                     let uu___9 =
+                                       FStar_Syntax_Syntax.range_of_bv
+                                         b.FStar_Syntax_Syntax.binder_bv in
+                                     FStar_Errors.raise_error uu___8 uu___9
+                                   else ())
+                                else ()) bs1;
+                           (let uu___7 =
+                              match tfun_opt with
+                              | FStar_Pervasives_Native.Some t ->
+                                  let t1 = FStar_Syntax_Subst.compress t in
+                                  let t_annot =
+                                    match topt with
+                                    | FStar_Pervasives_Native.Some t2 -> t2
+                                    | FStar_Pervasives_Native.None ->
+                                        failwith
+                                          "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some" in
+                                  (match t1.FStar_Syntax_Syntax.n with
+                                   | FStar_Syntax_Syntax.Tm_arrow uu___8 ->
+                                       (e, t_annot, guard1)
+                                   | uu___8 ->
+                                       let lc =
+                                         let uu___9 =
+                                           FStar_Syntax_Syntax.mk_Total
+                                             tfun_computed in
+                                         FStar_Compiler_Effect.op_Bar_Greater
+                                           uu___9
+                                           FStar_TypeChecker_Common.lcomp_of_comp in
+                                       let uu___9 =
+                                         FStar_TypeChecker_Util.check_has_type_maybe_coerce
+                                           env1 e lc t1 in
+                                       (match uu___9 with
+                                        | (e1, uu___10, guard') ->
+                                            let uu___11 =
+                                              FStar_TypeChecker_Env.conj_guard
+                                                guard1 guard' in
+                                            (e1, t_annot, uu___11)))
+                              | FStar_Pervasives_Native.None ->
+                                  (e, tfun_computed, guard1) in
+                            match uu___7 with
+                            | (e1, tfun, guard2) ->
+                                let c = FStar_Syntax_Syntax.mk_Total tfun in
+                                let uu___8 =
+                                  let uu___9 =
+                                    FStar_TypeChecker_Common.lcomp_of_comp c in
+                                  FStar_TypeChecker_Util.strengthen_precondition
+                                    FStar_Pervasives_Native.None env1 e1
+                                    uu___9 guard2 in
+                                (match uu___8 with | (c1, g) -> (e1, c1, g))))))))
 and (check_application_args :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

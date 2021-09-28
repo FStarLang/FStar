@@ -313,11 +313,12 @@ let (check_with_lid : FStar_Ident.lident) =
 let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
 let (allow_informative_binders_attr : FStar_Ident.lident) =
-  p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+  psconst "allow_informative_binders"
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
-let (ite_soundness_by_attr : FStar_Ident.lident) =
-  p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
+let (binder_strictly_positive_attr : FStar_Ident.lident) =
+  psconst "strictly_positive"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
