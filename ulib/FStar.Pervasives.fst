@@ -158,6 +158,8 @@ let noextract_to _ = ()
 
 let ite_soundness_by = ()
 
+let strictly_positive = ()
+
 let singleton #_ x = x
 
 let with_type #_ e = e
