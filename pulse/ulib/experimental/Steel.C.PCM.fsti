@@ -288,6 +288,35 @@ let frame_preserving_upd_goal3_post
 = frame_preserving_upd_goal3_pre p x y f v frame /\
   op p y frame == f v
 
+val frame_preserving_upd_post_intro
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (prf1:
+    (v: frame_preserving_upd_dom p x) ->
+    Lemma
+    (frame_preserving_upd_goal1 p x y f v)
+  )
+  (prf2:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (frame_preserving_upd_goal2_pre p x y f v frame))
+    (ensures (frame_preserving_upd_goal2_post p x y f v frame))
+  )
+  (prf3:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (frame_preserving_upd_goal3_pre p x y f v frame))
+    (ensures (frame_preserving_upd_goal3_post p x y f v frame))
+  )
+  (v: frame_preserving_upd_dom p x)
+: Lemma
+  (frame_preserving_upd_post p x y v (f v))
+
 val frame_preserving_upd_intro
   (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
   (f:
