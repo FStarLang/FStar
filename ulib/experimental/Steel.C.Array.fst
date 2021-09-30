@@ -1447,7 +1447,38 @@ let ref_of_array #base #t x =
     (Ghost.hide (Seq.index (Ghost.reveal gv <: Seq.seq t) 0));
   return r
 
-let array_of_ref = admit ()
+#restart-solver
+let array_of_ref
+  #_ #base #t r' r
+=
+  let g : Ghost.erased t = gget (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) in
+  let v = Steel.C.Ref.pts_to_view_elim
+    r
+    (Steel.C.Opt.opt_view t)
+  in
+  Steel.C.Ref.unfocus
+    r
+    (array_as_ref r')
+    (array_as_one_ref_conn base t)
+    v;
+  let g' : Ghost.erased (array_view_type t (len r')) =
+    (Ghost.hide (Seq.create 1 (Ghost.reveal g)))
+  in
+  let v' : Ghost.erased (array_pcm_carrier t (len r')) =
+    get_pts_to (array_as_ref r') _
+  in
+  array_pcm_carrier_ext t (len r') ((array_view t (len r')).Steel.C.Ref.to_carrier g') (Ghost.reveal v') (fun i ->
+    assert (i == zero_size)
+  );
+  Steel.C.Ref.pts_to_view_intro
+    _
+    _
+    (array_view t (len r'))
+    g';
+  change_equal_slprop
+    (Steel.C.Ref.pts_to_view (array_as_ref r') (array_view t (len r')))
+    (varray0 r');
+  intro_varray1 r'
 
 let mk_array_of_ref = admit ()
 
