@@ -122,6 +122,14 @@ let is_inverse_of_injective (#a #b: Type) (g: (b -> Tot a)) (f: (a -> Tot b))
   [SMTPat (g `is_inverse_of` f); SMTPat (f x1); SMTPat (f x2)]
 = assert (g (f x1) == g (f x2))
 
+let is_inverse_of_intro (#a #b: Type) (g: (b -> Tot a)) (f: (a -> Tot b))
+  (phi: (x: a) -> Lemma
+    (g (f x) == x)
+  )
+: Lemma
+  (g `is_inverse_of` f)
+= Classical.forall_intro phi
+
 #push-options "--print_universes"
 
 let restricted_frame_preserving_upd
@@ -621,6 +629,19 @@ let connection_of_isomorphism
     i.iso_1_2
     i.iso_1_2_inv_2_1
     (connection_of_isomorphism_fpu i)
+
+let connection_of_isomorphism_fpu_eq
+  (#t1 #t2: Type)
+  (#p1: pcm t1)
+  (#p2: pcm t2)
+  (i: isomorphism p1 p2)
+  (x: Ghost.erased t2 { ~ (Ghost.reveal x == one p2) })
+  (y: Ghost.erased t2)
+  (f: restricted_frame_preserving_upd p2 x y)
+  (v: frame_preserving_upd_dom p1 (i.iso_2_1.morph x))
+: Lemma
+  (((connection_of_isomorphism i).conn_lift_frame_preserving_upd ({ fpu_lift_dom_x = x; fpu_lift_dom_y = y; fpu_lift_dom_f = f; })).fpu_f v == connection_of_isomorphism_fpu' i x y f v)
+= ()
 
 let connection_of_isomorphism_inverse_left
   (#t1 #t2: Type)
