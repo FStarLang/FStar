@@ -294,26 +294,24 @@ val frame_preserving_upd_post_intro
     (v: frame_preserving_upd_dom p x) ->
     Tot a
   )
+  (v: frame_preserving_upd_dom p x)
   (prf1:
-    (v: frame_preserving_upd_dom p x) ->
+    unit ->
     Lemma
     (frame_preserving_upd_goal1 p x y f v)
   )
   (prf2:
-    (v: frame_preserving_upd_dom p x) ->
     (frame: a) ->
     Lemma
     (requires (frame_preserving_upd_goal2_pre p x y f v frame))
     (ensures (frame_preserving_upd_goal2_post p x y f v frame))
   )
   (prf3:
-    (v: frame_preserving_upd_dom p x) ->
     (frame: a) ->
     Lemma
     (requires (frame_preserving_upd_goal3_pre p x y f v frame))
     (ensures (frame_preserving_upd_goal3_post p x y f v frame))
   )
-  (v: frame_preserving_upd_dom p x)
 : Lemma
   (frame_preserving_upd_post p x y v (f v))
 
@@ -323,26 +321,24 @@ val frame_preserving_upd_post_intro'
     (v: frame_preserving_upd_dom p x) ->
     Tot a
   )
+  (v: frame_preserving_upd_dom p x)
   (prf1:
-    (v: frame_preserving_upd_dom p x) ->
+    unit ->
     Lemma
     (p_refine p (f v))
   )
   (prf2:
-    (v: frame_preserving_upd_dom p x) ->
     (frame: a) ->
     Lemma
     (requires (composable p x frame))
     (ensures (composable p y frame))
   )
   (prf3:
-    (v: frame_preserving_upd_dom p x) ->
     (frame: a) ->
     Lemma
     (requires (composable p x frame /\ composable p y frame /\ op p x frame == v))
     (ensures (op p y frame == f v))
   )
-  (v: frame_preserving_upd_dom p x)
 : Lemma
   (frame_preserving_upd_post p x y v (f v))
 

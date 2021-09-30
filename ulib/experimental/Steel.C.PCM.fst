@@ -302,32 +302,30 @@ let exclusive_fstar_pcm_of_pcm p x = ()
 let exclusive_pcm_of_fstar_pcm p x = ()
 
 let frame_preserving_upd_post_intro
-  p x y f prf1 prf2 prf3
-= fun v ->
-  prf1 v;
-  Classical.forall_intro (Classical.move_requires (prf2 v));
-  Classical.forall_intro (Classical.move_requires (prf3 v))
+  p x y f v prf1 prf2 prf3
+= prf1 ();
+  Classical.forall_intro (Classical.move_requires (prf2));
+  Classical.forall_intro (Classical.move_requires (prf3))
 
 let frame_preserving_upd_post_intro'
-  #a p x y f prf1 prf2 prf3 v
+  #a p x y f v prf1 prf2 prf3
 =
   frame_preserving_upd_post_intro
-    p x y f
-    (fun v ->
-      prf1 v;
+    p x y f v
+    (fun () ->
+      prf1 ();
       let frame = compatible_elim p x v in
-      prf2 v frame;
-      prf3 v frame;
+      prf2 frame;
+      prf3 frame;
       compatible_intro p y (f v) frame 
     )
-    (fun v frame -> prf2 v frame)
-    (fun v frame -> prf3 v frame)
-    v
+    (fun frame -> prf2 frame)
+    (fun frame -> prf3 frame)
 
 let frame_preserving_upd_intro
   p x y f prf1 prf2 prf3
 = fun v ->
-  frame_preserving_upd_post_intro p x y f prf1 prf2 prf3 v;
+  frame_preserving_upd_post_intro p x y f v (fun _ -> prf1 v) (prf2 v) (prf3 v);
   f v
 
 let fstar_fpu_of_fpu
