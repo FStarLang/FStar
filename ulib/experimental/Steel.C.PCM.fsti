@@ -317,6 +317,35 @@ val frame_preserving_upd_post_intro
 : Lemma
   (frame_preserving_upd_post p x y v (f v))
 
+val frame_preserving_upd_post_intro'
+  (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
+  (f:
+    (v: frame_preserving_upd_dom p x) ->
+    Tot a
+  )
+  (prf1:
+    (v: frame_preserving_upd_dom p x) ->
+    Lemma
+    (p_refine p (f v))
+  )
+  (prf2:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (composable p x frame))
+    (ensures (composable p y frame))
+  )
+  (prf3:
+    (v: frame_preserving_upd_dom p x) ->
+    (frame: a) ->
+    Lemma
+    (requires (composable p x frame /\ composable p y frame /\ op p x frame == v))
+    (ensures (op p y frame == f v))
+  )
+  (v: frame_preserving_upd_dom p x)
+: Lemma
+  (frame_preserving_upd_post p x y v (f v))
+
 val frame_preserving_upd_intro
   (#a:Type u#a) (p:pcm0 a) (x y: Ghost.erased a)
   (f:

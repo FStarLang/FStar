@@ -308,6 +308,22 @@ let frame_preserving_upd_post_intro
   Classical.forall_intro (Classical.move_requires (prf2 v));
   Classical.forall_intro (Classical.move_requires (prf3 v))
 
+let frame_preserving_upd_post_intro'
+  #a p x y f prf1 prf2 prf3 v
+=
+  frame_preserving_upd_post_intro
+    p x y f
+    (fun v ->
+      prf1 v;
+      let frame = compatible_elim p x v in
+      prf2 v frame;
+      prf3 v frame;
+      compatible_intro p y (f v) frame 
+    )
+    (fun v frame -> prf2 v frame)
+    (fun v frame -> prf3 v frame)
+    v
+
 let frame_preserving_upd_intro
   p x y f prf1 prf2 prf3
 = fun v ->
