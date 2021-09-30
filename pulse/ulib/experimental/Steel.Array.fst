@@ -54,7 +54,6 @@ let malloc #a x n =
   Steel.Effect.Atomic.return x
 
 let index r i =
-  let h = get() in
   let s = read (dsnd r) in
   Seq.index s (U32.v i)
 
