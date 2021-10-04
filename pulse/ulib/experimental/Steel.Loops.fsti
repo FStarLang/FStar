@@ -16,6 +16,7 @@
 module Steel.Loops
 open Steel.Effect.Common
 open Steel.Effect
+module AT = Steel.Effect.Atomic
 module U32 = FStar.UInt32
 
 (* This module provides some common iterative looping combinators *)
@@ -38,3 +39,15 @@ val for_loop (start:U32.t)
   : SteelT unit
       (inv (U32.v start))
       (fun _ -> inv (U32.v finish))
+
+/// while_loop: while (cond()) { body () }
+val while_loop (inv: Ghost.erased bool -> vprop)
+               (cond: (unit -> SteelT bool
+                                     (AT.h_exists inv)
+                                     (fun b -> inv b)))
+               (body: (unit -> SteelT unit
+                                     (inv true)
+                                     (fun _ -> AT.h_exists inv)))
+  : SteelT unit
+    (AT.h_exists inv)
+     (fun _ -> inv false)

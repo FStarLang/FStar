@@ -420,14 +420,14 @@ let lemma_unfold_subcomp_pre (#a:Type)
      (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
      (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
         can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-        ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        (req_g (mk_rmem pre_g h0) /\ ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x))) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
      ))
   ))
   = T.unfold_rewrite_with_tactic vc_norm (   can_be_split_trans pre_g (pre_f `star` frame) pre_f;
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+     (req_g (mk_rmem pre_g h0) /\ ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x))) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
      ))
   )
 
