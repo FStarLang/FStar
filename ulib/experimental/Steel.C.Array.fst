@@ -1669,3 +1669,24 @@ let upd
   change_equal_slprop
     (varray r')
     (varray r)
+
+#restart-solver
+let array_to_carrier_refine
+  (#t: Type0)
+  (n: size_t)
+  (v: array_view_type t n)
+: Lemma
+  (requires (size_v n > 0))
+  (ensures (p_refine (array_pcm t n) (array_to_carrier t n v)))
+= FStar.Classical.exists_intro (fun (k: array_domain t n) -> True) zero_size
+
+#restart-solver
+let malloc
+  #t x n
+=
+  let v = Seq.create (size_v n) x in
+  let c = array_to_carrier t n v in
+  array_to_carrier_refine n v;
+  let r0 = Steel.C.Ref.ref_alloc (array_pcm t n) c in
+  Steel.C.Ref.pts_to_view_intro r0 c (array_view t n) v;
+  intro_varray r0 ()
