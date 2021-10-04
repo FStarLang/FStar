@@ -2220,8 +2220,11 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            _e0::e1::e2::[])
           when
-          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "FStar.Buffer.rcreate_mm") ||
+          ((((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___5 = "FStar.Buffer.rcreate_mm") ||
+               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___5 = "Steel.C.Array.malloc"))
+              ||
               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
                uu___5 = "LowStar.Monotonic.Buffer.mmalloc"))
              ||
