@@ -150,6 +150,20 @@ val memcpy (#t:_)
       asel a0 h0 == asel a0 h1 /\
       asel a1 h1 == asel a0 h1)
 
+/// Decides whether the contents of a0 and a1 are equal
+val compare (#t:eqtype)
+            (a0 a1:array t)
+            (l:U32.t { length a0 == length a1 /\ U32.v l == length a0})
+  : Steel bool
+    (varray a0 `star` varray a1)
+    (fun _ -> varray a0 `star` varray a1)
+    (requires fun _ -> True)
+    (ensures fun h0 b h1 ->
+      asel a0 h0 == asel a0 h1 /\
+      asel a1 h0 == asel a1 h1 /\
+      b = (asel a0 h1 = asel a1 h1))
+
+
 
 (* AF: Non-selector version of the Array module, currently unused in Steel
    TODO: Port this to the selector version
