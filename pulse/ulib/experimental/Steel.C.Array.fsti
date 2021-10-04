@@ -346,3 +346,16 @@ val upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
              (ensures fun h0 _ h1 ->
                size_v i < length r /\
                h1 (varray r) == Seq.upd (h0 (varray r)) (size_v i) x)
+
+/// Allocates an array of size [n] where all cells have initial value [x]
+val malloc
+  (#t: Type0)
+  (x: t)
+  (n: size_t)
+: Steel (array (array_pcm_carrier t n) t)
+    emp
+    (fun r -> varray r)
+    (requires fun _ -> size_v n > 0)
+    (ensures fun _ r h' ->
+      h' (varray r) == Seq.create (size_v n) x
+    )
