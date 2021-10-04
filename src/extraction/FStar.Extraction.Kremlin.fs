@@ -1022,6 +1022,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
+          string_of_mlpath p = "Steel.C.Array.malloc" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
