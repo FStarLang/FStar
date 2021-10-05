@@ -55,12 +55,18 @@ val array_view (t: Type u#0) (n: size_t)
 
 /// Abstract datatype for a Steel array of type [t]
 /// Should extract to t*
-val array (base: Type u#0) (t:Type u#0) : Type u#0
+val array_or_null (base: Type u#0) (t: Type u#0) : Type u#0
 
 /// Returns the length of the array. Usable for specification and proof purposes,
 /// as modeled by the GTot effect
-val len (#base: Type) (#t: Type) (a: array base t) : GTot size_t
-let length (#base: Type) (#t: Type) (a: array base t) : GTot nat = size_v (len a)
+val len (#base: Type) (#t: Type) (a: array_or_null base t) : GTot size_t
+let length (#base: Type) (#t: Type) (a: array_or_null base t) : GTot nat = size_v (len a)
+
+val null (base: Type u#0) (t: Type u#0) : Pure (array_or_null base t) (requires True) (ensures (fun r -> len r == zero_size))
+val g_is_null (#base: Type) (#t: Type) (a: array_or_null base t) : Ghost bool (requires True) (ensures (fun res -> res == true <==> a == null base t))
+inline_for_extraction
+noextract
+let array (base: Type u#0) (t:Type u#0) : Type u#0 = (a: array_or_null base t { g_is_null a == false })
 
 // TODO 
 val array_is_unit (t: Type0) (n: size_t) (a: array_pcm_carrier t n)
@@ -347,15 +353,19 @@ val upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
                size_v i < length r /\
                h1 (varray r) == Seq.upd (h0 (varray r)) (size_v i) x)
 
+
+let varray_or_null (#base: Type0) (#t: Type0) (x: array_or_null base t) : Tot vprop =
+  if g_is_null x then emp else varray x
+
 /// Allocates an array of size [n] where all cells have initial value [x]
 val malloc
   (#t: Type0)
   (x: t)
   (n: size_t)
-: Steel (array (array_pcm_carrier t n) t)
+: Steel (array_or_null (array_pcm_carrier t n) t)
     emp
-    (fun r -> varray r)
+    (fun r -> varray_or_null r)
     (requires fun _ -> size_v n > 0)
     (ensures fun _ r h' ->
-      h' (varray r) == Seq.create (size_v n) x
+      g_is_null r == false ==> h' (varray r) == Seq.create (size_v n) x
     )
