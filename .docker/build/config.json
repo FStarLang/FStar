@@ -31,7 +31,7 @@
 
     "RepoVersions" : {
         "hacl_version" : "origin/master",
-        "kremlin_version" : "origin/master",
+        "kremlin_version" : "origin/protz_eaddrof",
         "qd_version" : "origin/master",
         "mitls_version" : "origin/master"
     }
