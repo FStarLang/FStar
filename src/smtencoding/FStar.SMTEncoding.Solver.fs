@@ -299,7 +299,7 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
+                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t\
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
@@ -344,7 +344,7 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
               ) (0, 0, 0) settings.query_errors
             in
             (match incomplete_count, canceled_count, unknown_count with
-             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel"
+             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query. Use --query_stats for more details."
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
