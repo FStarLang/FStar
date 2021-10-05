@@ -772,7 +772,7 @@ and translate_type_without_decay env t: typ =
         (UInt32, string_of_int (must (int_of_typenat n))))
   
   | MLTY_Named ([_; arg], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Array.array"
+    Syntax.string_of_mlpath p = "Steel.C.Array.array_or_null"
     ->
       TBuf (translate_type_without_decay env arg)
   
