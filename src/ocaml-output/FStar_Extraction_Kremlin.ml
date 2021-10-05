@@ -1538,7 +1538,7 @@ and (translate_type_without_decay :
           TArray uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::[], p) when
           let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___1 = "Steel.C.Array.array" ->
+          uu___1 = "Steel.C.Array.array_or_null" ->
           let uu___1 = translate_type_without_decay env1 arg in TBuf uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::uu___1::[], p)
           when
