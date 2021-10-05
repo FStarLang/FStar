@@ -2,7 +2,10 @@ EXCLUDED_FSTAR_FILES=ParDivWP.fst Semantics.WP.fst $(wildcard DList*)
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar Steel NMST MST NMSTTotal MSTTotal'
 FSTAR_FILES = DList1.fst $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-all: verify-all counter
+all: verify-all counter arraystructs
+
+arraystructs:
+	+$(MAKE) -C $@
 
 $(CACHE_DIR):
 	mkdir -p $@
@@ -25,4 +28,4 @@ counter:
 
 endif
 
-.PHONY: all verify-all counter
+.PHONY: all verify-all counter arraystructs
