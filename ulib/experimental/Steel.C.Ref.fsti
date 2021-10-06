@@ -46,6 +46,10 @@ val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
 
 module A = Steel.Effect.Atomic
 
+val freeable
+  (#a #b:Type0) (#p: pcm b) (r: ref a p)
+: Tot prop
+
 (** Allocate a reference containing value x. *)
 val ref_alloc
   (#a:Type0) (p: pcm a) (x: a)
@@ -53,7 +57,17 @@ val ref_alloc
     emp
     (fun r -> r `pts_to` x)
     (requires fun _ -> p_refine p x)
+    (ensures fun _ r _ -> freeable r)
+
+(** Free a "base" (freeable) reference containing a "whole" (p_refine) value x. *)
+val ref_free
+  (#a #b:Type0) (#p: pcm b) (#x: Ghost.erased b) (r: ref a p)
+: Steel unit
+    (r `pts_to` x)
+    (fun _ -> emp)
+    (requires fun _ -> p_refine p x /\ freeable r)
     (ensures fun _ _ _ -> True)
+
 
 (** Take a pointer to a "substructure" of a reference. *)
 val gfocus (#inames: _) (#p: pcm 'b) (r: ref 'a p)

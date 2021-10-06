@@ -64,6 +64,13 @@ let mk_id_ref
   let r : ref' a a = { p = p; q = p; pl = connection_id p; r = r0 } in
   r
 
+(* freeable r if and only if r is a "base" reference, i.e. its connection path is empty *)
+
+let freeable #a #b #p r =
+  a == b /\
+  r.p == p /\
+  r.pl == connection_id p
+
 #push-options "--z3rlimit 16"
 
 let ref_alloc #a p x =
@@ -76,6 +83,10 @@ let ref_alloc #a p x =
   connection_compose_id_right (lower_conn r);
   A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
   A.return r
+
+let ref_free #a #b #p #x r =
+  // TODO: use Steel.PCMReference.free, but we are blocked by (p.refine (one p)), which we explicitly excluded in Steel.C.PCM
+  Steel.Effect.Atomic.drop (r.r `mpts_to` _)
 
 #pop-options
 
