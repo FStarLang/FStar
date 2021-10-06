@@ -358,6 +358,13 @@ let varray_or_null (#base: Type0) (#t: Type0) (x: array_or_null base t) : Tot vp
   if g_is_null x then emp else varray x
 
 /// Allocates an array of size [n] where all cells have initial value [x]
+
+val freeable
+  (#base: Type0)
+  (#t: Type0)
+  (a: array base t)
+: Tot prop
+
 val malloc
   (#t: Type0)
   (x: t)
@@ -367,5 +374,15 @@ val malloc
     (fun r -> varray_or_null r)
     (requires fun _ -> size_v n > 0)
     (ensures fun _ r h' ->
-      g_is_null r == false ==> h' (varray r) == Seq.create (size_v n) x
+      g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x)
     )
+
+val free
+  (#base: Type0)
+  (#t: Type0)
+  (a: array base t)
+: Steel unit
+    (varray a)
+    (fun _ -> emp)
+    (requires (fun _ -> freeable a))
+    (ensures (fun _ _ _ -> True))

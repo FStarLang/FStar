@@ -1733,6 +1733,16 @@ let upd
     (varray r)
 
 #restart-solver
+let freeable
+  #base #t a
+=
+  let Some a' = a in
+  Steel.C.Ref.freeable a'.base_ref /\
+  size_v a'.base_len > 0 /\
+  a'.from == zero_size /\
+  a'.to == Ghost.reveal a'.base_len
+
+#restart-solver
 let array_to_carrier_refine
   (#t: Type0)
   (n: size_t)
@@ -1756,3 +1766,25 @@ let malloc
     (varray r)
     (varray_or_null r);
   return r
+
+#restart-solver
+#push-options "--print_implicits"
+let free
+  #base #t a
+=
+  let r = (Some?.v a).base_ref in
+  elim_varray r a ();
+  let v = Steel.C.Ref.pts_to_view_elim
+    #_
+    #_
+    #(array_pcm_carrier t (Ghost.hide (Ghost.reveal (Some?.v a).base_len)))
+    #(array_pcm t (Ghost.hide (Ghost.reveal (Some?.v a).base_len)))
+    r
+    (array_view t (Some?.v a).base_len)
+  in
+  Steel.C.Ref.ref_free
+    #_
+    #(array_pcm_carrier t (Ghost.hide (Ghost.reveal (Some?.v a).base_len)))
+    #(array_pcm t (Ghost.hide (Ghost.reveal (Some?.v a).base_len)))
+    #v
+    r
