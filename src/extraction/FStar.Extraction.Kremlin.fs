@@ -1045,6 +1045,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rfree" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.free" ||
+          string_of_mlpath p = "Steel.C.Array.free" ||
           string_of_mlpath p = "Steel.Array.free") ->
       EBufFree (translate_expr env e2)
 
