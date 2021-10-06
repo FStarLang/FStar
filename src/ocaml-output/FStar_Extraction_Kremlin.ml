@@ -2313,10 +2313,13 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e2::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "FStar.Buffer.rfree") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "FStar.Buffer.rfree") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "LowStar.Monotonic.Buffer.free"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___5 = "LowStar.Monotonic.Buffer.free"))
+              uu___5 = "Steel.C.Array.free"))
             ||
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___5 = "Steel.Array.free")
