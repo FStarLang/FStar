@@ -509,7 +509,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         l, t', u_names
       in
       letrecs |> List.map guard_one_letrec
-      
+
 let wrap_guard_with_tactic_opt topt g =
    match topt with
    | None -> g
@@ -941,6 +941,114 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e, c, Env.conj_guards [g_e; g_repr; g_a; g_eq; g']
     end
 
+  | Tm_app ({n=Tm_fvar {fv_qual=Some (Unresolved_constructor uc)}}, args) ->
+    (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
+    let base_term, uc_fields =
+      let base_term, fields =
+        if uc.uc_base_term
+        then match args with
+             | (b, _)::rest -> Some b, rest
+             | _ -> failwith "Impossible"
+        else None, args
+      in
+      base_term, List.zip uc.uc_fields (List.map fst fields)
+    in
+    let (rdc, constrname, constructor), topt =
+      match Env.expected_typ env with
+      | Some t ->
+        //first, prefer the expected type from the context, if any
+        TcUtil.find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
+
+      | None ->
+        match base_term with
+        | Some e ->
+          //Otherwise, if we have an {e with ...}, compute the type of e and use it
+          //(there's no expected type anyway from the context, so no need to clear it check e)
+          let _, lc, _ = tc_term env e in
+          TcUtil.find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
+
+        | None ->
+          //Otherwise, no type info here, use what ToSyntax decided
+          TcUtil.find_record_or_dc_from_typ env None uc top.pos, None
+    in
+    let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
+    let constructor = S.fv_to_tm constructor in
+    let mk_field_projector i x =
+        let projname = mk_field_projector_name_from_ident constrname i in
+        let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
+        let candidate = S.fvar (Ident.set_lid_range projname x.pos) (Delta_equational_at_level 1) qual in
+        S.mk_Tm_app candidate [(x, None)] x.pos
+    in
+    let fields =
+        TcUtil.make_record_fields_in_order env uc topt
+          rdc
+          uc_fields
+          (fun field_name ->
+            match base_term with
+            | Some x -> Some (mk_field_projector field_name x)
+            | _ -> None)
+          top.pos
+    in
+    let args = List.map (fun x -> x, None) fields in
+    let term = S.mk_Tm_app constructor args top.pos in
+    tc_term env term
+
+  | Tm_app ({n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}}, (e, None)::rest) ->
+    (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
+    let proceed_with choice =
+      match choice with
+      | None ->
+        raise_error (Errors.Fatal_IdentifierNotFound,
+                     BU.format1 "Field name %s could not be resolved"
+                                (string_of_lid field_name))
+                     (range_of_lid field_name)
+      | Some choice ->
+        let f = S.fv_to_tm choice in
+        let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
+        tc_term env term
+    in
+    //We have e.f, use the type of e to disambiguate
+    let _, lc, _ =
+      let env, _ = Env.clear_expected_typ env in
+      tc_term env e
+    in
+    begin
+    let t0 = N.unfold_whnf env lc.res_typ in
+    let thead, _ = U.head_and_args (U.unmeta t0) in
+    if Env.debug env <| Options.Other "RFD"
+    then (
+      BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
+        (Print.term_to_string lc.res_typ)
+        (Print.term_to_string t0)
+        (Print.term_to_string thead)
+    );
+    match (SS.compress (U.un_uinst thead)).n with
+    | Tm_fvar type_name -> (
+      match TcUtil.try_lookup_record_type env type_name.fv_name.v with
+      | None -> proceed_with candidate
+      | Some rdc ->
+        let i =
+          List.tryFind
+            (fun (i, _) -> TcUtil.field_name_matches field_name rdc i)
+            rdc.fields
+        in
+        match i with
+        | None -> proceed_with candidate
+        | Some (i, _) ->
+          let constrname = FStar.Ident.lid_of_ids (Ident.ns_of_lid rdc.typename @ [rdc.constrname]) in
+          let projname = mk_field_projector_name_from_ident constrname i in
+          let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
+          let choice =
+            S.lid_as_fv
+              (Ident.set_lid_range projname (Ident.range_of_lid field_name))
+              (Delta_equational_at_level 1)
+              qual
+          in
+          proceed_with (Some choice)
+      )
+    | _ -> proceed_with candidate
+    end
+
   // If we're on the first phase, we don't synth, and just wait for the next phase
   | Tm_app (head, [(tau, None)])
   | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])
@@ -1059,7 +1167,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
    *)
 
   match (SS.compress top).n with
-  | Tm_match(e1, ret_opt, eqns) ->  //ret_opt is the return annotation
+  | Tm_match(e1, ret_opt, eqns, _) ->  //ret_opt is the return annotation
     let e1, c1, g1 = tc_term
       (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
@@ -1118,7 +1226,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
                      erasable || erasable_branch)
                 t_eqns
                 ([], Env.trivial_guard, false) in
-      
+
       (* note that bind_cases adds an exhaustiveness check *)
       match ret_or_res_typ with
       | Inr res_t ->
@@ -1131,7 +1239,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let cases = List.map
           (fun (f, eff_label, cflags, c) ->
              (f, eff_label, cflags, (fun b -> TcComm.set_result_typ_lc (c b) t))) cases in
-        
+
         TcUtil.bind_cases env t cases guard_x, g, erasable
 
       | Inl (Inr c) ->  //a return annotation, with computation type
@@ -1172,7 +1280,11 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
-        let e = mk (Tm_match(scrutinee, ret_opt, branches)) top.pos in
+        let e =
+          let rc = { residual_effect = cres.eff_name;
+                     residual_typ = Some cres.res_typ;
+                     residual_flags = cres.cflags } in
+          mk (Tm_match(scrutinee, ret_opt, branches, Some rc)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
@@ -1309,7 +1421,7 @@ and tc_value env (e:term) : term
           let k, u = U.type_u () in
           TcUtil.new_implicit_var "type of user-provided implicit term" r env k
         | Some t -> t, [], Env.trivial_guard in
-    
+
     let e, _, g1 = TcUtil.new_implicit_var
           ("user-provided implicit term at " ^ (Range.string_of_range r))
           r env t in
@@ -1587,7 +1699,7 @@ and tc_universe env u : universe =
 
 (*
  * Called when typechecking a Tm_abs node
- * 
+ *
  * t0 is the expected type in the environment for the Tm_abs node
  *)
 and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
@@ -1744,13 +1856,13 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
         | None, Some Equality -> true
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
-  
+
         if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
         then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
         end;
-        
+
         (* since binders depend on previous ones, we accumulate a substitution *)
         let expected_t = SS.subst subst hd_expected.sort in
         let t, g_env =
@@ -1777,7 +1889,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
                     "Type annotation on parameter incompatible with the expected type"
                     g_env in
             t, Env.conj_guard g1_env g2_env in
-        
+
         let hd = {hd with sort=t} in
         let b = {binder_bv=hd;binder_qual=imp;binder_attrs=attrs} in
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
@@ -1856,7 +1968,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             (Tm_ascribed (body, (Inr (c_opt |> must), None), None))
             Range.dummyRange,
           false
-        else 
+        else
           envbody,
           body,
           (match c_opt, (SS.compress body).n with
@@ -2194,7 +2306,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
-            let ctx_uvar_meta, g_tau_or_attr = 
+            let ctx_uvar_meta, g_tau_or_attr =
                 match qual, attrs with
                 | Some (Meta tau), _ ->
                   let tau = SS.subst subst tau in
@@ -2215,7 +2327,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                            (Range.union_rng (Range.use_range head.pos)
                                                             (Range.use_range t.pos))
             in
-            let varg, _, implicits = 
+            let varg, _, implicits =
               new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
@@ -2628,6 +2740,20 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard,
           false
 
+        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
+          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
+          let f_sub_pats = List.zip uc.uc_fields sub_pats in
+          let sub_pats =
+            TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
+              (fun _ ->
+                let x = S.new_bv None S.tun in
+                Some (S.withinfo (Pat_wild x) p.p, false))
+              p.p
+          in
+          let p = { p with v=Pat_cons(constructor_fv, sub_pats) } in
+          let p = PatternUtils.elaborate_pat env p in
+          check_nested_pattern env p t
+
         | Pat_cons(fv, sub_pats) ->
           let simple_pat =
             let simple_sub_pats =
@@ -2989,7 +3115,7 @@ and tc_eqn scrutinee env ret_opt branch
      let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
 
      //g_branch is trivial, its logical content is now incorporated within c
-        
+
      let branch_has_layered_effect = c.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env in
 
      (* (b) *)
@@ -3042,7 +3168,7 @@ and tc_eqn scrutinee env ret_opt branch
 
          (*
           * AR: typecheck the pat_bv_tms, to resolve implicits etc.
-          * 
+          *
           * recall that pat_bv_tms are terms that are definitionally equal to the pat_bvs
           *   but are in terms of projectors on the scrutinee term
           * these will be used to substitute pat bvs in the computation type
@@ -3084,7 +3210,7 @@ and tc_eqn scrutinee env ret_opt branch
            then BU.print2 "tc_eqn: typechecked pat_bv_tms %s (pat_bvs : %s)\n"
                   (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms)
                   (List.fold_left (fun s t -> s ^ ";" ^ (Print.bv_to_string t)) "" pat_bvs) in
- 
+
          c_weak
          |> TcComm.apply_lcomp (fun c -> c) (fun g -> match eqs with
                                                | None -> g
@@ -3302,7 +3428,7 @@ and check_inner_let env e =
        //AR: TODO: FIXME: monadic annotations need to be adjusted for polymonadic binds
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
-       let lb = 
+       let lb =
          let attrs =
            let add_inline_let =  //add inline_let if
              not is_inline_let &&  //the letbinding is not already inline_let, and
@@ -3511,8 +3637,8 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
-        let g, lbtyp = 
-            if not check_t 
+        let g, lbtyp =
+            if not check_t
             then g_acc, lbtyp
             else let _, g, t = check_annot univ_vars lbtyp in
                  Env.conj_guard g_acc g, t
@@ -3549,7 +3675,7 @@ and check_let_recs env lbts =
         let bs, t, lcomp = abs_formals lb.lbdef in
         //see issue #1017
         match bs with
-        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, 
+        | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral,
                             BU.format2
                             "Only function literals may be defined recursively; %s is defined to be %s"
                                (Print.lbname_to_string lb.lbname)
@@ -3903,7 +4029,7 @@ let rec universe_of_aux env e =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+        | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation? Or the residual_comp?
           let (_, _, hd) = SS.open_branch hd in
           let hd, args' = U.head_and_args hd in
           type_of_head retry hd (args'@args)
@@ -3935,10 +4061,10 @@ let rec universe_of_aux env e =
      then let subst = U.subst_of_list bs args in
           SS.subst subst res
      else level_of_type_fail env e (Print.term_to_string res)
-   | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+   | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
-   | Tm_match(_, _, []) ->  //AR: TODO: use return annotation?
+   | Tm_match(_, _, [], _) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e =
@@ -4094,6 +4220,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t must_tot
 
+  | Tm_match (_, _, _, Some rc) -> rc.residual_typ
   | Tm_match _
   | Tm_let _
   | Tm_unknown
@@ -4110,7 +4237,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
-  
+
   | Tm_name _ -> Const.effect_PURE_lid |> Some
   | Tm_lazy _ -> Const.effect_PURE_lid |> Some
   | Tm_fvar _ -> Const.effect_PURE_lid |> Some
@@ -4120,7 +4247,7 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
   | Tm_abs _ -> Const.effect_PURE_lid |> Some
   | Tm_arrow _ -> Const.effect_PURE_lid |> Some
   | Tm_refine _ -> Const.effect_PURE_lid |> Some
-  
+
   | Tm_app (hd, args) ->
     let join_effects eff1 eff2 =
       let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in

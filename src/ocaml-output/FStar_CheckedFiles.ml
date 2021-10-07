@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (36))
+let (cache_version_number : Prims.int) = (Prims.of_int (38))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -539,11 +539,10 @@ let (store_module_to_cache :
             match digest with
             | FStar_Pervasives.Inr hashes ->
                 let tc_result2 =
-                  let uu___1 = tc_result1 in
                   {
-                    checked_module = (uu___1.checked_module);
-                    mii = (uu___1.mii);
-                    smt_decls = (uu___1.smt_decls);
+                    checked_module = (tc_result1.checked_module);
+                    mii = (tc_result1.mii);
+                    smt_decls = (tc_result1.smt_decls);
                     tc_time = Prims.int_zero;
                     extraction_time = Prims.int_zero
                   } in

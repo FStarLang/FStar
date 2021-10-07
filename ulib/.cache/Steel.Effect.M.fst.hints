@@ -22,7 +22,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "d920f66efbe15c0e80e9ace0f0ea5ff7"
+      "15d1185ddd35c64940d292b59e3ace20"
     ],
     [
       "Steel.Effect.M.lift_ens_x",
@@ -47,7 +47,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "412a3ef63b052fe46e04646f5a2dac94"
+      "a7e1a5de4e9607516f6ae492da6746cf"
     ],
     [
       "Steel.Effect.M.lift_m",
@@ -67,7 +67,7 @@
         "true_interp"
       ],
       0,
-      "c351288e4e4467225d26518997ec2826"
+      "075fceb1f487802fcd96e155f7e73a56"
     ]
   ]
 ]

@@ -50,17 +50,13 @@ let (set_use_range : range -> rng -> range) =
   fun r2 ->
     fun use_rng ->
       if use_rng <> dummy_rng
-      then
-        let uu___ = r2 in
-        { def_range = (uu___.def_range); use_range = use_rng }
+      then { def_range = (r2.def_range); use_range = use_rng }
       else r2
 let (set_def_range : range -> rng -> range) =
   fun r2 ->
     fun def_rng ->
       if def_rng <> dummy_rng
-      then
-        let uu___ = r2 in
-        { def_range = def_rng; use_range = (uu___.use_range) }
+      then { def_range = def_rng; use_range = (r2.use_range) }
       else r2
 let (mk_pos : Prims.int -> Prims.int -> pos) =
   fun l ->
@@ -126,16 +122,15 @@ let (file_of_range : range -> Prims.string) =
 let (set_file_of_range : range -> Prims.string -> range) =
   fun r ->
     fun f ->
-      let uu___ = r in
       {
         def_range =
-          (let uu___1 = r.def_range in
+          (let uu___ = r.def_range in
            {
              file_name = f;
-             start_pos = (uu___1.start_pos);
-             end_pos = (uu___1.end_pos)
+             start_pos = (uu___.start_pos);
+             end_pos = (uu___.end_pos)
            });
-        use_range = (uu___.use_range)
+        use_range = (r.use_range)
       }
 let (string_of_rng : rng -> Prims.string) =
   fun r ->
@@ -179,9 +174,7 @@ let (compare_use_range : range -> range -> Prims.int) =
 let (range_before_pos : range -> pos -> Prims.bool) =
   fun m1 -> fun p -> let uu___ = end_of_range m1 in pos_geq p uu___
 let (end_of_line : pos -> pos) =
-  fun p ->
-    let uu___ = p in
-    { line = (uu___.line); col = FStar_Compiler_Util.max_int }
+  fun p -> { line = (p.line); col = FStar_Compiler_Util.max_int }
 let (extend_to_end_of_line : range -> range) =
   fun r ->
     let uu___ = file_of_range r in

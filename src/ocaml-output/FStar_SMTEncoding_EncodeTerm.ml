@@ -1085,26 +1085,25 @@ and (encode_deeply_embedded_quantifier :
   fun t ->
     fun env ->
       let env1 =
-        let uu___ = env in
         {
           FStar_SMTEncoding_Env.bvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.bvar_bindings);
+            (env.FStar_SMTEncoding_Env.bvar_bindings);
           FStar_SMTEncoding_Env.fvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.fvar_bindings);
-          FStar_SMTEncoding_Env.depth = (uu___.FStar_SMTEncoding_Env.depth);
-          FStar_SMTEncoding_Env.tcenv = (uu___.FStar_SMTEncoding_Env.tcenv);
-          FStar_SMTEncoding_Env.warn = (uu___.FStar_SMTEncoding_Env.warn);
+            (env.FStar_SMTEncoding_Env.fvar_bindings);
+          FStar_SMTEncoding_Env.depth = (env.FStar_SMTEncoding_Env.depth);
+          FStar_SMTEncoding_Env.tcenv = (env.FStar_SMTEncoding_Env.tcenv);
+          FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
           FStar_SMTEncoding_Env.nolabels =
-            (uu___.FStar_SMTEncoding_Env.nolabels);
+            (env.FStar_SMTEncoding_Env.nolabels);
           FStar_SMTEncoding_Env.use_zfuel_name =
-            (uu___.FStar_SMTEncoding_Env.use_zfuel_name);
+            (env.FStar_SMTEncoding_Env.use_zfuel_name);
           FStar_SMTEncoding_Env.encode_non_total_function_typ =
-            (uu___.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+            (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
           FStar_SMTEncoding_Env.current_module_name =
-            (uu___.FStar_SMTEncoding_Env.current_module_name);
+            (env.FStar_SMTEncoding_Env.current_module_name);
           FStar_SMTEncoding_Env.encoding_quantifier = true;
           FStar_SMTEncoding_Env.global_cache =
-            (uu___.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache)
         } in
       let uu___ = encode_term t env1 in
       match uu___ with
@@ -1276,30 +1275,28 @@ and (encode_term :
        | FStar_Syntax_Syntax.Tm_meta
            (t2, FStar_Syntax_Syntax.Meta_pattern uu___1) ->
            encode_term t2
-             (let uu___2 = env in
-              {
-                FStar_SMTEncoding_Env.bvar_bindings =
-                  (uu___2.FStar_SMTEncoding_Env.bvar_bindings);
-                FStar_SMTEncoding_Env.fvar_bindings =
-                  (uu___2.FStar_SMTEncoding_Env.fvar_bindings);
-                FStar_SMTEncoding_Env.depth =
-                  (uu___2.FStar_SMTEncoding_Env.depth);
-                FStar_SMTEncoding_Env.tcenv =
-                  (uu___2.FStar_SMTEncoding_Env.tcenv);
-                FStar_SMTEncoding_Env.warn =
-                  (uu___2.FStar_SMTEncoding_Env.warn);
-                FStar_SMTEncoding_Env.nolabels =
-                  (uu___2.FStar_SMTEncoding_Env.nolabels);
-                FStar_SMTEncoding_Env.use_zfuel_name =
-                  (uu___2.FStar_SMTEncoding_Env.use_zfuel_name);
-                FStar_SMTEncoding_Env.encode_non_total_function_typ =
-                  (uu___2.FStar_SMTEncoding_Env.encode_non_total_function_typ);
-                FStar_SMTEncoding_Env.current_module_name =
-                  (uu___2.FStar_SMTEncoding_Env.current_module_name);
-                FStar_SMTEncoding_Env.encoding_quantifier = false;
-                FStar_SMTEncoding_Env.global_cache =
-                  (uu___2.FStar_SMTEncoding_Env.global_cache)
-              })
+             {
+               FStar_SMTEncoding_Env.bvar_bindings =
+                 (env.FStar_SMTEncoding_Env.bvar_bindings);
+               FStar_SMTEncoding_Env.fvar_bindings =
+                 (env.FStar_SMTEncoding_Env.fvar_bindings);
+               FStar_SMTEncoding_Env.depth =
+                 (env.FStar_SMTEncoding_Env.depth);
+               FStar_SMTEncoding_Env.tcenv =
+                 (env.FStar_SMTEncoding_Env.tcenv);
+               FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
+               FStar_SMTEncoding_Env.nolabels =
+                 (env.FStar_SMTEncoding_Env.nolabels);
+               FStar_SMTEncoding_Env.use_zfuel_name =
+                 (env.FStar_SMTEncoding_Env.use_zfuel_name);
+               FStar_SMTEncoding_Env.encode_non_total_function_typ =
+                 (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+               FStar_SMTEncoding_Env.current_module_name =
+                 (env.FStar_SMTEncoding_Env.current_module_name);
+               FStar_SMTEncoding_Env.encoding_quantifier = false;
+               FStar_SMTEncoding_Env.global_cache =
+                 (env.FStar_SMTEncoding_Env.global_cache)
+             }
        | FStar_Syntax_Syntax.Tm_meta (t2, uu___1) -> encode_term t2 env
        | FStar_Syntax_Syntax.Tm_name x ->
            let t2 = FStar_SMTEncoding_Env.lookup_term_var env x in (t2, [])
@@ -3011,7 +3008,7 @@ and (encode_term :
                          (uu___10, uu___11))) in
            FStar_Compiler_Effect.raise
              (FStar_SMTEncoding_Env.Inner_let_rec names)
-       | FStar_Syntax_Syntax.Tm_match (e, uu___1, pats) ->
+       | FStar_Syntax_Syntax.Tm_match (e, uu___1, pats, uu___2) ->
            encode_match e pats FStar_SMTEncoding_Term.mk_Term_unit env
              encode_term)
 and (encode_let :
@@ -3319,26 +3316,25 @@ and (encode_function_type_as_formula :
           binders in
       let quant = FStar_Syntax_Util.smt_lemma_as_forall t universe_of_binders in
       let env1 =
-        let uu___ = env in
         {
           FStar_SMTEncoding_Env.bvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.bvar_bindings);
+            (env.FStar_SMTEncoding_Env.bvar_bindings);
           FStar_SMTEncoding_Env.fvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.fvar_bindings);
-          FStar_SMTEncoding_Env.depth = (uu___.FStar_SMTEncoding_Env.depth);
-          FStar_SMTEncoding_Env.tcenv = (uu___.FStar_SMTEncoding_Env.tcenv);
-          FStar_SMTEncoding_Env.warn = (uu___.FStar_SMTEncoding_Env.warn);
+            (env.FStar_SMTEncoding_Env.fvar_bindings);
+          FStar_SMTEncoding_Env.depth = (env.FStar_SMTEncoding_Env.depth);
+          FStar_SMTEncoding_Env.tcenv = (env.FStar_SMTEncoding_Env.tcenv);
+          FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
           FStar_SMTEncoding_Env.nolabels =
-            (uu___.FStar_SMTEncoding_Env.nolabels);
+            (env.FStar_SMTEncoding_Env.nolabels);
           FStar_SMTEncoding_Env.use_zfuel_name = true;
           FStar_SMTEncoding_Env.encode_non_total_function_typ =
-            (uu___.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+            (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
           FStar_SMTEncoding_Env.current_module_name =
-            (uu___.FStar_SMTEncoding_Env.current_module_name);
+            (env.FStar_SMTEncoding_Env.current_module_name);
           FStar_SMTEncoding_Env.encoding_quantifier =
-            (uu___.FStar_SMTEncoding_Env.encoding_quantifier);
+            (env.FStar_SMTEncoding_Env.encoding_quantifier);
           FStar_SMTEncoding_Env.global_cache =
-            (uu___.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache)
         } in
       encode_formula quant env1
 and (encode_smt_patterns :
@@ -3350,26 +3346,25 @@ and (encode_smt_patterns :
   fun pats_l ->
     fun env ->
       let env1 =
-        let uu___ = env in
         {
           FStar_SMTEncoding_Env.bvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.bvar_bindings);
+            (env.FStar_SMTEncoding_Env.bvar_bindings);
           FStar_SMTEncoding_Env.fvar_bindings =
-            (uu___.FStar_SMTEncoding_Env.fvar_bindings);
-          FStar_SMTEncoding_Env.depth = (uu___.FStar_SMTEncoding_Env.depth);
-          FStar_SMTEncoding_Env.tcenv = (uu___.FStar_SMTEncoding_Env.tcenv);
-          FStar_SMTEncoding_Env.warn = (uu___.FStar_SMTEncoding_Env.warn);
+            (env.FStar_SMTEncoding_Env.fvar_bindings);
+          FStar_SMTEncoding_Env.depth = (env.FStar_SMTEncoding_Env.depth);
+          FStar_SMTEncoding_Env.tcenv = (env.FStar_SMTEncoding_Env.tcenv);
+          FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
           FStar_SMTEncoding_Env.nolabels =
-            (uu___.FStar_SMTEncoding_Env.nolabels);
+            (env.FStar_SMTEncoding_Env.nolabels);
           FStar_SMTEncoding_Env.use_zfuel_name = true;
           FStar_SMTEncoding_Env.encode_non_total_function_typ =
-            (uu___.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+            (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
           FStar_SMTEncoding_Env.current_module_name =
-            (uu___.FStar_SMTEncoding_Env.current_module_name);
+            (env.FStar_SMTEncoding_Env.current_module_name);
           FStar_SMTEncoding_Env.encoding_quantifier =
-            (uu___.FStar_SMTEncoding_Env.encoding_quantifier);
+            (env.FStar_SMTEncoding_Env.encoding_quantifier);
           FStar_SMTEncoding_Env.global_cache =
-            (uu___.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache)
         } in
       let encode_smt_pattern t =
         let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -3656,11 +3651,11 @@ and (encode_formula :
         | FStar_Syntax_Syntax.Tm_meta uu___ ->
             let uu___1 = FStar_Syntax_Util.unmeta phi1 in
             encode_formula uu___1 env
-        | FStar_Syntax_Syntax.Tm_match (e, uu___, pats) ->
-            let uu___1 =
+        | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
+            let uu___2 =
               encode_match e pats FStar_SMTEncoding_Util.mkFalse env
                 encode_formula in
-            (match uu___1 with | (t, decls) -> (t, decls))
+            (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let
             ((false,
               { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
@@ -3753,15 +3748,14 @@ and (encode_formula :
                          if uu___3
                          then tt
                          else
-                           (let uu___5 = tt in
-                            {
-                              FStar_SMTEncoding_Term.tm =
-                                (uu___5.FStar_SMTEncoding_Term.tm);
-                              FStar_SMTEncoding_Term.freevars =
-                                (uu___5.FStar_SMTEncoding_Term.freevars);
-                              FStar_SMTEncoding_Term.rng =
-                                (phi1.FStar_Syntax_Syntax.pos)
-                            }) in
+                           {
+                             FStar_SMTEncoding_Term.tm =
+                               (tt.FStar_SMTEncoding_Term.tm);
+                             FStar_SMTEncoding_Term.freevars =
+                               (tt.FStar_SMTEncoding_Term.freevars);
+                             FStar_SMTEncoding_Term.rng =
+                               (phi1.FStar_Syntax_Syntax.pos)
+                           } in
                        let uu___3 = FStar_SMTEncoding_Term.mk_Valid tt1 in
                        (uu___3, decls) in
                  let uu___1 = head_redex env head1 in
@@ -3789,15 +3783,14 @@ and (encode_formula :
                    if uu___2
                    then tt
                    else
-                     (let uu___4 = tt in
-                      {
-                        FStar_SMTEncoding_Term.tm =
-                          (uu___4.FStar_SMTEncoding_Term.tm);
-                        FStar_SMTEncoding_Term.freevars =
-                          (uu___4.FStar_SMTEncoding_Term.freevars);
-                        FStar_SMTEncoding_Term.rng =
-                          (phi1.FStar_Syntax_Syntax.pos)
-                      }) in
+                     {
+                       FStar_SMTEncoding_Term.tm =
+                         (tt.FStar_SMTEncoding_Term.tm);
+                       FStar_SMTEncoding_Term.freevars =
+                         (tt.FStar_SMTEncoding_Term.freevars);
+                       FStar_SMTEncoding_Term.rng =
+                         (phi1.FStar_Syntax_Syntax.pos)
+                     } in
                  let uu___2 = FStar_SMTEncoding_Term.mk_Valid tt1 in
                  (uu___2, decls)) in
       let encode_q_body env1 bs ps body =

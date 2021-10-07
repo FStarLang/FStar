@@ -642,7 +642,23 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___3 = term_to_string e in
                FStar_Compiler_Util.format3 "(%s <ascribed: %s %s)" uu___3
                  annot1 topt1
-           | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches) ->
+           | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches, lc) ->
+               let lc_str =
+                 match lc with
+                 | FStar_Pervasives_Native.Some lc1 when
+                     FStar_Options.print_implicits () ->
+                     let uu___3 =
+                       if
+                         FStar_Compiler_Option.isNone
+                           lc1.FStar_Syntax_Syntax.residual_typ
+                       then "None"
+                       else
+                         (let uu___5 =
+                            FStar_Compiler_Option.get
+                              lc1.FStar_Syntax_Syntax.residual_typ in
+                          term_to_string uu___5) in
+                     FStar_Compiler_Util.format1 " (residual_comp:%s)" uu___3
+                 | uu___3 -> "" in
                let uu___3 = term_to_string head in
                let uu___4 =
                  match asc_opt with
@@ -665,8 +681,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    FStar_Compiler_Effect.op_Bar_Greater branches
                      (FStar_Compiler_List.map branch_to_string) in
                  FStar_Compiler_Util.concat_l "\n\t|" uu___6 in
-               FStar_Compiler_Util.format3 "(match %s %swith\n\t| %s)" uu___3
-                 uu___4 uu___5
+               FStar_Compiler_Util.format4 "(match %s %swith\n\t| %s%s)"
+                 uu___3 uu___4 uu___5 lc_str
            | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
                let uu___3 = FStar_Options.print_universes () in
                if uu___3

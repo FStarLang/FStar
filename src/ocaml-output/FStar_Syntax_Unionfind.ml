@@ -79,24 +79,22 @@ let (set_ro : unit -> unit) =
   fun uu___ ->
     let s = get () in
     FStar_Compiler_Effect.op_Colon_Equals state
-      (let uu___1 = s in
-       {
-         term_graph = (uu___1.term_graph);
-         univ_graph = (uu___1.univ_graph);
-         version = (uu___1.version);
-         ro = true
-       })
+      {
+        term_graph = (s.term_graph);
+        univ_graph = (s.univ_graph);
+        version = (s.version);
+        ro = true
+      }
 let (set_rw : unit -> unit) =
   fun uu___ ->
     let s = get () in
     FStar_Compiler_Effect.op_Colon_Equals state
-      (let uu___1 = s in
-       {
-         term_graph = (uu___1.term_graph);
-         univ_graph = (uu___1.univ_graph);
-         version = (uu___1.version);
-         ro = false
-       })
+      {
+        term_graph = (s.term_graph);
+        univ_graph = (s.univ_graph);
+        version = (s.version);
+        ro = false
+      }
 let with_uf_enabled : 'a . (unit -> 'a) -> 'a =
   fun f ->
     let s = get () in

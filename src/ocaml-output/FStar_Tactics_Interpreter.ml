@@ -1777,19 +1777,17 @@ let run_tactic_on_ps' :
                                          uu___13
                                      else ());
                                     (let g1 =
-                                       let uu___12 =
-                                         FStar_TypeChecker_Env.trivial_guard in
                                        {
                                          FStar_TypeChecker_Common.guard_f =
-                                           (uu___12.FStar_TypeChecker_Common.guard_f);
+                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
                                          FStar_TypeChecker_Common.deferred_to_tac
                                            =
-                                           (uu___12.FStar_TypeChecker_Common.deferred_to_tac);
+                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
                                          FStar_TypeChecker_Common.deferred =
-                                           (uu___12.FStar_TypeChecker_Common.deferred);
+                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
                                          FStar_TypeChecker_Common.univ_ineqs
                                            =
-                                           (uu___12.FStar_TypeChecker_Common.univ_ineqs);
+                                           (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
                                          FStar_TypeChecker_Common.implicits =
                                            (ps1.FStar_Tactics_Types.all_implicits)
                                        } in

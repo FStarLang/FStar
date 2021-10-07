@@ -177,20 +177,20 @@ let rec (free_names_and_uvs' :
       | FStar_Syntax_Syntax.Tm_app (t1, args) ->
           let uu___ = free_names_and_uvars t1 use_cache in
           free_names_and_uvars_args args uu___ use_cache
-      | FStar_Syntax_Syntax.Tm_match (t1, asc_opt, pats) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = free_names_and_uvars t1 use_cache in
-              let uu___3 =
+      | FStar_Syntax_Syntax.Tm_match (t1, asc_opt, pats, uu___) ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = free_names_and_uvars t1 use_cache in
+              let uu___4 =
                 match asc_opt with
                 | FStar_Pervasives_Native.None -> no_free_vars
                 | FStar_Pervasives_Native.Some asc ->
                     free_names_and_uvars_ascription asc use_cache in
-              union uu___2 uu___3 in
+              union uu___3 uu___4 in
             FStar_Compiler_List.fold_left
               (fun n ->
-                 fun uu___2 ->
-                   match uu___2 with
+                 fun uu___3 ->
+                   match uu___3 with
                    | (p, wopt, t2) ->
                        let n1 =
                          match wopt with
@@ -199,17 +199,17 @@ let rec (free_names_and_uvs' :
                              free_names_and_uvars w use_cache in
                        let n2 = free_names_and_uvars t2 use_cache in
                        let n3 =
-                         let uu___3 = FStar_Syntax_Syntax.pat_bvs p in
-                         FStar_Compiler_Effect.op_Bar_Greater uu___3
+                         let uu___4 = FStar_Syntax_Syntax.pat_bvs p in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___4
                            (FStar_Compiler_List.fold_left
                               (fun n4 ->
                                  fun x ->
-                                   let uu___4 =
+                                   let uu___5 =
                                      free_names_and_uvars
                                        x.FStar_Syntax_Syntax.sort use_cache in
-                                   union n4 uu___4) n) in
-                       let uu___3 = union n1 n2 in union n3 uu___3) uu___1 in
-          FStar_Compiler_Effect.op_Bar_Greater pats uu___
+                                   union n4 uu___5) n) in
+                       let uu___4 = union n1 n2 in union n3 uu___4) uu___2 in
+          FStar_Compiler_Effect.op_Bar_Greater pats uu___1
       | FStar_Syntax_Syntax.Tm_ascribed (t1, asc, uu___) ->
           let uu___1 = free_names_and_uvars t1 use_cache in
           let uu___2 = free_names_and_uvars_ascription asc use_cache in

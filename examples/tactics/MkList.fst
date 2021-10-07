@@ -24,7 +24,8 @@ let constant_list (name: string) (l: list UInt8.t): Tac decls =
   let len = FStar.List.length l in
   let t = `(FStar.List.llist UInt8.t (`@len)) in
   let fv = pack_fv (cur_module () @ [ name ]) in
-  let se = pack_sigelt (Sg_Let false fv [] t (quote l)) in
+  let lb = pack_lb ({lb_fv=fv; lb_us=[]; lb_typ=t; lb_def = quote l}) in
+  let se = pack_sigelt (Sg_Let false [lb]) in
   [se]
 
 %splice[] (constant_list "l1" [ 1uy ])

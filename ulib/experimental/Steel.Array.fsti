@@ -17,6 +17,7 @@
 module Steel.Array
 open Steel.Memory
 open Steel.Effect
+open Steel.Effect.Atomic
 open FStar.Ghost
 module U32 = FStar.UInt32
 
@@ -24,25 +25,26 @@ module U32 = FStar.UInt32
 /// TODO: Add fractional permissions to this array library
 
 /// The contents of an array of type [t] is a sequence of values of type [t]
-let contents (t:Type u#0) = FStar.Seq.seq t
-/// Returns the length of the array. Usable for specification and proof purposes,
-/// as modeled by the GTot effect
-let length #t (r:contents t) : GTot nat = Seq.length r
+let contents (t:Type u#0) (n:nat) = FStar.Seq.lseq t n
 
 /// Abstract datatype for a Steel array of type [t]
 val array (t:Type u#0) : Type u#0
+
+/// Returns the length of the array. Usable for specification and proof purposes,
+/// as modeled by the GTot effect
+val length (#t:_) (r:array t) : GTot nat
 
 /// Separation logic predicate indicating the validity of the array in the current memory
 val is_array (#a:Type0) (r:array a) : slprop u#1
 
 /// Selector for Steel arrays. It returns the contents in memory of the array
-val array_sel (#a:Type0) (r:array a) : selector (contents a) (is_array r)
+val array_sel (#a:Type0) (r:array a) : selector (contents a (length r)) (is_array r)
 
 /// Combining the elements above to create an array vprop
 [@@ __steel_reduce__]
 let varray' #a r : vprop' =
   {hp = is_array r;
-   t = Seq.seq a;
+   t = contents a (length r);
    sel = array_sel r}
 
 [@@ __steel_reduce__]
@@ -57,13 +59,50 @@ let asel (#a:Type) (#p:vprop) (r:array a)
   (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (varray r) /\ True)})
   = h (varray r)
 
+/// We also provide an indexed assertion to represent an array
+/// without a selector
+///
+///   - I would like to remove the erased here, but doing that would
+///     be much more convenient once we merge the reveal/hide rewrites
+///     in the normalizer
+let elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
+
+/// The main indexed assertion
+val varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
+  : vprop
+
+/// Converting a `varray` into a `varray_pts_to`
+val intro_varray_pts_to (#t:_)
+                        (#opened:inames)
+                        (a:array t)
+  : SteelGhost (elseq t (length a)) opened
+    (varray a)
+    (fun x -> varray_pts_to a x)
+    (requires fun _ -> True)
+    (ensures fun h0 x h1 ->
+      Ghost.reveal x == asel a h0)
+
+/// Converting a `varray_pts_to` to a `varray`
+val elim_varray_pts_to (#t:_)
+                       (#opened:inames)
+                       (a:array t)
+                       (c:elseq t (length a))
+  : SteelGhost unit opened
+    (varray_pts_to a c)
+    (fun _ -> varray a)
+    (requires fun _ -> True)
+    (ensures fun _ _ h1 ->
+      asel a h1 == Ghost.reveal c)
+
 /// Allocates an array of length n, where all elements of the array initially are [x]
 val malloc (#t:Type) (x:t) (n:U32.t)
   : Steel (array t)
-             emp
-             (fun r -> varray r)
-             (requires fun _ -> True)
-             (ensures fun _ r h1 -> asel r h1 == Seq.create (U32.v n) x)
+          emp
+          (fun r -> varray r)
+          (requires fun _ -> True)
+          (ensures fun _ r h1 ->
+            length r == U32.v n /\
+            asel r h1 == Seq.create (U32.v n) x)
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
@@ -71,9 +110,9 @@ val index (#t:Type) (r:array t) (i:U32.t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
-             (requires fun h -> U32.v i < length (asel r h))
+             (requires fun h -> U32.v i < length r)
              (ensures fun h0 x h1 ->
-               U32.v i < length (asel r h1) /\
+               U32.v i < length r /\
                asel r h0 == asel r h1 /\
                x == Seq.index (asel r h1) (U32.v i))
 
@@ -83,9 +122,9 @@ val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
   : Steel unit
              (varray r)
              (fun _ -> varray r)
-             (requires fun h -> U32.v i < length (asel r h))
+             (requires fun h -> U32.v i < length r)
              (ensures fun h0 _ h1 ->
-               U32.v i < length (asel r h0) /\
+               U32.v i < length r /\
                asel r h1 == Seq.upd (asel r h0) (U32.v i) x)
 
 /// Frees array [r], as long as it initially was a valid array in memory
@@ -95,6 +134,35 @@ val free (#t:Type) (r:array t)
              (fun _ -> emp)
              (requires fun _ -> True)
              (ensures fun _ _ _ -> True)
+
+
+/// Copies the contents of a0 to a1
+val memcpy (#t:_)
+           (a0 a1:array t)
+           (i:U32.t)
+  : Steel unit
+    (varray a0 `star` varray a1)
+    (fun _ -> varray a0  `star` varray a1)
+    (requires fun _ ->
+       U32.v i == length a0 /\ length a0 == length a1)
+    (ensures fun h0 _ h1 ->
+      length a0 == length a1 /\
+      asel a0 h0 == asel a0 h1 /\
+      asel a1 h1 == asel a0 h1)
+
+/// Decides whether the contents of a0 and a1 are equal
+val compare (#t:eqtype)
+            (a0 a1:array t)
+            (l:U32.t { length a0 == length a1 /\ U32.v l == length a0})
+  : Steel bool
+    (varray a0 `star` varray a1)
+    (fun _ -> varray a0 `star` varray a1)
+    (requires fun _ -> True)
+    (ensures fun h0 b h1 ->
+      asel a0 h0 == asel a0 h1 /\
+      asel a1 h0 == asel a1 h1 /\
+      b = (asel a0 h1 = asel a1 h1))
+
 
 
 (* AF: Non-selector version of the Array module, currently unused in Steel

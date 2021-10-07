@@ -131,13 +131,12 @@ let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e -> e.typ
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty ->
     fun e ->
-      let uu___ = e in
       {
-        em = (uu___.em);
-        un = (uu___.un);
+        em = (e.em);
+        un = (e.un);
         typ = ty;
-        print = (uu___.print);
-        emb_typ = (uu___.emb_typ)
+        print = (e.print);
+        emb_typ = (e.emb_typ)
       }
 let embed_as :
   'a 'b .
@@ -317,11 +316,12 @@ let (e_any : FStar_Syntax_Syntax.term embedding) =
     FStar_Syntax_Print.term_to_string uu___
 let (e_unit : unit embedding) =
   let em u rng _topt _norm =
-    let uu___ = FStar_Syntax_Util.exp_unit in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n =
+        (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars =
+        (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unascribe t0 in
@@ -353,11 +353,10 @@ let (e_bool : Prims.bool embedding) =
       if b
       then FStar_Syntax_Util.exp_true_bool
       else FStar_Syntax_Util.exp_false_bool in
-    let uu___ = t in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in
@@ -387,11 +386,10 @@ let (e_bool : Prims.bool embedding) =
 let (e_char : FStar_Char.char embedding) =
   let em c rng _topt _norm =
     let t = FStar_Syntax_Util.exp_char c in
-    let uu___ = t in
     {
-      FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in

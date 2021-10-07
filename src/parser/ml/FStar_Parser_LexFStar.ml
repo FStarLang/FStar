@@ -54,6 +54,7 @@ let () =
   Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
+  Hashtbl.add keywords "eliminate"     ELIM;
   Hashtbl.add keywords "else"          ELSE        ;
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -71,6 +72,7 @@ let () =
   Hashtbl.add keywords "inline"        INLINE      ;
   Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
   Hashtbl.add keywords "instance"      INSTANCE    ;
+  Hashtbl.add keywords "introduce"     INTRO ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
   Hashtbl.add keywords "let"           (LET false) ;
   Hashtbl.add keywords "logic"         LOGIC       ;

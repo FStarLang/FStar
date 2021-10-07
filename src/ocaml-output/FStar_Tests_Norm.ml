@@ -120,8 +120,8 @@ let (mk_match :
           (FStar_Compiler_List.map FStar_Syntax_Util.branch) in
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_match
-           (h, FStar_Pervasives_Native.None, branches1))
-        FStar_Compiler_Range.dummyRange
+           (h, FStar_Pervasives_Native.None, branches1,
+             FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -146,13 +146,13 @@ let (pred_nat :
       let uu___1 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___2 = FStar_Tests_Util.x in
-              {
-                FStar_Syntax_Syntax.ppname =
-                  (uu___2.FStar_Syntax_Syntax.ppname);
-                FStar_Syntax_Syntax.index = Prims.int_zero;
-                FStar_Syntax_Syntax.sort = (uu___2.FStar_Syntax_Syntax.sort)
-              })) FStar_Compiler_Range.dummyRange in
+             {
+               FStar_Syntax_Syntax.ppname =
+                 (FStar_Tests_Util.x.FStar_Syntax_Syntax.ppname);
+               FStar_Syntax_Syntax.index = Prims.int_zero;
+               FStar_Syntax_Syntax.sort =
+                 (FStar_Tests_Util.x.FStar_Syntax_Syntax.sort)
+             }) FStar_Compiler_Range.dummyRange in
       (uu___, FStar_Pervasives_Native.None, uu___1) in
     mk_match s [zbranch; sbranch]
 let (minus_nat :
@@ -164,17 +164,19 @@ let (minus_nat :
     fun t2 ->
       let minus1 = FStar_Tests_Util.m in
       let x =
-        let uu___ = FStar_Tests_Util.x in
         {
-          FStar_Syntax_Syntax.ppname = (uu___.FStar_Syntax_Syntax.ppname);
-          FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
+          FStar_Syntax_Syntax.ppname =
+            (FStar_Tests_Util.x.FStar_Syntax_Syntax.ppname);
+          FStar_Syntax_Syntax.index =
+            (FStar_Tests_Util.x.FStar_Syntax_Syntax.index);
           FStar_Syntax_Syntax.sort = snat_type
         } in
       let y =
-        let uu___ = FStar_Tests_Util.y in
         {
-          FStar_Syntax_Syntax.ppname = (uu___.FStar_Syntax_Syntax.ppname);
-          FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
+          FStar_Syntax_Syntax.ppname =
+            (FStar_Tests_Util.y.FStar_Syntax_Syntax.ppname);
+          FStar_Syntax_Syntax.index =
+            (FStar_Tests_Util.y.FStar_Syntax_Syntax.index);
           FStar_Syntax_Syntax.sort = snat_type
         } in
       let zbranch =

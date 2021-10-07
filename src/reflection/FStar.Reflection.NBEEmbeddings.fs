@@ -598,15 +598,66 @@ let e_string_list = e_list e_string
 
 let e_ctor = e_tuple2 e_string_list e_term
 
+let e_lb_view =
+    let embed_lb_view cb (lbv:lb_view) : t =
+        mkConstruct ref_Mk_lb.fv [] [as_arg (embed e_fv         cb lbv.lb_fv);
+                                 as_arg (embed e_univ_names cb lbv.lb_us);
+				 as_arg (embed e_term       cb lbv.lb_typ);
+                                 as_arg (embed e_term       cb lbv.lb_def)]
+    in
+    let unembed_lb_view cb (t : t) : option<lb_view> =
+       match t.nbe_t with
+       | Construct (fv, _, [(fv', _); (us, _); (typ, _); (def,_)])
+	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
+            BU.bind_opt (unembed e_fv cb fv') (fun fv' ->
+	    BU.bind_opt (unembed e_univ_names cb us) (fun us ->
+            BU.bind_opt (unembed e_term cb typ) (fun typ ->
+            BU.bind_opt (unembed e_term cb def) (fun def ->
+            Some <|
+	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
+
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded lb_view: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
+
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+(* embeds as a string list *)
+let e_lid : embedding<I.lid> =
+    let embed rng lid : t =
+        embed e_string_list rng (I.path_of_lid lid)
+    in
+    let unembed cb (t : t) : option<I.lid> =
+        BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
+    in
+    mk_emb embed unembed
+        (mkConstruct fstar_refl_aqualv_fv [] [])
+        (fv_as_emb_typ fstar_refl_aqualv_fv)
+
+let e_letbinding =
+    let embed_letbinding cb (lb:letbinding) : t =
+        mk_lazy cb lb fstar_refl_letbinding Lazy_letbinding
+    in
+    let unembed_letbinding cb (t : t) : option<letbinding> =
+         match t.nbe_t with
+        | Lazy (Inl {blob=lb; lkind=Lazy_letbinding}, _) ->
+            Some (undyn lb)
+
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded letbinding: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_letbinding unembed_letbinding fstar_refl_letbinding_fv
+
 let e_sigelt_view =
     let embed_sigelt_view cb (sev:sigelt_view) : t =
         match sev with
-        | Sg_Let (r, fv, univs, ty, t) ->
+        | Sg_Let (r, lbs) ->
             mkConstruct ref_Sg_Let.fv [] [as_arg (embed e_bool cb r);
-                                   as_arg (embed e_fv cb fv);
-                                   as_arg (embed e_univ_names cb univs);
-                                   as_arg (embed e_term cb ty);
-                                   as_arg (embed e_term cb t)]
+                                   as_arg (embed (e_list e_letbinding) cb lbs)]
 
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
             mkConstruct ref_Sg_Inductive.fv [] [as_arg (embed e_string_list cb nm);
@@ -614,6 +665,12 @@ let e_sigelt_view =
                                          as_arg (embed e_binders cb bs);
                                          as_arg (embed e_term cb t);
                                          as_arg (embed (e_list e_ctor) cb dcs)]
+
+        | Sg_Val (nm, univs, t) ->
+            mkConstruct ref_Sg_Val.fv []
+                        [as_arg (embed e_string_list cb nm);
+                         as_arg (embed e_univ_names cb univs);
+                         as_arg (embed e_term cb t)]
 
         | Unk ->
             mkConstruct ref_Unk.fv [] []
@@ -628,13 +685,16 @@ let e_sigelt_view =
             BU.bind_opt (unembed (e_list e_ctor) cb dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
-        | Construct (fv, _, [(t, _); (ty, _); (univs, _); (fvar, _); (r, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Construct (fv, _, [(lbs, _); (r, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed e_bool cb r) (fun r ->
-            BU.bind_opt (unembed e_fv cb fvar) (fun fvar ->
-            BU.bind_opt (unembed e_univ_names cb univs) (fun univs ->
-            BU.bind_opt (unembed e_term cb ty) (fun ty ->
+            BU.bind_opt (unembed (e_list e_letbinding) cb lbs) (fun lbs ->
+            Some <| Sg_Let (r, lbs)))
+
+        | Construct (fv, _, [(t, _); (us, _); (nm, _)]) when S.fv_eq_lid fv ref_Sg_Val.lid ->
+            BU.bind_opt (unembed e_string_list cb nm) (fun nm ->
+            BU.bind_opt (unembed e_univ_names cb us) (fun us ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            Some <| Sg_Let (r, fvar, univs, ty, t))))))
+            Some <| Sg_Val(nm, us, t))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk
@@ -672,22 +732,6 @@ let e_exp =
     mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
 
 let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv (e_list e_term))
-
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
-
-
-(* embeds as a string list *)
-let e_lid : embedding<I.lid> =
-    let embed rng lid : t =
-        embed e_string_list rng (I.path_of_lid lid)
-    in
-    let unembed cb (t : t) : option<I.lid> =
-        BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
-    in
-    mk_emb embed unembed
-        (mkConstruct fstar_refl_aqualv_fv [] [])
-        (fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =

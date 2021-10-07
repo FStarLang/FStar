@@ -1463,9 +1463,11 @@ let (collect_one :
                  (FStar_Compiler_Util.iter_opt t collect_term;
                   FStar_Compiler_List.iter
                     (fun uu___4 ->
-                       match uu___4 with | (uu___5, t1) -> collect_term t1)
+                       match uu___4 with
+                       | (fn, t1) -> (collect_fieldname fn; collect_term t1))
                     idterms)
-             | FStar_Parser_AST.Project (t, uu___3) -> collect_term t
+             | FStar_Parser_AST.Project (t, f) ->
+                 (collect_term t; collect_fieldname f)
              | FStar_Parser_AST.Product (binders, t) ->
                  (collect_binders binders; collect_term t)
              | FStar_Parser_AST.Sum (binders, t) ->
@@ -1526,6 +1528,128 @@ let (collect_one :
                            (collect_term rel1;
                             collect_term just;
                             collect_term next)) steps)
+             | FStar_Parser_AST.IntroForall (bs, p, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_binders bs;
+                  collect_term p;
+                  collect_term e)
+             | FStar_Parser_AST.IntroExists (bs, t, vs, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_binders bs;
+                  collect_term t;
+                  FStar_Compiler_List.iter collect_term vs;
+                  collect_term e)
+             | FStar_Parser_AST.IntroImplies (p, q, x, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_binder x;
+                  collect_term e)
+             | FStar_Parser_AST.IntroOr (b, p, q, r) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_term r)
+             | FStar_Parser_AST.IntroAnd (p, q, r, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_term r;
+                  collect_term e)
+             | FStar_Parser_AST.ElimForall (bs, p, vs) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_binders bs;
+                  collect_term p;
+                  FStar_Compiler_List.iter collect_term vs)
+             | FStar_Parser_AST.ElimExists (bs, p, q, b, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_binders bs;
+                  collect_term p;
+                  collect_term q;
+                  collect_binder b;
+                  collect_term e)
+             | FStar_Parser_AST.ElimImplies (p, q, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_term e)
+             | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_term r;
+                  collect_binder x;
+                  collect_binder y;
+                  collect_term e)
+             | FStar_Parser_AST.ElimOr (p, q, r, x, e, y, e') ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Ident.lid_of_str "FStar.Classical.Sugar" in
+                       (false, uu___6) in
+                     P_dep uu___5 in
+                   add_to_parsing_data uu___4);
+                  collect_term p;
+                  collect_term q;
+                  collect_term r;
+                  collect_binder x;
+                  collect_binder y;
+                  collect_term e;
+                  collect_term e')
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
@@ -1569,7 +1693,20 @@ let (collect_one :
              | (pat, t1, t2) ->
                  (collect_pattern pat;
                   FStar_Compiler_Util.iter_opt t1 collect_term;
-                  collect_term t2) in
+                  collect_term t2)
+           and collect_fieldname fn =
+             let uu___2 = let uu___3 = FStar_Ident.nsstr fn in uu___3 <> "" in
+             if uu___2
+             then
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Ident.ns_of_lid fn in
+                     FStar_Ident.lid_of_ids uu___6 in
+                   (false, uu___5) in
+                 P_dep uu___4 in
+               add_to_parsing_data uu___3
+             else () in
            let uu___2 = FStar_Parser_Driver.parse_file filename in
            match uu___2 with
            | (ast, uu___3) ->
@@ -1633,9 +1770,8 @@ let (widen_deps :
                          fun dep_node1 ->
                            fun uu___3 ->
                              let uu___4 =
-                               let uu___5 = dep_node1 in
-                               let uu___6 = widen_one dep_node1.edges in
-                               { edges = uu___6; color = White } in
+                               let uu___5 = widen_one dep_node1.edges in
+                               { edges = uu___5; color = White } in
                              FStar_Compiler_Util.smap_add dg' filename uu___4)
                       ();
                     (let uu___3 = FStar_Compiler_Effect.op_Bang widened1 in
@@ -1679,8 +1815,7 @@ let (topological_dependences_of' :
                              uu___3
                          else ());
                         deps_add_dep dep_graph1 filename
-                          (let uu___3 = dep_node1 in
-                           { edges = (uu___3.edges); color = Gray });
+                          { edges = (dep_node1.edges); color = Gray };
                         (let uu___3 =
                            let uu___4 =
                              dependences_of file_system_map dep_graph1
@@ -1690,8 +1825,7 @@ let (topological_dependences_of' :
                          match uu___3 with
                          | (all_friends1, all_files1) ->
                              (deps_add_dep dep_graph1 filename
-                                (let uu___5 = dep_node1 in
-                                 { edges = (uu___5.edges); color = Black });
+                                { edges = (dep_node1.edges); color = Black };
                               (let uu___6 =
                                  FStar_Options.debug_at_level_no_module
                                    (FStar_Options.Other "Dep") in
@@ -1940,15 +2074,14 @@ let (collect :
            | Black -> ()
            | White ->
                (deps_add_dep dep_graph1 filename
-                  (let uu___2 = node in { edges = direct_deps; color = Gray });
+                  { edges = direct_deps; color = Gray };
                 (let uu___3 =
                    dependences_of file_system_map1 dep_graph1
                      all_command_line_files filename in
                  FStar_Compiler_List.iter (fun k -> aux (k :: cycle) k)
                    uu___3);
                 deps_add_dep dep_graph1 filename
-                  (let uu___4 = node in
-                   { edges = direct_deps; color = Black });
+                  { edges = direct_deps; color = Black };
                 (let uu___4 = is_interface filename in
                  if uu___4
                  then

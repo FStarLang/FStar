@@ -681,7 +681,22 @@ let close_wp_comp env bvs (c:comp) =
             let u_res_t, res_t, wp = destruct_wp_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
-            mk_comp md u_res_t c.result_typ wp c.flags
+            (*
+             * AR: a note re. comp flags:
+             *     earlier this code was setting the flags of the closed computation as c.flags
+             *
+             *     cf. #2352, when this code was called from
+             *       weaken_result_typ -> bind -> maybe_capture_unit_refinement,
+             *     the input comp was Tot had RETURN flag set, which means the closed comp also had RETURN
+             *
+             *     so when this closed computation was later `bind` with another comp,
+             *       we simply dropped the it (see code path in bind under U.is_trivial_wp)
+             *     thereby losing the captured refinement
+             *
+             *     in general, comp flags need some cleanup
+             *)
+            mk_comp md u_res_t c.result_typ wp
+              (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
 let close_wp_lcomp env bvs (lc:lcomp) =
@@ -1960,7 +1975,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, _, branches), _ ->
+    | Tm_match (_, _, branches, _), _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe
@@ -3083,3 +3098,226 @@ let update_env_sub_eff env sub r =
 let update_env_polymonadic_bind env m n p ty =
   Env.add_polymonadic_bind env m n p
     (fun env c1 bv_opt c2 flags r -> mk_indexed_bind env m n p ty c1 bv_opt c2 flags r)
+
+(*** Utilities for type-based record
+     disambiguation ***)
+
+
+(*
+   For singleton inductive types named `typename`,
+   it looks up the name of the constructor,
+   and the field names of that constructor
+ *)
+let try_lookup_record_type env (typename:lident)
+  : option<DsEnv.record_or_dc>
+  = try
+      match Env.datacons_of_typ env typename with
+      | _, [dc] ->
+        let se = Env.lookup_sigelt env dc in
+        (match se with
+         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
+           let formals, c = U.arrow_formals t in
+           if nparms < List.length formals
+           then let _, fields = List.splitAt nparms formals in //remove params
+                let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
+                let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
+                let is_rec = Env.is_record env typename in
+                let r : DsEnv.record_or_dc =
+                  {
+                    typename = typename;
+                    constrname = Ident.ident_of_lid dc;
+                    parms = [];
+                    fields = fields;
+                    is_private = false;
+                    is_record = is_rec
+                  }
+                in
+                Some r
+
+           else (
+             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+               (string_of_int nparms)
+               (Print.term_to_string t)
+               (Print.binders_to_string ", " formals);
+             None
+           )
+         | _ ->
+           BU.print1 "Could not find %s\n" (string_of_lid dc);
+           None)
+      | _, dcs ->
+        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
+        None
+    with
+    | _ -> None
+
+(*
+   If ToSyntax guessed `uc`
+   and the typechecker decided that type `t: option<typ>` was the type
+   to be used for disambiguation, then if
+
+    - t is None, the uc is used
+    - otherwise t overrides uc
+ *)
+let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
+    let default_rdc () =
+      match uc.uc_typename with
+      | None ->
+        let f = List.hd uc.uc_fields in
+        raise_error (Errors.Fatal_IdentifierNotFound,
+                     BU.format1 "Field name %s could not be resolved"
+                                (string_of_lid f))
+                     (range_of_lid f)
+      | Some tn ->
+        match try_lookup_record_type env tn with
+        | Some rdc -> rdc
+        | None ->
+          raise_error (Errors.Fatal_NameNotFound,
+                       BU.format1 "Record name %s not found" (string_of_lid tn))
+                      (range_of_lid tn)
+    in
+    let rdc : DsEnv.record_or_dc =
+      match t with
+      | None -> default_rdc()
+      | Some t ->
+        let thead, _ = U.head_and_args (U.unmeta (N.unfold_whnf env t)) in
+        match (SS.compress (U.un_uinst thead)).n with
+        | Tm_fvar type_name ->
+          begin
+          match try_lookup_record_type env type_name.fv_name.v with
+          | None -> default_rdc ()
+          | Some r -> r
+          end
+        | _ -> default_rdc()
+    in
+    let constrname =
+          let name = lid_of_ids (ns_of_lid rdc.typename @ [rdc.constrname]) in
+          Ident.set_lid_range name rng
+    in
+    let constructor =
+        let qual =
+          if rdc.is_record
+            then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
+          else None
+        in
+        S.lid_as_fv constrname delta_constant qual
+    in
+    rdc, constrname, constructor
+
+
+(* Check if a user provided `field_name` in a constructor or projector
+   matches `field` in `rdc`.
+
+   The main subtlety is that if `field_name` is unqualified, then it only
+   has to match `field`.
+
+   Otherwise, its namespace also has to match the module name of `rdc`.
+
+   This ensures that if the user wrote a qualified field name, then it
+   has to resolve to a field in the unambiguous module reference in
+   the qualifier.
+*)
+let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) =
+    Ident.ident_equals field (Ident.ident_of_lid field_name) &&
+    (if ns_of_lid field_name <> []
+     then nsstr field_name = nsstr rdc.typename
+     else true)
+
+(*
+  The field assignments of a record constructor can be given out of
+  order.
+
+  Given that we've committed to `rdc` as the record constructor, if
+  the user's field assignments are `fas`, then we order the alphas
+  by the order in which they appear in `rdc`.
+
+  If a particular field cannot be found, then we call not_found, which
+  an provide a default.
+
+  We raise errors if fields are not found and no default exists, or if
+  redundant fields are present.
+*)
+let make_record_fields_in_order env uc topt
+       (rdc : DsEnv.record_or_dc)
+       (fas : list<(lident * 'a)>)
+       (not_found:ident -> option<'a>)
+       (rng : Range.range)
+  : list<'a>
+  = let debug () =
+      let print_rdc (rdc:DsEnv.record_or_dc) =
+        BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
+          (string_of_lid rdc.typename)
+          (string_of_id rdc.constrname)
+          (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
+      in
+      let print_fas fas =
+        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
+      in
+      let print_topt topt =
+        match topt with
+        | None ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
+        | Some (Inl t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+        | Some (Inr t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+      in
+      BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+          (match uc.uc_typename with None -> "none" | Some tn -> string_of_lid tn)
+          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (print_topt topt)
+          (print_rdc rdc)
+          (print_fas fas)
+    in
+    let rest, as_rev =
+      List.fold_left
+        (fun (fields, as_rev) (field_name, _) ->
+           let matching, rest =
+             List.partition
+               (fun (fn, _) -> field_name_matches fn rdc field_name)
+               fields
+           in
+           match matching with
+           | [(_, a)] ->
+             rest, a::as_rev
+
+           | [] -> (
+             match not_found field_name with
+             | None ->
+//               debug();
+               raise_error
+                 (Errors.Fatal_MissingFieldInRecord,
+                   BU.format2 "Field %s of record type %s is missing"
+                     (string_of_id field_name)
+                     (string_of_lid rdc.typename))
+                 rng
+             | Some a ->
+               rest, a::as_rev
+             )
+
+           | _ ->
+//             debug();
+             raise_error
+               (Errors.Fatal_MissingFieldInRecord,
+                BU.format2 "Field %s of record type %s is given multiple assignments"
+                  (string_of_id field_name)
+                  (string_of_lid rdc.typename))
+               rng)
+        (fas, [])
+        rdc.fields
+    in
+    let _ =
+      match rest with
+      | [] -> ()
+      | (f, _)::_ ->
+//        debug();
+        raise_error
+          (Errors.Fatal_MissingFieldInRecord,
+            BU.format2 "Field %s is redundant for type %s"
+                       (string_of_lid f)
+                       (string_of_lid rdc.typename))
+          rng
+    in
+    List.rev as_rev

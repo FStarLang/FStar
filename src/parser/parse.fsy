@@ -44,7 +44,6 @@ let none_to_empty_list x =
 %start warn_error_list
 %token AMP
 %token AND
-%token AS
 %token ASSERT
 %token ASSUME
 %token ATTRIBUTES
@@ -77,6 +76,7 @@ let none_to_empty_list x =
 %token DOT_LENS_PAREN_LEFT
 %token DOT_LPAREN
 %token EFFECT
+%token ELIM
 %token ELSE
 %token END
 %token ENSURES
@@ -105,6 +105,7 @@ let none_to_empty_list x =
 %token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT8
+%token INTRO
 %token IRREDUCIBLE
 %token LARROW
 %token LAYERED_EFFECT
@@ -218,7 +219,6 @@ let none_to_empty_list x =
 %left MINUS OPINFIX2 QUOTE
 %left OPINFIX3
 %left BACKTICK
-%left BACKTICK_AT BACKTICK_HASH
 %right OPINFIX4
 %type <inputFragment> inputFragment
 %type <ident> lident
@@ -1556,6 +1556,73 @@ let pbs =    ( List.rev xs ) in
      (
          mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
+| INTRO FORALL binders DOT noSeqTerm WITH noSeqTerm
+    {let (_1, _2, bs, _4, p, _6, e) = ((), (), $3, (), $5, (), $7) in
+     (
+        mk_term (IntroForall(bs, p, e)) (rhs2 parseState 1 7) Expr
+     )}
+| INTRO EXISTS binders DOT noSeqTerm WITH list_atomicTerm_ AND noSeqTerm
+    {let (_1, _2, bs, _4, p, _6, vs, _8, e) = ((), (), $3, (), $5, (), $7, (), $9) in
+     (
+        if List.length bs <> List.length vs
+        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rhs parseState 7)
+        else mk_term (IntroExists(bs, p, vs, e)) (rhs2 parseState 1 9) Expr
+     )}
+| INTRO tmFormula IMPLIES tmFormula WITH singleBinder DOT noSeqTerm
+    {let (_1, p, _3, q, _5, y, _7, e) = ((), $2, (), $4, (), $6, (), $8) in
+     (
+        mk_term (IntroImplies(p, q, y, e)) (rhs2 parseState 1 8) Expr
+     )}
+| INTRO tmFormula DISJUNCTION tmConjunction WITH NAME noSeqTerm
+    {let (_1, p, _3, q, _5, lr, e) = ((), $2, (), $4, (), $6, $7) in
+     (
+        let b =
+            if lr = "Left" then true
+            else if lr = "Right" then false
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \/ expects either 'Left' or 'Right'") (rhs parseState 6)
+        in
+        mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
+     )}
+| INTRO tmConjunction CONJUNCTION tmTuple WITH noSeqTerm AND noSeqTerm
+    {let (_1, p, _3, q, _5, e1, _7, e2) = ((), $2, (), $4, (), $6, (), $8) in
+     (
+        mk_term (IntroAnd(p, q, e1, e2))  (rhs2 parseState 1 8) Expr
+     )}
+| ELIM FORALL binders DOT noSeqTerm WITH list_atomicTerm_
+    {let (_1, _2, xs, _4, p, _6, vs) = ((), (), $3, (), $5, (), $7) in
+     (
+        mk_term (ElimForall(xs, p, vs)) (rhs2 parseState 1 7) Expr
+     )}
+| ELIM EXISTS binders DOT noSeqTerm RETURNS noSeqTerm WITH singleBinder DOT noSeqTerm
+    {let (_1, _2, bs, _4, p, _6, q, _8, y, _10, e) = ((), (), $3, (), $5, (), $7, (), $9, (), $11) in
+     (
+        mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 11) Expr
+     )}
+| ELIM tmFormula IMPLIES tmFormula WITH noSeqTerm
+    {let (_1, p, _3, q, _5, e) = ((), $2, (), $4, (), $6) in
+     (
+        mk_term (ElimImplies(p, q, e)) (rhs2 parseState 1 6) Expr
+     )}
+| ELIM tmFormula DISJUNCTION tmConjunction RETURNS noSeqTerm WITH singleBinder DOT noSeqTerm AND singleBinder DOT noSeqTerm
+    {let (_1, p, _3, q, _5, r, _7, x, _9, e1, _11, y, _13, e2) = ((), $2, (), $4, (), $6, (), $8, (), $10, (), $12, (), $14) in
+     (
+        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rhs2 parseState 1 14) Expr
+     )}
+| ELIM tmConjunction CONJUNCTION tmTuple RETURNS noSeqTerm WITH binders DOT noSeqTerm
+    {let (_1, p, _3, q, _5, r, _7, xs, _9, e) = ((), $2, (), $4, (), $6, (), $8, (), $10) in
+     (
+        match xs with
+        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rhs2 parseState 1 10) Expr
+     )}
+
+singleBinder:
+  binders
+    {let bs = $1 in
+    (
+       match bs with
+       | [b] -> b
+       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 1)
+    )}
 
 calcRel:
   binop_name
@@ -2729,5 +2796,4 @@ in
    ( x :: xs )}
 
 %%
-
 

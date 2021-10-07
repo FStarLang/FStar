@@ -86,33 +86,30 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
          | FStar_Tactics_Result.Failed (m, q) ->
              (FStar_Syntax_Unionfind.rollback tx;
               (let ps1 =
-                 let uu___2 = ps in
                  {
                    FStar_Tactics_Types.main_context =
-                     (uu___2.FStar_Tactics_Types.main_context);
+                     (ps.FStar_Tactics_Types.main_context);
                    FStar_Tactics_Types.all_implicits =
-                     (uu___2.FStar_Tactics_Types.all_implicits);
-                   FStar_Tactics_Types.goals =
-                     (uu___2.FStar_Tactics_Types.goals);
+                     (ps.FStar_Tactics_Types.all_implicits);
+                   FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
                    FStar_Tactics_Types.smt_goals =
-                     (uu___2.FStar_Tactics_Types.smt_goals);
-                   FStar_Tactics_Types.depth =
-                     (uu___2.FStar_Tactics_Types.depth);
+                     (ps.FStar_Tactics_Types.smt_goals);
+                   FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
                    FStar_Tactics_Types.__dump =
-                     (uu___2.FStar_Tactics_Types.__dump);
-                   FStar_Tactics_Types.psc = (uu___2.FStar_Tactics_Types.psc);
+                     (ps.FStar_Tactics_Types.__dump);
+                   FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
                    FStar_Tactics_Types.entry_range =
-                     (uu___2.FStar_Tactics_Types.entry_range);
+                     (ps.FStar_Tactics_Types.entry_range);
                    FStar_Tactics_Types.guard_policy =
-                     (uu___2.FStar_Tactics_Types.guard_policy);
+                     (ps.FStar_Tactics_Types.guard_policy);
                    FStar_Tactics_Types.freshness =
                      (q.FStar_Tactics_Types.freshness);
                    FStar_Tactics_Types.tac_verb_dbg =
-                     (uu___2.FStar_Tactics_Types.tac_verb_dbg);
+                     (ps.FStar_Tactics_Types.tac_verb_dbg);
                    FStar_Tactics_Types.local_state =
-                     (uu___2.FStar_Tactics_Types.local_state);
+                     (ps.FStar_Tactics_Types.local_state);
                    FStar_Tactics_Types.urgency =
-                     (uu___2.FStar_Tactics_Types.urgency)
+                     (ps.FStar_Tactics_Types.urgency)
                  } in
                FStar_Tactics_Result.Success ((FStar_Pervasives.Inl m), ps1))))
 let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
@@ -221,60 +218,56 @@ let (set_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
     bind get
       (fun ps ->
          set
-           (let uu___ = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = gs;
-              FStar_Tactics_Types.smt_goals =
-                (uu___.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump = (uu___.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals = gs;
+             FStar_Tactics_Types.smt_goals =
+               (ps.FStar_Tactics_Types.smt_goals);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
     bind get
       (fun ps ->
          set
-           (let uu___ = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = (uu___.FStar_Tactics_Types.goals);
-              FStar_Tactics_Types.smt_goals = gs;
-              FStar_Tactics_Types.depth = (uu___.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump = (uu___.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
+             FStar_Tactics_Types.smt_goals = gs;
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (cur_goals : FStar_Tactics_Types.goal Prims.list tac) =
   bind get (fun ps -> ret ps.FStar_Tactics_Types.goals)
 let (cur_goal : FStar_Tactics_Types.goal tac) =
@@ -308,30 +301,27 @@ let (dismiss : unit tac) =
   bind get
     (fun ps ->
        let uu___ =
-         let uu___1 = ps in
-         let uu___2 = FStar_Compiler_List.tl ps.FStar_Tactics_Types.goals in
+         let uu___1 = FStar_Compiler_List.tl ps.FStar_Tactics_Types.goals in
          {
            FStar_Tactics_Types.main_context =
-             (uu___1.FStar_Tactics_Types.main_context);
+             (ps.FStar_Tactics_Types.main_context);
            FStar_Tactics_Types.all_implicits =
-             (uu___1.FStar_Tactics_Types.all_implicits);
-           FStar_Tactics_Types.goals = uu___2;
-           FStar_Tactics_Types.smt_goals =
-             (uu___1.FStar_Tactics_Types.smt_goals);
-           FStar_Tactics_Types.depth = (uu___1.FStar_Tactics_Types.depth);
-           FStar_Tactics_Types.__dump = (uu___1.FStar_Tactics_Types.__dump);
-           FStar_Tactics_Types.psc = (uu___1.FStar_Tactics_Types.psc);
+             (ps.FStar_Tactics_Types.all_implicits);
+           FStar_Tactics_Types.goals = uu___1;
+           FStar_Tactics_Types.smt_goals = (ps.FStar_Tactics_Types.smt_goals);
+           FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+           FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+           FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
            FStar_Tactics_Types.entry_range =
-             (uu___1.FStar_Tactics_Types.entry_range);
+             (ps.FStar_Tactics_Types.entry_range);
            FStar_Tactics_Types.guard_policy =
-             (uu___1.FStar_Tactics_Types.guard_policy);
-           FStar_Tactics_Types.freshness =
-             (uu___1.FStar_Tactics_Types.freshness);
+             (ps.FStar_Tactics_Types.guard_policy);
+           FStar_Tactics_Types.freshness = (ps.FStar_Tactics_Types.freshness);
            FStar_Tactics_Types.tac_verb_dbg =
-             (uu___1.FStar_Tactics_Types.tac_verb_dbg);
+             (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
-             (uu___1.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (uu___1.FStar_Tactics_Types.urgency)
+             (ps.FStar_Tactics_Types.local_state);
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
          } in
        set uu___)
 let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
@@ -340,35 +330,32 @@ let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
       (fun ps ->
          check_valid_goal g;
          (let uu___1 =
-            let uu___2 = ps in
-            let uu___3 =
-              let uu___4 =
+            let uu___2 =
+              let uu___3 =
                 FStar_Compiler_List.tl ps.FStar_Tactics_Types.goals in
-              g :: uu___4 in
+              g :: uu___3 in
             {
               FStar_Tactics_Types.main_context =
-                (uu___2.FStar_Tactics_Types.main_context);
+                (ps.FStar_Tactics_Types.main_context);
               FStar_Tactics_Types.all_implicits =
-                (uu___2.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = uu___3;
+                (ps.FStar_Tactics_Types.all_implicits);
+              FStar_Tactics_Types.goals = uu___2;
               FStar_Tactics_Types.smt_goals =
-                (uu___2.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___2.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump =
-                (uu___2.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___2.FStar_Tactics_Types.psc);
+                (ps.FStar_Tactics_Types.smt_goals);
+              FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+              FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+              FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
               FStar_Tactics_Types.entry_range =
-                (uu___2.FStar_Tactics_Types.entry_range);
+                (ps.FStar_Tactics_Types.entry_range);
               FStar_Tactics_Types.guard_policy =
-                (uu___2.FStar_Tactics_Types.guard_policy);
+                (ps.FStar_Tactics_Types.guard_policy);
               FStar_Tactics_Types.freshness =
-                (uu___2.FStar_Tactics_Types.freshness);
+                (ps.FStar_Tactics_Types.freshness);
               FStar_Tactics_Types.tac_verb_dbg =
-                (uu___2.FStar_Tactics_Types.tac_verb_dbg);
+                (ps.FStar_Tactics_Types.tac_verb_dbg);
               FStar_Tactics_Types.local_state =
-                (uu___2.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___2.FStar_Tactics_Types.urgency)
+                (ps.FStar_Tactics_Types.local_state);
+              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
             } in
           set uu___1))
 let (getopts : FStar_Options.optionstate tac) =
@@ -385,163 +372,147 @@ let (add_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
       (fun ps ->
          check_valid_goals gs;
          set
-           (let uu___1 = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___1.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___1.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals =
-                (FStar_Compiler_List.op_At gs ps.FStar_Tactics_Types.goals);
-              FStar_Tactics_Types.smt_goals =
-                (uu___1.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___1.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump =
-                (uu___1.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___1.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___1.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___1.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___1.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___1.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___1.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___1.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals =
+               (FStar_Compiler_List.op_At gs ps.FStar_Tactics_Types.goals);
+             FStar_Tactics_Types.smt_goals =
+               (ps.FStar_Tactics_Types.smt_goals);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (add_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
     bind get
       (fun ps ->
          check_valid_goals gs;
          set
-           (let uu___1 = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___1.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___1.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = (uu___1.FStar_Tactics_Types.goals);
-              FStar_Tactics_Types.smt_goals =
-                (FStar_Compiler_List.op_At gs
-                   ps.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___1.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump =
-                (uu___1.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___1.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___1.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___1.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___1.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___1.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___1.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___1.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
+             FStar_Tactics_Types.smt_goals =
+               (FStar_Compiler_List.op_At gs ps.FStar_Tactics_Types.smt_goals);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (push_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
     bind get
       (fun ps ->
          check_valid_goals gs;
          set
-           (let uu___1 = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___1.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___1.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals =
-                (FStar_Compiler_List.op_At ps.FStar_Tactics_Types.goals gs);
-              FStar_Tactics_Types.smt_goals =
-                (uu___1.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___1.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump =
-                (uu___1.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___1.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___1.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___1.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___1.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___1.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___1.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___1.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals =
+               (FStar_Compiler_List.op_At ps.FStar_Tactics_Types.goals gs);
+             FStar_Tactics_Types.smt_goals =
+               (ps.FStar_Tactics_Types.smt_goals);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (push_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
     bind get
       (fun ps ->
          check_valid_goals gs;
          set
-           (let uu___1 = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___1.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (uu___1.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = (uu___1.FStar_Tactics_Types.goals);
-              FStar_Tactics_Types.smt_goals =
-                (FStar_Compiler_List.op_At ps.FStar_Tactics_Types.smt_goals
-                   gs);
-              FStar_Tactics_Types.depth = (uu___1.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump =
-                (uu___1.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___1.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___1.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___1.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___1.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___1.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___1.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___1.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
+             FStar_Tactics_Types.smt_goals =
+               (FStar_Compiler_List.op_At ps.FStar_Tactics_Types.smt_goals gs);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (add_implicits : FStar_TypeChecker_Env.implicits -> unit tac) =
   fun i ->
     bind get
       (fun ps ->
          set
-           (let uu___ = ps in
-            {
-              FStar_Tactics_Types.main_context =
-                (uu___.FStar_Tactics_Types.main_context);
-              FStar_Tactics_Types.all_implicits =
-                (FStar_Compiler_List.op_At i
-                   ps.FStar_Tactics_Types.all_implicits);
-              FStar_Tactics_Types.goals = (uu___.FStar_Tactics_Types.goals);
-              FStar_Tactics_Types.smt_goals =
-                (uu___.FStar_Tactics_Types.smt_goals);
-              FStar_Tactics_Types.depth = (uu___.FStar_Tactics_Types.depth);
-              FStar_Tactics_Types.__dump = (uu___.FStar_Tactics_Types.__dump);
-              FStar_Tactics_Types.psc = (uu___.FStar_Tactics_Types.psc);
-              FStar_Tactics_Types.entry_range =
-                (uu___.FStar_Tactics_Types.entry_range);
-              FStar_Tactics_Types.guard_policy =
-                (uu___.FStar_Tactics_Types.guard_policy);
-              FStar_Tactics_Types.freshness =
-                (uu___.FStar_Tactics_Types.freshness);
-              FStar_Tactics_Types.tac_verb_dbg =
-                (uu___.FStar_Tactics_Types.tac_verb_dbg);
-              FStar_Tactics_Types.local_state =
-                (uu___.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency =
-                (uu___.FStar_Tactics_Types.urgency)
-            }))
+           {
+             FStar_Tactics_Types.main_context =
+               (ps.FStar_Tactics_Types.main_context);
+             FStar_Tactics_Types.all_implicits =
+               (FStar_Compiler_List.op_At i
+                  ps.FStar_Tactics_Types.all_implicits);
+             FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
+             FStar_Tactics_Types.smt_goals =
+               (ps.FStar_Tactics_Types.smt_goals);
+             FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+             FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+             FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
+             FStar_Tactics_Types.entry_range =
+               (ps.FStar_Tactics_Types.entry_range);
+             FStar_Tactics_Types.guard_policy =
+               (ps.FStar_Tactics_Types.guard_policy);
+             FStar_Tactics_Types.freshness =
+               (ps.FStar_Tactics_Types.freshness);
+             FStar_Tactics_Types.tac_verb_dbg =
+               (ps.FStar_Tactics_Types.tac_verb_dbg);
+             FStar_Tactics_Types.local_state =
+               (ps.FStar_Tactics_Types.local_state);
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           })
 let (new_uvar :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
@@ -638,17 +609,16 @@ let (goal_of_guard :
                bind uu___
                  (fun goal ->
                     let goal1 =
-                      let uu___1 = goal in
                       {
                         FStar_Tactics_Types.goal_main_env =
-                          (uu___1.FStar_Tactics_Types.goal_main_env);
+                          (goal.FStar_Tactics_Types.goal_main_env);
                         FStar_Tactics_Types.goal_ctx_uvar =
-                          (uu___1.FStar_Tactics_Types.goal_ctx_uvar);
+                          (goal.FStar_Tactics_Types.goal_ctx_uvar);
                         FStar_Tactics_Types.opts =
-                          (uu___1.FStar_Tactics_Types.opts);
+                          (goal.FStar_Tactics_Types.opts);
                         FStar_Tactics_Types.is_guard = true;
                         FStar_Tactics_Types.label =
-                          (uu___1.FStar_Tactics_Types.label)
+                          (goal.FStar_Tactics_Types.label)
                       } in
                     ret goal1))
 let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
@@ -674,44 +644,40 @@ let (compress_implicits : unit tac) =
     (fun ps ->
        let imps = ps.FStar_Tactics_Types.all_implicits in
        let g =
-         let uu___ = FStar_TypeChecker_Env.trivial_guard in
          {
            FStar_TypeChecker_Common.guard_f =
-             (uu___.FStar_TypeChecker_Common.guard_f);
+             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
            FStar_TypeChecker_Common.deferred_to_tac =
-             (uu___.FStar_TypeChecker_Common.deferred_to_tac);
+             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
            FStar_TypeChecker_Common.deferred =
-             (uu___.FStar_TypeChecker_Common.deferred);
+             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
            FStar_TypeChecker_Common.univ_ineqs =
-             (uu___.FStar_TypeChecker_Common.univ_ineqs);
+             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = imps
          } in
        let g1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac
            ps.FStar_Tactics_Types.main_context g in
        let ps' =
-         let uu___ = ps in
          {
            FStar_Tactics_Types.main_context =
-             (uu___.FStar_Tactics_Types.main_context);
+             (ps.FStar_Tactics_Types.main_context);
            FStar_Tactics_Types.all_implicits =
              (g1.FStar_TypeChecker_Common.implicits);
-           FStar_Tactics_Types.goals = (uu___.FStar_Tactics_Types.goals);
-           FStar_Tactics_Types.smt_goals =
-             (uu___.FStar_Tactics_Types.smt_goals);
-           FStar_Tactics_Types.depth = (uu___.FStar_Tactics_Types.depth);
-           FStar_Tactics_Types.__dump = (uu___.FStar_Tactics_Types.__dump);
-           FStar_Tactics_Types.psc = (uu___.FStar_Tactics_Types.psc);
+           FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
+           FStar_Tactics_Types.smt_goals = (ps.FStar_Tactics_Types.smt_goals);
+           FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);
+           FStar_Tactics_Types.__dump = (ps.FStar_Tactics_Types.__dump);
+           FStar_Tactics_Types.psc = (ps.FStar_Tactics_Types.psc);
            FStar_Tactics_Types.entry_range =
-             (uu___.FStar_Tactics_Types.entry_range);
+             (ps.FStar_Tactics_Types.entry_range);
            FStar_Tactics_Types.guard_policy =
-             (uu___.FStar_Tactics_Types.guard_policy);
-           FStar_Tactics_Types.freshness =
-             (uu___.FStar_Tactics_Types.freshness);
+             (ps.FStar_Tactics_Types.guard_policy);
+           FStar_Tactics_Types.freshness = (ps.FStar_Tactics_Types.freshness);
            FStar_Tactics_Types.tac_verb_dbg =
-             (uu___.FStar_Tactics_Types.tac_verb_dbg);
+             (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
-             (uu___.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (uu___.FStar_Tactics_Types.urgency)
+             (ps.FStar_Tactics_Types.local_state);
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
          } in
        set ps')

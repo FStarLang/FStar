@@ -65,11 +65,10 @@ let rec (prefix_with_iface_decls :
                (FStar_Const.Const_string
                   ("KremlinPrivate", (impl1.FStar_Parser_AST.drange))))
             impl1.FStar_Parser_AST.drange FStar_Parser_AST.Expr in
-        let uu___ = impl1 in
         {
-          FStar_Parser_AST.d = (uu___.FStar_Parser_AST.d);
-          FStar_Parser_AST.drange = (uu___.FStar_Parser_AST.drange);
-          FStar_Parser_AST.quals = (uu___.FStar_Parser_AST.quals);
+          FStar_Parser_AST.d = (impl1.FStar_Parser_AST.d);
+          FStar_Parser_AST.drange = (impl1.FStar_Parser_AST.drange);
+          FStar_Parser_AST.quals = (impl1.FStar_Parser_AST.quals);
           FStar_Parser_AST.attrs = (krem_private ::
             (impl1.FStar_Parser_AST.attrs))
         } in

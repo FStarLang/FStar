@@ -52,6 +52,11 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         else withinfo (Pat_var a) r
     in
     match p.v with
+    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _) ->
+      (* Unresolved constructors cannot be elaborated yet.
+         tc_pat has to resolve it first. *)
+      p
+
     | Pat_cons(fv, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name.v in

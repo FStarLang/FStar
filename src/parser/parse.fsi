@@ -101,6 +101,7 @@ type token =
   | LAYERED_EFFECT
   | LARROW
   | IRREDUCIBLE
+  | INTRO
   | INT8 of (string * bool)
   | INT64 of (string * bool)
   | INT32 of (string * bool)
@@ -129,6 +130,7 @@ type token =
   | ENSURES
   | END
   | ELSE
+  | ELIM
   | EFFECT
   | DOT_LPAREN
   | DOT_LENS_PAREN_LEFT
@@ -161,7 +163,6 @@ type token =
   | ATTRIBUTES
   | ASSUME
   | ASSERT
-  | AS
   | AND
   | AMP
 type tokenId = 
@@ -264,6 +265,7 @@ type tokenId =
     | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
     | TOKEN_IRREDUCIBLE
+    | TOKEN_INTRO
     | TOKEN_INT8
     | TOKEN_INT64
     | TOKEN_INT32
@@ -292,6 +294,7 @@ type tokenId =
     | TOKEN_ENSURES
     | TOKEN_END
     | TOKEN_ELSE
+    | TOKEN_ELIM
     | TOKEN_EFFECT
     | TOKEN_DOT_LPAREN
     | TOKEN_DOT_LENS_PAREN_LEFT
@@ -324,7 +327,6 @@ type tokenId =
     | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
-    | TOKEN_AS
     | TOKEN_AND
     | TOKEN_AMP
     | TOKEN_end_of_input
@@ -440,6 +442,7 @@ type nonTerminalId =
     | NONTERM_term
     | NONTERM_match_returning
     | NONTERM_noSeqTerm
+    | NONTERM_singleBinder
     | NONTERM_calcRel
     | NONTERM_calcStep
     | NONTERM_typ

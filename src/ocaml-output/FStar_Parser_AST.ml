@@ -78,6 +78,16 @@ type term' =
   | Quote of (term * quote_kind) 
   | VQuote of term 
   | CalcProof of (term * term * calc_step Prims.list) 
+  | IntroForall of (binder Prims.list * term * term) 
+  | IntroExists of (binder Prims.list * term * term Prims.list * term) 
+  | IntroImplies of (term * term * binder * term) 
+  | IntroOr of (Prims.bool * term * term * term) 
+  | IntroAnd of (term * term * term * term) 
+  | ElimForall of (binder Prims.list * term * term Prims.list) 
+  | ElimExists of (binder Prims.list * term * term * binder * term) 
+  | ElimImplies of (term * term * term) 
+  | ElimOr of (term * term * term * binder * term * binder * term) 
+  | ElimAnd of (term * term * term * binder * binder * term) 
 and term = {
   tm: term' ;
   range: FStar_Compiler_Range.range ;
@@ -326,6 +336,59 @@ let (uu___is_CalcProof : term' -> Prims.bool) =
 let (__proj__CalcProof__item___0 :
   term' -> (term * term * calc_step Prims.list)) =
   fun projectee -> match projectee with | CalcProof _0 -> _0
+let (uu___is_IntroForall : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IntroForall _0 -> true | uu___ -> false
+let (__proj__IntroForall__item___0 :
+  term' -> (binder Prims.list * term * term)) =
+  fun projectee -> match projectee with | IntroForall _0 -> _0
+let (uu___is_IntroExists : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IntroExists _0 -> true | uu___ -> false
+let (__proj__IntroExists__item___0 :
+  term' -> (binder Prims.list * term * term Prims.list * term)) =
+  fun projectee -> match projectee with | IntroExists _0 -> _0
+let (uu___is_IntroImplies : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IntroImplies _0 -> true | uu___ -> false
+let (__proj__IntroImplies__item___0 : term' -> (term * term * binder * term))
+  = fun projectee -> match projectee with | IntroImplies _0 -> _0
+let (uu___is_IntroOr : term' -> Prims.bool) =
+  fun projectee -> match projectee with | IntroOr _0 -> true | uu___ -> false
+let (__proj__IntroOr__item___0 : term' -> (Prims.bool * term * term * term))
+  = fun projectee -> match projectee with | IntroOr _0 -> _0
+let (uu___is_IntroAnd : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IntroAnd _0 -> true | uu___ -> false
+let (__proj__IntroAnd__item___0 : term' -> (term * term * term * term)) =
+  fun projectee -> match projectee with | IntroAnd _0 -> _0
+let (uu___is_ElimForall : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ElimForall _0 -> true | uu___ -> false
+let (__proj__ElimForall__item___0 :
+  term' -> (binder Prims.list * term * term Prims.list)) =
+  fun projectee -> match projectee with | ElimForall _0 -> _0
+let (uu___is_ElimExists : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ElimExists _0 -> true | uu___ -> false
+let (__proj__ElimExists__item___0 :
+  term' -> (binder Prims.list * term * term * binder * term)) =
+  fun projectee -> match projectee with | ElimExists _0 -> _0
+let (uu___is_ElimImplies : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ElimImplies _0 -> true | uu___ -> false
+let (__proj__ElimImplies__item___0 : term' -> (term * term * term)) =
+  fun projectee -> match projectee with | ElimImplies _0 -> _0
+let (uu___is_ElimOr : term' -> Prims.bool) =
+  fun projectee -> match projectee with | ElimOr _0 -> true | uu___ -> false
+let (__proj__ElimOr__item___0 :
+  term' -> (term * term * term * binder * term * binder * term)) =
+  fun projectee -> match projectee with | ElimOr _0 -> _0
+let (uu___is_ElimAnd : term' -> Prims.bool) =
+  fun projectee -> match projectee with | ElimAnd _0 -> true | uu___ -> false
+let (__proj__ElimAnd__item___0 :
+  term' -> (term * term * term * binder * binder * term)) =
+  fun projectee -> match projectee with | ElimAnd _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> tm
@@ -1720,6 +1783,111 @@ let rec (term_to_string : term -> Prims.string) =
           let uu___3 = FStar_Compiler_List.map calc_step_to_string steps in
           FStar_Compiler_Effect.op_Less_Bar (FStar_String.concat " ") uu___3 in
         FStar_Compiler_Util.format3 "calc (%s) { %s %s }" uu___ uu___1 uu___2
+    | ElimForall (bs, t, vs) ->
+        let uu___ = binders_to_string " " bs in
+        let uu___1 = term_to_string t in
+        let uu___2 =
+          let uu___3 = FStar_Compiler_List.map term_to_string vs in
+          FStar_String.concat " " uu___3 in
+        FStar_Compiler_Util.format3 "_elim_ forall %s. %s using %s" uu___
+          uu___1 uu___2
+    | ElimExists (bs, p, q, b, e) ->
+        let uu___ = binders_to_string " " bs in
+        let uu___1 = term_to_string p in
+        let uu___2 = term_to_string q in
+        let uu___3 = binder_to_string b in
+        let uu___4 = term_to_string e in
+        FStar_Compiler_Util.format5
+          "_elim_ exists %s. %s _to_ %s\n\\with %s. %s" uu___ uu___1 uu___2
+          uu___3 uu___4
+    | ElimImplies (p, q, e) ->
+        let uu___ = term_to_string p in
+        let uu___1 = term_to_string q in
+        let uu___2 = term_to_string e in
+        FStar_Compiler_Util.format3 "_elim_ %s ==> %s with %s" uu___ uu___1
+          uu___2
+    | ElimOr (p, q, r, x1, e, y, e') ->
+        let uu___ =
+          let uu___1 = term_to_string p in
+          let uu___2 =
+            let uu___3 = term_to_string q in
+            let uu___4 =
+              let uu___5 = term_to_string r in
+              let uu___6 =
+                let uu___7 = binder_to_string x1 in
+                let uu___8 =
+                  let uu___9 = term_to_string e in
+                  let uu___10 =
+                    let uu___11 = binder_to_string y in
+                    let uu___12 =
+                      let uu___13 = term_to_string e' in [uu___13] in
+                    uu___11 :: uu___12 in
+                  uu___9 :: uu___10 in
+                uu___7 :: uu___8 in
+              uu___5 :: uu___6 in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        FStar_Compiler_Util.format
+          "_elim_ %s \\/ %s _to_ %s\n\\with %s. %s\n\\and %s.%s" uu___
+    | ElimAnd (p, q, r, x1, y, e) ->
+        let uu___ =
+          let uu___1 = term_to_string p in
+          let uu___2 =
+            let uu___3 = term_to_string q in
+            let uu___4 =
+              let uu___5 = term_to_string r in
+              let uu___6 =
+                let uu___7 = binder_to_string x1 in
+                let uu___8 =
+                  let uu___9 = binder_to_string y in
+                  let uu___10 = let uu___11 = term_to_string e in [uu___11] in
+                  uu___9 :: uu___10 in
+                uu___7 :: uu___8 in
+              uu___5 :: uu___6 in
+            uu___3 :: uu___4 in
+          uu___1 :: uu___2 in
+        FStar_Compiler_Util.format
+          "_elim_ %s /\\ %s _to_ %s\n\\with %s %s. %s" uu___
+    | IntroForall (xs, p, e) ->
+        let uu___ = binders_to_string " " xs in
+        let uu___1 = term_to_string p in
+        let uu___2 = term_to_string e in
+        FStar_Compiler_Util.format3 "_intro_ forall %s. %s with %s" uu___
+          uu___1 uu___2
+    | IntroExists (xs, t, vs, e) ->
+        let uu___ = binders_to_string " " xs in
+        let uu___1 = term_to_string t in
+        let uu___2 =
+          let uu___3 = FStar_Compiler_List.map term_to_string vs in
+          FStar_String.concat " " uu___3 in
+        let uu___3 = term_to_string e in
+        FStar_Compiler_Util.format4 "_intro_ exists %s. %s using %s with %s"
+          uu___ uu___1 uu___2 uu___3
+    | IntroImplies (p, q, x1, e) ->
+        let uu___ = term_to_string p in
+        let uu___1 = term_to_string q in
+        let uu___2 = binder_to_string x1 in
+        let uu___3 = term_to_string p in
+        FStar_Compiler_Util.format4 "_intro_ %s ==> %s with %s. %s" uu___
+          uu___1 uu___2 uu___3
+    | IntroOr (b, p, q, r) ->
+        let uu___ = term_to_string p in
+        let uu___1 = term_to_string q in
+        let uu___2 = term_to_string r in
+        FStar_Compiler_Util.format4 "_intro_ %s \\/ %s using %s with %s"
+          uu___ uu___1 (if b then "Left" else "Right") uu___2
+    | IntroAnd (p, q, e1, e2) ->
+        let uu___ = term_to_string p in
+        let uu___1 = term_to_string q in
+        let uu___2 = term_to_string e1 in
+        let uu___3 = term_to_string e2 in
+        FStar_Compiler_Util.format4 "_intro_ %s /\\ %s with %s and %s" uu___
+          uu___1 uu___2 uu___3
+and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
+  fun sep ->
+    fun bs ->
+      let uu___ = FStar_Compiler_List.map binder_to_string bs in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat sep)
 and (try_or_match_to_string :
   term ->
     term ->
