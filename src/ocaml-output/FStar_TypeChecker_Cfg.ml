@@ -1941,10 +1941,12 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
         (match uu___ with
          | (FStar_Pervasives_Native.Some a2, FStar_Pervasives_Native.Some b2)
              ->
-             let uu___1 =
-               let uu___2 = f res.psc_range a2 b2 in
-               embed_c res.psc_range uu___2 in
-             FStar_Pervasives_Native.Some uu___1
+             let uu___1 = f res.psc_range a2 b2 in
+             (match uu___1 with
+              | FStar_Pervasives_Native.Some c1 ->
+                  let uu___2 = embed_c res.psc_range c1 in
+                  FStar_Pervasives_Native.Some uu___2
+              | uu___2 -> FStar_Pervasives_Native.None)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None in
   let list_of_string' rng s =
@@ -2583,10 +2585,13 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                                 fun x ->
                                                   fun y ->
                                                     let uu___34 =
-                                                      FStar_BigInt.to_int_fs
-                                                        x in
-                                                    FStar_String.make uu___34
-                                                      y)),
+                                                      let uu___35 =
+                                                        FStar_BigInt.to_int_fs
+                                                          x in
+                                                      FStar_String.make
+                                                        uu___35 y in
+                                                    FStar_Pervasives_Native.Some
+                                                      uu___34)),
                                           (FStar_TypeChecker_NBETerm.mixed_binary_op
                                              FStar_TypeChecker_NBETerm.arg_as_int
                                              FStar_TypeChecker_NBETerm.arg_as_char
@@ -2596,8 +2601,13 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                                              (fun x ->
                                                 fun y ->
                                                   let uu___34 =
-                                                    FStar_BigInt.to_int_fs x in
-                                                  FStar_String.make uu___34 y)))
+                                                    let uu___35 =
+                                                      FStar_BigInt.to_int_fs
+                                                        x in
+                                                    FStar_String.make uu___35
+                                                      y in
+                                                  FStar_Pervasives_Native.Some
+                                                    uu___34)))
                                           :: uu___33 in
                                       uu___31 :: uu___32 in
                                     uu___29 :: uu___30 in
@@ -3029,43 +3039,79 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     FStar_Compiler_List.op_At add_sub_mul_v
       (FStar_Compiler_List.op_At div_mod_unsigned bitwise) in
   let reveal_hide =
-    let mk f g =
-      (f, (Prims.of_int (2)), Prims.int_one,
-        (mixed_binary_op (fun x -> FStar_Pervasives_Native.Some x)
-           (fun uu___ ->
-              match uu___ with
-              | (x, uu___1) ->
-                  let uu___2 = FStar_Syntax_Util.head_and_args x in
-                  (match uu___2 with
-                   | (head, args) ->
-                       let uu___3 = FStar_Syntax_Util.is_fvar g head in
-                       if uu___3
-                       then
-                         (match args with
-                          | _t::(body, uu___4)::[] ->
-                              FStar_Pervasives_Native.Some body
-                          | uu___4 -> FStar_Pervasives_Native.None)
-                       else FStar_Pervasives_Native.None))
-           (fun r -> fun body -> body) (fun r -> fun _t -> fun body -> body)),
-        (FStar_TypeChecker_NBETerm.mixed_binary_op
-           (fun x -> FStar_Pervasives_Native.Some x)
-           (fun uu___ ->
-              match uu___ with
-              | (x, uu___1) ->
-                  let uu___2 = FStar_TypeChecker_NBETerm.nbe_t_of_t x in
-                  (match uu___2 with
-                   | FStar_TypeChecker_NBETerm.FV
-                       (fv, uu___3, (_t, uu___4)::(body, uu___5)::[]) when
-                       FStar_Syntax_Syntax.fv_eq_lid fv g ->
-                       FStar_Pervasives_Native.Some body
-                   | uu___3 -> FStar_Pervasives_Native.None))
-           (fun body -> body) (fun _t -> fun body -> body))) in
-    [mk FStar_Parser_Const.reveal FStar_Parser_Const.hide;
-    mk FStar_Parser_Const.hide FStar_Parser_Const.reveal] in
+    (FStar_Parser_Const.reveal, (Prims.of_int (2)), Prims.int_one,
+      (mixed_binary_op (fun x -> FStar_Pervasives_Native.Some x)
+         (fun uu___ ->
+            match uu___ with
+            | (x, uu___1) ->
+                let uu___2 = FStar_Syntax_Util.head_and_args x in
+                (match uu___2 with
+                 | (head, args) ->
+                     let uu___3 =
+                       FStar_Syntax_Util.is_fvar FStar_Parser_Const.hide head in
+                     if uu___3
+                     then
+                       (match args with
+                        | _t::(body, uu___4)::[] ->
+                            FStar_Pervasives_Native.Some body
+                        | uu___4 -> FStar_Pervasives_Native.None)
+                     else FStar_Pervasives_Native.None))
+         (fun r -> fun body -> body)
+         (fun r -> fun _t -> fun body -> FStar_Pervasives_Native.Some body)),
+      (FStar_TypeChecker_NBETerm.mixed_binary_op
+         (fun x -> FStar_Pervasives_Native.Some x)
+         (fun uu___ ->
+            match uu___ with
+            | (x, uu___1) ->
+                let uu___2 = FStar_TypeChecker_NBETerm.nbe_t_of_t x in
+                (match uu___2 with
+                 | FStar_TypeChecker_NBETerm.FV
+                     (fv, uu___3, (_t, uu___4)::(body, uu___5)::[]) when
+                     FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.hide
+                     -> FStar_Pervasives_Native.Some body
+                 | uu___3 -> FStar_Pervasives_Native.None))
+         (fun body -> body)
+         (fun _t -> fun body -> FStar_Pervasives_Native.Some body))) in
+  let hide_reveal =
+    (FStar_Parser_Const.hide, (Prims.of_int (2)), Prims.int_one,
+      (mixed_binary_op (fun x -> FStar_Pervasives_Native.Some x)
+         (fun uu___ ->
+            match uu___ with
+            | (x, uu___1) ->
+                let uu___2 = FStar_Syntax_Util.head_and_args x in
+                (match uu___2 with
+                 | (head, args) ->
+                     let uu___3 =
+                       FStar_Syntax_Util.is_fvar FStar_Parser_Const.reveal
+                         head in
+                     if uu___3
+                     then
+                       (match args with
+                        | (t, uu___4)::(body, uu___5)::[] ->
+                            FStar_Pervasives_Native.Some (t, body)
+                        | uu___4 -> FStar_Pervasives_Native.None)
+                     else FStar_Pervasives_Native.None))
+         (fun r -> fun body_opt -> body_opt)
+         (fun r ->
+            fun uu___ ->
+              fun uu___1 ->
+                match (uu___, uu___1) with
+                | ((t, uu___2), (t', body)) ->
+                    let uu___3 =
+                      let uu___4 = FStar_Syntax_Util.eq_tm t t' in
+                      uu___4 = FStar_Syntax_Util.Equal in
+                    if uu___3
+                    then FStar_Pervasives_Native.Some body
+                    else FStar_Pervasives_Native.None)),
+      (FStar_TypeChecker_NBETerm.mixed_binary_op
+         (fun uu___ -> FStar_Pervasives_Native.None)
+         (fun uu___ -> FStar_Pervasives_Native.None) (fun x -> x)
+         (fun uu___ -> fun uu___1 -> FStar_Pervasives_Native.None))) in
   let strong_steps =
     FStar_Compiler_List.map (as_primitive_step true)
       (FStar_Compiler_List.op_At basic_ops
-         (FStar_Compiler_List.op_At bounded_arith_ops reveal_hide)) in
+         (FStar_Compiler_List.op_At bounded_arith_ops
+            [reveal_hide; hide_reveal])) in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
   FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)

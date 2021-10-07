@@ -339,7 +339,7 @@ val interp_prop_eq2 : args -> option<t>
 val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
-                      ('a -> 'b -> 'c) -> args -> option<t>
+                      ('a -> 'b -> option<'c>) -> args -> option<t>
 val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
 val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
