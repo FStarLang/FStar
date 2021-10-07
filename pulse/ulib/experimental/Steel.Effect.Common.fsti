@@ -15,7 +15,7 @@
 *)
 
 module Steel.Effect.Common
-let ( @ ) x y = FStar.List.Tot.( x@y )
+let ( @ ) x y = FStar.List.Tot.append x y
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
@@ -1041,17 +1041,27 @@ let rec list_to_string (l:list term) : Tac string =
   | [] -> "end"
   | hd::tl -> term_to_string hd ^ " " ^ list_to_string tl
 
-let rec mdenote (#a:Type u#aa) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:exp) : a =
+let rec mdenote_gen (#a:Type u#aa) (unit:a) (mult:a -> a -> a) (am:amap a) (e:exp) : a =
   match e with
-  | Unit -> CE.CM?.unit m
+  | Unit -> unit
   | Atom x -> select x am
-  | Mult e1 e2 -> CE.CM?.mult m (mdenote eq m am e1) (mdenote eq m am e2)
+  | Mult e1 e2 -> mult (mdenote_gen unit mult am e1) (mdenote_gen unit mult am e2)
 
-let rec xsdenote (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs:list atom) : a =
+let rec xsdenote_gen (#a:Type) (unit:a) (mult:a -> a -> a) (am:amap a) (xs:list atom) : a =
   match xs with
-  | [] -> CE.CM?.unit m
+  | [] -> unit
   | [x] -> select x am
-  | x::xs' -> CE.CM?.mult m (select x am) (xsdenote eq m am xs')
+  | x::xs' -> mult (select x am) (xsdenote_gen unit mult am xs')
+
+unfold
+let mdenote (#a:Type u#aa) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:exp) : a =
+  let open FStar.Algebra.CommMonoid.Equiv in
+  mdenote_gen (CM?.unit m) (CM?.mult m) am e
+
+unfold
+let xsdenote (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs:list atom) : a =
+  let open FStar.Algebra.CommMonoid.Equiv in
+  xsdenote_gen (CM?.unit m) (CM?.mult m) am xs
 
 let rec flatten (e:exp) : list atom =
   match e with
@@ -1525,7 +1535,8 @@ let rec quote_atoms (l:list atom) = match l with
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
 /// In particular, all the sorting/list functions are entirely reduced
 let normal_tac_steps = [primops; iota; zeta; delta_only [
-          `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%mdenote; `%select;
+          `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
           `%flatten; `%sort;
           `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
           `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
@@ -1565,13 +1576,50 @@ let close_equality_typ (t:term) : Tac unit =
 /// to check the validity of the provided solution.
 /// In the case where SMT rewriting was needed, equalities abduction is performed by instantiating the
 /// abduction prop unification variable with the corresponding guard
-let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
-  let m_unit = norm_term [iota; zeta; delta](`CE.CM?.unit (`#m)) in
+
+
+/// 09/24:
+///
+/// The tactic internally builds a map from atoms to terms
+///   and uses the map for reflecting the goal to atoms representation
+/// During reflection, the tactics engine typechecks the amap, and hence all
+///   the terms again
+/// This typechecking of terms is unnecessary, since the terms are coming
+///   from the goal, and hence are already well-typed
+/// Worse, re-typechecking them may generate a lot of SMT queries
+/// And even worse, the SMT queries are discharged in the static context,
+///   requiring various workarounds (e.g. squash variables for if conditions etc.)
+///
+/// To fix this, we now "name" the terms and use the amap with names
+///
+/// Read through the canon_l_r function for how we do this
+
+
+/// The following three lemmas are helpers to manipulate the goal in canon_l_r
+
+let inst_bv (#a:Type) (#p:a -> Type0) (#q:Type0) (x:a) (_:squash (p x ==> q))
+  : Lemma ((forall (x:a). p x) ==> q) = ()
+
+let modus_ponens (#p #q:Type0) (_:squash p)
+  : Lemma ((p ==> q) ==> q)
+  = ()
+
+let cut (p q:Type0) : Lemma (requires p /\ (p ==> q)) (ensures q) = ()
+
+let canon_l_r (use_smt:bool)
+  (carrier_t:term)  //e.g. vprop
+  (eq:term) (m:term)
+  (pr pr_bind:term)
+  (lhs rel rhs:term) : Tac unit =
+
+  let m_unit = norm_term [iota; zeta; delta] (`(CE.CM?.unit (`#m))) in
+  let m_mult = norm_term [iota; zeta; delta] (`(CE.CM?.mult (`#m))) in
+
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
-// Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
+  // Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
   let l1_raw, l2_raw, emp_frame, uvar_terms =
     try
       let res = equivalent_lists use_smt (flatten r1_raw) (flatten r2_raw) am in
@@ -1581,64 +1629,190 @@ let canon_l_r (use_smt:bool) (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs 
     | _ -> fail "uncaught exception in equivalent_lists"
   in
 
-  let am = convert_am am in
-  let r1 = quote_exp r1_raw in
-  let r2 = quote_exp r2_raw in
-  let l1 = quote_atoms l1_raw in
-  let l2 = quote_atoms l2_raw in
-  change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
-                 `CE.EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2))));
-  apply_lemma (`normal_elim);
+   //So now we have:
+   //  am     : amap mapping atoms to terms in lhs and rhs
+   //  r1_raw : an expression in the atoms language for lhs
+   //  r2_raw : an expression in the atoms language for rhs
+   //  l1_raw : sorted list of atoms in lhs
+   //  l2_raw : sorted list of atoms in rhs
+   //
+   //In particular, r1_raw and r2_raw capture lhs and rhs structurally
+   //  (i.e. same associativity, emp, etc.)
+   //
+   //Whereas l1_raw and l2_raw are "canonical" representations of lhs and rhs
+   //  (vis xsdenote)
 
-  apply (`monoid_reflect );
+
+  //Build an amap where atoms are mapped to names
+  //The type of these names is carrier_t passed by the caller
+
+  let am_bv : list (atom & bv) = mapi (fun i (a, _) ->
+    let x = fresh_bv_named ("x" ^ (string_of_int i)) carrier_t in
+    (a, x)) (fst am) in
+
+  let am_bv_term : amap term = map (fun (a, bv) -> a, pack (Tv_Var bv)) am_bv, snd am in
+
+  let mdenote_tm (e:exp) : term = mdenote_gen
+    m_unit
+    (fun t1 t2 -> mk_app m_mult [(t1, Q_Explicit); (t2, Q_Explicit)])
+    am_bv_term
+    e in
+
+  let xsdenote_tm (l:list atom) : term = xsdenote_gen
+    m_unit
+    (fun t1 t2 -> mk_app m_mult [(t1, Q_Explicit); (t2, Q_Explicit)])
+    am_bv_term
+    l in
+
+  //Get the named representations of lhs, rhs, and their respective sorted versions
+
+  let lhs_named = mdenote_tm r1_raw in
+  let rhs_named = mdenote_tm r2_raw in
+
+  let sorted_lhs_named = xsdenote_tm l1_raw in
+  let sorted_rhs_named = xsdenote_tm l2_raw in
+
+  //We now build an auxiliary goal of the form:
+  //
+  //  forall xs. (sorted_lhs_named `rel` sorted_rhs_names) ==> (lhs_names `rel` rhs_named)
+  //
+  //  where xs are the fresh names that we introduced earlier
+
+  let mk_rel (l r:term) : term =
+    mk_app rel [(l, Q_Explicit); (r, Q_Explicit)] in
+
+  let imp_rhs = mk_rel lhs_named rhs_named in
+  let imp_lhs = mk_rel sorted_lhs_named sorted_rhs_named in
+
+  let imp =
+    mk_app (pack (Tv_FVar (pack_fv imp_qn))) [(imp_lhs, Q_Explicit); (imp_rhs, Q_Explicit)] in
+
+  //fold over names and quantify over them
+
+  let aux_goal = fold_right (fun (_, bv) t ->
+    let b = pack_binder bv Q_Explicit [] in
+    let t = close_term b t in
+    let t = pack_ln (Tv_Abs b t) in
+    mk_app (pack (Tv_FVar (pack_fv forall_qn))) [t, Q_Explicit]) am_bv imp in
 
 
-  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
-  let g = goals () in
-  if List.Tot.Base.length g = 0 then
-    // The application of equivalent_sorted seems to sometimes solve
-    // all goals
-    ()
-  else (
-    norm [primops; iota; zeta; delta_only
-      [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-        `%flatten; `%sort;
-        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
-        `%fst; `%__proj__Mktuple2__item___1;
-        `%snd; `%__proj__Mktuple2__item___2;
-        `%CE.__proj__CM__item__unit;
-        `%CE.__proj__CM__item__mult;
-        `%rm
+  //Introduce a cut with the auxiliary goal
 
-        ]];
+  apply_lemma (`cut (`#aux_goal));
 
-    split();
-    split();
-    // equivalent_lists should have built valid permutations.
-    // If that's not the case, it is a bug in equivalent_lists
-    or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
-    or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
-    match uvar_terms with
-    | [] -> // Closing unneded prop uvar
-            if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
-            if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
-            else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
-    | l -> if emp_frame then (
-             apply_lemma (`identity_left_smt (`#eq) (`#m))
-           ) else (
-             apply_lemma (`smt_reflexivity (`#eq))
-           );
-           t_trefl true;
-           close_equality_typ (cur_goal());
-           exact (`(FStar.Squash.return_squash (`#pr_bind)))
- )
+  //After the cut, the goal looks like: A /\ (A ==> G)
+  //  where A is the auxiliary goal and G is the original goal (lhs `rel` rhs)
+
+  split ();
+
+  //Solving A:
+
+  focus (fun _ ->
+    //The proof follows a similar structure as before naming was introduced
+    //
+    //Except that this time, the amap is in terms of names,
+    //  and hence its typechecking is faster and (hopefully) no SMT involved
+
+    //Open the forall binders in A, and use the fresh names to build an amap
+    
+    let am = fold_left (fun am (a, _) ->
+      let b = forall_intro () in
+      let bv, _ = inspect_binder b in
+      (a, pack (Tv_Var bv))::am) [] am_bv, snd am in
+
+    //Introduce the lhs of implication
+
+    let b = implies_intro () in
+
+    //Now the proof is the plain old canon proof
+
+    let am = convert_am am in
+    let r1 = quote_exp r1_raw in
+    let r2 = quote_exp r2_raw in
+
+    change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
+                   `CE.EQ?.eq (`#eq)`
+                 mdenote (`#eq) (`#m) (`#am) (`#r2))));
+
+    apply_lemma (`normal_elim);
+    apply (`monoid_reflect );
+
+    let l1 = quote_atoms l1_raw in
+    let l2 = quote_atoms l2_raw in
+
+    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+
+    if List.Tot.length (goals ()) = 0 then ()
+    else begin
+      norm [primops; iota; zeta; delta_only
+        [`%xsdenote; `%select;
+         `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
+         `%flatten; `%sort;
+         `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+         `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+         `%fst; `%__proj__Mktuple2__item___1;
+         `%snd; `%__proj__Mktuple2__item___2;
+         `%CE.__proj__CM__item__unit;
+         `%CE.__proj__CM__item__mult;
+         `%rm;
+         `%CE.__proj__EQ__item__eq;
+         `%req;
+         `%star;]
+      ];
+
+      //The goal is of the form G1 /\ G2 /\ G3, as in the requires of equivalent_sorted
+
+      split ();
+      split ();
+
+      //Solve G1 and G2 by trefl
+
+      trefl ();
+      trefl ();
+
+      //G3 is the lhs of the implication in the auxiliary goal
+      //  that we have in our assumptions via b
+
+      apply (`FStar.Squash.return_squash);
+      exact (binder_to_term b)
+    end);
+
+
+  //Our goal now is A ==> G (where G is the original goal (lhs `rel` rhs))
+
+  //Open the forall binders
+
+  ignore (repeatn (List.Tot.length am_bv) (fun _ -> apply_lemma (`inst_bv)));
+
+  //And apply modus ponens
+
+  apply_lemma (`modus_ponens);
+
+
+  //Now our goal is sorted_lhs_named `rel` sorted_rhs_named
+  //  where the names are replaced with fresh uvars (from the repeatn call above)
+
+  //So we just trefl
+
+  match uvar_terms with
+  | [] -> // Closing unneded prop uvar
+    if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
+    if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+    else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
+  | l ->
+    if emp_frame then (
+      apply_lemma (`identity_left_smt (`#eq) (`#m))
+    ) else (
+      apply_lemma (`smt_reflexivity (`#eq))
+    );
+    t_trefl true;
+    close_equality_typ (cur_goal());
+    exact (`(FStar.Squash.return_squash (`#pr_bind)))
 
 /// Wrapper around the tactic above
 /// The constraint should be of the shape `squash (equiv lhs rhs)`
-let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
+let canon_monoid (use_smt:bool) (carrier_t:term) (eq m:term) (pr pr_bind:term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
@@ -1652,7 +1826,7 @@ let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Ta
        then (
          match index xy (length xy - 2) , index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           canon_l_r use_smt eq m pr pr_bind lhs rhs
+           canon_l_r use_smt carrier_t eq m pr pr_bind lhs rel rhs
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )
        else (
@@ -1663,7 +1837,7 @@ let canon_monoid (use_smt:bool) (eq:term) (m:term) (pr:term) (pr_bind:term) : Ta
 
 /// Instantiation of the generic AC-unification tactic with the vprop commutative monoid
 let canon' (use_smt:bool) (pr:term) (pr_bind:term) : Tac unit =
-  canon_monoid use_smt (`req) (`rm) pr pr_bind
+  canon_monoid use_smt (pack (Tv_FVar (pack_fv [`%vprop]))) (`req) (`rm) pr pr_bind
 
 /// Counts the number of unification variables corresponding to vprops in the term [t]
 let rec slterm_nbr_uvars (t:term) : Tac int =
@@ -1801,6 +1975,7 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
           let p_bind = implies_intro () in
           apply_lemma (`equiv_can_be_split);
           or_else (fun _ -> flip()) (fun _ -> ());
+          let pr = norm_term [] pr in
           or_else
             (fun _ ->
               let b = unify pr (`true_p) in
