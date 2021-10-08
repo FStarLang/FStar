@@ -4,7 +4,7 @@ Interfacing with an SMT solver
 ==============================
 
 As mentioned :ref:`at the start of this section <Part1>`, a type ``t``
-represents a propostion and a term ``e : t`` is a proof of ``t``. In
+represents a proposition and a term ``e : t`` is a proof of ``t``. In
 many other dependently typed languages, exhibiting a term ``e : t`` is
 the only way to prove that ``t`` is valid. In F*, while one can do
 such proofs, it is not the only way to prove a theorem.
@@ -24,7 +24,7 @@ constructing a term representing a proof of ``17 >= 0``.
 This design has many important consequences, including, briefly:
 
 * Trust: F* implicitly trusts its encoding to SMT logic and the
-  correctess of the Z3 solver.
+  correctness of the Z3 solver.
   
 * Proof irrelevance: Since no proof term is constructed for proofs
   done by SMT, a program cannot distinguish between different proofs
@@ -133,7 +133,7 @@ quantifiers.
 Quantifiers
 ...........
 
-A universal quantifer is constructed using the ``forall`` keyword. Its
+A universal quantifier is constructed using the ``forall`` keyword. Its
 syntax has the following shape.
 
 .. code-block:: fstar
@@ -160,7 +160,7 @@ The scope of a quantifier extends as far to the right as possible.
 As usual in F*, the types on the bound variables can be omitted and F*
 will infer them. However, in the case of quantified formulas, it's a
 good idea to write down the types, since the meaning of the quantifier
-can change signicantly depending on the type of the variable. Consider
+can change significantly depending on the type of the variable. Consider
 the two propositions below.
 
 .. code-block:: fstar
@@ -193,7 +193,7 @@ Conjunction, Disjunction, Negation, Implication
 ...............................................
 
 In addition to the quantifiers, you can build propositions by
-combining them with other propositions, using the opertors below, in
+combining them with other propositions, using the operators below, in
 decreasing order of precedence.
 
 **Negation**
@@ -272,7 +272,7 @@ was expected.
 This next bit is quite technical. Don't worry if you didn't understand
 it at first. It's enough to know at this stage that, just like
 automatically converting a boolean to `prop`, F* automatically
-converts any type to ``prop``, when neeeded. So, you can form new
+converts any type to ``prop``, when needed. So, you can form new
 atomic propositions out of types.
 
 Every well-typed term in F* has a type. Even types have types, e.g.,
@@ -286,7 +286,7 @@ For any type ``t : Type``, the type ``_:unit { t } : prop``. We call
 this "squashing" a type. This is so common, that F* provides two
 mechanisms to support this:
 
-1. All the propositonal connectives, like ``p /\ q`` are designed so
+1. All the propositional connectives, like ``p /\ q`` are designed so
    that both ``p`` and ``q`` can be types (i.e., ``p,q : Type``),
    rather than propositions, and they implicitly squash their types.
 
