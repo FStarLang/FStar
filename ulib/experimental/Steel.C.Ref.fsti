@@ -5,8 +5,15 @@ open Steel.C.Connection
 
 #push-options "--print_universes"
 
-(** A [ref' a b] is a reference to some value of type b inside of a "base object" of type a. *)
-val ref' (a: Type u#0) (b: Type u#b) : Type u#b
+(** A [ptr a b] is a (maybe null) pointer to some value of type b inside of a "base object" of type a. *)
+val ptr (a: Type u#0) (b: Type u#b) : Type u#b
+
+val null (a: Type) (b: Type) : Tot (ptr a b)
+
+val ptr_is_null (#a: Type) (#b: Type) (p: ptr a b) : Ghost bool (requires True) (ensures (fun r -> r == true <==> p == null a b))
+
+(** A [ref' a b] is a (non-null) reference to some value of type b inside of a "base object" of type a. *)
+let ref' (a: Type u#0) (b: Type u#b) : Type u#b = (p: ptr a b { ptr_is_null p == false })
 
 (** The PCM that governs the values pointed to by a ref' *)
 val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ref' a b) : GTot (pcm b)
