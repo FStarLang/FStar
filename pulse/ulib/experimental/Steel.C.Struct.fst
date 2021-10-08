@@ -4,7 +4,7 @@ module P = FStar.PCM
 open Steel.C.PCM
 open Steel.C.Connection
 open Steel.C.Ref
-module Ptr = Steel.C.Ptr
+// module Ptr = Steel.C.Ptr
 open Steel.Effect
 module A = Steel.Effect.Atomic
 

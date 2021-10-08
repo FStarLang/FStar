@@ -208,7 +208,7 @@ let unaddr_of_union_field #a #tag #fields field p q =
   unaddr_of_union_field' #a #tag #fields field p q
 
 #restart-solver
-
+#push-options "--z3rlimit 64"
 let exclusive_refine_union_field
   (tag: Type0) (fields: c_fields)
   (old_field new_field: field_of fields)
@@ -236,6 +236,7 @@ let exclusive_refine_union_field
     assert (frame `feq` one (union_pcm tag fields))
   in
   FStar.Classical.(forall_intro (move_requires aux))
+#pop-options
 
 let switch_union_field''
   (#tag: Type0) (#fields: c_fields)

@@ -1188,7 +1188,7 @@ val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
           )
 
 #pop-options
-#push-options "--z3rlimit 64"
+#push-options "--z3rlimit 128"
 
 #restart-solver
 let split'
