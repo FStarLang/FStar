@@ -180,7 +180,7 @@ let generic_swap_sel (p:ref 'a 'c (opt_pcm #'c)) (q:ref 'b 'c (opt_pcm #'c))
   return ()
 
 val swap' (p: ref 'a point point_pcm)
-: Steel unit
+: Steel (ptr 'a point point_pcm)
     (p `pts_to_view` point_view emptyset)
     (fun _ -> p `pts_to_view` point_view emptyset)
     (requires fun _ -> True)
@@ -198,4 +198,17 @@ let swap' p =
   unaddr_of_struct_field "y" p r;
   unaddr_of_struct_field "x" p q;
   change_equal_slprop (p `pts_to_view` _) (p `pts_to_view` _);
+  return (null _ _ _)
+
+let test_malloc_free () : SteelT unit emp (fun _ -> emp) =
+  let c = malloc 42ul in
+  if is_null c _
+  then begin
+    elim_pts_to_view_or_null_null _ c (opt_view _);
+    return ()
+  end else begin
+    elim_pts_to_view_or_null_not_null c (opt_view _);
+    free c
+  end;
   return ()
+

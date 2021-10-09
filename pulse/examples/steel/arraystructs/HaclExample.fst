@@ -107,12 +107,32 @@ let do_something_with_limbs
 
 let do_something_with_precomp
   (a: array 'a U64.t)
-: Steel unit
+: Steel (array_or_null 'a U64.t)
     (varray a)
     (fun _ -> varray a)
     (requires fun _ -> length a == 20)
     (ensures fun _ _ _ -> True)
 = upd a (mk_size_t (U32.uint_to_t 19)) (U64.uint_to_t 0);
+  return (null _ _)
+
+let test_alloc_free
+  ()
+: SteelT unit
+    emp
+    (fun _ -> emp)
+=
+  let a = malloc true (mk_size_t 42ul) in
+  if Steel.C.Array.is_null a
+  then begin
+    change_equal_slprop
+      (varray_or_null a)
+      emp
+  end else begin
+    change_equal_slprop
+      (varray_or_null a)
+      (varray a);
+    free a
+  end;
   return ()
 
 #push-options "--fuel 0 --print_universes --print_implicits --z3rlimit 30"
@@ -127,7 +147,7 @@ let test
   let r = addr_of_struct_field "precomp" p in
   let b = intro_varray r () in
   do_something_with_limbs a;
-  do_something_with_precomp b;
+  let _ = do_something_with_precomp b in
   elim_varray q a ();
   elim_varray r b ();
   unaddr_of_struct_field "precomp" p r;

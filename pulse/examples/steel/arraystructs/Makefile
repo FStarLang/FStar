@@ -13,7 +13,7 @@ world: verify test
 
 FSTAR_OPTIONS = --cache_checked_modules \
 		--cmi \
-	        --already_cached 'Prims,FStar,Steel' \
+	        --already_cached 'Prims,FStar,LowStar,Steel' \
 		$(addprefix --include ,$(INCLUDE_PATH)) \
 		$(OTHERFLAGS)
 
@@ -21,8 +21,13 @@ FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 
 ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
 
+# We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
+# since the KReMLin AST does not have a node for null
+# TODO: This should be removed, and support for Steel.C null should be directly added to KReMLin instead
+SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst
+
 .depend: $(ALL_SOURCE_FILES) Makefile
-	$(FSTAR) --dep full $(ALL_SOURCE_FILES) > $@.tmp
+	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
