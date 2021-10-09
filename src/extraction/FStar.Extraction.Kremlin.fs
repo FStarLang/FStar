@@ -760,7 +760,7 @@ and translate_type_without_decay env t: typ =
       TQualified (must (lident_of_typestring tag))
   
   | MLTY_Named ([_; arg; _; _], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Reference.ref"
+    Syntax.string_of_mlpath p = "Steel.C.Reference.ptr"
     ->
       TBuf (translate_type_without_decay env arg)
       
@@ -1022,11 +1022,22 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
-          string_of_mlpath p = "Steel.C.Array.malloc" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
+    when (
+          string_of_mlpath p = "Steel.C.Array.malloc" ||
+          false) ->
+      EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
+    when (
+          string_of_mlpath p = "Steel.C.Opt.malloc" ||
+          false) ->
+      EBufCreate (ManuallyManaged, translate_expr env e, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e0; e1 ])
     when string_of_mlpath p = "Steel.Array.malloc" ->
@@ -1046,6 +1057,7 @@ and translate_expr env e: expr =
     when (string_of_mlpath p = "FStar.Buffer.rfree" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.free" ||
           string_of_mlpath p = "Steel.C.Array.free" ||
+          string_of_mlpath p = "Steel.C.Opt.free" ||
           string_of_mlpath p = "Steel.Array.free") ->
       EBufFree (translate_expr env e2)
 
@@ -1223,6 +1235,32 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
     translate_expr env e
+
+(* BEGIN support for the Steel null pointer. Here, we "piggyback" to
+the current Low* operators for the null pointer, which KReMLin will
+extract to C later.
+
+TODO: these should be removed and those operators should be directly
+supported by KReMLin (in src/Builtin.ml) Or alternatively Null and
+IsNull nodes should be added to the KReMLin AST *)
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [e])
+    when string_of_mlpath p = "Steel.C.Array.is_null"
+    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *); e; _ (* view *)])
+    when string_of_mlpath p = "Steel.C.Reference.is_null"
+    -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
+
+  | MLE_TApp ({expr=MLE_Name p}, _)
+    when Syntax.string_of_mlpath p = "Steel.C.Array.null"
+    -> EQualified (["LowStar"; "Buffer"], "null")
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
+    when string_of_mlpath p = "Steel.C.Reference.null"
+    -> EApp (EQualified (["LowStar"; "Buffer"], "null"), [EUnit])
+
+(* END support for the Steel null pointer *)
 
   (* Operations on Steel.C.Reference.ref *)
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, _)
