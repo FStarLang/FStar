@@ -1000,7 +1000,7 @@ let intro_varray
   #base #t #n r sq
 =
   let res = mk_array r in
-  assert (array_as_ref res == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
+  assert ((array_as_ref res <: Steel.C.Ref.ref base (array_pcm t n)) == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
   array_conn_id t n;
   assert (array_conn t n (mk_size_t 0ul) n () == Steel.C.Connection.connection_id (array_pcm t n));
   assert (array_as_ref res == Steel.C.Ref.ref_focus r (Steel.C.Connection.connection_id (array_pcm t n)));

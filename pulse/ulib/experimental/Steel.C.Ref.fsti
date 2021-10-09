@@ -6,22 +6,23 @@ open Steel.C.Connection
 #push-options "--print_universes"
 
 (** A [ptr a b] is a (maybe null) pointer to some value of type b inside of a "base object" of type a. *)
-val ptr' (a: Type u#0) (b: Type u#b) : Type u#b
-(** The PCM that governs the values pointed to by a ref' *)
-val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ptr' a b) : GTot (pcm b)
-let ptr (a: Type u#0) (#b: Type u#b) (p: pcm b) = (r: ptr' a b { pcm_of_ref' r == p })
+val ptr (a: Type u#0) (#b: Type u#b) (p: pcm b) : Tot (Type u#b)
 
 val null (a: Type u#0) (#b: Type u#b) (p: pcm b) : Tot (ptr a p)
 
 val ptr_is_null (#a: Type u#0) (#b: Type u#b) (#p: pcm b) (r: ptr a p) : Ghost bool (requires True) (ensures (fun res -> res == true <==> r == null a p))
 
-(** A [ref' a b] is a (non-null) reference to some value of type b inside of a "base object" of type a. *)
-let ref' (a: Type u#0) (b: Type u#b) : Type u#b = (p: ptr' a b { ptr_is_null (p <: ptr a (pcm_of_ref' p)) == false })
+let refine (a: Type) (p: (a -> prop)) : Tot Type =
+  (x: a { p x })
 
+let not_null
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b) (r: ptr a p)
+: Tot prop
+= ptr_is_null r == false
 
 (** A [ref a #b q] is a [ref' a b] where the PCM inside the ref' is forced to be q *)
 let ref (a: Type u#0) (#b: Type u#b) (q: pcm b) : Type u#b =
-  (r: ref' a b { pcm_of_ref' r == q })
+  refine (ptr a q) (not_null #a #b #q)
 
 open Steel.Effect
 
@@ -55,7 +56,7 @@ val ref_focus_comp (#p: pcm 'a) (#q: pcm 'b) (#s: pcm 'c) (r: ref 'd p)
 module A = Steel.Effect.Atomic
 
 val freeable
-  (#a #b:Type0) (#p: pcm b) (r: ref a p)
+  (#a: Type0) (#b:Type0) (#p: pcm b) (r: ref a p)
 : Tot prop
 
 (** Allocate a reference containing value x. *)
@@ -148,9 +149,6 @@ val base_fpu
 : Pure (frame_preserving_upd p x y)
   (requires (exclusive p x /\ p_refine p y))
   (ensures (fun _ -> True))
-
-let refine (a: Type) (p: (a -> Tot prop)) : Tot Type =
-  (x: a { p x })
 
 (** PCM carrier values are cumbersome to work with directly. To
     abstract over them, we define "view"s, which are essentially

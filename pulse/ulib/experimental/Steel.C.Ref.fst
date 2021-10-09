@@ -16,7 +16,14 @@ noeq type ptr' (a: Type u#0) (b: Type u#b) : Type u#b =
   | NonNull: (v: ref0 a b) -> ptr' a b
   | Null: (v: pcm b) -> ptr' a b
 
-let pcm_of_ref' r = if Null? r then Null?.v r else (NonNull?.v r).q
+let pcm_of_ptr'
+  (#a: Type u#0)
+  (#b: Type u#b)
+  (r: ptr' a b)
+: Tot (pcm b)
+= if Null? r then Null?.v r else (NonNull?.v r).q
+
+let ptr a #b p = (r: ptr' a b { pcm_of_ptr' r == p })
 
 let null a p = Null p
 
@@ -27,21 +34,21 @@ let mpts_to (#a: Type u#1) (#p: P.pcm a) (r: Steel.Memory.ref a p) ([@@@smt_fall
 let raise_p
   (#a: Type u#0)
   (#b: Type u#b)
-  (r: ref' a b)
+  (r: ptr' a b { NonNull? r})
 : Tot (pcm (U.raise_t u#0 u#1 a))
 = U.raise_pcm (NonNull?.v r).p
 
 let lower_conn
   (#a: Type u#0)
   (#b: Type u#b)
-  (r: ref' a b)
+  (r: ptr' a b { NonNull? r})
 : Tot (connection (raise_p r) (NonNull?.v r).p)
 = connection_of_isomorphism (isomorphism_inverse (U.raise_pcm_isomorphism u#0 u#1 (NonNull?.v r).p))
 
 let raise_pl
   (#a: Type u#0)
   (#b: Type u#b)
-  (r: ref' a b)
+  (r: ptr' a b {NonNull? r})
 : Tot (connection (raise_p r) (NonNull?.v r).q)
 = lower_conn r `connection_compose` (NonNull?.v r).pl
 
@@ -70,8 +77,7 @@ let mk_id_ref
 =
   let p' : pcm u#1 _ = U.raise_pcm u#0 u#1 p in
   let fp = fstar_pcm_of_pcm p' in
-  let r : ref' a a = NonNull ({ p = p; q = p; pl = connection_id p; r = r0 }) in
-  r
+  NonNull ({ p = p; q = p; pl = connection_id p; r = r0 })
 
 (* freeable r if and only if r is a "base" reference, i.e. its connection path is empty *)
 
@@ -89,7 +95,7 @@ let ref_alloc #a p x =
 //  let fp : P.pcm u#1 _ = fstar_pcm_of_pcm p' in // FIXME: I can define this local definition, but WHY WHY WHY can't I USE it?
   compatible_refl p' x';
   let r0 : Steel.Memory.ref (U.raise_t u#0 u#1 a) (fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) = Steel.PCMReference.alloc #_ #(fstar_pcm_of_pcm (U.raise_pcm u#0 u#1 p)) x' in
-  let r : ref' a a = mk_id_ref p r0 in
+  let r : ref a p = mk_id_ref p r0 in
   connection_compose_id_right (lower_conn r);
   A.change_equal_slprop (r0 `mpts_to` _) (r `pts_to` x);
   A.return r
