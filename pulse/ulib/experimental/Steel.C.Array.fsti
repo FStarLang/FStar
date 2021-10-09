@@ -386,3 +386,16 @@ val free
     (fun _ -> emp)
     (requires (fun _ -> freeable a))
     (ensures (fun _ _ _ -> True))
+
+val is_null
+  (#base: Type0)
+  (#t: Type0)
+  (a: array_or_null base t)
+: Steel bool
+    (varray_or_null a)
+    (fun _ -> varray_or_null a)
+    (requires fun _ -> True)
+    (ensures fun h res h' ->
+      res == g_is_null a /\
+      h' (varray_or_null a) == h (varray_or_null a)
+    )
