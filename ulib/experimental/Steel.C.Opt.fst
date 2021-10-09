@@ -33,3 +33,23 @@ let opt_pcm_read
   let y' = ref_read r in
   assert (Ghost.reveal x == y');
   Some?.v y'
+
+let malloc
+  #c x
+=
+  let xc = ((opt_view c).to_carrier x) in
+  let r = Steel.C.Ref.ref_alloc _ xc in
+  pts_to_view_intro r xc (opt_view c) x;
+  let r' : ref (option c) c (opt_pcm #c) = r in
+  A.change_equal_slprop
+    (Steel.C.Ref.pts_to_view r (opt_view c))
+    (pts_to_view r' (opt_view c));
+  intro_pts_to_view_or_null_not_null r' (opt_view c);
+  A.return r'
+
+let free
+  #c r
+=
+  let r' : Steel.C.Ref.ref (option c) (opt_pcm #c) = r in 
+  let _ = pts_to_view_elim r (opt_view c) in
+  Steel.C.Ref.ref_free r

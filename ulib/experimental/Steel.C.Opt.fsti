@@ -163,3 +163,24 @@ let ref_opt_write
     w == h' (pts_to_view r (opt_view b))
   ))
 = opt_write_sel r w
+
+val malloc
+  (#c:Type0) (x: c)
+: Steel (ptr (option c) c (opt_pcm #c))
+    emp
+    (fun r -> pts_to_view_or_null r (opt_view c))
+    (requires fun _ -> True)
+    (ensures fun _ r h' ->
+      let s = h' (pts_to_view_or_null r (opt_view c)) in
+      ptr_is_null r == None? s /\
+      (Some? s ==> (Some?.v s == x /\ freeable r))
+    )
+
+val free
+  (#c: Type0)
+  (r: ref (option c) c (opt_pcm #c))
+: Steel unit
+    (pts_to_view r (opt_view c))
+    (fun _ -> emp)
+    (requires fun _ -> freeable r)
+    (ensures fun _ _ _ -> True)
