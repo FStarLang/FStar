@@ -95,11 +95,17 @@ let elim_pts_to_view_or_null_null
   (#inames: _)
   (a: Type) (#b: Type) (#p: pcm b)
   (#c: Type0)
+  (r: ptr a c p)
   (vw: sel_view p c false)
-: SteelGhostT unit inames
-    (pts_to_view_or_null (null a c p) vw)
+: SteelGhost unit inames
+    (pts_to_view_or_null r vw)
     (fun _ -> emp)
-= elim_pts_to_view_or_null_null a vw
+    (requires (fun _ -> ptr_is_null r == true))
+    (ensures (fun _ _ _ -> True))
+= change_equal_slprop
+    (pts_to_view_or_null r vw)
+    (pts_to_view_or_null (null a c p) vw);
+  elim_pts_to_view_or_null_null a vw
 
 let intro_pts_to_view_or_null_not_null
   (#inames: _)
