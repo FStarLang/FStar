@@ -6,17 +6,18 @@ open Steel.C.Connection
 #push-options "--print_universes"
 
 (** A [ptr a b] is a (maybe null) pointer to some value of type b inside of a "base object" of type a. *)
-val ptr (a: Type u#0) (b: Type u#b) : Type u#b
+val ptr' (a: Type u#0) (b: Type u#b) : Type u#b
+(** The PCM that governs the values pointed to by a ref' *)
+val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ptr' a b) : GTot (pcm b)
+let ptr (a: Type u#0) (#b: Type u#b) (p: pcm b) = (r: ptr' a b { pcm_of_ref' r == p })
 
-val null (a: Type) (b: Type) : Tot (ptr a b)
+val null (a: Type u#0) (#b: Type u#b) (p: pcm b) : Tot (ptr a p)
 
-val ptr_is_null (#a: Type) (#b: Type) (p: ptr a b) : Ghost bool (requires True) (ensures (fun r -> r == true <==> p == null a b))
+val ptr_is_null (#a: Type u#0) (#b: Type u#b) (#p: pcm b) (r: ptr a p) : Ghost bool (requires True) (ensures (fun res -> res == true <==> r == null a p))
 
 (** A [ref' a b] is a (non-null) reference to some value of type b inside of a "base object" of type a. *)
-let ref' (a: Type u#0) (b: Type u#b) : Type u#b = (p: ptr a b { ptr_is_null p == false })
+let ref' (a: Type u#0) (b: Type u#b) : Type u#b = (p: ptr' a b { ptr_is_null (p <: ptr a (pcm_of_ref' p)) == false })
 
-(** The PCM that governs the values pointed to by a ref' *)
-val pcm_of_ref' (#a: _) (#b: Type u#b) (r: ref' a b) : GTot (pcm b)
 
 (** A [ref a #b q] is a [ref' a b] where the PCM inside the ref' is forced to be q *)
 let ref (a: Type u#0) (#b: Type u#b) (q: pcm b) : Type u#b =
@@ -315,3 +316,110 @@ val ref_read_sel
   ))
 
 (* write cannot be defined generically because of p_refine *)
+
+/// Pointers (and the null pointer)
+
+val pts_to_view_or_null_sl
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
+  (#c: Type u#0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: Tot (M.slprop u#1)
+
+val pts_to_view_or_null_sel
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: GTot (selector (option c) (pts_to_view_or_null_sl r vw))
+
+[@@__steel_reduce__]
+let pts_to_view_or_null'
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: GTot vprop'
+= {
+  hp = pts_to_view_or_null_sl r vw;
+  t = option c;
+  sel = pts_to_view_or_null_sel r vw;
+}
+
+[@@__steel_reduce__]
+let pts_to_view_or_null
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: Tot vprop
+= VUnit (pts_to_view_or_null' r vw)
+
+val is_null
+  (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (r: ptr a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: Steel bool
+    (pts_to_view_or_null r vw)
+    (fun _ -> pts_to_view_or_null r vw)
+    (requires (fun _ -> True))
+    (ensures (fun h res h' ->
+      let s = h (pts_to_view_or_null r vw) in
+      h' (pts_to_view_or_null r vw) == s /\
+      res == ptr_is_null r /\
+      res == (None? s)
+    ))
+
+val intro_pts_to_view_or_null_null
+  (#inames: _)
+  (a: Type) (#b: Type) (#p: pcm b)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: A.SteelGhost unit inames
+    emp
+    (fun _ -> pts_to_view_or_null (null a p) vw)
+    (requires (fun _ -> True))
+    (ensures (fun _ _ h' -> h' (pts_to_view_or_null (null a p) vw) == None))
+
+val elim_pts_to_view_or_null_null
+  (#inames: _)
+  (a: Type) (#b: Type) (#p: pcm b)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: A.SteelGhostT unit inames
+    (pts_to_view_or_null (null a p) vw)
+    (fun _ -> emp)
+
+val intro_pts_to_view_or_null_not_null
+  (#inames: _)
+  (#a: Type) (#b: Type) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: A.SteelGhost unit inames
+    (pts_to_view r vw)
+    (fun _ -> pts_to_view_or_null r vw)
+    (requires (fun _ -> True))
+    (ensures (fun h _ h' -> h' (pts_to_view_or_null r vw) == Some (h (pts_to_view r vw))))
+
+val elim_pts_to_view_or_null_not_null
+  (#inames: _)
+  (#a: Type) (#b: Type) (#p: pcm b)
+  (r: ref a p)
+  (#c: Type0)
+  (#can_view_unit: bool)
+  (vw: sel_view p c can_view_unit)
+: A.SteelGhost unit inames
+    (pts_to_view_or_null r vw)
+    (fun _ -> pts_to_view r vw)
+    (requires (fun _ -> True))
+    (ensures (fun h _ h' -> h (pts_to_view_or_null r vw) == Some (h' (pts_to_view r vw))))
