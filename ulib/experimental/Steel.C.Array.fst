@@ -1788,3 +1788,6 @@ let free
     #(array_pcm t (Ghost.hide (Ghost.reveal (Some?.v a).base_len)))
     #v
     r
+
+let is_null a =
+  return (None? a)
