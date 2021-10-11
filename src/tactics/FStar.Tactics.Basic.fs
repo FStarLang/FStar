@@ -2,10 +2,12 @@
 module FStar.Tactics.Basic
 
 open FStar
+open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
@@ -16,7 +18,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Printing
 
-module BU     = FStar.Util
+module BU     = FStar.Compiler.Util
 module Cfg    = FStar.TypeChecker.Cfg
 module EMB    = FStar.Syntax.Embeddings
 module Env    = FStar.TypeChecker.Env
@@ -376,11 +378,6 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
                                                   msg
            end))
 
-let istrivial (e:env) (t:term) : bool =
-    let steps = [Env.Reify; Env.UnfoldUntil delta_constant; Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
-    let t = normalize steps e t in
-    is_true t
-
 let get_guard_policy () : tac<guard_policy> =
     bind get (fun ps -> ret ps.guard_policy)
 
@@ -401,9 +398,6 @@ let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac<u
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-        if istrivial e f // trivializes further...
-        then ret ()
-        else // check the policy
     bind get (fun ps ->
     match ps.guard_policy with
     | Drop ->
@@ -445,13 +439,6 @@ let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
 
 let tc (e : env) (t : term) : tac<typ> = wrap_err "tc" <|
     bind (tcc e t) (fun c -> ret (U.comp_result c))
-
-let trivial () : tac<unit> =
-    bind cur_goal (fun goal ->
-    if istrivial (goal_env goal) (goal_type goal)
-    then solve' goal U.exp_unit
-    else fail1 "Not a trivial goal: %s" (tts (goal_env goal) (goal_type goal))
-    )
 
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
@@ -887,11 +874,11 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" env guard (rangeof goal)) (fun _ ->
         let pre_u = env.universe_of env pre in
-        bind (if not (istrivial env (U.mk_squash pre_u pre))
-              then add_irrelevant_goal goal "apply_lemma precondition" env pre
-              else ret ()) (fun _ ->
-        add_goals sub_goals))))
-    )))))))
+        bind (match (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial pre))).guard_f with
+              | Trivial -> ret ()
+              | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre) //AR: should we use the normalized pre instead?
+        
+             (fun _ -> add_goals sub_goals)))))))))))
 
 let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
     let rec aux e =
@@ -1483,7 +1470,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, None, brs)) s_tm.pos in
+      let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos)))))
@@ -1599,7 +1586,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
             | _ -> failwith "impossible: open_term returned different amount of binders"
         end
 
-    | Tm_match (t, ret_opt, brs) ->
+    | Tm_match (t, ret_opt, brs, _) ->
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
@@ -1676,7 +1663,7 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, ret_opt, brs)) Range.dummyRange
+        ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
         ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
@@ -1710,9 +1697,9 @@ let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" 
   | Some (l, r) -> begin
     let lh, las = U.head_and_args_full l in
     match (SS.compress (U.unascribe lh)).n with
-    | Tm_match (e, asc_opt, brs) ->
+    | Tm_match (e, asc_opt, brs, lopt) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, asc_opt, brs')) l.pos in
+      let l' = mk (Tm_match (e, asc_opt, brs', lopt)) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->

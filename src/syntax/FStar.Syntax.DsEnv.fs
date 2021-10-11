@@ -18,13 +18,11 @@
 
 module FStar.Syntax.DsEnv
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
@@ -33,7 +31,7 @@ open FStar.Ident
 open FStar.Errors
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
 type used_marker = ref<bool>
@@ -146,7 +144,7 @@ let iface_decls env l =
     | Some (_, decls) -> Some decls
 let set_iface_decls env l ds =
     let _, rest =
-        FStar.List.partition
+        FStar.Compiler.List.partition
             (fun (m, _) -> Ident.lid_equals l m)
             env.remaining_iface_decls in
     {env with remaining_iface_decls=(l, ds)::rest}
@@ -833,12 +831,21 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
 
 let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   let find_in_cache fieldname =
-//BU.print_string (BU.format1 "Trying field %s\n" (string_of_lid fieldname));
     let ns, id = ns_of_lid fieldname, ident_of_lid fieldname in
-    BU.find_map (peek_record_cache()) (fun record ->
-      option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r))
-    ) in
-  resolve_in_open_namespaces'' env fieldname Exported_id_field (fun _ -> Cont_ignore) (fun _ -> Cont_ignore) (fun r -> Cont_ok r)  (fun fn -> cont_of_option Cont_ignore (find_in_cache fn)) (fun k _ -> k)
+    BU.find_map
+      (peek_record_cache())
+      (fun record ->
+        option_of_cont (fun _ -> None) (find_in_record ns id record (fun r -> Cont_ok r)))
+  in
+  resolve_in_open_namespaces''
+    env
+    fieldname
+    Exported_id_field
+    (fun _ -> Cont_ignore)
+    (fun _ -> Cont_ignore)
+    (fun r -> Cont_ok r)
+    (fun fn -> cont_of_option Cont_ignore (find_in_cache fn))
+    (fun k _ -> k)
 
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with
@@ -1021,7 +1028,7 @@ let push_include env ns =
         in
         env
       | None ->
-        (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStar.ST, etc. *)
+        (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStar.Compiler.Effect, etc. *)
         raise_error (Errors.Fatal_IncludeModuleNotPrepared, (BU.format1 "include: Module %s was not prepared" (string_of_lid ns))) (Ident.range_of_lid ns)
       end
     | _ ->
@@ -1166,8 +1173,8 @@ type exported_ids = {
     exported_id_fields:list<string>
 }
 let as_exported_ids (e:exported_id_set) =
-    let terms = FStar.Util.set_elements (!(e Exported_id_term_type)) in
-    let fields = FStar.Util.set_elements (!(e Exported_id_field)) in
+    let terms = FStar.Compiler.Util.set_elements (!(e Exported_id_term_type)) in
+    let fields = FStar.Compiler.Util.set_elements (!(e Exported_id_field)) in
     {exported_id_terms=terms;
      exported_id_fields=fields}
 
@@ -1176,9 +1183,9 @@ let as_exported_id_set (e:option<exported_ids>) =
     | None -> exported_id_set_new ()
     | Some e ->
       let terms =
-          BU.mk_ref (FStar.Util.as_set e.exported_id_terms BU.compare) in
+          BU.mk_ref (FStar.Compiler.Util.as_set e.exported_id_terms BU.compare) in
       let fields =
-          BU.mk_ref (FStar.Util.as_set e.exported_id_fields BU.compare) in
+          BU.mk_ref (FStar.Compiler.Util.as_set e.exported_id_fields BU.compare) in
       function
         | Exported_id_term_type -> terms
         | Exported_id_field -> fields

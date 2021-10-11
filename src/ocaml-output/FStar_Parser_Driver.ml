@@ -1,6 +1,7 @@
 open Prims
 let (is_cache_file : Prims.string -> Prims.bool) =
-  fun fn -> let uu___ = FStar_Util.get_file_extension fn in uu___ = ".cache"
+  fun fn ->
+    let uu___ = FStar_Compiler_Util.get_file_extension fn in uu___ = ".cache"
 type fragment =
   | Empty 
   | Modul of FStar_Parser_AST.modul 
@@ -33,7 +34,8 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
           "Impossible: parsing a Toplevel always results in an ASTFragment"
 let (parse_file :
   Prims.string ->
-    (FStar_Parser_AST.file * (Prims.string * FStar_Range.range) Prims.list))
+    (FStar_Parser_AST.file * (Prims.string * FStar_Compiler_Range.range)
+      Prims.list))
   =
   fun fn ->
     let uu___ = FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename fn) in
@@ -42,8 +44,8 @@ let (parse_file :
         -> (ast, comments)
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
         ->
-        let msg = FStar_Util.format1 "%s: expected a module\n" fn in
-        let r = FStar_Range.dummyRange in
+        let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in
+        let r = FStar_Compiler_Range.dummyRange in
         FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg) r
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error (e, msg) r

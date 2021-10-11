@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module UF = FStar.Syntax.Unionfind
 module N = FStar.TypeChecker.Normalize
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
@@ -807,7 +807,7 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
+                  let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
@@ -1482,7 +1482,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       in
                       (env, xv::arg_vars, eqns, i + 1))
                     (env', [], [], 0)
-                    (FStar.List.zip args encoded_args)
+                    (FStar.Compiler.List.zip args encoded_args)
               in
               let arg_vars = List.rev arg_vars in
               let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in

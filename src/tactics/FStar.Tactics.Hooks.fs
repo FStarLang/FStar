@@ -2,9 +2,11 @@
 module FStar.Tactics.Hooks
 
 open FStar
-open FStar.All
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
@@ -13,8 +15,8 @@ open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Tactics.Interpreter
 
-module BU      = FStar.Util
-module Range   = FStar.Range
+module BU      = FStar.Compiler.Util
+module Range   = FStar.Compiler.Range
 module Err     = FStar.Errors
 module O       = FStar.Options
 module PC      = FStar.Parser.Const
@@ -252,8 +254,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-        | Tm_match (sc, asc_opt, brs) ->  //AR: not traversing the return annotation
-            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs))
+        | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs, lopt))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in

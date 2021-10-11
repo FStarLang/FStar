@@ -16,13 +16,13 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 
 type sort =
   | Bool_sort

@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.EncodeTerm
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -34,7 +34,7 @@ open FStar.SMTEncoding.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
@@ -313,7 +313,7 @@ let isInteger (tm: Syntax.term') : bool =
 
 let getInteger (tm : Syntax.term') =
     match tm with
-    | Tm_constant (Const_int (n,None)) -> FStar.Util.int_of_string n
+    | Tm_constant (Const_int (n,None)) -> FStar.Compiler.Util.int_of_string n
     | _ -> failwith "Expected an Integer term"
 
 (* We only want to encode a term as a bitvector term (not an uninterpreted function)
@@ -467,7 +467,7 @@ and encode_arith_term env head args_e =
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
-    let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
+    let sz_key = FStar.Compiler.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
       let t_decls = mkBvConstructor sz in
       mk_decls "" sz_key t_decls []
@@ -482,7 +482,7 @@ and encode_arith_term env head args_e =
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
-            failwith (FStar.Util.format1 "Not a constant bitvector extend size: %s"
+            failwith (FStar.Compiler.Util.format1 "Not a constant bitvector extend size: %s"
                             (FStar.Syntax.Print.term_to_string sz_arg))
         | _  -> (List.tail args_e, None)
     in
@@ -1231,7 +1231,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
-      | Tm_match(e, _, pats) ->
+      | Tm_match(e, _, pats, _) ->
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
@@ -1479,7 +1479,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta _ ->
           encode_formula (U.unmeta phi) env
 
-        | Tm_match(e, _, pats) ->
+        | Tm_match(e, _, pats, _) ->
            let t, decls = encode_match e pats mkFalse env encode_formula in
            t, decls
 

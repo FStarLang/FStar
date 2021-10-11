@@ -2,8 +2,10 @@
 module FStar.Tactics.CtrlRewrite
 
 open FStar.Pervasives
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
@@ -16,7 +18,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Common
 
 module Print  = FStar.Syntax.Print
-module BU     = FStar.Util
+module BU     = FStar.Compiler.Util
 module S      = FStar.Syntax.Syntax
 module U      = FStar.Syntax.Util
 module SS     = FStar.Syntax.Subst
@@ -271,7 +273,7 @@ and on_subterms
        * are opened with their contexts extended. Ignore the when clause,
        * and do not go into patterns.
        * also ignoring the return annotations *)
-      | Tm_match (hd, asc_opt, brs) ->
+      | Tm_match (hd, asc_opt, brs, lopt) ->
         let c_branch (br:S.branch) : tac<(S.branch * ctrl_flag)> =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
@@ -280,7 +282,7 @@ and on_subterms
           ret (br, flag))
         in
         bind (par_ctac rr (map_ctac c_branch) (hd, brs)) (fun ((hd, brs), flag) ->
-        ret (Tm_match (hd, asc_opt, brs), flag))
+        ret (Tm_match (hd, asc_opt, brs, lopt), flag))
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)

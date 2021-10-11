@@ -16,7 +16,7 @@
 #light "off"
 module FStar.VConfig
 
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 (* A type storing all options relevant to verification, used as
 the "format" for sigelt_opts and check_with (in reflection). *)

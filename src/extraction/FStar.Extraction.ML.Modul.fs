@@ -16,10 +16,11 @@
 #light "off"
 module FStar.Extraction.ML.Modul
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
@@ -32,7 +33,7 @@ open FStar.Syntax
 module Term = FStar.Extraction.ML.Term
 module Print = FStar.Syntax.Print
 module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module UF = FStar.Syntax.Unionfind
@@ -49,7 +50,7 @@ type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None, //NS delta: wrong
+    mk (Tm_app(S.fvar (PC.failwith_lid()) delta_constant None, //NS delta: wrong
                [ S.iarg t
                ; S.as_arg <|
                  mk (Tm_constant
@@ -71,7 +72,7 @@ let always_fail lid t =
         lbname=Inr (S.lid_as_fv lid delta_constant None);
         lbunivs=[];
         lbtyp=t;
-        lbeff=PC.effect_ML_lid;
+        lbeff=PC.effect_ML_lid();
         lbdef=imp;
         lbattrs=[];
         lbpos=imp.pos;
@@ -769,7 +770,7 @@ let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
       if Options.debug_any()
-      then FStar.Util.measure_execution_time
+      then FStar.Compiler.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
@@ -1112,7 +1113,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
             if Options.debug_module (string_of_lid m.name)
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 FStar.Util.measure_execution_time
+                 FStar.Compiler.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
             else extract_sig g se)

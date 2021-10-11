@@ -19,7 +19,8 @@ FSTAR_FILES := $(filter-out $(FLAKY), \
 WITH_CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 #271 -> pattern uses theory symbols
-OTHERFLAGS+=--warn_error @271
+#330 -> experimental feature
+OTHERFLAGS+=--warn_error @271-330
 
 include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk

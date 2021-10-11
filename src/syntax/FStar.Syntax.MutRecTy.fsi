@@ -16,10 +16,10 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.MutRecTy
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 
 val disentangle_abbrevs_from_bundle: list<sigelt> -> list<qualifier> -> list<lident> ->
-                                     FStar.Range.range -> sigelt * list<sigelt>
+                                     FStar.Compiler.Range.range -> sigelt * list<sigelt>

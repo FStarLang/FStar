@@ -16,14 +16,14 @@
 #light "off"
 module FStar.TypeChecker.Env
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module TcComm = FStar.TypeChecker.Common
 
@@ -128,7 +128,7 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment *)
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
-  gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
+  gamma_cache    :FStar.Compiler.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
@@ -340,8 +340,8 @@ val bound_vars   : env -> list<bv>
 val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames    : env -> FStar.Util.set<univ_name>
+val univ_vars    : env -> FStar.Compiler.Util.set<universe_uvar>
+val univnames    : env -> FStar.Compiler.Util.set<univ_name>
 val lidents      : env -> list<lident>
 
 (* operations on monads *)

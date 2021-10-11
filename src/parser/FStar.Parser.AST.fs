@@ -16,15 +16,15 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Errors
 module C = FStar.Parser.Const
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Const
 
 (* AST produced by the parser, before desugaring
@@ -86,7 +86,16 @@ type term' =
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
   | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
-
+  | IntroForall of list<binder> * term * term                     (* intro_forall x1..xn. P with e *)
+  | IntroExists of list<binder> * term * list<term> * term        (* intro_exists x1...xn.P using v1..vn with e *)
+  | IntroImplies of term * term * binder * term                   (* intro_implies P Q with x. e *)
+  | IntroOr of bool * term * term * term                          (* intro_or_{left ,right} P Q with e *)
+  | IntroAnd of term * term * term * term                         (* intro_and P Q with e1 and e2 *)
+  | ElimForall  of list<binder> * term * list<term>               (* elim_forall x1..xn. P using v1..vn *)
+  | ElimExists  of list<binder> * term * term * binder * term     (* elim_exists x1...xn.P to Q with e *)
+  | ElimImplies of term * term * term                             (* elim_implies P Q with e *)
+  | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
+  | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
 and term = {tm:term'; range:range; level:level}
 
 and patterns = list<ident> * list<list<term>>
@@ -289,7 +298,8 @@ let mkConsList r elts =
 let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
-    let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
+    let lid = C.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 
@@ -654,6 +664,83 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format3 "calc (%s) { %s %s }" (term_to_string rel)
                                        (term_to_string init)
                                        (String.concat " " <| List.map calc_step_to_string steps)
+
+
+  | ElimForall(bs, t, vs) ->
+    Util.format3 "_elim_ forall %s. %s using %s"
+        (binders_to_string " " bs)
+        (term_to_string t)
+        (String.concat " " (List.map term_to_string vs))
+
+  | ElimExists(bs, p, q, b, e) ->
+    Util.format5 "_elim_ exists %s. %s _to_ %s\n\with %s. %s"
+        (binders_to_string " " bs)
+        (term_to_string p)
+        (term_to_string q)
+        (binder_to_string b)
+        (term_to_string e)
+
+  | ElimImplies(p, q, e) ->
+    Util.format3 "_elim_ %s ==> %s with %s"
+      (term_to_string p)
+      (term_to_string q)
+      (term_to_string e)
+
+  | ElimOr(p, q, r, x, e, y, e') ->
+     Util.format "_elim_ %s \/ %s _to_ %s\n\with %s. %s\n\and %s.%s"
+       [term_to_string p;
+        term_to_string q;
+        term_to_string r;
+        binder_to_string x;
+        term_to_string e;
+        binder_to_string y;
+        term_to_string e']
+
+  | ElimAnd(p, q, r, x, y, e) ->
+     Util.format "_elim_ %s /\ %s _to_ %s\n\with %s %s. %s"
+       [term_to_string p;
+        term_to_string q;
+        term_to_string r;
+        binder_to_string x;
+        binder_to_string y;        
+        term_to_string e]
+
+  | IntroForall(xs, p, e) -> 
+    Util.format3 "_intro_ forall %s. %s with %s"
+      (binders_to_string " " xs)
+      (term_to_string p)
+      (term_to_string e)
+        
+  | IntroExists(xs, t, vs, e) ->
+    Util.format4 "_intro_ exists %s. %s using %s with %s"
+      (binders_to_string " " xs)
+      (term_to_string t)
+      (String.concat " " (List.map term_to_string vs))
+      (term_to_string e)
+  
+  | IntroImplies(p, q, x, e) ->
+    Util.format4 ("_intro_ %s ==> %s with %s. %s")
+      (term_to_string p)
+      (term_to_string q)
+      (binder_to_string x)
+      (term_to_string p)
+      
+  | IntroOr(b, p, q, r) ->
+    Util.format4 ("_intro_ %s \/ %s using %s with %s")
+      (term_to_string p)
+      (term_to_string q)
+      (if b then "Left" else "Right")
+      (term_to_string r)
+      
+  | IntroAnd(p, q, e1, e2) ->
+    Util.format4 ("_intro_ %s /\ %s with %s and %s")  
+      (term_to_string p)
+      (term_to_string q)
+      (term_to_string e1)
+      (term_to_string e2)
+      
+and binders_to_string sep bs =
+    List.map binder_to_string bs |> String.concat sep
 
 and try_or_match_to_string (x:term) scrutinee branches ret_opt =
   let s =

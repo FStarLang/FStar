@@ -15,13 +15,14 @@
 *)
 #light "off"
 module FStar.Main
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
+open FStar.Compiler
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
 
@@ -202,6 +203,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
     | FStar.Syntax.Syntax.Lazy_bv         -> FStar.Reflection.Embeddings.unfold_lazy_bv          i
     | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_letbinding -> FStar.Reflection.Embeddings.unfold_lazy_letbinding  i
     | FStar.Syntax.Syntax.Lazy_optionstate -> FStar.Reflection.Embeddings.unfold_lazy_optionstate i
     | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
     | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
@@ -236,7 +238,7 @@ let main () =
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStar.Util.string_of_int time)
+              (FStar.Compiler.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0

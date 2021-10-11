@@ -17,19 +17,19 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 
 module Errors     = FStar.Errors
-module U          = FStar.Util
+module U          = FStar.Compiler.Util
 module A          = FStar.Parser.AST
 module Resugar    = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
@@ -340,8 +340,14 @@ and term_to_string x =
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
         U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
-      | Tm_match(head, asc_opt, branches) ->
-        U.format3 "(match %s %swith\n\t| %s)"
+      | Tm_match(head, asc_opt, branches, lc) ->
+        let lc_str =
+          match lc with
+          | Some lc when (Options.print_implicits ()) ->
+            U.format1 " (residual_comp:%s)"
+              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
+          | _ -> "" in
+        U.format4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
           (match asc_opt with
            | None -> ""
@@ -354,6 +360,7 @@ and term_to_string x =
                 | None -> ""
                 | Some tac -> U.format1 " by %s" (term_to_string tac)))
           (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
+          lc_str
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
@@ -532,7 +539,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name C.effect_ML_lid
+                  && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)

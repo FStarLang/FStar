@@ -16,16 +16,15 @@
 #light "off"
 module FStar.TypeChecker.Tc
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -41,7 +40,7 @@ module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module Gen = FStar.TypeChecker.Generalize
@@ -386,7 +385,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, [], lb.lbpos),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid(), tval, def, [], lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)

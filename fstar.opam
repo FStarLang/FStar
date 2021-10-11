@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2021.06.23~dev"
+version: "2021.09.30~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -15,7 +15,7 @@ depends: [
   "fileutils"
   "menhir" {>= "20161115" build}
   "pprint" {build}
-  "sedlex" {build}
+  "sedlex" {< "2.4" build}
   "ppxlib" {>= "0.22.0"}
   "ppx_deriving"
   "ppx_deriving_yojson"

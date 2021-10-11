@@ -15,8 +15,8 @@
 *)
 #light "off"
 module FStar.Char
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 type char' = char
 type char = char'

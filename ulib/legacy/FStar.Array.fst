@@ -38,7 +38,7 @@ let of_seq #a s = ST.alloc s
 
 let to_seq #a s = !s
 
-let of_list #a l = of_seq (Seq.of_list l)
+let of_list #a l = of_seq (Seq.seq_of_list l)
 
 let create #a n init = ST.alloc (Seq.create n init)
 

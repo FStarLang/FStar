@@ -18,8 +18,7 @@
 #light "off"
 module FStar.Thunk
 open FStar.Pervasives
-open FStar.Util
-open FStar.ST
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 // GM: I get an F# error if I don't expose the definition of `thunk`,
 //     please ignore it :)

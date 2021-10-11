@@ -17,18 +17,18 @@
 #light "off"
 
 module FStar.Extraction.Kremlin
-open FStar.ST
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.BaseTypes
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 
 (** CHANGELOG
@@ -1001,6 +1001,10 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
+    when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
+    translate_expr env e
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 
@@ -1136,8 +1140,8 @@ and translate_constant c: expr =
       let c = EConstant (UInt32, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])
-  | MLC_Int (s, Some _) ->
-      failwith "impossible: machine integer not desugared to a function call"
+  | MLC_Int (s, Some (sg, wd)) ->
+      EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
   | MLC_Bytes _ ->

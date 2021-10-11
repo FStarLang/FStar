@@ -16,12 +16,11 @@
 
 #light "off"
 module FStar.Prettyprint
-open FStar.ST
-open FStar.All
-
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Parser.ToDocument
-
+module List = FStar.Compiler.List
 module D = FStar.Parser.Driver
 module P = FStar.Pprint
 
@@ -55,7 +54,7 @@ let generate (m: printing_mode) filenames =
            comments
         in
         let left_over_doc =
-          if not (FStar.List.isEmpty leftover_comments) then
+          if not (FStar.Compiler.List.isEmpty leftover_comments) then
             P.concat  [P.hardline ; P.hardline ; comments_to_document leftover_comments]
           else if m = FromTempToStdout then
             // This isn't needed for FromTempToFile, when using `append_to_file` a newline is added to EoF

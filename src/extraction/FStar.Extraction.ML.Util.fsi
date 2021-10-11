@@ -16,12 +16,12 @@
 #light "off"
 module FStar.Extraction.ML.Util
 open Prims
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 val codegen_fsharp : unit -> bool
 val pruneNones : list<(option<'a>)> -> list<'a>

@@ -18,8 +18,8 @@
 #light "off"
 module FStar.Unionfind
 
-open FStar.ST
-open FStar.Util
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Util
 
 type puf<'a>
 type p_uvar<'a>

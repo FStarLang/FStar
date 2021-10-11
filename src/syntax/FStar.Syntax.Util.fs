@@ -17,20 +17,21 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 open Prims
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
-open FStar.Dyn
-module U = FStar.Util
-module List = FStar.List
+open FStar.Compiler.Dyn
+module U = FStar.Compiler.Util
+module List = FStar.Compiler.List
 module PC = FStar.Parser.Const
 
 (********************************************************************************)
@@ -84,7 +85,7 @@ let null_binders_of_tks (tks:list<(typ * aqual)>) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
 let binders_of_tks (tks:list<(typ * aqual)>) : binders =
-    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp []) 
+    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp [])
 
 let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
 
@@ -208,7 +209,7 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
 let ml_comp t r =
   mk_Comp ({comp_univs=[U_zero];
-            effect_name=set_lid_range PC.effect_ML_lid r;
+            effect_name=set_lid_range (PC.effect_ML_lid()) r;
             result_typ=t;
             effect_args=[];
             flags=[MLEFFECT]})
@@ -269,7 +270,7 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:
   then match repr.n with
        | Tm_app (_, _::is) -> is |> List.map fst
        | _ -> err ()
-  else match repr.n with 
+  else match repr.n with
        | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
        | _ -> err ()
 
@@ -342,7 +343,7 @@ let is_lemma t =
 let rec head_of (t : term) : term =
     match (compress t).n with
     | Tm_app (t, _)
-    | Tm_match (t, _, _)
+    | Tm_match (t, _, _, _)
     | Tm_abs (_, t, _)
     | Tm_ascribed (t, _, _)
     | Tm_meta (t, _) -> head_of t
@@ -369,7 +370,7 @@ let un_uinst t =
         | _ -> t
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name PC.effect_ML_lid
+  | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
               || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false
@@ -456,6 +457,7 @@ let eq_lazy_kind k k' =
      | Lazy_proofstate, Lazy_proofstate
      | Lazy_goal, Lazy_goal
      | Lazy_sigelt, Lazy_sigelt
+     | Lazy_letbinding, Lazy_letbinding
      | Lazy_uvar, Lazy_uvar -> true
      | _ -> false
 
@@ -463,7 +465,7 @@ let unlazy_as_t k t =
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v})
         when eq_lazy_kind k k' ->
-      FStar.Dyn.undyn v
+      FStar.Compiler.Dyn.undyn v
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
 
@@ -608,7 +610,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
-    | Tm_match (t1, None, bs1), Tm_match (t2, None, bs2) ->  //AR: note: no return annotations
+    | Tm_match (t1, None, bs1, _), Tm_match (t2, None, bs2, _) ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
                              (List.zip bs1 bs2)
@@ -630,7 +632,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
        *)
     | Tm_abs (bs1, body1, _rc1), Tm_abs (bs2, body2, _rc2)
       when List.length bs1 = List.length bs2 ->
-      
+
       eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
                 Equal bs1 bs2)
              (fun () -> eq_tm body1 body2)
@@ -877,7 +879,7 @@ let qualifier_equal q1 q2 = match q1, q2 with
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
-      | Some rc -> Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (close bs)})
+      | Some rc -> Some ({rc with residual_typ=FStar.Compiler.Util.map_opt rc.residual_typ (close bs)})
   in
   match bs with
   | [] -> t
@@ -1016,7 +1018,7 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
-          Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
+          Some ({rc with residual_typ=FStar.Compiler.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -1253,10 +1255,11 @@ let mk_with_type u t e =
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
+let texists  = fvar PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
 let decidable_eq = fvar_const PC.op_Eq
-let mk_decidable_eq t e1 e2 = 
+let mk_decidable_eq t e1 e2 =
   mk (Tm_app (decidable_eq, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 let b_and = fvar_const PC.op_And
 let mk_and e1 e2 =
@@ -1295,6 +1298,20 @@ let mk_forall (u:universe) (x:bv) (body:typ) : typ =
 let close_forall_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ b.binder_bv f) bs f
 
+let mk_exists_aux fa x body =
+  mk (Tm_app(fa, [ iarg (x.sort);
+                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) dummyRange
+
+let mk_exists_no_univ (x:bv) (body:typ) : typ =
+  mk_exists_aux texists x body
+
+let mk_exists (u:universe) (x:bv) (body:typ) : typ =
+  let texists = mk_Tm_uinst texists [u] in
+  mk_exists_aux texists x body
+
+let close_exists_no_univs bs f =
+  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_exists_no_univ b.binder_bv f) bs f
+
 let is_wild_pat p =
     match p.v with
     | Pat_wild _ -> true
@@ -1303,7 +1320,7 @@ let is_wild_pat p =
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
-    mk (Tm_match(b, None, [then_branch; else_branch])) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
+    mk (Tm_match(b, None, [then_branch; else_branch], None)) (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
@@ -1730,7 +1747,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
 
-  | Tm_match (t1,None,bs1), Tm_match (t2,None,bs2) ->  //AR: note: no return annotations
+  | Tm_match (t1,None,bs1,_), Tm_match (t2,None,bs2,_) ->  //AR: note: no return annotations
     (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
 
@@ -1854,7 +1871,7 @@ let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
 
 let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
-     FStar.Util.for_some (is_fvar attr) attrs
+     FStar.Compiler.Util.for_some (is_fvar attr) attrs
 
 (* Checks whether the list of attrs contains an application of `attr`, and
  * returns the arguments if so. If there's more than one, the first one
@@ -1961,7 +1978,7 @@ let rec unbound_variables tm :  list<bv> =
         List.collect (fun (x, _) -> unbound_variables x) args
         @ unbound_variables t
 
-      | Tm_match(t, asc_opt, pats) ->
+      | Tm_match(t, asc_opt, pats, _) ->
         unbound_variables t
         @ (match asc_opt with
            | None -> []
@@ -2200,7 +2217,7 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
     ite_wp = f combs.ite_wp;
     close_wp = f combs.close_wp;
     trivial = f combs.trivial;
-    
+
     repr = map_option f combs.repr;
     return_repr = map_option f combs.return_repr;
     bind_repr = map_option f combs.bind_repr }
@@ -2231,7 +2248,7 @@ let get_eff_repr (ed:eff_decl) : option<tscheme> =
   | Primitive_eff combs
   | DM4F_eff combs -> combs.repr
   | Layered_eff combs -> combs.l_repr |> fst |> Some
-  
+
 let get_bind_vc_combinator (ed:eff_decl) : tscheme =
   match ed.combinators with
   | Primitive_eff combs
@@ -2243,7 +2260,7 @@ let get_return_vc_combinator (ed:eff_decl) : tscheme =
   | Primitive_eff combs
   | DM4F_eff combs -> combs.ret_wp
   | Layered_eff combs -> combs.l_return |> snd
-  
+
 let get_bind_repr (ed:eff_decl) : option<tscheme> =
   match ed.combinators with
   | Primitive_eff combs
@@ -2253,7 +2270,7 @@ let get_bind_repr (ed:eff_decl) : option<tscheme> =
 let get_return_repr (ed:eff_decl) : option<tscheme> =
   match ed.combinators with
   | Primitive_eff combs
-  | DM4F_eff combs -> combs.return_repr  
+  | DM4F_eff combs -> combs.return_repr
   | Layered_eff combs -> combs.l_return |> fst |> Some
 
 let get_wp_trivial_combinator (ed:eff_decl) : option<tscheme> =

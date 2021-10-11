@@ -11,7 +11,8 @@ true: \
   package(batteries), \
   package(zarith), \
   package(ppx_deriving.std), \
-  package(ppx_deriving_yojson)
+  package(ppx_deriving_yojson), \
+  package(stdint)
 
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": package(sedlex.ppx)
@@ -37,7 +38,7 @@ true: \
 <src/ocaml-output/**/*.ml> or <ulib/**/extracted/*.ml> or <ulib/tactics_ml/fstarlib_leftovers/*.ml> or <ulib/ml/*.ml>: \
   warn(-8-11-20-21-26-28)
 
-<ulib/ml/FStar_{U,}Int*.ml>  or "ulib/ml/fstarlib.cma": \
+<ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
   package(stdint)
 
 "ulib/ml/fstarlib.cma": \

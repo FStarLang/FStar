@@ -21,12 +21,11 @@
 #light "off"
 module FStar.TypeChecker.Rel
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -38,7 +37,7 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 
 open FStar.Common
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -2249,7 +2248,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     else
 
     let binders_as_bv_set (bs:binders) =
-        FStar.Util.as_set (List.map (fun b -> b.binder_bv) bs)
+        FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
                           Syntax.order_bv
     in
 
@@ -2772,8 +2771,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
             match (s1, U.unmeta t1), (s2, U.unmeta t2) with
-            | (_, {n=Tm_match (scrutinee, _, branches)}), (s, t)
-            | (s, t), (_, {n=Tm_match(scrutinee, _, branches)}) ->
+            | (_, {n=Tm_match (scrutinee, _, branches, _)}), (s, t)
+            | (s, t), (_, {n=Tm_match(scrutinee, _, branches, _)}) ->
               if not (is_flex scrutinee)
               then begin
                 if Env.debug env <| Options.Other "Rel"
@@ -3240,7 +3239,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: note ignoring the return annotation
+      | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in
@@ -3325,9 +3324,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug env (Options.Other "Rel")
-             then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
-                                 (Print.term_to_string head1)
-                                 (Print.term_to_string head2)
+             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+               [(string_of_int problem.pid);
+                (string_of_bool wl.smt_ok);
+                (Print.term_to_string head1);
+                (string_of_bool (Env.is_interpreted env head1));
+                (string_of_bool (no_free_uvars t1));
+                (Print.term_to_string head2);
+                (string_of_bool (Env.is_interpreted env head2));
+                (string_of_bool (no_free_uvars t2))]
          in
          let equal t1 t2 =
             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
@@ -4451,7 +4456,7 @@ let resolve_implicits' env is_tac g =
       else if unresolved ctx_u
       then begin match ctx_u.ctx_uvar_meta with
            | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-             let env : Env.env = FStar.Dyn.undyn env_dyn in
+             let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
              if Env.debug env (Options.Other "Tac") then
                BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
 

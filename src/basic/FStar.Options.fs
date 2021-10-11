@@ -17,18 +17,22 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.Compiler
+open FStar.Compiler.List
 open FStar.Pervasives
 open FStar.String
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
 
+module Option = FStar.Compiler.Option
 module FC = FStar.Common
+module Util = FStar.Compiler.Util
+module List = FStar.Compiler.List
 
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
@@ -486,11 +490,11 @@ let universe_include_path_base_dirs =
 
 
 // See comment in the interface file
-let _version = FStar.Util.mk_ref ""
-let _platform = FStar.Util.mk_ref ""
-let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref "<not set>"
-let _commit = FStar.Util.mk_ref ""
+let _version = Util.mk_ref ""
+let _platform = Util.mk_ref ""
+let _compiler = Util.mk_ref ""
+let _date = Util.mk_ref "<not set>"
+let _commit = Util.mk_ref ""
 
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
@@ -780,9 +784,9 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
          Modules can be extracted or not using the [+|-] qualifier. \n\t\t\t\
-         For example --extract '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
-         not extract FStar.List.Tot.*, \n\t\t\t\t\
-         extract remaining modules from FStar.List.*, \n\t\t\t\t\
+         For example --extract '* -FStar.Reflection +FStar.Compiler.List -FStar.Compiler.List.Tot' will \n\t\t\t\t\
+         not extract FStar.Compiler.List.Tot.*, \n\t\t\t\t\
+         extract remaining modules from FStar.Compiler.List.*, \n\t\t\t\t\
          not extract FStar.Reflection.*, \n\t\t\t\t\
          and extract all the rest.\n\t\t\
          Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\
@@ -1230,12 +1234,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
-         For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
-         remove all facts from FStar.List.Tot.*, \n\t\t\t\t\
-         retain all remaining facts from FStar.List.*, \n\t\t\t\t\
+         For example --using_facts_from '* -FStar.Reflection +FStar.Compiler.List -FStar.Compiler.List.Tot' will \n\t\t\t\t\
+         remove all facts from FStar.Compiler.List.Tot.*, \n\t\t\t\t\
+         retain all remaining facts from FStar.Compiler.List.*, \n\t\t\t\t\
          remove all facts from FStar.Reflection.*, \n\t\t\t\t\
          and retain all the rest.\n\t\t\
-         Note, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\t\
+         Note, the '+' is optional: --using_facts_from 'FStar.Compiler.List' is equivalent to --using_facts_from '+FStar.Compiler.List'. \n\t\t\
          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
        ( noshort,
@@ -1535,7 +1539,7 @@ let include_path () =
     cache_dir @ get_include()
   else
     let lib_paths =
-        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        match Util.expand_environment_variable "FSTAR_LIB" with
         | None ->
           let fstar_home = fstar_bin_directory ^ "/.."  in
           let defs = universe_include_path_base_dirs in
@@ -1545,7 +1549,7 @@ let include_path () =
     cache_dir @ lib_paths @ get_include() @ [ "." ]
 
 let find_file =
-  let file_map = FStar.Util.smap_create 100 in
+  let file_map = Util.smap_create 100 in
   fun filename ->
      match Util.smap_try_find file_map filename with
      | Some f -> f
@@ -1605,12 +1609,12 @@ let pervasives_native_basename () =
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
-  | Some x -> FStar.Util.join_paths x fname
+  | Some x -> Util.join_paths x fname
 
 let prepend_cache_dir fpath =
   match get_cache_dir() with
   | None -> fpath
-  | Some x -> FStar.Util.join_paths x (FStar.Util.basename fpath)
+  | Some x -> Util.join_paths x (Util.basename fpath)
 
 //Used to parse the options of
 //   --using_facts_from
@@ -1631,21 +1635,21 @@ let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if s = "-*" then ([], false)
-        else if FStar.Util.starts_with s "-"
-        then let path = path_of_text (FStar.Util.substring_from s 1) in
+        else if Util.starts_with s "-"
+        then let path = path_of_text (Util.substring_from s 1) in
              (path, false)
-        else let s = if FStar.Util.starts_with s "+"
-                     then FStar.Util.substring_from s 1
+        else let s = if Util.starts_with s "+"
+                     then Util.substring_from s 1
                      else s in
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-      let s = FStar.Util.trim_string s in
+      let s = Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
-             let s = FStar.Util.replace_char s ' ' ',' in
-             FStar.Util.splitlines s
-             |> List.concatMap (fun s -> FStar.Util.split s ",")
+             let s = Util.replace_char s ' ' ',' in
+             Util.splitlines s
+             |> List.concatMap (fun s -> Util.split s ",")
              |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
@@ -1903,7 +1907,7 @@ let set_options s =
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
 
 
 let get_vconfig () =

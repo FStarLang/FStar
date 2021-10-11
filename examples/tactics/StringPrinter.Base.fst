@@ -49,7 +49,7 @@ let seq (#t2: Type0) (x: m unit) (y: m t2) : Tot (m t2) =
 let print_char (c: U8.t) : Tot (m unit) =
   fun () -> ((), S.create 1 c)
 
-let log (#t: Type0) (x: m t) : GTot string = 
+let log (#t: Type0) (x: m t) : GTot string =
   let (_, log) = x () in
   log
 
@@ -78,10 +78,10 @@ let m_sz_correct
   if l > 4294967295
   then y == g' ()
   else y == g r (U32.uint_to_t l) ()
- 
+
 type m_sz #t (f: m t) = (
   (t' : Type) ->
-  (g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot t')) -> 
+  (g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot t')) ->
   (g' : ((u: unit { S.length (log f) > 4294967295 } ) -> Tot t')) ->
   Tot (y: t' {
     m_sz_correct f t' g g' y
@@ -265,7 +265,10 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false _ _ _ def -> def
+    | T.Sg_Let false [lb] -> begin
+      let lbv = T.inspect_lb lb in
+      T.(lbv.lb_def)
+      end
     | _ -> tfail "Not a non-recursive let definition"
     end
   | _ -> tfail "Definition not found"

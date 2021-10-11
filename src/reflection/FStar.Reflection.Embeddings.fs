@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.Embeddings
 
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -12,8 +12,8 @@ module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
-module Range = FStar.Range
+module BU = FStar.Compiler.Util
+module Range = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
@@ -26,7 +26,7 @@ module PC = FStar.Parser.Const
 module O = FStar.Options
 module RD = FStar.Reflection.Data
 
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 (*
  * embed   : from compiler to user
@@ -626,16 +626,59 @@ let e_univ_names = e_list e_univ_name
 
 let e_ctor = e_tuple2 (e_string_list) e_term
 
+let e_lb_view =
+    let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
+        S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed e_fv         rng lbv.lb_fv);
+                                 S.as_arg (embed e_univ_names rng lbv.lb_us);
+				 S.as_arg (embed e_term       rng lbv.lb_typ);
+                                 S.as_arg (embed e_term       rng lbv.lb_def)]
+                    rng
+    in
+    let unembed_lb_view w (t : term) : option<lb_view> =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [(fv', _); (us, _); (typ, _); (def,_)]
+	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
+            BU.bind_opt (unembed' w e_fv fv') (fun fv' ->
+	    BU.bind_opt (unembed' w e_univ_names us) (fun us ->
+            BU.bind_opt (unembed' w e_term typ) (fun typ ->
+            BU.bind_opt (unembed' w e_term def) (fun def ->
+            Some <|
+	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded lb_view: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
+
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+let e_letbinding =
+    let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
+        U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
+    in
+    let unembed_letbinding w (t : term) : option<letbinding> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=lb; lkind=Lazy_letbinding} ->
+            Some (undyn lb)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded letbinding: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_letbinding unembed_letbinding fstar_refl_letbinding
+
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
-        | Sg_Let (r, fv, univs, ty, t) ->
+        | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
                         [S.as_arg (embed e_bool rng r);
-                            S.as_arg (embed e_fv rng fv);
-                            S.as_arg (embed e_univ_names rng univs);
-                            S.as_arg (embed e_term rng ty);
-                            S.as_arg (embed e_term rng t)]
+                         S.as_arg (embed (e_list e_letbinding) rng lbs)]
                         rng
 
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
@@ -669,20 +712,23 @@ let e_sigelt_view =
             BU.bind_opt (unembed' w (e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
-        | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Tm_fvar fv, [(r, _); (lbs, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
-            BU.bind_opt (unembed' w e_fv fvar) (fun fvar ->
-            BU.bind_opt (unembed' w e_univ_names univs) (fun univs ->
-            BU.bind_opt (unembed' w e_term ty) (fun ty ->
+            BU.bind_opt (unembed' w (e_list e_letbinding) lbs) (fun lbs ->
+            Some <| Sg_Let (r, lbs)))
+
+        | Tm_fvar fv, [(nm, _); (us, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Val.lid ->
+            BU.bind_opt (unembed' w e_string_list nm) (fun nm ->
+            BU.bind_opt (unembed' w e_univ_names us) (fun us ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Sg_Let (r, fvar, univs, ty, t))))))
+            Some <| Sg_Val (nm, us, t))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk
 
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt_view: %s" (Print.term_to_string t)));
+        | _  ->
+             if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt_view: %s " (Print.term_to_string t)));
             None
     in
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
@@ -722,8 +768,6 @@ let e_exp =
     in
     mk_emb embed_exp unembed_exp fstar_refl_exp
 
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
 
 let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv e_attributes)
 
@@ -890,6 +934,18 @@ let unfold_lazy_binder (i : lazyinfo) : term =
                                           S.as_arg (embed e_aqualv i.rng aq);
                                           S.as_arg (embed e_attributes i.rng attrs)]
                 i.rng
+
+let unfold_lazy_letbinding (i : lazyinfo) : term =
+    let lb : letbinding = undyn i.blob in
+    let lbv = inspect_lb lb in
+    S.mk_Tm_app fstar_refl_pack_lb.t
+        [
+            S.as_arg (embed e_fv i.rng lbv.lb_fv);
+            S.as_arg (embed e_univ_names i.rng lbv.lb_us);
+            S.as_arg (embed e_term i.rng lbv.lb_typ);
+            S.as_arg (embed e_term i.rng lbv.lb_def)
+        ]
+        i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in

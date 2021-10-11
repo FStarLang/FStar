@@ -3,8 +3,8 @@ module FStar.Tactics.InterpFuns
 
 (* This module is awful, don't even look at it please. *)
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 
 open FStar.Syntax.Embeddings
 open FStar.Tactics.Monad

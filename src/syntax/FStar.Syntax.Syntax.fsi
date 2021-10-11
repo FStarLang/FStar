@@ -16,17 +16,18 @@
 #light "off"
 module FStar.Syntax.Syntax
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
-open FStar
-open FStar.Util
-open FStar.Range
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Ident
-open FStar.Dyn
+open FStar.Compiler.Dyn
+open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
 
@@ -113,7 +114,8 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option<ascription> * list<branch>    (* match e (ret asc?) with b1 ... bn *)
+  | Tm_match      of term * option<ascription> * list<branch> * option<residual_comp>
+                                                                 (* (match e (returns asc?) with b1 ... bn) : (C | N)) *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -212,10 +214,18 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
   | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Unresolved_projector of option<fv>          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
+  | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
+and unresolved_constructor = {
+  uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
+  uc_typename: option<lident>; // The constructed type, as determined by the ToSyntax's scoping rules
+  uc_fields : list<lident>  // The fields names as written in the source
+}
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -280,6 +290,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
+  | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
@@ -398,7 +409,7 @@ type wp_eff_combinators = {
 
 (*
  * Layered effects combinators
- * 
+ *
  * All of these are pairs of type schemes,
  *   where the first component is the term ts and the second component is the type ts
  *
@@ -427,7 +438,7 @@ type eff_decl = {
   mname       : lident;      //STATE_h
 
   cattributes : list<cflag>;
-  
+
   univs       : univ_names;  //u#heap
   binders     : binders;     //(heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
 

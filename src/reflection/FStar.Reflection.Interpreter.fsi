@@ -2,7 +2,7 @@
 module FStar.Reflection.Interpreter
 
 open FStar.Ident
-open FStar.List
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env

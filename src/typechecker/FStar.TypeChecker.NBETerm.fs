@@ -1,9 +1,9 @@
 #light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.Pervasives
-open FStar.All
-open FStar.Exn
+open FStar.Compiler.Effect
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
@@ -36,11 +36,11 @@ module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module SE = FStar.Syntax.Embeddings
 open FStar.VConfig
 
@@ -65,7 +65,9 @@ type atom
        // 2. reconstruct the returns annotation
        (unit -> option<ascription>) *
        // 3. reconstructs the pattern matching
-       (unit -> list<branch>)
+       (unit -> list<branch>) *
+       // 4. reconstruct the residual comp if set
+       (unit -> option<S.residual_comp>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -228,8 +230,9 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>)) =
-  mk_t <| Accu(Match (s, ret, bs), [])
+let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>))
+  (rc:unit -> option<S.residual_comp>) =
+  mk_t <| Accu(Match (s, ret, bs, rc), [])
 
 // Term equality
 
@@ -350,7 +353,7 @@ let rec t_to_string (x:t) =
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
-  | Match (t, _, _) -> "Match " ^ (t_to_string t)
+  | Match (t, _, _, _) -> "Match " ^ (t_to_string t)
   | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
   | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
   | UVar _ -> "UVar"
@@ -415,7 +418,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
-         let li = FStar.Dyn.mkdyn x, et in
+         let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
 let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
@@ -433,7 +436,7 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
                                 (P.emb_typ_to_string et')
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print1 "Unembed cancelled for %s\n"
                                      (P.emb_typ_to_string et)
@@ -731,18 +734,30 @@ let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
 
 let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
 
-let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
+let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t * option<S.meta_source_info>)> =
+    let (a, m) =
+      (match a.nbe_t with
+       | Meta(t, tm) ->
+         (match Thunk.force tm with
+          | Meta_desugared m -> (t, Some m)
+          | _ -> (a, None))
+       | _ -> (a, None)) in
     match a.nbe_t with
     | FV (fv1, [], [({nbe_t=Constant (Int i)}, _)])
       when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
                         "int_to_t" ->
-      Some (fv1, i)
+      Some (fv1, i, m)
     | _ -> None
 
 let int_as_bounded int_to_t n =
     let c = embed e_int bogus_cbs n in
     let int_to_t args = mk_t <| FV(int_to_t, [], args) in
     int_to_t [as_arg c]
+
+let with_meta_ds t (m:option<meta_source_info>) =
+      match m with
+      | None -> t
+      | Some m -> mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
@@ -957,9 +972,9 @@ let mk_range args : option<t> =
           arg_as_int to_line,
           arg_as_int to_col with
     | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
-      let r = FStar.Range.mk_range fn
-                (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+      let r = FStar.Compiler.Range.mk_range fn
+                (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
       Some (embed e_range bogus_cbs r)
     | _ -> None
     end

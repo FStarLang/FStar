@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.String
-
+open FStar.List.Tot
 (* String is a primitive type in F*.
 
    Most of the functions in this interface have a special status in

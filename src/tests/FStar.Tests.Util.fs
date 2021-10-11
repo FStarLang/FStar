@@ -1,11 +1,11 @@
 ﻿#light "off"
 module FStar.Tests.Util
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax
@@ -14,10 +14,10 @@ module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 
 let always id b =
     if b
@@ -76,7 +76,7 @@ let rec term_eq' t1 t2 =
               && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
       | Tm_app(t, args), Tm_app(s, args') -> term_eq' t s && args_eq args args'
-      | Tm_match(t, None, pats), Tm_match(t', None, pats') ->
+      | Tm_match(t, None, pats, _), Tm_match(t', None, pats', _) ->
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq' e e') pats pats'
         && term_eq' t t'

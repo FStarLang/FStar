@@ -29,13 +29,13 @@
 #light "off"
 
 module FStar.Parser.Lexhelp
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Mul
 open FStar
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse
@@ -151,6 +151,7 @@ let keywords =
     ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
+    ALWAYS, "eliminate"  ,ELIM;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -167,6 +168,7 @@ let keywords =
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
     ALWAYS, "instance"   ,INSTANCE;
+    ALWAYS, "introduce"  ,INTRO;
     ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;

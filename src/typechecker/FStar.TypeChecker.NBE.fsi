@@ -18,9 +18,9 @@
 #light "off"
 module FStar.TypeChecker.NBE
 open FStar.Pervasives
-open FStar.All
-open FStar.Exn
+open FStar.Compiler.Effect
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax

@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.Env
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -31,7 +31,7 @@ open FStar.Ident
 open FStar.SMTEncoding.Util
 
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
 exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-rec(s) and their locations

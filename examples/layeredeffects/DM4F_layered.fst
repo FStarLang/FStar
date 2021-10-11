@@ -127,7 +127,7 @@ let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
 //
 //sub_effect PURE ~> ST = lift_pure_st
 
-let lift_id_st_wp #a #st (w : ID2.w a) : wp st a =
+let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
   elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 

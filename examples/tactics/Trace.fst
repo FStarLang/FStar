@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Trace
-
+open FStar.List.Tot
 (* Instrumenting recursive functions to provide a trace of their calls *)
 (* TODO: update to make use of metaprogrammed let-recs and splicing *)
 

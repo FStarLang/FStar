@@ -17,17 +17,17 @@
 module FStar.TypeChecker.Common
 open Prims
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
 module S = FStar.Syntax.Syntax
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (* relations on types, kinds, etc. *)
 type rel =
