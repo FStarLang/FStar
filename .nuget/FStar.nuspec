@@ -4,8 +4,7 @@
 		<id>FStar</id>
 		<version>$version$</version>
 		<title>FStar</title>
-		<authors>TODO: Fill in</authors>
-		<owners>TODO: Fill in</owners>
+		<authors>mateuszbujalski,tahina</authors>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>A nuget package with FStar for easy installation into .net projects on Windows</description>
 		<summary>FStar as a nuget package</summary>
