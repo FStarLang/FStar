@@ -169,16 +169,14 @@ let rec (term_eq' :
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_1;
             FStar_Syntax_Syntax.pos = uu___;
             FStar_Syntax_Syntax.vars = uu___1;_},
-          (uu___2, FStar_Pervasives_Native.Some
-           { FStar_Syntax_Syntax.aqual_implicit = true;
-             FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::t12::t22::[]),
+          (uu___2, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
+           uu___3))::t12::t22::[]),
          FStar_Syntax_Syntax.Tm_app
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_2;
             FStar_Syntax_Syntax.pos = uu___4;
             FStar_Syntax_Syntax.vars = uu___5;_},
-          (uu___6, FStar_Pervasives_Native.Some
-           { FStar_Syntax_Syntax.aqual_implicit = true;
-             FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::s1::s2::[]))
+          (uu___6, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
+           uu___7))::s1::s2::[]))
           when
           (FStar_Syntax_Syntax.fv_eq_lid fv_eq_1 FStar_Parser_Const.eq2_lid)
             &&
@@ -187,17 +185,17 @@ let rec (term_eq' :
       | (FStar_Syntax_Syntax.Tm_app (t, args), FStar_Syntax_Syntax.Tm_app
          (s, args')) -> (term_eq' t s) && (args_eq args args')
       | (FStar_Syntax_Syntax.Tm_match
-         (t, FStar_Pervasives_Native.None, pats),
+         (t, FStar_Pervasives_Native.None, pats, uu___),
          FStar_Syntax_Syntax.Tm_match
-         (t', FStar_Pervasives_Native.None, pats')) ->
+         (t', FStar_Pervasives_Native.None, pats', uu___1)) ->
           (((FStar_Compiler_List.length pats) =
               (FStar_Compiler_List.length pats'))
              &&
              (FStar_Compiler_List.forall2
-                (fun uu___ ->
-                   fun uu___1 ->
-                     match (uu___, uu___1) with
-                     | ((uu___2, uu___3, e), (uu___4, uu___5, e')) ->
+                (fun uu___2 ->
+                   fun uu___3 ->
+                     match (uu___2, uu___3) with
+                     | ((uu___4, uu___5, e), (uu___6, uu___7, e')) ->
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed

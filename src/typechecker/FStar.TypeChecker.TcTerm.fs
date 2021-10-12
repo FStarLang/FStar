@@ -1195,7 +1195,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
    *)
 
   match (SS.compress top).n with
-  | Tm_match(e1, ret_opt, eqns) ->  //ret_opt is the return annotation
+  | Tm_match(e1, ret_opt, eqns, _) ->  //ret_opt is the return annotation
     let e1, c1, g1 = tc_term
       (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
@@ -1308,7 +1308,11 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
-        let e = mk (Tm_match(scrutinee, ret_opt, branches)) top.pos in
+        let e =
+          let rc = { residual_effect = cres.eff_name;
+                     residual_typ = Some cres.res_typ;
+                     residual_flags = cres.cflags } in
+          mk (Tm_match(scrutinee, ret_opt, branches, Some rc)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
@@ -4048,7 +4052,7 @@ let rec universe_of_aux env e =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+        | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation? Or the residual_comp?
           let (_, _, hd) = SS.open_branch hd in
           let hd, args' = U.head_and_args hd in
           type_of_head retry hd (args'@args)
@@ -4080,10 +4084,10 @@ let rec universe_of_aux env e =
      then let subst = U.subst_of_list bs args in
           SS.subst subst res
      else level_of_type_fail env e (Print.term_to_string res)
-   | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+   | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
-   | Tm_match(_, _, []) ->  //AR: TODO: use return annotation?
+   | Tm_match(_, _, [], _) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e =
@@ -4239,6 +4243,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t must_tot
 
+  | Tm_match (_, _, _, Some rc) -> rc.residual_typ
   | Tm_match _
   | Tm_let _
   | Tm_unknown

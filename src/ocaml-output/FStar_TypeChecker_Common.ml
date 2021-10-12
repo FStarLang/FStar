@@ -941,25 +941,25 @@ let (simplify :
           let uu___1 = FStar_Syntax_Subst.compress phi in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
-        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, br::brs) ->
-            let uu___3 = br in
-            (match uu___3 with
-             | (uu___4, uu___5, e) ->
+        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, br::brs, uu___3) ->
+            let uu___4 = br in
+            (match uu___4 with
+             | (uu___5, uu___6, e) ->
                  let r =
-                   let uu___6 = simp_t e in
-                   match uu___6 with
+                   let uu___7 = simp_t e in
+                   match uu___7 with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
                    | FStar_Pervasives_Native.Some b ->
-                       let uu___7 =
+                       let uu___8 =
                          FStar_Compiler_List.for_all
-                           (fun uu___8 ->
-                              match uu___8 with
-                              | (uu___9, uu___10, e') ->
-                                  let uu___11 = simp_t e' in
-                                  uu___11 = (FStar_Pervasives_Native.Some b))
+                           (fun uu___9 ->
+                              match uu___9 with
+                              | (uu___10, uu___11, e') ->
+                                  let uu___12 = simp_t e' in
+                                  uu___12 = (FStar_Pervasives_Native.Some b))
                            brs in
-                       if uu___7
+                       if uu___8
                        then FStar_Pervasives_Native.Some b
                        else FStar_Pervasives_Native.None in
                  r)
@@ -1159,10 +1159,8 @@ let (simplify :
                                      | uu___22 -> tm)
                                 | uu___19 -> tm)
                            | (ty, FStar_Pervasives_Native.Some
-                              { FStar_Syntax_Syntax.aqual_implicit = true;
-                                FStar_Syntax_Syntax.aqual_attributes =
-                                  uu___17;_})::(t, uu___18)::[]
-                               ->
+                              (FStar_Syntax_Syntax.Implicit uu___17))::
+                               (t, uu___18)::[] ->
                                let uu___19 =
                                  let uu___20 = FStar_Syntax_Subst.compress t in
                                  uu___20.FStar_Syntax_Syntax.n in
@@ -1202,10 +1200,8 @@ let (simplify :
                                         | uu___24 -> tm)
                                    | uu___21 -> tm)
                               | (ty, FStar_Pervasives_Native.Some
-                                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                                   FStar_Syntax_Syntax.aqual_attributes =
-                                     uu___19;_})::(t, uu___20)::[]
-                                  ->
+                                 (FStar_Syntax_Syntax.Implicit uu___19))::
+                                  (t, uu___20)::[] ->
                                   let uu___21 =
                                     let uu___22 =
                                       FStar_Syntax_Subst.compress t in
@@ -1537,10 +1533,8 @@ let (simplify :
                                      | uu___19 -> tm)
                                 | uu___16 -> tm)
                            | (ty, FStar_Pervasives_Native.Some
-                              { FStar_Syntax_Syntax.aqual_implicit = true;
-                                FStar_Syntax_Syntax.aqual_attributes =
-                                  uu___14;_})::(t, uu___15)::[]
-                               ->
+                              (FStar_Syntax_Syntax.Implicit uu___14))::
+                               (t, uu___15)::[] ->
                                let uu___16 =
                                  let uu___17 = FStar_Syntax_Subst.compress t in
                                  uu___17.FStar_Syntax_Syntax.n in
@@ -1580,10 +1574,8 @@ let (simplify :
                                         | uu___21 -> tm)
                                    | uu___18 -> tm)
                               | (ty, FStar_Pervasives_Native.Some
-                                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                                   FStar_Syntax_Syntax.aqual_attributes =
-                                     uu___16;_})::(t, uu___17)::[]
-                                  ->
+                                 (FStar_Syntax_Syntax.Implicit uu___16))::
+                                  (t, uu___17)::[] ->
                                   let uu___18 =
                                     let uu___19 =
                                       FStar_Syntax_Subst.compress t in

@@ -248,11 +248,9 @@ let (destruct_eq' :
                   (match uu___4 with
                    | (FStar_Syntax_Syntax.Tm_fvar fv,
                       (uu___5, FStar_Pervasives_Native.Some
-                       { FStar_Syntax_Syntax.aqual_implicit = true;
-                         FStar_Syntax_Syntax.aqual_attributes = uu___6;_})::
-                      (e1, FStar_Pervasives_Native.None)::(e2,
-                                                           FStar_Pervasives_Native.None)::[])
-                       when
+                       (FStar_Syntax_Syntax.Implicit uu___6))::(e1,
+                                                                FStar_Pervasives_Native.None)::
+                      (e2, FStar_Pervasives_Native.None)::[]) when
                        FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.op_Eq
                        -> FStar_Pervasives_Native.Some (e1, e2)
@@ -2035,15 +2033,11 @@ let rec (__try_unify_by_application :
                                                [FStar_Syntax_Syntax.NT
                                                   ((b.FStar_Syntax_Syntax.binder_bv),
                                                     uvt)] typ in
-                                           let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 =
-                                                 FStar_Syntax_Util.aqual_of_binder
-                                                   b in
-                                               (uvt, uu___10, uv) in
-                                             uu___9 :: acc in
                                            __try_unify_by_application
-                                             only_match uu___8 e typ' ty2 rng)))))
+                                             only_match
+                                             ((uvt,
+                                                (b.FStar_Syntax_Syntax.binder_qual),
+                                                uv) :: acc) e typ' ty2 rng)))))
 let (try_unify_by_application :
   Prims.bool ->
     env ->
@@ -2113,6 +2107,15 @@ let (t_apply :
                                               "t_apply: found args = %s\n"
                                               uu___7)
                                          (fun uu___6 ->
+                                            let fix_qual q =
+                                              match q with
+                                              | FStar_Pervasives_Native.Some
+                                                  (FStar_Syntax_Syntax.Meta
+                                                  uu___7) ->
+                                                  FStar_Pervasives_Native.Some
+                                                    (FStar_Syntax_Syntax.Implicit
+                                                       false)
+                                              | uu___7 -> q in
                                             let w =
                                               FStar_Compiler_List.fold_right
                                                 (fun uu___7 ->
@@ -2120,8 +2123,10 @@ let (t_apply :
                                                      match uu___7 with
                                                      | (uvt, q, uu___8) ->
                                                          FStar_Syntax_Util.mk_app
-                                                           w1 [(uvt, q)]) uvs
-                                                tm1 in
+                                                           w1
+                                                           [(uvt,
+                                                              (fix_qual q))])
+                                                uvs tm1 in
                                             let uvset =
                                               let uu___7 =
                                                 FStar_Syntax_Free.new_uv_set
@@ -4743,7 +4748,7 @@ let (t_destruct :
                                                                     FStar_Syntax_Syntax.binder_bv
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
-                                                                    = bq;
+                                                                    = aq;
                                                                     FStar_Syntax_Syntax.binder_attrs
                                                                     = uu___25;_}
                                                                     ->
@@ -4751,7 +4756,7 @@ let (t_destruct :
                                                                     (FStar_Syntax_Syntax.Pat_var
                                                                     bv)),
                                                                     (is_imp
-                                                                    bq))) bs3 in
+                                                                    aq))) bs3 in
                                                                     let subpats
                                                                     =
                                                                     FStar_Compiler_List.op_At
@@ -5058,7 +5063,8 @@ let (t_destruct :
                                                                     (FStar_Syntax_Syntax.Tm_match
                                                                     (s_tm1,
                                                                     FStar_Pervasives_Native.None,
-                                                                    brs))
+                                                                    brs,
+                                                                    FStar_Pervasives_Native.None))
                                                                     s_tm1.FStar_Syntax_Syntax.pos in
                                                                     let uu___15
                                                                     =
@@ -5256,23 +5262,23 @@ let rec (inspect :
                             | uu___4 ->
                                 failwith
                                   "impossible: open_term returned different amount of binders")))
-           | FStar_Syntax_Syntax.Tm_match (t4, ret_opt, brs) ->
+           | FStar_Syntax_Syntax.Tm_match (t4, ret_opt, brs, uu___2) ->
                let rec inspect_pat p =
                  match p.FStar_Syntax_Syntax.v with
                  | FStar_Syntax_Syntax.Pat_constant c ->
-                     let uu___2 = FStar_Reflection_Basic.inspect_const c in
-                     FStar_Reflection_Data.Pat_Constant uu___2
+                     let uu___3 = FStar_Reflection_Basic.inspect_const c in
+                     FStar_Reflection_Data.Pat_Constant uu___3
                  | FStar_Syntax_Syntax.Pat_cons (fv, ps) ->
-                     let uu___2 =
-                       let uu___3 =
+                     let uu___3 =
+                       let uu___4 =
                          FStar_Compiler_List.map
-                           (fun uu___4 ->
-                              match uu___4 with
+                           (fun uu___5 ->
+                              match uu___5 with
                               | (p1, b) ->
-                                  let uu___5 = inspect_pat p1 in (uu___5, b))
+                                  let uu___6 = inspect_pat p1 in (uu___6, b))
                            ps in
-                       (fv, uu___3) in
-                     FStar_Reflection_Data.Pat_Cons uu___2
+                       (fv, uu___4) in
+                     FStar_Reflection_Data.Pat_Cons uu___3
                  | FStar_Syntax_Syntax.Pat_var bv ->
                      FStar_Reflection_Data.Pat_Var bv
                  | FStar_Syntax_Syntax.Pat_wild bv ->
@@ -5283,10 +5289,10 @@ let rec (inspect :
                  FStar_Compiler_List.map FStar_Syntax_Subst.open_branch brs in
                let brs2 =
                  FStar_Compiler_List.map
-                   (fun uu___2 ->
-                      match uu___2 with
-                      | (pat, uu___3, t5) ->
-                          let uu___4 = inspect_pat pat in (uu___4, t5)) brs1 in
+                   (fun uu___3 ->
+                      match uu___3 with
+                      | (pat, uu___4, t5) ->
+                          let uu___5 = inspect_pat pat in (uu___5, t5)) brs1 in
                FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                  (FStar_Reflection_Data.Tv_Match (t4, ret_opt, brs2))
            | FStar_Syntax_Syntax.Tm_unknown ->
@@ -5422,7 +5428,8 @@ let (pack :
           FStar_Compiler_List.map FStar_Syntax_Subst.close_branch brs1 in
         let uu___ =
           FStar_Syntax_Syntax.mk
-            (FStar_Syntax_Syntax.Tm_match (t, ret_opt, brs2))
+            (FStar_Syntax_Syntax.Tm_match
+               (t, ret_opt, brs2, FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
@@ -5557,7 +5564,8 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                         FStar_Syntax_Subst.compress uu___6 in
                       uu___5.FStar_Syntax_Syntax.n in
                     (match uu___4 with
-                     | FStar_Syntax_Syntax.Tm_match (e, asc_opt, brs) ->
+                     | FStar_Syntax_Syntax.Tm_match (e, asc_opt, brs, lopt)
+                         ->
                          let brs' =
                            FStar_Compiler_List.map
                              (fun uu___5 ->
@@ -5568,7 +5576,8 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                     (p, w, uu___6)) brs in
                          let l' =
                            FStar_Syntax_Syntax.mk
-                             (FStar_Syntax_Syntax.Tm_match (e, asc_opt, brs'))
+                             (FStar_Syntax_Syntax.Tm_match
+                                (e, asc_opt, brs', lopt))
                              l.FStar_Syntax_Syntax.pos in
                          let uu___5 =
                            let uu___6 = FStar_Tactics_Types.goal_env g in

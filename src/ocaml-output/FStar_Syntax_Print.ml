@@ -121,7 +121,7 @@ let is_inr :
     | FStar_Pervasives.Inl uu___1 -> false
     | FStar_Pervasives.Inr uu___1 -> true
 let (filter_imp :
-  FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
+  FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     Prims.bool)
   =
   fun aq ->
@@ -142,11 +142,11 @@ let filter_imp_args :
   fun args ->
     FStar_Compiler_Effect.op_Bar_Greater args
       (FStar_Compiler_List.filter
-         (fun uu___ ->
-            match uu___ with
-            | (uu___1, FStar_Pervasives_Native.None) -> true
-            | (uu___1, FStar_Pervasives_Native.Some a) ->
-                Prims.op_Negation a.FStar_Syntax_Syntax.aqual_implicit))
+         (fun a ->
+            let uu___ =
+              FStar_Compiler_Effect.op_Bar_Greater a
+                FStar_Pervasives_Native.snd in
+            FStar_Compiler_Effect.op_Bar_Greater uu___ filter_imp))
 let (filter_imp_binders :
   FStar_Syntax_Syntax.binder Prims.list ->
     FStar_Syntax_Syntax.binder Prims.list)
@@ -642,7 +642,23 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___3 = term_to_string e in
                FStar_Compiler_Util.format3 "(%s <ascribed: %s %s)" uu___3
                  annot1 topt1
-           | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches) ->
+           | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches, lc) ->
+               let lc_str =
+                 match lc with
+                 | FStar_Pervasives_Native.Some lc1 when
+                     FStar_Options.print_implicits () ->
+                     let uu___3 =
+                       if
+                         FStar_Compiler_Option.isNone
+                           lc1.FStar_Syntax_Syntax.residual_typ
+                       then "None"
+                       else
+                         (let uu___5 =
+                            FStar_Compiler_Option.get
+                              lc1.FStar_Syntax_Syntax.residual_typ in
+                          term_to_string uu___5) in
+                     FStar_Compiler_Util.format1 " (residual_comp:%s)" uu___3
+                 | uu___3 -> "" in
                let uu___3 = term_to_string head in
                let uu___4 =
                  match asc_opt with
@@ -665,8 +681,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    FStar_Compiler_Effect.op_Bar_Greater branches
                      (FStar_Compiler_List.map branch_to_string) in
                  FStar_Compiler_Util.concat_l "\n\t|" uu___6 in
-               FStar_Compiler_Util.format3 "(match %s %swith\n\t| %s)" uu___3
-                 uu___4 uu___5
+               FStar_Compiler_Util.format4 "(match %s %swith\n\t| %s%s)"
+                 uu___3 uu___4 uu___5 lc_str
            | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
                let uu___3 = FStar_Options.print_universes () in
                if uu___3
@@ -847,9 +863,9 @@ and (attrs_to_string :
           FStar_Compiler_Effect.op_Bar_Greater uu___2
             (FStar_String.concat "; ") in
         FStar_Compiler_Util.format1 "[@ %s]" uu___1
-and (bqual_to_string' :
+and (aqual_to_string' :
   Prims.string ->
-    FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
+    FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
       Prims.string)
   =
   fun s ->
@@ -870,19 +886,11 @@ and (bqual_to_string' :
             Prims.op_Hat uu___2 (Prims.op_Hat "]" s) in
           Prims.op_Hat "#[" uu___1
       | FStar_Pervasives_Native.None -> s
-and (aqual_to_string' :
+and (imp_to_string :
   Prims.string ->
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
       Prims.string)
-  =
-  fun s ->
-    fun uu___ ->
-      match uu___ with
-      | FStar_Pervasives_Native.Some
-          { FStar_Syntax_Syntax.aqual_implicit = true;
-            FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
-          -> Prims.op_Hat "#" s
-      | uu___1 -> s
+  = fun s -> fun aq -> aqual_to_string' s aq
 and (binder_to_string' :
   Prims.bool -> FStar_Syntax_Syntax.binder -> Prims.string) =
   fun is_arrow ->
@@ -922,7 +930,7 @@ and (binder_to_string' :
               let uu___5 =
                 let uu___6 = nm_to_string b.FStar_Syntax_Syntax.binder_bv in
                 Prims.op_Hat attrs uu___6 in
-              bqual_to_string' uu___5 b.FStar_Syntax_Syntax.binder_qual
+              imp_to_string uu___5 b.FStar_Syntax_Syntax.binder_qual
             else
               (let uu___6 =
                  let uu___7 =
@@ -934,7 +942,7 @@ and (binder_to_string' :
                      Prims.op_Hat ":" uu___10 in
                    Prims.op_Hat uu___8 uu___9 in
                  Prims.op_Hat attrs uu___7 in
-               bqual_to_string' uu___6 b.FStar_Syntax_Syntax.binder_qual)))
+               imp_to_string uu___6 b.FStar_Syntax_Syntax.binder_qual)))
 and (binder_to_string : FStar_Syntax_Syntax.binder -> Prims.string) =
   fun b -> binder_to_string' false b
 and (arrow_binder_to_string : FStar_Syntax_Syntax.binder -> Prims.string) =
@@ -964,8 +972,7 @@ and (arg_to_string :
   =
   fun uu___ ->
     match uu___ with
-    | (a, imp) ->
-        let uu___1 = term_to_string a in aqual_to_string' uu___1 imp
+    | (a, imp) -> let uu___1 = term_to_string a in imp_to_string uu___1 imp
 and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
   fun args ->
     let args1 =
@@ -1215,8 +1222,6 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
           uu___1 uu___2 uu___3
 let (aqual_to_string : FStar_Syntax_Syntax.aqual -> Prims.string) =
   fun aq -> aqual_to_string' "" aq
-let (bqual_to_string : FStar_Syntax_Syntax.bqual -> Prims.string) =
-  fun bq -> bqual_to_string' "" bq
 let (comp_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env ->
@@ -1250,7 +1255,7 @@ let (binder_to_json :
       let n =
         let uu___ =
           let uu___1 = nm_to_string b.FStar_Syntax_Syntax.binder_bv in
-          bqual_to_string' uu___1 b.FStar_Syntax_Syntax.binder_qual in
+          imp_to_string uu___1 b.FStar_Syntax_Syntax.binder_qual in
         FStar_Compiler_Util.JsonStr uu___ in
       let t =
         let uu___ =

@@ -40,7 +40,9 @@ type atom =
   | Var of var 
   | Match of (t *
   (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option) *
-  (unit -> FStar_Syntax_Syntax.branch Prims.list)) 
+  (unit -> FStar_Syntax_Syntax.branch Prims.list) *
+  (unit -> FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
+  
   | UnreducedLet of (var * t FStar_Thunk.t * t FStar_Thunk.t * t
   FStar_Thunk.t * FStar_Syntax_Syntax.letbinding) 
   | UnreducedLetRec of ((var * t * t) Prims.list * t *
@@ -121,7 +123,9 @@ let (__proj__Match__item___0 :
   atom ->
     (t *
       (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
-      * (unit -> FStar_Syntax_Syntax.branch Prims.list)))
+      * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
+      (unit ->
+         FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)))
   = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_UnreducedLet : atom -> Prims.bool) =
   fun projectee ->
@@ -378,13 +382,18 @@ let (mkAccuVar : var -> t) =
 let (mkAccuMatch :
   t ->
     (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
-      -> (unit -> FStar_Syntax_Syntax.branch Prims.list) -> t)
+      ->
+      (unit -> FStar_Syntax_Syntax.branch Prims.list) ->
+        (unit ->
+           FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)
+          -> t)
   =
   fun s ->
     fun ret ->
       fun bs ->
-        FStar_Compiler_Effect.op_Less_Bar mk_t
-          (Accu ((Match (s, ret, bs)), []))
+        fun rc ->
+          FStar_Compiler_Effect.op_Less_Bar mk_t
+            (Accu ((Match (s, ret, bs, rc)), []))
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
   fun uu___ ->
     if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.Unknown
@@ -655,8 +664,8 @@ and (atom_to_string : atom -> Prims.string) =
     | Var v ->
         let uu___ = FStar_Syntax_Print.bv_to_string v in
         FStar_String.op_Hat "Var " uu___
-    | Match (t1, uu___, uu___1) ->
-        let uu___2 = t_to_string t1 in FStar_String.op_Hat "Match " uu___2
+    | Match (t1, uu___, uu___1, uu___2) ->
+        let uu___3 = t_to_string t1 in FStar_String.op_Hat "Match " uu___3
     | UnreducedLet (var1, typ, def, body, lb) ->
         let uu___ =
           let uu___1 = FStar_Syntax_Print.lbs_to_string [] (false, [lb]) in
@@ -778,8 +787,7 @@ let (lid_as_typ :
             FStar_Pervasives_Native.None in
         mkFV uu___ us args1
 let (as_iarg : t -> arg) =
-  fun a ->
-    let uu___ = FStar_Syntax_Syntax.as_aqual_implicit true in (a, uu___)
+  fun a -> (a, (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag))
 let (as_arg : t -> arg) = fun a -> (a, FStar_Pervasives_Native.None)
 let (make_arrow1 : t -> arg -> t) =
   fun t1 ->
@@ -1161,8 +1169,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                 (tl, FStar_Pervasives_Native.None)::(hd,
                                                      FStar_Pervasives_Native.None)::
                 (uu___1, FStar_Pervasives_Native.Some
-                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                   FStar_Syntax_Syntax.aqual_attributes = uu___2;_})::[])
+                 (FStar_Syntax_Syntax.Implicit uu___2))::[])
                when
                FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
                ->

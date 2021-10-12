@@ -1339,7 +1339,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let body = match sc_pat_opt with
             | Some (sc, pat) ->
                 let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
-                S.mk (Tm_match(sc, None, [(pat, None, body)])) body.pos
+                S.mk (Tm_match(sc, None, [(pat, None, body)], None)) body.pos
             | None -> body in
             setpos (no_annot_abs (List.rev bs) body), aq
 
@@ -1604,7 +1604,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
              | []
              | [{v=Pat_wild _}, _] -> body
              | _ ->
-               S.mk (Tm_match(S.bv_to_name x, None, desugar_disjunctive_pattern pat None body)) top.range
+               S.mk (Tm_match(S.bv_to_name x, None, desugar_disjunctive_pattern pat None body, None)) top.range
            in
            mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
         in
@@ -1630,7 +1630,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t3', aq3 = desugar_term_aq env t3 in
       mk (Tm_match(t1', asc_opt,
                     [(withinfo (Pat_constant (Const_bool true)) t1.range, None, t2');
-                     (withinfo (Pat_wild x) t1.range, None, t3')])), join_aqs [aq1;aq0;aq2;aq3]
+                     (withinfo (Pat_wild x) t1.range, None, t3')], None)), join_aqs [aq1;aq0;aq2;aq3]
 
     | TryWith(e, branches) ->
       let r = top.range in
@@ -1657,7 +1657,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | None -> None, []
         | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
       let brs, aqs = List.map desugar_branch branches |> List.unzip |> (fun (x, y) -> (List.flatten x, y)) in
-      mk <| Tm_match(e, asc_opt, brs), join_aqs (aq::aq0::aqs)
+      mk <| Tm_match(e, asc_opt, brs, None), join_aqs (aq::aq0::aqs)
 
     | Ascribed(e, t, tac_opt) ->
       let asc, aq0 = desugar_ascription env t tac_opt in

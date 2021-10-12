@@ -384,10 +384,10 @@ let (subst_flags' :
                   let uu___1 = subst_dec_order' s dec_order in
                   FStar_Syntax_Syntax.DECREASES uu___1
               | f -> f))
-let (subst_bqual' :
+let (subst_imp' :
   FStar_Syntax_Syntax.subst_ts ->
-    FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
   =
   fun s ->
     fun i ->
@@ -397,25 +397,6 @@ let (subst_bqual' :
             let uu___1 = subst' s t in FStar_Syntax_Syntax.Meta uu___1 in
           FStar_Pervasives_Native.Some uu___
       | uu___ -> i
-let (subst_aqual' :
-  FStar_Syntax_Syntax.subst_ts ->
-    FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual)
-  =
-  fun s ->
-    fun i ->
-      match i with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some a ->
-          let uu___ =
-            let uu___1 =
-              FStar_Compiler_List.map (subst' s)
-                a.FStar_Syntax_Syntax.aqual_attributes in
-            {
-              FStar_Syntax_Syntax.aqual_implicit =
-                (a.FStar_Syntax_Syntax.aqual_implicit);
-              FStar_Syntax_Syntax.aqual_attributes = uu___1
-            } in
-          FStar_Pervasives_Native.Some uu___
 let (subst_comp_typ' :
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
@@ -439,7 +420,7 @@ let (subst_comp_typ' :
                  match uu___5 with
                  | (t1, imp) ->
                      let uu___6 = subst' s t1 in
-                     let uu___7 = subst_aqual' s imp in (uu___6, uu___7))
+                     let uu___7 = subst_imp' s imp in (uu___6, uu___7))
               t.FStar_Syntax_Syntax.effect_args in
           let uu___5 = subst_flags' s t.FStar_Syntax_Syntax.flags in
           {
@@ -542,7 +523,7 @@ let (subst_binder' :
           FStar_Syntax_Syntax.index = (uu___1.FStar_Syntax_Syntax.index);
           FStar_Syntax_Syntax.sort = uu___2
         } in
-      let uu___1 = subst_bqual' s b.FStar_Syntax_Syntax.binder_qual in
+      let uu___1 = subst_imp' s b.FStar_Syntax_Syntax.binder_qual in
       let uu___2 =
         FStar_Compiler_Effect.op_Bar_Greater
           b.FStar_Syntax_Syntax.binder_attrs
@@ -846,7 +827,7 @@ let rec (push_subst :
           let phi1 =
             let uu___ = shift_subst' Prims.int_one s in subst' uu___ phi in
           mk (FStar_Syntax_Syntax.Tm_refine (x1, phi1))
-      | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats) ->
+      | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats, lopt) ->
           let t01 = subst' s t0 in
           let pats1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
@@ -871,7 +852,8 @@ let rec (push_subst :
             let uu___1 =
               let uu___2 =
                 FStar_Compiler_Util.map_opt asc_opt (subst_ascription' s) in
-              (t01, uu___2, pats1) in
+              let uu___3 = push_subst_lcomp s lopt in
+              (t01, uu___2, pats1, uu___3) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), body) ->
@@ -1012,16 +994,10 @@ let (subst_comp :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
   = fun s -> fun t -> subst_comp' ([s], FStar_Syntax_Syntax.NoUseRange) t
-let (subst_bqual :
-  FStar_Syntax_Syntax.subst_elt Prims.list ->
-    FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual)
-  =
-  fun s -> fun imp -> subst_bqual' ([s], FStar_Syntax_Syntax.NoUseRange) imp
-let (subst_aqual :
+let (subst_imp :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual)
-  =
-  fun s -> fun imp -> subst_aqual' ([s], FStar_Syntax_Syntax.NoUseRange) imp
+  = fun s -> fun imp -> subst_imp' ([s], FStar_Syntax_Syntax.NoUseRange) imp
 let (subst_ascription :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
     FStar_Syntax_Syntax.ascription -> FStar_Syntax_Syntax.ascription)
@@ -1068,7 +1044,7 @@ let (open_binders' :
               FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu___1
             } in
-          let imp = subst_bqual o b.FStar_Syntax_Syntax.binder_qual in
+          let imp = subst_imp o b.FStar_Syntax_Syntax.binder_qual in
           let attrs =
             FStar_Compiler_Effect.op_Bar_Greater
               b.FStar_Syntax_Syntax.binder_attrs
@@ -1240,7 +1216,7 @@ let (close_binders :
               FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu___1
             } in
-          let imp = subst_bqual s b.FStar_Syntax_Syntax.binder_qual in
+          let imp = subst_imp s b.FStar_Syntax_Syntax.binder_qual in
           let attrs =
             FStar_Compiler_Effect.op_Bar_Greater
               b.FStar_Syntax_Syntax.binder_attrs
@@ -1704,18 +1680,6 @@ let rec (deep_compress :
           uu___ li.FStar_Syntax_Syntax.lkind li in
         deep_compress t2
     | FStar_Syntax_Syntax.Tm_abs (bs, t2, rc_opt) ->
-        let elim_rc rc =
-          let uu___ =
-            FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
-              deep_compress in
-          let uu___1 =
-            deep_compress_cflags rc.FStar_Syntax_Syntax.residual_flags in
-          {
-            FStar_Syntax_Syntax.residual_effect =
-              (rc.FStar_Syntax_Syntax.residual_effect);
-            FStar_Syntax_Syntax.residual_typ = uu___;
-            FStar_Syntax_Syntax.residual_flags = uu___1
-          } in
         let uu___ =
           let uu___1 =
             let uu___2 = deep_compress_binders bs in
@@ -1745,7 +1709,7 @@ let rec (deep_compress :
             let uu___3 = deep_compress_args args in (uu___2, uu___3) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
         mk uu___
-    | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, branches) ->
+    | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, branches, rc_opt) ->
         let rec elim_pat p =
           match p.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_var x ->
@@ -1799,7 +1763,8 @@ let rec (deep_compress :
             let uu___2 = deep_compress t2 in
             let uu___3 = FStar_Compiler_Util.map_opt asc_opt elim_ascription in
             let uu___4 = FStar_Compiler_List.map elim_branch branches in
-            (uu___2, uu___3, uu___4) in
+            let uu___5 = FStar_Compiler_Util.map_opt rc_opt elim_rc in
+            (uu___2, uu___3, uu___4, uu___5) in
           FStar_Syntax_Syntax.Tm_match uu___1 in
         mk uu___
     | FStar_Syntax_Syntax.Tm_ascribed (t2, a, lopt) ->
@@ -1876,6 +1841,19 @@ and (elim_ascription :
               FStar_Pervasives.Inr uu___2 in
         let uu___2 = FStar_Compiler_Util.map_opt topt deep_compress in
         (uu___1, uu___2)
+and (elim_rc :
+  FStar_Syntax_Syntax.residual_comp -> FStar_Syntax_Syntax.residual_comp) =
+  fun rc ->
+    let uu___ =
+      FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
+        deep_compress in
+    let uu___1 = deep_compress_cflags rc.FStar_Syntax_Syntax.residual_flags in
+    {
+      FStar_Syntax_Syntax.residual_effect =
+        (rc.FStar_Syntax_Syntax.residual_effect);
+      FStar_Syntax_Syntax.residual_typ = uu___;
+      FStar_Syntax_Syntax.residual_flags = uu___1
+    }
 and (deep_compress_dec_order :
   FStar_Syntax_Syntax.decreases_order -> FStar_Syntax_Syntax.decreases_order)
   =
@@ -1995,29 +1973,13 @@ and (deep_compress_args :
          | (t, q) ->
              let t1 = deep_compress t in
              let q1 = deep_compress_aqual q in (t1, q1)) args
-and (deep_compress_bqual :
-  FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual) =
+and (deep_compress_aqual :
+  FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual) =
   fun q ->
     match q with
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
         let uu___ =
           let uu___1 = deep_compress t in FStar_Syntax_Syntax.Meta uu___1 in
-        FStar_Pervasives_Native.Some uu___
-    | uu___ -> q
-and (deep_compress_aqual :
-  FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual) =
-  fun q ->
-    match q with
-    | FStar_Pervasives_Native.Some a ->
-        let uu___ =
-          let uu___1 =
-            FStar_Compiler_List.map deep_compress
-              a.FStar_Syntax_Syntax.aqual_attributes in
-          {
-            FStar_Syntax_Syntax.aqual_implicit =
-              (a.FStar_Syntax_Syntax.aqual_implicit);
-            FStar_Syntax_Syntax.aqual_attributes = uu___1
-          } in
         FStar_Pervasives_Native.Some uu___
     | uu___ -> q
 and (deep_compress_binders :
@@ -2037,7 +1999,7 @@ and (deep_compress_binders :
              FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
              FStar_Syntax_Syntax.sort = uu___1
            } in
-         let q = deep_compress_bqual b.FStar_Syntax_Syntax.binder_qual in
+         let q = deep_compress_aqual b.FStar_Syntax_Syntax.binder_qual in
          let attrs =
            FStar_Compiler_Effect.op_Bar_Greater
              b.FStar_Syntax_Syntax.binder_attrs

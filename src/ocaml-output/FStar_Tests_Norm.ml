@@ -120,8 +120,8 @@ let (mk_match :
           (FStar_Compiler_List.map FStar_Syntax_Util.branch) in
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_match
-           (h, FStar_Pervasives_Native.None, branches1))
-        FStar_Compiler_Range.dummyRange
+           (h, FStar_Pervasives_Native.None, branches1,
+             FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -1241,13 +1241,10 @@ let run_either :
               (FStar_Options.Bool true);
             FStar_Options.set_option "print_implicits"
               (FStar_Options.Bool true);
-            FStar_Options.set_option "ugly" (FStar_Options.Bool true);
-            FStar_Options.set_option "print_bound_var_types"
-              (FStar_Options.Bool true);
-            (let uu___7 =
-               let uu___8 = FStar_Syntax_Util.unascribe x in
-               FStar_Tests_Util.term_eq uu___8 expected in
-             FStar_Tests_Util.always i uu___7)))
+            (let uu___5 =
+               let uu___6 = FStar_Syntax_Util.unascribe x in
+               FStar_Tests_Util.term_eq uu___6 expected in
+             FStar_Tests_Util.always i uu___5)))
 let (run_interpreter :
   Prims.int ->
     FStar_Syntax_Syntax.term ->

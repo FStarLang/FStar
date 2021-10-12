@@ -1121,26 +1121,27 @@ let rec (ty_strictly_positive_in_type :
                           "Checking strict positivity in an Tm_refine, recur in the bv sort)");
                      ty_strictly_positive_in_type ty_lid
                        bv.FStar_Syntax_Syntax.sort unfolded env)
-                | FStar_Syntax_Syntax.Tm_match (uu___4, uu___5, branches) ->
+                | FStar_Syntax_Syntax.Tm_match
+                    (uu___4, uu___5, branches, uu___6) ->
                     (debug_log env
-                       (fun uu___7 ->
+                       (fun uu___8 ->
                           "Checking strict positivity in an Tm_match, recur in the branches)");
                      FStar_Compiler_List.for_all
-                       (fun uu___7 ->
-                          match uu___7 with
-                          | (p, uu___8, t) ->
+                       (fun uu___8 ->
+                          match uu___8 with
+                          | (p, uu___9, t) ->
                               let bs =
-                                let uu___9 = FStar_Syntax_Syntax.pat_bvs p in
+                                let uu___10 = FStar_Syntax_Syntax.pat_bvs p in
                                 FStar_Compiler_List.map
-                                  FStar_Syntax_Syntax.mk_binder uu___9 in
-                              let uu___9 = FStar_Syntax_Subst.open_term bs t in
-                              (match uu___9 with
+                                  FStar_Syntax_Syntax.mk_binder uu___10 in
+                              let uu___10 = FStar_Syntax_Subst.open_term bs t in
+                              (match uu___10 with
                                | (bs1, t1) ->
-                                   let uu___10 =
+                                   let uu___11 =
                                      FStar_TypeChecker_Env.push_binders env
                                        bs1 in
                                    ty_strictly_positive_in_type ty_lid t1
-                                     unfolded uu___10)) branches)
+                                     unfolded uu___11)) branches)
                 | FStar_Syntax_Syntax.Tm_ascribed (t, uu___4, uu___5) ->
                     (debug_log env
                        (fun uu___7 ->
@@ -1654,13 +1655,29 @@ let (get_optimized_haseq_axiom :
                    let ind1 =
                      let uu___2 =
                        FStar_Compiler_List.map
-                         FStar_Syntax_Util.arg_of_non_null_binder bs2 in
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | { FStar_Syntax_Syntax.binder_bv = bv;
+                                FStar_Syntax_Syntax.binder_qual = aq;
+                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}
+                                ->
+                                let uu___5 =
+                                  FStar_Syntax_Syntax.bv_to_name bv in
+                                (uu___5, aq)) bs2 in
                      FStar_Syntax_Syntax.mk_Tm_app ind uu___2
                        FStar_Compiler_Range.dummyRange in
                    let ind2 =
                      let uu___2 =
                        FStar_Compiler_List.map
-                         FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | { FStar_Syntax_Syntax.binder_bv = bv;
+                                FStar_Syntax_Syntax.binder_qual = aq;
+                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}
+                                ->
+                                let uu___5 =
+                                  FStar_Syntax_Syntax.bv_to_name bv in
+                                (uu___5, aq)) ibs1 in
                      FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
                        FStar_Compiler_Range.dummyRange in
                    let haseq_ind =
@@ -2142,13 +2159,29 @@ let (unoptimized_haseq_ty :
                        let ind1 =
                          let uu___2 =
                            FStar_Compiler_List.map
-                             FStar_Syntax_Util.arg_of_non_null_binder bs2 in
+                             (fun uu___3 ->
+                                match uu___3 with
+                                | { FStar_Syntax_Syntax.binder_bv = bv;
+                                    FStar_Syntax_Syntax.binder_qual = aq;
+                                    FStar_Syntax_Syntax.binder_attrs = uu___4;_}
+                                    ->
+                                    let uu___5 =
+                                      FStar_Syntax_Syntax.bv_to_name bv in
+                                    (uu___5, aq)) bs2 in
                          FStar_Syntax_Syntax.mk_Tm_app ind uu___2
                            FStar_Compiler_Range.dummyRange in
                        let ind2 =
                          let uu___2 =
                            FStar_Compiler_List.map
-                             FStar_Syntax_Util.arg_of_non_null_binder ibs1 in
+                             (fun uu___3 ->
+                                match uu___3 with
+                                | { FStar_Syntax_Syntax.binder_bv = bv;
+                                    FStar_Syntax_Syntax.binder_qual = aq;
+                                    FStar_Syntax_Syntax.binder_attrs = uu___4;_}
+                                    ->
+                                    let uu___5 =
+                                      FStar_Syntax_Syntax.bv_to_name bv in
+                                    (uu___5, aq)) ibs1 in
                          FStar_Syntax_Syntax.mk_Tm_app ind1 uu___2
                            FStar_Compiler_Range.dummyRange in
                        let haseq_ind =
@@ -2609,7 +2642,17 @@ let (mk_discriminator_and_indexed_projectors :
                               FStar_Compiler_Effect.op_Bar_Greater
                                 (FStar_Compiler_List.op_At tps indices)
                                 (FStar_Compiler_List.map
-                                   FStar_Syntax_Util.arg_of_non_null_binder) in
+                                   (fun uu___ ->
+                                      match uu___ with
+                                      | { FStar_Syntax_Syntax.binder_bv = x;
+                                          FStar_Syntax_Syntax.binder_qual =
+                                            imp;
+                                          FStar_Syntax_Syntax.binder_attrs =
+                                            uu___1;_}
+                                          ->
+                                          let uu___2 =
+                                            FStar_Syntax_Syntax.bv_to_name x in
+                                          (uu___2, imp))) in
                             FStar_Syntax_Syntax.mk_Tm_app inst_tc args p in
                           let unrefined_arg_binder =
                             let uu___ = projectee arg_typ in
@@ -2800,7 +2843,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                          = uu___5;_}
                                                        ->
                                                        let b =
-                                                         FStar_Syntax_Syntax.is_bqual_implicit
+                                                         FStar_Syntax_Syntax.is_implicit
                                                            imp in
                                                        if b && (j < ntps)
                                                        then
@@ -2884,7 +2927,8 @@ let (mk_discriminator_and_indexed_projectors :
                                              uu___7 :: uu___8 in
                                            (arg_exp,
                                              FStar_Pervasives_Native.None,
-                                             uu___6) in
+                                             uu___6,
+                                             FStar_Pervasives_Native.None) in
                                          FStar_Syntax_Syntax.Tm_match uu___5 in
                                        FStar_Syntax_Syntax.mk uu___4 p) in
                                   let dd =
@@ -3133,7 +3177,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                   = uu___7;_}
                                                                 ->
                                                                 let b =
-                                                                  FStar_Syntax_Syntax.is_bqual_implicit
+                                                                  FStar_Syntax_Syntax.is_implicit
                                                                     imp in
                                                                 if
                                                                   (i + ntps)
@@ -3227,7 +3271,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                         [uu___9] in
                                                       (arg_exp,
                                                         FStar_Pervasives_Native.None,
-                                                        uu___8) in
+                                                        uu___8,
+                                                        FStar_Pervasives_Native.None) in
                                                     FStar_Syntax_Syntax.Tm_match
                                                       uu___7 in
                                                   FStar_Syntax_Syntax.mk
