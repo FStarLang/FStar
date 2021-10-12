@@ -133,6 +133,16 @@ unfold let simplify_typedefs =
 
 (* Operations on views *)
 
+[@@c_typedef]
+noextract inline_for_extraction
+let opt_typedef (t: Type0): typedef = {
+  carrier = option t;
+  pcm = opt_pcm #t;
+  view_type = t;
+  view = opt_view t;
+  is_unit = (fun x -> None? x);
+}
+
 open Steel.C.Reference
 
 [@@c_typedef]
