@@ -20,3 +20,10 @@ noeq type typedef = {
   (** A way to decide whether a given element of the PCM is unit (needed to determine the case of a union) *)
   is_unit: x:carrier -> b:bool{b <==> x == one pcm};
 } 
+
+inline_for_extraction noextract
+let view_type_of_typedef
+  (t: typedef)
+: Tot Type0
+= match t with
+  | { view_type = t';  } -> t'
