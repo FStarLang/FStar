@@ -18,21 +18,10 @@ open Steel.C.Typestring
 
 module U32 = FStar.UInt32
 
-unfold let int' = FStar.UInt32.t
-
 (** A struct is encoded by what amounts to a list of (field name, typedef) pairs.
     In this example, we define a struct named point with two u32 fields; to do so
-    we need a typedef for u32s. *)
-
-[@@c_typedef]
-noextract inline_for_extraction
-let c_int': typedef = {
-  carrier = option int';
-  pcm = opt_pcm #int';
-  view_type = int';
-  view = opt_view int';
-  is_unit = (fun x -> None? x);
-}
+    we need a typedef for u32s, which can be found in Steel.C.StdInt. *)
+module I = Steel.C.StdInt
 
 module T = FStar.Tactics
 
@@ -60,8 +49,8 @@ let point_tag = normalize (mk_string_t "PointStruct.point")
 [@@c_struct]
 noextract inline_for_extraction
 let point_fields: c_fields =
-  fields_cons "x" c_int' (
-  fields_cons "y" c_int' (
+  fields_cons "x" I.uint32 (
+  fields_cons "y" I.uint32 (
   fields_nil))
 
 (** The type of (struct point) values *)
