@@ -2661,7 +2661,12 @@ and (readback :
                       let x1 =
                         FStar_Syntax_Syntax.new_bv
                           FStar_Pervasives_Native.None t1 in
-                      FStar_Syntax_Syntax.mk_binder_with_attrs x1 q []) args in
+                      let uu___2 =
+                        FStar_Syntax_Util.bqual_and_attrs_of_aqual q in
+                      (match uu___2 with
+                       | (q1, attrs) ->
+                           FStar_Syntax_Syntax.mk_binder_with_attrs x1 q1 []))
+               args in
            let c1 = readback_comp cfg c in
            let uu___1 = FStar_Syntax_Util.arrow binders c1 in
            with_range uu___1

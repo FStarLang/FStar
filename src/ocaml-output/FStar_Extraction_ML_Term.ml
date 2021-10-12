@@ -3056,7 +3056,9 @@ and (term_as_mlexpr' :
                            let rec remove_implicits args2 f1 t2 =
                              match (args2, t2) with
                              | ((a0, FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Implicit uu___5))::args3,
+                                 { FStar_Syntax_Syntax.aqual_implicit = true;
+                                   FStar_Syntax_Syntax.aqual_attributes =
+                                     uu___5;_})::args3,
                                 FStar_Extraction_ML_Syntax.MLTY_Fun
                                 (uu___6, f', t3)) ->
                                  let uu___7 =

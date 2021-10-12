@@ -3510,7 +3510,9 @@ and (encode_formula :
                | (a, q) ->
                    (match q with
                     | FStar_Pervasives_Native.Some
-                        (FStar_Syntax_Syntax.Implicit uu___1) -> false
+                        { FStar_Syntax_Syntax.aqual_implicit = true;
+                          FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
+                        -> false
                     | uu___1 -> true)) args in
         if (FStar_Compiler_List.length rf) <> (Prims.of_int (2))
         then
