@@ -99,15 +99,10 @@ let check_expected_aqual_for_binder aq b pos =
       else expected_aq //keep the attributes
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =
-    let is_attr_erasable attr =
-        match (SS.compress attr).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv Const.erasable_attr
-        | _ -> false
-    in
     List.iter
       (fun attr ->
-        if is_attr_erasable attr
-        && not (Env.non_informative env binder_ty)
+        if U.is_fvar Const.erasable_attr attr
+        && not (N.non_info_norm env binder_ty)
         then raise_error (Errors.Fatal_QulifierListNotPermitted,
                           "Incompatible attributes:\
                            an erasable attribute on a binder must bind a name at an non-informative type")

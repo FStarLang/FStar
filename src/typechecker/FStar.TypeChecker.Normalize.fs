@@ -1346,7 +1346,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       if (cfg.steps.for_extraction ||
                           cfg.debug.erase_erasable_args) //just for experimentation
                       && aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
-                      then S.tun
+                      then U.exp_unit
                       else a
                     in
                     Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)

@@ -285,21 +285,14 @@ let (check_erasable_binder_attributes :
   fun env ->
     fun attrs ->
       fun binder_ty ->
-        let is_attr_erasable attr =
-          let uu___ =
-            let uu___1 = FStar_Syntax_Subst.compress attr in
-            uu___1.FStar_Syntax_Syntax.n in
-          match uu___ with
-          | FStar_Syntax_Syntax.Tm_fvar fv ->
-              FStar_Syntax_Syntax.fv_eq_lid fv
-                FStar_Parser_Const.erasable_attr
-          | uu___1 -> false in
         FStar_Compiler_List.iter
           (fun attr ->
              let uu___ =
-               (is_attr_erasable attr) &&
+               (FStar_Syntax_Util.is_fvar FStar_Parser_Const.erasable_attr
+                  attr)
+                 &&
                  (let uu___1 =
-                    FStar_TypeChecker_Env.non_informative env binder_ty in
+                    FStar_TypeChecker_Normalize.non_info_norm env binder_ty in
                   Prims.op_Negation uu___1) in
              if uu___
              then

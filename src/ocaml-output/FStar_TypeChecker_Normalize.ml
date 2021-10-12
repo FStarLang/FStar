@@ -3842,7 +3842,7 @@ let rec (norm :
                                         (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args)
                                        && (aqual_is_erasable aq) in
                                    if uu___3
-                                   then FStar_Syntax_Syntax.tun
+                                   then FStar_Syntax_Util.exp_unit
                                    else a in
                                  let uu___3 =
                                    let uu___4 =
