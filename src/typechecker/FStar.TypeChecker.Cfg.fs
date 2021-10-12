@@ -1065,7 +1065,7 @@ let built_in_primitive_steps : prim_step_set =
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide;hide_reveal])
+               (basic_ops@bounded_arith_ops@[reveal_hide])
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)

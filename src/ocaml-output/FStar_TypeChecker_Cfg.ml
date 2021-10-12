@@ -3110,8 +3110,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let strong_steps =
     FStar_Compiler_List.map (as_primitive_step true)
       (FStar_Compiler_List.op_At basic_ops
-         (FStar_Compiler_List.op_At bounded_arith_ops
-            [reveal_hide; hide_reveal])) in
+         (FStar_Compiler_List.op_At bounded_arith_ops [reveal_hide])) in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
   FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)
