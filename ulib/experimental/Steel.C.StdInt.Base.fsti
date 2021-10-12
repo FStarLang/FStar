@@ -1,4 +1,4 @@
-module Steel.C.StdInt
+module Steel.C.StdInt.Base
 
 open FStar.Mul
 

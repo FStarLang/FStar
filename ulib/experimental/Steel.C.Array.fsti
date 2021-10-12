@@ -15,7 +15,7 @@
 *)
 
 module Steel.C.Array
-include Steel.C.StdInt
+include Steel.C.StdInt.Base
 open Steel.Memory
 open Steel.FractionalPermission
 open Steel.Effect

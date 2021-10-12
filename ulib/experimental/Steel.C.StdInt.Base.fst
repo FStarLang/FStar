@@ -1,4 +1,4 @@
-module Steel.C.StdInt
+module Steel.C.StdInt.Base
 
 module U64 = FStar.UInt64
 module I64 = FStar.Int64
