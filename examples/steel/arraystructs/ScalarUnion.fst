@@ -24,27 +24,8 @@ module U16 = FStar.UInt16
 (** A union is encoded by what amounts to a list of (field name,
     typedef) pairs.  In this example, we define a union named
     u32_or_u16 with one u32 field and one u16 field; to do so we need
-    typedefs for u32s and u16s. *)
-
-[@@c_typedef]
-noextract inline_for_extraction
-let u32: typedef = {
-  carrier = option U32.t;
-  pcm = opt_pcm #U32.t;
-  view_type = U32.t;
-  view = opt_view U32.t;
-  is_unit = (fun x -> None? x);
-}
-
-[@@c_typedef]
-noextract inline_for_extraction
-let u16: typedef = {
-  carrier = option U16.t;
-  pcm = opt_pcm #U16.t;
-  view_type = U16.t;
-  view = opt_view U16.t;
-  is_unit = (fun x -> None? x);
-}
+    typedefs for u32s and u16s, which can be found in Steel.C.StdInt. *)
+module I = Steel.C.StdInt
 
 module T = FStar.Tactics
 
@@ -60,8 +41,8 @@ let u32_or_u16_tag = normalize (mk_string_t "ScalarUnion.u32_or_u16")
 [@@c_struct]
 noextract inline_for_extraction
 let u32_or_u16_fields: c_fields =
-  fields_cons "as_u32" u32 (
-  fields_cons "as_u16" u16 (
+  fields_cons "as_u32" I.uint32 (
+  fields_cons "as_u16" I.uint16 (
   fields_nil))
 
 (** The type of (union u32_or_u16) values. *)

@@ -20,6 +20,7 @@ open Steel.C.Typenat
 open Steel.C.Typestring
 
 module U64 = FStar.UInt64
+module I = Steel.C.StdInt
 
 (** In this file we demonstrate how Steel could be used to manipulate the following data type used in Hacl*:
       https://github.com/project-everest/hacl-star/blob/master/code/poly1305/Hacl.Impl.Poly1305.fsti#L18
@@ -29,16 +30,6 @@ module U64 = FStar.UInt64
 
     See PointStruct.fst for more detailed explanations of the various definitions needed below.
 *)
-
-[@@c_typedef]
-noextract inline_for_extraction
-let u64: typedef = {
-  carrier = option U64.t;
-  pcm = opt_pcm #U64.t;
-  view_type = U64.t;
-  view = opt_view U64.t;
-  is_unit = (fun x -> None? x);
-}
 
 module T = FStar.Tactics
 
