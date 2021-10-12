@@ -130,3 +130,38 @@ unfold let simplify_typedefs =
      `%Mktypedef?.view_type;
      `%Mktypedef?.view];
    iota; zeta; primops]
+
+(* Operations on views *)
+
+open Steel.C.Reference
+
+[@@c_typedef]
+inline_for_extraction noextract
+let refine_typedef
+  (t: typedef)
+  (p: (t.view_type -> Tot prop))
+: Tot typedef
+= {
+  carrier = t.carrier;
+  pcm = t.pcm;
+  view_type = Steel.C.Ref.refine t.view_type p;
+  view = refine_view t.view p;
+  is_unit = t.is_unit;
+}
+
+[@@c_typedef]
+inline_for_extraction noextract
+let rewrite_typedef
+  (t: typedef)
+  (#view': Type)
+  (f: t.view_type -> Tot view')
+  (g: view' -> Tot t.view_type)
+  (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
+: Tot typedef
+= {
+  carrier = t.carrier;
+  pcm = t.pcm;
+  view_type = view';
+  view = rewrite_view t.view f g prf;
+  is_unit = t.is_unit;
+}
