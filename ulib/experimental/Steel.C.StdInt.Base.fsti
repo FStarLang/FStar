@@ -19,6 +19,7 @@ val size_v_inj (x1 x2: size_t) : Lemma
   (size_v x1 == size_v x2 ==> x1 == x2)
   [SMTPat (size_v x1); SMTPat (size_v x2)]
 
+inline_for_extraction noextract
 val mk_size_t (x: U32.t) : Pure size_t
   (requires True)
   (ensures (fun y -> size_v y == U32.v x))
