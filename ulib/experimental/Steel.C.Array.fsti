@@ -189,7 +189,7 @@ val gsplit
     length rl == size_v i
   ))
 
-val split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
+val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
   : SteelGhost (array base t `gpair` array base t) opened
           (varray a)
           (fun res -> varray (GPair?.fst res) `star` varray (GPair?.snd res))
@@ -205,15 +205,17 @@ val split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
             s == sl `Seq.append` sr
           )
 
-val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
+val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t)
+  (al ar: Ghost.erased (array base t))
   : SteelAtomicBase (array base t) false opened Unobservable
-          (varray a)
-          (fun _ -> varray a)
-          (fun _ -> size_v i <= length a)
+          (varray al)
+          (fun res -> varray res)
+          (fun _ ->
+            merge_into al ar a
+          )
           (fun h res h' ->
-            h' (varray a) == h (varray a) /\
-            size_v i <= length a /\
-            res == GPair?.fst (gsplit a i)
+            res == Ghost.reveal al /\
+            h' (varray res) == h (varray al)
           )
 
 val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
@@ -226,6 +228,34 @@ val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
             size_v i <= length a /\
             res == GPair?.snd (gsplit a i)
           )
+
+inline_for_extraction
+let split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t) (sq: squash (size_v i <= length a))
+  : SteelAtomicBase (array base t) false opened Unobservable
+          (varray a)
+          (fun res -> varray (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit a i))))
+          `star` varray res)
+          (fun _ -> size_v i <= length a)
+          (fun h res h' ->
+            let s = h (varray a) in
+            let sl = h' (varray (GPair?.fst (gsplit a i))) in
+            let sr = h' (varray res) in
+            size_v i <= length a /\
+            res == GPair?.snd (gsplit a i) /\
+            sl == Seq.slice s 0 (size_v i) /\
+            sr == Seq.slice s (size_v i) (length a) /\
+            s == sl `Seq.append` sr
+          )
+=
+  let sr = split_right a i in
+  let g = split' a i in
+  change_equal_slprop
+    (varray (GPair?.fst g))
+    (varray (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit a i)))));
+  change_equal_slprop
+    (varray (GPair?.snd g))
+    (varray sr);
+  return sr
 
 val join' (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
   : SteelGhost (Ghost.erased (array base t)) opened
