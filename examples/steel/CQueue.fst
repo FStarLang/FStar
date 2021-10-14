@@ -516,9 +516,9 @@ let intro_llist_fragment_tail_snoc
 [@@erasable]
 noeq
 type ll_unsnoc_t (a: Type) = {
-  ll_unsnoc_l: Ghost.erased (list a);
-  ll_unsnoc_ptail: Ghost.erased (ref (ccell_ptrvalue a));
-  ll_unsnoc_tail: Ghost.erased (ccell_lvalue a);
+  ll_unsnoc_l: list a;
+  ll_unsnoc_ptail: ref (ccell_ptrvalue a);
+  ll_unsnoc_tail: ccell_lvalue a;
 }
 
 val elim_llist_fragment_tail_snoc
@@ -533,9 +533,9 @@ val elim_llist_fragment_tail_snoc
     (fun h res h' ->
       Cons? l /\
       Ghost.reveal res.ll_unsnoc_l == unsnoc_hd l /\
-      sel res.ll_unsnoc_ptail h' == Ghost.reveal res.ll_unsnoc_tail /\
+      sel res.ll_unsnoc_ptail h' == res.ll_unsnoc_tail /\
       sel (ccell_data res.ll_unsnoc_tail) h'== unsnoc_tl l /\
-      sel_llist_fragment_tail res.ll_unsnoc_l phead h' == Ghost.reveal res.ll_unsnoc_ptail /\
+      sel_llist_fragment_tail res.ll_unsnoc_l phead h' == res.ll_unsnoc_ptail /\
       sel_llist_fragment_tail l phead h == (ccell_next res.ll_unsnoc_tail)
     )
 
@@ -566,11 +566,10 @@ let elim_llist_fragment_tail_snoc
     (llist_fragment_tail_cons_lvalue_payload l0)
   in
   elim_vrefine (vptr (Ghost.reveal ptail0)) (ccell_is_lvalue_refine a);
-  let tail0 : Ghost.erased (ccell_lvalue a) = Ghost.hide (Ghost.reveal tail) in
   let res = {
-    ll_unsnoc_l = Ghost.hide (unsnoc_hd l0);
-    ll_unsnoc_ptail = ptail0;
-    ll_unsnoc_tail = tail0;
+    ll_unsnoc_l = unsnoc_hd l0;
+    ll_unsnoc_ptail = Ghost.reveal ptail0;
+    ll_unsnoc_tail = Ghost.reveal tail;
   } in
   change_equal_slprop
     (vptr (Ghost.reveal ptail0))
