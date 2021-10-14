@@ -1451,8 +1451,14 @@ let ref_of_array_ghost #inames #base #t x sq =
     _
     (Ghost.reveal v z);
   Steel.C.Ref.pts_to_view_intro
-    _
-    _
+    #inames
+    #base
+    #(option t)
+    #(Steel.C.Opt.opt_pcm #t)
+    (Steel.C.Ref.ref_focus (array_as_ref x) (array_as_one_ref_conn base t))
+    (Ghost.reveal v z)
+    #t
+    #false
     (Steel.C.Opt.opt_view t)
     (Ghost.hide (Seq.index (Ghost.reveal gv <: Seq.seq t) 0));
   change_equal_slprop
@@ -1496,8 +1502,14 @@ let ref_of_array0 #base #t x sq v0 =
   g_ref_of_array'_correct x;
   let r : Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t) = Steel.C.Ref.focus x'.base_ref (array_as_one_ref_conn' x') s (Ghost.reveal v zero_size) in
   Steel.C.Ref.pts_to_view_intro
-    _
-    _
+    #_
+    #base
+    #(option t)
+    #(Steel.C.Opt.opt_pcm #t)
+    r
+    (Ghost.reveal v zero_size)
+    #t
+    #false
     (Steel.C.Opt.opt_view t)
     (Ghost.hide (Seq.index (Ghost.reveal gv <: Seq.seq t) 0));
   intro_vrefine
