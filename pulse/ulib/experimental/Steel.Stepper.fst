@@ -108,11 +108,16 @@ module PR = Steel.PCMReference
 (*** Specializing the reference function for this specific PCM ***)
 
 // Use erased values here to avoid some rewritings
-val pts_to (r:ref stepper p) (v:erased stepper) : vprop
-let pts_to r v = pts_to r v
+[@@__reduce__]
+let pts_to (r:ref stepper p) (v:erased stepper) = pts_to r v
 
+[@@__reduce__]
 let v (r:ref stepper p) (n:nat{n > 0}) : vprop = pts_to r (V n)
+
+[@@__reduce__]
 let s_even (r:ref stepper p) (n:nat) : Pure vprop (n % 2 == 0) (fun _ -> True)  = pts_to r (Even n)
+
+[@@__reduce__]
 let s_odd (r:ref stepper p) (n:nat) : Pure vprop (n % 2 <> 0) (fun _ -> True)  = pts_to r (Odd n)
 
 let frame_compatible (x:erased stepper) (v y:stepper) =
