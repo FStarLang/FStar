@@ -170,7 +170,7 @@ type array' base t = {
   base_len: Ghost.erased size_t;
   base_ref: Steel.C.Reference.ref base (array_view_type t base_len) (array_pcm t base_len);
   from: size_t;
-  to: size_t; // must be Tot because of array_small_to_large below
+  to: Ghost.erased size_t;
   prf: squash (
     size_v base_len >= 0 /\
     size_v from <= size_v to /\
@@ -178,7 +178,7 @@ type array' base t = {
   );
 }
 
-let len' (#base: _) (#t: _) (a: array' base t) : Tot size_t =
+let len' (#base: _) (#t: _) (a: array' base t) : GTot size_t =
   a.to `size_sub` a.from
 
 let array_or_null base t = option (array' base t)
@@ -906,7 +906,7 @@ let array_as_ref_conn
   (#base: Type)
   (#t: Type)
   (a: array' base t)
-: Tot (Steel.C.Connection.connection (array_pcm t a.base_len) (array_pcm t (len' a)))
+: GTot (Steel.C.Connection.connection (array_pcm t a.base_len) (array_pcm t (len' a)))
 = array_conn t a.base_len a.from a.to a.prf
 
 let array_as_ref'
@@ -1036,7 +1036,7 @@ let adjacent r1 r2 =
   let Some r2 = r2 in
   r1.base_len == r2.base_len /\
   r1.base_ref == r2.base_ref /\
-  r1.to == r2.from
+  Ghost.reveal r1.to == r2.from
 
 val t_merge
   (#base: Type)
@@ -1158,6 +1158,7 @@ let array_as_ref_split_left
   array_conn_compose t x.base_len x.from x.to zero_size i;
   Steel.C.Ref.ref_focus_comp x.base_ref (array_as_ref_conn x) (array_conn t (len' x) zero_size i ())
 
+#restart-solver
 let array_as_ref_split_right
   (base: Type)
   (t: Type)
@@ -1172,7 +1173,7 @@ let array_as_ref_split_right
   array_conn_compose t x'.base_len x'.from x'.to i (len x);
   Steel.C.Ref.ref_focus_comp x'.base_ref (array_as_ref_conn x') (array_conn t (len x) i (len x) ())
 
-val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
+val split_ (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
   : SteelGhost (array base t `gpair` array base t) opened
           (varray a)
           (fun res -> varray (GPair?.fst res) `star` varray (GPair?.snd res))
@@ -1191,7 +1192,7 @@ val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
 #push-options "--z3rlimit 128"
 
 #restart-solver
-let split'
+let split_
   #j #base #t x i
 =
   let gv = gget (varray x) in
@@ -1298,17 +1299,27 @@ let split'
     (varray (GPair?.snd res));
   res
 
-let split
+let split'
   #_ #_ #t a i
 =
   let g = gget (varray a) in
   Seq.lemma_split #t (Ghost.reveal g) (size_v i);
-  split' a i
+  split_ a i
 
 let split_left
-  a i
+  a al _
 =
-  return (fst (tsplit a i))
+  let res = Some ({
+    base_len = (Some?.v a).base_len;
+    base_ref = (Some?.v a).base_ref;
+    from = (Some?.v a).from;
+    to = (Some?.v al).to;
+    prf = ();
+  }) in
+  change_equal_slprop
+    (varray al)
+    (varray res);
+  return res
 
 let split_right
   a i
@@ -1361,7 +1372,7 @@ let array_as_one_ref_conn'
   (requires (size_v (len' r) == 1))
   (ensures (fun _ -> True))
 =
-  array_conn t r.base_len r.from r.to () `Steel.C.Connection.connection_compose` array_as_one_ref_conn base t
+  array_conn t r.base_len r.from (r.from `size_add` one_size) () `Steel.C.Connection.connection_compose` array_as_one_ref_conn base t
 
 let array_as_one_ref_conn'_small_to_large
   (#base: Type) (#t:Type0) (r:array' base t)
@@ -1663,24 +1674,20 @@ let seq_equal_1
 let index
   #_ #t r i
 =
-  let rr = split_right r i in
-  let rs = split r i in
+  let rr = split r i () in
+  let rrr = split rr one_size () in
   change_equal_slprop
-    (varray (GPair?.snd rs))
-    (varray rr);
-  let rrl = split_left rr one_size in
-  let rrs = split rr one_size in
-  change_equal_slprop
-    (varray (GPair?.fst rrs))
-    (varray rrl);
+    (varray rrr)
+    (varray (Ghost.reveal (Ghost.hide rrr)));
+  let rrl = split_left rr (GPair?.fst (gsplit rr one_size)) rrr in
   let grl = gget (varray rrl) in
   let r0 = ref_of_array rrl in
   let res = Steel.C.Opt.ref_opt_read r0 in
   array_of_ref rrl r0;
   let grl' = gget (varray rrl) in
   seq_equal_1 t (Ghost.reveal grl) (Ghost.reveal grl');
-  let rr' = join' rrl (GPair?.snd rrs) in
-  let r' = join' (GPair?.fst rs) rr' in
+  let rr' = join' rrl (Ghost.reveal (Ghost.hide rrr)) in
+  let r' = join' (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit r i)))) rr' in
   change_equal_slprop
     (varray r')
     (varray r);
@@ -1708,26 +1715,22 @@ let seq_append_append_upd
 let upd
   #_ #t r i x
 =
-  let rr = split_right r i in
-  let rs = split r i in
-  let s1 = gget (varray (GPair?.fst rs)) in
+  let rr = split r i () in
+  let rrr = split rr one_size () in
+  let s3 = gget (varray rrr) in
   change_equal_slprop
-    (varray (GPair?.snd rs))
-    (varray rr);
-  let rrl = split_left rr one_size in
-  let rrs = split rr one_size in
-  let s3 = gget (varray (GPair?.snd rrs)) in
-  change_equal_slprop
-    (varray (GPair?.fst rrs))
-    (varray rrl);
+    (varray rrr)
+    (varray (Ghost.reveal (Ghost.hide rrr)));
+  let rrl = split_left rr (GPair?.fst (gsplit rr one_size)) rrr in
+  let s1 = gget (varray (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit r i))))) in
   let s2 = gget (varray rrl) in
   let r0 = ref_of_array rrl in
   Steel.C.Opt.ref_opt_write r0 x;
   array_of_ref rrl r0;
   let s2' = gget (varray rrl) in
   seq_append_append_upd t (size_v i) x s1 s2 s2' s3;
-  let rr' = join' rrl (GPair?.snd rrs) in
-  let r' = join' (GPair?.fst rs) rr' in
+  let rr' = join' rrl (Ghost.reveal (Ghost.hide rrr)) in
+  let r' = join' (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit r i)))) rr' in
   change_equal_slprop
     (varray r')
     (varray r)
@@ -1740,7 +1743,7 @@ let freeable
   Steel.C.Ref.freeable a'.base_ref /\
   size_v a'.base_len > 0 /\
   a'.from == zero_size /\
-  a'.to == Ghost.reveal a'.base_len
+  a'.to == a'.base_len
 
 #restart-solver
 let array_to_carrier_refine
