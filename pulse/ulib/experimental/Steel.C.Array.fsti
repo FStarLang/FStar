@@ -171,7 +171,10 @@ val merge_assoc
   (#t: Type)
   (r1 r2 r3: array base t)
 : Lemma
-  (requires (adjacent r1 r2 /\ adjacent r2 r3))
+  (requires (
+    (adjacent r1 r2 /\ (adjacent r2 r3 \/ adjacent (merge r1 r2) r3)) \/
+    (adjacent r2 r3 /\ adjacent r1 (merge r2 r3))
+  ))
   (ensures (
     adjacent r1 r2 /\ adjacent r2 r3 /\
     begin
@@ -182,6 +185,22 @@ val merge_assoc
     end
   ))
   [SMTPat (merge (merge r1 r2) r3)]
+
+val merge_inj_right
+  (#base: Type)
+  (#t: Type)
+  (a b1 b2: array base t)
+: Lemma
+  (requires (adjacent a b1 /\ adjacent a b2 /\ merge a b1 == merge a b2))
+  (ensures (b1 == b2))
+
+val merge_inj_left
+  (#base: Type)
+  (#t: Type)
+  (a1 a2 b: array base t)
+: Lemma
+  (requires (adjacent a1 b /\ adjacent a2 b /\ merge a1 b == merge a2 b))
+  (ensures (a1 == a2))
 
 [@erasable]
 noeq
