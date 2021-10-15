@@ -1093,6 +1093,10 @@ let merge r1 r2 = t_merge r1 r2
 
 let merge_assoc r1 r2 r3 = ()
 
+let merge_inj_right a b1 b2 = ()
+
+let merge_inj_left a1 a2 b = ()
+
 val tsplit
   (#base: Type)
   (#t: Type)
