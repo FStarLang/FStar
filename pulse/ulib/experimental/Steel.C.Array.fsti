@@ -107,9 +107,19 @@ let varray (#base: Type) (#t: Type) (x: array base t) : Tot vprop =
   VUnit (varray' x)
 
 val g_mk_array (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
-: Ghost (array base t)
-  (requires (size_v n > 0))
-  (ensures (fun a -> len a == Ghost.reveal n))
+  (a: array base t)
+: Tot prop
+
+val g_mk_array_weak
+  (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+  (a: array base t)
+: Lemma
+  (requires (g_mk_array r a))
+  (ensures (
+    size_v n > 0 /\
+    len a == Ghost.reveal n
+  ))
+  [SMTPat (g_mk_array r a)]
 
 val intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
   (_: squash (size_v n > 0))
@@ -118,7 +128,7 @@ val intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Refer
     (fun a -> varray a)
     (requires fun _ -> True)
   (ensures (fun h a h' ->
-    a == g_mk_array r /\
+    g_mk_array r a /\
     h' (varray a) == h (Steel.C.Ref.pts_to_view r (array_view t n))
   ))
 
@@ -126,9 +136,9 @@ val elim_varray (#inames: _) (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: S
 : SteelGhost unit inames
   (varray a)
   (fun _ -> Steel.C.Ref.pts_to_view r (array_view t n))
-  (requires fun _ -> a == g_mk_array r)
+  (requires fun _ -> g_mk_array r a)
   (ensures (fun h _ h' ->
-    a == g_mk_array r /\
+    g_mk_array r a /\
     h (varray a) == h' (Steel.C.Ref.pts_to_view r (array_view t n))
   ))
 
@@ -307,10 +317,16 @@ val g_ref_of_array
   (requires (length r == 1))
   (ensures (fun _ -> True))
 
+val v_ref_of_array
+  (#base: Type) (#t:Type0) (r:array base t)
+: Ghost vprop
+  (requires (length r == 1))
+  (ensures (fun _ -> True))
+
 val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
   : SteelGhost unit inames
              (varray r)
-             (fun _ -> Steel.C.Ref.pts_to_view (g_ref_of_array r) (Steel.C.Opt.opt_view t))
+             (fun _ -> Steel.C.Ref.pts_to_view (g_ref_of_array r) (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
              (requires fun _ -> True)
              (ensures fun h0 _ h1 ->
                let r' = g_ref_of_array r in
@@ -319,11 +335,11 @@ val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (s
                h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
-val ref_of_array (#base: Type) (#t:Type0) (r:array base t)
+val ref_of_array (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
   : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
              (varray r)
-             (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t))
-             (requires fun _ -> length r == 1)
+             (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
+             (requires fun _ -> True)
              (ensures fun h0 r' h1 ->
                let s = h0 (varray r) in
                Seq.length s == 1 /\
@@ -331,11 +347,11 @@ val ref_of_array (#base: Type) (#t:Type0) (r:array base t)
                h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
-val array_of_ref (#inames: _) (#base: Type) (#t:Type0) (r': array base t) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+val array_of_ref (#inames: _) (#base: Type) (#t:Type0) (r': array base t) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (sq: squash (length r' == 1))
   : SteelGhost unit inames
-             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
+             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t) `star` v_ref_of_array r')
              (fun _ -> varray r')
-             (requires fun _ -> length r' == 1 /\ g_ref_of_array r' == r)
+             (requires fun _ -> g_ref_of_array r' == r)
              (ensures fun h0 _ h1 ->
                let s = h1 (varray r') in
                Seq.length s == 1 /\
