@@ -171,6 +171,8 @@ type array' base t = {
   base_ref: Steel.C.Reference.ref base (array_view_type t base_len) (array_pcm t base_len);
   from: size_t;
   to: Ghost.erased size_t;
+  perm_ref: Steel.Reference.ghost_ref unit;
+  perm_val: Steel.FractionalPermission.perm;
   prf: squash (
     size_v base_len >= 0 /\
     size_v from <= size_v to /\
@@ -938,11 +940,19 @@ let varray0
     #(size_v (len x) = 0)
     (array_view' t (len x))
 
-let varray_hp #base #t x = hp_of (varray0 #base #t x)
+[@@__steel_reduce__]
+let varray9
+  (#base: Type)
+  (#t: Type)
+  (x: array base t)
+: Tot vprop
+= (varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref  (Some?.v x).perm_val) `vrewrite` fst
+
+let varray_hp #base #t x = hp_of (varray9 #base #t x)
 
 #push-options "--debug Steel.C.Array --debug_level Extreme"
 
-let varray_sel #base #t x = sel_of (varray0 #base #t x)
+let varray_sel #base #t x = sel_of (varray9 #base #t x)
 
 #pop-options
 
@@ -952,12 +962,15 @@ let intro_varray1
   (#t: Type)
   (x: array base t)
 : SteelGhost unit inames
-    (varray0 x)
+    (varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val)
     (fun _ -> varray x)
     (fun _ -> True)
     (fun h _ h' -> h' (varray x) == h (varray0 x))
-= change_slprop_rel
-    (varray0 x)
+= intro_vrewrite
+    (varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val)
+    fst;
+  change_slprop_rel
+    ((varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val) `vrewrite` fst)
     (varray x)
     (fun u v -> u == v)
     (fun m -> ())
@@ -969,37 +982,48 @@ let elim_varray1
   (x: array base t)
 : SteelGhost unit inames
     (varray x)
-    (fun _ -> varray0 x)
+    (fun _ -> varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val)
     (fun _ -> True)
     (fun h _ h' -> h' (varray0 x) == h (varray x))
 = change_slprop_rel
     (varray x)
-    (varray0 x)
+    ((varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val) `vrewrite` fst)
     (fun u v -> u == v)
-    (fun m -> ())
+    (fun m -> ());
+  elim_vrewrite
+    (varray0 x `star` Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Some?.v x).perm_val)
+    fst
 
-val mk_array (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
-: Pure (array base t)
-  (requires (size_v n > 0))
-  (ensures (fun a -> len a == Ghost.reveal n))
+let g_mk_array #base #t #n r a = 
+  let Some a' = a in
+  size_v n > 0 /\
+  Ghost.reveal a'.base_len == n /\
+  a'.base_ref == r /\
+  a'.from == mk_size_t 0ul /\
+  Ghost.reveal a'.to == n /\
+  a'.perm_val == Steel.FractionalPermission.full_perm
 
-let mk_array #base #t #n r =
-  Some ({
-    base_len = n;
-    base_ref = r;
-    from = mk_size_t 0ul;
-    to = n;
-    prf = ();
-  })
-
-let g_mk_array r = mk_array r
+let g_mk_array_weak r a = ()
 
 #push-options "--z3rlimit 32"
 
 let intro_varray
   #base #t #n r sq
 =
-  let res = mk_array r in
+  let perm_ref = Steel.Reference.ghost_alloc #unit () in
+  let res = Some ({
+    base_len = n;
+    base_ref = r;
+    from = mk_size_t 0ul;
+    to = n;
+    perm_ref = perm_ref;
+    perm_val = Steel.FractionalPermission.full_perm;
+    prf = ();
+  })
+  in
+  change_equal_slprop
+    (Steel.Reference.ghost_vptr perm_ref)
+    (Steel.Reference.ghost_vptrp ((Some?.v res).perm_ref) ((Some?.v res).perm_val));
   assert ((array_as_ref res <: Steel.C.Ref.ref base (array_pcm t n)) == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
   array_conn_id t n;
   assert (array_conn t n (mk_size_t 0ul) n () == Steel.C.Connection.connection_id (array_pcm t n));
@@ -1016,7 +1040,7 @@ let intro_varray
 let elim_varray
   #_ #base #t #n r res sq
 =
-  assert (res == g_mk_array r);
+  assert (g_mk_array r res);
   assert (array_as_ref res == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
   array_conn_id t n;
   assert (array_conn t n (mk_size_t 0ul) n () == Steel.C.Connection.connection_id (array_pcm t n));
@@ -1027,7 +1051,12 @@ let elim_varray
   elim_varray1 res;
   change_equal_slprop
     (varray0 res)
-    (r `Steel.C.Ref.pts_to_view` _)
+    (r `Steel.C.Ref.pts_to_view` _);
+  let perm_ref = (Some?.v res).perm_ref in
+  change_equal_slprop
+    (Steel.Reference.ghost_vptrp ((Some?.v res).perm_ref) ((Some?.v res).perm_val))
+    (Steel.Reference.ghost_vptr perm_ref);
+  Steel.Reference.ghost_free perm_ref
 
 #pop-options
 
@@ -1036,6 +1065,7 @@ let adjacent r1 r2 =
   let Some r2 = r2 in
   r1.base_len == r2.base_len /\
   r1.base_ref == r2.base_ref /\
+  r1.perm_ref == r2.perm_ref /\
   Ghost.reveal r1.to == r2.from
 
 val t_merge
@@ -1054,6 +1084,8 @@ let t_merge r1 r2 =
     base_ref = r1.base_ref;
     from = r1.from;
     to = r2.to;
+    perm_ref = r1.perm_ref;
+    perm_val = r1.perm_val `Steel.FractionalPermission.sum_perm` r2.perm_val;
     prf = ();
   })
 
@@ -1080,12 +1112,16 @@ let tsplit r i =
     base_ref = r.base_ref;
     from = r.from;
     to = r.from `size_add` i;
+    perm_ref = r.perm_ref;
+    perm_val = Steel.FractionalPermission.half_perm r.perm_val;
     prf = ()
   }), Some ({
     base_len = r.base_len;
     base_ref = r.base_ref;
     from = r.from `size_add` i;
     to = r.to;
+    perm_ref = r.perm_ref;
+    perm_val = Steel.FractionalPermission.half_perm r.perm_val;
     prf = ()
   }))
 
@@ -1253,6 +1289,10 @@ let split_
   change_equal_slprop // necessary, otherwise F* goes off rails
     (array_as_ref xl `Steel.C.Ref.pts_to_view` _)
     (varray0 xl);
+  Steel.Reference.ghost_share (Some?.v x).perm_ref;
+  change_equal_slprop
+    (Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Steel.FractionalPermission.half_perm (Some?.v x).perm_val))
+    (Steel.Reference.ghost_vptrp (Some?.v xl).perm_ref (Some?.v xl).perm_val);
   intro_varray1 xl;
   let cr : (cr: Steel.C.Connection.connection
     (array_pcm t (len x))
@@ -1289,6 +1329,9 @@ let split_
   change_equal_slprop // necessary, otherwise F* goes off rails
     (array_as_ref xr `Steel.C.Ref.pts_to_view` _)
     (varray0 xr);
+  change_equal_slprop
+    (Steel.Reference.ghost_vptrp (Some?.v x).perm_ref (Steel.FractionalPermission.half_perm (Some?.v x).perm_val))
+    (Steel.Reference.ghost_vptrp (Some?.v xr).perm_ref (Some?.v xr).perm_val);
   intro_varray1 xr;
   let res = GPair xl xr in
   change_equal_slprop
@@ -1314,6 +1357,8 @@ let split_left
     base_ref = (Some?.v a).base_ref;
     from = (Some?.v a).from;
     to = (Some?.v al).to;
+    perm_ref = (Some?.v a).perm_ref;
+    perm_val = (Some?.v al).perm_val;
     prf = ();
   }) in
   change_equal_slprop
@@ -1410,6 +1455,9 @@ let get_pts_to
     (fun _ v' _ -> v' == v)
 = noop(); v
 
+let v_ref_of_array r =
+  Steel.Reference.ghost_vptrp (Some?.v r).perm_ref (Some?.v r).perm_val
+
 (*
 assume
 val abstract_id
@@ -1469,7 +1517,7 @@ let ref_of_array_ghost #inames #base #t x sq =
 val ref_of_array0 (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1)) (v0: Ghost.erased t)
   : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
              (varray r)
-             (fun r' -> (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `vrefine` (fun v' -> v' == Ghost.reveal v0)) `star` pure (g_ref_of_array #base #t r == r'))
+             (fun r' -> (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `vrefine` (fun v' -> v' == Ghost.reveal v0)) `star` pure (g_ref_of_array #base #t r == r') `star` v_ref_of_array r)
              (requires fun h0 -> Seq.index (h0 (varray r)) 0 == Ghost.reveal v0)
              (ensures fun h0 r' h1 -> True)
 
@@ -1519,7 +1567,7 @@ let ref_of_array0 #base #t x sq v0 =
   return r
 
 #restart-solver
-let ref_of_array #base #t x =
+let ref_of_array #base #t x sq =
   let gv : Ghost.erased (array_view_type t (len x)) = gget (varray x) in
   let v0 = Ghost.hide (Seq.index (Ghost.reveal gv) 0) in
   let r = ref_of_array0 x () v0 in
@@ -1531,7 +1579,7 @@ let ref_of_array #base #t x =
 
 #restart-solver
 let array_of_ref
-  #_ #base #t r' r
+  #_ #base #t r' r sq
 =
   let g : Ghost.erased t = gget (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) in
   let v = Steel.C.Ref.pts_to_view_elim
@@ -1569,22 +1617,24 @@ let one_ref_as_array_conn
 =
   Steel.C.Connection.(connection_of_isomorphism (isomorphism_inverse (array_as_one_ref_iso base t)))
 
-let mk_array_of_ref' (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) : GTot (array base t) =
+let mk_array_of_ref' (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit) : GTot (array base t) =
   Some ({
     base_len = one_size;
     base_ref = r `Steel.C.Ref.ref_focus` one_ref_as_array_conn base t;
     from = zero_size;
     to = one_size;
+    perm_ref = perm_ref;
+    perm_val = Steel.FractionalPermission.full_perm;
     prf = ();
   })
 
 #restart-solver
 let mk_array_of_ref'_correct
-  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
 : Lemma
-  (g_ref_of_array (mk_array_of_ref' r) == r)
+  (g_ref_of_array (mk_array_of_ref' r perm_ref) == r)
 =
-  g_ref_of_array'_correct (mk_array_of_ref' r);
+  g_ref_of_array'_correct (mk_array_of_ref' r perm_ref);
   array_conn_id t one_size;
   Steel.C.Connection.connection_compose_id_left (array_as_one_ref_conn base t);
   Steel.C.Ref.ref_focus_comp r (one_ref_as_array_conn base t) (array_as_one_ref_conn base t);
@@ -1592,14 +1642,14 @@ let mk_array_of_ref'_correct
   Steel.C.Ref.ref_focus_id r
 
 let array_as_ref_mk_array_of_ref'
-  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
 : Lemma
   (ensures (
-    let x = mk_array_of_ref' r in
+    let x = mk_array_of_ref' r perm_ref in
     array_as_ref x == (Some?.v x).base_ref
   ))
 = 
-  let x = mk_array_of_ref' r in
+  let x = mk_array_of_ref' r perm_ref in
   array_conn_id t one_size;
   Steel.C.Ref.ref_focus_id (Some?.v x).base_ref
 
@@ -1640,16 +1690,19 @@ let mk_array_of_ref
     Steel.C.Connection.connection_of_isomorphism_inverse_left (array_as_one_ref_iso base t)
   in
   let r' = Steel.C.Ref.focus r (one_ref_as_array_conn base t) v v' in
+  let perm_ref = Steel.Reference.ghost_alloc #unit () in
   let res = Some ({
     base_len = one_size;
     base_ref = r';
     from = zero_size;
     to = one_size;
+    perm_ref = perm_ref;
+    perm_val = Steel.FractionalPermission.full_perm;
     prf = ()
   })
   in
-  assert (res == mk_array_of_ref' r);
-  mk_array_of_ref'_correct r;
+  assert (res == mk_array_of_ref' r perm_ref);
+  mk_array_of_ref'_correct r perm_ref;
   let g' : Ghost.erased (array_view_type t one_size) =
     Ghost.hide (Seq.create 1 (Ghost.reveal g))
   in
@@ -1659,10 +1712,13 @@ let mk_array_of_ref
     _
     (array_view t one_size)
     g';
-  array_as_ref_mk_array_of_ref' r;
+  array_as_ref_mk_array_of_ref' r perm_ref;
   change_equal_slprop
     (Steel.C.Ref.pts_to_view r' (array_view t one_size))
     (varray0 res);
+  change_equal_slprop
+    (Steel.Reference.ghost_vptr perm_ref)
+    (Steel.Reference.ghost_vptrp (Some?.v res).perm_ref (Some?.v res).perm_val);
   intro_varray1 res;
   return res
 
@@ -1693,9 +1749,9 @@ let index
     (varray (Ghost.reveal (Ghost.hide rrr)));
   let rrl = split_left rr (GPair?.fst (gsplit rr one_size)) rrr in
   let grl = gget (varray rrl) in
-  let r0 = ref_of_array rrl in
+  let r0 = ref_of_array rrl () in
   let res = Steel.C.Opt.ref_opt_read r0 in
-  array_of_ref rrl r0;
+  array_of_ref rrl r0 ();
   let grl' = gget (varray rrl) in
   seq_equal_1 t (Ghost.reveal grl) (Ghost.reveal grl');
   let rr' = join' rrl (Ghost.reveal (Ghost.hide rrr)) in
@@ -1736,9 +1792,9 @@ let upd
   let rrl = split_left rr (GPair?.fst (gsplit rr one_size)) rrr in
   let s1 = gget (varray (Ghost.reveal (Ghost.hide (GPair?.fst (gsplit r i))))) in
   let s2 = gget (varray rrl) in
-  let r0 = ref_of_array rrl in
+  let r0 = ref_of_array rrl () in
   Steel.C.Opt.ref_opt_write r0 x;
-  array_of_ref rrl r0;
+  array_of_ref rrl r0 ();
   let s2' = gget (varray rrl) in
   seq_append_append_upd t (size_v i) x s1 s2 s2' s3;
   let rr' = join' rrl (Ghost.reveal (Ghost.hide rrr)) in
@@ -1754,6 +1810,7 @@ let freeable
   let Some a' = a in
   Steel.C.Ref.freeable a'.base_ref /\
   size_v a'.base_len > 0 /\
+  a'.perm_val == Steel.FractionalPermission.full_perm /\
   a'.from == zero_size /\
   a'.to == a'.base_len
 
