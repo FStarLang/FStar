@@ -1549,29 +1549,25 @@
         "AlgWP_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
         "AlgWP_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "eq2-interp", "equation_Alg.state", "equation_Alg.sublist",
+        "equation_Alg.state", "equation_Alg.sublist",
         "equation_AlgWP.quotient_ro", "equation_AlgWP.st_monotonic",
         "equation_AlgWP.st_wp", "equation_AlgWP.stronger",
         "equation_AlgWP.subops", "equation_Prims.eqtype",
-        "equation_Prims.logical",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.Ghost.reveal",
-        "function_token_typing_Prims.int", "int_inversion",
+        "equation_Prims.logical", "function_token_typing_Prims.int",
+        "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
-        "interpretation_Tm_abs_81b0d7117dfbcd9db05b422051e388e9",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
-        "l_imp-interp", "lemma_FStar.Ghost.reveal_hide",
+        "l_imp-interp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
-        "refinement_interpretation_Tm_refine_9d2073cba9a19452f7ea0f79f02c5329",
+        "refinement_interpretation_Tm_refine_9cbf6e17ce9e637c8849b6e2dd959304",
         "token_correspondence_AlgWP.quotient_ro",
-        "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
-        "typing_Tm_abs_81b0d7117dfbcd9db05b422051e388e9"
+        "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "530c8a71c64b75c79bed844eb6ab2995"
+      "ecce8f5cd5bdd633f1e3614d6973679b"
     ],
     [
       "AlgWP.bind_ro",
@@ -1928,7 +1924,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "85e5e13b679a7455d5b128908d0239a3"
+      "803e1bfde0ac108a3958bdd8d0df5abb"
     ],
     [
       "AlgWP.bind_null_ro",

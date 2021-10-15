@@ -285,7 +285,7 @@
         "typing_Selectors.Tree.Core.tree"
       ],
       0,
-      "d4c10463555a529378d0580ae7ec8751"
+      "79fbceba8e3ccaf5ade67939ba820949"
     ],
     [
       "Selectors.Tree.Core.elim_leaf_lemma",
@@ -402,7 +402,7 @@
         "typing_Selectors.Tree.Core.tree"
       ],
       0,
-      "9479762e595a0840f55c83a27b40c66a"
+      "74fb909f0219be084ce339cd6fbfff31"
     ],
     [
       "Selectors.Tree.Core.pack_tree_lemma_aux",
@@ -536,7 +536,7 @@
         "typing_Selectors.Tree.Core.tree"
       ],
       0,
-      "79660fe2859ffbbca261598327661791"
+      "a9255298d91bfebc4df86449be319040"
     ],
     [
       "Selectors.Tree.Core.v_node",
@@ -620,7 +620,7 @@
         "typing_Selectors.Tree.Core.tree"
       ],
       0,
-      "67d5c224a475dfaa13a6fe72a433b504"
+      "c0f821162bb85d7ccc022c385f9d88e7"
     ],
     [
       "Selectors.Tree.Core.head",
@@ -782,7 +782,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "ba49f9f8f0a4464edbf4a468450146f6"
+      "5fecc4d18a9df9911dad77ba8ecc61e1"
     ],
     [
       "Selectors.Tree.Core.unpack_tree",
