@@ -1961,7 +1961,7 @@
         "unit_typing"
       ],
       0,
-      "2ec5dc58628389647a7602e1bcae21d5"
+      "795d2ac31cdcbc200966e23a8298abdc"
     ],
     [
       "Steel.Memory.iname_for_p_stable",
@@ -2152,7 +2152,7 @@
         "typing_Steel.Memory.hmem_with_inv_except", "typing_tok_Prims.T@tok"
       ],
       0,
-      "d1ff9b5a6cc410503bb34793a1f26938"
+      "fcbc42d1b853997cc63351d79c7797f9"
     ],
     [
       "Steel.Memory.rearrange_invariant",
