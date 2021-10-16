@@ -1463,7 +1463,7 @@
         "typing_CQueue.llist_fragment_head"
       ],
       0,
-      "eade61d8d1158ffbaa9253f3ea8555e3"
+      "6ef09fc3dc150b43f5c4fc8d1d35d08d"
     ],
     [
       "CQueue.llist_fragment_head_append",
@@ -1542,7 +1542,7 @@
         "typing_Steel.Reference.ref", "typing_Steel.Reference.vptr_"
       ],
       0,
-      "e33c7a309ba71bcebb53b7b733a09348"
+      "f0fc7eb6a782744aa74b8356c48352ce"
     ],
     [
       "CQueue.llist_fragment_head_to_tail",
@@ -1642,7 +1642,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "862e3c298fbc1c16eebf5cceddde2f3c"
+      "6c064f4c51d1d753826a4b9d4b919cf0"
     ],
     [
       "CQueue.llist_fragment_tail_to_head",
@@ -1715,7 +1715,7 @@
         "typing_Steel.Reference.vptr_", "well-founded-ordering-on-nat"
       ],
       0,
-      "572419c0cfde972e41f8dcdf9bf90afc"
+      "23b63f08ca95695b6bad9d40257b5060"
     ],
     [
       "CQueue.llist_fragment_head_is_nil",

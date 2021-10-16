@@ -893,7 +893,7 @@
         "token_correspondence_Steel.HigherReference.compose"
       ],
       0,
-      "2a643b58599a4c87b5d2b0b57b92c375"
+      "e33b791b0abd5e387187db5e67314b7c"
     ],
     [
       "Steel.HigherReference.gather",
@@ -1408,7 +1408,7 @@
         "typing_Steel.Memory.pure", "typing_Steel.Memory.star"
       ],
       0,
-      "a2ff592c19b7a3c7b1ba6bb356a20ad8"
+      "aa516b8643a62405e4274cc0b5777a9d"
     ],
     [
       "Steel.HigherReference.ghost_write_aux",
