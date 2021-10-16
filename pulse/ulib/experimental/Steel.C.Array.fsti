@@ -202,6 +202,12 @@ val merge_inj_left
   (requires (adjacent a1 b /\ adjacent a2 b /\ merge a1 b == merge a2 b))
   (ensures (a1 == a2))
 
+val no_self_merge_1 (#base #t: Type) (a b: array base t) : Lemma
+  (~ (merge_into a b a))
+
+val no_self_merge_2 (#base #t: Type) (a b: array base t) : Lemma
+  (~ (merge_into a b b))
+
 [@erasable]
 noeq
 type gpair (a b: Type) = | GPair: (fst: a) -> (snd: b) -> gpair a b

@@ -1097,6 +1097,32 @@ let merge_inj_right a b1 b2 = ()
 
 let merge_inj_left a1 a2 b = ()
 
+let no_self_merge_1 (#base #t: Type) (a b: array base t) : Lemma
+  (~ (merge_into a b a))
+= let aux () : Lemma
+    (requires (merge_into a b a))
+    (ensures False)
+  = assert (
+      let open Steel.FractionalPermission in
+      let open FStar.Real in
+      (Some?.v a).perm_val.v +. (Some?.v b).perm_val.v >. (Some?.v a).perm_val.v
+    )
+  in
+  Classical.move_requires aux ()
+
+let no_self_merge_2 (#base #t: Type) (a b: array base t) : Lemma
+  (~ (merge_into a b b))
+= let aux () : Lemma
+    (requires (merge_into a b a))
+    (ensures False)
+  = assert (
+      let open Steel.FractionalPermission in
+      let open FStar.Real in
+      (Some?.v a).perm_val.v +. (Some?.v b).perm_val.v >. (Some?.v b).perm_val.v
+    )
+  in
+  Classical.move_requires aux ()
+
 val tsplit
   (#base: Type)
   (#t: Type)
