@@ -11523,6 +11523,67 @@ let (level_of_type :
                            FStar_TypeChecker_Rel.force_trivial_guard env1 g);
                       u)) in
         aux true t
+let rec (apply_well_typed :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.args ->
+        FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun t_hd ->
+      fun args ->
+        if (FStar_Compiler_List.length args) = Prims.int_zero
+        then FStar_Pervasives_Native.Some t_hd
+        else
+          (let uu___1 =
+             let uu___2 = FStar_TypeChecker_Normalize.unfold_whnf env t_hd in
+             uu___2.FStar_Syntax_Syntax.n in
+           match uu___1 with
+           | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+               let n_args = FStar_Compiler_List.length args in
+               let n_bs = FStar_Compiler_List.length bs in
+               let uu___2 =
+                 if n_args < n_bs
+                 then
+                   let uu___3 = FStar_Compiler_Util.first_N n_args bs in
+                   match uu___3 with
+                   | (bs1, rest) ->
+                       let t =
+                         FStar_Syntax_Syntax.mk
+                           (FStar_Syntax_Syntax.Tm_arrow (rest, c))
+                           t_hd.FStar_Syntax_Syntax.pos in
+                       let uu___4 =
+                         let uu___5 = FStar_Syntax_Syntax.mk_Total t in
+                         FStar_Syntax_Subst.open_comp bs1 uu___5 in
+                       (match uu___4 with
+                        | (bs2, c1) ->
+                            (bs2, args, (FStar_Syntax_Util.comp_result c1),
+                              []))
+                 else
+                   (let uu___4 = FStar_Syntax_Subst.open_comp bs c in
+                    match uu___4 with
+                    | (bs1, c1) ->
+                        let uu___5 = FStar_Compiler_List.splitAt n_bs args in
+                        (match uu___5 with
+                         | (args1, remaining_args) ->
+                             (bs1, args1, (FStar_Syntax_Util.comp_result c1),
+                               remaining_args))) in
+               (match uu___2 with
+                | (bs1, args1, t, remaining_args) ->
+                    let subst =
+                      FStar_Compiler_List.map2
+                        (fun b ->
+                           fun a ->
+                             FStar_Syntax_Syntax.NT
+                               ((b.FStar_Syntax_Syntax.binder_bv),
+                                 (FStar_Pervasives_Native.fst a))) bs1 args1 in
+                    let t1 = FStar_Syntax_Subst.subst subst t in
+                    apply_well_typed env t1 remaining_args)
+           | FStar_Syntax_Syntax.Tm_refine (x, uu___2) ->
+               apply_well_typed env x.FStar_Syntax_Syntax.sort args
+           | FStar_Syntax_Syntax.Tm_ascribed (t, uu___2, uu___3) ->
+               apply_well_typed env t args
+           | uu___2 -> FStar_Pervasives_Native.None)
 let rec (universe_of_aux :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -11819,23 +11880,12 @@ let rec (universe_of_aux :
           let uu___1 = type_of_head true hd args in
           (match uu___1 with
            | (t, args1) ->
-               let t1 =
-                 FStar_TypeChecker_Normalize.normalize
-                   [FStar_TypeChecker_Env.UnfoldUntil
-                      FStar_Syntax_Syntax.delta_constant] env t in
-               let uu___2 = FStar_Syntax_Util.arrow_formals_comp t1 in
+               let uu___2 = apply_well_typed env t args1 in
                (match uu___2 with
-                | (bs, res) ->
-                    let res1 = FStar_Syntax_Util.comp_result res in
-                    if
-                      (FStar_Compiler_List.length bs) =
-                        (FStar_Compiler_List.length args1)
-                    then
-                      let subst = FStar_Syntax_Util.subst_of_list bs args1 in
-                      FStar_Syntax_Subst.subst subst res1
-                    else
-                      (let uu___4 = FStar_Syntax_Print.term_to_string res1 in
-                       level_of_type_fail env e uu___4)))
+                | FStar_Pervasives_Native.Some t1 -> t1
+                | FStar_Pervasives_Native.None ->
+                    let uu___3 = FStar_Syntax_Print.term_to_string t in
+                    level_of_type_fail env e uu___3))
       | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, hd::uu___3, uu___4) ->
           let uu___5 = FStar_Syntax_Subst.open_branch hd in
           (match uu___5 with
@@ -12054,71 +12104,9 @@ let rec (typeof_tot_or_gtot_term_fastpath :
             -> typeof_tot_or_gtot_term_fastpath env t2 must_tot
         | FStar_Syntax_Syntax.Tm_app (hd, args) ->
             let t_hd = typeof_tot_or_gtot_term_fastpath env hd must_tot in
-            let rec aux args1 t_hd1 =
-              let uu___ =
-                let uu___1 =
-                  FStar_TypeChecker_Normalize.unfold_whnf env t_hd1 in
-                uu___1.FStar_Syntax_Syntax.n in
-              match uu___ with
-              | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
-                  let n_args = FStar_Compiler_List.length args1 in
-                  let n_bs = FStar_Compiler_List.length bs in
-                  let bs_t_opt =
-                    if n_args < n_bs
-                    then
-                      let uu___1 = FStar_Compiler_Util.first_N n_args bs in
-                      match uu___1 with
-                      | (bs1, rest) ->
-                          let t2 =
-                            FStar_Syntax_Syntax.mk
-                              (FStar_Syntax_Syntax.Tm_arrow (rest, c))
-                              t_hd1.FStar_Syntax_Syntax.pos in
-                          let uu___2 =
-                            let uu___3 = FStar_Syntax_Syntax.mk_Total t2 in
-                            FStar_Syntax_Subst.open_comp bs1 uu___3 in
-                          (match uu___2 with
-                           | (bs2, c1) ->
-                               FStar_Pervasives_Native.Some
-                                 (bs2, args1,
-                                   (FStar_Syntax_Util.comp_result c1), []))
-                    else
-                      (let uu___2 = FStar_Syntax_Subst.open_comp bs c in
-                       match uu___2 with
-                       | (bs1, c1) ->
-                           let uu___3 =
-                             FStar_Compiler_List.splitAt n_bs args1 in
-                           (match uu___3 with
-                            | (args2, remaining_args) ->
-                                FStar_Pervasives_Native.Some
-                                  (bs1, args2,
-                                    (FStar_Syntax_Util.comp_result c1),
-                                    remaining_args))) in
-                  FStar_Compiler_Util.bind_opt bs_t_opt
-                    (fun uu___1 ->
-                       match uu___1 with
-                       | (bs1, args2, t2, remaining_args) ->
-                           let subst =
-                             FStar_Compiler_List.map2
-                               (fun b ->
-                                  fun a ->
-                                    FStar_Syntax_Syntax.NT
-                                      ((b.FStar_Syntax_Syntax.binder_bv),
-                                        (FStar_Pervasives_Native.fst a))) bs1
-                               args2 in
-                           let t3 = FStar_Syntax_Subst.subst subst t2 in
-                           if
-                             (FStar_Compiler_List.length remaining_args) =
-                               Prims.int_zero
-                           then FStar_Pervasives_Native.Some t3
-                           else aux remaining_args t3)
-              | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
-                  aux args1 x.FStar_Syntax_Syntax.sort
-              | FStar_Syntax_Syntax.Tm_ascribed (t2, uu___1, uu___2) ->
-                  aux args1 t2
-              | uu___1 -> FStar_Pervasives_Native.None in
             FStar_Compiler_Util.bind_opt t_hd
               (fun t_hd1 ->
-                 let uu___ = aux args t_hd1 in
+                 let uu___ = apply_well_typed env t_hd1 args in
                  FStar_Compiler_Util.bind_opt uu___
                    (fun t2 ->
                       let uu___1 =
