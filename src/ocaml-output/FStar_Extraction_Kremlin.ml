@@ -1538,7 +1538,7 @@ and (translate_type_without_decay :
           TArray uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::[], p) when
           let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___1 = "Steel.C.Array.array_or_null" ->
+          uu___1 = "Steel.C.Array.array_or_null_from" ->
           let uu___1 = translate_type_without_decay env1 arg in TBuf uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::uu___1::[], p)
           when
@@ -2248,16 +2248,16 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::e2::[])
+           e1::e2::uu___5::[])
           when
-          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___5 = "Steel.C.Array.malloc") || false
+          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Steel.C.Array.malloc_from") || false
           ->
-          let uu___5 =
-            let uu___6 = translate_expr env1 e1 in
-            let uu___7 = translate_expr env1 e2 in
-            (ManuallyManaged, uu___6, uu___7) in
-          EBufCreate uu___5
+          let uu___6 =
+            let uu___7 = translate_expr env1 e1 in
+            let uu___8 = translate_expr env1 e2 in
+            (ManuallyManaged, uu___7, uu___8) in
+          EBufCreate uu___6
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -2353,13 +2353,10 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e2::[])
           when
-          ((((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___5 = "FStar.Buffer.rfree") ||
-               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                uu___5 = "LowStar.Monotonic.Buffer.free"))
-              ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "FStar.Buffer.rfree") ||
               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___5 = "Steel.C.Array.free"))
+               uu___5 = "LowStar.Monotonic.Buffer.free"))
              ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "Steel.C.Opt.free"))
@@ -2367,6 +2364,23 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___5 = "Steel.Array.free")
           -> let uu___5 = translate_expr env1 e2 in EBufFree uu___5
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e2::uu___5::uu___6::[])
+          when
+          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Steel.C.Array.free_from") || false
+          -> let uu___7 = translate_expr env1 e2 in EBufFree uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3035,15 +3049,15 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::[])
+           e1::uu___5::uu___6::[])
           when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.C.Array.is_null" ->
-          let uu___5 =
-            let uu___6 = let uu___7 = translate_expr env1 e1 in [uu___7] in
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Steel.C.Array.is_null_from" ->
+          let uu___7 =
+            let uu___8 = let uu___9 = translate_expr env1 e1 in [uu___9] in
             ((EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null")),
-              uu___6) in
-          EApp uu___5
+              uu___8) in
+          EApp uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3074,7 +3088,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu___2)
           when
           let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___3 = "Steel.C.Array.null" ->
+          uu___3 = "Steel.C.Array.null_from" ->
           EQualified (["LowStar"; "Buffer"], "null")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -3295,7 +3309,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            r::[])
           when
           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Steel.C.Array.ref_of_array" -> translate_expr env1 r
+          uu___6 = "Steel.C.Array.ref_of_array_from" -> translate_expr env1 r
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3311,7 +3325,8 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            r::[])
           when
           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Steel.C.Array.mk_array_of_ref" -> translate_expr env1 r
+          uu___6 = "Steel.C.Array.mk_array_of_ref_from" ->
+          translate_expr env1 r
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3327,7 +3342,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu___6::r::uu___7::[])
           when
           let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___8 = "Steel.C.Array.intro_varray" ->
+          uu___8 = "Steel.C.Array.intro_varray_from" ->
           let uu___8 =
             let uu___9 = translate_expr env1 r in
             (uu___9, (EConstant (UInt32, "0"))) in
@@ -3344,14 +3359,14 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2::uu___3::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___4;
              FStar_Extraction_ML_Syntax.loc = uu___5;_},
-           r::i::[])
+           r::uu___6::i::[])
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Steel.C.Array.index" ->
-          let uu___6 =
-            let uu___7 = translate_expr env1 r in
-            let uu___8 = translate_expr env1 i in (uu___7, uu___8) in
-          EBufRead uu___6
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Steel.C.Array.index_from" ->
+          let uu___7 =
+            let uu___8 = translate_expr env1 r in
+            let uu___9 = translate_expr env1 i in (uu___8, uu___9) in
+          EBufRead uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3364,15 +3379,15 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2::uu___3::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___4;
              FStar_Extraction_ML_Syntax.loc = uu___5;_},
-           r::i::x::[])
+           r::uu___6::i::x::[])
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Steel.C.Array.upd" ->
-          let uu___6 =
-            let uu___7 = translate_expr env1 r in
-            let uu___8 = translate_expr env1 i in
-            let uu___9 = translate_expr env1 x in (uu___7, uu___8, uu___9) in
-          EBufWrite uu___6
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Steel.C.Array.upd_from" ->
+          let uu___7 =
+            let uu___8 = translate_expr env1 r in
+            let uu___9 = translate_expr env1 i in
+            let uu___10 = translate_expr env1 x in (uu___8, uu___9, uu___10) in
+          EBufWrite uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3388,45 +3403,13 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu___6::a::i::[])
           when
           let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Steel.C.Array.split_left" -> translate_expr env1 a
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::uu___3::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___4;
-             FStar_Extraction_ML_Syntax.loc = uu___5;_},
-           uu___6::a::i::[])
-          when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Steel.C.Array.split_right" ->
+          uu___7 = "Steel.C.Array.split_right_from" ->
           let uu___7 =
             let uu___8 =
               let uu___9 = translate_expr env1 a in
               let uu___10 = translate_expr env1 i in (uu___9, uu___10) in
             EBufRead uu___8 in
           EAddrOf uu___7
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::uu___3::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___4;
-             FStar_Extraction_ML_Syntax.loc = uu___5;_},
-           uu___6::al::ar::[])
-          when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Steel.C.Array.joinc" -> translate_expr env1 al
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
