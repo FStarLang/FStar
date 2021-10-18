@@ -10898,7 +10898,27 @@ and (solve_c :
                 uu___5
             else ());
            (let uu___3 =
-              FStar_TypeChecker_Normalize.ghost_to_pure2 env (c1, c2) in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    FStar_Compiler_Effect.op_Bar_Greater c1
+                      FStar_Syntax_Util.comp_effect_name in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___6
+                    (FStar_TypeChecker_Env.norm_eff_name env) in
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Compiler_Effect.op_Bar_Greater c2
+                      FStar_Syntax_Util.comp_effect_name in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___7
+                    (FStar_TypeChecker_Env.norm_eff_name env) in
+                (uu___5, uu___6) in
+              match uu___4 with
+              | (eff1, eff2) ->
+                  let uu___5 = FStar_Ident.lid_equals eff1 eff2 in
+                  if uu___5
+                  then (c1, c2)
+                  else
+                    FStar_TypeChecker_Normalize.ghost_to_pure2 env (c1, c2) in
             match uu___3 with
             | (c11, c21) ->
                 (match ((c11.FStar_Syntax_Syntax.n),

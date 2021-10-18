@@ -794,12 +794,15 @@ let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
 let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
-       (embed_c : 'c -> t) (f : 'a -> 'b -> 'c) (args : args) : option<t> =
+       (embed_c : 'c -> t) (f : 'a -> 'b -> option<'c>) (args : args) : option<t> =
              match args with
              | [a;b] ->
                 begin
                 match as_a a, as_b b with
-                | Some a, Some b -> Some (embed_c (f a b))
+                | Some a, Some b ->
+                  (match f a b with
+                   | Some c -> Some (embed_c c)
+                   | _ -> None)
                 | _ -> None
                 end
              | _ -> None

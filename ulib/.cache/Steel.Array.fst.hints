@@ -119,7 +119,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "e9d1ab394999398c233124616cc0df47"
+      "c1d84c8b7b058666ff33cecfc05de07d"
     ],
     [
       "Steel.Array.index",
@@ -569,7 +569,7 @@
         "typing_FStar.UInt32.t"
       ],
       0,
-      "cf471677ae8cb412fb86b738d964ecbc"
+      "54f09ffbed96fbb6a1dde677f4908b41"
     ],
     [
       "Steel.Array.intro_exists_inv",
@@ -805,7 +805,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "e8ff6f715cef868e49cf7977f41a7d2e"
+      "a961afc463dc54bbf4be8449091abc4a"
     ],
     [
       "Steel.Array.compare_pts",
@@ -869,7 +869,7 @@
         "typing_Steel.Array.length", "typing_Steel.Reference.is_null"
       ],
       0,
-      "b7da9ad69155314d131bd02670990759"
+      "d3fde941504a261ea4fa4d418557da32"
     ],
     [
       "Steel.Array.compare_pts",
@@ -885,40 +885,7 @@
         "refinement_interpretation_Tm_refine_56a2cb242410aa4c4b121b6bed84c505"
       ],
       0,
-      "8219731d4d91f24a067d5e006ecc1003"
-    ],
-    [
-      "Steel.Array.compare_pts",
-      4,
-      0,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_682661bef6ce8884337079a0510a96e6",
-        "typing_FStar.UInt32.t"
-      ],
-      0,
-      "0f87fd57e10de1af48e0a4893b238f84"
-    ],
-    [
-      "Steel.Array.compare_pts",
-      5,
-      0,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "equation_Prims.eqtype",
-        "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.UInt32.t"
-      ],
-      0,
-      "e76c41e27992396be2b1a89cabadc92c"
+      "f1e0e119ba75c24e32f3e3ebc353e99f"
     ],
     [
       "Steel.Array.compare",
@@ -935,7 +902,7 @@
         "refinement_interpretation_Tm_refine_83b47227979900a844226d60c4a9297d"
       ],
       0,
-      "e455fe0f23e30021baf068660c880d4e"
+      "345fdeebeabf7ed9604af63284c08f05"
     ],
     [
       "Steel.Array.compare",
@@ -944,7 +911,7 @@
       1,
       [ "@query" ],
       0,
-      "aa97278c905a5cce7c444d216afde218"
+      "3c7ed6e4d43a210e3e00086ed8697b11"
     ],
     [
       "Steel.Array.compare",
@@ -978,7 +945,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Array.length"
       ],
       0,
-      "a5d6f91a610dc8c9217ede9a82c9a076"
+      "73db45c2d5f7bb8c610fd52efbbf3d42"
     ]
   ]
 ]

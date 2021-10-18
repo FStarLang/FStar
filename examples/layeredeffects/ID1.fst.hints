@@ -54,16 +54,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "function_token_typing_FStar.Ghost.reveal",
-        "interpretation_Tm_abs_3c91e9dd078e8cf70cc338a54bdd418d",
-        "kinding_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_76b91d97f6c9a6f4b00942f2166ff967",
-        "typing_Tm_abs_3c91e9dd078e8cf70cc338a54bdd418d"
+        "refinement_interpretation_Tm_refine_1928f1c6289e1b549040bc3d2a9b6c8c",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6642c4d84d690db13be660cb0319c179"
+      "0b16f46f20f919683fa38baffb5fcccb"
     ],
     [
       "ID1.subcomp",
@@ -235,21 +230,6 @@
       "23d0599607a7b62c63b2e136d2fe7176"
     ],
     [
-      "ID1.l",
-      1,
-      2,
-      1,
-      [
-        "@query", "interpretation_Tm_abs_7abdf5a5f13e7e6a87c8f777c806807b",
-        "kinding_Tm_arrow_fce5e26d6599fbb4e26956c05e4721d2",
-        "lemma_FStar.Ghost.reveal_hide",
-        "token_correspondence_FStar.Ghost.reveal", "true_interp",
-        "typing_Tm_abs_7abdf5a5f13e7e6a87c8f777c806807b"
-      ],
-      0,
-      "d9226393e583f3e9a4a0863f07f0c9e7"
-    ],
-    [
       "ID1.pmap",
       1,
       2,
@@ -270,7 +250,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5835a585b2892740a3c4df0126d3371d"
+      "85df33fd4a951fec44ab79a4dce41891"
     ],
     [
       "ID1.fmap",
@@ -284,7 +264,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "05bb9b79c8bd04f85783c1c8b9805f39"
+      "3df3952c04fe7e08eb65a022052f4c35"
     ],
     [
       "ID1.callmap",
@@ -308,7 +288,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1dbb85b2b43a9929be7d00eb63360670"
+      "4ef59a56e585742024ab5dd4c4f90b25"
     ],
     [
       "ID1.count",
@@ -340,7 +320,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "383cb22a26f69ea774e1155bb1dd0192"
+      "5803c5ba91da83bbb8e661da2a0acd85"
     ],
     [
       "ID1.pow2",
@@ -357,7 +337,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7cabd5084177c18a0c8a942956f2166e"
+      "e43455935d5ccabb1dd050fe8741a3bc"
     ],
     [
       "ID1.fibl",
@@ -376,7 +356,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "95ecc72417bfcaa309b796c70fff707d"
+      "f116efeb0e81072aead91efff4a7df89"
     ],
     [
       "ID1.fibr",
@@ -395,7 +375,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6b94441fe82d7291901ffb9bb5731da4"
+      "a1186f1e6641386726581dc87d91af18"
     ],
     [
       "ID1.fib",
@@ -413,7 +393,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "41129713b593b1fd25382f05d668f544"
+      "37a6f11b679632880cba846c9e5de4cb"
     ],
     [
       "ID1.test_assert",
@@ -426,7 +406,7 @@
         "unit_typing"
       ],
       0,
-      "c09cb4acf58c4998404f91e83b31a63f"
+      "475dcb566891cbe29b1c1a15ab27e2a1"
     ],
     [
       "ID1.add1",
@@ -435,21 +415,7 @@
       1,
       [ "@query" ],
       0,
-      "52780ec82fa071c1402a996d98d13af9"
-    ],
-    [
-      "ID1.i_tot",
-      1,
-      2,
-      1,
-      [
-        "@query", "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "lemma_FStar.Ghost.reveal_hide",
-        "token_correspondence_FStar.Ghost.reveal", "true_interp",
-        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
-      ],
-      0,
-      "5dd794f846888eeefd257d67ab57880c"
+      "fa198111153c149e21f9b5669823646d"
     ]
   ]
 ]

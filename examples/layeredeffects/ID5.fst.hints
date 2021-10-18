@@ -48,16 +48,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "function_token_typing_FStar.Ghost.reveal",
-        "interpretation_Tm_abs_3c91e9dd078e8cf70cc338a54bdd418d",
-        "kinding_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "lemma_FStar.Ghost.reveal_hide",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_76b91d97f6c9a6f4b00942f2166ff967",
-        "typing_Tm_abs_3c91e9dd078e8cf70cc338a54bdd418d"
+        "refinement_interpretation_Tm_refine_1928f1c6289e1b549040bc3d2a9b6c8c",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2b7fa13fd4d0786f7ab8e1c218d3fde1"
+      "457161c65375bb7f318ad2b398c9b328"
     ],
     [
       "ID5.subcomp",
@@ -254,21 +249,6 @@
       "7f5453366115d8352f1b411f37a5494e"
     ],
     [
-      "ID5.l",
-      1,
-      2,
-      1,
-      [
-        "@query", "interpretation_Tm_abs_7abdf5a5f13e7e6a87c8f777c806807b",
-        "kinding_Tm_arrow_fce5e26d6599fbb4e26956c05e4721d2",
-        "lemma_FStar.Ghost.reveal_hide",
-        "token_correspondence_FStar.Ghost.reveal", "true_interp",
-        "typing_Tm_abs_7abdf5a5f13e7e6a87c8f777c806807b"
-      ],
-      0,
-      "fe965f18e3c2e447f2e4fdff82f464c0"
-    ],
-    [
       "ID5.map",
       1,
       2,
@@ -289,7 +269,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "438459f3c69c1d8ad075fdc1500e62e5"
+      "5b036cfdd20b8733b64c6737e0625766"
     ],
     [
       "ID5.fmap",
@@ -303,7 +283,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "35475a4fa828af88da0fe06a48c6b151"
+      "6b1a048b461cef9c46358aa55b74eab3"
     ],
     [
       "ID5.callmap",
@@ -327,7 +307,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "647dbdbceef641071b209db5466816ec"
+      "abcf9dc046319b2b46d3e23e63020193"
     ],
     [
       "ID5.callmap",
@@ -351,7 +331,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ab682f55da99b5985188730e3b68f325"
+      "520902b4448b9b1653be0fb2853e64ff"
     ],
     [
       "ID5.count",
@@ -368,7 +348,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ac832c0460417cbbc5ddd7aa09b0b537"
+      "017e8c94b384c1051611c6173cb762a1"
     ],
     [
       "ID5.pow2",
@@ -385,7 +365,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a4814848ee5a6b4941c3cc3f52ae0a5b"
+      "aae25b1bd66100c84585954c4fdef4c4"
     ],
     [
       "ID5.fibl",
@@ -404,7 +384,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e118ac69ff3596d6d6b5a667206fc298"
+      "704a552f29ea7884dfc30b052302693f"
     ],
     [
       "ID5.fibr",
@@ -423,7 +403,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "df1340ee70537c0ecaf12aa1c6b44800"
+      "6f5ac71b1afabe3200ad772c960b8e37"
     ],
     [
       "ID5.fib",
@@ -441,7 +421,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "af4ca15150c627c1b9ad3428c1b0f71c"
+      "b5f173ae820d5e4ddb69fe0e4ddfb6f8"
     ],
     [
       "ID5.test_assert",
@@ -450,7 +430,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "6b86cf90782f60cc4d626fedd06bf7fa"
+      "1c40118546ac5fa84f326493f0122405"
     ],
     [
       "ID5.idiv",
@@ -469,7 +449,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c604d6f75cd183f34eb316bff0380455"
+      "d1cd249017bad74fec99e40249eed6ee"
     ],
     [
       "ID5.ack",
@@ -494,7 +474,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e4118e1a8896696fd9b3641604d3e338"
+      "92c3f7bd34cee7d28d6e4b8a8b9c4169"
     ],
     [
       "ID5.add1",
@@ -503,21 +483,7 @@
       1,
       [ "@query" ],
       0,
-      "17d7c7f8850839d50af173e5231ce5db"
-    ],
-    [
-      "ID5.i_tot",
-      1,
-      2,
-      1,
-      [
-        "@query", "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "lemma_FStar.Ghost.reveal_hide",
-        "token_correspondence_FStar.Ghost.reveal", "true_interp",
-        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
-      ],
-      0,
-      "047ec14dcb7a0374fbc88d6d2be8f126"
+      "db3c8689ebb4a47fdfb8380c4181ca21"
     ],
     [
       "ID5.sum",
@@ -535,7 +501,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "844f4aae0d864dc02f86cc281732591a"
+      "4e08aa0e472104537f6c821189435050"
     ]
   ]
 ]

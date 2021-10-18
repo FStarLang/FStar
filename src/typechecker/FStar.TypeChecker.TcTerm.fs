@@ -3954,6 +3954,39 @@ let level_of_type env e t =
                u
     in aux true t
 
+(*
+ * This helper routine computes the result type of applying args to
+ *   a term of type t_hd
+ *
+ * It assumes that the terms are ghost/pure and well-typed in env
+ *   -- to be called from fastpath type checking routines ONLY
+ *)
+
+(* private *)
+let rec apply_well_typed env (t_hd:typ) (args:args) : option<typ> =
+  if List.length args = 0
+  then Some t_hd
+  else match (N.unfold_whnf env t_hd).n with
+       | Tm_arrow(bs, c) ->
+         let n_args = List.length args in
+         let n_bs = List.length bs in
+         let bs, args, t, remaining_args =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
+           if n_args < n_bs
+           then let bs, rest = BU.first_N n_args bs in
+                let t = S.mk (Tm_arrow (rest, c)) t_hd.pos in
+                let bs, c = SS.open_comp bs (S.mk_Total t) in
+                bs, args, U.comp_result c, []
+           else let bs, c = SS.open_comp bs c in
+                let args, remaining_args = List.splitAt n_bs args in
+                bs, args, U.comp_result c, remaining_args in
+         let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
+         let t = SS.subst subst t in
+         apply_well_typed env t remaining_args
+       | Tm_refine(x, _) -> apply_well_typed env x.sort args
+       | Tm_ascribed(t, _, _) -> apply_well_typed env t args
+       | _ -> None
+
+
 (* universe_of_aux env e:
       During type-inference, we build terms like WPs for which we need to compute
       explicit universe instantiations.
@@ -4076,13 +4109,9 @@ let rec universe_of_aux env e =
           t, args
      in
      let t, args = type_of_head true hd args in
-     let t = N.normalize [Env.UnfoldUntil delta_constant] env t in
-     let bs, res = U.arrow_formals_comp t in
-     let res = U.comp_result res in
-     if List.length bs = List.length args
-     then let subst = U.subst_of_list bs args in
-          SS.subst subst res
-     else level_of_type_fail env e (Print.term_to_string res)
+     (match apply_well_typed env t args with
+      | Some t -> t
+      | None -> level_of_type_fail env e (Print.term_to_string t))
    | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
@@ -4191,33 +4220,8 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_app(hd, args) ->
     let t_hd = typeof_tot_or_gtot_term_fastpath env hd must_tot in
-
-    let rec aux args t_hd =
-      match (N.unfold_whnf env t_hd).n with
-      | Tm_arrow(bs, c) ->
-        let n_args = List.length args in
-        let n_bs = List.length bs in
-        let bs_t_opt =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
-          if n_args < n_bs
-          then let bs, rest = BU.first_N n_args bs in
-               let t = S.mk (Tm_arrow (rest, c)) t_hd.pos in
-               let bs, c = SS.open_comp bs (S.mk_Total t) in
-               Some (bs, args, U.comp_result c, [])
-          else let bs, c = SS.open_comp bs c in
-               let args, remaining_args = List.splitAt n_bs args in
-               Some (bs, args, U.comp_result c, remaining_args)
-        in
-        bind_opt bs_t_opt (fun (bs, args, t, remaining_args) ->
-          let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
-          let t = SS.subst subst t in
-          if List.length remaining_args = 0 then Some t else aux remaining_args t)
-      | Tm_refine(x, _) -> aux args x.sort
-      | Tm_ascribed(t, _, _) -> aux args t
-      | _ -> None
-    in
-
     bind_opt t_hd (fun t_hd ->
-      bind_opt (aux args t_hd) (fun t ->
+      bind_opt (apply_well_typed env t_hd args) (fun t ->
         if (effect_ok t) ||
            (List.for_all (fun (a, _) -> typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
         then Some t

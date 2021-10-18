@@ -669,7 +669,7 @@
         "typing_MiniParse.Spec.Combinators.make_constant_size_parser_aux"
       ],
       0,
-      "c6d59f439936c798dd99b984671edf71"
+      "a24dcf28b261805d7fbf47371e8e2f83"
     ],
     [
       "MiniParse.Impl.Combinators.make_total_constant_size_parser_impl",
@@ -775,7 +775,7 @@
         "typing_MiniParse.Spec.Combinators.make_total_constant_size_parser"
       ],
       0,
-      "cd5c7ff42972023028d6e4fb8adfe9bd"
+      "1707b0c1482f8c7f248883b971e55890"
     ]
   ]
 ]
