@@ -54,21 +54,36 @@ val array_view (t: Type u#0) (n: size_t)
     (ensures (fun _ -> True))
 
 /// Abstract datatype for a Steel array of type [t]
-/// Should extract to t*
-val array_or_null (base: Type u#0) (t: Type u#0) : Type u#0
+/// We model it as three parts:
+/// - a pure part, which represents the beginning of the array, and should extract to t*
+/// - a ghost part, which represents the end of the array, and should be erased at extraction
+/// - a refinement, because KReMLin does not support inlining of dependent pair types where one part is ghost.
+val array_or_null_from (base: Type0) (t: Type0) : Tot Type0
+[@@erasable]
+val array_or_null_to (base: Type0) (t: Type0) : Tot Type0
+val array_or_null_spec (#base: Type0) (#t: Type0) (x: (array_or_null_from base t & array_or_null_to base t)) : Tot prop
+inline_for_extraction
+let array_or_null (base: Type u#0) (t: Type u#0) : Type u#0 = (x: (array_or_null_from base t & array_or_null_to base t) { array_or_null_spec x })
 
 /// Returns the length of the array. Usable for specification and proof purposes,
 /// as modeled by the GTot effect
 val len (#base: Type) (#t: Type) (a: array_or_null base t) : GTot size_t
 let length (#base: Type) (#t: Type) (a: array_or_null base t) : GTot nat = size_v (len a)
 
-val null (base: Type u#0) (t: Type u#0) : Pure (array_or_null base t) (requires True) (ensures (fun r -> len r == zero_size))
+
+val null_from (base: Type u#0) (t: Type u#0) : Tot (array_or_null_from base t) 
+val null_to (base: Type u#0) (t: Type u#0) : Pure (array_or_null_to base t) (requires True) (ensures (fun r0 ->
+  array_or_null_spec (null_from base t, r0) /\
+  len (null_from base t, r0) == zero_size))
+
+inline_for_extraction
+let null (base: Type u#0) (t: Type u#0) : Pure (array_or_null base t) (requires True) (ensures (fun r -> len r == zero_size))
+= (null_from base t, null_to base t)
 val g_is_null (#base: Type) (#t: Type) (a: array_or_null base t) : Ghost bool (requires True) (ensures (fun res -> res == true <==> a == null base t))
 inline_for_extraction
 noextract
 let array (base: Type u#0) (t:Type u#0) : Type u#0 = (a: array_or_null base t { g_is_null a == false })
 
-// TODO 
 val array_is_unit (t: Type0) (n: size_t) (a: array_pcm_carrier t n)
 : b:bool{b <==> a == one (array_pcm t n)}
 
@@ -121,7 +136,37 @@ val g_mk_array_weak
   ))
   [SMTPat (g_mk_array r a)]
 
-val intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+val g_mk_array_from
+  (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+  (a: array_or_null_from base t)
+: Tot prop
+
+val g_mk_array_to
+  (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+  (a: array_or_null_from base t)
+: Pure (array_or_null_to base t)
+  (requires (g_mk_array_from r a))
+  (ensures (fun a' ->
+    let a0 = (a, a') in
+    array_or_null_spec a0 /\
+    g_is_null a0 == false /\
+    g_mk_array r a0
+  ))
+
+val intro_varray_from (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+  (_: squash (size_v n > 0))
+: Steel (al: array_or_null_from base t { g_mk_array_from r al })
+    (Steel.C.Ref.pts_to_view r (array_view t n))
+    (fun al -> varray (al, g_mk_array_to r al))
+    (requires fun _ -> True)
+  (ensures (fun h al h' ->
+    let a = (al, g_mk_array_to r al) in
+    g_mk_array r a /\
+    h' (varray a) == h (Steel.C.Ref.pts_to_view r (array_view t n))
+  ))
+
+inline_for_extraction
+let intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
   (_: squash (size_v n > 0))
 : Steel (array base t)
     (Steel.C.Ref.pts_to_view r (array_view t n))
@@ -131,6 +176,13 @@ val intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Refer
     g_mk_array r a /\
     h' (varray a) == h (Steel.C.Ref.pts_to_view r (array_view t n))
   ))
+=
+  let al = intro_varray_from r () in
+  let a = (al, g_mk_array_to r al) in
+  change_equal_slprop
+    (varray (al, g_mk_array_to r al))
+    (varray a);
+  return a
 
 val elim_varray (#inames: _) (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n)) (a: array base t) (_: squash (size_v n > 0))
 : SteelGhost unit inames
@@ -156,7 +208,10 @@ val merge
   (r1 r2: array base t)
 : Ghost (array base t)
   (requires (adjacent r1 r2))
-  (ensures (fun r -> length r == length r1 + length r2))
+  (ensures (fun r ->
+    length r == length r1 + length r2 /\
+    fst r == fst r1 // this property justifies array_or_null_from _ t being extracted to t*
+  ))
 
 let merge_into
   (#base: Type)
@@ -240,7 +295,8 @@ val split' (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
             s == sl `Seq.append` sr
           )
 
-val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t)
+inline_for_extraction
+let split_left (#base: _) (#t:Type) (#opened: _) (a:array base t)
   (al ar: Ghost.erased (array base t))
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray al)
@@ -252,8 +308,40 @@ val split_left (#base: _) (#t:Type) (#opened: _) (a:array base t)
             res == Ghost.reveal al /\
             h' (varray res) == h (varray al)
           )
+= match a with
+  | (a_, _) ->
+    let res = (a_, snd al) in
+    change_equal_slprop
+      (varray al)
+      (varray res);
+    return res
 
-val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
+val split_right_from_prop (#base: _) (#t:Type) (a:array base t) (i:size_t) (from: array_or_null_from base t)
+: Tot prop
+
+val split_right_to (#base: _) (#t:Type) (a:array base t) (i:size_t) (sq: squash (size_v i <= length a)) (from: array_or_null_from base t)
+: Pure (array_or_null_to base t)
+  (requires (split_right_from_prop a i from))
+  (ensures (fun y ->
+    let res = (from, y) in
+    array_or_null_spec res /\
+    g_is_null res == false /\
+    res == GPair?.snd (gsplit a i)
+  ))
+
+val split_right_from (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
+  : SteelAtomicBase (array_or_null_from base t) false opened Unobservable
+          (varray a)
+          (fun _ -> varray a)
+          (fun _ -> size_v i <= length a)
+          (fun h res h' ->
+            h' (varray a) == h (varray a) /\
+            size_v i <= length a /\
+            split_right_from_prop a i res
+          )
+
+inline_for_extraction
+let split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray a)
           (fun _ -> varray a)
@@ -263,6 +351,9 @@ val split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
             size_v i <= length a /\
             res == GPair?.snd (gsplit a i)
           )
+= let from = split_right_from a i in
+  let res = (from, split_right_to a i () from) in
+  return res
 
 inline_for_extraction
 let split (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t) (sq: squash (size_v i <= length a))
@@ -303,7 +394,8 @@ val join' (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
             merge_into al ar a
           )
 
-val joinc (#base: _) (#t:Type) (#opened: _) (al ar:array base t)
+inline_for_extraction
+let joinc (#base: _) (#t:Type) (#opened: _) (al ar:array base t)
   : SteelAtomicBase (array base t) false opened Unobservable
           (varray al `star` varray ar)
           (fun a -> varray al `star` varray ar)
@@ -313,6 +405,10 @@ val joinc (#base: _) (#t:Type) (#opened: _) (al ar:array base t)
             h' (varray ar) == h (varray ar) /\
             merge_into al ar a
           )
+= match al with
+  | (a, _) ->
+    let res = (a, snd (merge al ar)) in
+    return res
 
 inline_for_extraction
 let join (#opened: _) (#base: _) (#t:Type) (al ar:array base t)
@@ -360,7 +456,21 @@ val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (s
                h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
-val ref_of_array (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
+val ref_of_array_from (#base: Type) (#t:Type0) (r_from:array_or_null_from base t) (r_to: array_or_null_to base t) (sq: squash (let r = (r_from, r_to) in array_or_null_spec r /\ length r == 1))
+  : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+             (varray (r_from, r_to))
+             (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array (r_from, r_to))
+             (requires fun _ -> True)
+             (ensures fun h0 r' h1 ->
+               let r = (r_from, r_to) in
+               let s = h0 (varray r) in
+               Seq.length s == 1 /\
+               g_ref_of_array r == r' /\
+               h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
+             )
+
+inline_for_extraction
+let ref_of_array (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
   : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
              (varray r)
              (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
@@ -371,6 +481,16 @@ val ref_of_array (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r
                g_ref_of_array r == r' /\
                h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
+= match r with
+  | (r_from, r_to) ->
+    change_equal_slprop
+      (varray r)
+      (varray (r_from, r_to));
+    let res = ref_of_array_from r_from r_to () in
+    change_equal_slprop
+      (v_ref_of_array (r_from, r_to))
+      (v_ref_of_array r);
+    return res
 
 val array_of_ref (#inames: _) (#base: Type) (#t:Type0) (r': array base t) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (sq: squash (length r' == 1))
   : SteelGhost unit inames
@@ -386,7 +506,37 @@ val array_of_ref (#inames: _) (#base: Type) (#t:Type0) (r': array base t) (r: St
 
 // this function should be used only to pass a pointer as an argument to a function that expects an array
 
-val mk_array_of_ref (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+val mk_array_of_ref_from_spec
+  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  (from: array_or_null_from base t)
+: Tot prop
+
+val mk_array_of_ref_to
+  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  (from: array_or_null_from base t)
+: Pure (array_or_null_to base t)
+  (requires (mk_array_of_ref_from_spec r from))
+  (ensures (fun to ->
+    let r' = (from, to) in
+    array_or_null_spec r' /\
+    g_is_null r' == false
+  ))
+
+val mk_array_of_ref_from (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  : Steel (r0: array_or_null_from base t { mk_array_of_ref_from_spec r r0 })
+             (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
+             (fun r0 -> varray (r0, mk_array_of_ref_to r r0))
+             (requires fun _ -> True)
+             (ensures fun h0 r0 h1 ->
+               let r' = (r0, mk_array_of_ref_to r r0) in
+               let s = h1 (varray r') in
+               Seq.length s == 1 /\
+               g_ref_of_array r' == r /\
+               h0 (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
+             )
+
+inline_for_extraction
+let mk_array_of_ref (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
   : Steel (array base t)
              (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r' -> varray r')
@@ -397,12 +547,29 @@ val mk_array_of_ref (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (S
                g_ref_of_array r' == r /\
                h0 (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
-
+= let from = mk_array_of_ref_from r in
+  let r' = (from, mk_array_of_ref_to r from) in
+  change_equal_slprop
+    (varray (from, mk_array_of_ref_to r from))
+    (varray r');
+  return r'
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
 
-val index (#base: Type) (#t:Type) (r:array base t) (i:size_t)
+val index_from (#base: Type) (#t:Type) (r:array_or_null_from base t) (r' : array_or_null_to base t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t)
+  : Steel t
+             (varray (r, r'))
+             (fun _ -> varray (r, r'))
+             (requires fun _ -> size_v i < length (r, r'))
+             (ensures fun h0 x h1 ->
+               let s = h1 (varray (r, r')) in
+               size_v i < length (r, r') /\
+               h0 (varray (r, r')) == s /\
+               x == Seq.index s (size_v i))
+
+inline_for_extraction
+let index (#base: Type) (#t:Type) (r:array base t) (i:size_t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
@@ -412,10 +579,33 @@ val index (#base: Type) (#t:Type) (r:array base t) (i:size_t)
                size_v i < length r /\
                h0 (varray r) == s /\
                x == Seq.index s (size_v i))
+= match r with
+  | (r0, r') ->
+    change_equal_slprop
+      (varray r)
+      (varray (r0, r'));
+    let res = index_from r0 r' i in
+    change_equal_slprop
+      (varray (r0, r'))
+      (varray r);
+    return res
+  
 
 /// Updates index [i] in array [r] with value [x], as long as [i]
 /// is in bounds and the array is currently valid in memory
-val upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
+
+
+val upd_from (#base: Type) (#t:Type) (r:array_or_null_from base t) (r' : array_or_null_to base t { array_or_null_spec (r, r') /\ g_is_null (r, r') == false }) (i:size_t) (x:t)
+  : Steel unit
+             (varray (r, r'))
+             (fun _ -> varray (r, r'))
+             (requires fun h -> size_v i < length (r, r'))
+             (ensures fun h0 _ h1 ->
+               size_v i < length (r, r') /\
+               h1 (varray (r, r')) == Seq.upd (h0 (varray (r, r'))) (size_v i) x)
+
+inline_for_extraction
+let upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
   : Steel unit
              (varray r)
              (fun _ -> varray r)
@@ -423,7 +613,15 @@ val upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
              (ensures fun h0 _ h1 ->
                size_v i < length r /\
                h1 (varray r) == Seq.upd (h0 (varray r)) (size_v i) x)
-
+= match r with
+  | (r0, r') ->
+    change_equal_slprop
+      (varray r)
+      (varray (r0, r'));
+    upd_from r0 r' i x;
+    change_equal_slprop
+      (varray (r0, r'))
+      (varray r)
 
 let varray_or_null (#base: Type0) (#t: Type0) (x: array_or_null base t) : Tot vprop =
   if g_is_null x then emp else varray x
@@ -436,7 +634,33 @@ val freeable
   (a: array base t)
 : Tot prop
 
-val malloc
+val malloc_to
+  (#t: Type0)
+  (x: t)
+  (n: size_t)
+  (from: array_or_null_from (array_pcm_carrier t n) t)
+: Pure (array_or_null_to (array_pcm_carrier t n) t)
+    (requires (size_v n > 0))
+    (ensures (fun to -> array_or_null_spec (from, to)))
+
+val malloc_from
+  (#t: Type0)
+  (x: t)
+  (n: size_t)
+  (sq: squash (size_v n > 0))
+: Steel (array_or_null_from (array_pcm_carrier t n) t)
+    emp
+    (fun r -> varray_or_null (r, malloc_to x n r))
+    (requires fun _ -> True)
+    (ensures fun _ r0 h' ->
+      size_v n > 0 /\
+      begin let r : array_or_null (array_pcm_carrier t n) t = (r0, malloc_to x n r0) in
+      g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x)
+      end
+    )
+
+inline_for_extraction
+let malloc
   (#t: Type0)
   (x: t)
   (n: size_t)
@@ -447,8 +671,27 @@ val malloc
     (ensures fun _ r h' ->
       g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x)
     )
+= let r0 = malloc_from x n () in
+  let r = (r0, malloc_to x n r0) in
+  change_equal_slprop
+    (varray_or_null (r0, malloc_to x n r0))
+    (varray_or_null r);
+  return r
 
-val free
+val free_from
+  (#base: Type0)
+  (#t: Type0)
+  (a: array_or_null_from base t)
+  (a' : array_or_null_to base t)
+  (sq: squash (array_or_null_spec (a, a') /\ g_is_null (a, a') == false))
+: Steel unit
+    (varray (a, a'))
+    (fun _ -> emp)
+    (requires (fun _ -> freeable (a,a')))
+    (ensures (fun _ _ _ -> True))
+
+inline_for_extraction
+let free
   (#base: Type0)
   (#t: Type0)
   (a: array base t)
@@ -457,8 +700,30 @@ val free
     (fun _ -> emp)
     (requires (fun _ -> freeable a))
     (ensures (fun _ _ _ -> True))
+= match a with
+  | (af, a') ->
+    change_equal_slprop
+      (varray a)
+      (varray (af, a'));
+    free_from af a' ()
 
-val is_null
+val is_null_from
+  (#base: Type0)
+  (#t: Type0)
+  (a: array_or_null_from base t)
+  (a' : array_or_null_to base t)
+  (sq: squash (array_or_null_spec (a, a')))
+: Steel bool
+    (varray_or_null (a, a'))
+    (fun _ -> varray_or_null (a, a'))
+    (requires fun _ -> True)
+    (ensures fun h res h' ->
+      res == g_is_null (a, a') /\
+      h' (varray_or_null (a, a')) == h (varray_or_null (a, a'))
+    )
+
+inline_for_extraction
+let is_null
   (#base: Type0)
   (#t: Type0)
   (a: array_or_null base t)
@@ -470,3 +735,13 @@ val is_null
       res == g_is_null a /\
       h' (varray_or_null a) == h (varray_or_null a)
     )
+= match a with
+  | (af, a') ->
+    change_equal_slprop
+      (varray_or_null a)
+      (varray_or_null (af, a'));
+    let res = is_null_from af a' () in
+    change_equal_slprop
+      (varray_or_null (af, a'))
+      (varray_or_null a);
+    return res
