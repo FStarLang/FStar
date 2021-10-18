@@ -772,7 +772,7 @@ and translate_type_without_decay env t: typ =
         (UInt32, string_of_int (must (int_of_typenat n))))
   
   | MLTY_Named ([_; arg], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Array.array_or_null"
+    Syntax.string_of_mlpath p = "Steel.C.Array.array_or_null_from"
     ->
       TBuf (translate_type_without_decay env arg)
   
@@ -1027,9 +1027,9 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _ (* sq *) ])
     when (
-          string_of_mlpath p = "Steel.C.Array.malloc" ||
+          string_of_mlpath p = "Steel.C.Array.malloc_from" ||
           false) ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
@@ -1056,9 +1056,14 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rfree" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.free" ||
-          string_of_mlpath p = "Steel.C.Array.free" ||
           string_of_mlpath p = "Steel.C.Opt.free" ||
           string_of_mlpath p = "Steel.Array.free") ->
+      EBufFree (translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2; _ (* a' *); _ (* sq *) ])
+    when (
+          string_of_mlpath p = "Steel.C.Array.free_from" ||
+          false) ->
       EBufFree (translate_expr env e2)
 
   (* Generic buffer operations. *)
@@ -1244,8 +1249,8 @@ TODO: these should be removed and those operators should be directly
 supported by KReMLin (in src/Builtin.ml) Or alternatively Null and
 IsNull nodes should be added to the KReMLin AST *)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [e])
-    when string_of_mlpath p = "Steel.C.Array.is_null"
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [e; _ (* a' *); _ (* sq *) ])
+    when string_of_mlpath p = "Steel.C.Array.is_null_from"
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *); e; _ (* view *)])
@@ -1253,7 +1258,7 @@ IsNull nodes should be added to the KReMLin AST *)
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
   | MLE_TApp ({expr=MLE_Name p}, _)
-    when Syntax.string_of_mlpath p = "Steel.C.Array.null"
+    when Syntax.string_of_mlpath p = "Steel.C.Array.null_from"
     -> EQualified (["LowStar"; "Buffer"], "null")
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
@@ -1308,36 +1313,28 @@ IsNull nodes should be added to the KReMLin AST *)
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
-    when string_of_mlpath p = "Steel.C.Array.ref_of_array" ->
+    when string_of_mlpath p = "Steel.C.Array.ref_of_array_from" ->
       translate_expr env r
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
-    when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref" ->
+    when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref_from" ->
       translate_expr env r
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; r; _])
-    when string_of_mlpath p = "Steel.C.Array.intro_varray" ->
+    when string_of_mlpath p = "Steel.C.Array.intro_varray_from" ->
       EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; i])
-    when string_of_mlpath p = "Steel.C.Array.index" ->
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; _ (* r' *); i])
+    when string_of_mlpath p = "Steel.C.Array.index_from" ->
       EBufRead (translate_expr env r, translate_expr env i)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; i; x])
-    when string_of_mlpath p = "Steel.C.Array.upd" ->
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; _ (* r' *); i; x])
+    when string_of_mlpath p = "Steel.C.Array.upd_from" ->
       EBufWrite (translate_expr env r, translate_expr env i, translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; a; i])
-    when string_of_mlpath p = "Steel.C.Array.split_left" ->
-      translate_expr env a
-
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; a; i])
-    when string_of_mlpath p = "Steel.C.Array.split_right" ->
+    when string_of_mlpath p = "Steel.C.Array.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
-
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; al; ar])
-    when string_of_mlpath p = "Steel.C.Array.joinc" ->
-      translate_expr env al
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
