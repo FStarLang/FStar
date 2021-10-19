@@ -107,6 +107,10 @@ let bind_req (#a:Type)
 /// exists an intermediate state where the two-state postcondition of the first computation was
 /// satisfied, and which yields the validity of the two-state postcondition of the second computation
 /// on the final state [m2] with the returned value [y]
+
+/// Note that the ensures for the bind below asserts req_f
+/// This is not necessary, but an explicit assert may help the solver
+
 unfold
 let bind_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
@@ -185,7 +189,7 @@ let subcomp_pre (#a:Type)
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+     (req_g (mk_rmem pre_g h0) /\ ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x))) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   ))
 ))
 
@@ -335,7 +339,7 @@ unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> wp (fun x -> (req x) m) /\ as_requires wp
+= fun m -> wp (fun x -> (req x) m)
 
 /// Logical postcondition of a Pure and a SteelAtomic composition.
 /// There exists an intermediate value (the output of the Pure computation) such that

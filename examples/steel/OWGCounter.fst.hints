@@ -47,93 +47,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "342430048e782025f09ef66de553cc61"
-    ],
-    [
-      "OWGCounter.lock_inv_equiv_lemma",
-      2,
-      1,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd", "equation_OWGCounter.fst",
-        "equation_OWGCounter.lock_inv", "equation_OWGCounter.snd",
-        "equation_Prims.eqtype",
-        "equation_Steel.Effect.Common.sel_depends_only_on",
-        "equation_Steel.Effect.Common.sel_depends_only_on_core",
-        "equation_Steel.Effect.Common.to_vprop_",
-        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int",
-        "interpretation_Tm_abs_44c1d0801e7dff69cc01119993bee82f",
-        "interpretation_Tm_abs_53dea2b938917e229daa2b0a1500b535",
-        "interpretation_Tm_abs_dd1f9d9ab3c22180d8f1c5be8e6ffa67",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_0c722941970840a076dacc92962bec5a",
-        "refinement_interpretation_Tm_refine_1465ae6f1c4202850f8c8105c0543ed2",
-        "refinement_interpretation_Tm_refine_1e4ab45e2c85cc05ccee58110de1e7c3",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_FStar.Pervasives.Native.fst",
-        "token_correspondence_FStar.Pervasives.Native.snd",
-        "token_correspondence_OWGCounter.fst",
-        "token_correspondence_OWGCounter.snd", "typing_FStar.Ghost.erased",
-        "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
-      ],
-      0,
-      "4f0796bab654899a125c24a1ad93b988"
-    ],
-    [
-      "OWGCounter.lock_inv_equiv_lemma",
-      3,
-      1,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd", "equation_OWGCounter.fst",
-        "equation_OWGCounter.lock_inv", "equation_OWGCounter.snd",
-        "equation_Prims.eqtype",
-        "equation_Steel.Effect.Common.sel_depends_only_on",
-        "equation_Steel.Effect.Common.sel_depends_only_on_core",
-        "equation_Steel.Effect.Common.to_vprop_",
-        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int",
-        "interpretation_Tm_abs_44c1d0801e7dff69cc01119993bee82f",
-        "interpretation_Tm_abs_53dea2b938917e229daa2b0a1500b535",
-        "interpretation_Tm_abs_dd1f9d9ab3c22180d8f1c5be8e6ffa67",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_0c722941970840a076dacc92962bec5a",
-        "refinement_interpretation_Tm_refine_1465ae6f1c4202850f8c8105c0543ed2",
-        "refinement_interpretation_Tm_refine_1e4ab45e2c85cc05ccee58110de1e7c3",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_FStar.Pervasives.Native.fst",
-        "token_correspondence_FStar.Pervasives.Native.snd",
-        "token_correspondence_OWGCounter.fst",
-        "token_correspondence_OWGCounter.snd", "typing_FStar.Ghost.erased",
-        "typing_FStar.Ghost.reveal", "typing_OWGCounter.lock_inv"
-      ],
-      0,
-      "bba526451a3e0faa784b441daa4d05bc"
+      "27149465ec7e3eb062840c3814be8b19"
     ],
     [
       "OWGCounter.og_acquire",
@@ -158,7 +72,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "7d51a027fff72e919e9f0c5c05ce76bf"
+      "9c733b0ca7c9d32872d434d301610a39"
     ],
     [
       "OWGCounter.og_release",
@@ -183,7 +97,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "24facde5a49dfa2700c35a0eafbf4ae4"
+      "65dfe3e1c14088ec057ab365b6247185"
     ],
     [
       "OWGCounter.incr_ctr",
@@ -200,7 +114,7 @@
         "true_interp", "typing_FStar.Ghost.hide", "typing_OWGCounter.g_incr"
       ],
       0,
-      "e5fd4f744f31a19990aa5a33d5917ce6"
+      "49b432154ee07e1e5d380879d1aa7e1d"
     ],
     [
       "OWGCounter.rewrite_perm",
@@ -222,7 +136,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "7cacb63d636bef90c25fad86952a6ed8"
+      "4cb08c5ee83e5af54377add89c094763"
     ],
     [
       "OWGCounter.incr_ghost_contrib",
@@ -254,7 +168,7 @@
         "true_interp", "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
       ],
       0,
-      "70831ace685634fdc08d9377fe838e36"
+      "a9c607fb5fbeeb5d72bcd9a7e849edbd"
     ],
     [
       "OWGCounter.incr",
@@ -278,7 +192,7 @@
         "typing_FStar.Ghost.reveal", "typing_OWGCounter.g_incr"
       ],
       0,
-      "b24553f6af2a0050d96949cd7db13721"
+      "2db076029ef2baa3e839ed751d78910a"
     ],
     [
       "OWGCounter.incr_main",
@@ -325,7 +239,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "9cd077689590df42203c0c013fd05610"
+      "e12ed62c4b2b529a2164df943e0863a3"
     ]
   ]
 ]

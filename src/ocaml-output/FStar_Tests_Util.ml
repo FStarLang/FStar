@@ -185,17 +185,17 @@ let rec (term_eq' :
       | (FStar_Syntax_Syntax.Tm_app (t, args), FStar_Syntax_Syntax.Tm_app
          (s, args')) -> (term_eq' t s) && (args_eq args args')
       | (FStar_Syntax_Syntax.Tm_match
-         (t, FStar_Pervasives_Native.None, pats),
+         (t, FStar_Pervasives_Native.None, pats, uu___),
          FStar_Syntax_Syntax.Tm_match
-         (t', FStar_Pervasives_Native.None, pats')) ->
+         (t', FStar_Pervasives_Native.None, pats', uu___1)) ->
           (((FStar_Compiler_List.length pats) =
               (FStar_Compiler_List.length pats'))
              &&
              (FStar_Compiler_List.forall2
-                (fun uu___ ->
-                   fun uu___1 ->
-                     match (uu___, uu___1) with
-                     | ((uu___2, uu___3, e), (uu___4, uu___5, e')) ->
+                (fun uu___2 ->
+                   fun uu___3 ->
+                     match (uu___2, uu___3) with
+                     | ((uu___4, uu___5, e), (uu___6, uu___7, e')) ->
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed

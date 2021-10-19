@@ -24,7 +24,7 @@
       "b57421037566340b5b66950ded1aee91"
     ],
     [
-      "ImmutableST.2253",
+      "ImmutableST.2189",
       1,
       2,
       1,
@@ -38,7 +38,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "94e50cd765af0327a95d9137c22f805f"
+      "f0b859bf4d36a038c90974b76f662fcb"
     ],
     [
       "ImmutableST.ist_witnessed",

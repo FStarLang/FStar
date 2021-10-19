@@ -2771,8 +2771,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
             match (s1, U.unmeta t1), (s2, U.unmeta t2) with
-            | (_, {n=Tm_match (scrutinee, _, branches)}), (s, t)
-            | (s, t), (_, {n=Tm_match(scrutinee, _, branches)}) ->
+            | (_, {n=Tm_match (scrutinee, _, branches, _)}), (s, t)
+            | (s, t), (_, {n=Tm_match(scrutinee, _, branches, _)}) ->
               if not (is_flex scrutinee)
               then begin
                 if Env.debug env <| Options.Other "Rel"
@@ -3239,7 +3239,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: note ignoring the return annotation
+      | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in
@@ -3729,7 +3729,17 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c1)
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
-         let c1, c2 = N.ghost_to_pure2 env (c1, c2) in
+
+         //AR: 10/18: try ghost to pure promotion only if effects are different
+
+         let c1, c2 =
+           let eff1, eff2 =
+             c1 |> U.comp_effect_name |> Env.norm_eff_name env,
+             c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+           if Ident.lid_equals eff1 eff2
+           then c1, c2
+           else N.ghost_to_pure2 env (c1, c2) in
+
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl

@@ -100,3 +100,6 @@ irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
 val subst : bv -> term -> term -> term
+
+
+val close_term : binder -> term -> term

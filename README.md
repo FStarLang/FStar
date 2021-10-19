@@ -1,5 +1,5 @@
-F*: Verification system for effectful programs
-==============================================
+F*: A Proof-oriented Programming Language
+=========================================
 
 ### F\* website
 

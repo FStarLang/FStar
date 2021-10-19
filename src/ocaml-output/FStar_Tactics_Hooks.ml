@@ -406,7 +406,7 @@ let rec (traverse :
                   comb1
                     (fun t2 -> FStar_Syntax_Syntax.Tm_ascribed (t2, asc, ef)) in
                 uu___2 uu___1
-            | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, brs) ->
+            | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, brs, lopt) ->
                 let uu___1 = traverse f pol1 e sc in
                 let uu___2 =
                   let uu___3 =
@@ -428,8 +428,8 @@ let rec (traverse :
                 comb2
                   (fun sc1 ->
                      fun brs1 ->
-                       FStar_Syntax_Syntax.Tm_match (sc1, asc_opt, brs1))
-                  uu___1 uu___2
+                       FStar_Syntax_Syntax.Tm_match
+                         (sc1, asc_opt, brs1, lopt)) uu___1 uu___2
             | x -> tpure x in
           match r with
           | Unchanged tn' ->

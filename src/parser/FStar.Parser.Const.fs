@@ -355,9 +355,11 @@ let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
-let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
-let ite_soundness_by_attr = p2l ["FStar"; "Pervasives"; "ite_soundness_by"]
+let ite_soundness_by_attr = psconst "ite_soundness_by"
+let binder_strictly_positive_attr = psconst "strictly_positive"
+
 
 //the type of well-founded relations, used for decreases clauses with relations
 let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]

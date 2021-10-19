@@ -120,8 +120,8 @@ let (mk_match :
           (FStar_Compiler_List.map FStar_Syntax_Util.branch) in
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_match
-           (h, FStar_Pervasives_Native.None, branches1))
-        FStar_Compiler_Range.dummyRange
+           (h, FStar_Pervasives_Native.None, branches1,
+             FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
 let (pred_nat :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)

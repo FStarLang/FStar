@@ -16,7 +16,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "01bd9454beef928f5d2f580bae702a48"
+      "eebb37825b4f234e33aeab6d9aec4449"
     ],
     [
       "AlgWP.sublist_at_const",
@@ -46,7 +46,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "850d36e3271307e22ff4343e25aaec4c"
+      "c9a9196106806fb6d001a7629719a296"
     ],
     [
       "AlgWP.op_At_At",
@@ -66,7 +66,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "107365e4490aa620b1c7292f2ed3fe88"
+      "f71d68f6771c7a34d147480493fc0320"
     ],
     [
       "AlgWP.rwtree_help",
@@ -100,7 +100,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "9e5d3dea8c06ea40480f339aaa955264"
+      "b50f59dc0856650bb1b645fec4959f6d"
     ],
     [
       "AlgWP.return_wp",
@@ -112,7 +112,7 @@
         "interpretation_Tm_abs_8fefa78b9304fa89f906a877711a1b75"
       ],
       0,
-      "3d230a976b024d0bb847fe141e67391a"
+      "10cd021b65cc8ad8750424f317730c6d"
     ],
     [
       "AlgWP.bind_wp",
@@ -134,7 +134,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "a09358c57fbc3c89e78d7dc7aaa11406"
+      "b715c30a6b2ec4a71f2f03dc04ac1a54"
     ],
     [
       "AlgWP.read_wp",
@@ -146,7 +146,7 @@
         "interpretation_Tm_abs_065d9e2b9fd3163c64bf757897f26553"
       ],
       0,
-      "8e06ba63db6e527d5bd4022d70469238"
+      "4ea4df4f4e13eb5d60da456706a67934"
     ],
     [
       "AlgWP.write_wp",
@@ -159,7 +159,7 @@
         "unit_typing"
       ],
       0,
-      "b68925afb1b3473b3a2f7682f101d9ea"
+      "8fbc62a6b18ba3cbb64c9df7ecc12383"
     ],
     [
       "AlgWP.interp_as_wp",
@@ -258,7 +258,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "b144c54b1d8582e628693f15159b8a97"
+      "f6cca7d00124d4d8ce8202d21697c9c2"
     ],
     [
       "AlgWP.interp_ret",
@@ -287,7 +287,7 @@
         "true_interp", "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "ea8e4e489bbb28bff37b0b91be735ca5"
+      "64157fa224c4f6a55272876c93b9077c"
     ],
     [
       "AlgWP.interp_ret'",
@@ -308,7 +308,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "ac4d522fcf71526af61e4b5d1e66d978"
+      "74ef1254b13b09936114b4dbc86ee1e4"
     ],
     [
       "AlgWP.interp_ret'",
@@ -331,7 +331,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "9393ce4db14c95000e4315d556cd3ab9"
+      "c67f00eeb2ec9fc457d1cf282ef7eba8"
     ],
     [
       "AlgWP.bind_preserves_mon",
@@ -353,7 +353,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "2c8dbda76dceb61fb030580b835294b6"
+      "81bec3114aafa4bb8f8fe86dbde9fd42"
     ],
     [
       "AlgWP.interp_monotonic",
@@ -375,7 +375,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "8690695bbd47760eca39eb50d3b89af7"
+      "39c61063dfe156bc5f64c8b99074ffb9"
     ],
     [
       "AlgWP.interp_monotonic",
@@ -434,7 +434,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "e712ef54a725327247b68c493f8771f0"
+      "743ed46a0654687c67071b4f7a25debd"
     ],
     [
       "AlgWP.elim_str",
@@ -448,7 +448,7 @@
         "token_correspondence_AlgWP.stronger"
       ],
       0,
-      "d8942b5f0f4103443300c44cd45aeff8"
+      "6196864b093088e706fedf4ff65e6a20"
     ],
     [
       "AlgWP.interp_morph",
@@ -476,7 +476,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "dee41132a4fab2a71e932dd27e84a4d4"
+      "76ce767728e5cba24f24a290fde43693"
     ],
     [
       "AlgWP.interp_morph",
@@ -570,7 +570,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "11016a84925bed0ac305f0e2d1c0b4f2"
+      "8c1c23d6759f2f61f32d849b10b4c786"
     ],
     [
       "AlgWP.interp_bind",
@@ -598,7 +598,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "37152f7177fb66f6738618d657bf004d"
+      "b6a8b1353ac425a220b059ee7297b3af"
     ],
     [
       "AlgWP.interp_bind",
@@ -645,7 +645,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "a0e1cde77a9adfa6b2a5f84fdf92ff4a"
+      "17ab439c99278db260a427cd32ee7ac3"
     ],
     [
       "AlgWP.repr",
@@ -666,7 +666,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "eaf87480db1b2a42bcd19b0507747fed"
+      "45cc57c9831a710e761ee14eb8a741fb"
     ],
     [
       "AlgWP.return",
@@ -690,7 +690,7 @@
         "true_interp"
       ],
       0,
-      "5d00c960f45fa05cb2518f3d83cce339"
+      "5fbce241cb02e94a2e9231fccf838ba4"
     ],
     [
       "AlgWP.bind",
@@ -709,7 +709,7 @@
         "token_correspondence_AlgWP.stronger"
       ],
       0,
-      "bed1c58146d9293dd12d29c3c0a88968"
+      "e5bd62a3e351e1c15d5c86934c257ce2"
     ],
     [
       "AlgWP.subcomp",
@@ -729,7 +729,7 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7"
       ],
       0,
-      "dc8c55aaf6e239585fa4de8d82349128"
+      "4a85570fbcab1b6ab8b968837ed3b2d8"
     ],
     [
       "AlgWP.AlgWP",
@@ -749,7 +749,7 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7"
       ],
       0,
-      "55682f5cd31a3fdad85e7d958e98525b"
+      "cdb672aea3b7bd785122c797adbbbf47"
     ],
     [
       "AlgWP.AlgWP",
@@ -769,7 +769,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "0698e53e36254564ab6e4fc78c119062"
+      "958270f020f1d39ef6569e9ebe63a56a"
     ],
     [
       "AlgWP.get",
@@ -827,7 +827,7 @@
         "unit_typing"
       ],
       0,
-      "9aea9d93f2940ce90981ab9a8e9134f1"
+      "24ff847f4ab4588e05d309d9098ef044"
     ],
     [
       "AlgWP.put",
@@ -878,7 +878,7 @@
         "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "d5e9960aaa1b4b86b54fe9a454c428a0"
+      "0a6951fe541be1a4341a56bb350cbd05"
     ],
     [
       "AlgWP.lift_pure_wp",
@@ -898,7 +898,7 @@
         "typing_Tm_abs_4d919759bceafc48670cf8103fc4eaae"
       ],
       0,
-      "6d3b9c3eab6bcd7743931667dab70e6f"
+      "73c5ca01ccfcfd2c82d68b2623207456"
     ],
     [
       "AlgWP.lift_pure_algwp",
@@ -949,7 +949,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "2d846d6b860ba466bc7acd5aa51812d8"
+      "e87a8fd0d75adf75df6b32e1d448fdb7"
     ],
     [
       "AlgWP.addx",
@@ -974,7 +974,7 @@
         "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "8a746d06527300d4617f530dc987e9a5"
+      "9b502cc515e374d9dfb798742b02daf2"
     ],
     [
       "AlgWP.add_via_state",
@@ -1005,7 +1005,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "e8996840f3105f4b07e6c5ab3088c411"
+      "8b32d3cecdd47e06dbef65c1cd7236c3"
     ],
     [
       "AlgWP.interp_sem",
@@ -1041,7 +1041,7 @@
         "token_correspondence_AlgWP.interp_as_wp", "true_interp"
       ],
       0,
-      "6731f7d3e42c9ecd7ff29a0152bcb54f"
+      "594e5c6ee14c32d2c075b6347ec9ea85"
     ],
     [
       "AlgWP.interp_sem",
@@ -1077,7 +1077,7 @@
         "typing_AlgWP.interp_as_wp"
       ],
       0,
-      "05dab9e5b87af7d7e7d89523f89958fa"
+      "50b9189c36ea59f9c923e71fc9c47aa4"
     ],
     [
       "AlgWP.interp_sem",
@@ -1127,7 +1127,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "af715b18fa106614867ae606a9458428"
+      "22d1eaae9a3d5fc6348c3423ab773865"
     ],
     [
       "AlgWP.quotient_ro",
@@ -1149,7 +1149,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "61ad1ad83c4f2aa718470297411a9662"
+      "339a08350ed3798112094590be169ab7"
     ],
     [
       "AlgWP.sanity_1",
@@ -1167,7 +1167,7 @@
         "token_correspondence_AlgWP.quotient_ro"
       ],
       0,
-      "dd1ccc0de11103bf773347278acd886a"
+      "63ccffca35db62588623005c666ef976"
     ],
     [
       "AlgWP.sanity_2",
@@ -1186,7 +1186,7 @@
         "token_correspondence_AlgWP.quotient_ro"
       ],
       0,
-      "3dfa126cb988f67ae417ccc168f2db72"
+      "5ccfaa206680ed05a11c5b78ff58c947"
     ],
     [
       "AlgWP.interp_ro",
@@ -1304,7 +1304,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "75f64b3416c7770870d88890863c5721"
+      "6cd112d8a1948116dacdbd80279916ac"
     ],
     [
       "AlgWP.interp_ro",
@@ -1363,7 +1363,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "dd45a046c22ac3c14a6a3d68d1a0aca3"
+      "a8546bab63fde2ef77be45d2af7429be"
     ],
     [
       "AlgWP.st_soundness",
@@ -1372,7 +1372,7 @@
       1,
       [ "@query", "equation_Alg.sublist" ],
       0,
-      "a36698c58868ec5314a13b1a3e39ee1a"
+      "a98c90d2c6ed17ab052df8874624503d"
     ],
     [
       "AlgWP.st_soundness",
@@ -1400,7 +1400,7 @@
         "true_interp"
       ],
       0,
-      "44ecceb7df5a2be69d83b2db0c2c6ba3"
+      "b91c7a368b6a3bacdb71a70f7c27696e"
     ],
     [
       "AlgWP.st_soundness",
@@ -1420,7 +1420,7 @@
         "token_correspondence_AlgWP.interp_as_wp", "true_interp"
       ],
       0,
-      "c90869896c3c622c4816a7378a7621d1"
+      "64c0426f68e12b8a547efdef30781ca8"
     ],
     [
       "AlgWP.ro_soundness",
@@ -1436,7 +1436,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "e437b2b31e0525608ef3f671f0689482"
+      "dfbe065ce70d51488942a1ae1e94a96c"
     ],
     [
       "AlgWP.ro_soundness",
@@ -1476,7 +1476,7 @@
         "typing_tok_Alg.Read@tok"
       ],
       0,
-      "29ffa07f609e52650a423e4e6ef77f39"
+      "5b8a582a43b7e6ed92f3b910419ed97e"
     ],
     [
       "AlgWP.ro_soundness",
@@ -1494,7 +1494,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "09d4586bd91a38248ae4ad145f3f2014"
+      "bc2e84dcbacb656ec1af3af4337362a0"
     ],
     [
       "AlgWP.quotient_lemma",
@@ -1521,7 +1521,7 @@
         "typing_Tm_abs_7540bb8f3ba6ce2d3430b53f23449e9f"
       ],
       0,
-      "f4b1add04c5c4a3ea888c8cd70b8261f"
+      "f24648ff6c4cc0d42c028133dcde2440"
     ],
     [
       "AlgWP.ro_soundness_pre_post",
@@ -1537,7 +1537,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "727d1b5c5fef5d107d6248571071d0f9"
+      "df8c06f720e9b8bb1a194a37f39fc343"
     ],
     [
       "AlgWP.ro_soundness_pre_post",
@@ -1549,29 +1549,25 @@
         "AlgWP_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
         "AlgWP_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "eq2-interp", "equation_Alg.state", "equation_Alg.sublist",
+        "equation_Alg.state", "equation_Alg.sublist",
         "equation_AlgWP.quotient_ro", "equation_AlgWP.st_monotonic",
         "equation_AlgWP.st_wp", "equation_AlgWP.stronger",
         "equation_AlgWP.subops", "equation_Prims.eqtype",
-        "equation_Prims.logical",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.Ghost.reveal",
-        "function_token_typing_Prims.int", "int_inversion",
+        "equation_Prims.logical", "function_token_typing_Prims.int",
+        "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
-        "interpretation_Tm_abs_81b0d7117dfbcd9db05b422051e388e9",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
-        "l_imp-interp", "lemma_FStar.Ghost.reveal_hide",
+        "l_imp-interp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
-        "refinement_interpretation_Tm_refine_9d2073cba9a19452f7ea0f79f02c5329",
+        "refinement_interpretation_Tm_refine_9cbf6e17ce9e637c8849b6e2dd959304",
         "token_correspondence_AlgWP.quotient_ro",
-        "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
-        "typing_Tm_abs_81b0d7117dfbcd9db05b422051e388e9"
+        "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "375411fb0a4f934d6af922c3e5a2a15e"
+      "c1fce2888a4b8a6fb17e77d5d25278fa"
     ],
     [
       "AlgWP.bind_ro",
@@ -1601,7 +1597,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "3dc9cc7d7d861ceac6675ca05ee89468"
+      "1b060a1277a6bd812d8e1eb76b9657b4"
     ],
     [
       "AlgWP.quot_mono",
@@ -1614,7 +1610,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "56fe32cf266761ddae4f55da60d040b4"
+      "dad15de30494c90cb2b54a88436be1cb"
     ],
     [
       "AlgWP.ro_tree_wp",
@@ -1635,7 +1631,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "4bc010495aa92f895f830b2688f5f348"
+      "783bdaa57e5e2ae596253e566d06905f"
     ],
     [
       "AlgWP.ro_tree_wp",
@@ -1697,7 +1693,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "757e42ac5b300fca912742c6c0e80e3d"
+      "8371f30aec9e7552152085f284330f1f"
     ],
     [
       "AlgWP.quot_tree",
@@ -1713,7 +1709,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "856edecf7dcf5ed18fd5c2d5ce82a2e1"
+      "da2390ce90fcc5aba274fbb065516e57"
     ],
     [
       "AlgWP.quot_tree",
@@ -1743,7 +1739,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "9e722b74c287a3d7a8d15fa38fcc123a"
+      "d056a2a54a84fd6b1b1748242fd23c02"
     ],
     [
       "AlgWP.quot",
@@ -1759,7 +1755,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "84e37b95d5218a1c53957e1e7b4f6787"
+      "e5ad3d3e643e19c9ea4f3f44c4084e51"
     ],
     [
       "AlgWP.quot",
@@ -1787,7 +1783,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "5222502703196dd634b5ff9198ba5332"
+      "2524cc0180ffe4bd79451aff61904622"
     ],
     [
       "AlgWP.AlgPP",
@@ -1801,7 +1797,7 @@
         "l_and-interp", "l_quant_interp_45e36f2117295ee7f73ce1b0d916cb62"
       ],
       0,
-      "4279eec688061011274401ff420308e4"
+      "4bb1c1c0d2cfb67990aa36fc05a4dce9"
     ],
     [
       "AlgWP.quotPP",
@@ -1817,7 +1813,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "59659772316a82ea2c6b5562669b26f7"
+      "f6a790a5664ca548e8f036e1824ddfc6"
     ],
     [
       "AlgWP.quotPP",
@@ -1867,7 +1863,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "4e9354dd9690fdbc48dbd87d036e24ff"
+      "be9242991e047374b3c4aa821f782412"
     ],
     [
       "AlgWP.null",
@@ -1884,7 +1880,7 @@
         "l_quant_interp_f286e8acaee32f5b1e7a843dd5baeebc"
       ],
       0,
-      "bb5ce9947351157969dab422af95a7dd"
+      "3dd1faaba51ed531e5fabe01e97e3446"
     ],
     [
       "AlgWP.null_ro1",
@@ -1898,7 +1894,7 @@
         "l_quant_interp_310ec8932244318b9ea0b5bdb7e6eb13"
       ],
       0,
-      "1d58daf59fb6a45e17eb828cac78eda6"
+      "7763b8361245c96f40f59cc4a70cbe98"
     ],
     [
       "AlgWP.null_equiv_sanity",
@@ -1928,7 +1924,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "85e5e13b679a7455d5b128908d0239a3"
+      "6f389bf9e95531c85988ea0824b53478"
     ],
     [
       "AlgWP.bind_null_ro",
@@ -1956,7 +1952,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "7027c81e64f4ec6fee067b1f57a3ce70"
+      "27545b587957684d1db6d35a7c4b7b5f"
     ],
     [
       "AlgWP.null_ro_tree_wp",
@@ -1977,7 +1973,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "fe5394f6bec9ba61e359f26d399551f2"
+      "724aea3ad17452ce8b0905c3f12e8dc0"
     ],
     [
       "AlgWP.null_ro_tree_wp",
@@ -2043,7 +2039,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "850702236c0b3014e0db934ff6994482"
+      "3876a4102a44505734b67534f89631d8"
     ],
     [
       "AlgWP.__tree_handle_into_ro",
@@ -2064,7 +2060,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "16841c355c4b66cd88fb1fcb27884ad9"
+      "00e2a40d33e92d722c619ac2853a4dc6"
     ],
     [
       "AlgWP.__tree_handle_into_ro",
@@ -2118,7 +2114,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "80cf389bcf324a3a3a7c72fe03fb9685"
+      "ef57e8bdab81301f06edbcdca9e2f55c"
     ],
     [
       "AlgWP.handle_into_ro",
@@ -2139,7 +2135,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "8f721bb430e6c5f127798bb24542dbc7"
+      "b9c56303aed6b9966e6b2633ace34574"
     ],
     [
       "AlgWP.ignore_writes",
@@ -2160,7 +2156,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "13a5c62d0f724c05dd255d235d204adc"
+      "402f73bc074e161fbdc2ff17393c27bd"
     ],
     [
       "AlgWP.ignore_writes",
@@ -2205,7 +2201,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "aa8538781d12cea7f536f7b9d29857ec"
+      "a99d99ebe736d08574e939a6d7ebbb89"
     ]
   ]
 ]

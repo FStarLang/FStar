@@ -2831,7 +2831,8 @@ and (desugar_term_maybe_top :
                                         (sc, FStar_Pervasives_Native.None,
                                           [(pat,
                                              FStar_Pervasives_Native.None,
-                                             body3)]))
+                                             body3)],
+                                          FStar_Pervasives_Native.None))
                                      body3.FStar_Syntax_Syntax.pos
                                | FStar_Pervasives_Native.None -> body1 in
                              let uu___5 =
@@ -3497,7 +3498,8 @@ and (desugar_term_maybe_top :
                                                 body1 in
                                             (uu___10,
                                               FStar_Pervasives_Native.None,
-                                              uu___11) in
+                                              uu___11,
+                                              FStar_Pervasives_Native.None) in
                                           FStar_Syntax_Syntax.Tm_match uu___9 in
                                         FStar_Syntax_Syntax.mk uu___8
                                           top.FStar_Parser_AST.range in
@@ -3604,7 +3606,8 @@ and (desugar_term_maybe_top :
                                               t3') in
                                           [uu___11] in
                                         uu___9 :: uu___10 in
-                                      (t1'1, asc_opt1, uu___8) in
+                                      (t1'1, asc_opt1, uu___8,
+                                        FStar_Pervasives_Native.None) in
                                     FStar_Syntax_Syntax.Tm_match uu___7 in
                                   mk uu___6 in
                                 (uu___5, (join_aqs [aq1; aq0; aq2; aq3]))))))
@@ -3683,7 +3686,8 @@ and (desugar_term_maybe_top :
                            let uu___4 =
                              FStar_Compiler_Effect.op_Less_Bar mk
                                (FStar_Syntax_Syntax.Tm_match
-                                  (e1, asc_opt, brs)) in
+                                  (e1, asc_opt, brs,
+                                    FStar_Pervasives_Native.None)) in
                            (uu___4, (join_aqs (aq :: aq0 :: aqs))))))
         | FStar_Parser_AST.Ascribed (e, t, tac_opt) ->
             let uu___1 = desugar_ascription env t tac_opt in

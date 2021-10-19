@@ -123,7 +123,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "895b54325444000d6e7cc5088aba6206"
+      "36cbb83871dc1ebc2684e7bcb4a5874c"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -203,7 +203,7 @@
       1,
       [ "@query" ],
       0,
-      "b1ba5fe59cca8d28231edb8b03f26f61"
+      "ac83bea8aaa9c8272d547d4db8dad420"
     ],
     [
       "FStar.Classical.Sugar.and_intro",

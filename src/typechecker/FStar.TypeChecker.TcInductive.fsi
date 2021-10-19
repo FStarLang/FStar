@@ -16,8 +16,6 @@ open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 
 val check_inductive_well_typedness: env_t -> list<sigelt> -> list<qualifier> -> list<lident> -> (sigelt * list<sigelt> * list<sigelt>)
-val check_positivity: sigelt -> env -> bool
-val check_exn_positivity: lid -> env -> bool
 
 val early_prims_inductives :list<string>
 

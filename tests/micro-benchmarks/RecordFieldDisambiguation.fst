@@ -5,6 +5,18 @@ type tf1 = { f : bool }
 let test_tf0_1 (x:tf0) (y:tf1) = x.f && y.f
 let test_tf0_2 (x:tf0) : tf1 = { f = x.f }
 
+let tf0_abbrev0 = tf0
+let proj_tf0_abbrev0 (x:tf0_abbrev0) = x.f
+let mk_tf0_abbrev0 (x:bool) : tf0_abbrev0 = { f = x }
+
+let tf0_abbrev1 (n:nat) = tf0_abbrev0
+let proj_tf0_abbrev1 (x:nat) (y:tf0_abbrev1 x) = y.f
+let mk_tf0_abbrev1 (y:bool) : tf0_abbrev1 0 = { f = y }
+
+let tf0_abbrev2 (n:nat) : Type = tf0_abbrev1 n
+let proj_tf0_abbrev2 (x:nat) (y:tf0_abbrev2 x) = y.f
+let mk_tf0_abbrev2 (y:bool) : tf0_abbrev2 0 = { f = y }
+
 type r = { a:nat }
 type s = { a:bool }
 

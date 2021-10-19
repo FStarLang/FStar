@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9d783c6a520d120f2ddb9d13b35f4583"
+      "61ab1c460faea251e07298f9f2e0b8b8"
     ],
     [
       "CQueue.Cell.__proj__Mkmcell__item__all_or_none_null",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "daf53e72e7fa010d393450b0f9261625"
+      "6a8b0ed08525ba19095a272abd1585a9"
     ],
     [
       "CQueue.Cell.__proj__Mkmcell__item__all_or_none_null",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "777b68e5892d57c56271490bd92eafbc"
+      "1088ca481e64e97012c70792004605b7"
     ],
     [
       "CQueue.Cell.ccell_ptrvalue_null",
@@ -47,7 +47,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "95facb28ca4902f03cd0173f9e7b1727"
+      "08dedfdbc924997bc9153954f7fd5912"
     ],
     [
       "CQueue.Cell.ccell_ptrvalue_is_null",
@@ -71,7 +71,7 @@
         "unit_inversion"
       ],
       0,
-      "3ca0ed16d99d6ea888a6b4897cca8940"
+      "d56e353cd1ddb90aeefbf3001d30d15b"
     ],
     [
       "CQueue.Cell.ccell_data",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b"
       ],
       0,
-      "91315d73f1de0424ad0bbf5e4d18adea"
+      "80344ef7aea585498d9f2e2fae9ce85d"
     ],
     [
       "CQueue.Cell.ccell_next",
@@ -106,7 +106,7 @@
         "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b"
       ],
       0,
-      "87afced2a3a97f6572c951ea4a381336"
+      "e5ae0f1bad1b7d2216229f0d828ccf74"
     ],
     [
       "CQueue.Cell.ccell_is_lvalue_refine",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e6ae86c9c5da71042cc8648531a8495b"
+      "cd822440447872c07754d42f7cf70688"
     ],
     [
       "CQueue.Cell.ccell_is_lvalue_rewrite",
@@ -137,7 +137,7 @@
         "typing_Steel.Effect.Common.emp"
       ],
       0,
-      "7b47f9c01c254170cff3df45e9a7d8c7"
+      "2ba1417f0d3e5f09aa9e6b653565b1b8"
     ],
     [
       "CQueue.Cell.ccell_is_lvalue_rewrite",
@@ -152,7 +152,7 @@
         "refinement_interpretation_Tm_refine_321342edf1de6d7b75d5e83852d93f2d"
       ],
       0,
-      "3cf1c0bab726f059d486f83c87f0915b"
+      "0777d24d54e45027d4567122a7e2b07e"
     ],
     [
       "CQueue.Cell.ccell_is_lvalue0",
@@ -169,7 +169,7 @@
         "typing_Steel.Effect.Common.emp"
       ],
       0,
-      "8c24485327db48f252e002521da089aa"
+      "e17bc28d98ab8206e1ff5ff61a7a0a17"
     ],
     [
       "CQueue.Cell.intro_ccell_is_lvalue",
@@ -181,69 +181,28 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "135740839ac4f19fdc7653d1cf4a415f"
+      "a686c6359a01a451eb019a1e6f412778"
     ],
     [
       "CQueue.Cell.intro_ccell_is_lvalue",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "80843c7448e00e16180822722e4bda1b"
-    ],
-    [
-      "CQueue.Cell.intro_ccell_is_lvalue",
-      3,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "equation_Steel.Effect.Common.req",
-        "equation_Steel.Effect.Common.rm",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "c65ee3451d6f05444b82b73fa73477ac"
-    ],
-    [
-      "CQueue.Cell.intro_ccell_is_lvalue",
-      4,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
-        "eq2-interp", "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_is_lvalue_refine",
+        "eq2-interp", "equation_CQueue.Cell.ccell_is_lvalue_refine",
         "equation_CQueue.Cell.ccell_is_lvalue_rewrite",
         "equation_CQueue.Cell.ccell_lvalue",
-        "equation_CQueue.Cell.ccell_ptrvalue", "equation_Prims.eq2",
+        "equation_CQueue.Cell.ccell_ptrvalue",
+        "equation_CQueue.Cell.ccell_ptrvalue_is_null", "equation_Prims.eq2",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.true_p",
         "fuel_guarded_inversion_CQueue.Cell.mcell",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2ad26f5c83acd73ef65c061d3981e22e"
+      "af133fc2cb0fd3b021997d5784965138"
     ],
     [
       "CQueue.Cell.elim_ccell_is_lvalue",
@@ -255,87 +214,11 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "a5770715d0f9ddc4d736e476a98e2896"
+      "894c84da4eeeb4c4abd34d507fad3b62"
     ],
     [
       "CQueue.Cell.elim_ccell_is_lvalue",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "0ea0fb6075821f24fd4d4abad74c7b52"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_is_lvalue",
-      3,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "equation_Steel.Effect.Common.req",
-        "equation_Steel.Effect.Common.rm",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "4ec70c10bd5c1f1152879760b0825647"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_is_lvalue",
-      4,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "dfe08a37f6b681dfa2848b907e5f892d"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_is_lvalue",
-      5,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "equation_Steel.Effect.Common.req",
-        "equation_Steel.Effect.Common.rm",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.CM_unit",
-        "typing_Steel.Effect.Common.emp"
-      ],
-      0,
-      "00dc374997e7bb4f7247f5540a783e4d"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_is_lvalue",
-      6,
       2,
       1,
       [
@@ -365,7 +248,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue0"
       ],
       0,
-      "f011692d8cdb281ba55ecf30e46a32fa"
+      "a7aac53c08e792dd247fa7914eabf42a"
     ],
     [
       "CQueue.Cell.ccell_rewrite",
@@ -388,7 +271,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "c850f193935018af8e240f3a1770906f"
+      "bf5c728d87bc8e4eb064e299caeea75f"
     ],
     [
       "CQueue.Cell.ccell_rewrite",
@@ -417,7 +300,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "18661736838d528e93c61efe63fde23e"
+      "608b8d7f4c2ef6764d4cd97505a7004e"
     ],
     [
       "CQueue.Cell.ccell1",
@@ -438,7 +321,7 @@
         "typing_CQueue.Cell.ccell_is_lvalue"
       ],
       0,
-      "6c3f1004b83309872527bb37d8fe3dd1"
+      "22385e5a044876e4d22aeb31237ed17c"
     ],
     [
       "CQueue.Cell.intro_ccell",
@@ -455,75 +338,23 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "a8f903f3451e47d0122754bd26ea050c"
+      "89700c44ac25a03dd27bf51263aaa261"
     ],
     [
       "CQueue.Cell.intro_ccell",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "f5ecf7628475b73b5551911f479dd150"
-    ],
-    [
-      "CQueue.Cell.intro_ccell",
-      3,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_CQueue.Cell.ccell_ptrvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_CQueue.Cell.mcell",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "02a385298d7a7f1d7f0510a466d31738"
-    ],
-    [
-      "CQueue.Cell.intro_ccell",
-      4,
       2,
       1,
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "equation_CQueue.Cell.ccell",
-        "equation_CQueue.Cell.ccell_",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
+        "@query", "equation_CQueue.Cell.ccell_lvalue",
         "equation_CQueue.Cell.ccell_ptrvalue",
         "equation_CQueue.Cell.ccell_rewrite",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dsnd", "equation_Prims.eq2",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.vptr_",
         "fuel_guarded_inversion_CQueue.Cell.mcell",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -532,11 +363,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "refinement_interpretation_Tm_refine_de31e19598daa6735f8b0ab9207dbb0b"
       ],
       0,
-      "23424f9fe3780032b163f5b55152e5df"
+      "9d67043833bd0cade57b3a4aaa0ae904"
     ],
     [
       "CQueue.Cell.elim_ccell_ghost",
@@ -558,156 +388,22 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "8edd2c932490cdc7744b1acee76a0d0f"
+      "3a2e740ee69f2bd4d917ecb524129f46"
     ],
     [
       "CQueue.Cell.elim_ccell_ghost",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "43f30e3ea880e138f18d82f0d8d94a22"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      3,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "9582a2adf20d13a32fcb61983aa60770"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      4,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "1c180ee5eeb8318a96e13fd0554087eb"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      5,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_CQueue.Cell.ccell_ptrvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_CQueue.Cell.mcell",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "f37809a91a37ca2bd0c8eb638b1f7b6f"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      6,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "2389314867a61b25b3a5f84312a9d16c"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      7,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
-        "equation_CQueue.Cell.ccell_is_lvalue",
-        "equation_CQueue.Cell.ccell_is_lvalue_",
-        "equation_CQueue.Cell.ccell_lvalue",
-        "equation_CQueue.Cell.ccell_ptrvalue",
-        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
-        "fuel_guarded_inversion_CQueue.Cell.mcell",
-        "proj_equation_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.Mkvprop__t",
-        "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "typing_CQueue.Cell.ccell_is_lvalue"
-      ],
-      0,
-      "cf8c12b685af6c9b8bbfed80e41fb047"
-    ],
-    [
-      "CQueue.Cell.elim_ccell_ghost",
-      8,
       2,
       1,
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "equation_CQueue.Cell.ccell",
-        "equation_CQueue.Cell.ccell_", "equation_CQueue.Cell.ccell_ptrvalue",
+        "@query", "equation_CQueue.Cell.ccell_ptrvalue",
         "equation_CQueue.Cell.ccell_rewrite",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dsnd", "equation_Prims.eq2",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.star",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_Steel.Reference.vptr_",
         "fuel_guarded_inversion_CQueue.Cell.mcell",
         "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -715,11 +411,10 @@
         "proj_equation_Prims.Mkdtuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c31c42799de6b31784ad7aba28556339"
+      "576a406e7dff0ccd1e92f21cbaf15a51"
     ],
     [
       "CQueue.Cell.elim_ccell",
@@ -741,7 +436,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "39c14b2caa16825eb21cdbfe4ef200ca"
+      "acfceacefa51bf0e3156e9fb0a17270b"
     ],
     [
       "CQueue.Cell.elim_ccell",
@@ -758,7 +453,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "2f8e0fced9b8384d188615af5af78415"
+      "db5ecf7c53762adadeea07305befa89f"
     ],
     [
       "CQueue.Cell.ccell_not_null",
@@ -771,7 +466,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "1986426c9d5d520f0ba4f288391d4d73"
+      "65f710643ca43aae769fae181c19c45c"
     ],
     [
       "CQueue.Cell.ccell_not_null",
@@ -787,7 +482,7 @@
         "token_correspondence_Steel.Effect.Common.mk_rmem", "true_interp"
       ],
       0,
-      "41dce41a73258823c2b914d6272b4e36"
+      "fc91c2e71755d2b1c9380f7d993ce03b"
     ],
     [
       "CQueue.Cell.ralloc",
@@ -802,7 +497,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "495a8180d9b06cb39b3372e23e83075d"
+      "6143135fdc1f869790d511e53f8550e9"
     ],
     [
       "CQueue.Cell.alloc_cell",
@@ -817,7 +512,7 @@
         "typing_CQueue.Cell.ccell"
       ],
       0,
-      "984014a12548b2b2fcce41bff9071e0f"
+      "bf10578338304225872912fddb8e8d46"
     ],
     [
       "CQueue.Cell.alloc_cell",
@@ -843,7 +538,7 @@
         "typing_CQueue.Cell.ccell_ptrvalue", "typing_Steel.Reference.is_null"
       ],
       0,
-      "c804d7da2251bb96c5a82c6f6751b3c5"
+      "0e8c3e49558d2b1cee183ea1378b8e8d"
     ],
     [
       "CQueue.Cell.free_cell",
@@ -852,7 +547,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "fcf49ce9fae6d17f7a61e66e6bebec81"
+      "ab506b20da510d0e19737b57afc53559"
     ]
   ]
 ]
