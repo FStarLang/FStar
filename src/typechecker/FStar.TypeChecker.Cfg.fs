@@ -399,7 +399,7 @@ let built_in_primitive_steps : prim_step_set =
            :  (arg -> option<'a>)
            -> (arg -> option<'b>)
            -> (Range.range -> 'c -> term)
-           -> (Range.range -> 'a -> 'b -> 'c)
+           -> (Range.range -> 'a -> 'b -> option<'c>)
            -> psc
            -> EMB.norm_cb
            -> args
@@ -409,7 +409,10 @@ let built_in_primitive_steps : prim_step_set =
                  | [a;b] ->
                     begin
                     match as_a a, as_b b with
-                    | Some a, Some b -> Some (embed_c res.psc_range (f res.psc_range a b))
+                    | Some a, Some b ->
+                      (match f res.psc_range a b with
+                       | Some c -> Some (embed_c res.psc_range c)
+                       | _ -> None)
                     | _ -> None
                     end
                  | _ -> None
@@ -732,12 +735,12 @@ let built_in_primitive_steps : prim_step_set =
                    arg_as_int
                    arg_as_char
                    (embed_simple EMB.e_string)
-                   (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y),
+                   (fun r (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)),
              NBETerm.mixed_binary_op
                    NBETerm.arg_as_int
                    NBETerm.arg_as_char
                    (NBETerm.embed NBETerm.e_string bogus_cbs)
-                   (fun (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
+                   (fun (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)));
          (PC.string_split_lid,
              2,
              0,
@@ -1008,7 +1011,37 @@ let built_in_primitive_steps : prim_step_set =
        @ div_mod_unsigned
        @ bitwise
     in
-    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let reveal_hide =
+      (* unconditionally reduce reveal #t' (hide #t x) to x *)
+            PC.reveal,
+            2,
+            1,
+            mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              let head, args = U.head_and_args x  in
+              if U.is_fvar PC.hide head
+              then match args with
+                   | [_t; (body, _)] -> Some body
+                   | _ -> None
+              else None)
+            (fun r body -> body)
+            (fun r _t body -> Some body),
+            NBETerm.mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              match NBETerm.nbe_t_of_t x with
+              | NBETerm.FV (fv, _, [(_t, _); (body, _)])
+                when fv_eq_lid fv PC.hide ->
+                Some body
+              | _ -> None)
+            (fun body -> body)
+            (fun _t body -> Some body)
+    in
+    let strong_steps =
+      List.map (as_primitive_step true)
+               (basic_ops@bounded_arith_ops@[reveal_hide])
+    in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 

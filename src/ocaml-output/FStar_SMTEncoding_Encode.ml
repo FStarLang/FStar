@@ -2316,22 +2316,38 @@ let (encode_top_level_val :
       FStar_Syntax_Syntax.fv ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.qualifier Prims.list ->
-            (FStar_SMTEncoding_Term.decls_t * FStar_SMTEncoding_Env.env_t))
+            (FStar_SMTEncoding_Term.decls_elt Prims.list *
+              FStar_SMTEncoding_Env.env_t))
   =
   fun uninterpreted ->
     fun env ->
-      fun lid ->
+      fun fv ->
         fun t ->
           fun quals ->
-            let tt = norm_before_encoding env t in
-            let uu___ = encode_free_var uninterpreted env lid t tt quals in
+            let tt =
+              let uu___ =
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in
+                  FStar_Ident.nsstr uu___2 in
+                uu___1 = "FStar.Ghost" in
+              if uu___
+              then
+                norm_with_steps
+                  [FStar_TypeChecker_Env.Eager_unfolding;
+                  FStar_TypeChecker_Env.Simplify;
+                  FStar_TypeChecker_Env.AllowUnboundUniverses;
+                  FStar_TypeChecker_Env.EraseUniverses;
+                  FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
+                  env.FStar_SMTEncoding_Env.tcenv t
+              else norm_before_encoding env t in
+            let uu___ = encode_free_var uninterpreted env fv t tt quals in
             match uu___ with
             | (decls, env1) ->
                 let uu___1 = FStar_Syntax_Util.is_smt_lemma t in
                 if uu___1
                 then
                   let uu___2 =
-                    let uu___3 = encode_smt_lemma env1 lid tt in
+                    let uu___3 = encode_smt_lemma env1 fv tt in
                     FStar_Compiler_List.op_At decls uu___3 in
                   (uu___2, env1)
                 else (decls, env1)

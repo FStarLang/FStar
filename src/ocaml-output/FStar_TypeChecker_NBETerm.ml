@@ -1569,7 +1569,8 @@ let mixed_binary_op :
     (arg -> 'a FStar_Pervasives_Native.option) ->
       (arg -> 'b FStar_Pervasives_Native.option) ->
         ('c -> t) ->
-          ('a -> 'b -> 'c) -> args -> t FStar_Pervasives_Native.option
+          ('a -> 'b -> 'c FStar_Pervasives_Native.option) ->
+            args -> t FStar_Pervasives_Native.option
   =
   fun as_a ->
     fun as_b ->
@@ -1584,8 +1585,12 @@ let mixed_binary_op :
                 (match uu___ with
                  | (FStar_Pervasives_Native.Some a2,
                     FStar_Pervasives_Native.Some b2) ->
-                     let uu___1 = let uu___2 = f a2 b2 in embed_c uu___2 in
-                     FStar_Pervasives_Native.Some uu___1
+                     let uu___1 = f a2 b2 in
+                     (match uu___1 with
+                      | FStar_Pervasives_Native.Some c1 ->
+                          let uu___2 = embed_c c1 in
+                          FStar_Pervasives_Native.Some uu___2
+                      | uu___2 -> FStar_Pervasives_Native.None)
                  | uu___1 -> FStar_Pervasives_Native.None)
             | uu___ -> FStar_Pervasives_Native.None
 let (list_of_string' : Prims.string -> t) =
