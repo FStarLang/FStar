@@ -71,11 +71,17 @@ noeq
 type t_t16 =
   | C161: t_t15 t_t16 -> t_t16
 
-assume val t_t17 ([@@@ strictly_positive] a:Type0) : Type0
+assume val t_t17 ([@@@ strictly_positive] a:Type0) (b:Type0) : Type0
+
+//fails since we don't know if the second binder of t_t17 is positive
+[@@ expect_failure]
+noeq
+type t_t18 =
+  | C181: t_t17 t_t18 t_t18 -> t_t18
 
 noeq
 type t_t18 =
-  | C181: t_t17 t_t18 -> t_t18
+  | C181: t_t17 t_t18 nat -> t_t18
 
 (*
  * strictly positive attribute is checked properly
