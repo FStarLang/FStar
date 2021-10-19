@@ -121,7 +121,7 @@ let tc_inductive' env ses quals attrs lids =
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = TcInductive.check_positivity ty env in
+         let b = TcUtil.check_positivity env ty in
          if not b then
            let lid, r =
              match ty.sigel with
@@ -140,7 +140,7 @@ let tc_inductive' env ses quals attrs lids =
             | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
             | _ -> failwith "Impossible"
          in
-         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+         if lid_equals ty_lid PC.exn_lid && not (TcUtil.check_exn_positivity env data_lid) then
             Errors.log_issue d.sigrng
                      (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                         ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
