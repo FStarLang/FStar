@@ -1046,7 +1046,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
               //   end
               // end;
               let f_e = effect_as_etag g lbeff in
-              let lbtyp = SS.compress lbtyp in
+              let lbtyp = SS.compress (U.canon_arrow lbtyp) in
               let no_gen () =
                   let expected_t = term_as_mlty g lbtyp in
                   (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
