@@ -60,3 +60,36 @@ assume val t_t14 : Type0
 noeq type t14 =
   | C141: t_t14 -> t14
 
+
+(*
+ * Using the strictly_positive attribute on binders
+ *)
+assume val t_t15 (a:Type0) : Type0
+
+[@@ expect_failure]
+noeq
+type t_t16 =
+  | C161: t_t15 t_t16 -> t_t16
+
+assume val t_t17 ([@@@ strictly_positive] a:Type0) (b:Type0) : Type0
+
+//fails since we don't know if the second binder of t_t17 is positive
+[@@ expect_failure]
+noeq
+type t_t18 =
+  | C181: t_t17 t_t18 t_t18 -> t_t18
+
+noeq
+type t_t18 =
+  | C181: t_t17 t_t18 nat -> t_t18
+
+(*
+ * strictly positive attribute is checked properly
+ *)
+
+val t_t19 ([@@@ strictly_positive] a:Type0) : Type0
+
+[@@ expect_failure]
+let t_t19 a = a -> int
+
+let t_t19 a = list a

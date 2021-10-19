@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "54d60e745976e92a8e165b5cd49df7c9"
+      "cd40070f399d729022d2e704e0d508dd"
     ],
     [
       "StructUpdate.__proj__Both__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_98107e6b7315063dc6bd76cc8e26b604"
       ],
       0,
-      "35d81ec7fe22870a5f0fe93785082a72"
+      "3dbc50785132bff53d59762c8b75b4ae"
     ],
     [
       "StructUpdate.__proj__Both__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_98107e6b7315063dc6bd76cc8e26b604"
       ],
       0,
-      "2a0189e088f87815d65a0cd617102690"
+      "70de900fb6416aa6a3ba5e3ff7bd70ac"
     ],
     [
       "StructUpdate.__proj__First__item___0",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_0e8db6bc544539abd696ca9e03b4b7c3"
       ],
       0,
-      "348527be40ab2c6c037466ea3227814a"
+      "fe295acc25da68b5ee5247c4c4c8e735"
     ],
     [
       "StructUpdate.__proj__Second__item___0",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_f7ccb138f3449f7541d6fd15f6692f09"
       ],
       0,
-      "b8f925cd6993579fb43150cb5f7290ca"
+      "12e5b54921ac4e0d54bb2b9f4ec9de86"
     ],
     [
       "StructUpdate.comp",
@@ -74,7 +74,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "1e296941ea6354bfa4e8e72844bddff8"
+      "60d04293e343e2306d28205c1f5ee9fc"
     ],
     [
       "StructUpdate.combine",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_8531fe32b408b37dc2f604ba6db5ed5a"
       ],
       0,
-      "0988ef47cf8e558aaffa42ce9f104cf6"
+      "03bdb8c39bb131596c8dbea5a3708885"
     ],
     [
       "StructUpdate.pcm_t",
@@ -152,7 +152,7 @@
         "typing_StructUpdate.combine", "unit_typing"
       ],
       0,
-      "46661fb635fbdd7e03278e73e2474e6f"
+      "f81b92e838ebbece17674db999a8f2d4"
     ],
     [
       "StructUpdate.upd_first",
@@ -166,20 +166,17 @@
         "constructor_distinct_StructUpdate.First",
         "constructor_distinct_StructUpdate.Neither",
         "constructor_distinct_StructUpdate.Second",
-        "constructor_distinct_Tm_unit",
         "data_typing_intro_StructUpdate.First@tok",
         "disc_equation_StructUpdate.Both",
         "disc_equation_StructUpdate.Neither",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
         "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
-        "equation_Steel.Effect.Common.true_p",
         "equation_StructUpdate.combine", "equation_StructUpdate.comp",
         "equation_StructUpdate.pcm_t", "false_interp",
         "fuel_guarded_inversion_StructUpdate.t",
         "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "interpretation_Tm_abs_5479c2e60fc09f3487669a88f452169e",
         "kinding_StructUpdate.t@tok", "l_or-interp",
-        "lemma_FStar.Ghost.reveal_hide",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
         "proj_equation_FStar.PCM.Mkpcm_p",
@@ -203,20 +200,20 @@
         "projection_inverse_StructUpdate.Second__0",
         "projection_inverse_StructUpdate.Second_a",
         "projection_inverse_StructUpdate.Second_b",
-        "refinement_interpretation_Tm_refine_4a922d541e86e954950168c3a08a1455",
-        "refinement_interpretation_Tm_refine_83e3b52bd571dc404f8a800ff3f4f496",
+        "refinement_interpretation_Tm_refine_114c2e5db9d4f0ecaed022da9ad813ba",
+        "refinement_interpretation_Tm_refine_b318227fb01607bc19f52a14deccbaa0",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
         "token_correspondence_StructUpdate.combine",
-        "token_correspondence_StructUpdate.comp", "true_interp",
+        "token_correspondence_StructUpdate.comp",
         "typing_FStar.Ghost.reveal",
         "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_StructUpdate.pcm_t"
       ],
       0,
-      "1cae5e7c322f4f4fe4f6542e479247b9"
+      "7b59d5d74e410421632e198fd3e064c5"
     ],
     [
       "StructUpdate.upd_second",
@@ -281,7 +278,7 @@
         "typing_StructUpdate.pcm_t"
       ],
       0,
-      "108aae21a5756a07d996cf8191d0486b"
+      "74f14041da95a49b1f0589d9b650d0f0"
     ]
   ]
 ]

@@ -3729,7 +3729,17 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c1)
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
-         let c1, c2 = N.ghost_to_pure2 env (c1, c2) in
+
+         //AR: 10/18: try ghost to pure promotion only if effects are different
+
+         let c1, c2 =
+           let eff1, eff2 =
+             c1 |> U.comp_effect_name |> Env.norm_eff_name env,
+             c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+           if Ident.lid_equals eff1 eff2
+           then c1, c2
+           else N.ghost_to_pure2 env (c1, c2) in
+
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
