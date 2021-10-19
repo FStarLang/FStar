@@ -316,19 +316,6 @@ let split_left (#base: _) (#t:Type) (#opened: _) (a:array base t)
       (varray res);
     return res
 
-val split_right_from_prop (#base: _) (#t:Type) (a:array base t) (i:size_t) (from: array_or_null_from base t)
-: Tot prop
-
-val split_right_to (#base: _) (#t:Type) (a:array base t) (i:size_t) (sq: squash (size_v i <= length a)) (from: array_or_null_from base t)
-: Pure (array_or_null_to base t)
-  (requires (split_right_from_prop a i from))
-  (ensures (fun y ->
-    let res = (from, y) in
-    array_or_null_spec res /\
-    g_is_null res == false /\
-    res == GPair?.snd (gsplit a i)
-  ))
-
 val split_right_from (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
   : SteelAtomicBase (array_or_null_from base t) false opened Unobservable
           (varray a)
@@ -337,7 +324,7 @@ val split_right_from (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_
           (fun h res h' ->
             h' (varray a) == h (varray a) /\
             size_v i <= length a /\
-            split_right_from_prop a i res
+            res == fst (GPair?.snd (gsplit a i))
           )
 
 inline_for_extraction
@@ -352,7 +339,7 @@ let split_right (#base: _) (#t:Type) (#opened: _) (a:array base t) (i:size_t)
             res == GPair?.snd (gsplit a i)
           )
 = let from = split_right_from a i in
-  let res = (from, split_right_to a i () from) in
+  let res = (from, snd (GPair?.snd (gsplit a i))) in
   return res
 
 inline_for_extraction
@@ -634,13 +621,20 @@ val freeable
   (a: array base t)
 : Tot prop
 
+val malloc_from_spec
+  (#t: Type0)
+  (x: t)
+  (n: size_t)
+  (from: array_or_null_from (array_pcm_carrier t n) t)
+: Tot prop
+
 val malloc_to
   (#t: Type0)
   (x: t)
   (n: size_t)
   (from: array_or_null_from (array_pcm_carrier t n) t)
 : Pure (array_or_null_to (array_pcm_carrier t n) t)
-    (requires (size_v n > 0))
+    (requires (size_v n > 0 /\ malloc_from_spec x n from))
     (ensures (fun to -> array_or_null_spec (from, to)))
 
 val malloc_from
@@ -648,7 +642,7 @@ val malloc_from
   (x: t)
   (n: size_t)
   (sq: squash (size_v n > 0))
-: Steel (array_or_null_from (array_pcm_carrier t n) t)
+: Steel (from: array_or_null_from (array_pcm_carrier t n) t { malloc_from_spec x n from })
     emp
     (fun r -> varray_or_null (r, malloc_to x n r))
     (requires fun _ -> True)
