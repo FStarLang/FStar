@@ -74,6 +74,13 @@ let morphism_compose (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fa
       fab.morph_compose x1 x2;
       fbc.morph_compose (fab.morph x1) (fab.morph x2))
 
+let morphism_compose_morph
+  (#a #b #c: Type) (#pa: pcm a) (#pb: pcm b) (#pc: pcm c) (fab: morphism pa pb) (fbc: morphism pb pc)
+  (x: a)
+: Lemma
+  ((morphism_compose fab fbc).morph x == fbc.morph (fab.morph x))
+= ()
+
 let morphism_id
   (#a: Type)
   (p: pcm a)
