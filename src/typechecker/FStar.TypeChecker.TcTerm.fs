@@ -1280,10 +1280,10 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
         let e =
-          let rc = { residual_effect = cres.eff_name;
-                     residual_typ = Some cres.res_typ;
-                     residual_flags = cres.cflags } in
-          mk (Tm_match(scrutinee, ret_opt, branches, Some rc)) top.pos in
+          // let rc = { residual_effect = cres.eff_name;
+          //            residual_typ = Some cres.res_typ;
+          //            residual_flags = cres.cflags } in
+          mk (Tm_match(scrutinee, ret_opt, branches, None)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided

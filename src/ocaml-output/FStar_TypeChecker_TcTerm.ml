@@ -3496,24 +3496,10 @@ and (tc_match :
                                                          cres1.FStar_TypeChecker_Common.res_typ in
                                                      (pat, wopt, uu___13))) in
                                        let e2 =
-                                         let rc =
-                                           {
-                                             FStar_Syntax_Syntax.residual_effect
-                                               =
-                                               (cres1.FStar_TypeChecker_Common.eff_name);
-                                             FStar_Syntax_Syntax.residual_typ
-                                               =
-                                               (FStar_Pervasives_Native.Some
-                                                  (cres1.FStar_TypeChecker_Common.res_typ));
-                                             FStar_Syntax_Syntax.residual_flags
-                                               =
-                                               (cres1.FStar_TypeChecker_Common.cflags)
-                                           } in
                                          FStar_Syntax_Syntax.mk
                                            (FStar_Syntax_Syntax.Tm_match
                                               (scrutinee, ret_opt1, branches,
-                                                (FStar_Pervasives_Native.Some
-                                                   rc)))
+                                                FStar_Pervasives_Native.None))
                                            top.FStar_Syntax_Syntax.pos in
                                        let e3 =
                                          FStar_TypeChecker_Util.maybe_monadic
