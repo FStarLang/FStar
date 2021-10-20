@@ -41,9 +41,6 @@ true: \
 <ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
   package(stdint)
 
-"ulib/ml/fstarlib.cma": \
-  linkpkg
-
 <ulib/tactics_ml/**/*.ml>: \
   package(fstar-compiler-lib)
 
