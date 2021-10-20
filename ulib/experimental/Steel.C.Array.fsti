@@ -76,6 +76,17 @@ val null_to (base: Type u#0) (t: Type u#0) : Pure (array_or_null_to base t) (req
   array_or_null_spec (null_from base t, r0) /\
   len (null_from base t, r0) == zero_size))
 
+val null_to_unique
+  (#base #t: Type)
+  (to: array_or_null_to base t)
+: Lemma
+  (requires (
+    array_or_null_spec (null_from base t, to)
+  ))
+  (ensures (
+    to == null_to base t
+  ))
+
 inline_for_extraction
 let null (base: Type u#0) (t: Type u#0) : Pure (array_or_null base t) (requires True) (ensures (fun r -> len r == zero_size))
 = (null_from base t, null_to base t)

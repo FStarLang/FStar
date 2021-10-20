@@ -221,6 +221,7 @@ let len (from, to) =
 
 let null_from _ _ = None
 let null_to _ _ = None
+let null_to_unique _ = ()
 
 let g_is_null a = None? (fst a)
 
