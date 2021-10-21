@@ -88,10 +88,11 @@ val gfocus (#inames: _) (#p: pcm 'b) (r: ref 'a p)
     (fun _ -> Ghost.reveal s == l.conn_small_to_large.morph x)
     (fun _ _ _ -> True)
 
-val focus (#p: pcm 'b) (r: ref 'a p)
+val focus (#opened: _) (#p: pcm 'b) (r: ref 'a p)
   (#q: pcm 'c)
   (l: connection p q) (s: Ghost.erased 'b) (x: Ghost.erased 'c)
-: Steel (ref 'a q)
+: A.SteelAtomicBase (ref 'a q)
+    false opened A.Unobservable
     (r `pts_to` s)
     (fun r' -> r' `pts_to` x)
     (fun _ -> Ghost.reveal s == l.conn_small_to_large.morph x)

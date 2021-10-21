@@ -1312,15 +1312,15 @@ IsNull nodes should be added to the KReMLin AST *)
         EBufRead (translate_expr env r, EConstant (UInt32, "0")),
         translate_expr env x)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.ref_of_array_from" ->
       translate_expr env r
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r])
     when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref_from" ->
       translate_expr env r
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; r; _])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened*); _ (* n *); r; _ (* squash *)])
     when string_of_mlpath p = "Steel.C.Array.intro_varray_from" ->
       EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
