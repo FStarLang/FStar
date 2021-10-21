@@ -164,9 +164,10 @@ val g_mk_array_to
     g_mk_array r a0
   ))
 
-val intro_varray_from (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+val intro_varray_from (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
   (_: squash (size_v n > 0))
-: Steel (al: array_or_null_from base t { g_mk_array_from r al })
+: SteelAtomicBase (al: array_or_null_from base t { g_mk_array_from r al })
+    false opened Unobservable
     (Steel.C.Ref.pts_to_view r (array_view t n))
     (fun al -> varray (al, g_mk_array_to r al))
     (requires fun _ -> True)
@@ -177,9 +178,10 @@ val intro_varray_from (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.
   ))
 
 inline_for_extraction
-let intro_varray (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+let intro_varray (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
   (_: squash (size_v n > 0))
-: Steel (array base t)
+: SteelAtomicBase (array base t)
+  false opened Unobservable
     (Steel.C.Ref.pts_to_view r (array_view t n))
     (fun a -> varray a)
     (requires fun _ -> True)
@@ -454,8 +456,9 @@ val ref_of_array_ghost (#inames: _) (#base: Type) (#t:Type0) (r:array base t) (s
                h1 (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t)) == Seq.index s 0
              )
 
-val ref_of_array_from (#base: Type) (#t:Type0) (r_from:array_or_null_from base t) (r_to: array_or_null_to base t) (sq: squash (let r = (r_from, r_to) in array_or_null_spec r /\ length r == 1))
-  : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+val ref_of_array_from (#base: Type) (#t:Type0) (#opened: _) (r_from:array_or_null_from base t) (r_to: array_or_null_to base t) (sq: squash (let r = (r_from, r_to) in array_or_null_spec r /\ length r == 1))
+  : SteelAtomicBase (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+    false opened Unobservable
              (varray (r_from, r_to))
              (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array (r_from, r_to))
              (requires fun _ -> True)
@@ -468,8 +471,9 @@ val ref_of_array_from (#base: Type) (#t:Type0) (r_from:array_or_null_from base t
              )
 
 inline_for_extraction
-let ref_of_array (#base: Type) (#t:Type0) (r:array base t) (sq: squash (length r == 1))
-  : Steel (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+let ref_of_array (#base: Type) (#t:Type0) (#opened: _) (r:array base t) (sq: squash (length r == 1))
+  : SteelAtomicBase (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+    false opened Unobservable
              (varray r)
              (fun r' -> Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `star` v_ref_of_array r)
              (requires fun _ -> True)
@@ -520,8 +524,9 @@ val mk_array_of_ref_to
     g_is_null r' == false
   ))
 
-val mk_array_of_ref_from (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
-  : Steel (r0: array_or_null_from base t { mk_array_of_ref_from_spec r r0 })
+val mk_array_of_ref_from (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  : SteelAtomicBase (r0: array_or_null_from base t { mk_array_of_ref_from_spec r r0 })
+    false opened Unobservable
              (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r0 -> varray (r0, mk_array_of_ref_to r r0))
              (requires fun _ -> True)
@@ -534,8 +539,9 @@ val mk_array_of_ref_from (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base
              )
 
 inline_for_extraction
-let mk_array_of_ref (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
-  : Steel (array base t)
+let mk_array_of_ref (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  : SteelAtomicBase (array base t)
+    false opened Unobservable
              (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r' -> varray r')
              (requires fun _ -> True)
