@@ -1345,7 +1345,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 List.fold_right
                   (fun (a, aq) stack ->
                     let a =
-                      if (cfg.steps.for_extraction ||
+                      if ((Cfg.cfg_env cfg).erase_erasable_args ||
                           cfg.debug.erase_erasable_args) //just for experimentation
                       && aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
                       then U.exp_unit

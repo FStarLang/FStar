@@ -203,6 +203,7 @@ and env = {
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool                      (* This flag is set when running postprocess_for_extraction_with tactics *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -330,6 +331,7 @@ let initial_env deps
     erasable_types_tab = BU.smap_create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
+    erase_erasable_args = false
   }
 
 let dsenv env = env.dsenv

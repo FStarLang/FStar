@@ -51,7 +51,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
-     for_extraction:bool
+     for_extraction:bool;
 }
 
 let steps_to_string f =
@@ -148,7 +148,7 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
-    for_extraction = false
+    for_extraction = false;
 }
 
 let fstep_add_one s fs =

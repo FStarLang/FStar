@@ -3842,7 +3842,9 @@ let rec (norm :
                              | (a, aq) ->
                                  let a1 =
                                    let uu___3 =
-                                     ((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                                     ((let uu___4 =
+                                         FStar_TypeChecker_Cfg.cfg_env cfg in
+                                       uu___4.FStar_TypeChecker_Env.erase_erasable_args)
                                         ||
                                         (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args)
                                        && (aqual_is_erasable aq) in
@@ -8608,7 +8610,9 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.enable_defer_to_tac);
                                   FStar_TypeChecker_Env.unif_allow_ref_guards
                                     =
-                                    (env1.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                    (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                  FStar_TypeChecker_Env.erase_erasable_args =
+                                    (env1.FStar_TypeChecker_Env.erase_erasable_args)
                                 } t true in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
@@ -8711,7 +8715,9 @@ let (eta_expand :
                           FStar_TypeChecker_Env.enable_defer_to_tac =
                             (env1.FStar_TypeChecker_Env.enable_defer_to_tac);
                           FStar_TypeChecker_Env.unif_allow_ref_guards =
-                            (env1.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                            (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                          FStar_TypeChecker_Env.erase_erasable_args =
+                            (env1.FStar_TypeChecker_Env.erase_erasable_args)
                         } t true in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))

@@ -44,6 +44,7 @@ module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
+module PC = FStar.Parser.Const
 open FStar.TypeChecker.Cfg
 
 (* Broadly, the algorithm implemented here is inspired by
@@ -177,8 +178,12 @@ let cache_add (cfg:config) (fv:fv) (v:t) =
 let try_in_cache (cfg:config) (fv:fv) : option<t> =
   let lid = fv.fv_name.v in
   BU.smap_try_find cfg.fv_cache (string_of_lid lid)
-let debug cfg f =
-  log_nbe cfg.core_cfg f
+let debug cfg f = log_nbe cfg.core_cfg f
+
+let aqual_is_erasable (aq:aqual) =
+  match aq with
+  | None -> false
+  | Some aq -> BU.for_some (U.is_fvar PC.erasable_attr) aq.aqual_attributes
 
 (* GM, Aug 19th 2018: This should not (at least always) be recursive.
  * Forcing the thunk on an NBE term (Lazy i) triggers arbitrary
@@ -498,6 +503,28 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       let cfg = reifying_true cfg in
       translate cfg bs (fst arg)
 
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
+      mk_t <| Reflect (translate cfg bs (fst arg))
+
+    | Tm_app({n=Tm_fvar fv}, [_])
+         when S.fv_eq_lid fv PC.assert_lid ||
+              S.fv_eq_lid fv PC.assert_norm_lid ->
+      debug (fun () -> BU.print_string "Eliminated assertion\n");
+      mk_t (Constant Unit)
+
+    | Tm_app(head, args)
+         when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args ->
+      iapp cfg (translate cfg bs head)
+               (List.map
+                 (fun x ->
+                   if aqual_is_erasable (snd x)
+                   then (
+                     debug (fun () -> BU.print1 "Erasing %s\n" (P.term_to_string (fst x)));
+                     mk_t (Constant Unit), snd x
+                   )
+                   else translate cfg bs (fst x), snd x)
+                 args)
+
     | Tm_app(head, args) ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
@@ -808,7 +835,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     begin
     match args with
     | [(a, _)] -> mk_rt a.nbe_r (Constant (Range a.nbe_r))
-    | _ ->     failwith ("NBE ill-typed application: " ^ t_to_string f)
+    | _ ->     failwith ("NBE ill-typed application Const_range_of: " ^ t_to_string f)
     end
 
   | Constant (SConst FStar.Const.Const_set_range_of) ->
@@ -816,8 +843,9 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     match args with
     | [(t, _); ({nbe_t=Constant (Range r)}, _)] ->
       { t with nbe_r = r}
-    | _ ->      failwith ("NBE ill-typed application: " ^ t_to_string f)
+    | _ ->      failwith ("NBE ill-typed application Const_set_range_of: " ^ t_to_string f)
     end
+
   | _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 

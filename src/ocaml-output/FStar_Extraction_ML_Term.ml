@@ -3584,9 +3584,12 @@ and (term_as_mlexpr' :
                                    ((let uu___6 =
                                        FStar_Syntax_Print.lbname_to_string
                                          lb.FStar_Syntax_Syntax.lbname in
-                                     FStar_Compiler_Util.print1
-                                       "Starting to normalize top-level let %s\n"
-                                       uu___6);
+                                     let uu___7 =
+                                       FStar_Syntax_Print.term_to_string
+                                         lb.FStar_Syntax_Syntax.lbdef in
+                                     FStar_Compiler_Util.print2
+                                       "Starting to normalize top-level let %s = %s\n"
+                                       uu___6 uu___7);
                                     (let a =
                                        let uu___6 =
                                          let uu___7 =

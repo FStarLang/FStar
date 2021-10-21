@@ -993,7 +993,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   attrs, None
           in
           let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-              let lbdef = Env.postprocess (tcenv_of_uenv g) tau lb.lbtyp lb.lbdef in
+              let env = tcenv_of_uenv g in
+              let env = {env with erase_erasable_args=true} in
+              let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
               { lb with lbdef = lbdef }
           in
           let lbs = (fst lbs,

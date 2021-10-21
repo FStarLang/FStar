@@ -230,7 +230,9 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.enable_defer_to_tac =
             (env.FStar_TypeChecker_Env.enable_defer_to_tac);
           FStar_TypeChecker_Env.unif_allow_ref_guards =
-            (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+            (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+          FStar_TypeChecker_Env.erase_erasable_args =
+            (env.FStar_TypeChecker_Env.erase_erasable_args)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
 let (rename_binders :
