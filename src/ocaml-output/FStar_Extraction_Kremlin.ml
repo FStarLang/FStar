@@ -3049,15 +3049,15 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::uu___5::uu___6::[])
+           uu___5::e1::uu___6::uu___7::[])
           when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Steel.C.Array.is_null_from" ->
-          let uu___7 =
-            let uu___8 = let uu___9 = translate_expr env1 e1 in [uu___9] in
+          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Steel.C.Array.is_null_from" ->
+          let uu___8 =
+            let uu___9 = let uu___10 = translate_expr env1 e1 in [uu___10] in
             ((EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null")),
-              uu___8) in
-          EApp uu___7
+              uu___9) in
+          EApp uu___8
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -3070,15 +3070,15 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                 uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           uu___5::e1::uu___6::[])
+           uu___5::uu___6::e1::uu___7::[])
           when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Steel.C.Reference.is_null" ->
-          let uu___7 =
-            let uu___8 = let uu___9 = translate_expr env1 e1 in [uu___9] in
+          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Steel.C.Reference.is_null" ->
+          let uu___8 =
+            let uu___9 = let uu___10 = translate_expr env1 e1 in [uu___10] in
             ((EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null")),
-              uu___8) in
-          EApp uu___7
+              uu___9) in
+          EApp uu___8
       | FStar_Extraction_ML_Syntax.MLE_TApp
           ({
              FStar_Extraction_ML_Syntax.expr =
