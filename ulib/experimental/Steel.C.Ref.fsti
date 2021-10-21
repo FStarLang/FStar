@@ -360,11 +360,12 @@ let pts_to_view_or_null
 
 val is_null
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
+  (#opened: _)
   (r: ptr a p)
   (#c: Type0)
   (#can_view_unit: bool)
   (vw: sel_view p c can_view_unit)
-: Steel bool
+: A.SteelAtomicBase bool false opened A.Unobservable
     (pts_to_view_or_null r vw)
     (fun _ -> pts_to_view_or_null r vw)
     (requires (fun _ -> True))

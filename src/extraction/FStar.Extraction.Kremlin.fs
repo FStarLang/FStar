@@ -1249,11 +1249,11 @@ TODO: these should be removed and those operators should be directly
 supported by KReMLin (in src/Builtin.ml) Or alternatively Null and
 IsNull nodes should be added to the KReMLin AST *)
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [e; _ (* a' *); _ (* sq *) ])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.is_null_from"
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *); e; _ (* view *)])
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
     when string_of_mlpath p = "Steel.C.Reference.is_null"
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 

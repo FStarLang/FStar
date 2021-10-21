@@ -64,10 +64,10 @@ let pts_to_view_or_null
 = r `pts_to_view_or_null` view
 
 let is_null
-  (#a: Type u#0) (#b: Type u#b) (#c: Type0) (#p: pcm b)
+  (#a: Type u#0) (#b: Type u#b) (#c: Type0) (#opened: _) (#p: pcm b)
   (r: ptr a c p)
   (vw: sel_view p c false)
-: Steel bool
+: SteelAtomicBase bool false opened Unobservable
     (pts_to_view_or_null r vw)
     (fun _ -> pts_to_view_or_null r vw)
     (requires (fun _ -> True))
