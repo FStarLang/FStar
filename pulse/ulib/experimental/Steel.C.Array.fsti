@@ -721,10 +721,11 @@ let free
 val is_null_from
   (#base: Type0)
   (#t: Type0)
+  (#opened: _)
   (a: array_or_null_from base t)
   (a' : array_or_null_to base t)
   (sq: squash (array_or_null_spec (a, a')))
-: Steel bool
+: SteelAtomicBase bool false opened Unobservable
     (varray_or_null (a, a'))
     (fun _ -> varray_or_null (a, a'))
     (requires fun _ -> True)
@@ -737,8 +738,9 @@ inline_for_extraction
 let is_null
   (#base: Type0)
   (#t: Type0)
+  (#opened: _)
   (a: array_or_null base t)
-: Steel bool
+: SteelAtomicBase bool false opened Unobservable
     (varray_or_null a)
     (fun _ -> varray_or_null a)
     (requires fun _ -> True)
