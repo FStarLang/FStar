@@ -3201,32 +3201,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3279,32 +3284,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3357,32 +3367,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3435,32 +3450,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3513,32 +3533,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3591,32 +3616,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3669,32 +3699,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___6 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___6 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___6)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___6 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___7 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___7)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___7 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___7 ->
                                  let uu___8 =
@@ -3747,32 +3782,37 @@ let rec (norm :
                                   (fun env2 -> fun uu___4 -> dummy :: env2)
                                   env1) in
                            let lopt1 =
-                             match lopt with
-                             | FStar_Pervasives_Native.Some rc ->
-                                 let rct =
-                                   if
-                                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                                   then
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (fun t2 ->
-                                          let uu___4 =
-                                            FStar_Syntax_Subst.subst opening
-                                              t2 in
-                                          norm cfg env' [] uu___4)
-                                   else
-                                     FStar_Compiler_Util.map_opt
-                                       rc.FStar_Syntax_Syntax.residual_typ
-                                       (FStar_Syntax_Subst.subst opening) in
-                                 FStar_Pervasives_Native.Some
-                                   {
-                                     FStar_Syntax_Syntax.residual_effect =
-                                       (rc.FStar_Syntax_Syntax.residual_effect);
-                                     FStar_Syntax_Syntax.residual_typ = rct;
-                                     FStar_Syntax_Syntax.residual_flags =
-                                       (rc.FStar_Syntax_Syntax.residual_flags)
-                                   }
-                             | uu___4 -> lopt in
+                             if
+                               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match lopt with
+                                | FStar_Pervasives_Native.Some rc ->
+                                    let rct =
+                                      if
+                                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                                      then
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (fun t2 ->
+                                             let uu___5 =
+                                               FStar_Syntax_Subst.subst
+                                                 opening t2 in
+                                             norm cfg env' [] uu___5)
+                                      else
+                                        FStar_Compiler_Util.map_opt
+                                          rc.FStar_Syntax_Syntax.residual_typ
+                                          (FStar_Syntax_Subst.subst opening) in
+                                    FStar_Pervasives_Native.Some
+                                      {
+                                        FStar_Syntax_Syntax.residual_effect =
+                                          (rc.FStar_Syntax_Syntax.residual_effect);
+                                        FStar_Syntax_Syntax.residual_typ =
+                                          rct;
+                                        FStar_Syntax_Syntax.residual_flags =
+                                          (rc.FStar_Syntax_Syntax.residual_flags)
+                                      }
+                                | uu___5 -> lopt) in
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___5 ->
                                  let uu___6 =
@@ -4100,9 +4140,14 @@ let rec (norm :
                                t1.FStar_Syntax_Syntax.pos in
                            rebuild cfg env1 stack1 uu___6))))
            | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches1, lopt) ->
+               let lopt1 =
+                 if
+                   (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                 then FStar_Pervasives_Native.None
+                 else lopt in
                let stack2 =
                  (Match
-                    (env1, asc_opt, branches1, lopt, cfg,
+                    (env1, asc_opt, branches1, lopt1, cfg,
                       (t1.FStar_Syntax_Syntax.pos)))
                  :: stack1 in
                if
