@@ -1314,17 +1314,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
                        let lopt =
-                         if cfg.steps.for_extraction
-                         then None
-                         else
-                           match lopt with
-                           | Some rc ->
-                             let rct =
-                               if cfg.steps.check_no_uvars
-                               then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                               else BU.map_opt rc.residual_typ (SS.subst opening) in
-                             Some ({rc with residual_typ=rct})
-                           | _ -> lopt in
+                         match lopt with
+                         | Some rc ->
+                           let rct =
+                             if cfg.steps.check_no_uvars
+                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
+                             else BU.map_opt rc.residual_typ (SS.subst opening) in
+                           Some ({rc with residual_typ=rct})
+                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
