@@ -1313,14 +1313,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                       let lopt = match lopt with
-                        | Some rc ->
-                          let rct =
-                            if cfg.steps.check_no_uvars
-                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                            else BU.map_opt rc.residual_typ (SS.subst opening) in
-                          Some ({rc with residual_typ=rct})
-                        | _ -> lopt in
+                       let lopt =
+                         if cfg.steps.for_extraction
+                         then None
+                         else
+                           match lopt with
+                           | Some rc ->
+                             let rct =
+                               if cfg.steps.check_no_uvars
+                               then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
+                               else BU.map_opt rc.residual_typ (SS.subst opening) in
+                             Some ({rc with residual_typ=rct})
+                           | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
@@ -1431,6 +1435,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_match(head, asc_opt, branches, lopt) ->
+            let lopt =
+              if cfg.steps.for_extraction
+              then None
+              else lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
             if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
