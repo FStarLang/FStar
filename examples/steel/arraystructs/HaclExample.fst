@@ -115,13 +115,9 @@ let test_alloc_free
   let a = malloc true (mk_size_t 42ul) in
   if Steel.C.Array.is_null a
   then begin
-    change_equal_slprop
-      (varray_or_null a)
-      emp
+    Steel.C.Array.elim_varray_or_null_none a
   end else begin
-    change_equal_slprop
-      (varray_or_null a)
-      (varray a);
+    Steel.C.Array.elim_varray_or_null_some a;
     free a
   end;
   return ()
