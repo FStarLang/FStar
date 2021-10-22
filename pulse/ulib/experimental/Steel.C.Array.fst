@@ -2010,6 +2010,93 @@ let upd_from
     (varray r0)
     (varray (r, r'))
 
+let varray_or_null0_rewrite
+  (#base #a: Type0)
+  (r: array_or_null base a)
+  (_: t_of emp)
+: Tot (option (array_view_type a (len r)))
+= None
+
+[@@__steel_reduce__]
+let varray_or_null0
+  (#base #a: Type0)
+  (r: array_or_null base a)
+: Tot vprop
+= if g_is_null r
+  then emp `vrewrite` varray_or_null0_rewrite r
+  else varray r `vrewrite` Some
+
+let is_array_or_null r = hp_of (varray_or_null0 r)
+let array_or_null_sel r = sel_of (varray_or_null0 r)
+
+let intro_varray_or_null_none x =
+  intro_vrewrite emp (varray_or_null0_rewrite x);
+  change_equal_slprop
+    (emp `vrewrite` varray_or_null0_rewrite x)
+    (varray_or_null0 x);
+  change_slprop_rel
+    (varray_or_null0 x)
+    (varray_or_null x)
+    (fun u v -> u == v)
+    (fun _ -> ())
+
+let intro_varray_or_null_some x =
+  intro_vrewrite (varray x) Some;
+  change_equal_slprop
+    (varray x `vrewrite` Some)
+    (varray_or_null0 x);
+  change_slprop_rel
+    (varray_or_null0 x)
+    (varray_or_null x)
+    (fun u v -> u == v)
+    (fun _ -> ())
+
+let elim_varray_or_null_some x =
+  change_slprop_rel
+    (varray_or_null x)
+    (varray_or_null0 x)
+    (fun u v -> u == v)
+    (fun _ -> ());
+  if g_is_null x
+  then begin
+    change_equal_slprop
+      (varray_or_null0 x)
+      (emp `vrewrite` varray_or_null0_rewrite x);
+    elim_vrewrite emp (varray_or_null0_rewrite x);
+    assert False;
+    change_equal_slprop
+      emp
+      (varray x)
+  end else begin
+    change_equal_slprop
+      (varray_or_null0 x)
+      (varray x `vrewrite` Some);
+    elim_vrewrite (varray x) Some
+  end
+
+let elim_varray_or_null_none x =
+  change_slprop_rel
+    (varray_or_null x)
+    (varray_or_null0 x)
+    (fun u v -> u == v)
+    (fun _ -> ());
+  if g_is_null x
+  then begin
+    change_equal_slprop
+      (varray_or_null0 x)
+      (emp `vrewrite` varray_or_null0_rewrite x);
+    elim_vrewrite emp (varray_or_null0_rewrite x)
+  end else begin
+    change_equal_slprop
+      (varray_or_null0 x)
+      (varray x `vrewrite` Some);
+    elim_vrewrite (varray x) Some;
+    assert False;
+    change_equal_slprop
+      (varray x)
+      emp
+  end
+
 #restart-solver
 let freeable
   #base #t a
@@ -2064,7 +2151,7 @@ val malloc0
       size_v n > 0 /\
       malloc_from_spec x n (fst r) /\
       snd r == malloc_to x n (fst r) /\
-      (g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x))
+      (g_is_null r == false ==> (freeable r /\ len r == n /\ h' (varray_or_null r) == Some (Seq.create (size_v n) x)))
     )
 
 #restart-solver
@@ -2077,9 +2164,7 @@ let malloc0
   let r0 = Steel.C.Ref.ref_alloc (array_pcm t n) c in
   Steel.C.Ref.pts_to_view_intro r0 c (array_view t n) v;
   let r = intro_varray r0 () in
-  change_equal_slprop
-    (varray r)
-    (varray_or_null r);
+  intro_varray_or_null_some r;
   return r
 
 let malloc_from

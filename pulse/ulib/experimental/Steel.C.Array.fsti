@@ -627,8 +627,67 @@ let upd (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
       (varray (r0, r'))
       (varray r)
 
-let varray_or_null (#base: Type0) (#t: Type0) (x: array_or_null base t) : Tot vprop =
-  if g_is_null x then emp else varray x
+
+val is_array_or_null (#base #a:Type0) (r:array_or_null base a) : slprop u#1
+val array_or_null_sel (#base #a:Type0) (r:array_or_null base a) : GTot (selector (option (array_view_type a (len r))) (is_array_or_null r))
+
+[@@ __steel_reduce__]
+let varray_or_null' #base #a (r: array_or_null base a) : GTot vprop' =
+  {hp = is_array_or_null r;
+   t = option (array_view_type a (len r));
+   sel = array_or_null_sel r}
+
+[@@ __steel_reduce__]
+let varray_or_null r = VUnit (varray_or_null' r)
+
+val intro_varray_or_null_none
+  (#opened: _)
+  (#base #a: Type)
+  (x: array_or_null base a)
+: SteelGhost unit opened
+    emp
+    (fun _ -> varray_or_null x)
+    (fun _ -> g_is_null x == true)
+    (fun _ _ h' -> h' (varray_or_null x) == None)
+
+val intro_varray_or_null_some
+  (#opened: _)
+  (#base #a: Type)
+  (x: array base a)
+: SteelGhost unit opened
+    (varray x)
+    (fun _ -> varray_or_null x)
+    (fun _ -> True)
+    (fun h _ h' ->
+      g_is_null x == false /\
+      h' (varray_or_null x) == Some (h (varray x)
+    ))
+
+val elim_varray_or_null_some
+  (#opened: _)
+  (#base #a: Type)
+  (x: array_or_null base a)
+: SteelGhost (squash (g_is_null x == false)) opened
+    (varray_or_null x)
+    (fun _ -> varray x)
+    (fun h -> g_is_null x == false \/ Some? (h (varray_or_null x)))
+    (fun h _ h' ->
+      g_is_null x == false /\
+      h (varray_or_null x) == Some (h' (varray x))
+    )
+
+val elim_varray_or_null_none
+  (#opened: _)
+  (#base #a: Type)
+  (x: array_or_null base a)
+: SteelGhost unit opened
+    (varray_or_null x)
+    (fun _ -> emp)
+    (fun h -> g_is_null x == true \/ None? (h (varray_or_null x)))
+    (fun h _ _ ->
+      g_is_null x == true /\
+      h (varray_or_null x) == None
+    )
 
 /// Allocates an array of size [n] where all cells have initial value [x]
 
@@ -666,7 +725,7 @@ val malloc_from
     (ensures fun _ r0 h' ->
       size_v n > 0 /\
       begin let r : array_or_null (array_pcm_carrier t n) t = (r0, malloc_to x n r0) in
-      g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x)
+      g_is_null r == false ==> (freeable r /\ len r == n /\ h' (varray_or_null r) == Some (Seq.create (size_v n) x))
       end
     )
 
@@ -680,7 +739,7 @@ let malloc
     (fun r -> varray_or_null r)
     (requires fun _ -> size_v n > 0)
     (ensures fun _ r h' ->
-      g_is_null r == false ==> (freeable r /\ h' (varray r) == Seq.create (size_v n) x)
+      g_is_null r == false ==> (freeable r /\ len r == n /\ h' (varray_or_null r) == Some (Seq.create (size_v n) x))
     )
 = let r0 = malloc_from x n () in
   let r = (r0, malloc_to x n r0) in
