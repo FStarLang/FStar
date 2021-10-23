@@ -765,14 +765,14 @@ and translate_type_without_decay env t: typ =
       TBuf (translate_type_without_decay env arg)
       
   | MLTY_Named ([t; n; s], p)
-    when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
+    when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
     ->
       TArray (
         translate_type_without_decay env t,
         (UInt32, string_of_int (must (int_of_typenat n))))
   
   | MLTY_Named ([_; arg], p) when
-    Syntax.string_of_mlpath p = "Steel.C.Array.array_or_null_from"
+    Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_or_null_from"
     ->
       TBuf (translate_type_without_decay env arg)
   
@@ -854,12 +854,12 @@ and translate_type env t: typ =
   // The outermost array type constructor decays to pointer
   match t with
   | MLTY_Named ([t; _; _], p)
-    when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type_sized"
+    when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type_sized"
     ->
       TBuf (translate_type_without_decay env t)
       
   | MLTY_Named ([t; _], p)
-    when Syntax.string_of_mlpath p = "Steel.C.Array.array_view_type"
+    when Syntax.string_of_mlpath p = "Steel.C.Array.Base.array_view_type"
     ->
       TBuf (translate_type_without_decay env t)
       
@@ -1029,7 +1029,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _ (* sq *) ])
     when (
-          string_of_mlpath p = "Steel.C.Array.malloc_from" ||
+          string_of_mlpath p = "Steel.C.Array.Base.malloc_from" ||
           false) ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
@@ -1062,7 +1062,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2; _ (* a' *); _ (* sq *) ])
     when (
-          string_of_mlpath p = "Steel.C.Array.free_from" ||
+          string_of_mlpath p = "Steel.C.Array.Base.free_from" ||
           false) ->
       EBufFree (translate_expr env e2)
 
@@ -1250,7 +1250,7 @@ supported by KReMLin (in src/Builtin.ml) Or alternatively Null and
 IsNull nodes should be added to the KReMLin AST *)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
-    when string_of_mlpath p = "Steel.C.Array.is_null_from"
+    when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); _ (* pcm *); e; _ (* view *)])
@@ -1258,7 +1258,7 @@ IsNull nodes should be added to the KReMLin AST *)
     -> EApp (EQualified (["LowStar"; "Monotonic"; "Buffer"], "is_null"), [ translate_expr env e ])
 
   | MLE_TApp ({expr=MLE_Name p}, _)
-    when Syntax.string_of_mlpath p = "Steel.C.Array.null_from"
+    when Syntax.string_of_mlpath p = "Steel.C.Array.Base.null_from"
     -> EQualified (["LowStar"; "Buffer"], "null")
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* pcm *)])
@@ -1313,15 +1313,15 @@ IsNull nodes should be added to the KReMLin AST *)
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r; _ (* r_to *); _ (* sq *) ])
-    when string_of_mlpath p = "Steel.C.Array.ref_of_array_from" ->
+    when string_of_mlpath p = "Steel.C.Array.Base.ref_of_array_from" ->
       translate_expr env r
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened *); r])
-    when string_of_mlpath p = "Steel.C.Array.mk_array_of_ref_from" ->
+    when string_of_mlpath p = "Steel.C.Array.Base.mk_array_of_ref_from" ->
       translate_expr env r
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_ (* opened*); _ (* n *); r; _ (* squash *)])
-    when string_of_mlpath p = "Steel.C.Array.intro_varray_from" ->
+    when string_of_mlpath p = "Steel.C.Array.Base.intro_varray_from" ->
       EBufRead (translate_expr env r, EConstant (UInt32, "0"))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [r; _ (* r' *); i])
@@ -1333,7 +1333,7 @@ IsNull nodes should be added to the KReMLin AST *)
       EBufWrite (translate_expr env r, translate_expr env i, translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [_; _])}, [_; a; i])
-    when string_of_mlpath p = "Steel.C.Array.split_right_from" ->
+    when string_of_mlpath p = "Steel.C.Array.Base.split_right_from" ->
       EAddrOf (EBufRead (translate_expr env a, translate_expr env i))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
