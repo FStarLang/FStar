@@ -1176,7 +1176,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                  Env.Primops;
                  Env.Beta;
                  Env.Eager_unfolding;
-                 Env.Iota]
+                 Env.Iota;
+                 Env.Unascribe]
             in
             let steps =
               if wl.smt_ok then basic_steps
@@ -1222,9 +1223,9 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2, made_progress =
             if d1_greater_than_d2
-            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
+            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF; Env.Unascribe] env t1 in
                  t1', t2, made_progress t1 t1'
-            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
+            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF; Env.Unascribe] env t2 in
                  t1, t2', made_progress t2 t2' in
           if made_progress
           then aux retry (n_delta + 1) t1 t2
@@ -1235,8 +1236,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
+            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF; Env.Unascribe] env t1 in
+            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF; Env.Unascribe] env t2 in
             if made_progress t1 t1' &&
                made_progress t2 t2'
             then aux retry (n_delta + 1) t1' t2'
@@ -3335,8 +3336,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 (string_of_bool (no_free_uvars t2))]
          in
          let equal t1 t2 =
-            let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
-            let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
+            let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota; Env.Unascribe] env t1 in
+            let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota; Env.Unascribe] env t2 in
             U.eq_tm t1 t2 = U.Equal
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)

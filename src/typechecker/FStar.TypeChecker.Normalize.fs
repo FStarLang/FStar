@@ -1433,7 +1433,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_match(head, asc_opt, branches, lopt) ->
             let lopt =
-              if cfg.steps.for_extraction
+              if cfg.steps.for_extraction ||
+                 cfg.steps.unascribe
               then None
               else lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
