@@ -4103,6 +4103,8 @@ let rec (norm :
                let lopt1 =
                  if
                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                     ||
+                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unascribe
                  then FStar_Pervasives_Native.None
                  else lopt in
                let stack2 =
