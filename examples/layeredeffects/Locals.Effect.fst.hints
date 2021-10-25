@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "434ac625fa2c6470f994a8abb1c14831"
+      "d67392b5bcf80409820b451ed15b6d9c"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a71bcfbe572c7e54079de984406690d7"
+      "fd5b4883a735392005ddf6b4eafdc945"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a9c48e3ae7354fbe41b0b59b3bd32f73"
+      "402f642c0225b0ad16f8993571d8bf02"
     ],
     [
       "Locals.Effect.locals_t",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9618574b95aa57f62cc51019fcf9ac05"
+      "b4f733453b8ff6af53533738ce56e03c"
     ],
     [
       "Locals.Effect.repr",
@@ -74,7 +74,7 @@
         "typing_Tm_abs_676be96ae4b733dd6a33eb0558e9b005"
       ],
       0,
-      "fa6f739da99e378ea695add0380cd864"
+      "98b6d5b7aee399daae9d99af231d15f4"
     ],
     [
       "Locals.Effect.return",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "5f65fd3e879e02dc7102dab6d7ff765b"
+      "10ea6d1def34d4b44014fbf56833478d"
     ],
     [
       "Locals.Effect.bind",
@@ -114,7 +114,7 @@
         "typing_Tm_abs_e8384b68ad10198c6025b7ea0d9e51c2"
       ],
       0,
-      "f88f61ded34a510b3f6dd32c802cd88d"
+      "3d42606c05631104f5d10166ea7ecefa"
     ],
     [
       "Locals.Effect.subcomp",
@@ -134,7 +134,7 @@
         "typing_Tm_abs_83a87d25257ae4e73048e71a976d1d67"
       ],
       0,
-      "f6271c4717889f762635bf725eee9f66"
+      "1c5c0a4dc40622a17d69687008c2bac0"
     ],
     [
       "Locals.Effect.LVARS",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e1228e0abdfd4ce3267a05dc198e69b2"
+      "482cb1c0f22e136c7982c7ebbc7d0906"
     ],
     [
       "Locals.Effect.LVARS",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "fe3f4b4bdb7fd81cc83f95611700054f"
+      "bc2c104c026bcbe36f353bdf91c77a05"
     ],
     [
       "Locals.Effect.lift_pure_lvars",
@@ -184,7 +184,7 @@
         "typing_Tm_abs_f4e50037218c944d065aa19d84762d0b"
       ],
       0,
-      "fb2442a67e512ccb784d02ef49da693b"
+      "843a4ab9a37f156046aa511e5185aaf2"
     ],
     [
       "Locals.Effect.create",
@@ -222,7 +222,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "296a33be78752b4c8bb37a42502df3b4"
+      "91fb86abc49b1fd901861d1a7870655e"
     ],
     [
       "Locals.Effect.read",
@@ -237,7 +237,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "793ef3ec7d53ff4e7f738d90e24e2992"
+      "037038fbdbd63158d9cf3fe436d97551"
     ],
     [
       "Locals.Effect.write",
@@ -272,7 +272,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "886e607150e29df9d2eaf61ad2350a79"
+      "f29b3feeb285b6671a63f192e68efc0d"
     ],
     [
       "Locals.Effect.get",
@@ -289,7 +289,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "374d8bee13c6af16f67bf371055a296b"
+      "15d9b84efc3d2bd5b7b2e5415de27385"
     ],
     [
       "Locals.Effect.test",
@@ -332,7 +332,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "c6e3e1709ca5dba8df8960f469153d37"
+      "90d101252defa45d2726e18ff477cdd5"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -346,7 +346,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c39442efc08d212b6da775a6349697b6"
+      "b96f266aa98154e9a3898bb07d224621"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -382,7 +382,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "39d2f66a9e0fe7368916a611745b05b8"
+      "7d2a4b647501998902bd1014d427becb"
     ],
     [
       "Locals.Effect.sum",
@@ -404,7 +404,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4eb12be8f75dd33c655c2ec390f78af5"
+      "053a567c027c61583f775fcf1ee69f95"
     ],
     [
       "Locals.Effect.test1",
@@ -431,7 +431,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "a14cc1e1452d049277b17ddfe132b8fc"
+      "5c73ba4fe206972fdd81b8ff7587c6f2"
     ]
   ]
 ]

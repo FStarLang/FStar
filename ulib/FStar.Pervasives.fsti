@@ -977,6 +977,16 @@ val noextract_to (backend:string) : Tot unit
   *)
 val ite_soundness_by : unit
 
+(** A binder in a definition/declaration may optionally be annotated as strictly_positive
+    When the let definition is used in a data constructor type in an inductive
+    definition, this annotation is used to check the positivity of the inductive
+
+    Further F* checks that the binder is actually positive in the let definition
+
+    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
+  *)
+val strictly_positive : unit
+
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

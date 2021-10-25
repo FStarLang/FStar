@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ad75d6ab6ba60d543cb5538d95602dea"
+      "d2b7d1a2cd9d28f4d70c067ef2efb477"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "a4f033c11c41f58c7970fc6dc45c2cfe"
+      "918372ce61563e0d8683238febd945c6"
     ],
     [
       "UserTactics.simple_equality_assertions",
@@ -30,7 +30,43 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "373c1e27031dc333e605d668779c1bc8"
+      "51ef6e2bd6e6d8d1bfac0fe40ffb5d67"
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      2,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "a3d103d8ea41dc7e30740da78b067358"
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      3,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "ecd2e3f5213eeca32d6ff5fe38589b33"
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      4,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "5e77b3bf8b618da8890c53aa5d2d3346"
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      5,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "8126f6ac1add6d9b5aeb2c35d05282ab"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -42,7 +78,7 @@
         "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "1400aeca0b319c0a06ba7aebac46488d"
+      "3edd55d1e0f7a380cdb0f0ddda4f0e33"
     ],
     [
       "UserTactics.simple_equality_assertions_within_a_function",
@@ -51,11 +87,47 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "5111db2c27c40754ed9032ca718ca7bf"
+      "bce77d89b070f02976a18d16afe5133c"
     ],
     [
       "UserTactics.simple_equality_assertions_within_a_function",
       2,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "0d5c80a0190ea920c5fa743ba2919920"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      3,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "653cf349f12bf296d3bc9fa9b337b4a3"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      4,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "8b7a90c7fba87d15b0aeef6723abbcaa"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      5,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "1bb2d8aa2a9661467c1e478954e03aa6"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      6,
       2,
       1,
       [
@@ -63,16 +135,34 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "55dbc2a645586936b7f2a0d69b3c699e"
+      "f88c88c35f21596dc859bef5a93bc7e7"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      7,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "068c0146f403d95806e588ae5841858f"
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      8,
+      2,
+      1,
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
+      0,
+      "527d30f48bbee282305f7e1d7624e89d"
     ],
     [
       "UserTactics.partially_solved_using_smt",
       1,
       2,
       1,
-      [ "@query", "assumption_UserTactics.Pred1_saturated", "int_typing" ],
+      [ "@query", "eq2-interp", "equation_Prims.eq2" ],
       0,
-      "0c64ff14444c7328cb1ffea4ddc6f618"
+      "03992e8238fd4707b8461deab3edb317"
     ],
     [
       "UserTactics.partially_solved_using_smt",
@@ -81,7 +171,16 @@
       1,
       [ "@query", "assumption_UserTactics.Pred1_saturated", "int_typing" ],
       0,
-      "11bf9d4091a02818cabb55e306d83e6c"
+      "d93207093a18e5ae051d09077497c9be"
+    ],
+    [
+      "UserTactics.partially_solved_using_smt",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_UserTactics.Pred1_saturated", "int_typing" ],
+      0,
+      "c48059a4b7acdd9b776d8968dc324b7d"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -90,7 +189,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "540c3c00fac0feee29bc8170f174aa68"
+      "c0f971dfe66183f01708d4a68f20bcaa"
     ],
     [
       "UserTactics.sqintro",
@@ -99,7 +198,7 @@
       1,
       [ "@query" ],
       0,
-      "1ce64208cc3391ab860e52977999f5c5"
+      "185c6b4152079ed6ad8ce77d28920ef7"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -108,7 +207,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "f85e04c42e8aeb8c3a91e8c7160b1951"
+      "0ddd16f5527233546f2be34e83142737"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -117,7 +216,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "a667ad44c293074758e175c389be50d1"
+      "3ba31ca8ef5ad45660d80e20e3a9afa8"
     ]
   ]
 ]
