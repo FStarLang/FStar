@@ -1715,7 +1715,7 @@ let canon_l_r (use_smt:bool)
     //  and hence its typechecking is faster and (hopefully) no SMT involved
 
     //Open the forall binders in A, and use the fresh names to build an amap
-    
+
     let am = fold_left (fun am (a, _) ->
       let b = forall_intro () in
       let bv, _ = inspect_binder b in
@@ -1778,6 +1778,7 @@ let canon_l_r (use_smt:bool)
       exact (binder_to_term b)
     end);
 
+  dismiss_slprops();
 
   //Our goal now is A ==> G (where G is the original goal (lhs `rel` rhs))
 
