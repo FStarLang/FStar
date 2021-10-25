@@ -510,8 +510,8 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
-let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
+let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF; Env.Unascribe] env (U.unmeta t)) |> U.unlazy_emb
+let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Unascribe] env t) |> U.unlazy_emb
 let sn env t =
   Profiling.profile
     (fun () ->
@@ -536,7 +536,7 @@ let whnf env t =
   Profiling.profile
     (fun () ->
       if should_strongly_reduce t
-      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
+      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant; Env.Unascribe] env t) |> U.unlazy_emb
       else whnf' env t)
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.whnf"
@@ -572,8 +572,8 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
        let steps =
          if should_delta
-         then [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
-         else [Env.Weak; Env.HNF] in
+         then [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant; Env.Unascribe]
+         else [Env.Weak; Env.HNF; Env.Unascribe] in
        normalize_refinement steps env t
    in
    let rec aux norm t1 =
@@ -3678,12 +3678,12 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
                            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.4"
-                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
+                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Unascribe] env
                                            (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
                            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.5"
-                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
+                                           [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Unascribe] env
                                            (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob, wl =

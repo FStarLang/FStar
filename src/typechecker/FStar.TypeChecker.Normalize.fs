@@ -758,7 +758,7 @@ let tr_norm_step = function
     | EMB.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
     | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
+    | EMB.Unmeta -> [Unmeta; Unascribe]
 
 let tr_norm_steps s =
     let s = List.concatMap tr_norm_step s in

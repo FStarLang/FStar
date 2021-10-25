@@ -635,7 +635,7 @@ let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     | Inl e when not (try_refine) -> traise e
     | Inl e ->
         mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
-        bind (catch (bind (norm [EMB.Delta]) (fun _ ->
+        bind (catch (bind (norm [EMB.Delta; EMB.Unmeta]) (fun _ ->
                        bind (refine_intro ()) (fun _ ->
                        __exact_now set_expected_typ tm)))) (function
               | Inr r ->
