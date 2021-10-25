@@ -1681,7 +1681,8 @@ let (tr_norm_step :
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.UnfoldQual names]
     | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
-    | FStar_Syntax_Embeddings.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
+    | FStar_Syntax_Embeddings.Unmeta ->
+        [FStar_TypeChecker_Env.Unmeta; FStar_TypeChecker_Env.Unascribe]
 let (tr_norm_steps :
   FStar_Syntax_Embeddings.norm_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list)

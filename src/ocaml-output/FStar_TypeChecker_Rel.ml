@@ -1294,7 +1294,8 @@ let (whnf' :
             [FStar_TypeChecker_Env.Beta;
             FStar_TypeChecker_Env.Reify;
             FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF] env uu___2 in
+            FStar_TypeChecker_Env.HNF;
+            FStar_TypeChecker_Env.Unascribe] env uu___2 in
         FStar_Syntax_Subst.compress uu___1 in
       FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Util.unlazy_emb
 let (sn' :
@@ -1306,7 +1307,9 @@ let (sn' :
       let uu___ =
         let uu___1 =
           FStar_TypeChecker_Normalize.normalize
-            [FStar_TypeChecker_Env.Beta; FStar_TypeChecker_Env.Reify] env t in
+            [FStar_TypeChecker_Env.Beta;
+            FStar_TypeChecker_Env.Reify;
+            FStar_TypeChecker_Env.Unascribe] env t in
         FStar_Syntax_Subst.compress uu___1 in
       FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Util.unlazy_emb
 let (sn :
@@ -1374,7 +1377,8 @@ let (whnf :
                    FStar_TypeChecker_Env.Reify;
                    FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
                    FStar_TypeChecker_Env.UnfoldUntil
-                     FStar_Syntax_Syntax.delta_constant] env t in
+                     FStar_Syntax_Syntax.delta_constant;
+                   FStar_TypeChecker_Env.Unascribe] env t in
                FStar_Syntax_Subst.compress uu___4 in
              FStar_Compiler_Effect.op_Bar_Greater uu___3
                FStar_Syntax_Util.unlazy_emb
@@ -1466,8 +1470,12 @@ let (base_and_refinement_maybe_delta :
               [FStar_TypeChecker_Env.Weak;
               FStar_TypeChecker_Env.HNF;
               FStar_TypeChecker_Env.UnfoldUntil
-                FStar_Syntax_Syntax.delta_constant]
-            else [FStar_TypeChecker_Env.Weak; FStar_TypeChecker_Env.HNF] in
+                FStar_Syntax_Syntax.delta_constant;
+              FStar_TypeChecker_Env.Unascribe]
+            else
+              [FStar_TypeChecker_Env.Weak;
+              FStar_TypeChecker_Env.HNF;
+              FStar_TypeChecker_Env.Unascribe] in
           normalize_refinement steps env1 t in
         let rec aux norm t11 =
           let t12 = FStar_Syntax_Util.unmeta t11 in
@@ -10763,7 +10771,8 @@ and (solve_c :
                                [FStar_TypeChecker_Env.UnfoldUntil
                                   FStar_Syntax_Syntax.delta_constant;
                                FStar_TypeChecker_Env.Weak;
-                               FStar_TypeChecker_Env.HNF] env uu___8 in
+                               FStar_TypeChecker_Env.HNF;
+                               FStar_TypeChecker_Env.Unascribe] env uu___8 in
                            let c2_repr =
                              let uu___8 =
                                let uu___9 = FStar_Syntax_Syntax.mk_Comp c21 in
@@ -10777,7 +10786,8 @@ and (solve_c :
                                [FStar_TypeChecker_Env.UnfoldUntil
                                   FStar_Syntax_Syntax.delta_constant;
                                FStar_TypeChecker_Env.Weak;
-                               FStar_TypeChecker_Env.HNF] env uu___8 in
+                               FStar_TypeChecker_Env.HNF;
+                               FStar_TypeChecker_Env.Unascribe] env uu___8 in
                            let uu___8 =
                              let uu___9 =
                                let uu___10 =
