@@ -189,7 +189,16 @@ let subcomp_pre (#a:Type)
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     (req_g (mk_rmem pre_g h0) /\ ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x))) ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+     can_be_split_trans (pre_g) (pre_f `star` frame) frame;
+     can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+
+     (req_g (mk_rmem pre_g h0) /\
+      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
+      frame_equalities frame
+        (focus_rmem (mk_rmem pre_g h0) frame)
+        (focus_rmem (mk_rmem (post_g x) h1) frame))
+
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   ))
 ))
 
