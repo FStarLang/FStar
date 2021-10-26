@@ -1314,14 +1314,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
                        let lopt =
-                         match lopt with
-                         | Some rc ->
-                           let rct =
-                             if cfg.steps.check_no_uvars
-                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                             else BU.map_opt rc.residual_typ (SS.subst opening) in
-                           Some ({rc with residual_typ=rct})
-                         | _ -> lopt in
+                         BU.map_opt lopt
+                           (fun rc ->
+                            norm_residual_comp cfg env'
+                              ({rc with
+                                residual_typ = BU.map_opt rc.residual_typ (SS.subst opening)})) in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
@@ -2582,13 +2579,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
-        let lopt =
-          match lopt with
-          | None -> None
-          | Some rc ->
-            Some ({rc with residual_typ = (match rc.residual_typ with
-                                           | None -> None
-                                           | Some t -> Some (closure_as_term cfg env' t))}) in
+        let lopt = BU.map_opt lopt (norm_residual_comp cfg env') in
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594
@@ -2805,6 +2796,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         then matches scrutinee branches
         else norm_and_rebuild_match ()
+
+and norm_residual_comp cfg env (rc:residual_comp) =
+  //AR: 10/26: don't go inside the residual type,
+  //           closure_as_term replaces the uvars when check_no_vars flag is set
+  {rc with residual_typ = BU.map_opt rc.residual_typ (closure_as_term cfg env)}
 
 let reflection_env_hook = BU.mk_ref None
 
