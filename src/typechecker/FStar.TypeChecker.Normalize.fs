@@ -758,7 +758,7 @@ let tr_norm_step = function
     | EMB.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
     | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta; Unascribe]
+    | EMB.Unmeta -> [Unmeta]
 
 let tr_norm_steps s =
     let s = List.concatMap tr_norm_step s in
@@ -1433,8 +1433,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_match(head, asc_opt, branches, lopt) ->
             let lopt =
-              if cfg.steps.for_extraction ||
-                 cfg.steps.unascribe
+              if cfg.steps.for_extraction
               then None
               else lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
@@ -2583,7 +2582,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
-        let lopt = norm_lcomp_opt cfg env' lopt in
+        let lopt =
+          match lopt with
+          | None -> None
+          | Some rc ->
+            Some ({rc with residual_typ = (match rc.residual_typ with
+                                           | None -> None
+                                           | Some t -> Some (closure_as_term cfg env' t))}) in
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594
