@@ -1942,9 +1942,7 @@ let (t_exact :
                              let uu___5 =
                                let uu___6 =
                                  let uu___7 =
-                                   norm
-                                     [FStar_Syntax_Embeddings.Delta;
-                                     FStar_Syntax_Embeddings.Unmeta] in
+                                   norm [FStar_Syntax_Embeddings.Delta] in
                                  FStar_Tactics_Monad.bind uu___7
                                    (fun uu___8 ->
                                       let uu___9 = refine_intro () in
