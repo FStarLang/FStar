@@ -1313,14 +1313,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                       let lopt = match lopt with
-                        | Some rc ->
-                          let rct =
-                            if cfg.steps.check_no_uvars
-                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                            else BU.map_opt rc.residual_typ (SS.subst opening) in
-                          Some ({rc with residual_typ=rct})
-                        | _ -> lopt in
+                       let lopt =
+                         match lopt with
+                         | Some rc ->
+                           let rct =
+                             if cfg.steps.check_no_uvars
+                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
+                             else BU.map_opt rc.residual_typ (SS.subst opening) in
+                           Some ({rc with residual_typ=rct})
+                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
@@ -1431,6 +1432,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_match(head, asc_opt, branches, lopt) ->
+            let lopt =
+              if cfg.steps.for_extraction
+              then None
+              else lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
             if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
@@ -2577,7 +2582,13 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
-        let lopt = norm_lcomp_opt cfg env' lopt in
+        let lopt =
+          match lopt with
+          | None -> None
+          | Some rc ->
+            Some ({rc with residual_typ = (match rc.residual_typ with
+                                           | None -> None
+                                           | Some t -> Some (closure_as_term cfg env' t))}) in
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594

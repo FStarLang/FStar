@@ -4100,9 +4100,14 @@ let rec (norm :
                                t1.FStar_Syntax_Syntax.pos in
                            rebuild cfg env1 stack1 uu___6))))
            | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches1, lopt) ->
+               let lopt1 =
+                 if
+                   (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                 then FStar_Pervasives_Native.None
+                 else lopt in
                let stack2 =
                  (Match
-                    (env1, asc_opt, branches1, lopt, cfg,
+                    (env1, asc_opt, branches1, lopt1, cfg,
                       (t1.FStar_Syntax_Syntax.pos)))
                  :: stack1 in
                if
@@ -7331,7 +7336,27 @@ and (rebuild :
                     uu___4 :: stack2 in
                   norm cfg env' uu___3 head
               | (Match (env', asc_opt, branches1, lopt, cfg1, r))::stack2 ->
-                  let lopt1 = norm_lcomp_opt cfg1 env' lopt in
+                  let lopt1 =
+                    match lopt with
+                    | FStar_Pervasives_Native.None ->
+                        FStar_Pervasives_Native.None
+                    | FStar_Pervasives_Native.Some rc ->
+                        let uu___3 =
+                          let uu___4 =
+                            match rc.FStar_Syntax_Syntax.residual_typ with
+                            | FStar_Pervasives_Native.None ->
+                                FStar_Pervasives_Native.None
+                            | FStar_Pervasives_Native.Some t2 ->
+                                let uu___5 = closure_as_term cfg1 env' t2 in
+                                FStar_Pervasives_Native.Some uu___5 in
+                          {
+                            FStar_Syntax_Syntax.residual_effect =
+                              (rc.FStar_Syntax_Syntax.residual_effect);
+                            FStar_Syntax_Syntax.residual_typ = uu___4;
+                            FStar_Syntax_Syntax.residual_flags =
+                              (rc.FStar_Syntax_Syntax.residual_flags)
+                          } in
+                        FStar_Pervasives_Native.Some uu___3 in
                   (FStar_TypeChecker_Cfg.log cfg1
                      (fun uu___4 ->
                         let uu___5 = FStar_Syntax_Print.term_to_string t1 in
