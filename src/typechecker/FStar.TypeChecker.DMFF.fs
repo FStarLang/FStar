@@ -964,6 +964,7 @@ and infer (env: env) (e: term): nm * term * term =
               Some rc
 
             | Some rt ->
+              let rt = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] (get_env env) rt in
               if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
               then
                 let flags = List.filter (function CPS -> false | _ -> true) rc.residual_flags in
