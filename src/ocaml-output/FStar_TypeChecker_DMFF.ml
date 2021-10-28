@@ -2252,6 +2252,15 @@ and (infer :
                                  else rc in
                                FStar_Pervasives_Native.Some rc1
                            | FStar_Pervasives_Native.Some rt ->
+                               let rt1 =
+                                 let uu___3 = get_env env3 in
+                                 FStar_TypeChecker_Normalize.normalize
+                                   [FStar_TypeChecker_Env.Beta;
+                                   FStar_TypeChecker_Env.Eager_unfolding;
+                                   FStar_TypeChecker_Env.UnfoldUntil
+                                     FStar_Syntax_Syntax.delta_constant;
+                                   FStar_TypeChecker_Env.EraseUniverses]
+                                   uu___3 rt in
                                let uu___3 =
                                  FStar_Compiler_Effect.op_Bar_Greater
                                    rc.FStar_Syntax_Syntax.residual_flags
@@ -2271,7 +2280,7 @@ and (infer :
                                      rc.FStar_Syntax_Syntax.residual_flags in
                                  let uu___4 =
                                    let uu___5 =
-                                     let uu___6 = double_star rt in
+                                     let uu___6 = double_star rt1 in
                                      FStar_Pervasives_Native.Some uu___6 in
                                    FStar_Syntax_Util.mk_residual_comp
                                      FStar_Parser_Const.effect_Tot_lid uu___5
@@ -2280,7 +2289,7 @@ and (infer :
                                else
                                  (let uu___5 =
                                     let uu___6 =
-                                      let uu___7 = star_type' env3 rt in
+                                      let uu___7 = star_type' env3 rt1 in
                                       FStar_Pervasives_Native.Some uu___7 in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
