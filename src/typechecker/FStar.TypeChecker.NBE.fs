@@ -180,10 +180,6 @@ let try_in_cache (cfg:config) (fv:fv) : option<t> =
   BU.smap_try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
 
-let aqual_is_erasable (aq:aqual) =
-  match aq with
-  | None -> false
-  | Some aq -> BU.for_some (U.is_fvar PC.erasable_attr) aq.aqual_attributes
 
 (* GM, Aug 19th 2018: This should not (at least always) be recursive.
  * Forcing the thunk on an NBE term (Lazy i) triggers arbitrary
@@ -513,11 +509,12 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       mk_t (Constant Unit)
 
     | Tm_app(head, args)
-         when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args ->
+         when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args
+            || cfg.core_cfg.steps.for_extraction ->
       iapp cfg (translate cfg bs head)
                (List.map
                  (fun x ->
-                   if aqual_is_erasable (snd x)
+                   if U.aqual_is_erasable (snd x)
                    then (
                      debug (fun () -> BU.print1 "Erasing %s\n" (P.term_to_string (fst x)));
                      mk_t (Constant Unit), snd x

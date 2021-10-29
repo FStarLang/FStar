@@ -1,12 +1,4 @@
 open Prims
-let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
-  fun aq ->
-    match aq with
-    | FStar_Pervasives_Native.None -> false
-    | FStar_Pervasives_Native.Some aq1 ->
-        FStar_Compiler_Util.for_some
-          (FStar_Syntax_Util.is_fvar FStar_Parser_Const.erasable_attr)
-          aq1.FStar_Syntax_Syntax.aqual_attributes
 let (maybe_debug :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_Syntax_Syntax.term ->
@@ -1646,63 +1638,6 @@ let (is_nbe_request : FStar_TypeChecker_Env.step Prims.list -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.for_some
       (FStar_TypeChecker_Env.eq_step FStar_TypeChecker_Env.NBE) s
-let (tr_norm_step :
-  FStar_Syntax_Embeddings.norm_step -> FStar_TypeChecker_Env.step Prims.list)
-  =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Syntax_Embeddings.Zeta -> [FStar_TypeChecker_Env.Zeta]
-    | FStar_Syntax_Embeddings.ZetaFull -> [FStar_TypeChecker_Env.ZetaFull]
-    | FStar_Syntax_Embeddings.Iota -> [FStar_TypeChecker_Env.Iota]
-    | FStar_Syntax_Embeddings.Delta ->
-        [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant]
-    | FStar_Syntax_Embeddings.Simpl -> [FStar_TypeChecker_Env.Simplify]
-    | FStar_Syntax_Embeddings.Weak -> [FStar_TypeChecker_Env.Weak]
-    | FStar_Syntax_Embeddings.HNF -> [FStar_TypeChecker_Env.HNF]
-    | FStar_Syntax_Embeddings.Primops -> [FStar_TypeChecker_Env.Primops]
-    | FStar_Syntax_Embeddings.Reify -> [FStar_TypeChecker_Env.Reify]
-    | FStar_Syntax_Embeddings.UnfoldOnly names ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
-            FStar_TypeChecker_Env.UnfoldOnly uu___3 in
-          [uu___2] in
-        (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
-          :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldFully names ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
-            FStar_TypeChecker_Env.UnfoldFully uu___3 in
-          [uu___2] in
-        (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
-          :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldAttr names ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Compiler_List.map FStar_Ident.lid_of_str names in
-            FStar_TypeChecker_Env.UnfoldAttr uu___3 in
-          [uu___2] in
-        (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
-          :: uu___1
-    | FStar_Syntax_Embeddings.UnfoldQual names ->
-        [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
-        FStar_TypeChecker_Env.UnfoldQual names]
-    | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
-    | FStar_Syntax_Embeddings.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
-let (tr_norm_steps :
-  FStar_Syntax_Embeddings.norm_step Prims.list ->
-    FStar_TypeChecker_Env.step Prims.list)
-  =
-  fun s ->
-    let s1 = FStar_Compiler_List.concatMap tr_norm_step s in
-    let add_exclude s2 z =
-      let uu___ =
-        FStar_Compiler_Util.for_some (FStar_TypeChecker_Env.eq_step z) s2 in
-      if uu___ then s2 else (FStar_TypeChecker_Env.Exclude z) :: s2 in
-    let s2 = FStar_TypeChecker_Env.Beta :: s1 in
-    let s3 = add_exclude s2 FStar_TypeChecker_Env.Zeta in
-    let s4 = add_exclude s3 FStar_TypeChecker_Env.Iota in s4
 let get_norm_request :
   'uuuuu .
     FStar_TypeChecker_Cfg.cfg ->
@@ -1722,7 +1657,7 @@ let get_norm_request :
             FStar_TypeChecker_Cfg.try_unembed_simple uu___1 s in
           match uu___ with
           | FStar_Pervasives_Native.Some steps ->
-              let uu___1 = tr_norm_steps steps in
+              let uu___1 = FStar_TypeChecker_Cfg.translate_norm_steps steps in
               FStar_Pervasives_Native.Some uu___1
           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
         let inherited_steps =
@@ -3803,12 +3738,16 @@ let rec (norm :
                              | (a, aq) ->
                                  let a1 =
                                    let uu___3 =
-                                     ((let uu___4 =
-                                         FStar_TypeChecker_Cfg.cfg_env cfg in
-                                       uu___4.FStar_TypeChecker_Env.erase_erasable_args)
+                                     (((let uu___4 =
+                                          FStar_TypeChecker_Cfg.cfg_env cfg in
+                                        uu___4.FStar_TypeChecker_Env.erase_erasable_args)
+                                         ||
+                                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
                                         ||
                                         (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args)
-                                       && (aqual_is_erasable aq) in
+                                       &&
+                                       (FStar_Syntax_Util.aqual_is_erasable
+                                          aq) in
                                    if uu___3
                                    then FStar_Syntax_Util.exp_unit
                                    else a in

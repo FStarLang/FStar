@@ -44,7 +44,8 @@ module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
-module Env = FStar.TypeChecker.Env
+module EMB=FStar.Syntax.Embeddings
+module Cfg = FStar.TypeChecker.Cfg
 
 type env_t = UEnv.uenv
 
@@ -618,7 +619,6 @@ let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
       Option.get iface_opt,
       List.rev impls |> List.flatten
 
-module EMB=FStar.Syntax.Embeddings
 
 let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
   BU.for_some (function attr ->
@@ -983,18 +983,20 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let attrs, post_tau =
+          let maybe_postprocess_lbs lbs =
+            let post_tau =
               match U.extract_attr' PC.postprocess_extr_with attrs with
-              | None -> attrs, None
-              | Some (ats, (tau, None)::_) -> ats, Some tau
-              | Some (ats, args) ->
-                  Errors.log_issue se.sigrng (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ill-formed application of `postprocess_for_extraction_with`"));
-                  attrs, None
-          in
-          let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+              | None -> None
+              | Some (_, (tau, None)::_) -> Some tau
+              | Some _ ->
+                  Errors.log_issue
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'postprocess_for_extraction_with'");
+                  None
+            in
+            let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
               let env = tcenv_of_uenv g in
-              let env = {env with erase_erasable_args=true} in
               let lbdef = 
                 Profiling.profile
                      (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
@@ -1002,13 +1004,62 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                      "FStar.Extraction.ML.Module.post_process_for_extraction"
               in
               { lb with lbdef = lbdef }
+            in
+            match post_tau with
+            | None -> lbs
+            | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
           in
-          let lbs = (fst lbs,
-                      (match post_tau with
-                       | Some tau -> List.map (postprocess_lb tau) (snd lbs)
-                       | None -> (snd lbs)))
+          let maybe_normalize_for_extraction lbs = 
+            let norm_steps =
+              match U.extract_attr' PC.normalize_for_extraction_lid attrs with
+              | None -> None
+              | Some (_, (steps, None)::_) ->
+                let steps = 
+                  //just normalizing the steps themselves, so that the user
+                  //does not have to write a literal at every use of the attribute
+                  N.normalize 
+                    [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
+                    (tcenv_of_uenv g)
+                    steps
+                in
+                begin
+                match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+                | Some steps -> 
+                  Some (Cfg.translate_norm_steps steps)
+                | _ -> 
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       BU.format1
+                         "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                         (Print.term_to_string steps));
+                  None
+                end
+              | Some _ ->
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'normalize_for_extraction'");
+                  None
+            in
+            let norm_one_lb steps lb =
+              let env = tcenv_of_uenv g in
+              let env = {env with erase_erasable_args=true} in
+              let lbd = 
+                Profiling.profile
+                     (fun () -> N.normalize steps env lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.normalize_for_extraction"
+              in
+              { lb with lbdef = lbd }
+            in
+            match norm_steps with
+            | None -> lbs
+            | Some steps ->
+              fst lbs, List.map (norm_one_lb steps) (snd lbs)
           in
           let ml_let, _, _ =
+            let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
             Term.term_as_mlexpr
                     g
                     (mk (Tm_let(lbs, U.exp_false_bool)) se.sigrng)

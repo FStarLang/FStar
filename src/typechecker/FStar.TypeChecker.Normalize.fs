@@ -58,11 +58,6 @@ module TcComm = FStar.TypeChecker.Common
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
-let aqual_is_erasable (aq:aqual) =
-  match aq with
-  | None -> false
-  | Some aq -> BU.for_some (U.is_fvar PC.erasable_attr) aq.aqual_attributes
-
 let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option<(term * BU.time)>) =
   if cfg.debug.print_normalized
   then match dbg with
@@ -744,39 +739,10 @@ let rejig_norm_request (hd:term) (args:args) :term =
 
 let is_nbe_request s = BU.for_some (eq_step NBE) s
 
-let tr_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
-        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
-        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
-        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
-        [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
-
-let tr_norm_steps s =
-    let s = List.concatMap tr_norm_step s in
-    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
-    let s = Beta::s in
-    let s = add_exclude s Zeta in
-    let s = add_exclude s Iota in
-    s
-
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
       match try_unembed_simple (EMB.e_list EMB.e_norm_step) s with
-      | Some steps -> Some (tr_norm_steps steps)
+      | Some steps -> Some (Cfg.translate_norm_steps steps)
       | None -> None
     in
     let inherited_steps =
@@ -1348,8 +1314,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   (fun (a, aq) stack ->
                     let a =
                       if ((Cfg.cfg_env cfg).erase_erasable_args ||
+                          cfg.steps.for_extraction ||
                           cfg.debug.erase_erasable_args) //just for experimentation
-                      && aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
+                      && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
                       then U.exp_unit
                       else a
                     in

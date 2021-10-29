@@ -250,14 +250,6 @@ let (try_in_cache :
       FStar_Compiler_Util.smap_try_find cfg.fv_cache uu___
 let (debug : config -> (unit -> unit) -> unit) =
   fun cfg -> fun f -> FStar_TypeChecker_Cfg.log_nbe cfg.core_cfg f
-let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
-  fun aq ->
-    match aq with
-    | FStar_Pervasives_Native.None -> false
-    | FStar_Pervasives_Native.Some aq1 ->
-        FStar_Compiler_Util.for_some
-          (FStar_Syntax_Util.is_fvar FStar_Parser_Const.erasable_attr)
-          aq1.FStar_Syntax_Syntax.aqual_attributes
 let rec (unlazy_unmeta :
   FStar_TypeChecker_NBETerm.t -> FStar_TypeChecker_NBETerm.t) =
   fun t ->
@@ -854,14 +846,17 @@ let rec (translate :
                 (FStar_TypeChecker_NBETerm.Constant
                    FStar_TypeChecker_NBETerm.Unit))
          | FStar_Syntax_Syntax.Tm_app (head, args) when
-             let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
-             uu___2.FStar_TypeChecker_Env.erase_erasable_args ->
+             (let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
+              uu___2.FStar_TypeChecker_Env.erase_erasable_args) ||
+               ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+             ->
              let uu___2 = translate cfg bs head in
              let uu___3 =
                FStar_Compiler_List.map
                  (fun x ->
                     let uu___4 =
-                      aqual_is_erasable (FStar_Pervasives_Native.snd x) in
+                      FStar_Syntax_Util.aqual_is_erasable
+                        (FStar_Pervasives_Native.snd x) in
                     if uu___4
                     then
                       (debug1

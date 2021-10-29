@@ -1728,7 +1728,7 @@ let (norm :
               FStar_Compiler_Util.print1 "norm: witness = %s\n" uu___1)
            (fun uu___ ->
               let steps =
-                let uu___1 = FStar_TypeChecker_Normalize.tr_norm_steps s in
+                let uu___1 = FStar_TypeChecker_Cfg.translate_norm_steps s in
                 FStar_Compiler_List.op_At
                   [FStar_TypeChecker_Env.Reify;
                   FStar_TypeChecker_Env.UnfoldTac] uu___1 in
@@ -1767,7 +1767,7 @@ let (norm_term_env :
                          | (t1, uu___4, uu___5) ->
                              let steps =
                                let uu___6 =
-                                 FStar_TypeChecker_Normalize.tr_norm_steps s in
+                                 FStar_TypeChecker_Cfg.translate_norm_steps s in
                                FStar_Compiler_List.op_At
                                  [FStar_TypeChecker_Env.Reify;
                                  FStar_TypeChecker_Env.UnfoldTac] uu___6 in
@@ -3240,7 +3240,7 @@ let (norm_binder_type :
                    "binder is not present in environment"
              | FStar_Pervasives_Native.Some (e0, bv1, bvs) ->
                  let steps =
-                   let uu___2 = FStar_TypeChecker_Normalize.tr_norm_steps s in
+                   let uu___2 = FStar_TypeChecker_Cfg.translate_norm_steps s in
                    FStar_Compiler_List.op_At
                      [FStar_TypeChecker_Env.Reify;
                      FStar_TypeChecker_Env.UnfoldTac] uu___2 in

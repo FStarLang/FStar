@@ -138,3 +138,5 @@ val config': list<primitive_step> -> list<step> -> Env.env -> cfg
 val config: list<step> -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
+
+val translate_norm_steps: list<EMB.norm_step> -> list<Env.step>

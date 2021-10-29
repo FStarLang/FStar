@@ -73,7 +73,6 @@ val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
-val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
 
 val remove_uvar_solutions: Env.env -> term -> term
 
