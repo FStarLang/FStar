@@ -778,38 +778,29 @@ let rec (translate :
               (FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Parser_Const.assert_norm_lid)
             ->
-            (debug_on cfg
-               (fun uu___6 ->
-                  FStar_Compiler_Util.print_string "Eliminated assertion\n");
-             mk_t1
-               (FStar_TypeChecker_NBETerm.Constant
-                  FStar_TypeChecker_NBETerm.Unit))
+            mk_t1
+              (FStar_TypeChecker_NBETerm.Constant
+                 FStar_TypeChecker_NBETerm.Unit)
         | FStar_Syntax_Syntax.Tm_app (head, args) when
             let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
             uu___2.FStar_TypeChecker_Env.erase_erasable_args ->
-            let uu___2 = translate cfg bs head in
-            let uu___3 =
+            let uu___3 = translate cfg bs head in
+            let uu___4 =
               FStar_Compiler_List.map
                 (fun x ->
-                   let uu___4 =
+                   let uu___5 =
                      aqual_is_erasable (FStar_Pervasives_Native.snd x) in
-                   if uu___4
+                   if uu___5
                    then
-                     (debug_on cfg
-                        (fun uu___6 ->
-                           let uu___7 =
-                             FStar_Syntax_Print.term_to_string
-                               (FStar_Pervasives_Native.fst x) in
-                           FStar_Compiler_Util.print1 "Erasing %s\n" uu___7);
-                      ((mk_t1
-                          (FStar_TypeChecker_NBETerm.Constant
-                             FStar_TypeChecker_NBETerm.Unit)),
-                        (FStar_Pervasives_Native.snd x)))
+                     ((mk_t1
+                         (FStar_TypeChecker_NBETerm.Constant
+                            FStar_TypeChecker_NBETerm.Unit)),
+                       (FStar_Pervasives_Native.snd x))
                    else
-                     (let uu___6 =
+                     (let uu___7 =
                         translate cfg bs (FStar_Pervasives_Native.fst x) in
-                      (uu___6, (FStar_Pervasives_Native.snd x)))) args in
-            iapp cfg uu___2 uu___3
+                      (uu___7, (FStar_Pervasives_Native.snd x)))) args in
+            iapp cfg uu___3 uu___4
         | FStar_Syntax_Syntax.Tm_app (head, args) ->
             let uu___3 = translate cfg bs head in
             let uu___4 =

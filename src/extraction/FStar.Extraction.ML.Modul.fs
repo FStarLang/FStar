@@ -995,7 +995,12 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
               let env = tcenv_of_uenv g in
               let env = {env with erase_erasable_args=true} in
-              let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
+              let lbdef = 
+                Profiling.profile
+                     (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.post_process_for_extraction"
+              in
               { lb with lbdef = lbdef }
           in
           let lbs = (fst lbs,
@@ -1140,12 +1145,12 @@ let extract (g:uenv) (m:modul) =
   let nm = string_of_lid m.name in
   let g, mllib =
     UF.with_uf_enabled (fun () ->
-      Errors.with_ctx ("While extracting module " ^ nm) (fun () ->
-        if Options.debug_any () then
-          let msg = BU.format1 "Extracting module %s" nm in
-          BU.measure_execution_time msg (fun () -> extract' g m)
-        else
-          extract' g m))
+      Errors.with_ctx ("While extracting module " ^ nm) 
+      (fun () ->
+        Profiling.profile
+          (fun () -> extract' g m)
+          (Some nm)
+          "FStar.Extraction.ML.Modul.extract"))
   in
   let g, mllib =
     match mllib with

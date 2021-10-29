@@ -2096,9 +2096,18 @@ let rec (extract_sig :
                                 true
                             } in
                           let lbdef =
-                            FStar_TypeChecker_Env.postprocess env1 tau
-                              lb.FStar_Syntax_Syntax.lbtyp
-                              lb.FStar_Syntax_Syntax.lbdef in
+                            let uu___7 =
+                              let uu___8 =
+                                let uu___9 =
+                                  FStar_TypeChecker_Env.current_module env1 in
+                                FStar_Ident.string_of_lid uu___9 in
+                              FStar_Pervasives_Native.Some uu___8 in
+                            FStar_Profiling.profile
+                              (fun uu___8 ->
+                                 FStar_TypeChecker_Env.postprocess env1 tau
+                                   lb.FStar_Syntax_Syntax.lbtyp
+                                   lb.FStar_Syntax_Syntax.lbdef) uu___7
+                              "FStar.Extraction.ML.Module.post_process_for_extraction" in
                           {
                             FStar_Syntax_Syntax.lbname =
                               (lb.FStar_Syntax_Syntax.lbname);
@@ -2539,15 +2548,9 @@ let (extract :
                  FStar_Errors.with_ctx
                    (Prims.op_Hat "While extracting module " nm)
                    (fun uu___6 ->
-                      let uu___7 = FStar_Options.debug_any () in
-                      if uu___7
-                      then
-                        let msg =
-                          FStar_Compiler_Util.format1 "Extracting module %s"
-                            nm in
-                        FStar_Compiler_Util.measure_execution_time msg
-                          (fun uu___8 -> extract' g m)
-                      else extract' g m)) in
+                      FStar_Profiling.profile (fun uu___7 -> extract' g m)
+                        (FStar_Pervasives_Native.Some nm)
+                        "FStar.Extraction.ML.Modul.extract")) in
           match uu___4 with
           | (g1, mllib) ->
               let uu___5 =
