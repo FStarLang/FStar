@@ -3147,18 +3147,6 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
       interpretation_nbe =
         (fun _cb -> FStar_TypeChecker_NBETerm.interp_prop_eq2)
     } in
-  let propositional_equality_unfolded =
-    {
-      name = FStar_Parser_Const.c_eq2_lid;
-      arity = (Prims.of_int (3));
-      univ_arity = Prims.int_one;
-      auto_reflect = FStar_Pervasives_Native.None;
-      strong_reduction_ok = true;
-      requires_binder_substitution = false;
-      interpretation = interp_prop_eq2;
-      interpretation_nbe =
-        (fun _cb -> FStar_TypeChecker_NBETerm.interp_prop_eq2)
-    } in
   let hetero_propositional_equality =
     {
       name = FStar_Parser_Const.eq3_lid;
@@ -3171,10 +3159,7 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
       interpretation_nbe =
         (fun _cb -> FStar_TypeChecker_NBETerm.interp_prop_eq3)
     } in
-  prim_from_list
-    [propositional_equality;
-    propositional_equality_unfolded;
-    hetero_propositional_equality]
+  prim_from_list [propositional_equality; hetero_propositional_equality]
 let (primop_time_map : Prims.int FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (50))
 let (primop_time_reset : unit -> unit) =
