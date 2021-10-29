@@ -143,12 +143,12 @@ let (gen_wps_for_free :
                   (fun uu___2 ->
                      match uu___2 with
                      | (t, b) ->
-                         let uu___3 = FStar_Syntax_Syntax.as_bqual_implicit b in
+                         let uu___3 = FStar_Syntax_Syntax.as_implicit b in
                          FStar_Syntax_Syntax.mk_binder_with_attrs t uu___3 []) in
               let mk_all_implicit =
                 FStar_Compiler_List.map
                   (fun t ->
-                     let uu___2 = FStar_Syntax_Syntax.as_bqual_implicit true in
+                     let uu___2 = FStar_Syntax_Syntax.as_implicit true in
                      {
                        FStar_Syntax_Syntax.binder_bv =
                          (t.FStar_Syntax_Syntax.binder_bv);
@@ -210,7 +210,7 @@ let (gen_wps_for_free :
                                        let uu___11 =
                                          FStar_Syntax_Syntax.bv_to_name bv in
                                        let uu___12 =
-                                         FStar_Syntax_Syntax.as_aqual_implicit
+                                         FStar_Syntax_Syntax.as_implicit
                                            false in
                                        (uu___11, uu___12)) binders in
                             let uu___8 =
@@ -218,13 +218,12 @@ let (gen_wps_for_free :
                                 let uu___10 =
                                   FStar_Syntax_Syntax.bv_to_name a1 in
                                 let uu___11 =
-                                  FStar_Syntax_Syntax.as_aqual_implicit false in
+                                  FStar_Syntax_Syntax.as_implicit false in
                                 (uu___10, uu___11) in
                               let uu___10 =
                                 let uu___11 =
                                   let uu___12 =
-                                    FStar_Syntax_Syntax.as_aqual_implicit
-                                      false in
+                                    FStar_Syntax_Syntax.as_implicit false in
                                   (t, uu___12) in
                                 [uu___11] in
                               uu___9 :: uu___10 in
@@ -1376,7 +1375,7 @@ let rec (mk_star_to_type :
                 let uu___4 =
                   let uu___5 = star_type' env1 a in
                   FStar_Syntax_Syntax.null_bv uu___5 in
-                let uu___5 = FStar_Syntax_Syntax.as_bqual_implicit false in
+                let uu___5 = FStar_Syntax_Syntax.as_implicit false in
                 FStar_Syntax_Syntax.mk_binder_with_attrs uu___4 uu___5 [] in
               [uu___3] in
             let uu___3 =
@@ -1457,7 +1456,7 @@ and (star_type' :
                                 let uu___9 = mk_star_to_type1 env1 a in
                                 FStar_Syntax_Syntax.null_bv uu___9 in
                               let uu___9 =
-                                FStar_Syntax_Syntax.as_bqual_implicit false in
+                                FStar_Syntax_Syntax.as_implicit false in
                               FStar_Syntax_Syntax.mk_binder_with_attrs uu___8
                                 uu___9 [] in
                             [uu___7] in
@@ -1905,7 +1904,7 @@ let (mk_return :
               let uu___2 = FStar_Syntax_Syntax.bv_to_name p in
               let uu___3 =
                 let uu___4 =
-                  let uu___5 = FStar_Syntax_Syntax.as_aqual_implicit false in
+                  let uu___5 = FStar_Syntax_Syntax.as_implicit false in
                   (e, uu___5) in
                 [uu___4] in
               (uu___2, uu___3) in
@@ -2253,6 +2252,15 @@ and (infer :
                                  else rc in
                                FStar_Pervasives_Native.Some rc1
                            | FStar_Pervasives_Native.Some rt ->
+                               let rt1 =
+                                 let uu___3 = get_env env3 in
+                                 FStar_TypeChecker_Normalize.normalize
+                                   [FStar_TypeChecker_Env.Beta;
+                                   FStar_TypeChecker_Env.Eager_unfolding;
+                                   FStar_TypeChecker_Env.UnfoldUntil
+                                     FStar_Syntax_Syntax.delta_constant;
+                                   FStar_TypeChecker_Env.EraseUniverses]
+                                   uu___3 rt in
                                let uu___3 =
                                  FStar_Compiler_Effect.op_Bar_Greater
                                    rc.FStar_Syntax_Syntax.residual_flags
@@ -2272,7 +2280,7 @@ and (infer :
                                      rc.FStar_Syntax_Syntax.residual_flags in
                                  let uu___4 =
                                    let uu___5 =
-                                     let uu___6 = double_star rt in
+                                     let uu___6 = double_star rt1 in
                                      FStar_Pervasives_Native.Some uu___6 in
                                    FStar_Syntax_Util.mk_residual_comp
                                      FStar_Parser_Const.effect_Tot_lid uu___5
@@ -2281,7 +2289,7 @@ and (infer :
                                else
                                  (let uu___5 =
                                     let uu___6 =
-                                      let uu___7 = star_type' env3 rt in
+                                      let uu___7 = star_type' env3 rt1 in
                                       FStar_Pervasives_Native.Some uu___7 in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
@@ -2817,7 +2825,7 @@ and (mk_match :
                                                  FStar_Syntax_Syntax.bv_to_name
                                                    p in
                                                let uu___10 =
-                                                 FStar_Syntax_Syntax.as_aqual_implicit
+                                                 FStar_Syntax_Syntax.as_implicit
                                                    false in
                                                (uu___9, uu___10) in
                                              [uu___8] in
@@ -3087,8 +3095,7 @@ and (mk_let :
                                     let uu___7 =
                                       FStar_Syntax_Syntax.bv_to_name p in
                                     let uu___8 =
-                                      FStar_Syntax_Syntax.as_aqual_implicit
-                                        false in
+                                      FStar_Syntax_Syntax.as_implicit false in
                                     (uu___7, uu___8) in
                                   [uu___6] in
                                 (s_e2, uu___5) in
@@ -3105,8 +3112,7 @@ and (mk_let :
                                 let uu___5 =
                                   let uu___6 =
                                     let uu___7 =
-                                      FStar_Syntax_Syntax.as_aqual_implicit
-                                        false in
+                                      FStar_Syntax_Syntax.as_implicit false in
                                     (s_e22, uu___7) in
                                   [uu___6] in
                                 (s_e1, uu___5) in
@@ -3246,8 +3252,7 @@ and (trans_F_ :
                                  | ((arg, q), (wp_arg, q')) ->
                                      let print_implicit q1 =
                                        let uu___9 =
-                                         FStar_Syntax_Syntax.is_aqual_implicit
-                                           q1 in
+                                         FStar_Syntax_Syntax.is_implicit q1 in
                                        if uu___9
                                        then "implicit"
                                        else "explicit" in
@@ -3367,8 +3372,7 @@ and (trans_F_ :
                                     let uu___7 =
                                       FStar_Syntax_Syntax.bv_to_name bv in
                                     let uu___8 =
-                                      FStar_Syntax_Syntax.as_aqual_implicit
-                                        false in
+                                      FStar_Syntax_Syntax.as_implicit false in
                                     (uu___7, uu___8)) bvs in
                              (wp, uu___6) in
                            FStar_Syntax_Syntax.Tm_app uu___5 in
@@ -3396,7 +3400,7 @@ and (trans_G :
               let uu___1 = star_type' env1 h in
               let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStar_Syntax_Syntax.as_aqual_implicit false in
+                  let uu___4 = FStar_Syntax_Syntax.as_implicit false in
                   (wp, uu___4) in
                 [uu___3] in
               {
@@ -3598,7 +3602,7 @@ let (cps_and_elaborate :
                                               FStar_Syntax_Syntax.bv_to_name
                                                 a1 in
                                             let uu___15 =
-                                              FStar_Syntax_Syntax.as_aqual_implicit
+                                              FStar_Syntax_Syntax.as_implicit
                                                 false in
                                             (uu___14, uu___15) in
                                           [uu___13] in
@@ -3611,8 +3615,7 @@ let (cps_and_elaborate :
                                   let binders =
                                     let uu___9 =
                                       let uu___10 =
-                                        FStar_Syntax_Syntax.as_bqual_implicit
-                                          false in
+                                        FStar_Syntax_Syntax.as_implicit false in
                                       FStar_Syntax_Syntax.mk_binder_with_attrs
                                         a1 uu___10 [] in
                                     let uu___10 =
@@ -3756,7 +3759,7 @@ let (cps_and_elaborate :
                                                                   FStar_Syntax_Syntax.bv_to_name
                                                                     b11.FStar_Syntax_Syntax.binder_bv in
                                                                 let uu___21 =
-                                                                  FStar_Syntax_Syntax.as_aqual_implicit
+                                                                  FStar_Syntax_Syntax.as_implicit
                                                                     false in
                                                                 (uu___20,
                                                                   uu___21) in
@@ -4319,7 +4322,7 @@ let (cps_and_elaborate :
                                                               FStar_Syntax_Syntax.bv_to_name
                                                                 a1 in
                                                             let uu___22 =
-                                                              FStar_Syntax_Syntax.as_aqual_implicit
+                                                              FStar_Syntax_Syntax.as_implicit
                                                                 false in
                                                             (uu___21,
                                                               uu___22) in
