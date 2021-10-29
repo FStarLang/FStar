@@ -1078,16 +1078,6 @@ let equality_ops : prim_step_set =
          interpretation = interp_prop_eq2;
          interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
     in
-    let propositional_equality_unfolded =
-        {name = PC.c_eq2_lid;
-         arity = 3;
-         univ_arity = 1;
-         auto_reflect=None;
-         strong_reduction_ok=true;
-         requires_binder_substitution=false;
-         interpretation = interp_prop_eq2;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
-    in
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
          arity = 4;
@@ -1099,7 +1089,7 @@ let equality_ops : prim_step_set =
          interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq3}
     in
 
-    prim_from_list [propositional_equality; propositional_equality_unfolded; hetero_propositional_equality]
+    prim_from_list [propositional_equality; hetero_propositional_equality]
 
 (* Profiling the time each different primitive step consumes *)
 let primop_time_map : BU.smap<int> = BU.smap_create 50
