@@ -31,7 +31,7 @@ let ref a = H.ref (U.raise_t a)
 let null #a = H.null #(U.raise_t a)
 let is_null #a r = H.is_null #(U.raise_t a) r
 
-let pts_to_sl r p v = H.pts_to_sl r p (hide (U.raise_val (reveal v)))
+let pts_to_sl r p v = H.pts_to_sl r p (U.raise_val v)
 
 val raise_val_inj (#a:Type) (x y:a) : Lemma
   (requires U.raise_val x == U.raise_val y)
@@ -46,25 +46,25 @@ let pts_to_ref_injective
       (#a: Type u#0)
       (r: ref a)
       (p0 p1:perm)
-      (v0 v1: erased a)
+      (v0 v1:a)
       (m:mem)
     : Lemma
       (requires
         interp (pts_to_sl r p0 v0 `Mem.star` pts_to_sl r p1 v1) m)
       (ensures v0 == v1)
-    = let v0' = hide (U.raise_val (reveal v0)) in
-      let v1' = hide (U.raise_val (reveal v1)) in
+    = let v0' = U.raise_val v0 in
+      let v1' = U.raise_val v1 in
       H.pts_to_ref_injective r p0 p1 v0' v1' m;
-      raise_val_inj (reveal v0) (reveal v1)
+      raise_val_inj v0 v1
 
 let pts_to_not_null (#a:Type u#0)
                     (x:ref a)
                     (p:perm)
-                    (v: erased a)
+                    (v:a)
                     (m:mem)
   : Lemma (requires interp (pts_to_sl x p v) m)
           (ensures x =!= null)
-  = let v = hide (U.raise_val (reveal v)) in
+  = let v = U.raise_val v in
     H.pts_to_not_null #(U.raise_t a) x p v m
 
 // let pts_to_not_null' (#a:Type u#0)
@@ -79,11 +79,11 @@ let pts_to_not_null (#a:Type u#0)
 
 
 let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to_sl r p)) =
-  let aux (x y : erased a) (m:mem)
+  let aux (x y : a) (m:mem)
     : Lemma (requires (interp (pts_to_sl r p x) m /\ interp (pts_to_sl r p y) m))
             (ensures  (x == y))
     = H.pts_to_witinv r p;
-      raise_val_inj (reveal x) (reveal y)
+      raise_val_inj x y
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
@@ -220,24 +220,22 @@ let cas_pt #t #uses r v v_old v_new =
 let ptrp r p = Mem.h_exists (pts_to_sl r p)
 
 val ptr_sel' (#a:Type0) (r: ref a) (p: perm) : selector' a (ptrp r p)
-let ptr_sel' #a r p = fun h ->
-  let x = id_elim_exists #(erased a) (pts_to_sl r p) h in
-  reveal (reveal x)
+let ptr_sel' #a r p = fun h -> id_elim_exists #a (pts_to_sl r p) h
 
 let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
   (p: perm)
   (m0:Mem.hmem (ptrp r p)) (m1:mem{disjoint m0 m1})
   : Lemma (ptr_sel' r p m0 == ptr_sel' r p (Mem.join m0 m1))
-  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r p) m0) in
-    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r p) (Mem.join m0 m1)) in
+  = let x = reveal (id_elim_exists #a (pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #a (pts_to_sl r p) (Mem.join m0 m1)) in
     pts_to_witinv r p;
     elim_wi (pts_to_sl r p) x y (Mem.join m0 m1)
 
 let ptr_sel_depends_only_on_core (#a:Type0) (r:ref a)
   (p: perm) (m0:Mem.hmem (ptrp r p))
   : Lemma (ptr_sel' r p m0 == ptr_sel' r p (core_mem m0))
-  = let x = reveal (id_elim_exists #(erased a) (pts_to_sl r p) m0) in
-    let y = reveal (id_elim_exists #(erased a) (pts_to_sl r p) (core_mem m0)) in
+  = let x = reveal (id_elim_exists #a (pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #a (pts_to_sl r p) (core_mem m0)) in
     pts_to_witinv r p;
     elim_wi (pts_to_sl r p) x y (core_mem m0)
 
@@ -248,12 +246,12 @@ let ptrp_sel r p =
 
 let ptrp_sel_interp #a r p m = pts_to_witinv r p
 
-let intro_ptrp_interp r p v m = intro_h_exists v (pts_to_sl r p) m
+let intro_ptrp_interp r p v m = intro_h_exists (reveal v) (pts_to_sl r p) m
 
 let intro_vptr_lemma (#a:Type) (r:ref a) (p: perm) (v:erased a) (m:mem) : Lemma
   (requires interp (pts_to_sl r p v) m)
   (ensures interp (ptrp r p) m /\ ptrp_sel r p m == reveal v)
-  = Mem.intro_h_exists v (pts_to_sl r p) m;
+  = Mem.intro_h_exists (reveal v) (pts_to_sl r p) m;
     pts_to_witinv r p
 
 let elim_vptr_lemma (#a:Type) (r:ref a) (p: perm) (v:erased a) (m:mem) : Lemma
@@ -325,21 +323,22 @@ let vptrp_not_null
 (*** GHOST REFERENCES ***)
 let ghost_ref a = H.ghost_ref (U.raise_t a)
 
-let raise_erased (#a:Type0) (x:erased a)
-  : erased (U.raise_t u#0 u#1 a)
-  = Ghost.hide (U.raise_val (Ghost.reveal x))
-
 [@__reduce__]
-let ghost_pts_to_sl #a r p x = H.ghost_pts_to_sl #(U.raise_t a) r p (raise_erased x)
+let ghost_pts_to_sl #a r p x = H.ghost_pts_to_sl #(U.raise_t a) r p (U.raise_val x)
 
 let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p)) =
-  let aux (x y : erased a) (m:mem)
+  let aux (x y : a) (m:mem)
     : Lemma (requires (interp (ghost_pts_to_sl r p x) m /\ interp (ghost_pts_to_sl r p y) m))
             (ensures  (x == y))
     = H.ghost_pts_to_witinv r p;
-      raise_val_inj (reveal x) (reveal y)
+      raise_val_inj x y
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+[@@__reduce__]
+let raise_erased (#a:Type0) (x:erased a)
+  : erased (U.raise_t u#0 u#1 a)
+  = Ghost.hide (U.raise_val (Ghost.reveal x))
 
 let ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
   : SteelGhostT (ghost_ref a) u
@@ -353,7 +352,7 @@ let ghost_share_pt (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)
                 (r:ghost_ref a)
-   = H.ghost_share r
+   = H.ghost_share #_ #_ #_ #(raise_erased x) r
 
 let ghost_gather_pt (#a:Type) (#u:_)
                  (#p0 #p1:perm)
@@ -392,24 +391,22 @@ let ghost_write_pt (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
 let ghost_ptrp r p = Mem.h_exists (ghost_pts_to_sl r p)
 
 val ghost_ptr_sel' (#a:Type0) (r: ghost_ref a) (p: perm) : selector' a (ghost_ptrp r p)
-let ghost_ptr_sel' #a r p = fun h ->
-  let x = id_elim_exists #(erased a) (ghost_pts_to_sl r p) h in
-  reveal (reveal x)
+let ghost_ptr_sel' #a r p = fun h -> id_elim_exists #a (ghost_pts_to_sl r p) h
 
 let ghost_ptr_sel_depends_only_on (#a:Type0) (r:ghost_ref a)
   (p: perm)
   (m0:Mem.hmem (ghost_ptrp r p)) (m1:mem{disjoint m0 m1})
   : Lemma (ghost_ptr_sel' r p m0 == ghost_ptr_sel' r p (Mem.join m0 m1))
-  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) m0) in
-    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) (Mem.join m0 m1)) in
+  = let x = reveal (id_elim_exists #a (ghost_pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #a (ghost_pts_to_sl r p) (Mem.join m0 m1)) in
     ghost_pts_to_witinv r p;
     elim_wi (ghost_pts_to_sl r p) x y (Mem.join m0 m1)
 
 let ghost_ptr_sel_depends_only_on_core (#a:Type0) (r:ghost_ref a)
   (p: perm) (m0:Mem.hmem (ghost_ptrp r p))
   : Lemma (ghost_ptr_sel' r p m0 == ghost_ptr_sel' r p (core_mem m0))
-  = let x = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) m0) in
-    let y = reveal (id_elim_exists #(erased a) (ghost_pts_to_sl r p) (core_mem m0)) in
+  = let x = reveal (id_elim_exists #a (ghost_pts_to_sl r p) m0) in
+    let y = reveal (id_elim_exists #a (ghost_pts_to_sl r p) (core_mem m0)) in
     ghost_pts_to_witinv r p;
     elim_wi (ghost_pts_to_sl r p) x y (core_mem m0)
 
@@ -424,7 +421,7 @@ let ghost_ptrp_sel_interp #a r p m = ghost_pts_to_witinv r p
 let intro_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (p: perm) (v:erased a) (m:mem) : Lemma
   (requires interp (ghost_pts_to_sl r p v) m)
   (ensures interp (ghost_ptrp r p) m /\ ghost_ptrp_sel r p m == reveal v)
-  = Mem.intro_h_exists v (ghost_pts_to_sl r p) m;
+  = Mem.intro_h_exists (reveal v) (ghost_pts_to_sl r p) m;
     ghost_pts_to_witinv r p
 
 let elim_ghost_vptr_lemma (#a:Type) (r:ghost_ref a) (p: perm) (v:erased a) (m:mem) : Lemma
