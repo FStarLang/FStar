@@ -52,14 +52,15 @@ let sub_map_of (#k:eqtype) (#v:Type0) (m1 m2:Map.t k v) : prop =
 [@@__reduce__]
 let store_contents_pred (#k:eqtype) (#v:Type0) (#h:hash_fn_t k)
   (arr:iarray k v h) (m:repr k v)
-  : A.elseq (option (k & v)) (A.length arr.store) -> vprop
+  : Seq.lseq (option (k & v)) (A.length arr.store) -> vprop
   = fun s ->
-    A.varray_pts_to arr.store s
+    A.varray_pts_to arr.store (G.hide s)
       `star`
     ghost_pts_to arr.g_repr full_perm m
       `star`
     pure (seq_to_map s arr.default_v `sub_map_of` m)
 
+[@@__reduce__]
 let ipts_to arr m = h_exists (store_contents_pred arr m)
 
 let create #k #v h x n =
@@ -79,6 +80,16 @@ let create #k #v h x n =
   change_equal_slprop (ghost_pts_to g_ref full_perm (empty_repr #k #v x))
                       (ghost_pts_to arr.g_repr full_perm (empty_repr #k #v x));
   change_equal_slprop (A.varray_pts_to store s)
-                      (A.varray_pts_to arr.store s);
-  intro_exists s (store_contents_pred arr (empty_repr #k #v x));
+                      (A.varray_pts_to arr.store (G.hide (G.reveal s)));
+  intro_exists (G.reveal s) (store_contents_pred arr (empty_repr #k #v x));
   return arr
+
+let index_aux (#k:eqtype) (#v:Type0) (#h:hash_fn_t k) (#m:G.erased (repr k v))
+  (a:iarray k v h) (i:k)
+  : SteelT unit
+      (ipts_to a m)
+      (fun r -> emp) =
+
+  let s = witness_exists () in
+  A.elim_varray_pts_to a.store s;
+  sladmit ()
