@@ -28,7 +28,7 @@ let length #t (x:array t) = dfst x
 let is_array r = ptr (dsnd r)
 let array_sel r = ptr_sel (dsnd r)
 
-let varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
+let varray_pts_to (#t:Type) (a:array t) (x:Seq.lseq t (length a))
   : vprop
   = Steel.Reference.pts_to (dsnd a) Steel.FractionalPermission.full_perm x
 
@@ -447,24 +447,12 @@ let compare_pts (#t:eqtype)
         then (
           R.write_pt ctr (Some U32.(i +^ 1ul));
           extend_equal_up_to l i;
-          assert_spinoff
-            (pure (equal_up_to s0 s1 (Some (U32.(i +^ 1ul)))) ==
-             pure (equal_up_to s0 s1 (Ghost.hide (Some (U32.(i +^ 1ul))))));
-          AT.change_equal_slprop
-            (pure (equal_up_to s0 s1 (Some (U32.(i +^ 1ul)))))
-            (pure (equal_up_to s0 s1 (Ghost.hide (Some (U32.(i +^ 1ul))))));
-          intro_exists_inv a0 a1 l ctr _
+          intro_exists_inv a0 a1 l ctr (Ghost.hide (Some (U32.(i +^ 1ul))))
         )
         else (
           R.write_pt ctr None;
           extend_equal_up_to_neg l i;
-          assert_spinoff
-            (pure (equal_up_to s0 s1 None) ==
-             pure (equal_up_to s0 s1 (Ghost.hide None)));
-          AT.change_equal_slprop
-            (pure (equal_up_to s0 s1 None))
-            (pure (equal_up_to s0 s1 (Ghost.hide None)));
-          intro_exists_inv a0 a1 l ctr _
+          intro_exists_inv a0 a1 l ctr (Ghost.hide None)
         )
     in
     init_inv a0 a1 l ctr;
