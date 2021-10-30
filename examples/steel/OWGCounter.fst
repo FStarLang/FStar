@@ -63,14 +63,14 @@ let snd = snd
 /// only them can modify it by retrieving the other half of the permission when accessing the invariant.
 /// The `__reduce__` attribute indicates the frame inference tactic to unfold this predicate for frame inference only
 [@@ __reduce__]
-let lock_inv_slprop (r:ref int) (r1 r2:ghost_ref int) (w:G.erased int & G.erased int) =
+let lock_inv_slprop (r:ref int) (r1 r2:ghost_ref int) (w:int & int) =
   ghost_pts_to r1 half_perm (fst w) `star`
   ghost_pts_to r2 half_perm (snd w) `star`
-  pts_to r full_perm (G.hide (fst w + snd w))
+  pts_to r full_perm (fst w + snd w)
 
 [@@ __reduce__]
 let lock_inv_pred (r:ref int) (r1 r2:ghost_ref int) =
-  fun (x:G.erased int & G.erased int) -> lock_inv_slprop r r1 r2 x
+  fun (x:int & int) -> lock_inv_slprop r r1 r2 x
 
 /// The actual invariant, existentially quantifying over the values currently stored in the two ghost references
 [@@ __reduce__]
@@ -89,35 +89,36 @@ let lock_inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
           (ensures interp (hp_of (lock_inv r r2 r1)) m)
           [SMTPat ()]
       = assert (
-          Steel.Memory.h_exists #(G.erased int & G.erased int) (fun x -> hp_of (lock_inv_pred r r1 r2 x)) ==
-          h_exists_sl #(G.erased int & G.erased int) (lock_inv_pred r r1 r2))
+          Steel.Memory.h_exists #(int & int) (fun x -> hp_of (lock_inv_pred r r1 r2 x)) ==
+          h_exists_sl #(int & int) (lock_inv_pred r r1 r2))
           by (FStar.Tactics.norm [delta_only [`%h_exists_sl]]);
 
-        let w : G.erased (G.erased int & G.erased int) = id_elim_exists (fun x -> hp_of (lock_inv_pred r r1 r2 x)) m in
+        let w : G.erased (int & int) = id_elim_exists (fun x -> hp_of (lock_inv_pred r r1 r2 x)) m in
         assert ((ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
                  ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w))))) `equiv`
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w))) `equiv`
                 (ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
                  ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))))) by (FStar.Tactics.norm [delta_attr [`%__steel_reduce__]]; canon' false (`true_p) (`true_p));
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)))) by (FStar.Tactics.norm [delta_attr [`%__steel_reduce__]]; canon' false (`true_p) (`true_p));
 
         reveal_equiv
           (ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
                  ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))))
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)))
           (ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
                  ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))));
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)));
 
-        assert (interp (hp_of (lock_inv_pred r r2 r1 (snd w, fst w))) m);
+       assert (interp (hp_of (lock_inv_pred r r2 r1 (snd w, fst w))) m);
 
         intro_h_exists (snd w, fst w) (fun x -> hp_of (lock_inv_pred r r2 r1 x)) m;
         assert (interp (Steel.Memory.h_exists (fun x -> hp_of (lock_inv_pred r r2 r1 x))) m);
 
        assert (
-          Steel.Memory.h_exists #(G.erased int & G.erased int) (fun x -> hp_of (lock_inv_pred r r2 r1 x)) ==
-          h_exists_sl #(G.erased int & G.erased int) (lock_inv_pred r r2 r1))
-          by (FStar.Tactics.norm [delta_only [`%h_exists_sl]]) in
+          Steel.Memory.h_exists #(int & int) (fun x -> hp_of (lock_inv_pred r r2 r1 x)) ==
+          h_exists_sl #(int & int) (lock_inv_pred r r2 r1))
+          by (FStar.Tactics.norm [delta_only [`%h_exists_sl]])
+  in
 
   reveal_equiv (lock_inv r r1 r2) (lock_inv r r2 r1)
 #pop-options
@@ -133,16 +134,16 @@ let og_acquire (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   = acquire l;
     if b then begin
       rewrite_slprop (lock_inv r (if b then r_mine else r_other)
-                                (if b then r_other else r_mine))
-                    (lock_inv r r_mine r_other)
-                    (fun _ -> ());
+                                 (if b then r_other else r_mine))
+                     (lock_inv r r_mine r_other)
+                     (fun _ -> ());
       ()
     end
     else begin
       rewrite_slprop (lock_inv r (if b then r_mine else r_other)
-                                (if b then r_other else r_mine))
-                    (lock_inv r r_other r_mine)
-                    (fun _ -> ());
+                                 (if b then r_other else r_mine))
+                     (lock_inv r r_other r_mine)
+                     (fun _ -> ());
       lock_inv_equiv_lemma r r_other r_mine;
       rewrite_slprop (lock_inv r r_other r_mine) (lock_inv r r_mine r_other) (fun _ -> reveal_equiv (lock_inv r r_other r_mine) (lock_inv r r_mine r_other))
     end
@@ -172,20 +173,15 @@ let og_release (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
     end;
     release l
 
-(*
- * Incrementing a ghost int
- *)
-let g_incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
-
 inline_for_extraction noextract
 let incr_ctr (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
-      (fun _ -> pts_to r full_perm (g_incr v))
+      (fun _ -> pts_to r full_perm (v+1))
   = let n = R.read_pt r in
     R.write_pt r (n+1);
     rewrite_slprop (pts_to r full_perm (n + 1))
-                  (pts_to r full_perm (g_incr v))
+                  (pts_to r full_perm (v+1))
                   (fun _ -> ())
 
 inline_for_extraction noextract
@@ -204,18 +200,18 @@ let incr_ghost_contrib (#v1 #v2:G.erased int) (r:ghost_ref int)
   : Steel unit
       (ghost_pts_to r half_perm v1 `star`
        ghost_pts_to r half_perm v2)
-      (fun _ -> ghost_pts_to r half_perm (g_incr v1) `star`
-             ghost_pts_to r half_perm (g_incr v2))
+      (fun _ -> ghost_pts_to r half_perm (v1+1) `star`
+             ghost_pts_to r half_perm (v2+1))
       (fun _ -> True)
       (fun _ _ _ -> v1 == v2)
   = ghost_gather_pt #_ #_ #half_perm #half_perm #v1 #v2 r;
     rewrite_perm r (sum_perm half_perm half_perm) full_perm;
-    ghost_write_pt r (g_incr v1);
+    ghost_write_pt r (v1+1);
     ghost_share_pt r;
-    rewrite_slprop (ghost_pts_to r (P.half_perm P.full_perm) (g_incr v1) `star`
-                   ghost_pts_to r (P.half_perm P.full_perm) (g_incr v1))
-                  (ghost_pts_to r half_perm (g_incr v1) `star`
-                   ghost_pts_to r half_perm (g_incr v2))
+    rewrite_slprop (ghost_pts_to r (P.half_perm P.full_perm) (v1+1) `star`
+                   ghost_pts_to r (P.half_perm P.full_perm) (v1+1))
+                  (ghost_pts_to r half_perm (v1+1) `star`
+                   ghost_pts_to r half_perm (v2+1))
                   (fun _ -> ())
 
 let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
@@ -225,48 +221,49 @@ let incr (r:ref int) (r_mine r_other:ghost_ref int) (b:G.erased bool)
   ()
   : SteelT unit
       (ghost_pts_to r_mine half_perm n_ghost)
-      (fun _ -> ghost_pts_to r_mine half_perm (g_incr n_ghost))
+      (fun _ -> ghost_pts_to r_mine half_perm (n_ghost + 1))
   = og_acquire r r_mine r_other b l;
-    let w : G.erased (G.erased int & G.erased int) = witness_exists () in
+    let w : G.erased (int & int) = witness_exists () in
     incr_ctr r;
     incr_ghost_contrib #n_ghost #(fst w) r_mine;
-    rewrite_slprop (pts_to r full_perm (g_incr (G.hide (fst w + snd w))))
-                  (pts_to r full_perm (G.hide (g_incr (fst w) + snd w)))
-                  (fun _ -> ());
-    intro_exists (g_incr (fst w), snd w) (lock_inv_pred r r_mine r_other);
+    rewrite_slprop (pts_to r full_perm ((fst w + snd w) + 1))
+                   (pts_to r full_perm ((fst w + 1) + snd w))
+                   (fun _ -> ());
+    intro_exists (fst w + 1, snd w) (lock_inv_pred r r_mine r_other);
     og_release r r_mine r_other b l
 
+#set-options "--print_implicits"
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
-      (fun _ -> pts_to r full_perm (G.hide (G.reveal v + 2)))
+      (fun _ -> pts_to r full_perm (v + 2))
   = //allocate the two contribution references
     let r1 = ghost_alloc_pt (G.hide 0) in
     let r2 = ghost_alloc_pt v in
 
     //split their permissions into half
     ghost_share_pt r1;
-    rewrite_slprop (ghost_pts_to r1 (P.half_perm P.full_perm) (G.hide 0) `star`
-                   ghost_pts_to r1 (P.half_perm P.full_perm) (G.hide 0))
-                  (ghost_pts_to r1 half_perm (G.hide 0) `star`
-                   ghost_pts_to r1 half_perm (G.hide 0))
+    rewrite_slprop (ghost_pts_to r1 (P.half_perm P.full_perm) 0 `star`
+                    ghost_pts_to r1 (P.half_perm P.full_perm) 0)
+                   (ghost_pts_to r1 half_perm 0 `star`
+                    ghost_pts_to r1 half_perm 0)
                   (fun _ -> ());
 
     ghost_share_pt r2;
     rewrite_slprop (ghost_pts_to r2 (P.half_perm P.full_perm) v `star`
-                   ghost_pts_to r2 (P.half_perm P.full_perm) v)
-                  (ghost_pts_to r2 half_perm v `star`
-                   ghost_pts_to r2 half_perm v)
-                  (fun _ -> ());
+                    ghost_pts_to r2 (P.half_perm P.full_perm) v)
+                   (ghost_pts_to r2 half_perm v `star`
+                    ghost_pts_to r2 half_perm v)
+                   (fun _ -> ());
 
 
     //rewrite the value of `r` to bring it in the shape as expected by the lock
     rewrite_slprop (pts_to r full_perm v)
-                  (pts_to r full_perm (G.hide (G.reveal (fst (G.hide 0, v)) + G.reveal (snd (G.hide 0, v)))))
-                  (fun _ -> ());
+                   (pts_to r full_perm (fst (0, G.reveal v) + (snd (0, G.reveal v))))
+                   (fun _ -> ());
 
     //create the lock
-    intro_exists (G.hide 0, v) (lock_inv_pred r r1 r2);
+    intro_exists (0, G.reveal v) (lock_inv_pred r r1 r2);
 
     let l = new_lock (lock_inv r r1 r2) in
 
@@ -278,12 +275,22 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     let w = witness_exists () in
 
-    //gather the permissions for the ghost references, and then drop them
-    ghost_gather_pt #_ #_ #_ #_ #(fst w) #_ r1;
-    ghost_gather_pt #_ #_ #_ #_ #(snd w) #_ r2;
-    drop (ghost_pts_to r1 (P.sum_perm half_perm half_perm) (fst w));
-    drop (ghost_pts_to r2 (P.sum_perm half_perm half_perm) (snd w));
+    //AR: TODO: these annotations are troubling
+    ghost_gather_pt #_ #_ #_ #_ #(G.hide 1) #(G.hide (fst w)) r1;
+    ghost_gather_pt #_ #_ #_ #_ #(G.hide (v + 1)) #(G.hide (snd w)) r2;
+    drop (ghost_pts_to r1 _ _);
+    drop (ghost_pts_to r2 _ _);
 
-    rewrite_slprop (pts_to r full_perm (G.hide (G.reveal (fst w) + G.reveal (snd w))))
-                  (pts_to r full_perm (v + 2))
-                  (fun _ -> ())
+    rewrite_slprop (pts_to r full_perm (fst w + snd w))
+                   (pts_to r full_perm (v + 2))
+                   (fun _ -> ())
+ r1; sladmit ()
+
+    drop (ghost_pts_to r1 half_perm 1);
+    drop (ghost_pts_to r2 half_perm (v + 1));
+    drop (ghost_pts_to r1 _ _);
+    drop (ghost_pts_to r2 _ _);
+
+    rewrite_slprop (pts_to r full_perm (fst w + snd w))
+                   (pts_to r full_perm (v + 2))
+                   (fun _ -> ())
