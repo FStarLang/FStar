@@ -28,7 +28,7 @@ open Steel.Reference
 [@@__reduce__]
 let conditional_inv (r:ghost_ref bool) (p:vprop) =
       (fun (b:bool) ->
-         ghost_pts_to r (half_perm full_perm) (hide b) `star`
+         ghost_pts_to r (half_perm full_perm) b `star`
          (if b then p else emp))
 
 [@@__reduce__]
@@ -42,7 +42,7 @@ let gref (#p:_) (i:inv p) = dfst i
 
 [@@__reduce__]
 let active (#p:_) ([@@@smt_fallback]f:perm) (i:inv p) =
-  ghost_pts_to (gref i) (half_perm f) (hide true)
+  ghost_pts_to (gref i) (half_perm f) true
 
 let new_inv #u p =
   let r = ghost_alloc_pt (Ghost.hide true) in
@@ -50,12 +50,12 @@ let new_inv #u p =
   intro_exists true (conditional_inv r p);
   let i = new_invariant (ex_conditional_inv r p) in
   rewrite_slprop
-    (ghost_pts_to r (half_perm full_perm) (hide true))
-    (ghost_pts_to (gref (hide (| r, i |))) (half_perm full_perm) (hide true))
+    (ghost_pts_to r (half_perm full_perm) true)
+    (ghost_pts_to (gref (hide (| r, i |))) (half_perm full_perm) true)
     (fun _ -> ());
   (| r, i |)
 
-let share #p #f #u i = ghost_share_pt (gref i)
+let share #p #f #u i = ghost_share_pt #_ #_ #_ #(hide true) (gref i)
 
 let gather #p #f0 #f1 #u i =
   ghost_gather_pt #_ #_ #(half_perm f0) (gref i);
