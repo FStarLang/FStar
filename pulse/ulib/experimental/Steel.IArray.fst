@@ -45,7 +45,7 @@ let rec seq_to_map_empty_seq (#k:eqtype) (#v:Type0) (n:nat) (default_v:v)
       seq_to_map_empty_seq #k #v (n-1) default_v
     end
 
-let sub_map_of (#k:eqtype) (#v:Type0) (m1 m2:Map.t k v) : prop =
+let submap_of (#k:eqtype) (#v:Type0) (m1 m2:Map.t k v) : prop =
   let open FStar.Map in
   forall (x:k). m1 `contains` x ==> (m2 `contains` x /\ m1 `sel` x == m2 `sel` x)
 
@@ -58,7 +58,7 @@ let store_contents_pred (#k:eqtype) (#v:Type0) (#h:hash_fn_t k)
       `star`
     ghost_pts_to arr.g_repr full_perm m
       `star`
-    pure (seq_to_map s arr.default_v `sub_map_of` m)
+    pure (seq_to_map s arr.default_v `submap_of` m)
 
 [@@__reduce__]
 let ipts_to arr m = h_exists (store_contents_pred arr m)
@@ -74,7 +74,7 @@ let create #k #v h x n =
     store_len_pf = () } in
   let s = A.intro_varray_pts_to arr.store in
   seq_to_map_empty_seq #k #v (U32.v n) x;
-  intro_pure (sub_map_of (seq_to_map s arr.default_v) (empty_repr #k #v x));
+  intro_pure (submap_of (seq_to_map s arr.default_v) (empty_repr #k #v x));
   assert_spinoff (ghost_pts_to g_ref full_perm (empty_repr #k #v x) ==
                   ghost_pts_to arr.g_repr full_perm (empty_repr #k #v x));
   change_equal_slprop (ghost_pts_to g_ref full_perm (empty_repr #k #v x))
@@ -91,12 +91,19 @@ let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v)))
                 Map.contains (seq_to_map s default_v) x /\
                 Map.sel (seq_to_map s default_v) x == y))
       (decreases i)
-  = if i = 0 then () else admit ()
+  = if i = 0 then () else begin
+      seq_to_map_ith (Seq.tail s) default_v (i-1);
+      match Seq.head s with
+      | None -> ()
+      | Some (x', y') ->
+        let Some (x, y) = Seq.index s i in
+        assume (x =!= x')
+    end
 
 let index #k #v #h #m a i =
   let s = witness_exists () in
   A.elim_varray_pts_to a.store s;
-  elim_pure (seq_to_map s a.default_v `sub_map_of` m);
+  elim_pure (seq_to_map s a.default_v `submap_of` m);
   assume (U32.v a.store_len <> 0);
   let vopt = A.index a.store (h i `U32.rem` a.store_len) in
   let r =
@@ -110,7 +117,7 @@ let index #k #v #h #m a i =
       end
       else return None in
   let s = A.intro_varray_pts_to a.store in
-  intro_pure (seq_to_map s a.default_v `sub_map_of` m);
+  intro_pure (seq_to_map s a.default_v `submap_of` m);
   intro_exists (G.reveal s) (store_contents_pred a m);
   intro_pure (Some? r ==> r == Some (Map.sel m i));
   return r
