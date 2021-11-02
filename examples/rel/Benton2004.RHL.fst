@@ -318,6 +318,7 @@ let rec r_while_terminates'
         (ensures (terminates_on (f') s0'))
       = let fuel3 = fuel0 + fuel2 + 1 in
         assert (f' (fuel3 - 1) s1' == f' fuel2 s1');
+        reified_computation_elim fc' fuel0 fuel3 s0';
         assert (fc' fuel3 s0' == fc' fuel0 s0');
         assert (fst (f' fuel3 s0') == true)
       in
