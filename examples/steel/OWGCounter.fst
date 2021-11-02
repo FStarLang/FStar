@@ -284,13 +284,4 @@ let incr_main (#v:G.erased int) (r:ref int)
     rewrite_slprop (pts_to r full_perm (fst w + snd w))
                    (pts_to r full_perm (v + 2))
                    (fun _ -> ())
- r1; sladmit ()
 
-    drop (ghost_pts_to r1 half_perm 1);
-    drop (ghost_pts_to r2 half_perm (v + 1));
-    drop (ghost_pts_to r1 _ _);
-    drop (ghost_pts_to r2 _ _);
-
-    rewrite_slprop (pts_to r full_perm (fst w + snd w))
-                   (pts_to r full_perm (v + 2))
-                   (fun _ -> ())
