@@ -64,11 +64,11 @@ let elim_pure (#p:prop) #u ()
                 (ensures fun _ _ _ -> p)
   = let _ = Steel.Effect.Atomic.elim_pure p in ()
 
-let open_exists (#a:Type) (#opened_invariants:_) (#p:Ghost.erased a -> vprop) (_:unit)
+let open_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
   : SteelGhostT (Ghost.erased a) opened_invariants
-                 (h_exists p) p
-  = let v : erased (erased a)  = witness_exists () in
-    reveal v
+                 (h_exists p) (fun r -> p (reveal r))
+  = let v : erased a  = witness_exists () in
+    v
 
 (*** Queue invariant ***)
 
@@ -76,18 +76,20 @@ let open_exists (#a:Type) (#opened_invariants:_) (#p:Ghost.erased a -> vprop) (_
 /// Owicki-Gries invariant, but applied to queues
 [@@__reduce__]
 let lock_inv #a (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a)) =
-    h_exists (fun (v:erased (Q.t a)) ->
+    h_exists (fun (v:Q.t a) ->
       pts_to ptr full v `star`
       ghost_pts_to ghost half v)
 
 let intro_lock_inv #a #u (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a))
   : SteelGhostT unit u
-    (h_exists (fun v -> pts_to ptr full v `star` ghost_pts_to ghost half v))
+    (h_exists (fun (v:Q.t a) -> pts_to ptr full v `star` ghost_pts_to ghost half v))
     (fun _ -> lock_inv ptr ghost)
-  = rewrite_slprop
-      (h_exists (fun v -> pts_to ptr full v `star` ghost_pts_to ghost half v))
+  = assert_spinoff
+    (h_exists (fun (v:Q.t a) -> pts_to ptr full v `star` ghost_pts_to ghost half v) == lock_inv ptr ghost);
+    rewrite_slprop
+      (h_exists (fun (v:Q.t a) -> pts_to ptr full v `star` ghost_pts_to ghost half v))
       (lock_inv _ _)
-      (fun _ -> assert_norm (lock_inv ptr ghost == h_exists (fun v -> pts_to ptr full v `star` ghost_pts_to ghost half v)))
+      (fun _ -> ())
 
 /// The type of a queue pointer.
 /// Contains the concrete pointer [ptr], the pointer to ghost state [ghost],
@@ -104,8 +106,8 @@ type q_ptr (a:Type) = {
 /// state of the enqueuer and dequeuer, while ensuring that the concrete queue always remains
 /// a valid queue
 let queue_invariant (#a:_) ([@@@smt_fallback]head:q_ptr a) ([@@@smt_fallback] tail:q_ptr a) =
-  h_exists (fun h ->
-  h_exists (fun t ->
+  h_exists (fun (h:Q.t a) ->
+  h_exists (fun (t:Q.t a) ->
     ghost_pts_to head.ghost half h `star`
     ghost_pts_to tail.ghost half t `star`
     Q.queue h t))
@@ -116,10 +118,10 @@ let pack_queue_invariant (#a:_) (#u:_) (x:erased (Q.t a)) (y:erased (Q.t a)) (he
     ghost_pts_to tail.ghost half y `star`
     Q.queue x y)
    (fun _ -> queue_invariant head tail)
- = intro_exists y (fun y -> ghost_pts_to head.ghost half x `star`
+ = intro_exists (reveal y) (fun y -> ghost_pts_to head.ghost half x `star`
                          ghost_pts_to tail.ghost half y `star`
                          Q.queue x y);
-   intro_exists x (fun x -> h_exists (fun y -> ghost_pts_to head.ghost half x `star`
+   intro_exists (reveal x) (fun x -> h_exists (fun y -> ghost_pts_to head.ghost half x `star`
                                          ghost_pts_to tail.ghost half y `star`
                                          Q.queue x y))
 
@@ -154,7 +156,7 @@ let new_queue (#a:_) (x:a)
     let head = new_qptr hd in
     let tail = new_qptr hd in
     // Creating the global queue invariant
-    pack_queue_invariant _ _ head tail;
+    pack_queue_invariant (hide hd) (hide hd) head tail;
     let inv = new_invariant _ in
     // Packing the different components to return a queue, as defined in type `t`
     return ({ head; tail; inv })
@@ -189,7 +191,7 @@ let enqueue (#a:_) (hdl:t a) (x:a)
         ghost_write_pt hdl.tail.ghost node;
 
         ghost_share_pt #_ #_ hdl.tail.ghost;
-        pack_queue_invariant _ _ hdl.head hdl.tail;
+        pack_queue_invariant h (hide node) hdl.head hdl.tail;
         return ()
     in
     // Actually executing the atomic enqueue operation while preserving the global queue invariant
@@ -199,7 +201,7 @@ let enqueue (#a:_) (hdl:t a) (x:a)
     // Updates the queue tail ghost state
     let r3 = intro_exists
       _
-      (fun (n:erased (Q.t a)) -> pts_to hdl.tail.ptr full_perm n `star`
+      (fun (n:(Q.t a)) -> pts_to hdl.tail.ptr full_perm n `star`
              ghost_pts_to hdl.tail.ghost half n) in
     // Releases the tail lock corresponding to the enqueuer
     Steel.SpinLock.release hdl.tail.lock
@@ -240,7 +242,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
       rewrite (Q.dequeue_post _ _ _) (Q.dequeue_post_success _ _ _);
       let c = open_exists () in
       elim_pure ();
-      intro_exists c (pts_to hd full_perm);
+      intro_exists (reveal c) (pts_to hd full_perm);
       // Updates the head ghost state
       ghost_write_pt hdl.head.ghost p;
       ghost_share_pt hdl.head.ghost;
