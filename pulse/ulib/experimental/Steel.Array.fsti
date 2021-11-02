@@ -61,15 +61,12 @@ let asel (#a:Type) (#p:vprop) (r:array a)
 
 /// We also provide an indexed assertion to represent an array
 /// without a selector
-///
-///   - I would like to remove the erased here, but doing that would
-///     be much more convenient once we merge the reveal/hide rewrites
-///     in the normalizer
-let elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
 
 /// The main indexed assertion
-val varray_pts_to (#t:Type) (a:array t) (x:elseq t (length a))
+val varray_pts_to (#t:Type) (a:array t) (x:Seq.lseq t (length a))
   : vprop
+
+type elseq a (n:nat) = Ghost.erased (Seq.lseq a n)
 
 /// Converting a `varray` into a `varray_pts_to`
 val intro_varray_pts_to (#t:_)

@@ -13,12 +13,12 @@ module U = Steel.Utils
 
 /// This library does not allow sharing ownership of the queue. As such, fractional permissions
 /// in this module will not be useful, and we use this wrapper to avoid specifying them
-let pts_to (#a:_) (x:t a) ([@@@smt_fallback]v: Ghost.erased (cell a)) = pts_to x full_perm v
+let pts_to (#a:_) (x:t a) ([@@@smt_fallback]v: cell a) = pts_to x full_perm v
 
 /// The core queue separation logic predicate.
 /// It is indexed by a head and tail pointer.
-val queue (#a:_) ([@@@smt_fallback] hd:Ghost.erased (t a))
-                 ([@@@smt_fallback] tl:Ghost.erased (t a)) : vprop
+val queue (#a:_) ([@@@smt_fallback] hd:t a)
+                 ([@@@smt_fallback] tl:t a) : vprop
 
 /// Creating a new queue containing element [v].
 val new_queue (#a:_) (v:a) :
@@ -69,7 +69,7 @@ assume atomic field update primitive:
 let dequeue_post_success (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
                                 ([@@@smt_fallback]hd:t a)
                                 ([@@@smt_fallback]p:t a) =
-      h_exists (fun (c:Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl)
+      h_exists (fun (c:cell a) -> pts_to hd c `star` pure (p == c.next) `star` queue p tl)
 
 let dequeue_post (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
                         ([@@@smt_fallback]hd:t a)

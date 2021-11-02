@@ -349,7 +349,7 @@ let lemma_cons_not_null (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
       | (hd, v)::tl ->
           let p = pts_to_sl ptr full_perm (hide hd) `Mem.star`
             llist_ptr_sl' (next hd) tl `Mem.star`
-            pts_to_sl (data hd) full_perm (hide v) in
+            pts_to_sl (data hd) full_perm v in
           pure_star_interp p (ptr =!= null_llist) m
 
 let cons_is_not_null #a ptr =
