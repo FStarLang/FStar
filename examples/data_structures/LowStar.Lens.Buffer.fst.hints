@@ -324,7 +324,9 @@
         "equation_FStar.Seq.Properties.lseq", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.lt", "equation_LowStar.Lens.Buffer.flavor",
+        "equation_FStar.UInt32.lt",
+        "equation_LowStar.Lens.Buffer.buffer_hs_lens",
+        "equation_LowStar.Lens.Buffer.flavor",
         "equation_LowStar.Lens.Buffer.ix",
         "equation_LowStar.Lens.Buffer.lens_of",
         "equation_LowStar.Lens.Buffer.lseq_of",
@@ -345,10 +347,10 @@
         "function_token_typing_LowStar.Lens.inv",
         "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_1996ab06df417255f7f724e81a7f1785",
         "interpretation_Tm_abs_3df81e352ed3eaf978fad995773126ac",
         "interpretation_Tm_abs_712468ba117fed1847ede4bc37f63153",
         "interpretation_Tm_abs_afaa6bc2b6afd69987301a2126d36b4f",
+        "interpretation_Tm_abs_c1cd23806d5c27b5102611b3b2bb70b0",
         "interpretation_Tm_abs_f0438dc14e7f791d1a122e52e6e9b9d8",
         "interpretation_Tm_abs_f890b0d4ed77baa4f5155d55d9c3f1b0",
         "lemma_FStar.Ghost.reveal_hide",
@@ -385,6 +387,7 @@
         "projection_inverse_LowStar.Lens.Mklens_put",
         "refinement_interpretation_Tm_refine_1495cf439cd222fe40e4c274af77bad3",
         "refinement_interpretation_Tm_refine_1c9044117730afbc4604b4a04ffc77eb",
+        "refinement_interpretation_Tm_refine_2a8dee9dbe756da080af35157125e6e3",
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_Tm_refine_3f6d01b6bf38baabfa9d99d2ce5f8cd8",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -412,7 +415,7 @@
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "1aa0c056253f48a7799bf5e6d73cb865"
+      "1a26c911951fd1ce9fe2c9e5720b3687"
     ],
     [
       "LowStar.Lens.Buffer.elim_inv",
@@ -487,7 +490,7 @@
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "5435937dcf3afeb7476e3f18271ecbaa"
+      "0a92b14292ef97413f776ee4a0c1cf4b"
     ],
     [
       "LowStar.Lens.Buffer.elim_inv",
@@ -559,7 +562,7 @@
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "001e819144f75ad3248222cc6dbe2d93"
+      "86a744727833221747b23755224d62dd"
     ],
     [
       "LowStar.Lens.Buffer.index",
@@ -600,7 +603,7 @@
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "7b07513e905f1609ae88a6a01f21c22b"
+      "ab02c7988a373e544601273eb59b6a5d"
     ],
     [
       "LowStar.Lens.Buffer.upd",
@@ -644,7 +647,7 @@
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "6680bad00bbccc5646697f69d8656827"
+      "139d1ebb8585f5ec6e3d7f6619d63f5c"
     ]
   ]
 ]
