@@ -24,6 +24,31 @@ type iarray k v (h:hash_fn_t k) = {
   store_len_pf : squash (A.length store == U32.v store_len);
 }
 
+let seq_props (#k:eqtype) (#v:Type0) (h:hash_fn_t k)
+  (s:Seq.seq (option (k & v))) : prop =
+  
+  0 < Seq.length s /\ UInt.size (Seq.length s) 32 /\
+  
+  (forall (i:nat{i < Seq.length s}).
+     Some? (Seq.index s i) ==>
+     (let Some (x, _) = Seq.index s i in
+      U32.v (h x) `UInt.mod` (Seq.length s) == i))
+
+let seq_props_empty_seq (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (n:nat)
+  : Lemma (seq_props #k #v h (Seq.create n None))
+  = admit ()
+
+let seq_props_derived (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option (k & v))) : prop =
+  forall (i j:(k:nat{k < Seq.length s})).{:pattern Seq.index s i; Seq.index s j}
+    (i =!= j /\ Some? (Seq.index s i) /\ Some? (Seq.index s j)) ==>
+    (fst (Some?.v (Seq.index s i)) =!= fst (Some?.v (Seq.index s j)))  
+
+let seq_props_derived_lemma (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option (k & v)))
+  : Lemma
+      (requires seq_props h s)
+      (ensures seq_props_derived h s)
+  = ()
+
 let rec seq_to_map (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v)
   : Tot (repr k v) (decreases Seq.length s)
   = if Seq.length s = 0
@@ -33,17 +58,6 @@ let rec seq_to_map (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_
          match hd with
          | Some (x, y) -> Map.upd m x y
          | None -> m
-
-let rec seq_to_map_empty_seq (#k:eqtype) (#v:Type0) (n:nat) (default_v:v)
-  : Lemma (Map.equal (seq_to_map (Seq.create n None) default_v)
-                     (empty_repr #k #v default_v))
-  = if n = 0
-    then ()
-    else begin
-      assert (Seq.equal (Seq.tail (Seq.create #(option (k & v)) n None))
-                        (Seq.create (n-1) None));
-      seq_to_map_empty_seq #k #v (n-1) default_v
-    end
 
 let submap_of (#k:eqtype) (#v:Type0) (m1 m2:Map.t k v) : prop =
   let open FStar.Map in
@@ -58,10 +72,32 @@ let store_contents_pred (#k:eqtype) (#v:Type0) (#h:hash_fn_t k)
       `star`
     ghost_pts_to arr.g_repr full_perm m
       `star`
-    pure (seq_to_map s arr.default_v `submap_of` m)
+    pure (seq_props h s /\ seq_to_map s arr.default_v `submap_of` m)
 
 [@@__reduce__]
 let ipts_to arr m = h_exists (store_contents_pred arr m)
+
+let rec seq_to_map_empty_seq (#k:eqtype) (#v:Type0) (n:nat) (default_v:v)
+  : Lemma (Map.equal (seq_to_map (Seq.create n None) default_v)
+                     (empty_repr #k #v default_v))
+  = if n = 0
+    then ()
+    else begin
+      assert (Seq.equal (Seq.tail (Seq.create #(option (k & v)) n None))
+                        (Seq.create (n-1) None));
+      seq_to_map_empty_seq #k #v (n-1) default_v
+    end
+
+let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option (k & v)))
+  (default_v:v)
+  (i:nat{i < Seq.length s})
+  : Lemma
+      (requires seq_props_derived h s /\ Some? (Seq.index s i))
+      (ensures (let Some (x, y) = Seq.index s i in
+                Map.contains (seq_to_map s default_v) x /\
+                Map.sel (seq_to_map s default_v) x == y))
+      (decreases i)
+  = if i = 0 then () else seq_to_map_ith h (Seq.tail s) default_v (i-1)
 
 let create #k #v h x n =
   let store = A.malloc #(option (k & v)) None n in
@@ -73,8 +109,9 @@ let create #k #v h x n =
     default_v = x;
     store_len_pf = () } in
   let s = A.intro_varray_pts_to arr.store in
+  seq_props_empty_seq #k #v h (U32.v n);
   seq_to_map_empty_seq #k #v (U32.v n) x;
-  intro_pure (submap_of (seq_to_map s arr.default_v) (empty_repr #k #v x));
+  intro_pure (seq_props h s /\ submap_of (seq_to_map s arr.default_v) (empty_repr #k #v x));
   assert_spinoff (ghost_pts_to g_ref full_perm (empty_repr #k #v x) ==
                   ghost_pts_to arr.g_repr full_perm (empty_repr #k #v x));
   change_equal_slprop (ghost_pts_to g_ref full_perm (empty_repr #k #v x))
@@ -82,28 +119,10 @@ let create #k #v h x n =
   intro_exists (G.reveal s) (store_contents_pred arr (empty_repr #k #v x));
   return arr
 
-let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v)))
-  (default_v:v)
-  (i:nat{i < Seq.length s})
-  : Lemma
-      (requires Some? (Seq.index s i))
-      (ensures (let Some (x, y) = Seq.index s i in
-                Map.contains (seq_to_map s default_v) x /\
-                Map.sel (seq_to_map s default_v) x == y))
-      (decreases i)
-  = if i = 0 then () else begin
-      seq_to_map_ith (Seq.tail s) default_v (i-1);
-      match Seq.head s with
-      | None -> ()
-      | Some (x', y') ->
-        let Some (x, y) = Seq.index s i in
-        assume (x =!= x')
-    end
-
 let index #k #v #h #m a i =
   let s = witness_exists () in
   A.elim_varray_pts_to a.store s;
-  elim_pure (seq_to_map s a.default_v `submap_of` m);
+  elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
   assume (U32.v a.store_len <> 0);
   let vopt = A.index a.store (h i `U32.rem` a.store_len) in
   let r =
@@ -112,12 +131,12 @@ let index #k #v #h #m a i =
     | Some (i', v) ->
       if i = i'
       then begin
-        seq_to_map_ith s a.default_v (U32.v (h i `U32.rem` a.store_len));
+        seq_to_map_ith h s a.default_v (U32.v (h i `U32.rem` a.store_len));
         return (Some v)
       end
       else return None in
   let s = A.intro_varray_pts_to a.store in
-  intro_pure (seq_to_map s a.default_v `submap_of` m);
+  intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
   intro_exists (G.reveal s) (store_contents_pred a m);
   intro_pure (Some? r ==> r == Some (Map.sel m i));
   return r
