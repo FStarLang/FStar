@@ -3401,7 +3401,8 @@ and (term_as_mlexpr' :
                         uu___6.FStar_Syntax_Syntax.n in
                       (match uu___5 with
                        | FStar_Syntax_Syntax.Tm_constant
-                           (FStar_Const.Const_string (s, uu___6)) ->
+                           (FStar_Const.Const_string (s, uu___6)) when
+                           s <> "" ->
                            let id =
                              let uu___7 =
                                let uu___8 = FStar_Syntax_Syntax.range_of_bv x in
@@ -3416,11 +3417,16 @@ and (term_as_mlexpr' :
                              } in
                            let bv1 = FStar_Syntax_Syntax.freshen_bv bv in
                            FStar_Pervasives_Native.Some bv1
-                       | uu___6 -> FStar_Pervasives_Native.None)
+                       | uu___6 ->
+                           (FStar_Errors.log_issue
+                              top1.FStar_Syntax_Syntax.pos
+                              (FStar_Errors.Warning_UnrecognizedAttribute,
+                                "Ignoring ill-formed application of `rename_let`");
+                            FStar_Pervasives_Native.None))
                   | FStar_Pervasives_Native.Some uu___4 ->
                       (FStar_Errors.log_issue top1.FStar_Syntax_Syntax.pos
                          (FStar_Errors.Warning_UnrecognizedAttribute,
-                           "Ill-formed application of `rename_let`");
+                           "Ignoring ill-formed application of `rename_let`");
                        FStar_Pervasives_Native.None)
                   | FStar_Pervasives_Native.None ->
                       FStar_Pervasives_Native.None in

@@ -1600,19 +1600,24 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               | Some ([(str, _)]) ->
                 begin
                 match (SS.compress str).n with
-                | Tm_constant (Const_string (s, _)) ->
+                | Tm_constant (Const_string (s, _))
+                  when s <> "" ->
                   // BU.print1 "Found suggested name %s\n" s;
                   let id = Ident.mk_ident (s, range_of_bv x) in
                   let bv = { ppname = id; index = 0; sort = x.sort } in
                   let bv = freshen_bv bv in
                   Some bv
                 | _ ->
+                  Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ignoring ill-formed application of `rename_let`"));
                   None
                 end
+
               | Some _ ->
                 Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ill-formed application of `rename_let`"));
+                                         ("Ignoring ill-formed application of `rename_let`"));
                 None
+
               | None ->
                 None
           in
