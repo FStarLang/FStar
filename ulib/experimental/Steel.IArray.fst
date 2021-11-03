@@ -136,14 +136,51 @@ let index #k #v #h #m a i =
   intro_pure (Some? r ==> r == Some (Map.sel m i));
   return r
 
-let seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v)
+let rec seq_to_map_domain (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v) (x:k)
+  : Lemma
+      (ensures
+        seq_to_map s default_v `Map.contains` x ==>
+        (exists (i:nat{i < Seq.length s}). Some? (Seq.index s i) /\ fst (Some?.v (Seq.index s i)) == x))
+      (decreases Seq.length s)
+  = if Seq.length s = 0 then ()
+    else seq_to_map_domain (Seq.tail s) default_v x
+
+let rec seq_to_map_upd_aux (#k:eqtype) (#v:Type0) h (s:Seq.seq (option (k & v))) (default_v:v)
+  (i:nat{i < Seq.length s}) (x:k) (y:v)
+  : Lemma
+      (requires
+        seq_props_derived h s /\
+        seq_props_derived h (Seq.upd s i (Some (x, y))))
+      (ensures
+        seq_to_map (Seq.upd s i (Some (x, y))) default_v `submap_of`
+        Map.upd (seq_to_map s default_v) x y)
+      (decreases i)
+  = if i = 0 then begin
+      match Seq.head s with
+      | None -> ()
+      | Some (x', _) -> seq_to_map_domain (Seq.tail s) default_v x'
+    end
+    else begin
+      seq_to_map_upd_aux h (Seq.tail s) default_v (i-1) x y;
+      match Seq.head s with
+      | None -> ()
+      | Some (x', y') ->
+        assert (Seq.index (Seq.upd s i (Some (x, y))) 0 == Some (x', y'));
+        assert (Seq.index (Seq.upd s i (Some (x, y))) i == Some (x, y));
+        assert (x =!= x')
+    end
+
+let seq_to_map_upd (#k:eqtype) (#v:Type0) h (s:Seq.seq (option (k & v))) (default_v:v)
   (m:Map.t k v)
   (i:nat{i < Seq.length s}) (x:k) (y:v)
   : Lemma
-      (requires seq_to_map s default_v `submap_of` m)
+      (requires
+        seq_props_derived h s /\
+        seq_props_derived h (Seq.upd s i (Some (x, y))) /\
+        seq_to_map s default_v `submap_of` m)
       (ensures
         seq_to_map (Seq.upd s i (Some (x, y))) default_v `submap_of` Map.upd m x y)
-  = admit ()
+  = seq_to_map_upd_aux h s default_v i x y
             
 let upd #k #v #h #m a i x =
   let s = witness_exists () in
@@ -153,7 +190,7 @@ let upd #k #v #h #m a i x =
   A.upd a.store (h i `U32.rem` a.store_len) (Some (i, x));
   ghost_write_pt a.g_repr (Map.upd m i x);
   assert (seq_props #k #v h (Seq.upd s (U32.v (h i `U32.rem` a.store_len)) (Some (i, x))));
-  seq_to_map_upd #k #v s a.default_v m (U32.v (h i `U32.rem` a.store_len)) i x;
+  seq_to_map_upd #k #v h s a.default_v m (U32.v (h i `U32.rem` a.store_len)) i x;
   let s = A.intro_varray_pts_to a.store in
   intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` Map.upd m i x);
   intro_exists (G.reveal s) (store_contents_pred a (Map.upd m i x))
