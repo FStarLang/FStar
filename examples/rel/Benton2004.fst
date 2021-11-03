@@ -38,6 +38,15 @@ let fuel_monotonic
 type reified_computation =
   (f: reified_raw_computation { fuel_monotonic f } )
 
+let reified_computation_elim
+  (f: reified_computation)
+  (fuel fuel' : nat)
+  (h: _)
+: Lemma
+  (requires (fuel <= fuel' /\ fst (f fuel h) == true))
+  (ensures (f fuel' h == f fuel h))
+= ()
+
 type raw_computation =
   (fuel: nat) -> ISNull bool
 
@@ -48,9 +57,7 @@ type computation =
   (f: raw_computation { fuel_monotonic (reify_raw_computation f) })
 
 let reify_computation (c: computation) : GTot reified_computation =
-  admit ();
-  let f n = reify (c n) in
-  f
+  reify_raw_computation c
 
 let skip : computation = let f (fuel: nat) : ISNull bool = true in f
 
@@ -692,6 +699,7 @@ let d_cc
   assert (forall s0 fuel . fl s0 fuel == fr s0 fuel);
   assert (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (seq (ifthenelse b c1 c2) c3))
 
+#restart-solver
 let d_lu1
   (b: exp bool)
   (c: computation)
@@ -717,8 +725,27 @@ let d_lu1
     end else ()
   in
   Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  assert (forall s0 fuel . fst (fr fuel s0) == true ==> fl (fuel + 1) s0 == fr fuel s0)
+  let prf2
+    (s0: heap)
+    (fuel: nat)
+  : Lemma
+    (requires (fst (fr fuel s0) == true))
+    (ensures (fst (fr fuel s0) == true /\ fl (fuel + 1) s0 == fr fuel s0))
+  = if fst (eb s0)
+    then begin
+      ()
+    end else ()
+  in
+  let prf2'
+    (s0: heap)
+    (fuel: nat)
+  : Lemma
+    (ensures (fst (fr fuel s0) == true ==> fl (fuel + 1) s0 == fr fuel s0))
+  = Classical.move_requires (prf2 s0) fuel
+  in
+  Classical.forall_intro_2 prf2'
 
+#restart-solver
 let d_lu2
   (b: exp bool)
   (c: computation)
@@ -771,7 +798,9 @@ let d_lu2
         assert (fl (fuel + fuel) s0 ==
                 fl ((fuel + fuel) - 1) s1);
         assert (fl (fuel + fuel) s0 == fl (fuel - 1 + fuel - 1) s2)
-      end else ()
+      end else begin
+        assert (fl (fuel + fuel) s0 == fr fuel s0)
+      end
     end else ()
   in
   let prf1' (s0:heap) (fuel:nat) :Lemma (fst (fl fuel s0) == true ==> fr fuel s0 == fl fuel s0)

@@ -1600,19 +1600,24 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               | Some ([(str, _)]) ->
                 begin
                 match (SS.compress str).n with
-                | Tm_constant (Const_string (s, _)) ->
+                | Tm_constant (Const_string (s, _))
+                  when s <> "" ->
                   // BU.print1 "Found suggested name %s\n" s;
                   let id = Ident.mk_ident (s, range_of_bv x) in
                   let bv = { ppname = id; index = 0; sort = x.sort } in
                   let bv = freshen_bv bv in
                   Some bv
                 | _ ->
+                  Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ignoring ill-formed application of `rename_let`"));
                   None
                 end
+
               | Some _ ->
                 Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ill-formed application of `rename_let`"));
+                                         ("Ignoring ill-formed application of `rename_let`"));
                 None
+
               | None ->
                 None
           in
@@ -1667,20 +1672,19 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef
+                                 Profiling.profile
+                                   (fun () ->
+                                     N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
+                                   (Some (Ident.string_of_lid (Env.current_module tcenv)))
+                                   "FStar.Extraction.ML.Term.normalize_lb_def"
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print1 "Starting to normalize top-level let %s\n"
-                                            (Print.lbname_to_string lb.lbname) in
-//                                            (Print.univ_names_to_string lb.lbunivs)
-//                                           (Print.term_to_string lb.lbdef) in
-                                  // Options.set_option "debug_level"
-                                  //   (Options.List [Options.String "Norm"; Options.String "Extraction"]);
-                                  let a = FStar.Compiler.Util.measure_execution_time
-                                          (BU.format1 "###(Time to normalize top-level let %s)"
-                                            (Print.lbname_to_string lb.lbname))
-                                          norm_call in
+                             then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
+                                            (Print.lbname_to_string lb.lbname)
+                                            (Print.term_to_string lb.lbdef)
+                                  in
+                                  let a = norm_call() in
                                   BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()

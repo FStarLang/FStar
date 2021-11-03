@@ -4666,3 +4666,11 @@ let (get_stronger_repr :
             combs.FStar_Syntax_Syntax.l_subcomp FStar_Pervasives_Native.fst in
         FStar_Compiler_Effect.op_Bar_Greater uu___
           (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
+let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
+  fun aq ->
+    match aq with
+    | FStar_Pervasives_Native.None -> false
+    | FStar_Pervasives_Native.Some aq1 ->
+        FStar_Compiler_Util.for_some
+          (is_fvar FStar_Parser_Const.erasable_attr)
+          aq1.FStar_Syntax_Syntax.aqual_attributes

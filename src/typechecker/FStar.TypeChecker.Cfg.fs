@@ -51,7 +51,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
-     for_extraction:bool
+     for_extraction:bool;
 }
 
 let steps_to_string f =
@@ -148,7 +148,7 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
-    for_extraction = false
+    for_extraction = false;
 }
 
 let fstep_add_one s fs =
@@ -213,6 +213,7 @@ type debug_switches = {
     norm_delayed     : bool;
     print_normalized : bool;
     debug_nbe        : bool;
+    erase_erasable_args: bool
 }
 
 let no_debug_switches = {
@@ -226,6 +227,7 @@ let no_debug_switches = {
     norm_delayed     = false;
     print_normalized = false;
     debug_nbe        = false;
+    erase_erasable_args = false;
 }
 
 type primitive_step = {
@@ -1188,7 +1190,16 @@ let config' psteps s e =
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
-             ; debug_nbe = Env.debug e (Options.Other "NBE")}
+             ; debug_nbe = Env.debug e (Options.Other "NBE")
+             ; erase_erasable_args =
+               (let b = Env.debug e (Options.Other "UNSOUND_EraseErasableArgs") in
+                if b
+                then Errors.log_issue
+                        (Env.get_range e)
+                        (Errors.Warning_WarnOnUse,
+                         "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
+                b)
+             }
             else no_debug_switches
       ;
      steps = steps;
@@ -1215,3 +1226,32 @@ let should_reduce_local_let cfg lb =
     then true //Or, 2. it's pure and we either not extracting, or it's marked @inline_let
     else U.is_ghost_effect n && //Or, 3. it's ghost and we're not extracting
          not (cfg.steps.pure_subterms_within_computations)
+
+let translate_norm_step = function
+    | EMB.Zeta ->    [Zeta]
+    | EMB.ZetaFull -> [ZetaFull]
+    | EMB.Iota ->    [Iota]
+    | EMB.Delta ->   [UnfoldUntil delta_constant]
+    | EMB.Simpl ->   [Simplify]
+    | EMB.Weak ->    [Weak]
+    | EMB.HNF  ->    [HNF]
+    | EMB.Primops -> [Primops]
+    | EMB.Reify ->   [Reify]
+    | EMB.UnfoldOnly names ->
+        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldFully names ->
+        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
+    | EMB.UnfoldAttr names ->
+        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
+    | EMB.UnfoldQual names ->
+        [UnfoldUntil delta_constant; UnfoldQual names]
+    | EMB.NBE -> [NBE]
+    | EMB.Unmeta -> [Unmeta]
+
+let translate_norm_steps s =
+    let s = List.concatMap translate_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s

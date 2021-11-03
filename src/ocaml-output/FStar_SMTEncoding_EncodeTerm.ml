@@ -1494,7 +1494,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.enable_defer_to_tac =
                                 (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
-                                (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                              FStar_TypeChecker_Env.erase_erasable_args =
+                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->

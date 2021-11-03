@@ -815,6 +815,67 @@ let rec (translate :
              ->
              let cfg1 = reifying_true cfg in
              translate cfg1 bs (FStar_Pervasives_Native.fst arg)
+         | FStar_Syntax_Syntax.Tm_app
+             ({
+                FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
+                  (FStar_Const.Const_reflect uu___2);
+                FStar_Syntax_Syntax.pos = uu___3;
+                FStar_Syntax_Syntax.vars = uu___4;_},
+              arg::[])
+             ->
+             let uu___5 =
+               let uu___6 =
+                 translate cfg bs (FStar_Pervasives_Native.fst arg) in
+               FStar_TypeChecker_NBETerm.Reflect uu___6 in
+             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___5
+         | FStar_Syntax_Syntax.Tm_app
+             ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                FStar_Syntax_Syntax.pos = uu___2;
+                FStar_Syntax_Syntax.vars = uu___3;_},
+              uu___4::[])
+             when
+             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.assert_lid)
+               ||
+               (FStar_Syntax_Syntax.fv_eq_lid fv
+                  FStar_Parser_Const.assert_norm_lid)
+             ->
+             (debug1
+                (fun uu___6 ->
+                   FStar_Compiler_Util.print_string "Eliminated assertion\n");
+              mk_t1
+                (FStar_TypeChecker_NBETerm.Constant
+                   FStar_TypeChecker_NBETerm.Unit))
+         | FStar_Syntax_Syntax.Tm_app (head, args) when
+             ((let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
+               uu___2.FStar_TypeChecker_Env.erase_erasable_args) ||
+                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+               ||
+               ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args
+             ->
+             let uu___2 = translate cfg bs head in
+             let uu___3 =
+               FStar_Compiler_List.map
+                 (fun x ->
+                    let uu___4 =
+                      FStar_Syntax_Util.aqual_is_erasable
+                        (FStar_Pervasives_Native.snd x) in
+                    if uu___4
+                    then
+                      (debug1
+                         (fun uu___6 ->
+                            let uu___7 =
+                              FStar_Syntax_Print.term_to_string
+                                (FStar_Pervasives_Native.fst x) in
+                            FStar_Compiler_Util.print1 "Erasing %s\n" uu___7);
+                       ((mk_t1
+                           (FStar_TypeChecker_NBETerm.Constant
+                              FStar_TypeChecker_NBETerm.Unit)),
+                         (FStar_Pervasives_Native.snd x)))
+                    else
+                      (let uu___6 =
+                         translate cfg bs (FStar_Pervasives_Native.fst x) in
+                       (uu___6, (FStar_Pervasives_Native.snd x)))) args in
+             iapp cfg uu___2 uu___3
          | FStar_Syntax_Syntax.Tm_app (head, args) ->
              (debug1
                 (fun uu___3 ->
@@ -1526,7 +1587,8 @@ and (iapp :
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
-                   Prims.op_Hat "NBE ill-typed application: " uu___3 in
+                   Prims.op_Hat "NBE ill-typed application Const_range_of: "
+                     uu___3 in
                  failwith uu___2)
         | FStar_TypeChecker_NBETerm.Constant
             (FStar_TypeChecker_NBETerm.SConst
@@ -1547,7 +1609,8 @@ and (iapp :
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
-                   Prims.op_Hat "NBE ill-typed application: " uu___3 in
+                   Prims.op_Hat
+                     "NBE ill-typed application Const_set_range_of: " uu___3 in
                  failwith uu___2)
         | uu___1 ->
             let uu___2 =

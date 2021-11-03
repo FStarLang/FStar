@@ -83,6 +83,22 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+(*
+   check_expected_aqual_for_binder:
+
+   This is used to check an application.
+
+   Given val f (#[@@@ att] x:t) : t'
+
+   the user is expected to write f #a to apply f, matching the
+   implicit qualifier at the binding site.
+
+   However, they do not (and cannot, there's no syntax for it) provide
+   the attributes of the binding site at the application site.
+
+   So, this function checks that the implicit flags match and takes
+   the attributes from the binding site, i.e., expected_aq.
+*)
 let check_expected_aqual_for_binder aq b pos =
     let expected_aq = U.aqual_of_binder b in
     match aq, expected_aq with
@@ -97,6 +113,18 @@ let check_expected_aqual_for_binder aq b pos =
       if aq.aqual_implicit <> eaq.aqual_implicit
       then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
       else expected_aq //keep the attributes
+
+let check_erasable_binder_attributes env attrs (binder_ty:typ) =
+    List.iter
+      (fun attr ->
+        if U.is_fvar Const.erasable_attr attr
+        && not (N.non_info_norm env binder_ty)
+        then raise_error (Errors.Fatal_QulifierListNotPermitted,
+                          "Incompatible attributes:\
+                           an erasable attribute on a binder must bind a name at an non-informative type")
+                         attr.pos)
+     attrs
+
 
 let push_binding env b =
   Env.push_bv env b.binder_bv
@@ -1913,6 +1941,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
           attrs@diff
         in
         let b = {binder_bv=hd;binder_qual=imp;binder_attrs=combine_attrs attrs attrs'} in
+        check_erasable_binder_attributes env b.binder_attrs t;
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
@@ -3838,9 +3867,12 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
         | _ -> imp, Env.trivial_guard
     in
     let attrs =
-      attrs |> List.map (fun attr ->
+      attrs |> List.map
+      (fun attr ->
         let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
-        attr) in
+        attr)
+    in
+    check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string x.binder_bv) (Print.term_to_string t);

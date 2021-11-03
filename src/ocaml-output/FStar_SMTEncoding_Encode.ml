@@ -1694,7 +1694,10 @@ let (encode_free_var :
                                        (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac);
                                      FStar_TypeChecker_Env.unif_allow_ref_guards
                                        =
-                                       (uu___8.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                       (uu___8.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                     FStar_TypeChecker_Env.erase_erasable_args
+                                       =
+                                       (uu___8.FStar_TypeChecker_Env.erase_erasable_args)
                                    }) comp FStar_Syntax_Syntax.U_unknown in
                               FStar_Syntax_Syntax.mk_Total uu___7
                             else comp in
@@ -2591,7 +2594,9 @@ let (encode_top_level_let :
                   FStar_TypeChecker_Env.enable_defer_to_tac =
                     (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
                   FStar_TypeChecker_Env.unif_allow_ref_guards =
-                    (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                    (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                  FStar_TypeChecker_Env.erase_erasable_args =
+                    (uu___1.FStar_TypeChecker_Env.erase_erasable_args)
                 } in
               let subst_comp formals actuals comp =
                 let subst =

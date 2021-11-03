@@ -744,6 +744,7 @@ let eq_aqual a1 a2 =
   | _ ->
     NotEqual
 
+
 let rec unrefine t =
   let t = compress t in
   match t.n with
@@ -2352,3 +2353,8 @@ let get_stronger_repr (ed:eff_decl) : option<tscheme> =
   | Primitive_eff _
   | DM4F_eff _ -> None
   | Layered_eff combs -> combs.l_subcomp |> fst |> Some
+
+let aqual_is_erasable (aq:aqual) =
+  match aq with
+  | None -> false
+  | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
