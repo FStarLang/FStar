@@ -830,7 +830,7 @@ let rec (translate :
                         translate cfg bs (FStar_Pervasives_Native.fst x) in
                       (uu___5, (FStar_Pervasives_Native.snd x))) args in
                iapp cfg uu___3 uu___4))
-         | FStar_Syntax_Syntax.Tm_match (scrut, ret_opt, branches) ->
+         | FStar_Syntax_Syntax.Tm_match (scrut, ret_opt, branches, rc) ->
              let make_returns uu___2 =
                match ret_opt with
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -853,6 +853,14 @@ let rec (translate :
                          readback_comp cfg uu___6 in
                        FStar_Pervasives.Inr uu___5 in
                      (uu___4, tacopt) in
+                   FStar_Pervasives_Native.Some uu___3 in
+             let make_rc uu___2 =
+               match rc with
+               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+               | FStar_Pervasives_Native.Some rc1 ->
+                   let uu___3 =
+                     let uu___4 = translate_residual_comp cfg bs rc1 in
+                     readback_residual_comp cfg uu___4 in
                    FStar_Pervasives_Native.Some uu___3 in
              let make_branches uu___2 =
                let cfg1 = zeta_false cfg in
@@ -978,7 +986,7 @@ let rec (translate :
                          translate cfg uu___5 branch
                      | FStar_Pervasives_Native.None ->
                          FStar_TypeChecker_NBETerm.mkAccuMatch scrut2
-                           make_returns make_branches))
+                           make_returns make_branches make_rc))
                | FStar_TypeChecker_NBETerm.Constant c ->
                    (debug1
                       (fun uu___4 ->
@@ -994,13 +1002,13 @@ let rec (translate :
                          translate cfg (arg :: bs) branch
                      | FStar_Pervasives_Native.None ->
                          FStar_TypeChecker_NBETerm.mkAccuMatch scrut2
-                           make_returns make_branches
+                           make_returns make_branches make_rc
                      | FStar_Pervasives_Native.Some (uu___5, hd::tl) ->
                          failwith
                            "Impossible: Matching on constants cannot bind more than one variable"))
                | uu___3 ->
                    FStar_TypeChecker_NBETerm.mkAccuMatch scrut2 make_returns
-                     make_branches))
+                     make_branches make_rc))
          | FStar_Syntax_Syntax.Tm_meta
              (e1, FStar_Syntax_Syntax.Meta_monadic (m, t)) when
              (cfg.core_cfg).FStar_TypeChecker_Cfg.reifying ->
@@ -2295,7 +2303,8 @@ and (translate_monadic :
                                let uu___7 = reifying_false cfg in
                                translate uu___7 bs e2))
                      | uu___3 -> fallback1 ()))
-               | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, branches) ->
+               | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, branches, lopt)
+                   ->
                    let branches1 =
                      FStar_Compiler_Effect.op_Bar_Greater branches
                        (FStar_Compiler_List.map
@@ -2306,7 +2315,8 @@ and (translate_monadic :
                                  (pat, wopt, uu___2))) in
                    let tm =
                      FStar_Syntax_Syntax.mk
-                       (FStar_Syntax_Syntax.Tm_match (sc, asc_opt, branches1))
+                       (FStar_Syntax_Syntax.Tm_match
+                          (sc, asc_opt, branches1, lopt))
                        e1.FStar_Syntax_Syntax.pos in
                    let uu___1 = reifying_false cfg in translate uu___1 bs tm
                | FStar_Syntax_Syntax.Tm_meta
@@ -2721,16 +2731,17 @@ and (readback :
            with_range uu___1
        | FStar_TypeChecker_NBETerm.Accu
            (FStar_TypeChecker_NBETerm.Match
-            (scrut, make_returns, make_branches), args)
+            (scrut, make_returns, make_branches, make_rc), args)
            ->
            let args1 = readback_args cfg args in
            let head =
              let scrut_new = readback cfg scrut in
              let returns_new = make_returns () in
              let branches_new = make_branches () in
+             let rc_new = make_rc () in
              FStar_Syntax_Syntax.mk
                (FStar_Syntax_Syntax.Tm_match
-                  (scrut_new, returns_new, branches_new))
+                  (scrut_new, returns_new, branches_new, rc_new))
                scrut.FStar_TypeChecker_NBETerm.nbe_r in
            let app = FStar_Syntax_Util.mk_app head args1 in
            let uu___1 =

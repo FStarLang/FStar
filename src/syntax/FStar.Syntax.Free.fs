@@ -119,7 +119,7 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_app(t, args) ->
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
-      | Tm_match(t, asc_opt, pats) ->
+      | Tm_match(t, asc_opt, pats, _) ->
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars

@@ -78,7 +78,9 @@ type atom
        // 2. reconstruct the returns annotation
        (unit -> option<ascription>) *
        // 3. reconstructs the pattern matching, if it needs to be readback
-       (unit -> list<branch>)
+       (unit -> list<branch>) *
+       // 4. reconstruct the residual comp if set
+       (unit -> option<S.residual_comp>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -218,7 +220,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> option<ascription>) -> (unit -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> option<ascription>) -> (unit -> list<branch>) -> (unit -> option<S.residual_comp>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -337,7 +339,7 @@ val interp_prop_eq2 : args -> option<t>
 val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
-                      ('a -> 'b -> 'c) -> args -> option<t>
+                      ('a -> 'b -> option<'c>) -> args -> option<t>
 val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
 val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 

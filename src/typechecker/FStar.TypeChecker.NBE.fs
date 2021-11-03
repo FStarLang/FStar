@@ -502,13 +502,19 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
-    | Tm_match(scrut, ret_opt, branches) ->
+    | Tm_match(scrut, ret_opt, branches, rc) ->
       (* Thunked computation to reconstrct the returns annotation *)
       let make_returns () : option<ascription> =
         match ret_opt with
         | None -> None
         | Some (Inl t, tacopt) -> Some (Inl (readback cfg (translate cfg bs t)), tacopt)
         | Some (Inr c, tacopt) -> Some (Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt) in
+
+      (* Thunked computation to reconstruct residual comp *)
+      let make_rc () : option<S.residual_comp> =
+        match rc with
+        | None -> None
+        | Some rc -> Some (readback_residual_comp cfg (translate_residual_comp cfg bs rc)) in
 
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list<branch> =
@@ -563,7 +569,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate cfg (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut make_returns make_branches
+            mkAccuMatch scrut make_returns make_branches make_rc
           end
       | Constant c ->
           debug (fun () -> BU.print1 "Match constant : %s\n" (t_to_string scrut));
@@ -574,12 +580,12 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate cfg (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut make_returns make_branches
+             mkAccuMatch scrut make_returns make_branches make_rc
            | Some (_, hd::tl) ->
              failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut make_returns make_branches
+          mkAccuMatch scrut make_returns make_branches make_rc
       end
 
     | Tm_meta (e, Meta_monadic(m, t))
@@ -1079,10 +1085,10 @@ and translate_monadic (m, ty) cfg bs e : t =
         fallback1 ()
      end
 
-   | Tm_match (sc, asc_opt, branches) ->
+   | Tm_match (sc, asc_opt, branches, lopt) ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-     let tm = S.mk (Tm_match(sc, asc_opt, branches)) e.pos in
+     let tm = S.mk (Tm_match(sc, asc_opt, branches, lopt)) e.pos in
      translate (reifying_false cfg) bs tm
 
    | Tm_meta (t, Meta_monadic _) ->
@@ -1280,13 +1286,14 @@ and readback (cfg:config) (x:t) : term =
         else app
       )
 
-    | Accu (Match (scrut, make_returns, make_branches), args) ->
+    | Accu (Match (scrut, make_returns, make_branches, make_rc), args) ->
       let args = readback_args cfg args in
       let head =
         let scrut_new = readback cfg scrut in
         let returns_new = make_returns () in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, returns_new, branches_new)) scrut.nbe_r
+        let rc_new = make_rc () in
+        S.mk (Tm_match (scrut_new, returns_new, branches_new, rc_new)) scrut.nbe_r
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.

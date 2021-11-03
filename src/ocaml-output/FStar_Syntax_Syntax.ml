@@ -190,7 +190,8 @@ type term' =
   | Tm_match of (term' syntax * ((term' syntax, comp' syntax)
   FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
-  FStar_Pervasives_Native.option * term' syntax) Prims.list) 
+  FStar_Pervasives_Native.option * term' syntax) Prims.list * residual_comp
+  FStar_Pervasives_Native.option) 
   | Tm_ascribed of (term' syntax * ((term' syntax, comp' syntax)
   FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option) *
   FStar_Ident.lident FStar_Pervasives_Native.option) 
@@ -418,7 +419,8 @@ let (__proj__Tm_match__item___0 :
     (term' syntax * ((term' syntax, comp' syntax) FStar_Pervasives.either *
       term' syntax FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
-      FStar_Pervasives_Native.option * term' syntax) Prims.list))
+      FStar_Pervasives_Native.option * term' syntax) Prims.list *
+      residual_comp FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | Tm_match _0 -> _0
 let (uu___is_Tm_ascribed : term' -> Prims.bool) =
   fun projectee ->

@@ -337,8 +337,7 @@ let (tc_inductive' :
                       FStar_Compiler_List.iter
                         (fun ty ->
                            let b =
-                             FStar_TypeChecker_TcInductive.check_positivity
-                               ty env1 in
+                             FStar_TypeChecker_Util.check_positivity env1 ty in
                            if Prims.op_Negation b
                            then
                              let uu___6 =
@@ -378,8 +377,8 @@ let (tc_inductive' :
                                     FStar_Parser_Const.exn_lid)
                                    &&
                                    (let uu___8 =
-                                      FStar_TypeChecker_TcInductive.check_exn_positivity
-                                        data_lid env1 in
+                                      FStar_TypeChecker_Util.check_exn_positivity
+                                        env1 data_lid in
                                     Prims.op_Negation uu___8) in
                                if uu___7
                                then

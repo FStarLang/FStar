@@ -2013,7 +2013,7 @@ let rec (check :
         | FStar_Syntax_Syntax.Tm_let ((false, binding::[]), e2) ->
             mk_let env1 binding e2
               (fun env2 -> fun e21 -> check env2 e21 context_nm) ensure_m
-        | FStar_Syntax_Syntax.Tm_match (e0, uu___1, branches) ->
+        | FStar_Syntax_Syntax.Tm_match (e0, uu___1, branches, uu___2) ->
             mk_match env1 e0 branches
               (fun env2 -> fun body -> check env2 body context_nm)
         | FStar_Syntax_Syntax.Tm_meta (e1, uu___1) ->
@@ -2253,6 +2253,15 @@ and (infer :
                                  else rc in
                                FStar_Pervasives_Native.Some rc1
                            | FStar_Pervasives_Native.Some rt ->
+                               let rt1 =
+                                 let uu___3 = get_env env3 in
+                                 FStar_TypeChecker_Normalize.normalize
+                                   [FStar_TypeChecker_Env.Beta;
+                                   FStar_TypeChecker_Env.Eager_unfolding;
+                                   FStar_TypeChecker_Env.UnfoldUntil
+                                     FStar_Syntax_Syntax.delta_constant;
+                                   FStar_TypeChecker_Env.EraseUniverses]
+                                   uu___3 rt in
                                let uu___3 =
                                  FStar_Compiler_Effect.op_Bar_Greater
                                    rc.FStar_Syntax_Syntax.residual_flags
@@ -2272,7 +2281,7 @@ and (infer :
                                      rc.FStar_Syntax_Syntax.residual_flags in
                                  let uu___4 =
                                    let uu___5 =
-                                     let uu___6 = double_star rt in
+                                     let uu___6 = double_star rt1 in
                                      FStar_Pervasives_Native.Some uu___6 in
                                    FStar_Syntax_Util.mk_residual_comp
                                      FStar_Parser_Const.effect_Tot_lid uu___5
@@ -2281,7 +2290,7 @@ and (infer :
                                else
                                  (let uu___5 =
                                     let uu___6 =
-                                      let uu___7 = star_type' env3 rt in
+                                      let uu___7 = star_type' env3 rt1 in
                                       FStar_Pervasives_Native.Some uu___7 in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
@@ -2673,7 +2682,7 @@ and (infer :
                                     (final_type1, uu___8, uu___9)))))))
       | FStar_Syntax_Syntax.Tm_let ((false, binding::[]), e2) ->
           mk_let env1 binding e2 infer check_m
-      | FStar_Syntax_Syntax.Tm_match (e0, uu___1, branches) ->
+      | FStar_Syntax_Syntax.Tm_match (e0, uu___1, branches, uu___2) ->
           mk_match env1 e0 branches infer
       | FStar_Syntax_Syntax.Tm_uinst (e1, uu___1) -> infer env1 e1
       | FStar_Syntax_Syntax.Tm_meta (e1, uu___1) -> infer env1 e1
@@ -2839,7 +2848,8 @@ and (mk_match :
                               mk
                                 (FStar_Syntax_Syntax.Tm_match
                                    (s_e0, FStar_Pervasives_Native.None,
-                                     s_branches2)) in
+                                     s_branches2,
+                                     FStar_Pervasives_Native.None)) in
                             FStar_Syntax_Util.abs uu___4 uu___5
                               (FStar_Pervasives_Native.Some
                                  (FStar_Syntax_Util.residual_tot
@@ -2868,7 +2878,7 @@ and (mk_match :
                             mk
                               (FStar_Syntax_Syntax.Tm_match
                                  (u_e0, FStar_Pervasives_Native.None,
-                                   u_branches1)) in
+                                   u_branches1, FStar_Pervasives_Native.None)) in
                           ((M t1), uu___4, uu___5)
                         else
                           (let s_branches1 =
@@ -2885,7 +2895,8 @@ and (mk_match :
                                    mk
                                      (FStar_Syntax_Syntax.Tm_match
                                         (s_e0, FStar_Pervasives_Native.None,
-                                          s_branches1)) in
+                                          s_branches1,
+                                          FStar_Pervasives_Native.None)) in
                                  (uu___8,
                                    ((FStar_Pervasives.Inl t1_star),
                                      FStar_Pervasives_Native.None),
@@ -2896,7 +2907,8 @@ and (mk_match :
                              mk
                                (FStar_Syntax_Syntax.Tm_match
                                   (u_e0, FStar_Pervasives_Native.None,
-                                    u_branches1)) in
+                                    u_branches1,
+                                    FStar_Pervasives_Native.None)) in
                            ((N t1), uu___5, uu___6))))
 and (mk_let :
   env_ ->

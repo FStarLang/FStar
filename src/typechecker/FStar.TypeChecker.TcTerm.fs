@@ -554,7 +554,6 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
    | _ -> None
 
 
-
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -1183,7 +1182,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
    *)
 
   match (SS.compress top).n with
-  | Tm_match(e1, ret_opt, eqns) ->  //ret_opt is the return annotation
+  | Tm_match(e1, ret_opt, eqns, _) ->  //ret_opt is the return annotation
     let e1, c1, g1 = tc_term
       (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
@@ -1296,7 +1295,11 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
-        let e = mk (Tm_match(scrutinee, ret_opt, branches)) top.pos in
+        let e =
+          let rc = { residual_effect = cres.eff_name;
+                     residual_typ = Some cres.res_typ;
+                     residual_flags = cres.cflags } in
+          mk (Tm_match(scrutinee, ret_opt, branches, Some rc)) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
@@ -1903,7 +1906,13 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
             t, Env.conj_guard g1_env g2_env in
 
         let hd = {hd with sort=t} in
-        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=attrs} in
+        let combine_attrs (attrs:list<S.attribute>) (attrs':list<S.attribute>) : list<S.attribute> =
+          let diff = List.filter (fun attr' ->
+            not (List.existsb (fun attr -> U.eq_tm attr attr' = U.Equal) attrs)
+          ) attrs' in
+          attrs@diff
+        in
+        let b = {binder_bv=hd;binder_qual=imp;binder_attrs=combine_attrs attrs attrs'} in
         let b_expected = ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'}) in
         let env_b = push_binding env b in
         let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
@@ -2019,6 +2028,23 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
+
+    (*
+     * AR: Check strictly_positive annotations on the binders, if any
+     *
+     *     To do so, we use the same routine as used for inductive types,
+     *       after substituting the bv name with a fresh lid fv in the function body
+     *)
+    List.iter (fun b ->
+      if U.has_attribute b.binder_attrs Const.binder_strictly_positive_attr
+      then let r = TcUtil.name_strictly_positive_in_type env b.binder_bv body in
+           if not r
+           then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                  BU.format1 "Binder %s is marked strictly positive, but its use in the definition is not"
+                               (Print.binder_to_string b)) (S.range_of_bv b.binder_bv)
+           else ()
+      else ()) bs;
+
     (*
      * AR: there are three types in the code above now:
      *     topt : option<term> -- the original annotation
@@ -3935,6 +3961,39 @@ let level_of_type env e t =
                u
     in aux true t
 
+(*
+ * This helper routine computes the result type of applying args to
+ *   a term of type t_hd
+ *
+ * It assumes that the terms are ghost/pure and well-typed in env
+ *   -- to be called from fastpath type checking routines ONLY
+ *)
+
+(* private *)
+let rec apply_well_typed env (t_hd:typ) (args:args) : option<typ> =
+  if List.length args = 0
+  then Some t_hd
+  else match (N.unfold_whnf env t_hd).n with
+       | Tm_arrow(bs, c) ->
+         let n_args = List.length args in
+         let n_bs = List.length bs in
+         let bs, args, t, remaining_args =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
+           if n_args < n_bs
+           then let bs, rest = BU.first_N n_args bs in
+                let t = S.mk (Tm_arrow (rest, c)) t_hd.pos in
+                let bs, c = SS.open_comp bs (S.mk_Total t) in
+                bs, args, U.comp_result c, []
+           else let bs, c = SS.open_comp bs c in
+                let args, remaining_args = List.splitAt n_bs args in
+                bs, args, U.comp_result c, remaining_args in
+         let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
+         let t = SS.subst subst t in
+         apply_well_typed env t remaining_args
+       | Tm_refine(x, _) -> apply_well_typed env x.sort args
+       | Tm_ascribed(t, _, _) -> apply_well_typed env t args
+       | _ -> None
+
+
 (* universe_of_aux env e:
       During type-inference, we build terms like WPs for which we need to compute
       explicit universe instantiations.
@@ -4032,7 +4091,7 @@ let rec universe_of_aux env e =
         | Tm_meta _
         | Tm_type _ ->
           universe_of_aux env hd, args
-        | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+        | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation? Or the residual_comp?
           let (_, _, hd) = SS.open_branch hd in
           let hd, args' = U.head_and_args hd in
           type_of_head retry hd (args'@args)
@@ -4057,17 +4116,13 @@ let rec universe_of_aux env e =
           t, args
      in
      let t, args = type_of_head true hd args in
-     let t = N.normalize [Env.UnfoldUntil delta_constant] env t in
-     let bs, res = U.arrow_formals_comp t in
-     let res = U.comp_result res in
-     if List.length bs = List.length args
-     then let subst = U.subst_of_list bs args in
-          SS.subst subst res
-     else level_of_type_fail env e (Print.term_to_string res)
-   | Tm_match(_, _, hd::_) ->  //AR: TODO: use return annotation?
+     (match apply_well_typed env t args with
+      | Some t -> t
+      | None -> level_of_type_fail env e (Print.term_to_string t))
+   | Tm_match(_, _, hd::_, _) ->  //AR: TODO: use return annotation?
      let (_, _, hd) = SS.open_branch hd in
      universe_of_aux env hd
-   | Tm_match(_, _, []) ->  //AR: TODO: use return annotation?
+   | Tm_match(_, _, [], _) ->  //AR: TODO: use return annotation?
      level_of_type_fail env e "empty match cases"
 
 let universe_of env e =
@@ -4172,33 +4227,8 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_app(hd, args) ->
     let t_hd = typeof_tot_or_gtot_term_fastpath env hd must_tot in
-
-    let rec aux args t_hd =
-      match (N.unfold_whnf env t_hd).n with
-      | Tm_arrow(bs, c) ->
-        let n_args = List.length args in
-        let n_bs = List.length bs in
-        let bs_t_opt =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
-          if n_args < n_bs
-          then let bs, rest = BU.first_N n_args bs in
-               let t = S.mk (Tm_arrow (rest, c)) t_hd.pos in
-               let bs, c = SS.open_comp bs (S.mk_Total t) in
-               Some (bs, args, U.comp_result c, [])
-          else let bs, c = SS.open_comp bs c in
-               let args, remaining_args = List.splitAt n_bs args in
-               Some (bs, args, U.comp_result c, remaining_args)
-        in
-        bind_opt bs_t_opt (fun (bs, args, t, remaining_args) ->
-          let subst = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs args in
-          let t = SS.subst subst t in
-          if List.length remaining_args = 0 then Some t else aux remaining_args t)
-      | Tm_refine(x, _) -> aux args x.sort
-      | Tm_ascribed(t, _, _) -> aux args t
-      | _ -> None
-    in
-
     bind_opt t_hd (fun t_hd ->
-      bind_opt (aux args t_hd) (fun t ->
+      bind_opt (apply_well_typed env t_hd args) (fun t ->
         if (effect_ok t) ||
            (List.for_all (fun (a, _) -> typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
         then Some t
@@ -4223,6 +4253,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
 
   | Tm_meta(t, _) -> typeof_tot_or_gtot_term_fastpath env t must_tot
 
+  | Tm_match (_, _, _, Some rc) -> rc.residual_typ
   | Tm_match _
   | Tm_let _
   | Tm_unknown

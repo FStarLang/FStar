@@ -941,25 +941,25 @@ let (simplify :
           let uu___1 = FStar_Syntax_Subst.compress phi in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
-        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, br::brs) ->
-            let uu___3 = br in
-            (match uu___3 with
-             | (uu___4, uu___5, e) ->
+        | FStar_Syntax_Syntax.Tm_match (uu___1, uu___2, br::brs, uu___3) ->
+            let uu___4 = br in
+            (match uu___4 with
+             | (uu___5, uu___6, e) ->
                  let r =
-                   let uu___6 = simp_t e in
-                   match uu___6 with
+                   let uu___7 = simp_t e in
+                   match uu___7 with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
                    | FStar_Pervasives_Native.Some b ->
-                       let uu___7 =
+                       let uu___8 =
                          FStar_Compiler_List.for_all
-                           (fun uu___8 ->
-                              match uu___8 with
-                              | (uu___9, uu___10, e') ->
-                                  let uu___11 = simp_t e' in
-                                  uu___11 = (FStar_Pervasives_Native.Some b))
+                           (fun uu___9 ->
+                              match uu___9 with
+                              | (uu___10, uu___11, e') ->
+                                  let uu___12 = simp_t e' in
+                                  uu___12 = (FStar_Pervasives_Native.Some b))
                            brs in
-                       if uu___7
+                       if uu___8
                        then FStar_Pervasives_Native.Some b
                        else FStar_Pervasives_Native.None in
                  r)

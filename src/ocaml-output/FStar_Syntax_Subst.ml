@@ -846,7 +846,7 @@ let rec (push_subst :
           let phi1 =
             let uu___ = shift_subst' Prims.int_one s in subst' uu___ phi in
           mk (FStar_Syntax_Syntax.Tm_refine (x1, phi1))
-      | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats) ->
+      | FStar_Syntax_Syntax.Tm_match (t0, asc_opt, pats, lopt) ->
           let t01 = subst' s t0 in
           let pats1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
@@ -871,7 +871,8 @@ let rec (push_subst :
             let uu___1 =
               let uu___2 =
                 FStar_Compiler_Util.map_opt asc_opt (subst_ascription' s) in
-              (t01, uu___2, pats1) in
+              let uu___3 = push_subst_lcomp s lopt in
+              (t01, uu___2, pats1, uu___3) in
             FStar_Syntax_Syntax.Tm_match uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), body) ->
@@ -1704,18 +1705,6 @@ let rec (deep_compress :
           uu___ li.FStar_Syntax_Syntax.lkind li in
         deep_compress t2
     | FStar_Syntax_Syntax.Tm_abs (bs, t2, rc_opt) ->
-        let elim_rc rc =
-          let uu___ =
-            FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
-              deep_compress in
-          let uu___1 =
-            deep_compress_cflags rc.FStar_Syntax_Syntax.residual_flags in
-          {
-            FStar_Syntax_Syntax.residual_effect =
-              (rc.FStar_Syntax_Syntax.residual_effect);
-            FStar_Syntax_Syntax.residual_typ = uu___;
-            FStar_Syntax_Syntax.residual_flags = uu___1
-          } in
         let uu___ =
           let uu___1 =
             let uu___2 = deep_compress_binders bs in
@@ -1745,7 +1734,7 @@ let rec (deep_compress :
             let uu___3 = deep_compress_args args in (uu___2, uu___3) in
           FStar_Syntax_Syntax.Tm_app uu___1 in
         mk uu___
-    | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, branches) ->
+    | FStar_Syntax_Syntax.Tm_match (t2, asc_opt, branches, rc_opt) ->
         let rec elim_pat p =
           match p.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_var x ->
@@ -1799,7 +1788,8 @@ let rec (deep_compress :
             let uu___2 = deep_compress t2 in
             let uu___3 = FStar_Compiler_Util.map_opt asc_opt elim_ascription in
             let uu___4 = FStar_Compiler_List.map elim_branch branches in
-            (uu___2, uu___3, uu___4) in
+            let uu___5 = FStar_Compiler_Util.map_opt rc_opt elim_rc in
+            (uu___2, uu___3, uu___4, uu___5) in
           FStar_Syntax_Syntax.Tm_match uu___1 in
         mk uu___
     | FStar_Syntax_Syntax.Tm_ascribed (t2, a, lopt) ->
@@ -1876,6 +1866,19 @@ and (elim_ascription :
               FStar_Pervasives.Inr uu___2 in
         let uu___2 = FStar_Compiler_Util.map_opt topt deep_compress in
         (uu___1, uu___2)
+and (elim_rc :
+  FStar_Syntax_Syntax.residual_comp -> FStar_Syntax_Syntax.residual_comp) =
+  fun rc ->
+    let uu___ =
+      FStar_Compiler_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
+        deep_compress in
+    let uu___1 = deep_compress_cflags rc.FStar_Syntax_Syntax.residual_flags in
+    {
+      FStar_Syntax_Syntax.residual_effect =
+        (rc.FStar_Syntax_Syntax.residual_effect);
+      FStar_Syntax_Syntax.residual_typ = uu___;
+      FStar_Syntax_Syntax.residual_flags = uu___1
+    }
 and (deep_compress_dec_order :
   FStar_Syntax_Syntax.decreases_order -> FStar_Syntax_Syntax.decreases_order)
   =

@@ -90,7 +90,7 @@ type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
- | Match    of env * option<ascription> * branches * cfg * Range.range  //ascription is the return annotation
+ | Match    of env * option<ascription> * branches * option<residual_comp> * cfg * Range.range  //ascription is the return annotation
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
  | CBVApp   of env * term * aqual * Range.range
@@ -414,8 +414,8 @@ let rec inline_closure_env cfg (env:env) stack t =
         let t = mk (Tm_let((true, lbs), body)) t.pos in
         rebuild_closure cfg env stack t
 
-      | Tm_match(head, asc_opt, branches) ->
-        let stack = Match(env, asc_opt, branches, cfg, t.pos)::stack in
+      | Tm_match(head, asc_opt, branches, lopt) ->
+        let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
         inline_closure_env cfg env stack head
 
 and non_tail_inline_closure_env cfg env t =
@@ -443,7 +443,8 @@ and rebuild_closure cfg env stack t =
       let lopt = close_lcomp_opt cfg env'' lopt in
       rebuild_closure cfg env stack ({abs bs t lopt with pos=r})
 
-    | Match(env, asc_opt, branches, cfg, r)::stack ->
+    | Match(env, asc_opt, branches, lopt, cfg, r)::stack ->
+      let lopt = close_lcomp_opt cfg env lopt in
       let close_one_branch env (pat, w_opt, tm) =
           let rec norm_pat env p =
             match p.v with
@@ -479,7 +480,8 @@ and rebuild_closure cfg env stack t =
       let t =
           mk (Tm_match(t,
                        BU.map_opt asc_opt (close_ascription cfg env),
-                       branches |> List.map (close_one_branch env))) t.pos
+                       branches |> List.map (close_one_branch env),
+                       lopt)) t.pos
       in
       rebuild_closure cfg env stack t
 
@@ -1102,6 +1104,11 @@ let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : bool =
     end
   | _ -> false
 
+let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
+  if cfg.steps.for_extraction
+  then {rc with residual_typ = None}
+  else rc
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug_level NormTop is given, which makes it a
@@ -1311,14 +1318,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                       let lopt = match lopt with
-                        | Some rc ->
-                          let rct =
-                            if cfg.steps.check_no_uvars
-                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                            else BU.map_opt rc.residual_typ (SS.subst opening) in
-                          Some ({rc with residual_typ=rct})
-                        | _ -> lopt in
+                       let lopt = lopt
+                         |> BU.map_option (maybe_drop_rc_typ cfg)
+                         |> BU.map_option (fun rc ->
+                                          {rc with
+                                           residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}) in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
@@ -1428,8 +1432,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
 
-          | Tm_match(head, asc_opt, branches) ->
-            let stack = Match(env, asc_opt, branches, cfg, t.pos)::stack in
+          | Tm_match(head, asc_opt, branches, lopt) ->
+            let lopt = BU.map_option (maybe_drop_rc_typ cfg) lopt in
+            let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
             if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
                 && not cfg.steps.weak
@@ -1604,6 +1609,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                   (Range.string_of_range t.pos)
                                   (Print.term_to_string t))
           else rebuild cfg env stack (inline_closure_env cfg env [] t)
+
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
@@ -1904,12 +1910,12 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
         log cfg (fun () -> BU.print1 "Reified lift to (2): %s\n" (Print.term_to_string lifted));
         norm cfg env (List.tl stack) lifted
 
-    | Tm_match(e, asc_opt, branches) ->
+    | Tm_match(e, asc_opt, branches, lopt) ->
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
       (* reify (match e with p -> e') ~> match e with p -> reify e' *)
       let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-      let tm = mk (Tm_match(e, asc_opt, branches)) top.pos in
+      let tm = mk (Tm_match(e, asc_opt, branches, lopt)) top.pos in
       norm cfg env (List.tl stack) tm
 
     | _ ->
@@ -2061,14 +2067,6 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
-and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp> =
-    fun cfg env lopt ->
-        match lopt with
-        | Some rc ->
-          let flags = filter_out_lcomp_cflags rc.residual_flags in
-          Some ({rc with residual_typ=if cfg.steps.for_extraction then None else BU.map_opt rc.residual_typ (norm cfg env [])})
-       | _ -> lopt
-
 and maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
     if cfg.debug.b380
@@ -2215,7 +2213,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, _, br::brs) ->
+        | Tm_match (_, _, br::brs, _) ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None
@@ -2472,7 +2470,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
       | Abs (env', bs, env'', lopt, r)::stack ->
         let bs = norm_binders cfg env' bs in
-        let lopt = norm_lcomp_opt cfg env'' lopt in
+        let lopt = BU.map_option (norm_residual_comp cfg env'') lopt in
         rebuild cfg env stack ({abs bs t lopt with pos=r})
 
       | Arg (Univ _,  _, _)::_
@@ -2574,7 +2572,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       | CBVApp(env', head, aq, r)::stack ->
         norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
-      | Match(env', asc_opt, branches, cfg, r) :: stack ->
+      | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
+        let lopt = BU.map_option (norm_residual_comp cfg env') lopt in
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594
@@ -2659,7 +2658,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
                 | _ -> false in
             match (U.unascribe scrutinee).n with
-            | Tm_match (sc0, asc_opt0, branches0) when can_commute ->
+            | Tm_match (sc0, asc_opt0, branches0, lopt0) when can_commute ->
               (* We have a blocked match, because of something like
 
                   (match (match sc0 with P1 -> e1 | ... | Pn -> en) with
@@ -2678,7 +2677,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
              let reduce_branch (b:S.branch) =
                //reduce the inner branch `b` while setting the continuation
                //stack to be the outer match
-               let stack = [Match(env', asc_opt, branches, cfg, r)] in
+               let stack = [Match(env', asc_opt, branches, lopt, cfg, r)] in
                let p, wopt, e = SS.open_branch b in
                //It's important to normalize all the sorts within the pat!
                let p, branch_env = norm_pat scrutinee_env p in
@@ -2689,7 +2688,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                U.branch (p, wopt, e)
              in
              let branches0 = List.map reduce_branch branches0 in
-             rebuild cfg env stack (mk (Tm_match(sc0, asc_opt0, branches0)) r)
+             rebuild cfg env stack (mk (Tm_match(sc0, asc_opt0, branches0, lopt0)) r)
             | _ ->
               let scrutinee =
                 if cfg.steps.iota
@@ -2705,7 +2704,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               in
               let asc_opt = BU.map_opt asc_opt norm_ascription in
               let branches = norm_branches() in
-              rebuild cfg env stack (mk (Tm_match(scrutinee, asc_opt, branches)) r)
+              rebuild cfg env stack (mk (Tm_match(scrutinee, asc_opt, branches, lopt)) r)
           in
           maybe_commute_matches()
         in
@@ -2723,7 +2722,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           | None -> b
           | Some w ->
             let then_branch = b in
-            let else_branch = mk (Tm_match(scrutinee, asc_opt, rest)) r in
+            let else_branch = mk (Tm_match(scrutinee, asc_opt, rest, lopt)) r in
             U.if_then_else w then_branch else_branch
         in
 
@@ -2791,6 +2790,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         then matches scrutinee branches
         else norm_and_rebuild_match ()
+
+and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
+  {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
 
 let reflection_env_hook = BU.mk_ref None
 

@@ -658,7 +658,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           end
     end
 
-    | Tm_match(e, None, [(pat, wopt, t)]) ->
+    | Tm_match(e, None, [(pat, wopt, t)], _) ->
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
@@ -668,7 +668,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
-    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
+    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _) when is_true_pat pat1 && is_wild_pat pat2 ->
       let asc_opt =
         match BU.map_opt asc_opt (resugar_ascription env) with
         | None -> None
@@ -679,7 +679,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                resugar_term' env t1,
                resugar_term' env t2))
 
-    | Tm_match(e, asc_opt, branches) ->
+    | Tm_match(e, asc_opt, branches, _) ->
       let resugar_branch (pat, wopt,b) =
         let pat, wopt, b = SS.open_branch (pat, wopt, b) in
         let branch_bv = FStar.Syntax.Free.names b in

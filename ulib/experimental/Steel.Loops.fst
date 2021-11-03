@@ -53,3 +53,17 @@ let rec for_loop' start finish current inv body
 
 (* produces 11 queries *)
 let for_loop start finish inv body = for_loop' start finish start inv body
+
+
+let rec while_loop inv cond body =
+  let b = cond () in
+  if b
+  then (
+     AT.change_equal_slprop (inv b) (inv true);
+     body();
+     while_loop inv cond body
+  )
+  else (
+     AT.change_equal_slprop (inv b) (inv false);
+     AT.return ()
+  )
