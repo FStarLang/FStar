@@ -510,7 +510,8 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_app(head, args)
          when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args
-            || cfg.core_cfg.steps.for_extraction ->
+            || cfg.core_cfg.steps.for_extraction
+            || cfg.core_cfg.debug.erase_erasable_args (* for debugging *) ->
       iapp cfg (translate cfg bs head)
                (List.map
                  (fun x ->

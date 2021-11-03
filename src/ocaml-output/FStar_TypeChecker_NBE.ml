@@ -846,9 +846,11 @@ let rec (translate :
                 (FStar_TypeChecker_NBETerm.Constant
                    FStar_TypeChecker_NBETerm.Unit))
          | FStar_Syntax_Syntax.Tm_app (head, args) when
-             (let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
-              uu___2.FStar_TypeChecker_Env.erase_erasable_args) ||
-               ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+             ((let uu___2 = FStar_TypeChecker_Cfg.cfg_env cfg.core_cfg in
+               uu___2.FStar_TypeChecker_Env.erase_erasable_args) ||
+                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+               ||
+               ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.erase_erasable_args
              ->
              let uu___2 = translate cfg bs head in
              let uu___3 =
