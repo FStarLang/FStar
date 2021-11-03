@@ -83,6 +83,22 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+(*
+   check_expected_aqual_for_binder:
+
+   This is used to check an application.
+
+   Given val f (#[@@@ att] x:t) : t'
+
+   the user is expected to write f #a to apply f, matching the
+   implicit qualifier at the binding site.
+
+   However, they do not (and cannot, there's no syntax for it) provide
+   the attributes of the binding site at the application site.
+
+   So, this function checks that the implicit flags match and takes
+   the attributes from the binding site, i.e., expected_aq.
+*)
 let check_expected_aqual_for_binder aq b pos =
     let expected_aq = U.aqual_of_binder b in
     match aq, expected_aq with
