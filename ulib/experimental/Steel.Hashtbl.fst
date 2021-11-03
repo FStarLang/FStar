@@ -176,7 +176,7 @@ let rec seq_to_map_domain (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (d
 
 /// Commutation of seq_to_map with Seq.upd
 ///
-/// It requires that the keys distinctness property in the original and updated sequence
+/// It requires the keys distinctness property in the original and updated sequence
 
 let rec seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v)
   (i:nat{i < Seq.length s})
@@ -210,7 +210,7 @@ let rec seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (defa
         //  Map.upd m_tl x y `submap_of` Map.upd (Map.upd m_tl x' y') x y
         //
         //Note that this would not be the case if m_tl `Map.contains` x'
-        //  since if it is, then it could be the case that m_tl[x'] = y'',
+        //  since if it does, then it could be the case that m_tl[x'] = y'',
         //  whereas its mapping on the right hand side is y'
         //
         //But we are in luck, we can prove that x' \notin m_tl

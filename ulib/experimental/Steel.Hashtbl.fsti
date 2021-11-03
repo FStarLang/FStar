@@ -62,6 +62,7 @@ val ipts_to (#k:eqtype) (#v:Type0) (#h:hash_fn k) (t:tbl k v h) (m:repr k v) : v
 /// n is a hint to the implementation for its internal memory allocation
 ///   (roughly the number of keys that the client expects to be active at a given time)
 
+inline_for_extraction
 val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 0})
   : SteelT (tbl k v h)
       emp
@@ -72,6 +73,7 @@ val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 
 /// It is a partial function,
 ///   if it succeeds then the returned value is related to the logical map view of the table
 
+inline_for_extraction
 val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k)
   : SteelT (option v)
       (ipts_to a m)
@@ -82,6 +84,7 @@ val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k 
 
 /// put API
 
+inline_for_extraction
 val put (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k) (x:v)
   : SteelT unit
       (ipts_to a m)
@@ -90,6 +93,7 @@ val put (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k 
 
 /// free API
 
+inline_for_extraction
 val free (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h)
   : SteelT unit
       (ipts_to a m)
