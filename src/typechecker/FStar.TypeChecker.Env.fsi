@@ -177,7 +177,7 @@ and env = {
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
-  erase_erasable_args: bool                           (* This flag is set when running postprocess_for_extraction_with tactics *)
+  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 }
 
 and solver_depth_t = int * int * int
