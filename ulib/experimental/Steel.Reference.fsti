@@ -47,13 +47,13 @@ val is_null (#a:Type0) (r:ref a) : (b:bool{b <==> r == null})
 /// The standard points to separation logic assertion, expressing that
 /// reference [r] is valid in memory, stores value [v], and that we have
 /// permission [p] on it.
-val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
+val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:a) : slprop u#1
 
 /// Lifting the standard points to predicate to vprop, with a non-informative selector.
 /// The permission [p] and the value [v] are annotated with the smt_fallback attribute,
 /// enabling SMT rewriting on them during frame inference
 [@@ __steel_reduce__]
-let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a)
+let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:a)
   = to_vprop (pts_to_sl r p v)
 
 /// If two pts_to predicates on the same reference [r] are valid in the memory [m],
@@ -62,7 +62,7 @@ val pts_to_ref_injective
       (#a: Type u#0)
       (r: ref a)
       (p0 p1:perm)
-      (v0 v1: erased a)
+      (v0 v1:a)
       (m:mem)
     : Lemma
       (requires
@@ -73,7 +73,7 @@ val pts_to_ref_injective
 val pts_to_not_null (#a:Type u#0)
                     (x:ref a)
                     (p:perm)
-                    (v: erased a)
+                    (v:a)
                     (m:mem)
   : Lemma (requires interp (pts_to_sl x p v) m)
           (ensures x =!= null)
@@ -325,13 +325,13 @@ val ghost_ref (a:Type u#0) : Type u#0
 
 (* Textbook separation logic version of ghost references *)
 
-val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:erased a) : slprop u#1
+val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:a) : slprop u#1
 
 [@@ __steel_reduce__]
 let ghost_pts_to (#a:Type0)
   (r:ghost_ref a)
   ([@@@smt_fallback] p:perm)
-  ([@@@ smt_fallback] v:erased a)
+  ([@@@ smt_fallback] v:a)
   : vprop
   = to_vprop (ghost_pts_to_sl r p v)
 
