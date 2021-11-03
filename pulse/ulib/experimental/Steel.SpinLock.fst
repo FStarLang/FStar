@@ -28,7 +28,7 @@ let available = false
 let locked = true
 
 let lockinv (p:vprop) (r:ref bool) : vprop =
-  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+  h_exists (fun b -> pts_to r full_perm b `star` (if b then emp else p))
 
 let lock_t = ref bool & erased iname
 
@@ -43,13 +43,13 @@ val intro_lockinv_locked (#uses:inames) (p:vprop) (r:ref bool)
 let intro_lockinv_available #uses p r =
   intro_exists false
     (fun (b: bool) ->
-      pts_to r full_perm (Ghost.hide b) `star`
+      pts_to r full_perm b `star`
         (if b then emp else p)
     )
 
 let intro_lockinv_locked #uses p r =
   intro_exists true
-    (fun b -> pts_to r full_perm (Ghost.hide b) `star`
+    (fun b -> pts_to r full_perm b `star`
           (if b then emp else p))
 
 let new_lock (p:vprop)
