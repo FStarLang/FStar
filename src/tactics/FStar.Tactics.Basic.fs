@@ -128,7 +128,7 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
         begin
         let hd, args = U.head_and_args t in
         match (SS.compress hd).n, args with
-        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
+        | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
             Some (e1, e2)
         | _ -> None
         end
@@ -670,7 +670,7 @@ let rec  __try_unify_by_application
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, b.binder_qual, uv)::acc) e typ' ty2 rng))
+            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
@@ -705,14 +705,7 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "appl
     bind (try_unify_by_application only_match e typ (goal_type goal) (rangeof goal)) (fun uvs ->
     mlog (fun () -> BU.print1 "t_apply: found args = %s\n"
         (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs)) (fun () ->
-    (* use normal implicit application for meta-args: meta application does not
-     * make sense and the typechecker complains. *)
-    let fix_qual q =
-      match q with
-      | Some (Meta _) -> Some (Implicit false)
-      | _ -> q
-    in
-    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, fix_qual q)]) uvs tm in
+    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
 
     let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
@@ -1442,8 +1435,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let bs = SS.subst_binders subst bs in
                         let subpats_1 = List.map (fun (({binder_bv=bv}), (t, _)) ->
                                                  (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
-                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=aq}) ->
-                                                 (mk_pat (Pat_var bv), is_imp aq)) bs in
+                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=bq}) ->
+                                                 (mk_pat (Pat_var bv), is_imp bq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
                         let env = (goal_env g) in

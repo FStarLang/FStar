@@ -2326,7 +2326,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -2348,7 +2348,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with

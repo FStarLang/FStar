@@ -248,9 +248,11 @@ let (destruct_eq' :
                   (match uu___4 with
                    | (FStar_Syntax_Syntax.Tm_fvar fv,
                       (uu___5, FStar_Pervasives_Native.Some
-                       (FStar_Syntax_Syntax.Implicit uu___6))::(e1,
-                                                                FStar_Pervasives_Native.None)::
-                      (e2, FStar_Pervasives_Native.None)::[]) when
+                       { FStar_Syntax_Syntax.aqual_implicit = true;
+                         FStar_Syntax_Syntax.aqual_attributes = uu___6;_})::
+                      (e1, FStar_Pervasives_Native.None)::(e2,
+                                                           FStar_Pervasives_Native.None)::[])
+                       when
                        FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.op_Eq
                        -> FStar_Pervasives_Native.Some (e1, e2)
@@ -2033,11 +2035,15 @@ let rec (__try_unify_by_application :
                                                [FStar_Syntax_Syntax.NT
                                                   ((b.FStar_Syntax_Syntax.binder_bv),
                                                     uvt)] typ in
+                                           let uu___8 =
+                                             let uu___9 =
+                                               let uu___10 =
+                                                 FStar_Syntax_Util.aqual_of_binder
+                                                   b in
+                                               (uvt, uu___10, uv) in
+                                             uu___9 :: acc in
                                            __try_unify_by_application
-                                             only_match
-                                             ((uvt,
-                                                (b.FStar_Syntax_Syntax.binder_qual),
-                                                uv) :: acc) e typ' ty2 rng)))))
+                                             only_match uu___8 e typ' ty2 rng)))))
 let (try_unify_by_application :
   Prims.bool ->
     env ->
@@ -2107,15 +2113,6 @@ let (t_apply :
                                               "t_apply: found args = %s\n"
                                               uu___7)
                                          (fun uu___6 ->
-                                            let fix_qual q =
-                                              match q with
-                                              | FStar_Pervasives_Native.Some
-                                                  (FStar_Syntax_Syntax.Meta
-                                                  uu___7) ->
-                                                  FStar_Pervasives_Native.Some
-                                                    (FStar_Syntax_Syntax.Implicit
-                                                       false)
-                                              | uu___7 -> q in
                                             let w =
                                               FStar_Compiler_List.fold_right
                                                 (fun uu___7 ->
@@ -2123,10 +2120,8 @@ let (t_apply :
                                                      match uu___7 with
                                                      | (uvt, q, uu___8) ->
                                                          FStar_Syntax_Util.mk_app
-                                                           w1
-                                                           [(uvt,
-                                                              (fix_qual q))])
-                                                uvs tm1 in
+                                                           w1 [(uvt, q)]) uvs
+                                                tm1 in
                                             let uvset =
                                               let uu___7 =
                                                 FStar_Syntax_Free.new_uv_set
@@ -4748,7 +4743,7 @@ let (t_destruct :
                                                                     FStar_Syntax_Syntax.binder_bv
                                                                     = bv;
                                                                     FStar_Syntax_Syntax.binder_qual
-                                                                    = aq;
+                                                                    = bq;
                                                                     FStar_Syntax_Syntax.binder_attrs
                                                                     = uu___25;_}
                                                                     ->
@@ -4756,7 +4751,7 @@ let (t_destruct :
                                                                     (FStar_Syntax_Syntax.Pat_var
                                                                     bv)),
                                                                     (is_imp
-                                                                    aq))) bs3 in
+                                                                    bq))) bs3 in
                                                                     let subpats
                                                                     =
                                                                     FStar_Compiler_List.op_At

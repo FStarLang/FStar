@@ -55,7 +55,26 @@ let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
-let arg_of_non_null_binder b = (bv_to_name b.binder_bv, b.binder_qual)
+let aqual_of_binder (b:binder)
+  : aqual
+  = match b.binder_qual, b.binder_attrs with
+    | Some (Implicit _), _
+    | Some (Meta _), _ ->
+      Some ({ aqual_implicit = true;
+              aqual_attributes = b.binder_attrs })
+    | _, _::_ ->
+      Some ({ aqual_implicit = false;
+              aqual_attributes = b.binder_attrs })
+    | _ -> None
+
+let bqual_and_attrs_of_aqual (a:aqual)
+  : bqual * list<attribute>
+  = match a with
+    | None -> None, []
+    | Some a -> (if a.aqual_implicit then Some imp_tag else None),
+               a.aqual_attributes
+
+let arg_of_non_null_binder b = (bv_to_name b.binder_bv, aqual_of_binder b)
 
 let args_of_non_null_binders (binders:binders) =
     binders |> List.collect (fun b ->
@@ -81,10 +100,10 @@ let name_function_binders t = match t.n with
     | Tm_arrow(binders, comp) -> mk (Tm_arrow(name_binders binders, comp)) t.pos
     | _ -> t
 
-let null_binders_of_tks (tks:list<(typ * aqual)>) : binders =
+let null_binders_of_tks (tks:list<(typ * bqual)>) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
-let binders_of_tks (tks:list<(typ * aqual)>) : binders =
+let binders_of_tks (tks:list<(typ * bqual)>) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp [])
 
 let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
@@ -691,7 +710,7 @@ and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs
     && List.forall2 eq_univs us vs
 
-let eq_aqual a1 a2 =
+let eq_bqual a1 a2 =
     match a1, a2 with
     | None, None -> Equal
     | None, _
@@ -700,6 +719,30 @@ let eq_aqual a1 a2 =
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
+
+let eq_aqual a1 a2 =
+  match a1, a2 with
+  | Some a1, Some a2 ->
+    if a1.aqual_implicit = a2.aqual_implicit
+    && List.length a1.aqual_attributes = List.length a2.aqual_attributes
+    then List.fold_left2
+           (fun out t1 t2 ->
+             match out with
+             | NotEqual -> out
+             | Unknown ->
+               (match eq_tm t1 t2 with
+                 | NotEqual -> NotEqual
+                 | _ -> Unknown)
+             | Equal ->
+               eq_tm t1 t2)
+           Equal
+           a1.aqual_attributes
+           a2.aqual_attributes
+    else NotEqual
+  | None, None ->
+    Equal
+  | _ ->
+    NotEqual
 
 let rec unrefine t =
   let t = compress t in
@@ -799,7 +842,7 @@ let mk_app f args =
       mk (Tm_app(f, args)) r
 
 let mk_app_binders f bs =
-    mk_app f (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> (bv_to_name bv, aq)) bs)
+    mk_app f (List.map (fun b -> (bv_to_name b.binder_bv, aqual_of_binder b)) bs)
 
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
@@ -1819,7 +1862,9 @@ and arg_eq_dbg (dbg : bool) a1 a2 =
            a1 a2
 and binder_eq_dbg (dbg : bool) b1 b2 =
     (check "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
-    (check "binder qual" (eq_aqual b1.binder_qual b2.binder_qual = Equal))  //AR: not checking attributes, should we?
+    (check "binder qual" (eq_bqual b1.binder_qual b2.binder_qual = Equal)) &&  //AR: not checking attributes, should we?
+    (check "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
+
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let c1 = comp_to_comp_typ_nouniv c1 in
     let c2 = comp_to_comp_typ_nouniv c2 in

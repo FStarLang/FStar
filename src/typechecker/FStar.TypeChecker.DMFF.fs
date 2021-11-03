@@ -128,8 +128,8 @@ let gen_wps_for_free
   in
 
   (* Some helpers. *)
-  let binders_of_list = List.map (fun (t, b) -> S.mk_binder_with_attrs t (S.as_implicit b) []) in
-  let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_implicit true }) in
+  let binders_of_list = List.map (fun (t, b) -> S.mk_binder_with_attrs t (S.as_bqual_implicit b) []) in
+  let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_bqual_implicit true }) in
   let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name bv.binder_bv)) in
 
   let env, mk_ctx, mk_gctx =
@@ -153,8 +153,9 @@ let gen_wps_for_free
     let mk_app fv t =
       // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
       mk (Tm_app (fv,
-        List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_implicit false) binders @
-        [ S.bv_to_name a, S.as_implicit false; t, S.as_implicit false ]))
+        List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
+        [ S.bv_to_name a, S.as_aqual_implicit false;
+          t, S.as_aqual_implicit false ]))
     in
 
     env, mk_app ctx_fv, mk_app gctx_fv
@@ -531,7 +532,7 @@ let double_star typ =
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_implicit false) []],
+    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_bqual_implicit false) []],
     mk_Total U.ktype0
   ))
 
@@ -565,7 +566,7 @@ and star_type' env t =
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
               mk (Tm_arrow (
                 binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
-                              (S.as_implicit false) []],
+                              (S.as_bqual_implicit false) []],
                 mk_Total U.ktype0))
       end
 
@@ -781,7 +782,7 @@ let mk_return env (t: typ) (e: term) =
   let mk x = mk x e.pos in
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
-  let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
+  let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_aqual_implicit false ])) in
   U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
@@ -1173,7 +1174,7 @@ and mk_match env e0 branches f =
     let p_type = mk_star_to_type mk env t1 in
     let p = S.gen_bv "p''" None p_type in
     let s_branches = List.map (fun (pat, guard, s_body) ->
-      let s_body = mk (Tm_app (s_body, [ S.bv_to_name p, S.as_implicit false ])) in
+      let s_body = mk (Tm_app (s_body, [ S.bv_to_name p, S.as_aqual_implicit false ])) in
         (pat, guard, s_body)
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
@@ -1233,11 +1234,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let p_type = mk_star_to_type mk env t2 in
       let p = S.gen_bv "p''" None p_type in
       // e2* p
-      let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
+      let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_aqual_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
       let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.ktype0)) in
       // e1* (fun x -> e2* p)
-      let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
+      let body = mk (Tm_app (s_e1, [ s_e2, S.as_aqual_implicit false ])) in
       M t2,
       U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0)),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
@@ -1285,7 +1286,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
          not (is_constructor wp_head (PC.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
-        let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
+        let print_implicit q = if S.is_aqual_implicit q then "implicit" else "explicit" in
         if eq_aqual q q' <> Equal
         then Errors.log_issue
                     head.pos
@@ -1310,7 +1311,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       ) binders_orig) in
       let binders = List.flatten binders in
       let comp = SS.subst_comp (U.rename_binders binders_orig (S.binders_of_list bvs)) comp in
-      let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
+      let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_aqual_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
   | Tm_ascribed(e, _, _) ->
@@ -1325,7 +1326,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
       comp_univs = [U_unknown];
       effect_name = PC.effect_PURE_lid;
       result_typ = star_type' env h;
-      effect_args = [ wp, S.as_implicit false ];
+      effect_args = [ wp, S.as_aqual_implicit false ];
       flags = []
     })
   else
@@ -1416,11 +1417,11 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let dmff_env = empty env (TcTerm.tc_constant env Range.dummyRange) in
   let wp_type = star_type dmff_env repr in
   let _ = recheck_debug "*" env wp_type in
-  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
+  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_aqual_implicit false) ]))) in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ S.mk_binder_with_attrs a (S.as_implicit false) [];
+    let binders = [ S.mk_binder_with_attrs a (S.as_bqual_implicit false) [];
                     S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
@@ -1469,7 +1470,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         (* invariant but we need them for normalization *)
         let env0 = push_binders (get_env dmff_env) [b1 ; b2] in
         let wp_b1 =
-          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name b1.binder_bv, S.as_implicit false) ])) in
+          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name b1.binder_bv, S.as_aqual_implicit false) ])) in
           N.normalize [ Env.Beta ] env0 raw_wp_b1
         in
         let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
@@ -1620,7 +1621,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let repr =
     let wp = S.gen_bv "wp_a" None wp_a in
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+    U.abs binders (trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_aqual_implicit false ]))) (S.bv_to_name wp)) None
   in
   let _ = recheck_debug "FC" env repr in
   let repr = register "repr" repr in

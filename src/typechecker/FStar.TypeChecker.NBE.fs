@@ -1251,6 +1251,7 @@ and readback (cfg:config) (x:t) : term =
           (fun (t, q) ->
             let t = readback cfg t in
             let x = S.new_bv None t in
+            let q, attrs = U.bqual_and_attrs_of_aqual q in
             S.mk_binder_with_attrs x q [])
           args
       in

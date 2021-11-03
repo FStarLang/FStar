@@ -1405,7 +1405,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     // eq2 : #a:Type -> a -> a -> Type
     // equals: #a:Type -> a -> a -> Type
     let eq_op r args : (term * decls_t) =
-        let rf = List.filter (fun (a,q) -> match q with | Some (Implicit _) -> false | _ -> true) args in
+        let rf = List.filter (fun (a,q) -> match q with | Some ({ aqual_implicit = true }) -> false | _ -> true) args in
         if List.length rf <> 2
         then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
         else enc (bin_op mkEq) r rf

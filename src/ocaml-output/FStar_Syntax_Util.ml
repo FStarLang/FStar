@@ -36,19 +36,59 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
         FStar_Ident.string_of_id uu___1 in
       FStar_Compiler_Util.char_at uu___ Prims.int_zero in
     FStar_Compiler_Util.is_upper c
+let (aqual_of_binder :
+  FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.aqual) =
+  fun b ->
+    match ((b.FStar_Syntax_Syntax.binder_qual),
+            (b.FStar_Syntax_Syntax.binder_attrs))
+    with
+    | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit uu___),
+       uu___1) ->
+        FStar_Pervasives_Native.Some
+          {
+            FStar_Syntax_Syntax.aqual_implicit = true;
+            FStar_Syntax_Syntax.aqual_attributes =
+              (b.FStar_Syntax_Syntax.binder_attrs)
+          }
+    | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___), uu___1)
+        ->
+        FStar_Pervasives_Native.Some
+          {
+            FStar_Syntax_Syntax.aqual_implicit = true;
+            FStar_Syntax_Syntax.aqual_attributes =
+              (b.FStar_Syntax_Syntax.binder_attrs)
+          }
+    | (uu___, uu___1::uu___2) ->
+        FStar_Pervasives_Native.Some
+          {
+            FStar_Syntax_Syntax.aqual_implicit = false;
+            FStar_Syntax_Syntax.aqual_attributes =
+              (b.FStar_Syntax_Syntax.binder_attrs)
+          }
+    | uu___ -> FStar_Pervasives_Native.None
+let (bqual_and_attrs_of_aqual :
+  FStar_Syntax_Syntax.aqual ->
+    (FStar_Syntax_Syntax.bqual * FStar_Syntax_Syntax.attribute Prims.list))
+  =
+  fun a ->
+    match a with
+    | FStar_Pervasives_Native.None -> (FStar_Pervasives_Native.None, [])
+    | FStar_Pervasives_Native.Some a1 ->
+        ((if a1.FStar_Syntax_Syntax.aqual_implicit
+          then FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag
+          else FStar_Pervasives_Native.None),
+          (a1.FStar_Syntax_Syntax.aqual_attributes))
 let (arg_of_non_null_binder :
   FStar_Syntax_Syntax.binder ->
-    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
-      FStar_Pervasives_Native.option))
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual))
   =
   fun b ->
     let uu___ =
       FStar_Syntax_Syntax.bv_to_name b.FStar_Syntax_Syntax.binder_bv in
-    (uu___, (b.FStar_Syntax_Syntax.binder_qual))
+    let uu___1 = aqual_of_binder b in (uu___, uu___1)
 let (args_of_non_null_binders :
   FStar_Syntax_Syntax.binders ->
-    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
-      FStar_Pervasives_Native.option) Prims.list)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual) Prims.list)
   =
   fun binders ->
     FStar_Compiler_Effect.op_Bar_Greater binders
@@ -129,7 +169,7 @@ let (name_function_binders :
         FStar_Syntax_Syntax.mk uu___ t.FStar_Syntax_Syntax.pos
     | uu___ -> t
 let (null_binders_of_tks :
-  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.aqual) Prims.list ->
+  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.bqual) Prims.list ->
     FStar_Syntax_Syntax.binders)
   =
   fun tks ->
@@ -147,7 +187,7 @@ let (null_binders_of_tks :
                     (uu___1.FStar_Syntax_Syntax.binder_attrs)
                 }))
 let (binders_of_tks :
-  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.aqual) Prims.list ->
+  (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.bqual) Prims.list ->
     FStar_Syntax_Syntax.binders)
   =
   fun tks ->
@@ -1151,9 +1191,9 @@ and (eq_univs_list :
     fun vs ->
       ((FStar_Compiler_List.length us) = (FStar_Compiler_List.length vs)) &&
         (FStar_Compiler_List.forall2 eq_univs us vs)
-let (eq_aqual :
-  FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
-    FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+let (eq_bqual :
+  FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
+    FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
       eq_result)
   =
   fun a1 ->
@@ -1171,6 +1211,43 @@ let (eq_aqual :
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality),
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality)) ->
           Equal
+      | uu___ -> NotEqual
+let (eq_aqual :
+  FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+    FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+      eq_result)
+  =
+  fun a1 ->
+    fun a2 ->
+      match (a1, a2) with
+      | (FStar_Pervasives_Native.Some a11, FStar_Pervasives_Native.Some a21)
+          ->
+          if
+            (a11.FStar_Syntax_Syntax.aqual_implicit =
+               a21.FStar_Syntax_Syntax.aqual_implicit)
+              &&
+              ((FStar_Compiler_List.length
+                  a11.FStar_Syntax_Syntax.aqual_attributes)
+                 =
+                 (FStar_Compiler_List.length
+                    a21.FStar_Syntax_Syntax.aqual_attributes))
+          then
+            FStar_Compiler_List.fold_left2
+              (fun out ->
+                 fun t1 ->
+                   fun t2 ->
+                     match out with
+                     | NotEqual -> out
+                     | Unknown ->
+                         let uu___ = eq_tm t1 t2 in
+                         (match uu___ with
+                          | NotEqual -> NotEqual
+                          | uu___1 -> Unknown)
+                     | Equal -> eq_tm t1 t2) Equal
+              a11.FStar_Syntax_Syntax.aqual_attributes
+              a21.FStar_Syntax_Syntax.aqual_attributes
+          else NotEqual
+      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Equal
       | uu___ -> NotEqual
 let rec (unrefine : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
@@ -1350,13 +1427,10 @@ let (mk_app_binders :
     fun bs ->
       let uu___ =
         FStar_Compiler_List.map
-          (fun uu___1 ->
-             match uu___1 with
-             | { FStar_Syntax_Syntax.binder_bv = bv;
-                 FStar_Syntax_Syntax.binder_qual = aq;
-                 FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
-                 let uu___3 = FStar_Syntax_Syntax.bv_to_name bv in
-                 (uu___3, aq)) bs in
+          (fun b ->
+             let uu___1 =
+               FStar_Syntax_Syntax.bv_to_name b.FStar_Syntax_Syntax.binder_bv in
+             let uu___2 = aqual_of_binder b in (uu___1, uu___2)) bs in
       mk_app f uu___
 let (field_projector_prefix : Prims.string) = "__proj__"
 let (field_projector_sep : Prims.string) = "__item__"
@@ -3700,17 +3774,22 @@ and (binder_eq_dbg :
   fun dbg ->
     fun b1 ->
       fun b2 ->
-        (let uu___ =
-           term_eq_dbg dbg
-             (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-             (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-         check "binder_sort" uu___) &&
+        ((let uu___ =
+            term_eq_dbg dbg
+              (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+              (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+          check "binder_sort" uu___) &&
+           (let uu___ =
+              let uu___1 =
+                eq_bqual b1.FStar_Syntax_Syntax.binder_qual
+                  b2.FStar_Syntax_Syntax.binder_qual in
+              uu___1 = Equal in
+            check "binder qual" uu___))
+          &&
           (let uu___ =
-             let uu___1 =
-               eq_aqual b1.FStar_Syntax_Syntax.binder_qual
-                 b2.FStar_Syntax_Syntax.binder_qual in
-             uu___1 = Equal in
-           check "binder qual" uu___)
+             eqlist (term_eq_dbg dbg) b1.FStar_Syntax_Syntax.binder_attrs
+               b2.FStar_Syntax_Syntax.binder_attrs in
+           check "binder attrs" uu___)
 and (comp_eq_dbg :
   Prims.bool ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->

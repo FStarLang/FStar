@@ -70,8 +70,8 @@ let rec term_eq' t1 t2 =
              term_eq' t1 t2
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
       | Tm_refine(x, t), Tm_refine(y, u) -> term_eq' x.sort y.sort && term_eq' t u
-      | Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some (Implicit _)); t1; t2]),
-        Tm_app({n=Tm_fvar fv_eq_2}, [(_, Some (Implicit _)); s1; s2])
+      | Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some ({ aqual_implicit = true })); t1; t2]),
+        Tm_app({n=Tm_fvar fv_eq_2}, [(_, Some ({ aqual_implicit = true })); s1; s2])
             when S.fv_eq_lid fv_eq_1 Const.eq2_lid
               && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
@@ -100,5 +100,7 @@ let rec term_eq' t1 t2 =
 let term_eq t1 t2 =
 //    BU.print2 "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
     let b = term_eq' t1 t2 in
-    if not b then BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    if not b then (
+      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2)
+    );
     b

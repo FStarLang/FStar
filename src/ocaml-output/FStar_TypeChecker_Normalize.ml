@@ -1017,8 +1017,8 @@ and (close_ascription :
 and (close_imp :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
-      FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
+        FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
   =
   fun cfg ->
     fun env1 ->
@@ -6325,8 +6325,12 @@ and (maybe_simplify_aux :
                                                  | uu___25 -> tm1)
                                             | uu___22 -> tm1)
                                        | (ty, FStar_Pervasives_Native.Some
-                                          (FStar_Syntax_Syntax.Implicit
-                                          uu___20))::(t, uu___21)::[] ->
+                                          {
+                                            FStar_Syntax_Syntax.aqual_implicit
+                                              = true;
+                                            FStar_Syntax_Syntax.aqual_attributes
+                                              = uu___20;_})::(t, uu___21)::[]
+                                           ->
                                            let uu___22 =
                                              let uu___23 =
                                                FStar_Syntax_Subst.compress t in
@@ -6376,8 +6380,12 @@ and (maybe_simplify_aux :
                                                     | uu___27 -> tm1)
                                                | uu___24 -> tm1)
                                           | (ty, FStar_Pervasives_Native.Some
-                                             (FStar_Syntax_Syntax.Implicit
-                                             uu___22))::(t, uu___23)::[] ->
+                                             {
+                                               FStar_Syntax_Syntax.aqual_implicit
+                                                 = true;
+                                               FStar_Syntax_Syntax.aqual_attributes
+                                                 = uu___22;_})::(t, uu___23)::[]
+                                              ->
                                               let uu___24 =
                                                 let uu___25 =
                                                   FStar_Syntax_Subst.compress
@@ -6727,8 +6735,12 @@ and (maybe_simplify_aux :
                                                  | uu___22 -> tm1)
                                             | uu___19 -> tm1)
                                        | (ty, FStar_Pervasives_Native.Some
-                                          (FStar_Syntax_Syntax.Implicit
-                                          uu___17))::(t, uu___18)::[] ->
+                                          {
+                                            FStar_Syntax_Syntax.aqual_implicit
+                                              = true;
+                                            FStar_Syntax_Syntax.aqual_attributes
+                                              = uu___17;_})::(t, uu___18)::[]
+                                           ->
                                            let uu___19 =
                                              let uu___20 =
                                                FStar_Syntax_Subst.compress t in
@@ -6778,8 +6790,12 @@ and (maybe_simplify_aux :
                                                     | uu___24 -> tm1)
                                                | uu___21 -> tm1)
                                           | (ty, FStar_Pervasives_Native.Some
-                                             (FStar_Syntax_Syntax.Implicit
-                                             uu___19))::(t, uu___20)::[] ->
+                                             {
+                                               FStar_Syntax_Syntax.aqual_implicit
+                                                 = true;
+                                               FStar_Syntax_Syntax.aqual_attributes
+                                                 = uu___19;_})::(t, uu___20)::[]
+                                              ->
                                               let uu___21 =
                                                 let uu___22 =
                                                   FStar_Syntax_Subst.compress

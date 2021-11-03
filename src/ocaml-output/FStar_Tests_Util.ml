@@ -169,14 +169,16 @@ let rec (term_eq' :
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_1;
             FStar_Syntax_Syntax.pos = uu___;
             FStar_Syntax_Syntax.vars = uu___1;_},
-          (uu___2, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-           uu___3))::t12::t22::[]),
+          (uu___2, FStar_Pervasives_Native.Some
+           { FStar_Syntax_Syntax.aqual_implicit = true;
+             FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::t12::t22::[]),
          FStar_Syntax_Syntax.Tm_app
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_2;
             FStar_Syntax_Syntax.pos = uu___4;
             FStar_Syntax_Syntax.vars = uu___5;_},
-          (uu___6, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-           uu___7))::s1::s2::[]))
+          (uu___6, FStar_Pervasives_Native.Some
+           { FStar_Syntax_Syntax.aqual_implicit = true;
+             FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::s1::s2::[]))
           when
           (FStar_Syntax_Syntax.fv_eq_lid fv_eq_1 FStar_Parser_Const.eq2_lid)
             &&
