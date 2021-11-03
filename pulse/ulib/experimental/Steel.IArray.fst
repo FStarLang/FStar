@@ -34,10 +34,6 @@ let seq_props (#k:eqtype) (#v:Type0) (h:hash_fn_t k)
      (let Some (x, _) = Seq.index s i in
       U32.v (h x) `UInt.mod` (Seq.length s) == i))
 
-let seq_props_empty_seq (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (n:nat)
-  : Lemma (seq_props #k #v h (Seq.create n None))
-  = admit ()
-
 let seq_props_derived (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option (k & v))) : prop =
   forall (i j:(k:nat{k < Seq.length s})).{:pattern Seq.index s i; Seq.index s j}
     (i =!= j /\ Some? (Seq.index s i) /\ Some? (Seq.index s j)) ==>
@@ -80,8 +76,7 @@ let ipts_to arr m = h_exists (store_contents_pred arr m)
 let rec seq_to_map_empty_seq (#k:eqtype) (#v:Type0) (n:nat) (default_v:v)
   : Lemma (Map.equal (seq_to_map (Seq.create n None) default_v)
                      (empty_repr #k #v default_v))
-  = if n = 0
-    then ()
+  = if n = 0 then ()
     else begin
       assert (Seq.equal (Seq.tail (Seq.create #(option (k & v)) n None))
                         (Seq.create (n-1) None));
@@ -100,6 +95,7 @@ let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option
   = if i = 0 then () else seq_to_map_ith h (Seq.tail s) default_v (i-1)
 
 let create #k #v h x n =
+  assume (U32.v n > 0);
   let store = A.malloc #(option (k & v)) None n in
   let g_ref = ghost_alloc_pt (G.hide (empty_repr #k #v x)) in
   let arr = {
@@ -109,7 +105,6 @@ let create #k #v h x n =
     default_v = x;
     store_len_pf = () } in
   let s = A.intro_varray_pts_to arr.store in
-  seq_props_empty_seq #k #v h (U32.v n);
   seq_to_map_empty_seq #k #v (U32.v n) x;
   intro_pure (seq_props h s /\ submap_of (seq_to_map s arr.default_v) (empty_repr #k #v x));
   assert_spinoff (ghost_pts_to g_ref full_perm (empty_repr #k #v x) ==
@@ -140,3 +135,25 @@ let index #k #v #h #m a i =
   intro_exists (G.reveal s) (store_contents_pred a m);
   intro_pure (Some? r ==> r == Some (Map.sel m i));
   return r
+
+let seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v)
+  (m:Map.t k v)
+  (i:nat{i < Seq.length s}) (x:k) (y:v)
+  : Lemma
+      (requires seq_to_map s default_v `submap_of` m)
+      (ensures
+        seq_to_map (Seq.upd s i (Some (x, y))) default_v `submap_of` Map.upd m x y)
+  = admit ()
+            
+let upd #k #v #h #m a i x =
+  let s = witness_exists () in
+  A.elim_varray_pts_to a.store s;
+  elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
+  assume (U32.v a.store_len <> 0);
+  A.upd a.store (h i `U32.rem` a.store_len) (Some (i, x));
+  ghost_write_pt a.g_repr (Map.upd m i x);
+  assert (seq_props #k #v h (Seq.upd s (U32.v (h i `U32.rem` a.store_len)) (Some (i, x))));
+  seq_to_map_upd #k #v s a.default_v m (U32.v (h i `U32.rem` a.store_len)) i x;
+  let s = A.intro_varray_pts_to a.store in
+  intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` Map.upd m i x);
+  intro_exists (G.reveal s) (store_contents_pred a (Map.upd m i x))
