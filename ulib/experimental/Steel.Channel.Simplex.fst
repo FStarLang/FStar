@@ -222,14 +222,14 @@ let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver
     H.share recv;
     H.share send;
     (* TODO: use smt_fallback *)
-    rewrite_slprop (pts_to send (half_perm full_perm) (Ghost.hide v) `star`
-                   pts_to send (half_perm full_perm) (Ghost.hide v) `star`
-                   pts_to recv (half_perm full_perm) (Ghost.hide v) `star`
-                   pts_to recv (half_perm full_perm) (Ghost.hide v))
-                  (pts_to send half (Ghost.hide vp) `star`
-                   pts_to send half (Ghost.hide vp) `star`
-                   pts_to recv half (Ghost.hide vp) `star`
-                   pts_to recv half (Ghost.hide vp))
+    rewrite_slprop (pts_to send (half_perm full_perm) v `star`
+                   pts_to send (half_perm full_perm) v `star`
+                   pts_to recv (half_perm full_perm) v `star`
+                   pts_to recv (half_perm full_perm) v)
+                  (pts_to send half vp `star`
+                   pts_to send half vp `star`
+                   pts_to recv half vp `star`
+                   pts_to recv half vp)
                   (fun _ -> ());
     let c = mk_chan send recv vp in
     intro_in_state send p vp;

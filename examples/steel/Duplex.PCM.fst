@@ -1188,26 +1188,26 @@ let new_channel' (p:dprot)
   let rA = HR.alloc v in
   let rB = HR.alloc v in
   let c = new_chan p in
-  slassert (HR.pts_to rA Perm.full_perm (hide v) `star`
+  slassert (HR.pts_to rA Perm.full_perm v `star`
             pure (eq2_prop #dprot (dfst v) p) `star`
             endpoint A c p (empty_trace p) `star`
-            (HR.pts_to rB Perm.full_perm (hide v) `star`
+            (HR.pts_to rB Perm.full_perm v `star`
              pure (eq2_prop #dprot (dfst v) p) `star`
              endpoint B c p (empty_trace p)));
   let cA : channel p = (c, rA) in
   let cB : channel p = (c, rB) in
-  rewrite_slprop ((HR.pts_to rA Perm.full_perm (hide v) `star`
+  rewrite_slprop ((HR.pts_to rA Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint A c p (empty_trace p)) `star`
-                (HR.pts_to rB Perm.full_perm (hide v) `star`
+                (HR.pts_to rB Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint B c p (empty_trace p)))
                 (endpt_pred A cA p v `star`
                  endpt_pred B cB p v)
-                (fun _ -> reveal_equiv ((HR.pts_to rA Perm.full_perm (hide v) `star`
+                (fun _ -> reveal_equiv ((HR.pts_to rA Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint A c p (empty_trace p)) `star`
-                (HR.pts_to rB Perm.full_perm (hide v) `star`
+                (HR.pts_to rB Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint B c p (empty_trace p)))
                                  (endpt_pred A cA p v `star`
