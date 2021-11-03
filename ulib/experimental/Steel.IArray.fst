@@ -17,7 +17,7 @@ module A = Steel.Array
 
 noeq
 type iarray k v (h:hash_fn_t k) = {
-  store_len    : u32;
+  store_len    : n:u32{U32.v n > 0};
   store        : A.array (option (k & v));
   g_repr       : ghost_ref (Map.t k v);
   default_v    : G.erased v;
@@ -95,7 +95,6 @@ let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (h:hash_fn_t k) (s:Seq.seq (option
   = if i = 0 then () else seq_to_map_ith h (Seq.tail s) default_v (i-1)
 
 let create #k #v h x n =
-  assume (U32.v n > 0);
   let store = A.malloc #(option (k & v)) None n in
   let g_ref = ghost_alloc_pt (G.hide (empty_repr #k #v x)) in
   let arr = {
@@ -118,7 +117,6 @@ let index #k #v #h #m a i =
   let s = witness_exists () in
   A.elim_varray_pts_to a.store s;
   elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
-  assume (U32.v a.store_len <> 0);
   let vopt = A.index a.store (h i `U32.rem` a.store_len) in
   let r =
     match vopt with
@@ -186,7 +184,6 @@ let upd #k #v #h #m a i x =
   let s = witness_exists () in
   A.elim_varray_pts_to a.store s;
   elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
-  assume (U32.v a.store_len <> 0);
   A.upd a.store (h i `U32.rem` a.store_len) (Some (i, x));
   ghost_write_pt a.g_repr (Map.upd m i x);
   assert (seq_props #k #v h (Seq.upd s (U32.v (h i `U32.rem` a.store_len)) (Some (i, x))));
