@@ -1769,11 +1769,11 @@ let print_full (deps:deps) : unit =
                       List.filter
                         (fun df ->
                            lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
-                           && Options.should_extract (lowercase_module_name df))
+                           && Options.should_extract (lowercase_module_name df) Options.OCaml)
                   in
                   extracted_fst_files |> List.map output_cmx_file
               in
-              if Options.should_extract (lowercase_module_name file_name)
+              if Options.should_extract (lowercase_module_name file_name) Options.OCaml
               then
                 let cmx_files = String.concat "\\\n\t" cmx_files in
                 print_entry
@@ -1818,7 +1818,7 @@ let print_full (deps:deps) : unit =
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname
+                       if Options.should_extract mname Options.OCaml
                        then BU.smap_add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
@@ -1827,7 +1827,8 @@ let print_full (deps:deps) : unit =
         keys
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       BU.smap_add krml_file_map mname (output_krml_file fst_file));
+                       if Options.should_extract mname Options.Kremlin
+                       then BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
     let print_all tag files =
