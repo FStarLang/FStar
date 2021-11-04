@@ -1858,7 +1858,7 @@ type parsed_extract_setting = {
 }
 
 let find_setting_for_target tgt (s:list<(codegen_t * list<string>)>)
-  : option (list<string>)
+  : option<(list<string>)>
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
     | _ -> None
