@@ -1009,7 +1009,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "a00588d57c0a066fd01317ea4726144d"
+      "5c8eda1b0212a855340a875c1d014a19"
     ],
     [
       "Steel.Effect.Atomic.rewrite_slprop0",
@@ -1363,7 +1363,7 @@
         "unit_inversion"
       ],
       0,
-      "490efa0ef23d5c3b76fdaf7b6398d59f"
+      "bb204979961d00c2bdebab0c072ec4c1"
     ],
     [
       "Steel.Effect.Atomic.change_slprop_rel",
@@ -1469,7 +1469,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "41bd48f7eb445380072fff8b2c1f6fef"
+      "c9c73c85244df05c9aa84a2fe97837db"
     ],
     [
       "Steel.Effect.Atomic.change_slprop_rel_with_cond",
@@ -1719,7 +1719,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "6517ffb402e8f7d8d4c0c1710f2cf6eb"
+      "4e8b58ce81cae703815e7f77ce506f51"
     ],
     [
       "Steel.Effect.Atomic.reveal_star0",

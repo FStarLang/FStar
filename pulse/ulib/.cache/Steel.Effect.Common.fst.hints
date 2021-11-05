@@ -1093,7 +1093,7 @@
         "token_correspondence_Steel.Effect.Common.sel_of"
       ],
       0,
-      "23a0efb66fb50eb1b6474834a79f49f6"
+      "0dc60bd285d14a02e5afd5622c762f0b"
     ],
     [
       "Steel.Effect.Common.vrefine_hp",
@@ -1223,7 +1223,7 @@
         "typing_Steel.Effect.Common.vrefine_am"
       ],
       0,
-      "2c3d904cef8219dc8312b1217ffe8a12"
+      "9621294febf7b51459fe18ed3718e0d3"
     ],
     [
       "Steel.Effect.Common.vrefine_sel_eq",
@@ -1309,7 +1309,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "68fea58e81ce982dca71ea4977ad1017"
+      "310f7da587927e156266f7a214090a0d"
     ],
     [
       "Steel.Effect.Common.vdep_sel'",
@@ -1383,7 +1383,7 @@
         "typing_Steel.Memory.core_mem", "typing_Steel.Memory.join"
       ],
       0,
-      "18bbd5efef0962bff6e186ca8ed56265"
+      "37c082df9c8c9329ac642574dfad4833"
     ],
     [
       "Steel.Effect.Common.vdep_sel_eq",
@@ -1431,7 +1431,7 @@
         "typing_Steel.Effect.Common.vdep_hp_payload"
       ],
       0,
-      "f85cc32ac0206fcdce186f81696b8988"
+      "01e4d2c5f3d2f2fab9d37681bf5e486b"
     ],
     [
       "Steel.Effect.Common.vrewrite_sel",
@@ -1465,7 +1465,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "110cc79541970701495ee09344f51635"
+      "f7469def84230dd916f11afde9a2e347"
     ],
     [
       "Steel.Effect.Common.vrewrite_sel_eq",
