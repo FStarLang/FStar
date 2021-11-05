@@ -167,33 +167,35 @@ let (by_tactic_interp :
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (tactic, FStar_Pervasives_Native.None)::(typ,
                                                          FStar_Pervasives_Native.Some
-                                                         (FStar_Syntax_Syntax.Implicit
-                                                         (false)))::(tm,
-                                                                    FStar_Pervasives_Native.None)::[])
-                 when
+                                                         {
+                                                           FStar_Syntax_Syntax.aqual_implicit
+                                                             = true;
+                                                           FStar_Syntax_Syntax.aqual_attributes
+                                                             = uu___2;_})::
+                (tm, FStar_Pervasives_Native.None)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.rewrite_by_tactic_lid
                  ->
-                 let uu___2 =
+                 let uu___3 =
                    FStar_TypeChecker_Env.new_implicit_var_aux
                      "rewrite_with_tactic RHS" tm.FStar_Syntax_Syntax.pos e
                      typ FStar_Syntax_Syntax.Allow_untyped
                      FStar_Pervasives_Native.None in
-                 (match uu___2 with
-                  | (uvtm, uu___3, g_imp) ->
+                 (match uu___3 with
+                  | (uvtm, uu___4, g_imp) ->
                       let u = e.FStar_TypeChecker_Env.universe_of e typ in
                       let goal =
-                        let uu___4 = FStar_Syntax_Util.mk_eq2 u typ tm uvtm in
+                        let uu___5 = FStar_Syntax_Util.mk_eq2 u typ tm uvtm in
                         FStar_Syntax_Util.mk_squash
-                          FStar_Syntax_Syntax.U_zero uu___4 in
-                      let uu___4 =
+                          FStar_Syntax_Syntax.U_zero uu___5 in
+                      let uu___5 =
                         run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
                           tm.FStar_Syntax_Syntax.pos tactic e goal in
-                      (match uu___4 with
-                       | (gs, uu___5) ->
+                      (match uu___5 with
+                       | (gs, uu___6) ->
                            ((match gs with
                              | [] -> ()
-                             | uu___7 ->
+                             | uu___8 ->
                                  FStar_Errors.raise_error
                                    (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                                      "rewrite_with_tactic left open goals")

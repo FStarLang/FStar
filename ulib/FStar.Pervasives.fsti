@@ -966,6 +966,36 @@ val commute_nested_matches : unit
   *)
 val noextract_to (backend:string) : Tot unit
 
+
+(** This attribute decorates a let binding, e.g.,
+
+    [@@normalize_for_extraction steps]
+    let f = e
+
+    The effect is that prior to extraction, F* will first reduce [e]
+    using the normalization [steps], and then proceed to extract it as
+    usual.
+
+    Almost the same behavior can be achieved by using a
+    [postprocess_for_extraction_with t] attribute, which runs tactic
+    [t] on the goal [e == ?u] and extracts the solution to [?u] in
+    place of [e]. However, using a tactic to postprocess a term is
+    more general than needed for some cases.
+
+    In particular, if we intend to only normalize [e] before
+    extraction (rather than applying some other form of equational
+    reasoning), then using [normalize_for_extraction] can be more
+    efficient, for the following reason:
+
+    Since we are reducing [e] just before extraction, F* can enable an
+    otherwise non-user-facing normalization feature that allows all
+    arguments marked [@@@erasable] to be erased to [()]---these terms
+    will anyway be extracted to [()] so erasing them during
+    normalization is a useful optimization.
+  *)
+val normalize_for_extraction (steps:list norm_step) : Tot unit
+
+
 (** A layered effect definition may optionally be annoated with
     (ite_soundness_by t) attribute, where t is another attribute
     When so, the implicits and the smt guard generated when

@@ -125,7 +125,7 @@ let filter_imp aq =
    | Some (Meta _) -> false
    | _ -> true
 let filter_imp_args args =
-  args |> List.filter (fun a -> a |> snd |> filter_imp)
+  args |> List.filter (function (_, None) -> true | (_, Some a) -> not a.aqual_implicit)
 let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
@@ -452,7 +452,7 @@ and attrs_to_string = function
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and aqual_to_string' s = function
+and bqual_to_string' s = function
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
@@ -460,9 +460,10 @@ and aqual_to_string' s = function
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-and imp_to_string s aq =
-    aqual_to_string' s aq
-
+and aqual_to_string' s = function
+  | Some ({aqual_implicit=true}) -> "#" ^ s
+  | _ -> s
+  
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
     match Resugar.resugar_binder b Range.dummyRange with
@@ -475,8 +476,8 @@ and binder_to_string' is_arrow b =
     if is_null_binder b
     then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
     else if not is_arrow && not (Options.print_bound_var_types())
-    then imp_to_string (attrs ^ nm_to_string b.binder_bv) b.binder_qual
-    else imp_to_string (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
+    then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
+    else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
 
 and binder_to_string b =  binder_to_string' false b
 
@@ -492,7 +493,7 @@ and binders_to_string sep bs =
     else bs |> List.map binder_to_string |> String.concat sep
 
 and arg_to_string = function
-   | a, imp -> imp_to_string (term_to_string a) imp
+   | a,  imp -> aqual_to_string' (term_to_string a) imp
 
 and args_to_string args =
     let args =
@@ -603,6 +604,7 @@ and metadata_to_string = function
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
 let aqual_to_string aq = aqual_to_string' "" aq
+let bqual_to_string bq = bqual_to_string' "" bq
 
 let comp_to_string' env c =
   if Options.ugly ()
@@ -619,7 +621,7 @@ let term_to_string' env x =
        Pp.pretty_string (float_of_string "1.0") 100 d
 
 let binder_to_json env b =
-    let n = JsonStr (imp_to_string (nm_to_string b.binder_bv) b.binder_qual) in
+    let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
     let t = JsonStr (term_to_string' env b.binder_bv.sort) in
     JsonAssoc [("name", n); ("type", t)]
 

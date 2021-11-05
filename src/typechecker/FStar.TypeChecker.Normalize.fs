@@ -739,39 +739,10 @@ let rejig_norm_request (hd:term) (args:args) :term =
 
 let is_nbe_request s = BU.for_some (eq_step NBE) s
 
-let tr_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
-        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
-        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
-        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
-        [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
-
-let tr_norm_steps s =
-    let s = List.concatMap tr_norm_step s in
-    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
-    let s = Beta::s in
-    let s = add_exclude s Zeta in
-    let s = add_exclude s Iota in
-    s
-
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
       match try_unembed_simple (EMB.e_list EMB.e_norm_step) s with
-      | Some steps -> Some (tr_norm_steps steps)
+      | Some steps -> Some (Cfg.translate_norm_steps steps)
       | None -> None
     in
     let inherited_steps =
@@ -1338,7 +1309,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin
             match strict_args with
             | None ->
-              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              let stack =
+                List.fold_right
+                  (fun (a, aq) stack ->
+                    let a =
+                      if ((Cfg.cfg_env cfg).erase_erasable_args ||
+                          cfg.steps.for_extraction ||
+                          cfg.debug.erase_erasable_args) //just for experimentation
+                      && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
+                      then U.exp_unit
+                      else a
+                    in
+                    Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                  args
+                  stack
+              in
               log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack head
 
@@ -2326,7 +2311,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -2348,7 +2333,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with

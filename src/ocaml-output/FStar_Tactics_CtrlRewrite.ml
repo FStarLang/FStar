@@ -146,7 +146,10 @@ let (__do_rewrite :
                                      (env.FStar_TypeChecker_Env.enable_defer_to_tac);
                                    FStar_TypeChecker_Env.unif_allow_ref_guards
                                      =
-                                     (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                     (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                   FStar_TypeChecker_Env.erase_erasable_args
+                                     =
+                                     (env.FStar_TypeChecker_Env.erase_erasable_args)
                                  } tm in
                              FStar_Pervasives_Native.Some uu___3)) ()
                with

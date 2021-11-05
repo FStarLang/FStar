@@ -182,7 +182,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
+     let gen_types (uvs:list<ctx_uvar>) : list<(bv * bqual)> =
          let fail rng k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
@@ -221,7 +221,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
            U.set_uvar u.ctx_uvar_head t;
             //t clearly has a free variable; this is the one place we break the
             //invariant of a uvar always being resolved to a term well-typed in its given context
-           a, Some S.imp_tag)
+           a, S.as_bqual_implicit true)
      in
 
      let gen_univs = gen_univs env univs in

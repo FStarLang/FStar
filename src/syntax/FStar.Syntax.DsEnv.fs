@@ -785,7 +785,7 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                 let is_rec = is_record typename_quals in
                 let formals' = formals |> List.collect (fun f ->
                         if S.is_null_bv f.binder_bv
-                        || (is_rec && S.is_implicit f.binder_qual)
+                        || (is_rec && S.is_bqual_implicit f.binder_qual)
                         then []
                         else [f] )
                 in

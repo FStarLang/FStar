@@ -46,7 +46,7 @@ val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * term * b
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation of implicits
-val maybe_implicit_with_meta_or_attr: aqual -> list<attribute> -> bool
+val maybe_implicit_with_meta_or_attr: bqual -> list<attribute> -> bool
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 
 //operations on computation types
