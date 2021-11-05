@@ -1840,7 +1840,7 @@ let print_full (deps:deps) : unit =
     all_fsti_files
     |> List.iter
       (fun fsti ->
-          let mn = lowercase_module_name fsti in
+         let mn = lowercase_module_name fsti in
          let range_of_file fsti =
            let r = Range.set_file_of_range Range.dummyRange fsti in
            Range.set_use_range r (Range.def_range r)

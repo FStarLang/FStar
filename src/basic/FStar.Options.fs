@@ -785,8 +785,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
          'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\t\
          A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
-         For example --extract 'OCaml:* A -A.B; Kremlin:* A -A.C'.\n\t\t\t\
-         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\
+         For example --extract 'OCaml:A -A.B' --extract 'Kremlin:A -A.C' --extract '*' means\n\t\t\t\t\
+         for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
+         for Kremlin, extract everything in the A namespace only except A.C;\n\t\t\t\t\
+         for everything else, extract everything.\n\t\t\t\
+         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\t\
+         Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\t\
          Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
 
        ( noshort,
@@ -1853,12 +1857,25 @@ let matches_namespace_filter_opt m =
   | Some filter -> module_matches_namespace_filter m filter
 
 type parsed_extract_setting = {
-  target_specific_settings: list<(codegen_t * (list<string>))>;
-  default_settings:option<(list<string>)>
+  target_specific_settings: list<(codegen_t * string)>;
+  default_settings:option<string>
 }
 
-let find_setting_for_target tgt (s:list<(codegen_t * list<string>)>)
-  : option<(list<string>)>
+let print_pes pes =
+  Util.format2 "{ target_specific_settings = %s;\n\t
+               default_settings = %s }"
+            (List.map (fun (tgt, s) ->
+                         Util.format2 "(%s, %s)"
+                           (print_codegen tgt)
+                           s)
+                      pes.target_specific_settings
+             |> String.concat "; ")
+            (match pes.default_settings with
+             | None -> "None"
+             | Some s -> s)
+
+let find_setting_for_target tgt (s:list<(codegen_t * string)>)
+  : option<string>
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
     | _ -> None
@@ -1872,7 +1889,7 @@ let extract_settings
         | None, None -> None
         | Some p, None
         | None, Some p -> Some p
-        | Some p0, Some p1 -> Some (p0 @ p1)
+        | Some p0, Some p1 -> Some (p0 ^ "," ^ p1)
       in
       let merge_target tgt =
         match
@@ -1910,11 +1927,10 @@ let extract_settings
                    | [default_setting] ->
                      Inr (Util.trim_string default_setting)
                    | [target; setting] ->
-                     begin
+                     let target = Util.trim_string target in
                      match parse_codegen target with
                      | None -> fail target
                      | Some tgt -> Inl (tgt, Util.trim_string setting)
-                     end
                    | _ -> fail t_setting
                in
                let settings = List.map split_one tgt_specific_settings in
@@ -1931,11 +1947,11 @@ let extract_settings
                      match setting with
                      | Inr def ->
                        (match out.default_settings with
-                         | None -> { out with default_settings = Some [def] }
+                         | None -> { out with default_settings = Some def }
                          | Some _ ->  fail_duplicate def "default")
                      | Inl (target, setting) ->
                        (match Util.try_find (fun (x, _) -> x = target) out.target_specific_settings with
-                         | None -> { out with target_specific_settings = (target, [setting]):: out.target_specific_settings }
+                         | None -> { out with target_specific_settings = (target, setting):: out.target_specific_settings }
                          | Some _ -> fail_duplicate setting (print_codegen target)))
                    settings
                    ({ target_specific_settings = []; default_settings = None })
@@ -1944,10 +1960,12 @@ let extract_settings
              in
              let empty_pes = { target_specific_settings = []; default_settings = None } in
              let pes =
-               List.fold_left
-                 (fun pes setting -> merge_parsed_extract_settings pes (parse_one_setting setting))
-                 empty_pes
+               //the left-most settings on the command line are at the end of the list
+               //so fold_right
+               List.fold_right
+                 (fun setting pes -> merge_parsed_extract_settings pes (parse_one_setting setting))
                  extract_settings
+                 empty_pes
              in
              memo := (Some pes, true);
              Some pes
@@ -1955,7 +1973,7 @@ let extract_settings
 let should_extract m tgt =
     let m = String.lowercase m in
     match extract_settings() with
-    | Some pes -> //new option, using --extract '* -FStar' etc.
+    | Some pes -> //new option, using --extract 'OCaml:* -FStar' etc.
       let _ =
         match get_no_extract(),
               get_extract_namespace(),
@@ -1972,9 +1990,9 @@ let should_extract m tgt =
         | None ->
           match pes.default_settings with
           | Some s -> s
-          | None -> ["*"]
+          | None -> "*" //extract everything, by default
       in
-      module_matches_namespace_filter m tsetting
+      module_matches_namespace_filter m [tsetting]
     | None -> //old
         let should_extract_namespace m =
             match get_extract_namespace () with
@@ -1988,7 +2006,7 @@ let should_extract m tgt =
         in
         not (no_extract m) &&
         (match get_extract_namespace (), get_extract_module() with
-        | [], [] -> true //neither is set
+        | [], [] -> true //neither is set; extract everything
         | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =

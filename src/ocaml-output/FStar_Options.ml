@@ -1053,7 +1053,7 @@ let rec (specs_with_types :
       (Accumulated
          (SimpleStr
             "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'")),
-      "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\tA 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\tFor example --extract 'OCaml:* A -A.B; Kremlin:* A -A.C'.\n\t\t\tNote, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\tMultiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
+      "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\tA 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\tFor example --extract 'OCaml:A -A.B' --extract 'Kremlin:A -A.C' --extract '*' means\n\t\t\t\tfor OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\tfor Kremlin, extract everything in the A namespace only except A.C;\n\t\t\t\tfor everything else, extract everything.\n\t\t\tNote, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\tNote also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\tMultiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
     (FStar_Getopt.noshort, "extract_module",
       (Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name")))),
       "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
@@ -2083,26 +2083,40 @@ let (matches_namespace_filter_opt :
           module_matches_namespace_filter m filter
 type parsed_extract_setting =
   {
-  target_specific_settings: (codegen_t * Prims.string Prims.list) Prims.list ;
-  default_settings: Prims.string Prims.list FStar_Pervasives_Native.option }
+  target_specific_settings: (codegen_t * Prims.string) Prims.list ;
+  default_settings: Prims.string FStar_Pervasives_Native.option }
 let (__proj__Mkparsed_extract_setting__item__target_specific_settings :
-  parsed_extract_setting -> (codegen_t * Prims.string Prims.list) Prims.list)
-  =
+  parsed_extract_setting -> (codegen_t * Prims.string) Prims.list) =
   fun projectee ->
     match projectee with
     | { target_specific_settings; default_settings;_} ->
         target_specific_settings
 let (__proj__Mkparsed_extract_setting__item__default_settings :
-  parsed_extract_setting ->
-    Prims.string Prims.list FStar_Pervasives_Native.option)
-  =
+  parsed_extract_setting -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { target_specific_settings; default_settings;_} -> default_settings
+let (print_pes : parsed_extract_setting -> Prims.string) =
+  fun pes ->
+    let uu___ =
+      let uu___1 =
+        FStar_Compiler_List.map
+          (fun uu___2 ->
+             match uu___2 with
+             | (tgt, s) ->
+                 FStar_Compiler_Util.format2 "(%s, %s)" (print_codegen tgt) s)
+          pes.target_specific_settings in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat "; ") in
+    FStar_Compiler_Util.format2
+      "{ target_specific_settings = %s;\n\t\n               default_settings = %s }"
+      uu___
+      (match pes.default_settings with
+       | FStar_Pervasives_Native.None -> "None"
+       | FStar_Pervasives_Native.Some s -> s)
 let (find_setting_for_target :
   codegen_t ->
-    (codegen_t * Prims.string Prims.list) Prims.list ->
-      Prims.string Prims.list FStar_Pervasives_Native.option)
+    (codegen_t * Prims.string) Prims.list ->
+      Prims.string FStar_Pervasives_Native.option)
   =
   fun tgt ->
     fun s ->
@@ -2126,7 +2140,11 @@ let (extract_settings :
       | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some p) ->
           FStar_Pervasives_Native.Some p
       | (FStar_Pervasives_Native.Some p01, FStar_Pervasives_Native.Some p11)
-          -> FStar_Pervasives_Native.Some (FStar_Compiler_List.op_At p01 p11) in
+          ->
+          let uu___ =
+            let uu___1 = FStar_String.op_Hat "," p11 in
+            FStar_String.op_Hat p01 uu___1 in
+          FStar_Pervasives_Native.Some uu___ in
     let merge_target tgt =
       let uu___ =
         let uu___1 = find_setting_for_target tgt p0.target_specific_settings in
@@ -2138,11 +2156,8 @@ let (extract_settings :
     let uu___ =
       FStar_Compiler_List.collect merge_target
         [OCaml; FSharp; Kremlin; Plugin] in
-    {
-      target_specific_settings = uu___;
-      default_settings =
-        (merge_setting p0.default_settings p1.default_settings)
-    } in
+    let uu___1 = merge_setting p0.default_settings p1.default_settings in
+    { target_specific_settings = uu___; default_settings = uu___1 } in
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang memo in
     match uu___1 with
@@ -2172,14 +2187,15 @@ let (extract_settings :
                        FStar_Pervasives.Inr
                          (FStar_Compiler_Util.trim_string default_setting)
                    | target::setting::[] ->
-                       let uu___4 = parse_codegen target in
+                       let target1 = FStar_Compiler_Util.trim_string target in
+                       let uu___4 = parse_codegen target1 in
                        (match uu___4 with
-                        | FStar_Pervasives_Native.None -> fail target
+                        | FStar_Pervasives_Native.None -> fail target1
                         | FStar_Pervasives_Native.Some tgt ->
                             FStar_Pervasives.Inl
                               (tgt,
-                                (FStar_Compiler_Util.trim_string setting)))
-                   | uu___4 -> fail t_setting in
+                                (FStar_Compiler_Util.trim_string setting))
+                        | uu___5 -> fail t_setting) in
                  let settings =
                    FStar_Compiler_List.map split_one tgt_specific_settings in
                  let fail_duplicate msg tgt =
@@ -2201,7 +2217,7 @@ let (extract_settings :
                                      target_specific_settings =
                                        (out.target_specific_settings);
                                      default_settings =
-                                       (FStar_Pervasives_Native.Some [def])
+                                       (FStar_Pervasives_Native.Some def)
                                    }
                                | FStar_Pervasives_Native.Some uu___4 ->
                                    fail_duplicate def "default")
@@ -2216,7 +2232,7 @@ let (extract_settings :
                                | FStar_Pervasives_Native.None ->
                                    {
                                      target_specific_settings =
-                                       ((target, [setting1]) ::
+                                       ((target, setting1) ::
                                        (out.target_specific_settings));
                                      default_settings =
                                        (out.default_settings)
@@ -2235,12 +2251,12 @@ let (extract_settings :
                    default_settings = FStar_Pervasives_Native.None
                  } in
                let pes =
-                 FStar_Compiler_List.fold_left
-                   (fun pes1 ->
-                      fun setting ->
+                 FStar_Compiler_List.fold_right
+                   (fun setting ->
+                      fun pes1 ->
                         let uu___4 = parse_one_setting setting in
-                        merge_parsed_extract_settings pes1 uu___4) empty_pes
-                   extract_settings1 in
+                        merge_parsed_extract_settings pes1 uu___4)
+                   extract_settings1 empty_pes in
                (FStar_Compiler_Effect.op_Colon_Equals memo
                   ((FStar_Pervasives_Native.Some pes), true);
                 FStar_Pervasives_Native.Some pes))
@@ -2268,8 +2284,8 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
               | FStar_Pervasives_Native.None ->
                   (match pes.default_settings with
                    | FStar_Pervasives_Native.Some s -> s
-                   | FStar_Pervasives_Native.None -> ["*"]) in
-            module_matches_namespace_filter m1 tsetting))
+                   | FStar_Pervasives_Native.None -> "*") in
+            module_matches_namespace_filter m1 [tsetting]))
       | FStar_Pervasives_Native.None ->
           let should_extract_namespace m2 =
             let uu___1 = get_extract_namespace () in
