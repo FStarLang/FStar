@@ -31,6 +31,13 @@ module U32 = FStar.UInt32
 ///
 /// In particular, if the table already contains a key k1 and the client invokes `put` API
 ///   with another key k2 that has a hash-collision with k1, then k1 is removed from the table
+///
+/// The module also provides a logical view of the hashtable as a map
+///
+/// The logical map provides a hash-collision-free view of the table,
+///   in the example above, the map would contain both k1 and k2, with the mapping for k1 unchanged by the `put` operation on k2 (unless k1 == k2)
+///
+/// So in that sense, the concrete state maintains a partial view of the map
 
 type u32 = U32.t
 
@@ -46,7 +53,8 @@ val tbl (k:eqtype) (v:Type0) (h:hash_fn k) : Type0
 
 type repr (k:eqtype) (v:Type0) = Map.t k v
 
-let empty_repr (#k:eqtype) (#v:Type0) (x:v) : repr k v = Map.restrict Set.empty (Map.const x)
+let empty_repr (#k:eqtype) (#v:Type0) (x:v) : repr k v =
+  Map.restrict Set.empty (Map.const x)
 
 /// The main separation logic assertion for the hashtable,
 ///   saying that in the current heap, tbl points to the map m
@@ -75,12 +83,11 @@ val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 
 
 inline_for_extraction
 val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k)
-  : SteelT (option v)
+  : Steel (option v)
       (ipts_to a m)
-      (fun r ->
-       ipts_to a m
-         `star`
-       pure (Some? r ==> r == Some (Map.sel m i)))
+      (fun _ -> ipts_to a m)
+      (fun _ -> True)
+      (fun _ r _ -> Some? r ==> r == Some (Map.sel m i))
 
 /// put API
 
