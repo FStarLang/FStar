@@ -302,7 +302,6 @@ let get #k #v #h #m a i =
   let s = A.intro_varray_pts_to a.store in
   intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
   intro_exists (G.reveal s) (store_contents_pred a m);
-  intro_pure (Some? r ==> r == Some (Map.sel m i));
   return r
 
 let put #k #v #h #m a i x =
