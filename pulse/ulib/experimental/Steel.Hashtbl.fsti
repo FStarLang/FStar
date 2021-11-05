@@ -53,13 +53,13 @@ val tbl (k:eqtype) (v:Type0) (h:hash_fn k) : Type0
 
 type repr (k:eqtype) (v:Type0) = Map.t k v
 
-let empty_repr (#k:eqtype) (#v:Type0) (x:v) : repr k v =
+let empty_repr (#k:eqtype) (#v:Type0) (x:v) : G.erased (repr k v) =
   Map.restrict Set.empty (Map.const x)
 
 /// The main separation logic assertion for the hashtable,
-///   saying that in the current heap, tbl points to the map m
+///   saying that in the current heap, the tbl is a partial view of the map m
 
-val ipts_to (#k:eqtype) (#v:Type0) (#h:hash_fn k) (t:tbl k v h) (m:repr k v) : vprop
+val tpts_to (#k:eqtype) (#v:Type0) (#h:hash_fn k) (t:tbl k v h) (m:repr k v) : vprop
 
 
 /// create API
@@ -74,7 +74,7 @@ inline_for_extraction
 val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 0})
   : SteelT (tbl k v h)
       emp
-      (fun a -> ipts_to a (empty_repr (G.reveal x)))
+      (fun a -> tpts_to a (empty_repr (G.reveal x)))
 
 /// get API
 ///
@@ -84,8 +84,8 @@ val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 
 inline_for_extraction
 val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k)
   : Steel (option v)
-      (ipts_to a m)
-      (fun _ -> ipts_to a m)
+      (tpts_to a m)
+      (fun _ -> tpts_to a m)
       (fun _ -> True)
       (fun _ r _ -> Some? r ==> r == Some (Map.sel m i))
 
@@ -94,8 +94,8 @@ val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k 
 inline_for_extraction
 val put (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k) (x:v)
   : SteelT unit
-      (ipts_to a m)
-      (fun _ -> ipts_to a (Map.upd m i x))
+      (tpts_to a m)
+      (fun _ -> tpts_to a (Map.upd m i x))
 
 
 /// free API
@@ -103,5 +103,5 @@ val put (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k 
 inline_for_extraction
 val free (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h)
   : SteelT unit
-      (ipts_to a m)
+      (tpts_to a m)
       (fun _ -> emp)

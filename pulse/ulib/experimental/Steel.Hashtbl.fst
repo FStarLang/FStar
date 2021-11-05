@@ -94,7 +94,7 @@ let seq_props_implies_seq_keys_distinct (#k:eqtype) (#v:Type0) (h:hash_fn k) (s:
 ///   to the store is a submap of the logical map
 
 let rec seq_to_map (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (default_v:v)
-  : Tot (repr k v) (decreases Seq.length s)
+  : GTot (repr k v) (decreases Seq.length s)
   = if Seq.length s = 0
     then empty_repr default_v
     else let hd, tl = Seq.head s, Seq.tail s in
@@ -124,7 +124,7 @@ let store_contents_pred (#k:eqtype) (#v:Type0) (#h:hash_fn k) (arr:tbl k v h) (m
     pure (seq_props h s /\ seq_to_map s arr.default_v `submap_of` m)
 
 [@@__reduce__]
-let ipts_to arr m = h_exists (store_contents_pred arr m)
+let tpts_to arr m = h_exists (store_contents_pred arr m)
 
 
 /// Some pure lemmas for a few properties of the store and logical map
@@ -267,7 +267,7 @@ let rec seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (defa
 
 let create #k #v h x n =
   let store = A.malloc None n in
-  let g_ref = ghost_alloc_pt (G.hide (empty_repr (G.reveal x))) in
+  let g_ref = ghost_alloc_pt (empty_repr (G.reveal x)) in
   let arr = {
     store_len = n;
     store = store;
