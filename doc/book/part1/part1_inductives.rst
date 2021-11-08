@@ -135,7 +135,7 @@ Tuples
 ^^^^^^
 
 The next step from enumerations is to define composite types, e.g.,
-types that are from from pairs, triples, quadruples, etc. of other
+types that are made from pairs, triples, quadruples, etc. of other
 types. Here's how
 
 .. literalinclude:: ../code/Part1.Inductives.fst
