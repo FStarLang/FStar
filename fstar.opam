@@ -15,7 +15,7 @@ depends: [
   "fileutils"
   "menhir" {>= "20161115" build}
   "pprint" {build}
-  "sedlex" {< "2.4" build}
+  "sedlex" {build}
   "ppxlib" {>= "0.22.0"}
   "ppx_deriving"
   "ppx_deriving_yojson"
