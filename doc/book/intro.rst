@@ -54,7 +54,7 @@ collection of domain-specific languages (DSLs). A common use of F* is
 to embed within it programming languages at different levels of
 abstraction or for specific programming tasks, and for the embedded
 language to be engineered with domain-specific reasoning, proof
-automation, and compilaton backends. Some examples include:
+automation, and compilation backends. Some examples include:
 
 * Low*, an shallowly embedded DSL for sequential programming against a
   C-like memory model including explicit memory management on the
@@ -151,7 +151,7 @@ readers with a background in general-purpose programming languages
 like C# or Scala, but not all dependently typed languages are Turing
 complete, since nontermination can break soundness. However, F*
 supports general recursive functions and non-termination in a safe
-manner, without compromsing soundness.
+manner, without compromising soundness.
 
 Beyond nontermination, F* supports a system of user-defined
 computational effects which can be used to model a variety of
@@ -162,7 +162,7 @@ Here below is some code in an F* dialect called :ref:`Low* <LowStar>`
 which provides a sequential, imperative C-like programming model with
 mutable memory. The function ``malloc_copy_free`` allocates an array
 ``dest``, copies the contents of an array of bytes ``src`` into a
-``dest``, deallocates, ``src`` and returns ``dest``.
+``dest``, deallocates ``src`` and returns ``dest``.
 
 .. literalinclude:: code/MemCpy.fst
    :language: fstar
@@ -178,7 +178,7 @@ full detail, but here are two main points to take away:
     and that it is *correct* (i.e., that it successfully copies
     ``src`` to ``dest`` without modifying any other memory)
 
-  * Given the implementation of a procedure F* actually builds a
+  * Given the implementation of a procedure, F* actually builds a
     mathematical proof that it is safe and correct with respect to its
     signature.
 
@@ -221,7 +221,7 @@ F* seeks to reduce that burden, using a variety of techniques.
 Proving even a simple program often involves proving dozens or
 hundreds of small facts, e.g., proving that bounded arithmetic doesn't
 overflow, or that ill-defined operations like divisions by zero never
-occur. All these little proofs can can quickly overwhelm a user.
+occur. All these little proofs can quickly overwhelm a user.
 
 The main workhorse for proofs in F* is an automated theorem prover,
 known as a *Satisfiability Modulo Theories*, or SMT, solver. The F*
@@ -303,7 +303,7 @@ proof of the theorem.
 
 Tactics are an instance of a more general metaprogramming system in
 F*, which allows an F* program to generate other F* programs. You'll
-learn more about tactics and metaprograming in :ref:`this chapter
+learn more about tactics and metaprogramming in :ref:`this chapter
 <MetaFStar>`.
 
 
@@ -373,7 +373,7 @@ some of the following:
 
   * `Theorem Proving in Lean
     <https://leanprover.github.io/theorem_proving_in_lean/>`_: This is
-    the standard reference for learning abou the Lean theorem prover,
+    the standard reference for learning about the Lean theorem prover,
     though there are several other `resources
     <https://leanprover-community.github.io/learn.html>`_ too.
 
@@ -398,7 +398,7 @@ kinds of mathematics. What sets F* apart from these other languages
 (and more like Nuprl) is its extensional notion of type equality,
 making many programming patterns significantly smoother in F* (cf. the
 :ref:`vector <Intro_Vec>` example). However, this design also makes
-typechecking in F* undedicable. The practical consequences of this are
+typechecking in F* undecidable. The practical consequences of this are
 that F* typechecker can time-out and refuse to accept your
 program. Other dependently typed languages have decidable
 typechecking, though they can, in principle, take arbitrarily long to
@@ -411,7 +411,7 @@ languages with dependent types, though in return, one needs to also
 trust the combination of F* and Z3 to believe in the validity of an F*
 proof. Isabelle/HOL provides similar SMT-assisted automation (in its
 Sledgehammer tool), for the weaker logic provided by HOL, though
-Sledghammer's design ensures that the SMT solver need not be
+Sledgehammer's design ensures that the SMT solver need not be
 trusted. F*'s use of SMT is also similar to what program verifiers
 like Dafny and Liquid Haskell offer. However, unlike their SMT-only
 proof strategies, F*, like Coq and Lean, also provides symbolic

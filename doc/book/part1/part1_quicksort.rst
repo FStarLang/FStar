@@ -65,7 +65,7 @@ There are a few points worth discussing in detail:
 
 2. We have to prove that ``sort`` terminates. The measure we've
    provided is ``length l``, meaning that at each recursive call,
-   we're claiming that the length of input list is stricly
+   we're claiming that the length of input list is strictly
    decreasing.
 
 3. Why is this true? Well, informally, the recursive calls ``sort lo``
@@ -88,7 +88,7 @@ elements in ``l`` such that the every element in ``l₁`` satisfies
        :start-after: SNIPPET_START: partition
        :end-before: SNIPPET_END: partition
 
-The specification we've given ``parition`` is only partial—we do not
+The specification we've given ``partition`` is only partial—we do not
 say, for instance, that all the elements in ``l₁`` satisfy ``f``. We
 only say that the sum of the lengths of the ``l₁`` and ``l₂`` are
 equal to the length of ``l``. That's because that's the only property
@@ -111,7 +111,7 @@ correct. Here's a proof—it requires three auxiliary lemmas and we'll
 discuss it in detail.
 
 Our first lemma relates ``partition`` to ``mem``: it proves what we
-left out in the intrinsic specifiation of ``partition``, i.e., that
+left out in the intrinsic specification of ``partition``, i.e., that
 all the elements in ``l₁`` satisfy ``f``, the elements in ``l₂`` do
 not, and every element in ``l`` appears in either ``l₁`` or ``l₂``.
 
@@ -167,13 +167,13 @@ itself.
 
     + We also need to prove the ``sorted`` refinements on ``sort lo``
       and ``sort hi`` in order to call ``sorted_concat``, but the
-      recursive calls of the lemma give us those proeprties.
+      recursive calls of the lemma give us those properties.
 
     + After calling ``sorted_concat``, we have proven that the
       resulting list is sorted. What's left is to prove that all the
       elements of the input list are in the result, and ``append_mem``
       does that, using the postcondition of ``partition_mem`` and the
-      induction hyptothesis to relate the elements of ``append (sort
+      induction hypothesis to relate the elements of ``append (sort
       lo) (pivot :: sort hi)`` to the input list ``l``.
 
 Here's another version of the ``sort_correct`` lemma, this time
