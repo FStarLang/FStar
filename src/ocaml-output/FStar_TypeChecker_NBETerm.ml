@@ -787,7 +787,8 @@ let (lid_as_typ :
             FStar_Pervasives_Native.None in
         mkFV uu___ us args1
 let (as_iarg : t -> arg) =
-  fun a -> (a, (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag))
+  fun a ->
+    let uu___ = FStar_Syntax_Syntax.as_aqual_implicit true in (a, uu___)
 let (as_arg : t -> arg) = fun a -> (a, FStar_Pervasives_Native.None)
 let (make_arrow1 : t -> arg -> t) =
   fun t1 ->
@@ -1169,7 +1170,8 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                 (tl, FStar_Pervasives_Native.None)::(hd,
                                                      FStar_Pervasives_Native.None)::
                 (uu___1, FStar_Pervasives_Native.Some
-                 (FStar_Syntax_Syntax.Implicit uu___2))::[])
+                 { FStar_Syntax_Syntax.aqual_implicit = true;
+                   FStar_Syntax_Syntax.aqual_attributes = uu___2;_})::[])
                when
                FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
                ->

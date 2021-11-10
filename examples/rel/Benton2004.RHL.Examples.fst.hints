@@ -61,7 +61,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "0e946f7f253ebd4534b98550406c0742"
+      "014a9e051b5876191c09a58200988298"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -113,7 +113,8 @@
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_AmpAmp",
         "token_correspondence_Prims.op_Equality",
-        "typing_Benton2004.RHL.geq", "typing_Benton2004.assign",
+        "typing_Benton2004.RHL.gand", "typing_Benton2004.RHL.geq",
+        "typing_Benton2004.RHL.gvar", "typing_Benton2004.assign",
         "typing_Benton2004.const", "typing_Benton2004.eop",
         "typing_Benton2004.evar", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
         "typing_Tm_abs_6c79f0d33661d6bb133651fed566829b",
@@ -123,7 +124,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "7a6f12dfab1f17a7c215ff6a588767ce"
+      "ed338793dd534163df866c17028eaa67"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -155,7 +156,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "c0864a7efa16592b2ceead83dd7a5781"
+      "f72e57fc5edbb97804407d2f284d0632"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -188,7 +189,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "559eedb01151a51bf638ff1b8781e6c7"
+      "925f6b431a175069b2c17b35f8b4e4bb"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -221,7 +222,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "117a76bd307b8d7b0ae1ac5385812148"
+      "7fba18e2518e91549660ee6505977080"
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -238,7 +239,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "0f824a38205b430b621ba480175f5e38"
+      "9812871740a65f0d1aa1d5bb11c194ec"
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -255,7 +256,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "eaff20a5ba0bc308faa9529d49d12192"
+      "07ad80a7d552f524e8f25eaef5b9c301"
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -268,7 +269,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "d4286fbab12403b52604fcd0691291ca"
+      "fc7cd25ad746628b619ae0eb51eb32fa"
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -295,7 +296,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "d3b12cbe1e4055e3ba5c8ca7b1111fdb"
+      "cd9d1a4a1cb35c4ba2d80b4d0f4e0b32"
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -308,7 +309,7 @@
         "typing_Benton2004.skip"
       ],
       0,
-      "bb438d7f8df1c21e700f7e2367029b52"
+      "40be0976830baa3673eaaa9d6383fe0e"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -415,7 +416,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "395fc53beca5887c3f6d1131b834391f"
+      "b18697b2c77698a64a57709349343673"
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
@@ -462,6 +463,7 @@
         "interpretation_Tm_abs_ec742af2e60fcd53c3ec5adf15a291f6",
         "lemma_Benton2004.RHL.exp_to_gexp_const",
         "lemma_Benton2004.RHL.exp_to_gexp_evar",
+        "lemma_Benton2004.RHL.holds_gand",
         "lemma_Benton2004.RHL.holds_interp",
         "lemma_Benton2004.RHL.included_alt",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
@@ -476,15 +478,15 @@
         "token_correspondence_Benton2004.reify_exp",
         "token_correspondence_Prims.op_AmpAmp",
         "token_correspondence_Prims.op_GreaterThan",
-        "typing_Benton2004.RHL.exp_to_gexp", "typing_Benton2004.RHL.gnot",
-        "typing_Benton2004.evar", "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
+        "typing_Benton2004.RHL.Examples.sec43__precond",
+        "typing_Benton2004.RHL.gand", "typing_Benton2004.RHL.gnot",
         "typing_Tm_abs_6c79f0d33661d6bb133651fed566829b",
         "typing_Tm_abs_815b57c9640da25f7ebc5d29276cb38b",
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908",
         "typing_tok_Benton2004.RHL.Left@tok"
       ],
       0,
-      "c79fa67bc33059b78ddd399711582196"
+      "9dce30a0006fd72388ea825e382f0c6f"
     ]
   ]
 ]

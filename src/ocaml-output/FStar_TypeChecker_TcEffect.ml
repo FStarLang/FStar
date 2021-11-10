@@ -247,7 +247,9 @@ let (check_no_subtyping_for_layered_combinator :
              FStar_TypeChecker_Env.enable_defer_to_tac =
                (env.FStar_TypeChecker_Env.enable_defer_to_tac);
              FStar_TypeChecker_Env.unif_allow_ref_guards =
-               (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+               (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+             FStar_TypeChecker_Env.erase_erasable_args =
+               (env.FStar_TypeChecker_Env.erase_erasable_args)
            } in
          match k with
          | FStar_Pervasives_Native.None ->
@@ -1862,19 +1864,6 @@ let (tc_layered_eff_decl :
                               FStar_Compiler_Effect.op_Bar_Greater uu___12
                                 FStar_Pervasives_Native.snd in
                             uu___11.FStar_Syntax_Syntax.pos in
-                          let binder_aq_to_arg_aq uu___11 =
-                            match uu___11 with
-                            | (aq, attrs1) ->
-                                (match (aq, attrs1) with
-                                 | (FStar_Pervasives_Native.Some
-                                    (FStar_Syntax_Syntax.Implicit uu___12),
-                                    uu___13) -> aq
-                                 | (FStar_Pervasives_Native.Some
-                                    (FStar_Syntax_Syntax.Meta uu___12),
-                                    uu___13) ->
-                                     FStar_Pervasives_Native.Some
-                                       (FStar_Syntax_Syntax.Implicit false)
-                                 | uu___12 -> FStar_Pervasives_Native.None) in
                           let uu___11 = if_then_else in
                           match uu___11 with
                           | (ite_us, ite_t, uu___12) ->
@@ -1929,10 +1918,11 @@ let (tc_layered_eff_decl :
                                                             let uu___22 =
                                                               FStar_Syntax_Syntax.bv_to_name
                                                                 b.FStar_Syntax_Syntax.binder_bv in
+                                                            let uu___23 =
+                                                              FStar_Syntax_Util.aqual_of_binder
+                                                                b in
                                                             (uu___22,
-                                                              (binder_aq_to_arg_aq
-                                                                 ((b.FStar_Syntax_Syntax.binder_qual),
-                                                                   (b.FStar_Syntax_Syntax.binder_attrs)))))) in
+                                                              uu___23))) in
                                                   FStar_Syntax_Syntax.mk_Tm_app
                                                     ite_t1 uu___21 r in
                                                 FStar_Compiler_Effect.op_Bar_Greater
@@ -2489,7 +2479,10 @@ let (tc_layered_eff_decl :
                                           (uu___16.FStar_TypeChecker_Env.enable_defer_to_tac);
                                         FStar_TypeChecker_Env.unif_allow_ref_guards
                                           =
-                                          (uu___16.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                          (uu___16.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                        FStar_TypeChecker_Env.erase_erasable_args
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.erase_erasable_args)
                                       } in
                                     FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                                       uu___15
@@ -4242,7 +4235,10 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.enable_defer_to_tac);
                                                                     FStar_TypeChecker_Env.unif_allow_ref_guards
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                                                    (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                                                    FStar_TypeChecker_Env.erase_erasable_args
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.erase_erasable_args)
                                                                     }
                                                                     (
                                                                     fun
@@ -4514,7 +4510,10 @@ let (tc_non_layered_eff_decl :
                                                                     (uu___24.FStar_TypeChecker_Env.enable_defer_to_tac);
                                                                    FStar_TypeChecker_Env.unif_allow_ref_guards
                                                                     =
-                                                                    (uu___24.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                                                    (uu___24.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                                                   FStar_TypeChecker_Env.erase_erasable_args
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.erase_erasable_args)
                                                                  } in
                                                                ((let uu___25
                                                                    =
@@ -5706,7 +5705,9 @@ let (tc_lift :
                               FStar_TypeChecker_Env.enable_defer_to_tac =
                                 (env.FStar_TypeChecker_Env.enable_defer_to_tac);
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
-                                (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                              FStar_TypeChecker_Env.erase_erasable_args =
+                                (env.FStar_TypeChecker_Env.erase_erasable_args)
                             } in
                           let lift1 =
                             match lift with

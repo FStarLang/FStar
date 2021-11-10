@@ -199,7 +199,7 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = {
   binder_bv    : bv;
-  binder_qual  : aqual;
+  binder_qual  : bqual;
   binder_attrs : list<attribute>
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
@@ -320,10 +320,15 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
-and arg_qualifier =
+and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term  //meta-argument that specifies a tactic term
+  | Meta of term     //meta-argument that specifies a tactic term
   | Equality
+and bqual = option<binder_qualifier>
+and arg_qualifier = {
+  aqual_implicit : bool;
+  aqual_attributes : list<attribute>
+}
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
@@ -642,7 +647,7 @@ let mk_binder_with_attrs bv aqual attrs = {
 let mk_binder a = mk_binder_with_attrs a None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
-let iarg t : arg = t, Some imp_tag
+let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
 let is_null_binder (b:binder) = is_null_bv b.binder_bv
@@ -656,10 +661,11 @@ let freenames_of_binders (bs:binders) : freenames =
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
-let is_implicit = function Some (Implicit _) -> true | _ -> false
-let is_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
-let as_implicit = function true -> Some imp_tag | _ -> None
-
+let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
+let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
+let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
+let as_bqual_implicit = function true -> Some imp_tag | _ -> None
+let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
 let pat_bvs (p:pat) : list<bv> =
     let rec aux b p = match p.v with
         | Pat_dot_term _

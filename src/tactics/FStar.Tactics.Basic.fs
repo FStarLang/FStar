@@ -128,7 +128,7 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
         begin
         let hd, args = U.head_and_args t in
         match (SS.compress hd).n, args with
-        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
+        | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
             Some (e1, e2)
         | _ -> None
         end
@@ -569,7 +569,7 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
     mlog (fun () -> BU.print1 "norm: witness = %s\n" (Print.term_to_string (goal_witness goal))) (fun _ ->
     // Translate to actual normalizer steps
-    let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
+    let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
     //let w = normalize steps (goal_env goal) (goal_witness goal) in
     let t = normalize steps (goal_env goal) (goal_type goal) in
     replace_cur (goal_with_type goal t)
@@ -585,7 +585,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) (fun () ->
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
     bind (__tc_lax e t) (fun (t, _, _) ->
-    let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
+    let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
     let t = normalize steps ps.main_context t in
     mlog (fun () -> BU.print1 "norm_term_env: t' = %s\n" (Print.term_to_string t)) (fun () ->
     ret t
@@ -670,7 +670,7 @@ let rec  __try_unify_by_application
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, b.binder_qual, uv)::acc) e typ' ty2 rng))
+            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
@@ -705,14 +705,7 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "appl
     bind (try_unify_by_application only_match e typ (goal_type goal) (rangeof goal)) (fun uvs ->
     mlog (fun () -> BU.print1 "t_apply: found args = %s\n"
         (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs)) (fun () ->
-    (* use normal implicit application for meta-args: meta application does not
-     * make sense and the typechecker complains. *)
-    let fix_qual q =
-      match q with
-      | Some (Meta _) -> Some (Implicit false)
-      | _ -> q
-    in
-    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, fix_qual q)]) uvs tm in
+    let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
 
     let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
@@ -1011,7 +1004,7 @@ let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_e
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) -> begin
-        let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
+        let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
         let bv' = { bv with sort = sort' } in
         let env' = push_bvs e0 (bv'::bvs) in
@@ -1442,8 +1435,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let bs = SS.subst_binders subst bs in
                         let subpats_1 = List.map (fun (({binder_bv=bv}), (t, _)) ->
                                                  (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
-                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=aq}) ->
-                                                 (mk_pat (Pat_var bv), is_imp aq)) bs in
+                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=bq}) ->
+                                                 (mk_pat (Pat_var bv), is_imp bq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
                         let env = (goal_env g) in

@@ -1973,7 +1973,7 @@ let (extract_record :
                                                       f.FStar_Syntax_Syntax.binder_bv)
                                                      ||
                                                      (is_rec &&
-                                                        (FStar_Syntax_Syntax.is_implicit
+                                                        (FStar_Syntax_Syntax.is_bqual_implicit
                                                            f.FStar_Syntax_Syntax.binder_qual)) in
                                                  if uu___20 then [] else [f])) in
                                        let fields' =

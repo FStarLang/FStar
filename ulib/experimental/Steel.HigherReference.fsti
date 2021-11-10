@@ -41,11 +41,11 @@ val is_null (#a:Type u#1) (r:ref a) : (b:bool{b <==> r == null})
 /// The standard points to separation logic assertion, expressing that
 /// reference [r] is valid in memory, stores value [v], and that we have
 /// permission [p] on it.
-val pts_to_sl (#a:Type u#1) (r:ref a) (p:perm) (v:erased a) : slprop u#1
+val pts_to_sl (#a:Type u#1) (r:ref a) (p:perm) (v:a) : slprop u#1
 
 /// Lifting the standard points to predicate to vprop, with a non-informative selector
 [@@ __steel_reduce__]
-unfold let pts_to (#a:Type u#1) (r:ref a) (p:perm) (v:erased a) : vprop =
+unfold let pts_to (#a:Type u#1) (r:ref a) (p:perm) (v:a) : vprop =
   to_vprop (pts_to_sl r p v)
 
 /// If two pts_to predicates on the same reference [r] are valid in the memory [m],
@@ -54,7 +54,7 @@ val pts_to_ref_injective
       (#a: Type u#1)
       (r: ref a)
       (p0 p1:perm)
-      (v0 v1: erased a)
+      (v0 v1:a)
       (m:mem)
     : Lemma
       (requires
@@ -65,7 +65,7 @@ val pts_to_ref_injective
 val pts_to_not_null (#a:Type u#1)
                     (x:ref a)
                     (p:perm)
-                    (v: erased a)
+                    (v:a)
                     (m:mem)
   : Lemma (requires interp (pts_to_sl x p v) m)
           (ensures x =!= null)
@@ -133,7 +133,7 @@ val gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a
 val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                (#uses:inames)
                (r:ref t)
-               (v:Ghost.erased t)
+               (v:erased t)
                (v_old:t)
                (v_new:t)
    : action_except (b:bool{b <==> (Ghost.reveal v == v_old)})
@@ -152,10 +152,10 @@ val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
 [@@ erasable]
 val ghost_ref (a:Type u#1) : Type u#0
 
-val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (x:erased a) : slprop u#1
+val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (x:a) : slprop u#1
 
 [@@ __steel_reduce__]
-unfold let ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:erased a) : vprop =
+unfold let ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:a) : vprop =
   to_vprop (ghost_pts_to_sl r p x)
 
 val ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p))
