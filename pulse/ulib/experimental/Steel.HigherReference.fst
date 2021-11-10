@@ -95,7 +95,7 @@ let pts_to_ref_injective
       (#a: Type u#1)
       (r: ref a)
       (p0 p1:perm)
-      (v0 v1: erased a)
+      (v0 v1:a)
       (m:mem)
     : Lemma
       (requires
@@ -115,7 +115,7 @@ let pts_to_ref_injective
 let pts_to_not_null (#a:Type u#1)
                     (r:ref a)
                     (p:perm)
-                    (v: erased a)
+                    (v:a)
                     (m:mem)
   : Lemma (requires interp (pts_to_sl r p v) m)
           (ensures r =!= null)
@@ -153,7 +153,7 @@ let alloc #a x =
   assert (FStar.PCM.composable pcm_frac v None);
   assert (compatible pcm_frac v v);
   let r = RP.alloc v in
-  rewrite_slprop (RP.pts_to r v) (pts_to r full_perm (hide x))
+  rewrite_slprop (RP.pts_to r v) (pts_to r full_perm x)
     (fun m ->
       emp_unit (hp_of (pts_to_raw r full_perm x));
       pure_star_interp (hp_of (pts_to_raw r full_perm x)) (perm_ok full_perm) m
@@ -364,7 +364,7 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
 let ghost_ref a = erased (ref a)
 
 [@@__reduce__]
-let ghost_pts_to_sl #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to_sl (reveal r) p x
+let ghost_pts_to_sl #a (r:ghost_ref a) (p:perm) (x:a) = pts_to_sl (reveal r) p x
 
 let ghost_pts_to_witinv (#a:Type) (r:ghost_ref a) (p:perm) : Lemma (is_witness_invariant (ghost_pts_to_sl r p)) =
   let aux (x y : erased a) (m:mem)
@@ -391,7 +391,6 @@ let ghost_alloc_aux (#a:Type) (#u:_) (x:a)
 
 let ghost_alloc x =
   let r = ghost_alloc_aux (reveal x) in
-  rewrite_slprop (pts_to r full_perm (hide (reveal x))) (ghost_pts_to r full_perm x) (fun _ -> ());
   hide r
 
 let ghost_free #a #u #v r =

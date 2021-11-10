@@ -265,7 +265,7 @@ let enqueue
   return ()
 
 assume
-val read_next (#a: _) (#u: _) (#v: _) (x:t a)
+val read_next (#a: _) (#u: _) (#v: Ghost.erased (cell a)) (x:t a)
     : SteelAtomic (t a) u (pts_to x v)
                             (fun _ -> pts_to x v)
                             (requires (fun _ -> True))
@@ -320,6 +320,6 @@ let dequeue
     intro_exists_erased ltl (queue_lc p tl l2);
     intro_exists_erased l2 (queue_l p tl);
     intro_pure (Ghost.reveal p == (Ghost.reveal (Ghost.hide (snd lhd))).next);
-    intro_exists (Ghost.hide (snd lhd)) (fun (c: Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl);
+    intro_exists (snd lhd) (fun (c: (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl);
     return (Some p)
   end
