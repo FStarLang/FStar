@@ -100,3 +100,14 @@ let source_file b =
 
 let current_line b =
   b.cur_p.Lexing.pos_lnum
+
+(* Since sedlex 2.4, we need to expose Sedlexing.__private_next_int
+   (see #2343)
+
+   From https://github.com/ocaml-communi-ty/sedlex/blob/268c553f474457574e22701679d68f66aa771551/src/lib/sedlexing.mli#L154-L161
+   [next] and [__private__next_int] have the same doc description,
+   the only difference is the return type *)
+let __private__next_int b =
+  match next b with
+  | Some v -> Uchar.to_int v
+  | None -> -1
