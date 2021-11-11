@@ -2486,7 +2486,8 @@ let (print_full : deps -> unit) =
                                                       lowercase_module_name
                                                         df in
                                                     FStar_Options.should_extract
-                                                      uu___7))) in
+                                                      uu___7
+                                                      FStar_Options.OCaml))) in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          extracted_fst_files
                                          (FStar_Compiler_List.map
@@ -2494,7 +2495,8 @@ let (print_full : deps -> unit) =
                                      let uu___7 =
                                        let uu___8 =
                                          lowercase_module_name file_name1 in
-                                       FStar_Options.should_extract uu___8 in
+                                       FStar_Options.should_extract uu___8
+                                         FStar_Options.OCaml in
                                      if uu___7
                                      then
                                        let cmx_files1 =
@@ -2553,7 +2555,8 @@ let (print_full : deps -> unit) =
             (FStar_Compiler_List.iter
                (fun fst_file ->
                   let mname = lowercase_module_name fst_file in
-                  let uu___2 = FStar_Options.should_extract mname in
+                  let uu___2 =
+                    FStar_Options.should_extract mname FStar_Options.OCaml in
                   if uu___2
                   then
                     let uu___3 = output_ml_file fst_file in
@@ -2567,8 +2570,13 @@ let (print_full : deps -> unit) =
             (FStar_Compiler_List.iter
                (fun fst_file ->
                   let mname = lowercase_module_name fst_file in
-                  let uu___2 = output_krml_file fst_file in
-                  FStar_Compiler_Util.smap_add krml_file_map mname uu___2));
+                  let uu___2 =
+                    FStar_Options.should_extract mname FStar_Options.Kremlin in
+                  if uu___2
+                  then
+                    let uu___3 = output_krml_file fst_file in
+                    FStar_Compiler_Util.smap_add krml_file_map mname uu___3
+                  else ()));
           sort_output_files krml_file_map in
         let print_all tag files =
           pr tag;

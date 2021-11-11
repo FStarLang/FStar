@@ -383,6 +383,13 @@ Guidelines for the changelog:
 
 ## Command line options
 
+   * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
+     The behavior of the --extract option was changed so that it no
+     longer treats the OCaml and Kremlin targets
+     differently. Previously, when used with --dep full, F* would
+     disregard the --extract setting when emitting the
+     `ALL_KRML_FILES` variable.
+
    * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
      options take lists of namespaces as arguments
      (`--already_cached`, `--extract`, `--using_facts_from`, etc.),

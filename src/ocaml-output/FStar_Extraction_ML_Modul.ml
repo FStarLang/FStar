@@ -2601,52 +2601,59 @@ let (extract :
     fun m ->
       (let uu___1 = FStar_Options.restore_cmd_line_options true in
        FStar_Compiler_Effect.op_Less_Bar (fun uu___2 -> ()) uu___1);
-      (let uu___2 =
-         let uu___3 =
-           let uu___4 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-           FStar_Options.should_extract uu___4 in
-         Prims.op_Negation uu___3 in
-       if uu___2
-       then
-         let uu___3 =
-           let uu___4 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-           FStar_Compiler_Util.format1
-             "Extract called on a module %s that should not be extracted"
-             uu___4 in
-         failwith uu___3
-       else ());
-      (let uu___2 = FStar_Options.interactive () in
-       if uu___2
-       then (g, FStar_Pervasives_Native.None)
-       else
-         (let nm = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-          let uu___4 =
-            FStar_Syntax_Unionfind.with_uf_enabled
-              (fun uu___5 ->
-                 FStar_Errors.with_ctx
-                   (Prims.op_Hat "While extracting module " nm)
-                   (fun uu___6 ->
-                      FStar_Profiling.profile (fun uu___7 -> extract' g m)
-                        (FStar_Pervasives_Native.Some nm)
-                        "FStar.Extraction.ML.Modul.extract")) in
-          match uu___4 with
-          | (g1, mllib) ->
-              let uu___5 =
-                match mllib with
-                | FStar_Pervasives_Native.None -> (g1, mllib)
-                | FStar_Pervasives_Native.Some mllib1 ->
-                    let uu___6 =
-                      FStar_Extraction_ML_UEnv.with_typars_env g1
-                        (fun e ->
-                           FStar_Extraction_ML_RemoveUnusedParameters.elim_mllib
-                             e mllib1) in
-                    (match uu___6 with
-                     | (g2, mllib2) ->
-                         (g2, (FStar_Pervasives_Native.Some mllib2))) in
-              (match uu___5 with
-               | (g2, mllib1) ->
-                   ((let uu___7 = FStar_Options.restore_cmd_line_options true in
-                     FStar_Compiler_Effect.op_Less_Bar (fun uu___8 -> ())
-                       uu___7);
-                    (let uu___7 = FStar_Extraction_ML_UEnv.exit_module g2 in
-                     (uu___7, mllib1))))))
+      (let tgt =
+         let uu___1 = FStar_Options.codegen () in
+         match uu___1 with
+         | FStar_Pervasives_Native.None ->
+             failwith "Impossible: We're in extract, codegen must be set!"
+         | FStar_Pervasives_Native.Some t -> t in
+       (let uu___2 =
+          let uu___3 =
+            let uu___4 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
+            FStar_Options.should_extract uu___4 tgt in
+          Prims.op_Negation uu___3 in
+        if uu___2
+        then
+          let uu___3 =
+            let uu___4 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
+            FStar_Compiler_Util.format1
+              "Extract called on a module %s that should not be extracted"
+              uu___4 in
+          failwith uu___3
+        else ());
+       (let uu___2 = FStar_Options.interactive () in
+        if uu___2
+        then (g, FStar_Pervasives_Native.None)
+        else
+          (let nm = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
+           let uu___4 =
+             FStar_Syntax_Unionfind.with_uf_enabled
+               (fun uu___5 ->
+                  FStar_Errors.with_ctx
+                    (Prims.op_Hat "While extracting module " nm)
+                    (fun uu___6 ->
+                       FStar_Profiling.profile (fun uu___7 -> extract' g m)
+                         (FStar_Pervasives_Native.Some nm)
+                         "FStar.Extraction.ML.Modul.extract")) in
+           match uu___4 with
+           | (g1, mllib) ->
+               let uu___5 =
+                 match mllib with
+                 | FStar_Pervasives_Native.None -> (g1, mllib)
+                 | FStar_Pervasives_Native.Some mllib1 ->
+                     let uu___6 =
+                       FStar_Extraction_ML_UEnv.with_typars_env g1
+                         (fun e ->
+                            FStar_Extraction_ML_RemoveUnusedParameters.elim_mllib
+                              e mllib1) in
+                     (match uu___6 with
+                      | (g2, mllib2) ->
+                          (g2, (FStar_Pervasives_Native.Some mllib2))) in
+               (match uu___5 with
+                | (g2, mllib1) ->
+                    ((let uu___7 =
+                        FStar_Options.restore_cmd_line_options true in
+                      FStar_Compiler_Effect.op_Less_Bar (fun uu___8 -> ())
+                        uu___7);
+                     (let uu___7 = FStar_Extraction_ML_UEnv.exit_module g2 in
+                      (uu___7, mllib1)))))))

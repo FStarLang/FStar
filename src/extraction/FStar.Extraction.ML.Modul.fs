@@ -1188,7 +1188,12 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract (string_of_lid m.name)) then
+  let tgt = 
+    match Options.codegen() with
+    | None -> failwith "Impossible: We're in extract, codegen must be set!"
+    | Some t -> t
+  in
+  if not (Options.should_extract (string_of_lid m.name) tgt) then
     failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
 
   if Options.interactive() then g, None else begin
