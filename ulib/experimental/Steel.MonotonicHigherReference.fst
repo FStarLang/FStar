@@ -35,7 +35,7 @@ open FStar.Real
 noeq
 type history (a:Type) (p:Preorder.preorder a) =
   | Witnessed : Q.hist p -> history a p
-  | Current : Q.vhist p -> perm -> history a p
+  | Current : h:Q.vhist p -> f:perm -> history a p
 
 let hval_tot #a #p (h:history a p{Current? h}) : a =
   match h with
@@ -180,7 +180,7 @@ let ref a p = M.ref (history a p) pcm_history
 
 let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
   : prop
-  = Current? h /\ hval h == v /\ hperm h == f
+  = Current? h /\ hval h == v /\ hperm h == f /\ f.v <=. one
 
 [@@__reduce__]
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
@@ -189,6 +189,18 @@ let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
 
 let pts_to' (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a) =
     h_exists (pts_to_body r f v)
+
+let split_current #a #p (h:history a p { Current? h /\ (Current?.f h).v <=. one  })
+  : half:history a p {
+    Current? h /\
+    composable pcm_history half half /\
+    op pcm_history half half  == h /\
+    Current?.h half == Current?.h h /\
+    history_val half (hval h) (Current?.f half)
+  }
+  = let Current v p = h in
+    assert_spinoff (sum_perm (half_perm p) (half_perm p) == p);
+    Current v (half_perm p)
 
 let pts_to_sl r f v = hp_of (pts_to' r f v)
 
@@ -374,3 +386,57 @@ let recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (fact:p
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
     intro_exists_erased h (pts_to_body r q v)
+
+let elim_pts_to #o (#a:Type)
+                (#p:Preorder.preorder a)
+                (r:ref a p)
+                (f:perm)
+                (v:Ghost.erased a)
+    : SteelGhostT unit o
+                  (pts_to r f v)
+                  (fun _ -> pts_to' r f v)
+    = rewrite_slprop _ _ (fun _ -> ())
+
+
+let intro_pts_to #o (#a:Type)
+                (#p:Preorder.preorder a)
+                (r:ref a p)
+                (f:perm)
+                (v:Ghost.erased a)
+    : SteelGhostT unit o
+                  (pts_to' r f v)
+                  (fun _ -> pts_to' r f v)
+    = rewrite_slprop _ _ (fun _ -> ())
+
+let share #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a)
+  : SteelGhostT unit o
+    (pts_to r f v)
+    (fun _ -> pts_to r (half_perm f) v `star` pts_to r (half_perm f) v)
+  = let open Steel.Effect.Atomic in
+    elim_pts_to r f v;
+    let h : erased (history a p) = witness_exists () in
+    elim_pure _;
+    let sh = split_current h in
+    PR.split r h sh sh;
+    intro_pure (history_val sh v (half_perm f));
+    intro_exists #(history a p) sh (pts_to_body r (half_perm f) v);
+    intro_pts_to r (half_perm f) v;
+    intro_pure (history_val sh v (half_perm f));
+    intro_exists #(history a p) sh (pts_to_body r (half_perm f) v);
+    intro_pts_to r (half_perm f) v
+
+let gather #o (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f g:perm) (v:Ghost.erased a)
+  : SteelGhostT unit o
+    (pts_to r f v `star` pts_to r g v)
+    (fun _ -> pts_to r (sum_perm f g) v)
+  = let open Steel.Effect.Atomic in
+    elim_pts_to r f v;
+    let hf : erased (history a p) = witness_exists #_ #_ #(pts_to_body r f v) () in
+    elim_pure _;
+    elim_pts_to r g v;
+    let hg : erased (history a p) = witness_exists () in
+    elim_pure _;
+    PR.gather r hf hg;
+    intro_pure (history_val (op pcm_history hf hg) v (sum_perm f g));
+    intro_exists (op pcm_history hf hg) (pts_to_body r (sum_perm f g) v);
+    intro_pts_to r (sum_perm f g) v

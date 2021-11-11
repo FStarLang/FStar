@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.MonotonicHigherReference
+module Steel.MonotonicReference
 
 open FStar.PCM
 open FStar.Ghost
@@ -25,80 +25,92 @@ open Steel.Effect.Atomic
 open Steel.Effect
 
 module Preorder = FStar.Preorder
+module MHR = Steel.MonotonicHigherReference
+module U = FStar.Universe
 
-/// A library for Steel references that are monotonic with respect to a user-specified preorder.
-/// This library builds on top of Steel.HigherReference, and is specialized to values at universe 1.
+let raise_preorder (#a:Type0) (p:Preorder.preorder a)
+  : Preorder.preorder (U.raise_t a)
+  = fun (x0 x1:U.raise_t a) ->
+       p (U.downgrade_val x0) (U.downgrade_val x1)
 
-/// An abstract datatype for monotonic references
-val ref (a:Type u#1) (p:Preorder.preorder a)
-  : Type u#0
+let ref a p = MHR.ref (FStar.Universe.raise_t a) (raise_preorder p)
 
 /// The standard points to separation logic predicate
-val pts_to_sl (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:erased a)
-  : slprop u#1
-
-/// Lifting the standard points to predicate to vprop, with a non-informative selector
-[@@ __steel_reduce__]
-unfold let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:erased a) : vprop =
-  to_vprop (pts_to_sl r f v)
+let pts_to_sl (#a:Type) (#p:Preorder.preorder a)
+              (r:ref a p)
+              (f:perm)
+              (v:a)
+    = MHR.pts_to_sl r f (hide (U.raise_val v))
 
 /// Allocates a reference with value [x]. We have full permission on the newly
 /// allocated reference.
-val alloc (#a:Type) (p:Preorder.preorder a) (v:a)
+let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
   : SteelT (ref a p) emp (fun r -> pts_to r full_perm v)
+  = let r = MHR.alloc (raise_preorder p) (U.raise_val v) in
+    rewrite_slprop
+      (MHR.pts_to r full_perm (hide (U.raise_val v)))
+      (pts_to r full_perm v)
+      (fun _ -> ());
+    return r
 
-/// A variant of read, useful when an existentially quantified predicate
-/// depends on the value stored in the reference
-val read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> vprop)
-                (r:ref a p)
-  : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` frame v))
-             (fun v -> pts_to r q v `star` frame v)
 
 /// Writes value [x] in the reference [r], as long as we have full ownership of [r]
-val write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
+let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a)
   : Steel unit (pts_to r full_perm v)
                (fun v -> pts_to r full_perm x)
                (requires fun _ -> p v x /\ True)
                (ensures fun _ _ _ -> True)
+  = MHR.write r (U.raise_val x);
+    rewrite_slprop
+      (MHR.pts_to _ _ _)
+      (pts_to r full_perm x)
+      (fun _ -> ())
 
-/// A wrapper around a predicate that depends on a value of type [a]
-let property (a:Type)
-  = a -> prop
+let lift_property (#a:Type u#0) (p:property a)
+  : MHR.property (U.raise_t a)
+  = fun x -> p (U.downgrade_val x)
 
-/// A wrapper around a property [fact] that has been witnessed to be true and stable
-/// with respect to preorder [p]
-val witnessed (#a:Type u#1) (#p:Preorder.preorder a) (r:ref a p) (fact:property a)
-  : prop
-
-/// The type of properties depending on values of type [a], and that
-/// are stable with respect to the preorder [p]
-let stable_property (#a:Type) (p:Preorder.preorder a)
-  = fact:property a { Preorder.stable fact p }
+let witnessed (#a:Type u#0)
+              (#p:Preorder.preorder a)
+              (r:ref a p)
+              (fact:property a)
+  = MHR.witnessed r (lift_property fact)
 
 /// If [fact] is a stable property for the reference preorder [p], and if
 /// it holds for the current value [v] of the reference, then we can witness it
-val witness (#inames: _) (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
-            (fact:stable_property p)
-            (v:erased a)
-            (_:squash (fact v))
-  : SteelGhost unit inames (pts_to r q v)
+let witness (#inames: _)
+           (#a:Type)
+           (#q:perm)
+           (#p:Preorder.preorder a)
+           (r:ref a p)
+           (fact:stable_property p)
+           (v:erased a)
+           (_:squash (fact v))
+  : SteelGhost unit inames
+               (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> True)
                (ensures fun _ _ _ -> witnessed r fact)
+  = MHR.witness r (lift_property fact) (hide (U.raise_val (reveal v))) ()
 
 /// If we previously witnessed the validity of [fact], we can recall its validity
-val recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
+let recall (#inames: _)
+           (#a:Type u#0)
+           (#q:perm)
+           (#p:Preorder.preorder a)
            (fact:property a)
-           (r:ref a p) (v:erased a)
+           (r:ref a p)
+           (v:erased a)
   : SteelGhost unit inames (pts_to r q v)
                (fun _ -> pts_to r q v)
                (requires fun _ -> witnessed r fact)
                (ensures fun _ _ _ -> fact v)
+  = MHR.recall (lift_property fact) r (hide (U.raise_val (reveal v)))
 
 /// Monotonic references are also equipped with the usual fractional permission discipline
 /// So, you can split a reference into two read-only shares
-val share (#inames:_)
+let share (#inames:_)
           (#a:Type)
           (#p:Preorder.preorder a)
           (r:ref a p)
@@ -107,9 +119,10 @@ val share (#inames:_)
   : SteelGhostT unit inames
     (pts_to r f v)
     (fun _ -> pts_to r (half_perm f) v `star` pts_to r (half_perm f) v)
+  = MHR.share r f (hide (U.raise_val (reveal v)))
 
 /// And you can gather back the shares
-val gather (#inames:_)
+let gather (#inames:_)
            (#a:Type)
            (#p:Preorder.preorder a)
            (r:ref a p)
@@ -118,3 +131,4 @@ val gather (#inames:_)
   : SteelGhostT unit inames
     (pts_to r f v `star` pts_to r g v)
     (fun _ -> pts_to r (sum_perm f g) v)
+  = MHR.gather r f g (hide (U.raise_val (reveal v)))
