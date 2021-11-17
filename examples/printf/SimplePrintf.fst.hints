@@ -14,7 +14,7 @@
         "typing_FStar.String.char"
       ],
       0,
-      "7eeda3d97b1c06cfd4ff50eb7eab3a26"
+      "2be3f2d90260f194cb3dda5a6a281644"
     ],
     [
       "SimplePrintf.__proj__Lit__item___0",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_4c947cba4356c53de258d6a2aaf1bdcf"
       ],
       0,
-      "1b41e0cb3a5066688d1e5a6d07340637"
+      "4956cc36965fbe9058f6fe59f1a1e542"
     ],
     [
       "SimplePrintf.__proj__Arg__item___0",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Tm_refine_18496ceb9c66ce4705128a993a338a20"
       ],
       0,
-      "fd5c4163c3401e0bfc8342c5b1b7482a"
+      "b057ab6f42faae417bcd326f6772362f"
     ],
     [
       "SimplePrintf.arg_type",
@@ -54,7 +54,7 @@
         "fuel_guarded_inversion_SimplePrintf.arg"
       ],
       0,
-      "5e9677828eb2b1df942a626c94392cf6"
+      "c890d645689f80c9ffa3b3acff4b917d"
     ],
     [
       "SimplePrintf.dir_type",
@@ -74,7 +74,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "f009460e284a352d2c291cd013ef0ed6"
+      "77627228e83c2481dc8a7f0085b72823"
     ],
     [
       "SimplePrintf.string_of_dirs",
@@ -125,7 +125,7 @@
         "typing_Tm_abs_55d28017a0da5d545c9b30c6c0d37957"
       ],
       0,
-      "459910510ebf5903c31ed34801a00557"
+      "9195d43c71777dca06c5bbe6e25f3d06"
     ],
     [
       "SimplePrintf.add_dir",
@@ -142,7 +142,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6b2bf08ddc8bbd06e760d7c5ecda65d7"
+      "ad7d33666c0557c342516425f331ee62"
     ],
     [
       "SimplePrintf.parse_format_pure",
@@ -166,7 +166,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "e7b153e86240518031323137583ad3dc"
+      "c55dc8f044477179bf88f343dfc6ffb4"
     ],
     [
       "SimplePrintf.sprintf",
@@ -201,7 +201,7 @@
         "typing_Tm_abs_7de968e83fab2a5ec34920f38db5f8bf"
       ],
       0,
-      "7cf9384e3b222b9229a7fe84db687933"
+      "81f8bec747ce32a9d611edaedbee83b1"
     ],
     [
       "SimplePrintf.test",
@@ -210,7 +210,7 @@
       1,
       [ "@query" ],
       0,
-      "e2894ec982fd27e9af53b0f00f34179e"
+      "726d337131ae17b5847bfe73a4a9f164"
     ]
   ]
 ]

@@ -1174,11 +1174,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let x = mkFreeV xx in
        let b2t_x = mkApp("Prims.b2t", [x]) in
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
+       let bool_ty = lookup_free_var env (withsort Const.bool_lid) in
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
                                 Some "b2t def",
-                                "b2t_def")] in
+                                "b2t_def");
+                    Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
+                                           mkImp(mk_HasType x bool_ty,
+                                                 mk_HasType b2t_x mk_Term_type)),
+                                Some "b2t typing",
+                                "b2t_typing")] in
        decls |> mk_decls_trivial, env
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->

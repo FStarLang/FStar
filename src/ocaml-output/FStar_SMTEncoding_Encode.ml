@@ -4355,6 +4355,10 @@ and (encode_sigelt' :
                 let b2t_x = FStar_SMTEncoding_Util.mkApp ("Prims.b2t", [x]) in
                 let valid_b2t_x =
                   FStar_SMTEncoding_Util.mkApp ("Valid", [b2t_x]) in
+                let bool_ty =
+                  let uu___10 =
+                    FStar_Syntax_Syntax.withsort FStar_Parser_Const.bool_lid in
+                  FStar_SMTEncoding_Env.lookup_free_var env1 uu___10 in
                 let decls =
                   let uu___10 =
                     let uu___11 =
@@ -4376,7 +4380,30 @@ and (encode_sigelt' :
                         (uu___13, (FStar_Pervasives_Native.Some "b2t def"),
                           "b2t_def") in
                       FStar_SMTEncoding_Util.mkAssume uu___12 in
-                    [uu___11] in
+                    let uu___12 =
+                      let uu___13 =
+                        let uu___14 =
+                          let uu___15 =
+                            let uu___16 = FStar_Syntax_Syntax.range_of_fv b2t in
+                            let uu___17 =
+                              let uu___18 =
+                                let uu___19 =
+                                  let uu___20 =
+                                    FStar_SMTEncoding_Term.mk_HasType x
+                                      bool_ty in
+                                  let uu___21 =
+                                    FStar_SMTEncoding_Term.mk_HasType b2t_x
+                                      FStar_SMTEncoding_Term.mk_Term_type in
+                                  (uu___20, uu___21) in
+                                FStar_SMTEncoding_Util.mkImp uu___19 in
+                              ([[b2t_x]], [xx], uu___18) in
+                            FStar_SMTEncoding_Term.mkForall uu___16 uu___17 in
+                          (uu___15,
+                            (FStar_Pervasives_Native.Some "b2t typing"),
+                            "b2t_typing") in
+                        FStar_SMTEncoding_Util.mkAssume uu___14 in
+                      [uu___13] in
+                    uu___11 :: uu___12 in
                   (FStar_SMTEncoding_Term.DeclFun
                      (tname, [FStar_SMTEncoding_Term.Term_sort],
                        FStar_SMTEncoding_Term.Term_sort,

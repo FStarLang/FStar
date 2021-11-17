@@ -194,7 +194,7 @@ val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
-val should_extract              : string  -> bool
+val should_extract              : string  -> codegen_t -> bool
 val should_check                : string  -> bool (* Should check this module, lax or not. *)
 val should_check_file           : string  -> bool (* Should check this file, lax or not. *)
 val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
