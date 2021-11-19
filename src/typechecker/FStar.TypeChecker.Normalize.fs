@@ -739,39 +739,10 @@ let rejig_norm_request (hd:term) (args:args) :term =
 
 let is_nbe_request s = BU.for_some (eq_step NBE) s
 
-let tr_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
-        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
-        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
-        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
-        [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
-
-let tr_norm_steps s =
-    let s = List.concatMap tr_norm_step s in
-    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
-    let s = Beta::s in
-    let s = add_exclude s Zeta in
-    let s = add_exclude s Iota in
-    s
-
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
       match try_unembed_simple (EMB.e_list EMB.e_norm_step) s with
-      | Some steps -> Some (tr_norm_steps steps)
+      | Some steps -> Some (Cfg.translate_norm_steps steps)
       | None -> None
     in
     let inherited_steps =
@@ -1104,6 +1075,11 @@ let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : bool =
     end
   | _ -> false
 
+let maybe_drop_rc_typ cfg (rc:residual_comp) : residual_comp =
+  if cfg.steps.for_extraction
+  then {rc with residual_typ = None}
+  else rc
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug_level NormTop is given, which makes it a
@@ -1313,14 +1289,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                       let lopt = match lopt with
-                        | Some rc ->
-                          let rct =
-                            if cfg.steps.check_no_uvars
-                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
-                            else BU.map_opt rc.residual_typ (SS.subst opening) in
-                          Some ({rc with residual_typ=rct})
-                        | _ -> lopt in
+                       let lopt = lopt
+                         |> BU.map_option (maybe_drop_rc_typ cfg)
+                         |> BU.map_option (fun rc ->
+                                          {rc with
+                                           residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}) in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = (Cfg (cfg, None))::stack in
                        let cfg = { cfg with strong = true } in
@@ -1336,7 +1309,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin
             match strict_args with
             | None ->
-              let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack) args in
+              let stack =
+                List.fold_right
+                  (fun (a, aq) stack ->
+                    let a =
+                      if ((Cfg.cfg_env cfg).erase_erasable_args ||
+                          cfg.steps.for_extraction ||
+                          cfg.debug.erase_erasable_args) //just for experimentation
+                      && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
+                      then U.exp_unit
+                      else a
+                    in
+                    Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                  args
+                  stack
+              in
               log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack head
 
@@ -1431,6 +1418,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_match(head, asc_opt, branches, lopt) ->
+            let lopt = BU.map_option (maybe_drop_rc_typ cfg) lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
             if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
@@ -1606,6 +1594,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                   (Range.string_of_range t.pos)
                                   (Print.term_to_string t))
           else rebuild cfg env stack (inline_closure_env cfg env [] t)
+
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
@@ -2063,14 +2052,6 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
-and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp> =
-    fun cfg env lopt ->
-        match lopt with
-        | Some rc ->
-          let flags = filter_out_lcomp_cflags rc.residual_flags in
-          Some ({rc with residual_typ=if cfg.steps.for_extraction then None else BU.map_opt rc.residual_typ (norm cfg env [])})
-       | _ -> lopt
-
 and maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
     if cfg.debug.b380
@@ -2330,7 +2311,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -2352,7 +2333,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -2474,7 +2455,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
       | Abs (env', bs, env'', lopt, r)::stack ->
         let bs = norm_binders cfg env' bs in
-        let lopt = norm_lcomp_opt cfg env'' lopt in
+        let lopt = BU.map_option (norm_residual_comp cfg env'') lopt in
         rebuild cfg env stack ({abs bs t lopt with pos=r})
 
       | Arg (Univ _,  _, _)::_
@@ -2577,7 +2558,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
-        let lopt = norm_lcomp_opt cfg env' lopt in
+        let lopt = BU.map_option (norm_residual_comp cfg env') lopt in
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594
@@ -2794,6 +2775,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         then matches scrutinee branches
         else norm_and_rebuild_match ()
+
+and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
+  {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
 
 let reflection_env_hook = BU.mk_ref None
 

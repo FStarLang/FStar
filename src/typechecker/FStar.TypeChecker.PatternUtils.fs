@@ -116,7 +116,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, true)::aux formals' pats
 
             | (_, imp) ->
-                (p, S.is_implicit imp)::aux formals' pats'
+                (p, S.is_bqual_implicit imp)::aux formals' pats'
             end
         in
         {p with v=Pat_cons(fv, aux f pats)}

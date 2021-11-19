@@ -203,6 +203,7 @@ and env = {
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -330,6 +331,7 @@ let initial_env deps
     erasable_types_tab = BU.smap_create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
+    erase_erasable_args = false
   }
 
 let dsenv env = env.dsenv
@@ -943,9 +945,7 @@ let rec non_informative env t =
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow(_, c) ->
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
-      //It would be sound to also add this disjunct below,
-      //But, it leads to regressions in examples/rel/Benton2004.fst
-      //|| is_ghost_effect (comp_effect_name c)
+      || is_ghost_effect (comp_effect_name c)
     | _ -> false
 
 let fv_has_strict_args env fv =

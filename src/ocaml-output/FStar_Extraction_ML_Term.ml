@@ -3056,7 +3056,9 @@ and (term_as_mlexpr' :
                            let rec remove_implicits args2 f1 t2 =
                              match (args2, t2) with
                              | ((a0, FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Implicit uu___5))::args3,
+                                 { FStar_Syntax_Syntax.aqual_implicit = true;
+                                   FStar_Syntax_Syntax.aqual_attributes =
+                                     uu___5;_})::args3,
                                 FStar_Extraction_ML_Syntax.MLTY_Fun
                                 (uu___6, f', t3)) ->
                                  let uu___7 =
@@ -3399,7 +3401,8 @@ and (term_as_mlexpr' :
                         uu___6.FStar_Syntax_Syntax.n in
                       (match uu___5 with
                        | FStar_Syntax_Syntax.Tm_constant
-                           (FStar_Const.Const_string (s, uu___6)) ->
+                           (FStar_Const.Const_string (s, uu___6)) when
+                           s <> "" ->
                            let id =
                              let uu___7 =
                                let uu___8 = FStar_Syntax_Syntax.range_of_bv x in
@@ -3414,11 +3417,16 @@ and (term_as_mlexpr' :
                              } in
                            let bv1 = FStar_Syntax_Syntax.freshen_bv bv in
                            FStar_Pervasives_Native.Some bv1
-                       | uu___6 -> FStar_Pervasives_Native.None)
+                       | uu___6 ->
+                           (FStar_Errors.log_issue
+                              top1.FStar_Syntax_Syntax.pos
+                              (FStar_Errors.Warning_UnrecognizedAttribute,
+                                "Ignoring ill-formed application of `rename_let`");
+                            FStar_Pervasives_Native.None))
                   | FStar_Pervasives_Native.Some uu___4 ->
                       (FStar_Errors.log_issue top1.FStar_Syntax_Syntax.pos
                          (FStar_Errors.Warning_UnrecognizedAttribute,
-                           "Ill-formed application of `rename_let`");
+                           "Ignoring ill-formed application of `rename_let`");
                        FStar_Pervasives_Native.None)
                   | FStar_Pervasives_Native.None ->
                       FStar_Pervasives_Native.None in
@@ -3564,11 +3572,22 @@ and (term_as_mlexpr' :
                               then lb.FStar_Syntax_Syntax.lbdef
                               else
                                 (let norm_call uu___4 =
-                                   FStar_TypeChecker_Normalize.normalize
-                                     (FStar_TypeChecker_Env.PureSubtermsWithinComputations
-                                     :: FStar_TypeChecker_Env.Reify ::
-                                     extraction_norm_steps) tcenv
-                                     lb.FStar_Syntax_Syntax.lbdef in
+                                   let uu___5 =
+                                     let uu___6 =
+                                       let uu___7 =
+                                         FStar_TypeChecker_Env.current_module
+                                           tcenv in
+                                       FStar_Ident.string_of_lid uu___7 in
+                                     FStar_Pervasives_Native.Some uu___6 in
+                                   FStar_Profiling.profile
+                                     (fun uu___6 ->
+                                        FStar_TypeChecker_Normalize.normalize
+                                          (FStar_TypeChecker_Env.PureSubtermsWithinComputations
+                                          :: FStar_TypeChecker_Env.Reify ::
+                                          extraction_norm_steps) tcenv
+                                          lb.FStar_Syntax_Syntax.lbdef)
+                                     uu___5
+                                     "FStar.Extraction.ML.Term.normalize_lb_def" in
                                  let uu___4 =
                                    (FStar_Compiler_Effect.op_Less_Bar
                                       (FStar_TypeChecker_Env.debug tcenv)
@@ -3582,19 +3601,13 @@ and (term_as_mlexpr' :
                                    ((let uu___6 =
                                        FStar_Syntax_Print.lbname_to_string
                                          lb.FStar_Syntax_Syntax.lbname in
-                                     FStar_Compiler_Util.print1
-                                       "Starting to normalize top-level let %s\n"
-                                       uu___6);
-                                    (let a =
-                                       let uu___6 =
-                                         let uu___7 =
-                                           FStar_Syntax_Print.lbname_to_string
-                                             lb.FStar_Syntax_Syntax.lbname in
-                                         FStar_Compiler_Util.format1
-                                           "###(Time to normalize top-level let %s)"
-                                           uu___7 in
-                                       FStar_Compiler_Util.measure_execution_time
-                                         uu___6 norm_call in
+                                     let uu___7 =
+                                       FStar_Syntax_Print.term_to_string
+                                         lb.FStar_Syntax_Syntax.lbdef in
+                                     FStar_Compiler_Util.print2
+                                       "Starting to normalize top-level let %s = %s\n"
+                                       uu___6 uu___7);
+                                    (let a = norm_call () in
                                      (let uu___7 =
                                         FStar_Syntax_Print.term_to_string a in
                                       FStar_Compiler_Util.print1

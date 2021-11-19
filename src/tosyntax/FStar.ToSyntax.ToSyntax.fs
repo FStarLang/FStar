@@ -155,14 +155,10 @@ let trans_pragma = function
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
-    | Hash -> Some S.imp_tag
+    | Hash -> S.as_aqual_implicit true
     | _ -> None
-let arg_withimp_e imp t =
-    t, as_imp imp
 let arg_withimp_t imp t =
-    match imp with
-        | Hash -> t, Some S.imp_tag
-        | _ -> t, None
+    t, as_imp imp
 
 let contains_binder binders =
   binders |> BU.for_some (fun b -> match b.b with
@@ -506,7 +502,7 @@ let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
-  | LocalBinder of bv     * S.aqual * list<S.term>  //binder attributes
+  | LocalBinder of bv     * S.bqual * list<S.term>  //binder attributes
   | LetBinder   of lident * (S.term * option<S.term>)
 
 let is_implicit (b:bnd) : bool =
@@ -533,19 +529,19 @@ let no_annot_abs bs t = U.abs bs t None
 let mk_ref_read tm =
   let tm' = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.sread_lid delta_constant None),
-    [ tm, S.as_implicit false ]) in
+    [ tm, S.as_aqual_implicit false ]) in
   S.mk tm' tm.pos
 
 let mk_ref_alloc tm =
   let tm' = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.salloc_lid delta_constant None),
-    [ tm, S.as_implicit false ]) in
+    [ tm, S.as_aqual_implicit false ]) in
   S.mk tm' tm.pos
 
 let mk_ref_assign t1 t2 pos =
   let tm = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.swrite_lid delta_constant None),
-    [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
+    [ t1, S.as_aqual_implicit false; t2, S.as_aqual_implicit false ]) in
   S.mk tm pos
 
 (*
@@ -827,7 +823,7 @@ let rec desugar_data_pat
         loc, env', binder, p, annots'@annots
 
       | PatWild (aq, attrs) ->
-        let aq = trans_aqual env aq in
+        let aq = trans_bqual env aq in
         let attrs = attrs |> List.map (desugar_term env) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, aq, attrs), pos <| Pat_wild x, []
@@ -838,7 +834,7 @@ let rec desugar_data_pat
 
       | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
-        let aq = trans_aqual env aq in
+        let aq = trans_bqual env aq in
         let attrs = attrs |> List.map (desugar_term env) in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq, attrs), pos <| Pat_var xbv, []
@@ -1041,7 +1037,7 @@ and desugar_machine_integer env repr (signedness, width) range =
     | None ->
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
-  let app = S.mk (Tm_app (lid, [repr', as_implicit false])) range in
+  let app = S.mk (Tm_app (lid, [repr', S.as_aqual_implicit false])) range in
   S.mk (Tm_meta (app, Meta_desugared
                  (Machine_integer (signedness, width)))) range
 
@@ -1224,7 +1220,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                 let universes = List.map (fun x -> desugar_universe (fst x)) universes in
                 let args, aqs = List.map (fun (t, imp) ->
                   let te, aq = desugar_term_aq env t in
-                  arg_withimp_e imp te, aq) args |> List.unzip in
+                  arg_withimp_t imp te, aq) args |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 mk (Tm_app (head, args)), join_aqs aqs
             end
@@ -1399,7 +1395,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let rec aux args aqs e = match (unparen e).tm with
         | App(e, t, imp) when imp <> UnivApp ->
           let t, aq = desugar_term_aq env t in
-          let arg = arg_withimp_e imp t in
+          let arg = arg_withimp_t imp t in
           aux (arg::args) (aq::aqs) e
         | _ ->
           let head, aq = desugar_term_aq env e in
@@ -2002,8 +1998,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       *)
       let mk_forall_elim a p v t =
         let head = S.fv_to_tm (S.lid_as_fv C.forall_elim_lid S.delta_equational None) in
-        let args = [(a, Some (S.Implicit false));
-                    (p, Some (S.Implicit false));
+        let args = [(a, S.as_aqual_implicit true);
+                    (p, S.as_aqual_implicit true);
                     (v, None);
                     (t, None)] in
         S.mk_Tm_app head args v.pos
@@ -2040,7 +2036,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | [b] ->
           let x = b.binder_bv in
           let head = S.fv_to_tm (S.lid_as_fv C.exists_lid S.delta_equational None) in
-          let args = [(x.sort, Some (S.Implicit false));
+          let args = [(x.sort, S.as_aqual_implicit true);
                       (U.abs [List.hd bs] p None, None)] in
           S.mk_Tm_app head args p.pos
         | b::bs ->
@@ -2049,8 +2045,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       in
       let mk_exists_elim t x_p s_ex_p f r =
         let head = S.fv_to_tm (S.lid_as_fv C.exists_elim_lid S.delta_equational None) in
-        let args = [(t, Some (S.Implicit false));
-                    (x_p, Some (S.Implicit false));
+        let args = [(t, S.as_aqual_implicit true);
+                    (x_p, S.as_aqual_implicit true);
                     (s_ex_p, None);
                     (f, None)] in
         mk_Tm_app head args r
@@ -2158,7 +2154,7 @@ and desugar_ascription env t tac_opt =
   (annot, BU.map_opt tac_opt (desugar_term env)), aq0
 
 and desugar_args env args =
-    args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
+    args |> List.map (fun (a, imp) -> arg_withimp_t imp (desugar_term env a))
 
 and desugar_comp r (allow_type_promotion:bool) env t =
     let fail : (Errors.raw_error * string) -> 'a = fun err -> raise_error err r in
@@ -2389,7 +2385,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                 let pattern =
                   S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
                 in
-                S.mk_Tm_app nil [(pattern, Some S.imp_tag)] pat.pos
+                S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
               | _ -> pat
             in
             [req; ens; (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) pat.pos, aq)]
@@ -2486,12 +2482,12 @@ and desugar_binder env b : option<ident> * S.term * list<S.attribute> =
 
 and as_binder env imp = function
   | (None, k, attrs) ->
-    S.mk_binder_with_attrs (null_bv k) (trans_aqual env imp) attrs, env
+    S.mk_binder_with_attrs (null_bv k) (trans_bqual env imp) attrs, env
   | (Some a, k, attrs) ->
     let env, a = Env.push_bv env a in
-    (S.mk_binder_with_attrs ({a with sort=k}) (trans_aqual env imp) attrs), env
+    (S.mk_binder_with_attrs ({a with sort=k}) (trans_bqual env imp) attrs), env
 
-and trans_aqual env = function
+and trans_bqual env = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
   | Some (AST.Meta t) ->
@@ -2505,7 +2501,7 @@ let typars_of_binders env bs : _ * binders =
             | Some a, k, attrs ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                env, (S.mk_binder_with_attrs a (trans_aqual env b.aqual) attrs)::out
+                env, (S.mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 

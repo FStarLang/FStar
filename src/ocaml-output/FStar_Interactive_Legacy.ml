@@ -138,7 +138,9 @@ let (push_with_kind :
               FStar_TypeChecker_Env.enable_defer_to_tac =
                 (env.FStar_TypeChecker_Env.enable_defer_to_tac);
               FStar_TypeChecker_Env.unif_allow_ref_guards =
-                (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+              FStar_TypeChecker_Env.erase_erasable_args =
+                (env.FStar_TypeChecker_Env.erase_erasable_args)
             } in
           let res = FStar_TypeChecker_Tc.push_context env1 msg in
           FStar_Options.push ();

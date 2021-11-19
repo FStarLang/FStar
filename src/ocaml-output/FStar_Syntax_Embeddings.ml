@@ -1048,9 +1048,11 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                     -> FStar_Pervasives_Native.Some []
                 | (FStar_Syntax_Syntax.Tm_fvar fv,
                    (uu___2, FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Implicit uu___3))::(hd1,
-                                                             FStar_Pervasives_Native.None)::
-                   (tl, FStar_Pervasives_Native.None)::[]) when
+                    { FStar_Syntax_Syntax.aqual_implicit = true;
+                      FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
+                   (hd1, FStar_Pervasives_Native.None)::(tl,
+                                                         FStar_Pervasives_Native.None)::[])
+                    when
                     FStar_Syntax_Syntax.fv_eq_lid fv
                       FStar_Parser_Const.cons_lid
                     ->

@@ -122,7 +122,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         end
 
     // rewrite_with_tactic marker
-    | Tm_fvar fv, [(tactic, None); (typ, Some (Implicit false)); (tm, None)]
+    | Tm_fvar fv, [(tactic, None); (typ, Some ({ aqual_implicit = true } )); (tm, None)]
             when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
 
         // Create a new uvar that must be equal to the initial term

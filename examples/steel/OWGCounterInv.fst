@@ -100,7 +100,7 @@ let half_perm = P.half_perm full_perm
 
 [@@ __reduce__]
 let inv_pred (r:ref int) (r1 r2:ghost_ref int) =
-  fun (w:G.erased int & G.erased int) ->
+  fun (w:int & int) ->
     ghost_pts_to r1 (P.half_perm full_perm) (fst w) `star`
     ghost_pts_to r2 (P.half_perm full_perm) (snd w) `star`
     pts_to r full_perm (fst w + snd w)
@@ -125,27 +125,27 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
           (ensures interp (hp_of (inv_slprop r r2 r1)) m)
           [SMTPat ()]
       = assert (
-          Steel.Memory.h_exists #(G.erased int & G.erased int) (fun x -> hp_of (inv_pred r r1 r2 x)) ==
-          h_exists_sl #(G.erased int & G.erased int) (inv_pred r r1 r2))
+          Steel.Memory.h_exists #(int & int) (fun x -> hp_of (inv_pred r r1 r2 x)) ==
+          h_exists_sl #(int & int) (inv_pred r r1 r2))
           by (FStar.Tactics.norm [delta_only [`%h_exists_sl]]);
 
 
-        let w : G.erased (G.erased int & G.erased int) = id_elim_exists (fun x -> hp_of (inv_pred r r1 r2 x)) m in
+        let w : G.erased (int & int) = id_elim_exists (fun x -> hp_of (inv_pred r r1 r2 x)) m in
 
         assert ((ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
                  ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w))))) `equiv`
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w))) `equiv`
                 (ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
                  ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))))) by (FStar.Tactics.norm [delta_attr [`%__steel_reduce__]]; canon' false (`true_p) (`true_p));
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)))) by (FStar.Tactics.norm [delta_attr [`%__steel_reduce__]]; canon' false (`true_p) (`true_p));
 
         reveal_equiv
           (ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
                  ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))))
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)))
           (ghost_pts_to r2 half_perm (fst (snd w, fst w)) `star`
                  ghost_pts_to r1 half_perm (snd (snd w, fst w)) `star`
-                 pts_to r full_perm (G.hide (G.reveal (fst (snd w, fst w)) + G.reveal (snd (snd w, fst w)))));
+                 pts_to r full_perm (fst (snd w, fst w) + snd (snd w, fst w)));
 
         assert (interp (hp_of (inv_pred r r2 r1 (snd w, fst w))) m);
 
@@ -153,8 +153,8 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
         assert (interp (Steel.Memory.h_exists (fun x -> hp_of (inv_pred r r2 r1 x))) m);
 
         assert (
-          Steel.Memory.h_exists #(G.erased int & G.erased int) (fun x -> hp_of (inv_pred r r2 r1 x)) ==
-          h_exists_sl #(G.erased int & G.erased int) (inv_pred r r2 r1))
+          Steel.Memory.h_exists #(int & int) (fun x -> hp_of (inv_pred r r2 r1 x)) ==
+          h_exists_sl #(int & int) (inv_pred r r2 r1))
           by (FStar.Tactics.norm [delta_only [`%h_exists_sl]]) in
 
   reveal_equiv (inv_slprop r r1 r2) (inv_slprop r r2 r1)
@@ -220,12 +220,12 @@ let incr_with_inv_slprop
   = //get inv_slprop in the context
     rewrite_slprop (inv_slprop_conditional _ _ _ _)
                    (inv_slprop _ _ _) (fun _ -> Classical.forall_intro_2 reveal_equiv);
-    let w : G.erased (G.erased int & G.erased int) = witness_exists () in
+    let w : G.erased (int & int) = witness_exists () in
     incr_atomic r;
     incr_ghost_contrib #_ #n_ghost #(fst w) r_mine;
 
     //restore inv_slprop, by first writing r to a form expected by the invariant
-    intro_exists (incr (fst w), snd w) (inv_pred r r_mine r_other);
+    intro_exists (fst w+1, snd w) (inv_pred r r_mine r_other);
     rewrite_slprop (inv_slprop _ _ _)
                    (inv_slprop_conditional _ _ _ _)
                    (fun _ -> Classical.forall_intro_2 reveal_equiv)
@@ -261,7 +261,7 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     //create the invariant
 
-    intro_exists (G.hide 0, v) (inv_pred r r1 r2);
+    intro_exists (0, G.reveal v) (inv_pred r r1 r2);
     let i = new_inv (inv_slprop r r1 r2) in
 
     //split the invariant permission

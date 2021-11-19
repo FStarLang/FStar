@@ -301,6 +301,8 @@ let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective"
+let (normalize_for_extraction_lid : FStar_Ident.lident) =
+  psconst "normalize_for_extraction"
 let (postprocess_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let (preprocess_with : FStar_Ident.lident) =

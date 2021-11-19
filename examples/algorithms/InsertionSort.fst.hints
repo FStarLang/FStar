@@ -41,7 +41,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "8f60d0e0f2ea5060d32091cdcb09419d"
+      "78c741df23e03066662d5454ecadae94"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -84,7 +84,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "d992a725612495f86b8160d99a2ee509"
+      "1c95c24eea338b209e6f36ff485de159"
     ],
     [
       "InsertionSort.sort",
@@ -120,7 +120,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a504ee0229806147d543636013128b2a"
+      "0793226b45c71a4078afee57147a8eac"
     ]
   ]
 ]

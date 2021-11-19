@@ -272,11 +272,12 @@ let tc_one_file
       Options.restore_cmd_line_options true |> ignore
   in
   let maybe_extract_mldefs tcmod env =
-      if Options.codegen() = None
-      || not (Options.should_extract (string_of_lid tcmod.name))
+    match Options.codegen() with
+    | None -> None, 0
+    | Some tgt ->
+      if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
-      else
-        FStar.Compiler.Util.record_time (fun () ->
+      else FStar.Compiler.Util.record_time (fun () ->
             with_env env (fun env ->
               let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -410,11 +411,12 @@ let tc_one_file
 
         (* If we have to extract this module, then do it first *)
         let mllib =
-            if Options.codegen()<>None
-            && Options.should_extract (string_of_lid tcmod.name)
-            && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
-            then
-                 let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
+          match Options.codegen() with
+          | None -> None
+          | Some tgt ->
+            if Options.should_extract (string_of_lid tcmod.name) tgt
+            && (not tcmod.is_interface || tgt=Options.Kremlin)
+            then let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
                  extracted_defs
             else None
         in
