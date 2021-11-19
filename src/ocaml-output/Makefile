@@ -119,9 +119,11 @@ $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
 	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
 
 ../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	rm $@
 	$(Q)cp $^ $@
 
 ../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
+	rm $@
 	$(Q)cp $^ $@
 
 install-compiler-lib: $(FSTAR_MAIN_NATIVE)
