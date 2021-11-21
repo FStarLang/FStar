@@ -39,6 +39,7 @@ irreducible let ite_attr : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 [@@__steel_reduce__]
+unfold
 let true_p : prop = True
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
