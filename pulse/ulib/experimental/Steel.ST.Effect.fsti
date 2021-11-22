@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.ST
+module Steel.ST.Effect
 open Steel.Memory
 open FStar.Ghost
 module Mem = Steel.Memory
