@@ -24,22 +24,6 @@ include Steel.Effect.Common
 
 #set-options "--warn_error -330 --ide_id_info_off"  //turn off the experimental feature warning
 
-/// A datatype indicating whether a computation is ghost (unobservable) or not
-type observability : eqtype =
-  | Observable
-  | Unobservable
-
-(* Helpers to handle observability inside atomic computations *)
-
-unfold
-let obs_at_most_one (o1 o2:observability) =
-  o1=Unobservable || o2=Unobservable
-
-unfold
-let join_obs (o1:observability) (o2:observability) =
-  if o1 = Observable || o2 = Observable
-  then Observable
-  else Unobservable
 
 (*** SteelAGCommon effect ***)
 

@@ -2387,3 +2387,24 @@ let ite_soundness_tac () : Tac unit =
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
 let vc_norm () : Tac unit = norm normal_steps; trefl()
+
+////////////////////////////////////////////////////////////////////////////////
+//Common datatypes for the atomic & ghost effects
+////////////////////////////////////////////////////////////////////////////////
+
+/// A datatype indicating whether a computation is ghost (unobservable) or not
+type observability : eqtype =
+  | Observable
+  | Unobservable
+
+(* Helpers to handle observability inside atomic computations *)
+
+unfold
+let obs_at_most_one (o1 o2:observability) =
+  o1=Unobservable || o2=Unobservable
+
+unfold
+let join_obs (o1:observability) (o2:observability) =
+  if o1 = Observable || o2 = Observable
+  then Observable
+  else Unobservable
