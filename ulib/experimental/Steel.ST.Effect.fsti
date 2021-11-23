@@ -210,10 +210,12 @@ val lift_st_steel
 
 sub_effect STBase ~> Steel.Effect.SteelBase = lift_st_steel
 
-val coerce_steel_st (a:Type)
-                     (#pre:pre_t)
-                     (#post:post_t a)
-                     (#req:Type0)
-                     (#ens:a -> Type0)
-                     (f:unit -> Steel.Effect.SteelBase a false pre post (fun _ -> req) (fun _ x _ -> ens x))
+val coerce_steel (#a:Type)
+                 (#pre:pre_t)
+                 (#post:post_t a)
+                 (#req:Type0)
+                 (#ens:a -> Type0)
+                 ($f:unit -> Steel.Effect.SteelBase a false pre post
+                          (fun _ -> req)
+                          (fun _ x _ -> ens x))
    : ST a pre post req ens
