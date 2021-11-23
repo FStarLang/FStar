@@ -169,7 +169,7 @@ let extract_fact (#opened:inames)
 
 let noop #o _ = rewrite #o emp emp
 
-let admit _ = STGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+let admit_ _ = STGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let slassert0 #o (p:vprop)
   : SEA.SteelGhostT unit o p (fun _ -> p)
