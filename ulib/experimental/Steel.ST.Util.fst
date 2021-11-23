@@ -85,7 +85,7 @@ let coerce_repr #a (#framed:bool) #obs #o #p
   : STAG.repr a framed o obs p q pre post
    = SEA.reify_steel_atomic_comp f
 
-let coerce #a #framed #o #obs #p
+let coerce_atomic #a #framed #o #obs #p
                  (#q:a -> vprop)
                  (#pre:Type0)
                  (#post: a -> Type0)
@@ -163,7 +163,7 @@ let return0 #a #o #p (x:a)
                         (fun _ v _ -> v == x)
   = let _ = () in SEA.return x
 
-let return #a #o #p x = coerce (fun _ -> return0 x)
+let return #a #o #p x = coerce_atomic (fun _ -> return0 x)
 
 (* Lifting the separation logic exists combinator to vprop *)
 let exists_ (#a:Type u#a) (p:a -> vprop)
@@ -199,7 +199,7 @@ let with_invariant (#a:Type)
                    ($f:unit -> STAtomicT a (add_inv opened_invariants i)
                                           (p `star` fp)
                                           (fun x -> p `star` fp' x))
-  = coerce
+  = coerce_atomic
     (fun _ ->
       SEA.with_invariant i
         (lift_sta_steela a

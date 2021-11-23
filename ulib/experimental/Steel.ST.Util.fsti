@@ -18,8 +18,38 @@ open FStar.Ghost
 open Steel.Memory
 open Steel.ST.Effect.Ghost
 module U = FStar.Universe
+include Steel.FractionalPermission
+include Steel.Memory
+include Steel.Effect.Common
+include Steel.ST.Effect
 include Steel.ST.Effect.Atomic
 include Steel.ST.Effect.Ghost
+module SEA = Steel.Effect.Atomic
+
+val coerce_atomic (#a:Type)
+                  (#framed:bool)
+                  (#o:inames)
+                  (#obs:observability)
+                  (#p:vprop)
+                  (#q:a -> vprop)
+                  (#pre:Type0)
+                  (#post: a -> Type0)
+                  ($f:unit -> SEA.SteelAtomicBase a framed o obs p q
+                           (fun _ -> pre)
+                           (fun _ x _ -> post x))
+  : STAtomicBase a framed o obs p q pre post
+
+val coerce_ghost (#a:Type)
+                 (#framed:bool)
+                 (#o:inames)
+                 (#p:vprop)
+                 (#q:a -> vprop)
+                 (#pre:Type0)
+                 (#post: a -> Type0)
+                 ($f:unit -> SEA.SteelGhostBase a framed o Unobservable p q
+                   (fun _ -> pre)
+                   (fun _ x _ -> post x))
+  : STGhostBase a framed o Unobservable p q pre post
 
 val weaken (#opened:inames)
             (p q:vprop)
