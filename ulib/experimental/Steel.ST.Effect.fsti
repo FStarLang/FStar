@@ -107,6 +107,23 @@ val subcomp (a:Type)
     req_g ==> (req_f /\ (forall x. ens_f x ==> ens_g x)))
   (ensures fun _ -> True)
 
+/// Logical precondition for the if_then_else combinator
+unfold
+let if_then_else_req (p req_then req_else:Type0)
+  : Type0
+  =  (p ==> req_then) /\
+     ((~ p) ==> req_else)
+
+/// Logical precondition for the if_then_else combinator
+unfold
+let if_then_else_ens (a:Type)
+                      (p:Type0)
+                      (ens_then ens_else : a -> Type0)
+  : a -> Type0
+  = fun (x:a) ->
+      (p ==>  ens_then x) /\
+      (~p ==> ens_else x)
+
 let if_then_else (a:Type)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
@@ -128,9 +145,11 @@ let if_then_else (a:Type)
   (g:repr a framed_g pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a true (pre_f `star` frame_f) (fun x -> post_f x `star` frame_f)
-    (if p then req_then else req_else)
-    (fun x -> if p then ens_then x else ens_else x)
+= repr a true
+       (pre_f `star` frame_f)
+       (fun x -> post_f x `star` frame_f)
+       (if_then_else_req p req_then req_else)
+       (if_then_else_ens a p ens_then ens_else)
 
 
 /// Assembling the combinators defined above into an actual effect

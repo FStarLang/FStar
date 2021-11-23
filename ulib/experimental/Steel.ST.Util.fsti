@@ -73,7 +73,7 @@ val noop (#opened:inames) (_:unit)
   : STGhostT unit opened emp (fun _ -> emp)
 
 [@@warn_on_use "uses an axiom"]
-val admit (#a:Type)
+val admit_ (#a:Type)
           (#opened:inames)
           (#p:pre_t)
           (#q:post_t a)
