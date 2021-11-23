@@ -85,14 +85,28 @@ let coerce_repr #a (#framed:bool) #obs #o #p
   : STAG.repr a framed o obs p q pre post
    = SEA.reify_steel_atomic_comp f
 
-let coerce_atomic #a #framed #o #obs #p
+
+let coerce_atomic #a #o #obs
+                 (#p:vprop)
                  (#q:a -> vprop)
                  (#pre:Type0)
                  (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelAtomicBase a framed o obs p q
+                 ($f:unit -> SEA.SteelAtomicBase a false o obs p q
                    (fun _ -> pre)
                    (fun _ x _ -> post x))
-  : STAtomicBase a framed o obs p q pre post
+  : STAtomicBase a false o obs p q pre post
+  = STAtomicBase?.reflect (coerce_repr f)
+
+
+let coerce_atomicF #a #o #obs
+                   (#p:vprop)
+                   (#q:a -> vprop)
+                   (#pre:Type0)
+                   (#post: a -> Type0)
+                   ($f:unit -> SEA.SteelAtomicBase a true o obs p q
+                     (fun _ -> pre)
+                     (fun _ x _ -> post x))
+  : STAtomicBase a true o obs p q pre post
   = STAtomicBase?.reflect (coerce_repr f)
 
 let coerce_ghost_repr #a #framed #o  #p
@@ -105,14 +119,24 @@ let coerce_ghost_repr #a #framed #o  #p
   : STAG.repr a framed o Unobservable p q pre post
   = SEA.reify_steel_ghost_comp f
 
-let coerce_ghost #a #framed #o #p
+let coerce_ghost #a #o #p
                  (#q:a -> vprop)
                  (#pre:Type0)
                  (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelGhostBase a framed o Unobservable p q
+                 ($f:unit -> SEA.SteelGhostBase a false o Unobservable p q
                    (fun _ -> pre)
                    (fun _ x _ -> post x))
-  : STGhostBase a framed o Unobservable p q pre post
+  : STGhostBase a false o Unobservable p q pre post
+  = STGhostBase?.reflect (coerce_ghost_repr f)
+
+let coerce_ghostF #a #o #p
+                 (#q:a -> vprop)
+                 (#pre:Type0)
+                 (#post: a -> Type0)
+                 ($f:unit -> SEA.SteelGhostBase a true o Unobservable p q
+                   (fun _ -> pre)
+                   (fun _ x _ -> post x))
+  : STGhostBase a true o Unobservable p q pre post
   = STGhostBase?.reflect (coerce_ghost_repr f)
 
 let weaken #o p q l =
@@ -163,7 +187,7 @@ let return0 #a #o #p (x:a)
                         (fun _ v _ -> v == x)
   = let _ = () in SEA.return x
 
-let return #a #o #p x = coerce_atomic (fun _ -> return0 x)
+let return #a #o #p x = coerce_atomicF (fun _ -> return0 x)
 
 (* Lifting the separation logic exists combinator to vprop *)
 let exists_ (#a:Type u#a) (p:a -> vprop)
