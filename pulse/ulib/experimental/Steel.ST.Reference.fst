@@ -58,12 +58,7 @@ let alloc (#a:Type) (x:a)
       (fun r -> pts_to r full_perm x)
       (requires True)
       (ensures fun r -> not (is_null r))
-  = let r = Steel.ST.Effect.coerce_steel_st (ref a)
-                                    #emp
-                                    #(fun (r:ref a) -> pts_to r full_perm x)
-                                    #True
-                                    #(fun (r:ref a) -> not (is_null r))
-                                    (fun _ -> R.alloc_pt x) in
+  = let r = coerce_steel (fun _ -> R.alloc_pt x) in
     r
 
 /// Reads the value in reference [r], as long as it initially is valid
@@ -76,13 +71,7 @@ let read (#a:Type)
       (fun _ -> pts_to r p v)
       (requires True)
       (ensures fun x -> x == Ghost.reveal v)
-  = let u =
-        Steel.ST.Effect.coerce_steel_st a
-                                        #(pts_to r p v)
-                                        #(fun x -> pts_to r p x)
-                                        #True
-                                        #(fun x -> x == Ghost.reveal v)
-                                        (fun _ -> R.read_pt #a #p #v r) in
+  = let u = coerce_steel (fun _ -> R.read_pt r) in
     return u
 
 
@@ -94,12 +83,7 @@ let write (#a:Type0)
   : STT unit
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm x)
-  = Steel.ST.Effect.coerce_steel_st unit
-       #(pts_to r full_perm v)
-       #(fun _ -> pts_to r full_perm x)
-       #True
-       #(fun _ -> True)
-       (fun _ -> R.write_pt r x);
+  = coerce_steel (fun _ -> R.write_pt r x);
     return ()
 
 /// Frees reference [r], as long as we have full ownership of [r]
@@ -109,12 +93,7 @@ let free (#a:Type0)
   : STT unit
         (pts_to r full_perm v)
         (fun _ -> emp)
-  = Steel.ST.Effect.coerce_steel_st unit
-       #(pts_to r full_perm v)
-       #(fun _ -> emp)
-       #True
-       #(fun _ -> True)
-       (fun _ -> R.free_pt r);
+  = coerce_steel(fun _ -> R.free_pt r);
     return ()
 
 
