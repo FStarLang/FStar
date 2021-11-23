@@ -27,7 +27,26 @@ module STA = Steel.ST.Effect.Atomic
 [@@ erasable; ite_soundness_by ite_attr]
 total
 reflectable
-new_effect STGhostBase = STAG.STAGCommon
+effect {
+  STGhostBase (a:Type)
+             (framed:bool)
+             (opened_invariants:inames)
+             (o:observability)
+             (pre:pre_t)
+             (post:post_t a)
+             (req:Type0)
+             (ens:a -> Type0)
+  with { repr = STAG.repr;
+         return = STAG.return_;
+         bind = STAG.bind;
+         subcomp = STAG.subcomp;
+         if_then_else = STAG.if_then_else }
+}
+
+// [@@ erasable; ite_soundness_by ite_attr]
+// total
+// reflectable
+// new_effect STGhostBase = STAG.STAGCommon
 
 /// The two user-facing effects, corresponding to not yet framed (SteelGhost)
 /// and already framed (SteelGhostF) computations.

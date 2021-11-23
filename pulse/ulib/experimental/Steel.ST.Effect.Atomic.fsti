@@ -26,10 +26,32 @@ module STAG = Steel.ST.Effect.AtomicAndGhost
 /// that SteelAtomic computations are distinct from any computation with the
 /// SteelAGCommon effect, while allowing this effect to directly inherit
 /// the SteelAGCommon combinators
+
+/// Assembling the combinators defined above into an actual effect
+/// The total keyword ensures that all ghost and atomic computations terminate.
 [@@ ite_soundness_by ite_attr]
 total
 reflectable
-new_effect STAtomicBase = STAG.STAGCommon
+effect {
+  STAtomicBase (a:Type)
+             (framed:bool)
+             (opened_invariants:inames)
+             (o:observability)
+             (pre:pre_t)
+             (post:post_t a)
+             (req:Type0)
+             (ens:a -> Type0)
+  with { repr = STAG.repr;
+         return = STAG.return_;
+         bind = STAG.bind;
+         subcomp = STAG.subcomp;
+         if_then_else = STAG.if_then_else }
+}
+
+// [@@ ite_soundness_by ite_attr]
+// total
+// reflectable
+// new_effect STAtomicBase = STAG.STAGCommon
 
 /// The two user-facing effects, corresponding to not yet framed (SteelAtomic)
 /// and already framed (SteelAtomicF) computations.
