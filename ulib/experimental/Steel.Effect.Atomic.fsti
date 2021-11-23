@@ -666,27 +666,11 @@ val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x
                 (fun _ -> h_exists q)
 
 (* Lifting invariants to vprops *)
-
-///  This operator asserts that the logical content of invariant [i] is the separation logic
-///  predicate [p]
-let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
-
-/// [i : inv p] is an invariant whose content is [p]
-let inv (p:vprop) = i:(erased iname){reveal i >--> p}
-
-/// Ghost check to determing whether invariant [i] belongs to the set of opened invariants [e]
-let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-
-/// Adding invariant [i] to the set of opened invariants [e]
-let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
-  Set.union (Set.singleton (reveal i)) (reveal e)
-
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
   : SteelGhostT (inv p) opened_invariants p (fun _ -> emp)
 
-let set_add i o : inames = Set.union (Set.singleton i) o
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
 /// This requires invariant [i] to not belong to the set of currently opened invariants.

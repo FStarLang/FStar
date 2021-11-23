@@ -21,15 +21,15 @@ module U = FStar.Universe
 include Steel.ST.Effect.Atomic
 include Steel.ST.Effect.Ghost
 
-val rewrite (#opened:inames)
+val weaken (#opened:inames)
             (p q:vprop)
             (l:(m:mem) -> Lemma
                            (requires interp (hp_of p) m)
                            (ensures interp (hp_of q) m))
   : STGhostT unit opened p (fun _ -> q)
 
-val rewrite_eq (#opened:inames)
-               (p q: vprop)
+val rewrite (#opened:inames)
+            (p q: vprop)
   : STGhost unit opened p (fun _ -> q) (p == q) (fun _ -> True)
 
 val extract_fact (#opened:inames)
@@ -88,51 +88,46 @@ val return (#a:Type u#a)
                  (fun v -> v == x)
 
 (* Lifting the separation logic exists combinator to vprop *)
-val h_exists (#a:Type u#a) (p:a -> vprop) : vprop
+val exists_ (#a:Type u#a) (p:a -> vprop) : vprop
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
 val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> vprop)
-  : STGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+  : STGhostT unit opened_invariants (p x) (fun _ -> exists_ p)
 
 /// Variant of intro_exists above, when the witness is a ghost value
-val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> vprop)
-  : STGhostT unit opened_invariants (p x) (fun _ -> h_exists p)
+val intro_exists_erased (#a:Type)
+                        (#opened_invariants:_)
+                        (x:Ghost.erased a)
+                        (p:a -> vprop)
+  : STGhostT unit opened_invariants (p x) (fun _ -> exists_ p)
 
 /// Extracting a witness for predicate [p] if it currently holds for some [x]
-val elim_exists (#a:Type) (#opened_invariants:_) (#p:a -> vprop) (_:unit)
+val elim_exists (#a:Type)
+                (#opened_invariants:_)
+                (#p:a -> vprop)
+                (_:unit)
   : STGhostT (Ghost.erased a) opened_invariants
-             (h_exists p)
+             (exists_ p)
              (fun x -> p x)
 
-
 /// Lifting the existentially quantified predicate to a higher universe
-val lift_exists (#a:_) (#u:_) (p:a -> vprop)
+val lift_exists (#a:_)
+                (#u:_)
+                (p:a -> vprop)
   : STGhostT unit u
-             (h_exists p)
-             (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+             (exists_ p)
+             (fun _a -> exists_ #(U.raise_t a) (U.lift_dom p))
 
 /// If two predicates [p] and [q] are equivalent, then their existentially quantified versions
 /// are equivalent, and we can switch from `h_exists p` to `h_exists q`
-val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
+val exists_cong (#a:_)
+                (#u:_)
+                (p:a -> vprop)
+                (q:a -> vprop {forall x. equiv (p x) (q x) })
   : STGhostT unit u
-             (h_exists p)
-             (fun _ -> h_exists q)
+             (exists_ p)
+             (fun _ -> exists_ q)
 
-(* Lifting invariants to vprops *)
-
-///  This operator asserts that the logical content of invariant [i] is the separation logic
-///  predicate [p]
-let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
-
-/// [i : inv p] is an invariant whose content is [p]
-let inv (p:vprop) = i:Ghost.erased iname{reveal i >--> p}
-
-/// Ghost check to determing whether invariant [i] belongs to the set of opened invariants [e]
-let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-
-/// Adding invariant [i] to the set of opened invariants [e]
-let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
-  Set.union (Set.singleton (reveal i)) (reveal e)
 
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
