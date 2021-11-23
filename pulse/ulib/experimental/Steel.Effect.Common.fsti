@@ -2413,6 +2413,7 @@ let join_obs (o1:observability) (o2:observability) =
 
 ///  This operator asserts that the logical content of invariant [i] is the separation logic
 ///  predicate [p]
+noextract
 let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
 
 /// [i : inv p] is an invariant whose content is [p]
@@ -2422,7 +2423,9 @@ let inv (p:vprop) = i:Ghost.erased iname{reveal i >--> p}
 let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
 
 /// Adding invariant [i] to the set of opened invariants [e]
+noextract
 let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
   Set.union (Set.singleton (reveal i)) (reveal e)
 
+noextract
 let set_add i o : inames = Set.union (Set.singleton i) o
