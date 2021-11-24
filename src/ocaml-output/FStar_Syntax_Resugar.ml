@@ -2291,6 +2291,8 @@ let (resugar_pragma : FStar_Syntax_Syntax.pragma -> FStar_Parser_AST.pragma)
     | FStar_Syntax_Syntax.PopOptions -> FStar_Parser_AST.PopOptions
     | FStar_Syntax_Syntax.RestartSolver -> FStar_Parser_AST.RestartSolver
     | FStar_Syntax_Syntax.LightOff -> FStar_Parser_AST.LightOff
+    | FStar_Syntax_Syntax.PrintEffectsGraph ->
+        FStar_Parser_AST.PrintEffectsGraph
 let (resugar_typ :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->

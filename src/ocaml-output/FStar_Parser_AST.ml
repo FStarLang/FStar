@@ -706,6 +706,7 @@ type pragma =
   | PopOptions 
   | RestartSolver 
   | LightOff 
+  | PrintEffectsGraph 
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | SetOptions _0 -> true | uu___ -> false
@@ -730,6 +731,9 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
     match projectee with | RestartSolver -> true | uu___ -> false
 let (uu___is_LightOff : pragma -> Prims.bool) =
   fun projectee -> match projectee with | LightOff -> true | uu___ -> false
+let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PrintEffectsGraph -> true | uu___ -> false
 type decl' =
   | TopLevelModule of FStar_Ident.lid 
   | Open of FStar_Ident.lid 

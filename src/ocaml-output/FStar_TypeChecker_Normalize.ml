@@ -5513,37 +5513,39 @@ and (reify_lift :
                       FStar_TypeChecker_Env.mlift =
                         { FStar_TypeChecker_Env.mlift_wp = uu___6;
                           FStar_TypeChecker_Env.mlift_term =
-                            FStar_Pervasives_Native.None;_};_}
+                            FStar_Pervasives_Native.None;_};
+                      FStar_TypeChecker_Env.mpath = uu___7;_}
                     ->
-                    let uu___7 =
-                      let uu___8 = FStar_Ident.string_of_lid msrc in
-                      let uu___9 = FStar_Ident.string_of_lid mtgt in
+                    let uu___8 =
+                      let uu___9 = FStar_Ident.string_of_lid msrc in
+                      let uu___10 = FStar_Ident.string_of_lid mtgt in
                       FStar_Compiler_Util.format2
                         "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
-                        uu___8 uu___9 in
-                    failwith uu___7
+                        uu___9 uu___10 in
+                    failwith uu___8
                 | FStar_Pervasives_Native.Some
                     { FStar_TypeChecker_Env.msource = uu___4;
                       FStar_TypeChecker_Env.mtarget = uu___5;
                       FStar_TypeChecker_Env.mlift =
                         { FStar_TypeChecker_Env.mlift_wp = uu___6;
                           FStar_TypeChecker_Env.mlift_term =
-                            FStar_Pervasives_Native.Some lift;_};_}
+                            FStar_Pervasives_Native.Some lift;_};
+                      FStar_TypeChecker_Env.mpath = uu___7;_}
                     ->
                     let e1 =
-                      let uu___7 =
+                      let uu___8 =
                         FStar_TypeChecker_Env.is_reifiable_effect env1 msrc in
-                      if uu___7
+                      if uu___8
                       then FStar_Syntax_Util.mk_reify e
                       else
-                        (let uu___9 =
-                           let uu___10 =
-                             let uu___11 =
-                               let uu___12 =
+                        (let uu___10 =
+                           let uu___11 =
+                             let uu___12 =
+                               let uu___13 =
                                  FStar_Syntax_Syntax.null_binder
                                    FStar_Syntax_Syntax.t_unit in
-                               [uu___12] in
-                             (uu___11, e,
+                               [uu___13] in
+                             (uu___12, e,
                                (FStar_Pervasives_Native.Some
                                   {
                                     FStar_Syntax_Syntax.residual_effect =
@@ -5552,12 +5554,12 @@ and (reify_lift :
                                       (FStar_Pervasives_Native.Some t);
                                     FStar_Syntax_Syntax.residual_flags = []
                                   })) in
-                           FStar_Syntax_Syntax.Tm_abs uu___10 in
-                         FStar_Syntax_Syntax.mk uu___9
+                           FStar_Syntax_Syntax.Tm_abs uu___11 in
+                         FStar_Syntax_Syntax.mk uu___10
                            e.FStar_Syntax_Syntax.pos) in
-                    let uu___7 =
+                    let uu___8 =
                       env1.FStar_TypeChecker_Env.universe_of env1 t in
-                    lift uu___7 t e1))
+                    lift uu___8 t e1))
 and (norm_pattern_args :
   FStar_TypeChecker_Cfg.cfg ->
     env ->

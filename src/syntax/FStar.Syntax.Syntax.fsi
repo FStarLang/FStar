@@ -53,6 +53,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
 
 type memo<'a> = ref<option<'a>>
 
