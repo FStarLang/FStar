@@ -1368,7 +1368,7 @@ let print_effects_graph env =
   let lifts : smap<smap<string>> = smap_create 20 in
 
   //Similar to pbinds
-  let psubcomps : smap string = smap_create 10 in
+  let psubcomps : smap<string> = smap_create 10 in
 
   //Populate the maps
 
