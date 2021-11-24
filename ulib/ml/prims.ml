@@ -196,11 +196,7 @@ let op_Modulus x y = x mod y
 let op_Division x y = x / y
 let rec (pow2 : nat -> pos) =
   fun x  ->
-    match x with
-    | _0_2 when _0_2 = (parse_int "0") -> (parse_int "1")
-    | uu____1577 ->
-        op_Multiply (parse_int "2")
-          (pow2 (op_Subtraction x (parse_int "1")))
+    Z.shift_left Z.one (Z.to_int x)
 
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y
