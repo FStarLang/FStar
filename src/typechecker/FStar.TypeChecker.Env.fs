@@ -135,9 +135,10 @@ and mlift = {
 }
 
 and edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
+  msource : lident;
+  mtarget : lident;
+  mlift   : mlift;
+  mpath   : list<lident>;
 }
 
 and effects = {
@@ -1172,7 +1173,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=identity_mlift})
+  then Some ({msource=l1; mtarget=l2; mlift=identity_mlift; mpath=[]})
   else env.effects.order |> BU.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux decls m =
@@ -1348,6 +1349,85 @@ let exists_polymonadic_subcomp env m n =
   | Some (_, _, ts) -> Some ts
   | _ -> None
 
+let print_effects_graph env =
+  let eff_name lid = lid |> ident_of_lid |> string_of_id in
+  let path_str path = path |> List.map eff_name |> String.concat ";" in
+
+  //
+  //Right now the values in the map are just ""
+  //
+  //But it may be range or something else if we wanted to dump it in the dot graph
+  //
+  let pbinds : smap<string> = smap_create 10 in
+
+  //
+  //The keys in the map are sources
+  //
+  //Each source is mapped to a map, whose keys are targets, and values are the path strings
+  //
+  let lifts : smap<smap<string>> = smap_create 20 in
+
+  //Similar to pbinds
+  let psubcomps : smap string = smap_create 10 in
+
+  //Populate the maps
+
+  //
+  //Note that since order, polymonadic_binds, and polymonadic_subcomps are lists,
+  //  they may have duplicates (and the typechecker picks the first one)
+  //
+
+  env.effects.order |> List.iter (fun ({msource=src; mtarget=tgt; mpath=path}) ->
+    let key = eff_name src in
+    let m =
+      match smap_try_find lifts key with
+      | None ->
+        let m = smap_create 10 in
+        smap_add lifts key m;
+        m
+      | Some m -> m in
+    match smap_try_find m (eff_name tgt) with
+    | Some _ -> ()
+    | None -> smap_add m (eff_name tgt) (path_str path));
+
+  env.effects.polymonadic_binds |> List.iter (fun (m, n, p, _) ->
+    let key = BU.format3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
+    smap_add pbinds key "");
+
+  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _) ->
+    let key = BU.format2 "%s <: %s" (eff_name m) (eff_name n) in
+    smap_add psubcomps key "");
+
+  //
+  //Dump the dot graph
+  //
+  //Interesting bit of trivia:
+  //  the cluster_ in the names of the subgraphs is important,
+  //  if the name does not begin like this, dot rendering does not draw boxes
+  //    around subgraphs (!)
+  //
+
+  BU.format3 "digraph {\n\
+    label=\"Effects ordering\"\n\
+    subgraph cluster_lifts {\n\
+      label = \"Lifts\"\n
+      %s\n\
+    }\n\
+    subgraph cluster_polymonadic_binds {\n\
+      label = \"Polymonadic binds\"\n\
+      %s\n\
+    }\n\
+    subgraph cluster_polymonadic_subcomps {\n\
+      label = \"Polymonadic subcomps\"\n\
+      %s\n\
+    }}\n"
+
+    ((smap_fold lifts (fun src m s ->
+        smap_fold m (fun tgt path s ->
+          (BU.format3 "%s -> %s [label=\"%s\"]" src tgt path)::s) s) []) |> String.concat "\n")
+    (smap_fold pbinds (fun k _ s -> (BU.format1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
+    (smap_fold psubcomps (fun k _ s -> (BU.format1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
+
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
     let composed_lift =
@@ -1363,32 +1443,23 @@ let update_effect_lattice env src tgt st_mlift =
     in
     { msource=e1.msource;
       mtarget=e2.mtarget;
-      mlift=composed_lift }
+      mlift=composed_lift;
+      mpath=e1.mpath@[e1.mtarget]@e2.mpath}
   in
 
   let edge = {
     msource=src;
     mtarget=tgt;
-    mlift=st_mlift
+    mlift=st_mlift;
+    mpath=[];
   } in
 
   let id_edge l = {
     msource=src;
     mtarget=tgt;
-    mlift=identity_mlift
+    mlift=identity_mlift;
+    mpath=[];
   } in
-
-  (* For debug purpose... *)
-  // let print_mlift l =
-  //   (* A couple of bogus constants, just for printing *)
-  //   let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
-  //   let arg = bogus_term "ARG" in
-  //   let wp = bogus_term "WP" in
-  //   let e = bogus_term "COMP" in
-  //   BU.format2 "{ wp : %s ; term : %s }"
-  //     (Print.term_to_string (l.mlift_wp U_zero arg wp))
-  //     (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
-  // in
 
   let find_edge order (i, j) =
     if lid_equals i j
@@ -1398,92 +1469,74 @@ let update_effect_lattice env src tgt st_mlift =
   let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
 
   (*
-   * AR: we first compute all the new edges induced by the input edge
-   *     for a new edge M ~> N
+   * AR: we compute all the new edges induced by the input edge
+   *     and add them to the head of the edges list
    *
-   *     1. if there already exists an edge M ~> N, we ignore the new edge
-   *        we should emit a warning but for now we don't
-   *     2. if there exists a polymonadic subcomp M N, then we give an error
-   *        since to decide M <: N, there are now two routes:
-   *          polymonadic_subcomp or lift M to N and then use subcomp combinator of N
-   *     3. if there exists a polymonadic subcomp N M, then also we give an error
-   *        since it's a cycle
-   *
-   *     Conflicts with polymonadic binds will be checked later when we compute joins
+   *     in other words, previous paths are overwritten
    *)
 
-  //all nodes i such that i ~> src is an edge
+  //all nodes i such that i <> src and i ~> src is an edge
   let all_i_src = ms |> List.fold_left (fun edges i ->
-    match find_edge env.effects.order (i, edge.msource) with
-    | Some e -> e::edges
-    | None -> edges) [] in
+    if lid_equals i edge.msource then edges
+    else match find_edge env.effects.order (i, edge.msource) with
+         | Some e -> e::edges
+         | None -> edges) [] in
 
-  //all nodes j such that tgt ~> j is an edge
+  //all nodes j such that j <> tgt and tgt ~> j is an edge
   let all_tgt_j = ms |> List.fold_left (fun edges j ->
-    match find_edge env.effects.order (edge.mtarget, j) with
-    | Some e -> e::edges
-    | None -> edges) [] in
+    if lid_equals edge.mtarget j then edges
+    else match find_edge env.effects.order (edge.mtarget, j) with
+         | Some e -> e::edges
+         | None -> edges) [] in
 
-  let new_edges = List.fold_left (fun edges i_src ->
+  let check_cycle src tgt = 
+    if lid_equals src tgt
+    then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
+           BU.format3 "Adding an edge %s~>%s induces a cycle %s"
+             (Ident.string_of_lid edge.msource)
+             (Ident.string_of_lid edge.mtarget)
+             (Ident.string_of_lid src)) env.range in
+
+  //
+  //There are three types of new edges now:
+  //
+  //  - From i to edge target
+  //  - From edge source to j
+  //  - From i to j
+  //
+
+  let new_i_edge_target = List.fold_left (fun edges i_src ->
+    check_cycle i_src.msource edge.mtarget;
+    (compose_edges i_src edge)::edges) [] all_i_src in
+
+  let new_edge_source_j = List.fold_left (fun edges tgt_j ->
+    check_cycle edge.msource tgt_j.mtarget;
+    (compose_edges edge tgt_j)::edges) [] all_tgt_j in
+
+  let new_i_j = List.fold_left (fun edges i_src ->
     List.fold_left (fun edges tgt_j ->
-      let src = i_src.msource in
-      let tgt = tgt_j.mtarget in
-      if lid_equals src tgt
-      then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-             BU.format3 "Adding an edge %s~>%s induces a cycle %s"
-               (Ident.string_of_lid edge.msource)
-               (Ident.string_of_lid edge.mtarget)
-               (Ident.string_of_lid src)) env.range;
-      if find_edge env.effects.order (src, tgt) |> is_some
-      then begin
-        //AR: 07/09: TODO: enable this warning
-        // log_issue env.range (Errors.Warning_BleedingEdge_Feature,
-        //   BU.format4 "Adding an edge %s~>%s adds a second path for %s~>%s, ignoring this second path"
-        //      (Ident.string_of_lid edge.msource)
-        //      (Ident.string_of_lid edge.mtarget)
-        //      (Ident.string_of_lid src)
-        //      (Ident.string_of_lid tgt));
-        edges
-      end
-      else if exists_polymonadic_subcomp env src tgt |> is_some ||
-              exists_polymonadic_subcomp env tgt src |> is_some then
-        raise_error (Errors.Fatal_Effects_Ordering_Coherence, BU.format4
-          "Adding an edge %s~>%s induces an edge %s~>%s that conflicts with an existing polymonadic subcomp between them"
-          (Ident.string_of_lid edge.msource)
-          (Ident.string_of_lid edge.mtarget)
-          (Ident.string_of_lid src)
-          (Ident.string_of_lid tgt)) env.range
-      else (compose_edges (compose_edges i_src edge) tgt_j)::edges) edges all_tgt_j) [] all_i_src in
+      check_cycle i_src.msource tgt_j.mtarget;
+      (compose_edges (compose_edges i_src edge) tgt_j)::edges) edges all_tgt_j) [] all_i_src in
 
+  let new_edges = edge::(new_i_edge_target@new_edge_source_j@new_i_j) in
+
+  //Add new edges to the front of the list, shadowing existing ones
 
   let order = new_edges@env.effects.order in
-  // let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
-  //                                    && lid_equals e1.mtarget e2.mtarget) order in
 
-  //   (* basically, this is Warshall's algorithm for transitive closure,
-  //      except it's ineffcient because find_edge is doing a linear scan.
-  //      and it's not incremental.
-  //      Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
-  // let order =
-  //   let fold_fun order k =
-  //     order@(ms |> List.collect (fun i ->
-  //               if lid_equals i k then []
-  //               else ms |> List.collect (fun j ->
-  //                 if lid_equals j k
-  //                 then []
-  //                 else match find_edge order (i, k), find_edge order (k, j) with
-  //                      | Some e1, Some e2 -> [compose_edges e1 e2]
-  //                      | _ -> [])))
-  //   in ms |> List.fold_left fold_fun order
-  // in
-
-  let _ = order |> List.iter (fun edge ->
+  order |> List.iter (fun edge ->
     if Ident.lid_equals edge.msource Const.effect_DIV_lid
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" (string_of_lid edge.mtarget))) (get_range env))
-  in
+    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
+                      (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'"
+                        (string_of_lid edge.mtarget))) (get_range env));
 
-  //compute upper bounds now
+  //
+  //Compute upper bounds
+  //
+  //Addition of an edge may change upper bounds,
+  // that's ok, as long as it is unique in the new graph
+  //
   let joins =
     ms |> List.collect (fun i ->
     ms |> List.collect (fun j ->
@@ -1496,13 +1549,12 @@ let update_effect_lattice env src tgt st_mlift =
           begin match bopt with
           (* we don't have a current candidate as the upper bound; so we may as well use k *)
           | None -> Some (k, ik, jk)
-
           | Some (ub, _, _) ->
             begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
                   | true, true ->
-                    if Ident.lid_equals k ub
-                    then (Errors.log_issue Range.dummyRange (Errors.Warning_UpperBoundCandidateAlreadyVisited, "Looking multiple times at the same upper bound candidate") ; bopt)
-                    else failwith "Found a cycle in the lattice"
+                    if not (Ident.lid_equals k ub)
+                    then failwith "Impossible! Should have already detected the cycle in the effect ordering"
+                    else bopt
                   | false, false ->
                     raise_error (Errors.Fatal_Effects_Ordering_Coherence, BU.format4
                       "Uncomparable upper bounds! i=%s, j=%s, k=%s, ub=%s\n"
@@ -1510,94 +1562,33 @@ let update_effect_lattice env src tgt st_mlift =
                       (Ident.string_of_lid j)
                       (Ident.string_of_lid k)
                       (Ident.string_of_lid ub)) env.range
-                          (* AR: 07/09: earlier we were returning bopt, not raising error with the following comment, should check *)
-                          (* KM : This seems a little fishy since we could obtain as *)
-                          (* a join an effect which might not be comparable with all *)
-                          (* upper bounds (which means that the order of joins does matter) *)
-                          (* raise (Error (BU.format4 "Uncomparable upper bounds for effects %s and %s : %s %s" *)
-                          (*                 (Ident.string_of_lid i) *)
-                          (*                 (Ident.string_of_lid j) *)
-                          (*                 (Ident.string_of_lid k) *)
-                          (*                 (Ident.string_of_lid ub), *)
-                          (*               get_range env)) *)
                   | true, false -> Some (k, ik, jk) //k is less than ub
                   | false, true -> bopt
                 end
             end
-          | _ -> bopt) None
-    in
+          | _ -> bopt) None in
     match k_opt with
     | None -> []
-    | Some (k, e1, e2) ->
-      (*
-       * AR: we computed k as the least upper bound of i and j
-       *     if there exists polymonadic binds i, j or j, i
-       *     then there are multiple ways to bind i, j or j, i computations now
-       *     so error out
-       *
-       *     02/23: But if i = j, the loop above returns the identity edge
-       *     Since that edge is not user added, if there is a (i, j)
-       *       polymonadic bind, we don't count that as a conflict
-       *)
-      if (not (lid_equals i j)) &&
-         (exists_polymonadic_bind env i j |> is_some ||
-          exists_polymonadic_bind env j i |> is_some)
-      then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-             BU.format5 "Updating effect lattice with a lift between %s and %s \
-               induces a least upper bound %s of %s and %s, and this \
-               conflicts with a polymonadic bind between them"
-               (Ident.string_of_lid src) (Ident.string_of_lid tgt)
-               (Ident.string_of_lid i) (Ident.string_of_lid j) (Ident.string_of_lid k)) env.range
-      else let j_opt = join_opt env i j in
-           if j_opt |> is_some && not (lid_equals k (j_opt |> must |> (fun (l, _, _) -> l)))
-           then raise_error (Errors.Fatal_Effects_Ordering_Coherence, BU.format6
-             "Updating effect lattice with %s ~> %s makes the least upper bound of \
-             %s and %s as %s, whereas earlier it was %s"
-             (Ident.string_of_lid src) (Ident.string_of_lid tgt)
-             (Ident.string_of_lid i) (Ident.string_of_lid j)
-             (Ident.string_of_lid k)
-             (j_opt |> must |> (fun (l, _, _) -> l) |>  Ident.string_of_lid)) env.range
-      else [(i, j, k, e1.mlift, e2.mlift)]))
-  in
+    | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
 
   let effects = {env.effects with order=order; joins=joins} in
-//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" (string_of_lid o.msource) (string_of_lid o.mtarget) (print_mlift o.mlift));
-//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" (string_of_lid e1) (string_of_lid e2) (string_of_lid e3) (print_mlift l1) (print_mlift l2));
   {env with effects=effects}
 
-let add_polymonadic_bind env m n p ty =
-  let err_msg (poly:bool) =
-    BU.format4 "Polymonadic bind ((%s, %s) |> %s) conflicts with \
-      an already existing %s"
-      (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
-      (if poly then "polymonadic bind"
-       else "path in the effect lattice") in
+(*
+ * We allow overriding a previously defined poymonadic bind/subcomps
+ *   between the same effects
+ *
+ * Also, polymonadic versions always take precedence over the effects graph
+ *)
 
-  if exists_polymonadic_bind env m n |> is_some
-  then raise_error (Errors.Fatal_Effects_Ordering_Coherence, (err_msg true)) env.range
-  else if join_opt env m n |> is_some
-       && not (lid_equals m n)  //AR: 07/09: TODO: this is a problem when m = n, we allow defining a polymonadic bind between m and m, but a bind between them already exists, so some code may use bind, some then mauy use the polymonadic bind
-  then raise_error (Errors.Fatal_Effects_Ordering_Coherence, (err_msg false)) env.range
-  else { env with
-         effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
+let add_polymonadic_bind env m n p ty =
+  { env with
+    effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
 
 let add_polymonadic_subcomp env m n ts =
-  let err_msg (poly:bool) =
-    BU.format3 "Polymonadic subcomp %s <: %s conflicts with \
-      an already existing %s"
-      (Ident.string_of_lid m) (Ident.string_of_lid n)
-      (if poly then "polymonadic subcomp"
-       else "path in the effect lattice") in
-
-  if exists_polymonadic_subcomp env m n |> is_some ||
-     exists_polymonadic_subcomp env n m |> is_some
-  then raise_error (Errors.Fatal_Effects_Ordering_Coherence, (err_msg true)) env.range
-  else if monad_leq env m n |> is_some ||
-          monad_leq env n m |> is_some
-  then raise_error (Errors.Fatal_Effects_Ordering_Coherence, (err_msg false)) env.range
-  else { env with
-         effects = ({ env.effects with
-                      polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+  { env with
+    effects = ({ env.effects with
+                 polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
