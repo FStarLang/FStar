@@ -261,6 +261,8 @@ val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
 type req_t (pre:pre_t) = rmem pre -> Type0
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
   rmem pre -> (x:a) -> rmem (post x) -> Type0
+let st_req_t = Type0
+let st_ens_t (a:Type u#a) = a -> Type0
 
 (* Empty assertion *)
 val emp : vprop
@@ -2231,7 +2233,12 @@ let rec resolve_tac_logical () : Tac unit =
 /// Determining whether the type represented by term [t] corresponds to one of the logical (requires/ensures) goals
 let typ_contains_req_ens (t:term) : Tac bool =
   let name, _ = collect_app t in
-  if term_eq name (`req_t) || term_eq name (`ens_t) || term_eq name (`pure_wp) then true
+  if term_eq name (`req_t) ||
+     term_eq name (`ens_t) ||
+     term_eq name (`pure_wp) ||
+     term_eq name (`st_req_t) ||
+     term_eq name (`st_ens_t)
+  then true
   else false
 
 /// Splits goals between separation logic goals (slgoals) and requires/ensures goals (loggoals)

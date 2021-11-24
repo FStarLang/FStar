@@ -61,10 +61,21 @@ assume
 val ffalse (r:ref bool)
   : STT unit (pts_to r false) (fun _ -> pts_to r false)
 
-let test (r:ref bool)  (v:erased bool)
+assume
+val fany (r:ref bool) (v:erased bool)
+  : STT unit (pts_to r v) (fun _ -> pts_to r v)
+
+let test_ite (r:ref bool)  (v:erased bool)
   : STT unit (pts_to r v) (fun _ -> pts_to r v)
   = let x = !r in
-    if x returns (STT unit (pts_to r v) (fun _ -> pts_to r v))
+    if x
+    then fany r v
+    else fany r v
+
+let test_ite2 (r:ref bool)  (v:erased bool)
+  : STT unit (pts_to r v) (fun _ -> pts_to r v)
+  = let x = !r in
+    if x
     then (
       rewrite (pts_to r v) (pts_to r true);
       ftrue r;
@@ -76,37 +87,54 @@ let test (r:ref bool)  (v:erased bool)
       rewrite (pts_to r false) (pts_to r v)
     )
 
+// let test_ite3 (r:ref bool)  (v:erased bool)
+//   : STT unit (pts_to r v) (fun _ -> pts_to r v)
+//   = let x = !r in
+//     rewrite (pts_to r v) (pts_to r x);
+//     if x returns (STT unit (pts_to r x) (fun _ -> pts_to r x))
+//     then (
+//       ftrue r; ()
+//     )
+//     else (
+//       ffalse r; ()
+//     );
+//     rewrite (pts_to r x) (pts_to r v)
 
-open Steel.Effect
-open Steel.Effect.Atomic
+
 assume
-val fftrue (r:ref bool)
-  : SteelT unit (pts_to r true) (fun _ -> pts_to r true)
+val gread (#o:_) (#a:_) (r:ref a) (v:erased a)
+  : STGhost a o (pts_to r v) (fun _ -> pts_to r v) True (fun x -> x == reveal v)
 
 assume
-val fffalse (r:ref bool)
-  : SteelT unit (pts_to r false) (fun _ -> pts_to r false)
+val gtrue (#o:_) (r:ref bool)
+  : STGhostT unit o (pts_to r true) (fun _ -> pts_to r true)
 
 assume
-val read (#a:Type) (#v:erased a) (x:ref a)
-  : Steel a
-    (pts_to x v)
-    (fun _ -> pts_to x v)
-    (fun _ -> True)
-    (fun _ r _ -> r == reveal v)
+val gfalse (#o:_) (r:ref bool)
+  : STGhostT unit o (pts_to r false) (fun _ -> pts_to r false)
 
+assume
+val gany (#o:_) (r:ref bool) (v:erased bool)
+  : STGhostT unit o (pts_to r v) (fun _ -> pts_to r v)
 
-let fftest (r:ref bool)  (v:erased bool)
-  : SteelT unit (pts_to r v) (fun _ -> pts_to r v)
-  = let x = read r in
+let test_ite_g (#o:_) (r:ref bool)  (v:erased bool)
+  : STGhostT unit o (pts_to r v) (fun _ -> pts_to r v)
+  = let x = gread r _ in
+    if x
+    then gany r v
+    else gany r v
+
+let test_ite_g2 (#o:_) (r:ref bool)  (v:erased bool)
+  : STGhostT unit o (pts_to r v) (fun _ -> pts_to r v)
+  = let x = gread r _ in
     if x
     then (
-      change_equal_slprop (pts_to r v) (pts_to r true);
-      fftrue r;
-      change_equal_slprop (pts_to r true) (pts_to r v)
+      rewrite (pts_to r v) (pts_to r true);
+      gtrue r;
+      rewrite (pts_to r true) (pts_to r v)
     )
     else (
-      change_equal_slprop (pts_to r v) (pts_to r false);
-      fffalse r;
-      change_equal_slprop (pts_to r false) (pts_to r v)
+      rewrite (pts_to r v) (pts_to r false);
+      gfalse r;
+      rewrite (pts_to r false) (pts_to r v)
     )

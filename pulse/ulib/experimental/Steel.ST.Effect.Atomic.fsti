@@ -34,13 +34,13 @@ total
 reflectable
 effect {
   STAtomicBase (a:Type)
-             (framed:bool)
-             (opened_invariants:inames)
-             (o:observability)
-             (pre:pre_t)
-             (post:post_t a)
-             (req:Type0)
-             (ens:a -> Type0)
+               (framed:bool)
+               (opened_invariants:inames)
+               (o:observability)
+               (pre:pre_t)
+               (post:post_t a)
+               (req:st_req_t)
+               (ens:st_ens_t a)
   with { repr = STAG.repr;
          return = STAG.return_;
          bind = STAG.bind;
@@ -59,19 +59,19 @@ effect {
 /// Both effects are instantiated with the Observable bit, indicating that they do not
 /// model ghost computations
 effect STAtomic (a:Type)
-  (opened:inames)
-  (pre:pre_t)
-  (post:post_t a)
-  (req:Type0)
-  (ens:a -> Type0)
+                (opened:inames)
+                (pre:pre_t)
+                (post:post_t a)
+                (req:st_req_t)
+                (ens:st_ens_t a)
   = STAtomicBase a false opened Observable pre post req ens
 
 effect STAtomicF (a:Type)
-  (opened:inames)
-  (pre:pre_t)
-  (post:post_t a)
-  (req:Type0)
-  (ens:a -> Type0)
+                 (opened:inames)
+                 (pre:pre_t)
+                 (post:post_t a)
+                 (req:st_req_t)
+                 (ens:st_ens_t a)
   = STAtomicBase a true opened Observable pre post req ens
 
 (* Composing SteelAtomic and Pure computations *)
