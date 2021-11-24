@@ -3991,7 +3991,8 @@ let (process_pragma :
            else
              FStar_Errors.raise_error
                (FStar_Errors.Fatal_FailToProcessPragma,
-                 "Cannot #pop-options, stack would become empty") r)
+                 "Cannot #pop-options, stack would become empty") r
+       | FStar_Syntax_Syntax.PrintEffectsGraph -> ())
 let rec (unbound_variables :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.bv Prims.list)

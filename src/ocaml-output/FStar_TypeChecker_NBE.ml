@@ -2492,51 +2492,53 @@ and (translate_monadic_lift :
                        FStar_TypeChecker_Env.mlift =
                          { FStar_TypeChecker_Env.mlift_wp = uu___6;
                            FStar_TypeChecker_Env.mlift_term =
-                             FStar_Pervasives_Native.None;_};_}
+                             FStar_Pervasives_Native.None;_};
+                       FStar_TypeChecker_Env.mpath = uu___7;_}
                      ->
-                     let uu___7 =
-                       let uu___8 = FStar_Ident.string_of_lid msrc in
-                       let uu___9 = FStar_Ident.string_of_lid mtgt in
+                     let uu___8 =
+                       let uu___9 = FStar_Ident.string_of_lid msrc in
+                       let uu___10 = FStar_Ident.string_of_lid mtgt in
                        FStar_Compiler_Util.format2
                          "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
-                         uu___8 uu___9 in
-                     failwith uu___7
+                         uu___9 uu___10 in
+                     failwith uu___8
                  | FStar_Pervasives_Native.Some
                      { FStar_TypeChecker_Env.msource = uu___4;
                        FStar_TypeChecker_Env.mtarget = uu___5;
                        FStar_TypeChecker_Env.mlift =
                          { FStar_TypeChecker_Env.mlift_wp = uu___6;
                            FStar_TypeChecker_Env.mlift_term =
-                             FStar_Pervasives_Native.Some lift;_};_}
+                             FStar_Pervasives_Native.Some lift;_};
+                       FStar_TypeChecker_Env.mpath = uu___7;_}
                      ->
                      let lift_lam =
                        let x =
                          FStar_Syntax_Syntax.new_bv
                            FStar_Pervasives_Native.None
                            FStar_Syntax_Syntax.tun in
-                       let uu___7 =
-                         let uu___8 = FStar_Syntax_Syntax.mk_binder x in
-                         [uu___8] in
                        let uu___8 =
-                         let uu___9 = FStar_Syntax_Syntax.bv_to_name x in
-                         lift FStar_Syntax_Syntax.U_unknown ty uu___9 in
-                       FStar_Syntax_Util.abs uu___7 uu___8
+                         let uu___9 = FStar_Syntax_Syntax.mk_binder x in
+                         [uu___9] in
+                       let uu___9 =
+                         let uu___10 = FStar_Syntax_Syntax.bv_to_name x in
+                         lift FStar_Syntax_Syntax.U_unknown ty uu___10 in
+                       FStar_Syntax_Util.abs uu___8 uu___9
                          FStar_Pervasives_Native.None in
                      let cfg' = reifying_false cfg in
                      let t =
-                       let uu___7 = translate cfg' [] lift_lam in
-                       let uu___8 =
-                         let uu___9 =
-                           let uu___10 = translate cfg bs e1 in
-                           (uu___10, FStar_Pervasives_Native.None) in
-                         [uu___9] in
-                       iapp cfg uu___7 uu___8 in
+                       let uu___8 = translate cfg' [] lift_lam in
+                       let uu___9 =
+                         let uu___10 =
+                           let uu___11 = translate cfg bs e1 in
+                           (uu___11, FStar_Pervasives_Native.None) in
+                         [uu___10] in
+                       iapp cfg uu___8 uu___9 in
                      (debug cfg
-                        (fun uu___8 ->
-                           let uu___9 =
+                        (fun uu___9 ->
+                           let uu___10 =
                              FStar_TypeChecker_NBETerm.t_to_string t in
                            FStar_Compiler_Util.print1
-                             "translate_monadic_lift(2): %s\n" uu___9);
+                             "translate_monadic_lift(2): %s\n" uu___10);
                       t))
 and (readback :
   config -> FStar_TypeChecker_NBETerm.t -> FStar_Syntax_Syntax.term) =

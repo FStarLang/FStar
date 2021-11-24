@@ -862,8 +862,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       end
 
     | Sig_pragma PrintEffectsGraph ->
-      let s = Env.print_effect_ordering env in
-      BU.write_file "effects.graph" s;
+      BU.write_file "effects.graph" (Env.print_effects_graph env);
       env
 
     | Sig_new_effect ne ->
