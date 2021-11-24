@@ -1505,6 +1505,13 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
     then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
 
 let tc_lift env sub r =
+  if lid_equals sub.source sub.target
+  then raise_error (Fatal_UnexpectedEffect,
+                    BU.format1
+                      "Cannot define a lift with same source and target (%s)"
+                      (string_of_lid sub.source))
+                   r;
+
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     Gen.generalize_universes env (tc_check_trivial_guard env t k) in
