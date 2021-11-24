@@ -56,6 +56,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>

@@ -1219,6 +1219,7 @@ let resugar_pragma = function
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
   | S.LightOff -> A.LightOff
+  | S.PrintEffectsGraph -> A.PrintEffectsGraph
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =
   match se.sigel with

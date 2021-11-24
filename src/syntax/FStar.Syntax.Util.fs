@@ -1978,6 +1978,8 @@ let process_pragma p r =
       then ()
       else Errors.raise_error (Errors.Fatal_FailToProcessPragma, "Cannot #pop-options, stack would become empty") r
 
+    | PrintEffectsGraph -> ()  //Typechecker handles it
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list<bv> =
     let t = Subst.compress tm in

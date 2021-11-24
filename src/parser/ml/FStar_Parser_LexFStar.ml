@@ -460,6 +460,7 @@ match%sedlex lexbuf with
  | "#push-options" -> PRAGMA_PUSH_OPTIONS
  | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
+ | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 

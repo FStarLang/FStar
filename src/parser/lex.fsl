@@ -257,6 +257,8 @@ rule token args = parse
      { PRAGMA_RESET_OPTIONS }
  | "#restart-solver"
      { PRAGMA_RESTART_SOLVER }
+ | "#print-effects-graph"
+     { PRAGMA_PRINT_EFFECTS_GRAPH }
  | "#push-options"
      { PRAGMA_PUSH_OPTIONS }
  | "#pop-options"
