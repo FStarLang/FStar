@@ -900,8 +900,8 @@ let encode_top_level_let :
             in
             let binder_decls = binder_decls @ guard_decls in
             let decl_g = Term.DeclFun(g, Fuel_sort::List.map fv_sort (fst (BU.first_N fvb.smt_arity vars)), Term_sort, Some "Fuel-instrumented function name") in
-            let env0 = push_zfuel_name env0 fvb.fvar_lid g in
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let env0 = push_zfuel_name env0 fvb.fvar_lid g gtok in
             let vars_tm = List.map mkFreeV vars in
             let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in

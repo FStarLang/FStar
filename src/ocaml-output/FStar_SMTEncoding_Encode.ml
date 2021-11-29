@@ -3298,12 +3298,6 @@ let (encode_top_level_let :
                                                                     "Fuel-instrumented function name")) in
                                                                     FStar_SMTEncoding_Term.DeclFun
                                                                     uu___20 in
-                                                                    let env02
-                                                                    =
-                                                                    FStar_SMTEncoding_Env.push_zfuel_name
-                                                                    env01
-                                                                    fvb.FStar_SMTEncoding_Env.fvar_lid
-                                                                    g in
                                                                     let decl_g_tok
                                                                     =
                                                                     FStar_SMTEncoding_Term.DeclFun
@@ -3312,6 +3306,12 @@ let (encode_top_level_let :
                                                                     FStar_SMTEncoding_Term.Term_sort,
                                                                     (FStar_Pervasives_Native.Some
                                                                     "Token for fuel-instrumented partial applications")) in
+                                                                    let env02
+                                                                    =
+                                                                    FStar_SMTEncoding_Env.push_zfuel_name
+                                                                    env01
+                                                                    fvb.FStar_SMTEncoding_Env.fvar_lid
+                                                                    g gtok in
                                                                     let vars_tm
                                                                     =
                                                                     FStar_Compiler_List.map
