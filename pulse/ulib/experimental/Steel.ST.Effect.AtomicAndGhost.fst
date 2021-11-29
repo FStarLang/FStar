@@ -223,11 +223,6 @@ let bind_pure_stag (a:Type) (b:Type)
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     weaken_repr (SEA.bind_pure_steela_ a b opened_invariants o #wp #framed #pre #post #(fun x _ -> req x) #(fun x _ y _ -> ens x y) f g) () ()
 
-
-/// If the set of currently opened invariants is empty, an atomic Steel computation can be lifted
-/// to a generic Steel computation.
-/// Note that lifts are transitive in the effect lattice; hence a Steel ghost computation
-/// will automatically be lifted to a generic Steel computation if needed by successively applying the lift from ghost to atomic computations, followed by the lift from atomic to generic steel computations, as long as all preconditions are satisfied
 let lift_atomic_st
     (a:Type)
     (o:eqtype_as_type observability)

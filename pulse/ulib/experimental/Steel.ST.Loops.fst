@@ -20,6 +20,8 @@ open Steel.ST.Coercions
 module L = Steel.Loops
 module SE = Steel.Effect
 module SEA = Steel.Effect.Atomic
+open FStar.Ghost
+
 (* This module provides some common iterative looping combinators *)
 
 let for_loop' (start:U32.t)
@@ -103,21 +105,6 @@ let while_loop' (inv: Ghost.erased bool -> vprop)
        (coerce_cond inv cond)
        (coerce_body inv body)
 
-// /// while_loop: while (cond()) { body () }
-// let while_loop (inv: Ghost.erased bool -> vprop)
-//                 (cond: (unit -> STT bool
-//                                      (exists_ inv)
-//                                      (fun b -> inv b)))
-//                 (body: (unit -> STT unit
-//                                      (inv true)
-//                                      (fun _ -> exists_ inv)))
-//   : STT unit
-//         (exists_ inv)
-//         (fun _ -> inv false)
-//   = exists_to_h_exists inv;
-//     coerce_steel (fun _ -> while_loop' inv cond body)
-
-open FStar.Ghost
 let exists_to_e_exists (#a:Type) #o (p:a -> vprop)
   : STGhostT unit o (exists_ p)
                     (fun _ -> exists_ (fun (x:erased a) -> p x))

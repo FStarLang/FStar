@@ -66,7 +66,6 @@ let alloc (#a:Type) (x:a)
   = let r = coerce_steel (fun _ -> R.alloc_pt x) in
     r
 
-/// Reads the value in reference [r], as long as it initially is valid
 let read (#a:Type)
          (#p:perm)
          (#v:erased a)
@@ -79,8 +78,6 @@ let read (#a:Type)
   = let u = coerce_steel (fun _ -> R.read_pt r) in
     return u
 
-
-/// Writes value [x] in the reference [r], as long as we have full ownership of [r]
 let write (#a:Type0)
           (#v:erased a)
           (r:ref a)
@@ -91,7 +88,6 @@ let write (#a:Type0)
   = coerce_steel (fun _ -> R.write_pt r x);
     return ()
 
-/// Frees reference [r], as long as we have full ownership of [r]
 let free (#a:Type0)
          (#v:erased a)
          (r:ref a)
@@ -102,8 +98,6 @@ let free (#a:Type0)
     return ()
 
 
-/// Splits the permission on reference [r] into two.
-/// This function is computationally irrelevant (it has effect SteelGhost)
 let share (#a:Type0)
           (#uses:_)
           (#p:perm)
@@ -114,8 +108,6 @@ let share (#a:Type0)
       (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = coerce_ghost (fun _ -> R.share_pt r)
 
-/// Combines permissions on reference [r].
-/// This function is computationally irrelevant (it has effect SteelGhost)
 let gather (#a:Type0)
            (#uses:_)
            (#p0 p1:perm)
@@ -128,7 +120,6 @@ let gather (#a:Type0)
       (ensures fun _ -> v0 == v1)
   = coerce_ghost (fun _ -> R.gather_pt #a #uses #p0 #p1 #v0 #v1 r)
 
-/// Atomic compare and swap on references.
 let cas (#t:eqtype)
         (#uses:inames)
         (r:ref t)
