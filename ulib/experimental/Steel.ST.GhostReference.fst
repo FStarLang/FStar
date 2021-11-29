@@ -16,6 +16,7 @@
 module Steel.ST.GhostReference
 open FStar.Ghost
 open Steel.ST.Util
+open Steel.ST.Coercions
 module R = Steel.Reference
 
 [@@ erasable]

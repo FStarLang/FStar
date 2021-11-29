@@ -15,6 +15,11 @@
 *)
 
 module Steel.ST.Effect
+
+(** This module provides an effect ST, a specialization of
+    Steel.Effect.Steel removing selectors from the requires and
+    ensures indexes *)
+
 open Steel.Memory
 open FStar.Ghost
 module Mem = Steel.Memory
@@ -23,9 +28,6 @@ include Steel.Effect.Common
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 #set-options "--ide_id_info_off"
 
-
-/// The framed bit indicates whether this computation has already been framed. This corresponds to the |- and |-_F modalities
-/// in the ICFP21 paper
 val repr (a:Type)
          (framed:bool)
          (pre:pre_t)
@@ -209,32 +211,13 @@ val bind_pure_st_ (a:Type) (b:Type)
     (bind_pure_st_req wp req)
     (bind_pure_st_ens wp ens)
 
-/// A polymonadic composition between Pure computations (in the PURE effects) and Steel computations (in the SteelBase effect).
-/// Note that the SteelBase, PURE case is not handled here: In this case, a SteelBase return is automatically inserted by the F* typechecked
+/// A polymonadic composition between Pure computations (in the PURE
+/// effects) and Steel computations (in the SteelBase effect).  Note
+/// that the SteelBase, PURE case is not handled here: In this case, a
+/// SteelBase return is automatically inserted by the F* typechecked
 polymonadic_bind (PURE, STBase) |> STBase = bind_pure_st_
 
-/// A version of the ST effect with trivial requires and ensures clauses
+/// A version of the ST effect with trivial requires and ensures
+/// clauses
 effect STT (a:Type) (pre:pre_t) (post:post_t a) =
   ST a pre post True (fun _ -> True)
-
-val lift_st_steel
-      (a:Type)
-      (#framed:eqtype_as_type bool)
-      (#pre:pre_t)
-      (#post:post_t a)
-      (#req:st_req_t)
-      (#ens:st_ens_t a)
-      (f:repr a framed pre post req ens)
-  : Steel.Effect.repr a framed pre post (fun _ -> req) (fun _ x _ -> ens x)
-
-sub_effect STBase ~> Steel.Effect.SteelBase = lift_st_steel
-
-val coerce_steel (#a:Type)
-                 (#pre:pre_t)
-                 (#post:post_t a)
-                 (#req:st_req_t)
-                 (#ens:st_ens_t a)
-                 ($f:unit -> Steel.Effect.SteelBase a false pre post
-                          (fun _ -> req)
-                          (fun _ x _ -> ens x))
-   : ST a pre post req ens

@@ -45,3 +45,28 @@ let as_atomic_action_ghost (#a:Type u#a)
   : STGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
   = let ff = SEA.reify_steel_ghost_comp (fun _ -> SEA.as_atomic_action_ghost f) in
     STGhostBase?.reflect ff
+
+
+let extract_fact0 (#opened:inames)
+                  (p:vprop)
+                  (fact:prop)
+                  (l:(m:mem) -> Lemma
+                      (requires interp (hp_of p) m)
+                      (ensures fact))
+  : STAG.repr unit false opened Unobservable p (fun _ -> p) True (fun _ -> fact)
+  = fun frame ->
+      let m0:full_mem = NMSTTotal.get () in
+      Classical.forall_intro_3 reveal_mk_rmem;
+      let h0 = mk_rmem p (core_mem m0) in
+      l (core_mem m0)
+
+let extract_fact (#opened:inames)
+                 (p:vprop)
+                 (fact:prop)
+                 (l:(m:mem) -> Lemma
+                                (requires interp (hp_of p) m)
+                                (ensures fact))
+  : STGhost unit opened p (fun _ -> p) True (fun _ -> fact)
+  = STGhostBase?.reflect (extract_fact0 p fact l)
+
+let admit_ _ = STGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())

@@ -1,5 +1,5 @@
 (*
-   Copyright 2020 Microsoft Research
+   Copyright 2021 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,16 +17,32 @@ module Steel.ST.GhostReference
 open FStar.Ghost
 open Steel.ST.Util
 
+(** This module provides a *ghost* reference whose ownership is
+    controlled using fractional permissions.
+
+    Most of its functionality is identical to Steel.ST.Reference,
+    except it uses the STGhost effect.
+*)
+
+
+/// The main ref type.
+///
+/// It's in universe zero, so refs can be stored in the heap, you can
+/// have [ref (ref a)] etc.
+///
+/// The type is marked erasable, so [ref a] values are extracted to [()]
 [@@ erasable]
 val ref (a:Type u#0)
   : Type u#0
 
+/// The main representation predicate
 val pts_to (#a:_)
            (r:ref a)
-           (p:perm)
+           ([@@@smt_fallback] p:perm)
            ([@@@smt_fallback] v:a)
   : vprop
 
+/// A ref can point to at most one value
 val pts_to_injective_eq (#a:_)
                         (#u:_)
                         (#p #q:_)
@@ -38,6 +54,7 @@ val pts_to_injective_eq (#a:_)
       (requires True)
       (ensures fun _ -> v0 == v1)
 
+/// Allocating a ghost reference, with an erased initial value
 val alloc (#a:Type)
           (#u:_)
           (x:erased a)
@@ -45,6 +62,7 @@ val alloc (#a:Type)
       emp
       (fun r -> pts_to r full_perm x)
 
+/// Reading a ghost reference only provides an erased value
 val read (#a:Type)
          (#u:_)
          (#p:perm)
@@ -56,6 +74,8 @@ val read (#a:Type)
       (requires True)
       (ensures fun x -> x == v)
 
+/// Updating the contents of a fully owned ghost reference with an
+/// erased value
 val write (#a:Type)
           (#u:_)
           (#v:erased a)
@@ -65,7 +85,7 @@ val write (#a:Type)
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm x)
 
-
+/// Splitting ownership of a ghost reference
 val share (#a:Type)
           (#u:_)
           (#p:perm)
@@ -76,6 +96,8 @@ val share (#a:Type)
       (fun _ -> pts_to r (half_perm p) x `star`
              pts_to r (half_perm p) x)
 
+/// Combining ownership of a ghost reference
+///  -- the ensures clause internalizes a use of pts_to_injective_eq
 val gather (#a:Type)
            (#u:_)
            (#p0 #p1:perm)
@@ -87,6 +109,9 @@ val gather (#a:Type)
       (requires True)
       (ensures fun _ -> x0 == x1)
 
+/// Technically, a ghost reference need not be freed (since it is
+/// never allocated anyway). But, we provide a free nonetheless. It is
+/// equivalent to just dropping the predicate.
 val free (#a:Type0)
          (#u:_)
          (#v:erased a)

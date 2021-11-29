@@ -17,6 +17,7 @@
 module Steel.ST.Reference
 open FStar.Ghost
 open Steel.ST.Util
+open Steel.ST.Coercions
 module R = Steel.Reference
 
 let ref (a:Type0)
@@ -33,7 +34,7 @@ let is_null (#a:Type0) (r:ref a)
 
 let pts_to (#a:Type0)
            (r:ref a)
-           (p:perm)
+           ([@@@smt_fallback] p:perm)
            ([@@@smt_fallback] v:a)
   : vprop
   = R.pts_to r p v
@@ -51,6 +52,10 @@ let pts_to_injective_eq
       (ensures fun _ -> v0 == v1)
   = coerce_ghost
     (fun _ -> R.pts_to_injective_eq #a #opened #p0 #p1 #(hide v0) #(hide v1) r)
+
+let pts_to_not_null #a #opened #p #v r
+  = extract_fact #opened (pts_to r p v) (r =!= null) (R.pts_to_not_null r p v);
+    ()
 
 let alloc (#a:Type) (x:a)
   : ST (ref a)

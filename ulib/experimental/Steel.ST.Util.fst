@@ -14,130 +14,14 @@
    limitations under the License.
 *)
 module Steel.ST.Util
-friend Steel.Effect.Atomic
-friend Steel.ST.Effect.AtomicAndGhost
 open FStar.Ghost
 open Steel.Memory
 open Steel.ST.Effect.Ghost
 module U = FStar.Universe
-include Steel.ST.Effect.Atomic
-include Steel.ST.Effect.Ghost
 module SEA = Steel.Effect.Atomic
 module STG = Steel.ST.Effect.Ghost
 module STAG = Steel.ST.Effect.AtomicAndGhost
-
-assume
-val reify_st_atomic_base(#a:Type)
-                        (#framed:eqtype_as_type bool)
-                        (#obs:eqtype_as_type observability)
-                        (#o:inames)
-                        (#p:vprop)
-                        (#q:a -> vprop)
-                        (#pre:Type0)
-                        (#post: a -> Type0)
-                        ($f:unit -> STAtomicBase a framed o obs p q pre post)
-  : STAG.repr a framed o obs p q pre post
-
-
-assume
-val reify_st_ghost_base (#a:Type)
-                        (#framed:eqtype_as_type bool)
-                        (#obs:eqtype_as_type observability)
-                        (#o:inames)
-                        (#p:vprop)
-                        (#q:a -> vprop)
-                        (#pre:Type0)
-                        (#post: a -> Type0)
-                        ($f:unit -> STGhostBase a framed o obs p q pre post)
-  : STAG.repr a framed o obs p q pre post
-
-let lift_sta_steela (a:Type)
-                    (#framed:eqtype_as_type bool)
-                    (#obs:eqtype_as_type observability)
-                    #o #p
-                    (#q:a -> vprop)
-                    (#pre:Type0)
-                    (#post: a -> Type0)
-                    (f:unit -> STAtomicBase a framed o obs p q pre post)
-                    (_:unit)
-  : SEA.SteelAtomicBase a framed o obs p q (fun _ -> pre) (fun _ x _ -> post x)
-  = SEA.SteelAtomicBase?.reflect (reify_st_atomic_base f)
-
-let lift_stg_steelg (a:Type)
-                    (#framed:eqtype_as_type bool)
-                    (#obs:eqtype_as_type observability)
-                    #o #p
-                    (#q:a -> vprop)
-                    (#pre:Type0)
-                    (#post: a -> Type0)
-                    (f:unit -> STGhostBase a framed o obs p q pre post)
-                    (_:unit)
-  : SEA.SteelGhostBase a framed o obs p q (fun _ -> pre) (fun _ x _ -> post x)
-  = SEA.SteelGhostBase?.reflect (reify_st_ghost_base f)
-
-let coerce_repr #a (#framed:bool) #obs #o #p
-                   (#q:a -> vprop)
-                   (#pre:Type0)
-                   (#post: a -> Type0)
-                   ($f:unit -> SEA.SteelAtomicBase a framed o obs p q
-                        (fun _ -> pre)
-                        (fun _ x _ -> post x))
-  : STAG.repr a framed o obs p q pre post
-   = SEA.reify_steel_atomic_comp f
-
-
-let coerce_atomic #a #o #obs
-                 (#p:vprop)
-                 (#q:a -> vprop)
-                 (#pre:Type0)
-                 (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelAtomicBase a false o obs p q
-                   (fun _ -> pre)
-                   (fun _ x _ -> post x))
-  : STAtomicBase a false o obs p q pre post
-  = STAtomicBase?.reflect (coerce_repr f)
-
-
-let coerce_atomicF #a #o #obs
-                   (#p:vprop)
-                   (#q:a -> vprop)
-                   (#pre:Type0)
-                   (#post: a -> Type0)
-                   ($f:unit -> SEA.SteelAtomicBase a true o obs p q
-                     (fun _ -> pre)
-                     (fun _ x _ -> post x))
-  : STAtomicBase a true o obs p q pre post
-  = STAtomicBase?.reflect (coerce_repr f)
-
-let coerce_ghost_repr #a #framed #o  #p
-                      (#q:a -> vprop)
-                      (#pre:Type0)
-                      (#post: a -> Type0)
-                      ($f:unit -> SEA.SteelGhostBase a framed o Unobservable p q
-                        (fun _ -> pre)
-                        (fun _ x _ -> post x))
-  : STAG.repr a framed o Unobservable p q pre post
-  = SEA.reify_steel_ghost_comp f
-
-let coerce_ghost #a #o #p
-                 (#q:a -> vprop)
-                 (#pre:Type0)
-                 (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelGhostBase a false o Unobservable p q
-                   (fun _ -> pre)
-                   (fun _ x _ -> post x))
-  : STGhostBase a false o Unobservable p q pre post
-  = STGhostBase?.reflect (coerce_ghost_repr f)
-
-let coerce_ghostF #a #o #p
-                 (#q:a -> vprop)
-                 (#pre:Type0)
-                 (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelGhostBase a true o Unobservable p q
-                   (fun _ -> pre)
-                   (fun _ x _ -> post x))
-  : STGhostBase a true o Unobservable p q pre post
-  = STGhostBase?.reflect (coerce_ghost_repr f)
+open Steel.ST.Coercions
 
 let weaken #o p q l =
     coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
@@ -145,37 +29,14 @@ let weaken #o p q l =
 let rewrite #o p q =
     weaken p q (fun _ -> ()); ()
 
-let extract_fact0 (#opened:inames)
-                  (p:vprop)
-                  (fact:prop)
-                  (l:(m:mem) -> Lemma
-                      (requires interp (hp_of p) m)
-                      (ensures fact))
-  : STAG.repr unit false opened Unobservable p (fun _ -> p) True (fun _ -> fact)
-  = fun frame ->
-      let m0:full_mem = NMSTTotal.get () in
-      Classical.forall_intro_3 reveal_mk_rmem;
-      let h0 = mk_rmem p (core_mem m0) in
-      l (core_mem m0)
-
-let extract_fact (#opened:inames)
-                 (p:vprop)
-                 (fact:prop)
-                 (l:(m:mem) -> Lemma
-                                (requires interp (hp_of p) m)
-                                (ensures fact))
-  : STGhost unit opened p (fun _ -> p) True (fun _ -> fact)
-  = STGhostBase?.reflect (extract_fact0 p fact l)
-
 let noop #o _ = rewrite #o emp emp
-
-let admit_ _ = STGhostF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let slassert0 #o (p:vprop)
   : SEA.SteelGhostT unit o p (fun _ -> p)
   = SEA.slassert p
 
 let assert_ #o p = coerce_ghost (fun _ -> slassert0 p)
+let assume_ #o p = admit_ ()
 let drop #o p = coerce_ghost (fun _ -> SEA.drop p)
 let intro_pure #o p = coerce_ghost (fun _ -> SEA.intro_pure p)
 let elim_pure #o p = coerce_ghost (fun _ -> SEA.elim_pure p)
@@ -226,9 +87,8 @@ let with_invariant (#a:Type)
   = coerce_atomic
     (fun _ ->
       SEA.with_invariant i
-        (lift_sta_steela a
-          #false
-          #Observable
+        (lift_sta_steela
+          #a
           #(add_inv opened_invariants i)
           #(p `star` fp)
           #(fun x -> p `star` fp' x)
@@ -248,9 +108,8 @@ let with_invariant_g (#a:Type)
   = coerce_ghost
     (fun _ ->
        SEA.with_invariant_g i
-        (lift_stg_steelg a
-          #false
-          #Unobservable
+        (lift_stg_steelg
+          #a
           #(add_inv opened_invariants i)
           #(p `star` fp)
           #(fun x -> p `star` fp' x)

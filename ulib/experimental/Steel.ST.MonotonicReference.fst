@@ -17,18 +17,21 @@
 module Steel.ST.MonotonicReference
 open FStar.Ghost
 open Steel.ST.Util
+open Steel.ST.Coercions
 module Preorder = FStar.Preorder
 module MR = Steel.MonotonicReference
 
-/// A library for Steel references that are monotonic with respect to a user-specified preorder.
-/// This library builds on top of Steel.HigherReference, and is specialized to values at universe 1.
+/// A library for Steel references that are monotonic with respect to
+/// a user-specified preorder.  This library builds on top of
+/// Steel.HigherReference, and is specialized to values at universe 1.
 
 /// An abstract datatype for monotonic references
 let ref (a:Type u#0) (p:Preorder.preorder a)
   : Type u#0
   = MR.ref a p
 
-/// Lifting the standard points to predicate to vprop, with a non-informative selector
+/// Lifting the standard points to predicate to vprop, with a
+/// non-informative selector
 let pts_to (#a:Type)
            (#p:Preorder.preorder a)
            (r:ref a p)
@@ -37,14 +40,15 @@ let pts_to (#a:Type)
    : vprop
    = MR.pts_to #a #p r f v
 
-/// Allocates a reference with value [x]. We have full permission on the newly
-/// allocated reference.
+/// Allocates a reference with value [x]. We have full permission on
+/// the newly allocated reference.
 let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
   : STT (ref a p) emp (fun r -> pts_to r full_perm v)
   = let x = coerce_steel (fun _ -> MR.alloc p v) in
     return x
 
-/// Writes value [x] in the reference [r], as long as we have full ownership of [r]
+/// Writes value [x] in the reference [r], as long as we have full
+/// ownership of [r]
 let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a)
   : ST unit
@@ -61,8 +65,9 @@ let witnessed (#a:Type u#0)
   : prop
   = MR.witnessed r fact
 
-/// If [fact] is a stable property for the reference preorder [p], and if
-/// it holds for the current value [v] of the reference, then we can witness it
+/// If [fact] is a stable property for the reference preorder [p], and
+/// if it holds for the current value [v] of the reference, then we
+/// can witness it
 let witness' (#inames: _)
             (#a:Type)
             (#q:perm)
@@ -94,7 +99,8 @@ let witness (#inames: _)
       (ensures fun _ -> witnessed r fact)
   = coerce_ghost (witness' r fact v pf); ()
 
-/// If we previously witnessed the validity of [fact], we can recall its validity
+/// If we previously witnessed the validity of [fact], we can recall
+/// its validity
 let recall (#inames: _)
            (#a:Type u#0)
            (#q:perm)
@@ -109,8 +115,9 @@ let recall (#inames: _)
       (ensures fun _ -> fact v)
   = coerce_ghost (fun _ -> MR.recall #inames #a #q #p fact r v)
 
-/// Monotonic references are also equipped with the usual fractional permission discipline
-/// So, you can split a reference into two read-only shares
+/// Monotonic references are also equipped with the usual fractional
+/// permission discipline So, you can split a reference into two
+/// read-only shares
 let share (#inames:_)
           (#a:Type)
           (#p:Preorder.preorder a)

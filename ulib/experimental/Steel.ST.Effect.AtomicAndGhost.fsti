@@ -22,24 +22,37 @@ include Steel.Effect.Common
 module STF = Steel.ST.Effect
 
 /// This module defines atomic and ghost variants of the Steel effect
+/// The effect it defines, [STAGCommon] (for ST Atomic and Ghost) is
+/// not used directly.
+///
+/// Instead, two new instances of it, [STAtomic] and [STGhost] are
+/// defined in Steel.ST.Effect.Atomic and Steel.ST.Effect.Ghost, and
+/// those are used instead.
+///
+/// This module just allows us to factor some of the common
+/// definitions for atomic and ghost effects into one place.
+///
+/// Please look at Steel.Effect.Atomic for more detailed
+/// comments. This module is derived from it by specializing the
+/// requires and ensures indexes to prop and result-predicates,
+/// respectively.
+///
+/// NOTE: It is important that the [req] and [ens] indexes are
+/// annotated exactly as shown here, with the [st_req_t] and
+/// [st_ens_t] abbreviations. The tactic in Steel.Effect.Common relies
+/// on those names to distinguish between vprop and non-vprop goals.
 
 #set-options "--warn_error -330 --ide_id_info_off"  //turn off the experimental feature warning
 
-(*** SteelAGCommon effect ***)
-
-/// The underlying representation of atomic and ghost computations, very similar to Steel
-/// computations in Steel.Effect.
-/// The opened_invariants index corresponds to the set of currently opened invariants,
-/// and is relevant to the with_invariant combinator below
-/// The observability bit will always be Unobservable for ghost computations
-val repr (a:Type u#a)
-         (already_framed:bool)
-         (opened_invariants:inames)
-         (g:observability)
-         (pre:pre_t)
-         (post:post_t a)
-         (req:st_req_t)
-         (ens:st_ens_t a)
+(*** STAGCommon effect ***)
+val repr (a:Type u#a)               //result type
+         (already_framed:bool)      //framed or not
+         (opened_invariants:inames) //which invariants are we relying on
+         (g:observability)          //is this a ghost computation?
+         (pre:pre_t)                //expects vprop
+         (post:post_t a)            //provides a -> vprop
+         (req:st_req_t)             //a prop refinement as a precondition
+         (ens:st_ens_t a)           //an (a -> prop) as a postcondition
   : Type u#(max a 2)
 
 /// Monadic return combinator for the Steel effect. It is parametric in the postcondition
@@ -54,6 +67,8 @@ val return_ (a:Type u#a)
          True
          (fun v -> v == x)
 
+/// Sequential composition: only allows if at least one of them is non-observable,
+/// since composing two observables would result in a non-atomic computation
 val bind (a:Type) (b:Type)
          (opened_invariants:inames)
          (o1:eqtype_as_type observability)
@@ -94,6 +109,8 @@ val bind (a:Type) (b:Type)
         (requires obs_at_most_one o1 o2)
         (ensures fun _ -> True)
 
+/// Subsumption, only on the observability flags
+/// and on the requires / ensures clauses
 val subcomp (a:Type)
             (opened_invariants:inames)
             (o1:eqtype_as_type observability)
@@ -119,6 +136,7 @@ val subcomp (a:Type)
     (req_g ==> (req_f /\ (forall x. ens_f x ==> ens_g x))))
   (ensures fun _ -> True)
 
+/// Conditional composition
 let if_then_else (a:Type)
                  (o:inames)
                  (#framed_f:eqtype_as_type bool)
@@ -171,7 +189,8 @@ effect {
 }
 
 
-/// The composition combinator.
+/// Sequentially composing a pure computation with a non-trivial WP
+/// with a STAG continuation.
 val bind_pure_stag (a:Type) (b:Type)
                    (opened_invariants:inames)
                    (o:eqtype_as_type observability)
@@ -191,10 +210,8 @@ val bind_pure_stag (a:Type) (b:Type)
     (STF.bind_pure_st_ens wp ens)
 
 
-/// If the set of currently opened invariants is empty, an atomic Steel computation can be lifted
-/// to a generic Steel computation.
-/// Note that lifts are transitive in the effect lattice; hence a Steel ghost computation
-/// will automatically be lifted to a generic Steel computation if needed by successively applying the lift from ghost to atomic computations, followed by the lift from atomic to generic steel computations, as long as all preconditions are satisfied
+/// If the set of currently opened invariants is empty, an atomic
+/// ST computation can be lifted to a generic ST computation.
 val lift_atomic_st
   (a:Type)
   (o:eqtype_as_type observability)

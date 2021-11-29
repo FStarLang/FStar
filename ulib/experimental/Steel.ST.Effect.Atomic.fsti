@@ -15,20 +15,14 @@
 *)
 
 module Steel.ST.Effect.Atomic
-
+(** This module instantiates Steel.ST.Effect.AtomicAndGhost
+    providing the STAtomic effect, a non-selector variant of
+    SteelAtomic *)
+#push-options "--warn_error -330" //we intentionally use polymonads
 open Steel.Memory
-module T = FStar.Tactics
 include Steel.Effect.Common
 module STAG = Steel.ST.Effect.AtomicAndGhost
 
-/// Defining a SteelAtomic effect for atomic Steel computations.
-/// F*'s effect system is nominal; defining this as a `new_effect` ensures
-/// that SteelAtomic computations are distinct from any computation with the
-/// SteelAGCommon effect, while allowing this effect to directly inherit
-/// the SteelAGCommon combinators
-
-/// Assembling the combinators defined above into an actual effect
-/// The total keyword ensures that all ghost and atomic computations terminate.
 [@@ ite_soundness_by ite_attr]
 total
 reflectable
@@ -48,16 +42,12 @@ effect {
          if_then_else = STAG.if_then_else }
 }
 
+(* NB: Definining it this way led to universe errors *)
 // [@@ ite_soundness_by ite_attr]
 // total
 // reflectable
 // new_effect STAtomicBase = STAG.STAGCommon
 
-/// The two user-facing effects, corresponding to not yet framed (SteelAtomic)
-/// and already framed (SteelAtomicF) computations.
-/// In the ICFP21 paper, this is modeled by the |- and |-_F modalities.
-/// Both effects are instantiated with the Observable bit, indicating that they do not
-/// model ghost computations
 effect STAtomic (a:Type)
                 (opened:inames)
                 (pre:pre_t)
@@ -75,10 +65,7 @@ effect STAtomicF (a:Type)
   = STAtomicBase a true opened Observable pre post req ens
 
 (* Composing SteelAtomic and Pure computations *)
-
-#push-options "--warn_error -330"
 polymonadic_bind (PURE, STAtomicBase) |> STAtomicBase = STAG.bind_pure_stag
-#pop-options
 
 /// A version of the SteelAtomic effect with trivial requires and ensures clauses
 effect STAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
@@ -86,7 +73,7 @@ effect STAtomicT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
 
 sub_effect STAtomicBase ~> Steel.ST.Effect.STBase = STAG.lift_atomic_st
 
-/// Lifting actions from the memory model to Steel atomic and ghost computations.
+/// Lifting actions from the memory model to atomic and ghost computations.
 /// Only to be used internally, for the core primitives of the Steel framework
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)
