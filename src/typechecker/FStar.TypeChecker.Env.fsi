@@ -107,12 +107,34 @@ and mlift = {
   mlift_term:option<(universe -> typ -> term -> term)>
 }
 
-(* Edge in the effect lattice *)
+(* 
+ * Edge in the effect lattice
+ *
+ * May have been computed by composing other "edges"
+ *)
 and edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
+  msource : lident;
+  mtarget : lident;
+  mlift   : mlift;
+  mpath   : list<lident>;  //this is just for debugging pusposes
+                           //e.g. it is used when printing the effects graph
+                           //it has no other role
+                           //the path is the list of nodes that the "edge" goes through
+                           //not including msource and mtarget
 }
+
+(*
+ * The effects graph
+ *
+ * Each of order, joins, polymonadic binds, subcomps, are lists,
+ *   that may have multiple entries for same nodes,
+ *   e.g. multiple edges between effects M and N
+ *
+ * We keep adding the latest ones to the head of the list,
+ *   which is then picked for application
+ *
+ * I.e. we don't remove when overriding
+ *)
 
 and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
@@ -317,6 +339,10 @@ val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
 val exists_polymonadic_subcomp: env -> lident -> lident -> option<tscheme>
+
+//print the effects graph in dot format
+val print_effects_graph: env -> string
+
 val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>

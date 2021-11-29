@@ -207,7 +207,8 @@ and edge =
   {
   msource: FStar_Ident.lident ;
   mtarget: FStar_Ident.lident ;
-  mlift: mlift }
+  mlift: mlift ;
+  mpath: FStar_Ident.lident Prims.list }
 and effects =
   {
   decls:
@@ -382,13 +383,20 @@ let (__proj__Mkmlift__item__mlift_term :
     match projectee with | { mlift_wp; mlift_term;_} -> mlift_term
 let (__proj__Mkedge__item__msource : edge -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { msource; mtarget; mlift = mlift1;_} -> msource
+    match projectee with
+    | { msource; mtarget; mlift = mlift1; mpath;_} -> msource
 let (__proj__Mkedge__item__mtarget : edge -> FStar_Ident.lident) =
   fun projectee ->
-    match projectee with | { msource; mtarget; mlift = mlift1;_} -> mtarget
+    match projectee with
+    | { msource; mtarget; mlift = mlift1; mpath;_} -> mtarget
 let (__proj__Mkedge__item__mlift : edge -> mlift) =
   fun projectee ->
-    match projectee with | { msource; mtarget; mlift = mlift1;_} -> mlift1
+    match projectee with
+    | { msource; mtarget; mlift = mlift1; mpath;_} -> mlift1
+let (__proj__Mkedge__item__mpath : edge -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { msource; mtarget; mlift = mlift1; mpath;_} -> mpath
 let (__proj__Mkeffects__item__decls :
   effects ->
     (FStar_Syntax_Syntax.eff_decl * FStar_Syntax_Syntax.qualifier Prims.list)
@@ -3967,7 +3975,8 @@ let (monad_leq :
         if uu___
         then
           FStar_Pervasives_Native.Some
-            { msource = l1; mtarget = l2; mlift = identity_mlift }
+            { msource = l1; mtarget = l2; mlift = identity_mlift; mpath = []
+            }
         else
           FStar_Compiler_Effect.op_Bar_Greater (env1.effects).order
             (FStar_Compiler_Util.find_opt
@@ -4439,6 +4448,106 @@ let (exists_polymonadic_subcomp :
         | FStar_Pervasives_Native.Some (uu___1, uu___2, ts) ->
             FStar_Pervasives_Native.Some ts
         | uu___1 -> FStar_Pervasives_Native.None
+let (print_effects_graph : env -> Prims.string) =
+  fun env1 ->
+    let eff_name lid =
+      let uu___ =
+        FStar_Compiler_Effect.op_Bar_Greater lid FStar_Ident.ident_of_lid in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Ident.string_of_id in
+    let path_str path =
+      let uu___ =
+        FStar_Compiler_Effect.op_Bar_Greater path
+          (FStar_Compiler_List.map eff_name) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ";") in
+    let pbinds = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
+    let lifts = FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
+    let psubcomps = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
+    FStar_Compiler_Effect.op_Bar_Greater (env1.effects).order
+      (FStar_Compiler_List.iter
+         (fun uu___1 ->
+            match uu___1 with
+            | { msource = src; mtarget = tgt; mlift = uu___2; mpath = path;_}
+                ->
+                let key = eff_name src in
+                let m =
+                  let uu___3 = FStar_Compiler_Util.smap_try_find lifts key in
+                  match uu___3 with
+                  | FStar_Pervasives_Native.None ->
+                      let m1 =
+                        FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
+                      (FStar_Compiler_Util.smap_add lifts key m1; m1)
+                  | FStar_Pervasives_Native.Some m1 -> m1 in
+                let uu___3 =
+                  let uu___4 = eff_name tgt in
+                  FStar_Compiler_Util.smap_try_find m uu___4 in
+                (match uu___3 with
+                 | FStar_Pervasives_Native.Some uu___4 -> ()
+                 | FStar_Pervasives_Native.None ->
+                     let uu___4 = eff_name tgt in
+                     let uu___5 = path_str path in
+                     FStar_Compiler_Util.smap_add m uu___4 uu___5)));
+    FStar_Compiler_Effect.op_Bar_Greater (env1.effects).polymonadic_binds
+      (FStar_Compiler_List.iter
+         (fun uu___2 ->
+            match uu___2 with
+            | (m, n, p, uu___3) ->
+                let key =
+                  let uu___4 = eff_name m in
+                  let uu___5 = eff_name n in
+                  let uu___6 = eff_name p in
+                  FStar_Compiler_Util.format3 "%s, %s |> %s" uu___4 uu___5
+                    uu___6 in
+                FStar_Compiler_Util.smap_add pbinds key ""));
+    FStar_Compiler_Effect.op_Bar_Greater (env1.effects).polymonadic_subcomps
+      (FStar_Compiler_List.iter
+         (fun uu___3 ->
+            match uu___3 with
+            | (m, n, uu___4) ->
+                let key =
+                  let uu___5 = eff_name m in
+                  let uu___6 = eff_name n in
+                  FStar_Compiler_Util.format2 "%s <: %s" uu___5 uu___6 in
+                FStar_Compiler_Util.smap_add psubcomps key ""));
+    (let uu___3 =
+       let uu___4 =
+         FStar_Compiler_Util.smap_fold lifts
+           (fun src ->
+              fun m ->
+                fun s ->
+                  FStar_Compiler_Util.smap_fold m
+                    (fun tgt ->
+                       fun path ->
+                         fun s1 ->
+                           let uu___5 =
+                             FStar_Compiler_Util.format3
+                               "%s -> %s [label=\"%s\"]" src tgt path in
+                           uu___5 :: s1) s) [] in
+       FStar_Compiler_Effect.op_Bar_Greater uu___4 (FStar_String.concat "\n") in
+     let uu___4 =
+       let uu___5 =
+         FStar_Compiler_Util.smap_fold pbinds
+           (fun k ->
+              fun uu___6 ->
+                fun s ->
+                  let uu___7 =
+                    FStar_Compiler_Util.format1
+                      "\"%s\" [shape=\"plaintext\"]" k in
+                  uu___7 :: s) [] in
+       FStar_Compiler_Effect.op_Bar_Greater uu___5 (FStar_String.concat "\n") in
+     let uu___5 =
+       let uu___6 =
+         FStar_Compiler_Util.smap_fold psubcomps
+           (fun k ->
+              fun uu___7 ->
+                fun s ->
+                  let uu___8 =
+                    FStar_Compiler_Util.format1
+                      "\"%s\" [shape=\"plaintext\"]" k in
+                  uu___8 :: s) [] in
+       FStar_Compiler_Effect.op_Bar_Greater uu___6 (FStar_String.concat "\n") in
+     FStar_Compiler_Util.format3
+       "digraph {\nlabel=\"Effects ordering\"\nsubgraph cluster_lifts {\nlabel = \"Lifts\"\n\n      %s\n}\nsubgraph cluster_polymonadic_binds {\nlabel = \"Polymonadic binds\"\n%s\n}\nsubgraph cluster_polymonadic_subcomps {\nlabel = \"Polymonadic subcomps\"\n%s\n}}\n"
+       uu___3 uu___4 uu___5)
 let (update_effect_lattice :
   env -> FStar_Ident.lident -> FStar_Ident.lident -> mlift -> env) =
   fun env1 ->
@@ -4478,11 +4587,20 @@ let (update_effect_lattice :
             {
               msource = (e1.msource);
               mtarget = (e2.mtarget);
-              mlift = composed_lift
+              mlift = composed_lift;
+              mpath =
+                (FStar_Compiler_List.op_At e1.mpath
+                   (FStar_Compiler_List.op_At [e1.mtarget] e2.mpath))
             } in
-          let edge1 = { msource = src; mtarget = tgt; mlift = st_mlift } in
+          let edge1 =
+            { msource = src; mtarget = tgt; mlift = st_mlift; mpath = [] } in
           let id_edge l =
-            { msource = src; mtarget = tgt; mlift = identity_mlift } in
+            {
+              msource = src;
+              mtarget = tgt;
+              mlift = identity_mlift;
+              mpath = []
+            } in
           let find_edge order uu___ =
             match uu___ with
             | (i, j) ->
@@ -4508,90 +4626,75 @@ let (update_effect_lattice :
               (FStar_Compiler_List.fold_left
                  (fun edges ->
                     fun i ->
-                      let uu___ =
-                        find_edge (env1.effects).order (i, (edge1.msource)) in
-                      match uu___ with
-                      | FStar_Pervasives_Native.Some e -> e :: edges
-                      | FStar_Pervasives_Native.None -> edges) []) in
+                      let uu___ = FStar_Ident.lid_equals i edge1.msource in
+                      if uu___
+                      then edges
+                      else
+                        (let uu___2 =
+                           find_edge (env1.effects).order
+                             (i, (edge1.msource)) in
+                         match uu___2 with
+                         | FStar_Pervasives_Native.Some e -> e :: edges
+                         | FStar_Pervasives_Native.None -> edges)) []) in
           let all_tgt_j =
             FStar_Compiler_Effect.op_Bar_Greater ms
               (FStar_Compiler_List.fold_left
                  (fun edges ->
                     fun j ->
-                      let uu___ =
-                        find_edge (env1.effects).order ((edge1.mtarget), j) in
-                      match uu___ with
-                      | FStar_Pervasives_Native.Some e -> e :: edges
-                      | FStar_Pervasives_Native.None -> edges) []) in
-          let new_edges =
+                      let uu___ = FStar_Ident.lid_equals edge1.mtarget j in
+                      if uu___
+                      then edges
+                      else
+                        (let uu___2 =
+                           find_edge (env1.effects).order
+                             ((edge1.mtarget), j) in
+                         match uu___2 with
+                         | FStar_Pervasives_Native.Some e -> e :: edges
+                         | FStar_Pervasives_Native.None -> edges)) []) in
+          let check_cycle src1 tgt1 =
+            let uu___ = FStar_Ident.lid_equals src1 tgt1 in
+            if uu___
+            then
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_Ident.string_of_lid edge1.msource in
+                  let uu___4 = FStar_Ident.string_of_lid edge1.mtarget in
+                  let uu___5 = FStar_Ident.string_of_lid src1 in
+                  FStar_Compiler_Util.format3
+                    "Adding an edge %s~>%s induces a cycle %s" uu___3 uu___4
+                    uu___5 in
+                (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___2) in
+              FStar_Errors.raise_error uu___1 env1.range
+            else () in
+          let new_i_edge_target =
+            FStar_Compiler_List.fold_left
+              (fun edges ->
+                 fun i_src ->
+                   check_cycle i_src.msource edge1.mtarget;
+                   (let uu___1 = compose_edges i_src edge1 in uu___1 :: edges))
+              [] all_i_src in
+          let new_edge_source_j =
+            FStar_Compiler_List.fold_left
+              (fun edges ->
+                 fun tgt_j ->
+                   check_cycle edge1.msource tgt_j.mtarget;
+                   (let uu___1 = compose_edges edge1 tgt_j in uu___1 :: edges))
+              [] all_tgt_j in
+          let new_i_j =
             FStar_Compiler_List.fold_left
               (fun edges ->
                  fun i_src ->
                    FStar_Compiler_List.fold_left
                      (fun edges1 ->
                         fun tgt_j ->
-                          let src1 = i_src.msource in
-                          let tgt1 = tgt_j.mtarget in
-                          (let uu___1 = FStar_Ident.lid_equals src1 tgt1 in
-                           if uu___1
-                           then
-                             let uu___2 =
-                               let uu___3 =
-                                 let uu___4 =
-                                   FStar_Ident.string_of_lid edge1.msource in
-                                 let uu___5 =
-                                   FStar_Ident.string_of_lid edge1.mtarget in
-                                 let uu___6 = FStar_Ident.string_of_lid src1 in
-                                 FStar_Compiler_Util.format3
-                                   "Adding an edge %s~>%s induces a cycle %s"
-                                   uu___4 uu___5 uu___6 in
-                               (FStar_Errors.Fatal_Effects_Ordering_Coherence,
-                                 uu___3) in
-                             FStar_Errors.raise_error uu___2 env1.range
-                           else ());
+                          check_cycle i_src.msource tgt_j.mtarget;
                           (let uu___1 =
-                             let uu___2 =
-                               find_edge (env1.effects).order (src1, tgt1) in
-                             FStar_Compiler_Effect.op_Bar_Greater uu___2
-                               FStar_Compiler_Util.is_some in
-                           if uu___1
-                           then edges1
-                           else
-                             (let uu___3 =
-                                (let uu___4 =
-                                   exists_polymonadic_subcomp env1 src1 tgt1 in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___4
-                                   FStar_Compiler_Util.is_some)
-                                  ||
-                                  (let uu___4 =
-                                     exists_polymonadic_subcomp env1 tgt1
-                                       src1 in
-                                   FStar_Compiler_Effect.op_Bar_Greater
-                                     uu___4 FStar_Compiler_Util.is_some) in
-                              if uu___3
-                              then
-                                let uu___4 =
-                                  let uu___5 =
-                                    let uu___6 =
-                                      FStar_Ident.string_of_lid edge1.msource in
-                                    let uu___7 =
-                                      FStar_Ident.string_of_lid edge1.mtarget in
-                                    let uu___8 =
-                                      FStar_Ident.string_of_lid src1 in
-                                    let uu___9 =
-                                      FStar_Ident.string_of_lid tgt1 in
-                                    FStar_Compiler_Util.format4
-                                      "Adding an edge %s~>%s induces an edge %s~>%s that conflicts with an existing polymonadic subcomp between them"
-                                      uu___6 uu___7 uu___8 uu___9 in
-                                  (FStar_Errors.Fatal_Effects_Ordering_Coherence,
-                                    uu___5) in
-                                FStar_Errors.raise_error uu___4 env1.range
-                              else
-                                (let uu___5 =
-                                   let uu___6 = compose_edges i_src edge1 in
-                                   compose_edges uu___6 tgt_j in
-                                 uu___5 :: edges1)))) edges all_tgt_j) []
-              all_i_src in
+                             let uu___2 = compose_edges i_src edge1 in
+                             compose_edges uu___2 tgt_j in
+                           uu___1 :: edges1)) edges all_tgt_j) [] all_i_src in
+          let new_edges = edge1 ::
+            (FStar_Compiler_List.op_At new_i_edge_target
+               (FStar_Compiler_List.op_At new_edge_source_j new_i_j)) in
           let order =
             FStar_Compiler_List.op_At new_edges (env1.effects).order in
           FStar_Compiler_Effect.op_Bar_Greater order
@@ -4671,18 +4774,16 @@ let (update_effect_lattice :
                                                     (match uu___6 with
                                                      | (true, true) ->
                                                          let uu___7 =
-                                                           FStar_Ident.lid_equals
-                                                             k ub in
+                                                           let uu___8 =
+                                                             FStar_Ident.lid_equals
+                                                               k ub in
+                                                           Prims.op_Negation
+                                                             uu___8 in
                                                          if uu___7
                                                          then
-                                                           (FStar_Errors.log_issue
-                                                              FStar_Compiler_Range.dummyRange
-                                                              (FStar_Errors.Warning_UpperBoundCandidateAlreadyVisited,
-                                                                "Looking multiple times at the same upper bound candidate");
-                                                            bopt)
-                                                         else
                                                            failwith
-                                                             "Found a cycle in the lattice"
+                                                             "Impossible! Should have already detected the cycle in the effect ordering"
+                                                         else bopt
                                                      | (false, false) ->
                                                          let uu___7 =
                                                            let uu___8 =
@@ -4716,95 +4817,7 @@ let (update_effect_lattice :
                              match k_opt with
                              | FStar_Pervasives_Native.None -> []
                              | FStar_Pervasives_Native.Some (k, e1, e2) ->
-                                 let uu___1 =
-                                   (let uu___2 = FStar_Ident.lid_equals i j in
-                                    Prims.op_Negation uu___2) &&
-                                     ((let uu___2 =
-                                         exists_polymonadic_bind env1 i j in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___2 FStar_Compiler_Util.is_some)
-                                        ||
-                                        (let uu___2 =
-                                           exists_polymonadic_bind env1 j i in
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           uu___2 FStar_Compiler_Util.is_some)) in
-                                 if uu___1
-                                 then
-                                   let uu___2 =
-                                     let uu___3 =
-                                       let uu___4 =
-                                         FStar_Ident.string_of_lid src in
-                                       let uu___5 =
-                                         FStar_Ident.string_of_lid tgt in
-                                       let uu___6 =
-                                         FStar_Ident.string_of_lid i in
-                                       let uu___7 =
-                                         FStar_Ident.string_of_lid j in
-                                       let uu___8 =
-                                         FStar_Ident.string_of_lid k in
-                                       FStar_Compiler_Util.format5
-                                         "Updating effect lattice with a lift between %s and %s induces a least upper bound %s of %s and %s, and this conflicts with a polymonadic bind between them"
-                                         uu___4 uu___5 uu___6 uu___7 uu___8 in
-                                     (FStar_Errors.Fatal_Effects_Ordering_Coherence,
-                                       uu___3) in
-                                   FStar_Errors.raise_error uu___2 env1.range
-                                 else
-                                   (let j_opt = join_opt env1 i j in
-                                    let uu___3 =
-                                      (FStar_Compiler_Effect.op_Bar_Greater
-                                         j_opt FStar_Compiler_Util.is_some)
-                                        &&
-                                        (let uu___4 =
-                                           let uu___5 =
-                                             let uu___6 =
-                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                 j_opt
-                                                 FStar_Compiler_Util.must in
-                                             FStar_Compiler_Effect.op_Bar_Greater
-                                               uu___6
-                                               (fun uu___7 ->
-                                                  match uu___7 with
-                                                  | (l, uu___8, uu___9) -> l) in
-                                           FStar_Ident.lid_equals k uu___5 in
-                                         Prims.op_Negation uu___4) in
-                                    if uu___3
-                                    then
-                                      let uu___4 =
-                                        let uu___5 =
-                                          let uu___6 =
-                                            FStar_Ident.string_of_lid src in
-                                          let uu___7 =
-                                            FStar_Ident.string_of_lid tgt in
-                                          let uu___8 =
-                                            FStar_Ident.string_of_lid i in
-                                          let uu___9 =
-                                            FStar_Ident.string_of_lid j in
-                                          let uu___10 =
-                                            FStar_Ident.string_of_lid k in
-                                          let uu___11 =
-                                            let uu___12 =
-                                              let uu___13 =
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  j_opt
-                                                  FStar_Compiler_Util.must in
-                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                uu___13
-                                                (fun uu___14 ->
-                                                   match uu___14 with
-                                                   | (l, uu___15, uu___16) ->
-                                                       l) in
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              uu___12
-                                              FStar_Ident.string_of_lid in
-                                          FStar_Compiler_Util.format6
-                                            "Updating effect lattice with %s ~> %s makes the least upper bound of %s and %s as %s, whereas earlier it was %s"
-                                            uu___6 uu___7 uu___8 uu___9
-                                            uu___10 uu___11 in
-                                        (FStar_Errors.Fatal_Effects_Ordering_Coherence,
-                                          uu___5) in
-                                      FStar_Errors.raise_error uu___4
-                                        env1.range
-                                    else [(i, j, k, (e1.mlift), (e2.mlift))]))))) in
+                                 [(i, j, k, (e1.mlift), (e2.mlift))])))) in
            let effects1 =
              let uu___1 = env1.effects in
              {
@@ -4876,102 +4889,67 @@ let (add_polymonadic_bind :
       fun n ->
         fun p ->
           fun ty ->
-            let err_msg poly =
-              let uu___ = FStar_Ident.string_of_lid m in
-              let uu___1 = FStar_Ident.string_of_lid n in
-              let uu___2 = FStar_Ident.string_of_lid p in
-              FStar_Compiler_Util.format4
-                "Polymonadic bind ((%s, %s) |> %s) conflicts with an already existing %s"
-                uu___ uu___1 uu___2
-                (if poly
-                 then "polymonadic bind"
-                 else "path in the effect lattice") in
-            let uu___ =
-              let uu___1 = exists_polymonadic_bind env1 m n in
-              FStar_Compiler_Effect.op_Bar_Greater uu___1
-                FStar_Compiler_Util.is_some in
-            if uu___
-            then
-              let uu___1 =
-                let uu___2 = err_msg true in
-                (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___2) in
-              FStar_Errors.raise_error uu___1 env1.range
-            else
-              (let uu___2 =
-                 (let uu___3 = join_opt env1 m n in
-                  FStar_Compiler_Effect.op_Bar_Greater uu___3
-                    FStar_Compiler_Util.is_some)
-                   &&
-                   (let uu___3 = FStar_Ident.lid_equals m n in
-                    Prims.op_Negation uu___3) in
-               if uu___2
-               then
-                 let uu___3 =
-                   let uu___4 = err_msg false in
-                   (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___4) in
-                 FStar_Errors.raise_error uu___3 env1.range
-               else
+            {
+              solver = (env1.solver);
+              range = (env1.range);
+              curmodule = (env1.curmodule);
+              gamma = (env1.gamma);
+              gamma_sig = (env1.gamma_sig);
+              gamma_cache = (env1.gamma_cache);
+              modules = (env1.modules);
+              expected_typ = (env1.expected_typ);
+              sigtab = (env1.sigtab);
+              attrtab = (env1.attrtab);
+              instantiate_imp = (env1.instantiate_imp);
+              effects =
+                (let uu___ = env1.effects in
                  {
-                   solver = (env1.solver);
-                   range = (env1.range);
-                   curmodule = (env1.curmodule);
-                   gamma = (env1.gamma);
-                   gamma_sig = (env1.gamma_sig);
-                   gamma_cache = (env1.gamma_cache);
-                   modules = (env1.modules);
-                   expected_typ = (env1.expected_typ);
-                   sigtab = (env1.sigtab);
-                   attrtab = (env1.attrtab);
-                   instantiate_imp = (env1.instantiate_imp);
-                   effects =
-                     ((let uu___4 = env1.effects in
-                       {
-                         decls = (uu___4.decls);
-                         order = (uu___4.order);
-                         joins = (uu___4.joins);
-                         polymonadic_binds = ((m, n, p, ty) ::
-                           ((env1.effects).polymonadic_binds));
-                         polymonadic_subcomps = (uu___4.polymonadic_subcomps)
-                       }));
-                   generalize = (env1.generalize);
-                   letrecs = (env1.letrecs);
-                   top_level = (env1.top_level);
-                   check_uvars = (env1.check_uvars);
-                   use_eq = (env1.use_eq);
-                   use_eq_strict = (env1.use_eq_strict);
-                   is_iface = (env1.is_iface);
-                   admit = (env1.admit);
-                   lax = (env1.lax);
-                   lax_universes = (env1.lax_universes);
-                   phase1 = (env1.phase1);
-                   failhard = (env1.failhard);
-                   nosynth = (env1.nosynth);
-                   uvar_subtyping = (env1.uvar_subtyping);
-                   tc_term = (env1.tc_term);
-                   typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-                   universe_of = (env1.universe_of);
-                   typeof_well_typed_tot_or_gtot_term =
-                     (env1.typeof_well_typed_tot_or_gtot_term);
-                   use_bv_sorts = (env1.use_bv_sorts);
-                   qtbl_name_and_index = (env1.qtbl_name_and_index);
-                   normalized_eff_names = (env1.normalized_eff_names);
-                   fv_delta_depths = (env1.fv_delta_depths);
-                   proof_ns = (env1.proof_ns);
-                   synth_hook = (env1.synth_hook);
-                   try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-                   splice = (env1.splice);
-                   mpreprocess = (env1.mpreprocess);
-                   postprocess = (env1.postprocess);
-                   identifier_info = (env1.identifier_info);
-                   tc_hooks = (env1.tc_hooks);
-                   dsenv = (env1.dsenv);
-                   nbe = (env1.nbe);
-                   strict_args_tab = (env1.strict_args_tab);
-                   erasable_types_tab = (env1.erasable_types_tab);
-                   enable_defer_to_tac = (env1.enable_defer_to_tac);
-                   unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-                   erase_erasable_args = (env1.erase_erasable_args)
-                 })
+                   decls = (uu___.decls);
+                   order = (uu___.order);
+                   joins = (uu___.joins);
+                   polymonadic_binds = ((m, n, p, ty) ::
+                     ((env1.effects).polymonadic_binds));
+                   polymonadic_subcomps = (uu___.polymonadic_subcomps)
+                 });
+              generalize = (env1.generalize);
+              letrecs = (env1.letrecs);
+              top_level = (env1.top_level);
+              check_uvars = (env1.check_uvars);
+              use_eq = (env1.use_eq);
+              use_eq_strict = (env1.use_eq_strict);
+              is_iface = (env1.is_iface);
+              admit = (env1.admit);
+              lax = (env1.lax);
+              lax_universes = (env1.lax_universes);
+              phase1 = (env1.phase1);
+              failhard = (env1.failhard);
+              nosynth = (env1.nosynth);
+              uvar_subtyping = (env1.uvar_subtyping);
+              tc_term = (env1.tc_term);
+              typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+              universe_of = (env1.universe_of);
+              typeof_well_typed_tot_or_gtot_term =
+                (env1.typeof_well_typed_tot_or_gtot_term);
+              use_bv_sorts = (env1.use_bv_sorts);
+              qtbl_name_and_index = (env1.qtbl_name_and_index);
+              normalized_eff_names = (env1.normalized_eff_names);
+              fv_delta_depths = (env1.fv_delta_depths);
+              proof_ns = (env1.proof_ns);
+              synth_hook = (env1.synth_hook);
+              try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+              splice = (env1.splice);
+              mpreprocess = (env1.mpreprocess);
+              postprocess = (env1.postprocess);
+              identifier_info = (env1.identifier_info);
+              tc_hooks = (env1.tc_hooks);
+              dsenv = (env1.dsenv);
+              nbe = (env1.nbe);
+              strict_args_tab = (env1.strict_args_tab);
+              erasable_types_tab = (env1.erasable_types_tab);
+              enable_defer_to_tac = (env1.enable_defer_to_tac);
+              unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+              erase_erasable_args = (env1.erase_erasable_args)
+            }
 let (add_polymonadic_subcomp :
   env ->
     FStar_Ident.lident ->
@@ -4981,106 +4959,67 @@ let (add_polymonadic_subcomp :
     fun m ->
       fun n ->
         fun ts ->
-          let err_msg poly =
-            let uu___ = FStar_Ident.string_of_lid m in
-            let uu___1 = FStar_Ident.string_of_lid n in
-            FStar_Compiler_Util.format3
-              "Polymonadic subcomp %s <: %s conflicts with an already existing %s"
-              uu___ uu___1
-              (if poly
-               then "polymonadic subcomp"
-               else "path in the effect lattice") in
-          let uu___ =
-            (let uu___1 = exists_polymonadic_subcomp env1 m n in
-             FStar_Compiler_Effect.op_Bar_Greater uu___1
-               FStar_Compiler_Util.is_some)
-              ||
-              (let uu___1 = exists_polymonadic_subcomp env1 n m in
-               FStar_Compiler_Effect.op_Bar_Greater uu___1
-                 FStar_Compiler_Util.is_some) in
-          if uu___
-          then
-            let uu___1 =
-              let uu___2 = err_msg true in
-              (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___2) in
-            FStar_Errors.raise_error uu___1 env1.range
-          else
-            (let uu___2 =
-               (let uu___3 = monad_leq env1 m n in
-                FStar_Compiler_Effect.op_Bar_Greater uu___3
-                  FStar_Compiler_Util.is_some)
-                 ||
-                 (let uu___3 = monad_leq env1 n m in
-                  FStar_Compiler_Effect.op_Bar_Greater uu___3
-                    FStar_Compiler_Util.is_some) in
-             if uu___2
-             then
-               let uu___3 =
-                 let uu___4 = err_msg false in
-                 (FStar_Errors.Fatal_Effects_Ordering_Coherence, uu___4) in
-               FStar_Errors.raise_error uu___3 env1.range
-             else
+          {
+            solver = (env1.solver);
+            range = (env1.range);
+            curmodule = (env1.curmodule);
+            gamma = (env1.gamma);
+            gamma_sig = (env1.gamma_sig);
+            gamma_cache = (env1.gamma_cache);
+            modules = (env1.modules);
+            expected_typ = (env1.expected_typ);
+            sigtab = (env1.sigtab);
+            attrtab = (env1.attrtab);
+            instantiate_imp = (env1.instantiate_imp);
+            effects =
+              (let uu___ = env1.effects in
                {
-                 solver = (env1.solver);
-                 range = (env1.range);
-                 curmodule = (env1.curmodule);
-                 gamma = (env1.gamma);
-                 gamma_sig = (env1.gamma_sig);
-                 gamma_cache = (env1.gamma_cache);
-                 modules = (env1.modules);
-                 expected_typ = (env1.expected_typ);
-                 sigtab = (env1.sigtab);
-                 attrtab = (env1.attrtab);
-                 instantiate_imp = (env1.instantiate_imp);
-                 effects =
-                   ((let uu___4 = env1.effects in
-                     {
-                       decls = (uu___4.decls);
-                       order = (uu___4.order);
-                       joins = (uu___4.joins);
-                       polymonadic_binds = (uu___4.polymonadic_binds);
-                       polymonadic_subcomps = ((m, n, ts) ::
-                         ((env1.effects).polymonadic_subcomps))
-                     }));
-                 generalize = (env1.generalize);
-                 letrecs = (env1.letrecs);
-                 top_level = (env1.top_level);
-                 check_uvars = (env1.check_uvars);
-                 use_eq = (env1.use_eq);
-                 use_eq_strict = (env1.use_eq_strict);
-                 is_iface = (env1.is_iface);
-                 admit = (env1.admit);
-                 lax = (env1.lax);
-                 lax_universes = (env1.lax_universes);
-                 phase1 = (env1.phase1);
-                 failhard = (env1.failhard);
-                 nosynth = (env1.nosynth);
-                 uvar_subtyping = (env1.uvar_subtyping);
-                 tc_term = (env1.tc_term);
-                 typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-                 universe_of = (env1.universe_of);
-                 typeof_well_typed_tot_or_gtot_term =
-                   (env1.typeof_well_typed_tot_or_gtot_term);
-                 use_bv_sorts = (env1.use_bv_sorts);
-                 qtbl_name_and_index = (env1.qtbl_name_and_index);
-                 normalized_eff_names = (env1.normalized_eff_names);
-                 fv_delta_depths = (env1.fv_delta_depths);
-                 proof_ns = (env1.proof_ns);
-                 synth_hook = (env1.synth_hook);
-                 try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-                 splice = (env1.splice);
-                 mpreprocess = (env1.mpreprocess);
-                 postprocess = (env1.postprocess);
-                 identifier_info = (env1.identifier_info);
-                 tc_hooks = (env1.tc_hooks);
-                 dsenv = (env1.dsenv);
-                 nbe = (env1.nbe);
-                 strict_args_tab = (env1.strict_args_tab);
-                 erasable_types_tab = (env1.erasable_types_tab);
-                 enable_defer_to_tac = (env1.enable_defer_to_tac);
-                 unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-                 erase_erasable_args = (env1.erase_erasable_args)
-               })
+                 decls = (uu___.decls);
+                 order = (uu___.order);
+                 joins = (uu___.joins);
+                 polymonadic_binds = (uu___.polymonadic_binds);
+                 polymonadic_subcomps = ((m, n, ts) ::
+                   ((env1.effects).polymonadic_subcomps))
+               });
+            generalize = (env1.generalize);
+            letrecs = (env1.letrecs);
+            top_level = (env1.top_level);
+            check_uvars = (env1.check_uvars);
+            use_eq = (env1.use_eq);
+            use_eq_strict = (env1.use_eq_strict);
+            is_iface = (env1.is_iface);
+            admit = (env1.admit);
+            lax = (env1.lax);
+            lax_universes = (env1.lax_universes);
+            phase1 = (env1.phase1);
+            failhard = (env1.failhard);
+            nosynth = (env1.nosynth);
+            uvar_subtyping = (env1.uvar_subtyping);
+            tc_term = (env1.tc_term);
+            typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+            universe_of = (env1.universe_of);
+            typeof_well_typed_tot_or_gtot_term =
+              (env1.typeof_well_typed_tot_or_gtot_term);
+            use_bv_sorts = (env1.use_bv_sorts);
+            qtbl_name_and_index = (env1.qtbl_name_and_index);
+            normalized_eff_names = (env1.normalized_eff_names);
+            fv_delta_depths = (env1.fv_delta_depths);
+            proof_ns = (env1.proof_ns);
+            synth_hook = (env1.synth_hook);
+            try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+            splice = (env1.splice);
+            mpreprocess = (env1.mpreprocess);
+            postprocess = (env1.postprocess);
+            identifier_info = (env1.identifier_info);
+            tc_hooks = (env1.tc_hooks);
+            dsenv = (env1.dsenv);
+            nbe = (env1.nbe);
+            strict_args_tab = (env1.strict_args_tab);
+            erasable_types_tab = (env1.erasable_types_tab);
+            enable_defer_to_tac = (env1.enable_defer_to_tac);
+            unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+            erase_erasable_args = (env1.erase_erasable_args)
+          }
 let (push_local_binding : env -> FStar_Syntax_Syntax.binding -> env) =
   fun env1 ->
     fun b ->
