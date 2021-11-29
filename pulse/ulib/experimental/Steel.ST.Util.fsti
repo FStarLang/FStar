@@ -14,6 +14,12 @@
    limitations under the License.
 *)
 module Steel.ST.Util
+(** This module aggregates several of the core effects and utilities
+    associated with the Steel.ST namespace.
+
+    Client modules should typically just [open Steel.ST.Util] and
+    that should bring most of what they need in scope.
+*)
 open FStar.Ghost
 open Steel.Memory
 open Steel.ST.Effect.Ghost
@@ -24,88 +30,70 @@ include Steel.Effect.Common
 include Steel.ST.Effect
 include Steel.ST.Effect.Atomic
 include Steel.ST.Effect.Ghost
-module SEA = Steel.Effect.Atomic
 
-val coerce_atomic (#a:Type)
-                  (#o:inames)
-                  (#obs:observability)
-                  (#p:vprop)
-                  (#q:a -> vprop)
-                  (#pre:Type0)
-                  (#post: a -> Type0)
-                  ($f:unit -> SEA.SteelAtomicBase a false o obs p q
-                           (fun _ -> pre)
-                           (fun _ x _ -> post x))
-  : STAtomicBase a false o obs p q pre post
-
-val coerce_ghost (#a:Type)
-                 (#o:inames)
-                 (#p:vprop)
-                 (#q:a -> vprop)
-                 (#pre:Type0)
-                 (#post: a -> Type0)
-                 ($f:unit -> SEA.SteelGhostBase a false o Unobservable p q
-                   (fun _ -> pre)
-                   (fun _ x _ -> post x))
-  : STGhostBase a false o Unobservable p q pre post
-
+/// Weaken a vprop from [p] to [q]
+/// of every memory validating [p] also validates [q]
 val weaken (#opened:inames)
-            (p q:vprop)
-            (l:(m:mem) -> Lemma
+           (p q:vprop)
+           (l:(m:mem) -> Lemma
                            (requires interp (hp_of p) m)
                            (ensures interp (hp_of q) m))
   : STGhostT unit opened p (fun _ -> q)
 
+/// Rewrite [p] to [q] when they are equal
 val rewrite (#opened:inames)
             (p q: vprop)
   : STGhost unit opened p (fun _ -> q) (p == q) (fun _ -> True)
 
-val extract_fact (#opened:inames)
-                 (p:vprop)
-                 (fact:prop)
-                 (l:(m:mem) -> Lemma
-                                (requires interp (hp_of p) m)
-                                (ensures fact))
-  : STGhost unit opened p (fun _ -> p) True (fun _ -> fact)
-
-/// A noop operator, occasionally useful for forcing framing of a subsequent computation
+/// A noop operator, occasionally useful for forcing framing of a
+/// subsequent computation
 val noop (#opened:inames) (_:unit)
   : STGhostT unit opened emp (fun _ -> emp)
-
-[@@warn_on_use "uses an axiom"]
-val admit_ (#a:Type)
-          (#opened:inames)
-          (#p:pre_t)
-          (#q:post_t a)
-          (_:unit)
-  : STGhostF a opened p q True (fun _ -> False)
 
 /// Asserts the validity of vprop [p] in the current context
 val assert_ (#opened_invariants:_)
             (p:vprop)
   : STGhostT unit opened_invariants p (fun _ -> p)
 
-/// Drops vprop [p] from the context. Although our separation logic is affine,
-/// the frame inference tactic treats it as linear.
-/// Leveraging affinity requires a call from the user to this helper, to avoid
-/// implicit memory leaks.
-/// This should only be used for pure and ghost vprops
+/// Allows assuming [p] for free
+/// See also Steel.ST.Effect.Ghost.admit_
+[@@warn_on_use "uses an axiom"]
+val assume_ (#opened_invariants:_)
+            (p:vprop)
+  : STGhostT unit opened_invariants emp (fun _ -> p)
+
+/// Drops vprop [p] from the context. Although our separation logic is
+/// affine, the frame inference tactic treats it as linear.
+/// Leveraging affinity requires a call from the user to this helper,
+/// to avoid implicit memory leaks.  This should only be used for pure
+/// and ghost vprops
 val drop (#opened:inames) (p:vprop) : STGhostT unit opened p (fun _ -> emp)
 
-(* Helpers to interoperate between pure predicates encoded as separation logic
-   propositions, and as predicates discharged by SMT *)
-val intro_pure (#opened_invariants:_) (p:prop)
-  : STGhost unit opened_invariants emp (fun _ -> pure p) p (fun _ -> True)
+/// Introduce a pure vprop, when [p] is valid in the context
+val intro_pure (#uses:_) (p:prop)
+  : STGhost unit uses emp (fun _ -> pure p) p (fun _ -> True)
 
+/// Eliminate a pure vprop, gaining that p is valid in the context
 val elim_pure (#uses:_) (p:prop)
   : STGhost unit uses (pure p) (fun _ -> emp) True (fun _ -> p)
 
-/// Hook to manually insert atomic monadic returns.
-/// Because of the left-associative structure of F* computations,
-/// this is necessary when a computation is atomic and returning a value
+/// Extracting a proposition from a [pure p] while retaining [pure p]
+let extract_pure (#uses:_) (p:prop)
+  : STGhost unit uses (pure p) (fun _ -> pure p) True (fun _ -> p)
+  = let _ = elim_pure p in
+    intro_pure p
+
+/// It's generally good practice to end a computation with a [return].
+///
+/// It becomes necessary when combining ghost and non-ghost
+/// computations, so it is often less surprising to always write it.
+///
+/// Because of the left-associative structure of F* computations, this
+/// is necessary when a computation is atomic and returning a value
 /// with an informative type, but the previous computation was ghost.
-/// Else, the returned value will be given type SteelGhost, and F* will fail to typecheck
-/// the program as it will try to lift a SteelGhost computation with an informative return type
+/// Else, the returned value will be given type SteelGhost, and F*
+/// will fail to typecheck the program as it will try to lift a
+/// SteelGhost computation with an informative return type
 val return (#a:Type u#a)
            (#opened_invariants:inames)
            (#p:a -> vprop)
@@ -115,7 +103,7 @@ val return (#a:Type u#a)
                  True
                  (fun v -> v == x)
 
-(* Lifting the separation logic exists combinator to vprop *)
+/// An existential quantifier for vprop
 val exists_ (#a:Type u#a) (p:a -> vprop) : vprop
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
@@ -156,13 +144,11 @@ val exists_cong (#a:_)
              (exists_ p)
              (fun _ -> exists_ q)
 
-
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
   : STGhostT (inv p) opened_invariants p (fun _ -> emp)
 
-let set_add i o : inames = Set.union (Set.singleton i) o
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
 /// This requires invariant [i] to not belong to the set of currently opened invariants.

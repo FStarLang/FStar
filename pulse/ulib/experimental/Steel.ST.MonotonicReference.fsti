@@ -19,14 +19,23 @@ open FStar.Ghost
 open Steel.ST.Util
 module Preorder = FStar.Preorder
 
-/// A library for Steel references that are monotonic with respect to a user-specified preorder.
-/// This library builds on top of Steel.HigherReference, and is specialized to values at universe 1.
+/// A library for references that are monotonic with respect to a
+/// user-specified preorder, with ownership controlled using
+/// fractional permissions.
+///
+/// This library builds on top of Steel.MonotonicReference, providing
+/// a version of it for the ST effect.
+///
+/// Its main feature is that it allows "witnessing" the value of a
+/// reference and later "recalling" that the current value is related
+/// to the prior witnessed value by the preorder.
 
 /// An abstract datatype for monotonic references
+/// where [p] constrains how the contents of the reference is allowed to evolve
 val ref (a:Type u#0) (p:Preorder.preorder a)
   : Type u#0
 
-/// Lifting the standard points to predicate to vprop, with a non-informative selector
+/// The main representation predicate
 val pts_to (#a:Type)
            (#p:Preorder.preorder a)
            (r:ref a p)
@@ -39,7 +48,9 @@ val pts_to (#a:Type)
 val alloc (#a:Type) (p:Preorder.preorder a) (v:a)
   : STT (ref a p) emp (fun r -> pts_to r full_perm v)
 
-/// Writes value [x] in the reference [r], as long as we have full ownership of [r]
+/// Writes value [x] in the reference [r], as long as we have full
+/// ownership of [r], and, importantly, if the new value [x] is
+/// related to the old value by [p].
 val write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
           (r:ref a p) (x:a)
   : ST unit
@@ -64,6 +75,10 @@ let stable_property (#a:Type) (p:Preorder.preorder a)
 
 /// If [fact] is a stable property for the reference preorder [p], and if
 /// it holds for the current value [v] of the reference, then we can witness it
+///
+/// The most precise stable fact one can witness if [p v], i.e., that
+/// any future value [v'] is related to the current value [v] by [p v
+/// v'].
 val witness (#inames: _)
             (#a:Type)
             (#q:perm)
@@ -92,8 +107,9 @@ val recall (#inames: _)
       (requires witnessed r fact)
       (ensures fun _ -> fact v)
 
-/// Monotonic references are also equipped with the usual fractional permission discipline
-/// So, you can split a reference into two read-only shares
+/// Monotonic references are also equipped with the usual fractional
+/// permission discipline So, you can split a reference into two
+/// read-only shares
 val share (#inames:_)
           (#a:Type)
           (#p:Preorder.preorder a)

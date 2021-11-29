@@ -16,6 +16,7 @@
 module Steel.ST.Loops
 module U32 = FStar.UInt32
 open Steel.ST.Util
+open Steel.ST.Coercions
 module L = Steel.Loops
 module SE = Steel.Effect
 module SEA = Steel.Effect.Atomic

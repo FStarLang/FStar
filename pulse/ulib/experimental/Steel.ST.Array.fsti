@@ -1,5 +1,5 @@
 (*
-   Copyright 2020 Microsoft Research
+   Copyright 2021 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,11 +13,19 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
 module Steel.ST.Array
 open FStar.Ghost
 open Steel.ST.Util
+open FStar.Seq
 module U32 = FStar.UInt32
+
+(** This module provides an array type, with only exclusive ownership
+    over the entire array.
+
+    This is non-selector variant of the Steel.Array library.
+    
+    A variant of it with fractional permissions and splitting
+    ownership over sub-arrays would be nice, but doesn't exist yet. *)
 
 /// Abstract datatype for a Steel array of type [t]
 val array (t:Type u#0) : Type u#0
@@ -26,18 +34,36 @@ val array (t:Type u#0) : Type u#0
 /// as modeled by the GTot effect
 val length (#t:_) (r:array t) : GTot nat
 
-/// The contents of an array of type [t] is a sequence of values of type [t]
-let contents (t:Type u#0) (n:nat) = FStar.Seq.lseq t n
-
-let repr (#t:Type) (a:array t) = contents t (length a)
-
+/// An abbreviation refining an array by its length
 let larray (t:Type) (n:nat) = a:array t{ length a = n }
 
 /// The main representation predicate
+///
+/// A big design decision in this library was whether the second index
+/// of this predicate should be a [lseq t (length a)] or just a [seq t].
+///
+/// Making it an [lseq] forces every specification to be strongly
+/// typed, in the sense that the logical representation of an array
+/// has to be a sequence of the right length. This can be a little
+/// cumbersome in specifications, particularly as the refinement appears
+/// in some cases beneath the [erased] constructor.
+///
+/// So, we opted instead to let the index be just a [seq t], and
+/// requiring length refinements on it in certain functions, only when
+/// necessary.
 val pts_to (#t:Type)
            (a:array t)
-           ([@@@smt_fallback] s:repr a)
+           ([@@@smt_fallback] s:seq t)
   : vprop
+
+/// This ghost function proves that an array always points to a
+/// sequence of the appropriate length
+val pts_to_length (#t:Type) (#o:inames) (a:array t) (s:seq t)
+  : STGhost unit o
+      (pts_to a s)
+      (fun _ -> pts_to a s)
+      (requires True)
+      (ensures fun _ -> Seq.length s == length a)
 
 /// Allocates an array of length n, where all elements of the array initially are [x]
 val alloc (#t:Type)
@@ -51,8 +77,8 @@ val alloc (#t:Type)
 /// is currently valid in memory
 val read (#t:Type) 
          (a:array t)
-         (#s:erased (repr a))
-         (i:U32.t { U32.v i < length a })
+         (#s:erased (seq t))
+         (i:U32.t { U32.v i < Seq.length s })
   : ST t
        (pts_to a s)
        (fun _ -> pts_to a s)
@@ -64,8 +90,8 @@ val read (#t:Type)
 /// is in bounds and the array is currently valid in memory
 val write (#t:Type)
           (a:array t)
-          (#s:erased (repr a))
-          (i:U32.t { U32.v i < length a })
+          (#s:erased (seq t))
+          (i:U32.t { U32.v i < Seq.length s })
           (x:t)
   : STT unit
        (pts_to a s)
@@ -80,8 +106,7 @@ val free (#t:Type) (a:array t)
 /// Copies the contents of a0 to a1
 val memcpy (#t:_)
            (a0 a1:array t)
-           (#s0:erased (repr a0))
-           (#s1:erased (repr a1))
+           (#s0 #s1:erased (seq t))
            (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
     (pts_to a0 s0 `star` pts_to a1 s1)
@@ -90,8 +115,7 @@ val memcpy (#t:_)
 /// Decides whether the contents of a0 and a1 are equal
 val compare (#t:eqtype)
             (a0 a1:array t)
-            (#s0:erased (repr a0))
-            (#s1:erased (repr a1))
+            (#s0 #s1:erased (seq t))
             (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
   : ST bool
     (pts_to a0 s0 `star` pts_to a1 s1)

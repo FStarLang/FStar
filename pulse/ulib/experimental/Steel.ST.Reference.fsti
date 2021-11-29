@@ -1,5 +1,5 @@
 (*
-   Copyright 2020 Microsoft Research
+   Copyright 2021 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,33 +18,70 @@ module Steel.ST.Reference
 open FStar.Ghost
 open Steel.ST.Util
 
+(** This module provides a reference whose ownership is controlled
+    using fractional permissions.
+    
+    It provides a distinguished null reference too, which is
+    extractable to C as a null pointer. *)
+
+/// The main ref type.
+///
+/// It's in universe zero, so refs can be stored in the heap, you can
+/// have [ref (ref a)] etc.
 val ref (a:Type0)
   : Type0
 
+/// The null reference
 val null (#a:Type0) 
   : ref a
 
+/// Nullness is decidable with a pure function
 val is_null (#a:Type0) (r:ref a)
   : b:bool{b <==> r == null}
 
+/// The main representation predicate
+///
+/// Both the permissions [p] and the value [v] are marked with the
+/// [smt_fallback] attribute. This allows the Steel unifier to produce
+/// equality goals discharged by SMT to relate instances of the
+/// [pts_to] predicate that differ on the [p] and [v] arguments.
+///
+/// For instance, [pts_to r (sum_perm (half_perm p) (half_perm p)) (v + 1)]
+/// is unifiable with [pts_to r p (1 + v)]
 val pts_to (#a:Type0)
            (r:ref a)
-           (p:perm)
+           ([@@@smt_fallback] p:perm)
            ([@@@smt_fallback] v:a)
   : vprop
 
-val pts_to_injective_eq
-      (#a: Type)
-      (#opened:inames)
-      (#p0 #p1:perm)
-      (#v0 #v1: a)
-      (r: ref a)
+/// A reference can point to at most one value
+val pts_to_injective_eq (#a: Type)
+                        (#opened:inames)
+                        (#p0 #p1:perm)
+                        (#v0 #v1: a)
+                        (r: ref a)
   : STGhost unit opened
       (pts_to r p0 v0 `star` pts_to r p1 v1)
       (fun _ -> pts_to r p0 v0 `star` pts_to r p1 v0)
       (requires True)
       (ensures fun _ -> v0 == v1)
 
+/// Null references can't point to anything
+val pts_to_not_null (#a:Type)
+                    (#opened:inames)
+                    (#p:perm)
+                    (#v:a)
+                    (r:ref a)
+  : STGhost unit opened
+      (pts_to r p v)
+      (fun _ -> pts_to r p v)
+      (requires True)
+      (ensures fun _ -> r =!= null)
+                    
+/// Allocating a reference returns full-permission to a non-null
+/// reference pointing to the initializer [x].
+///
+/// We do not model memory exhaustion
 val alloc (#a:Type) (x:a)
   : ST (ref a)
       emp 
@@ -52,7 +89,8 @@ val alloc (#a:Type) (x:a)
       (requires True)
       (ensures fun r -> not (is_null r))
 
-/// Reads the value in reference [r], as long as it initially is valid
+/// Reads the value in reference [r]. The postcondition ensures that
+/// the returned value is equal to the index [v].
 val read (#a:Type)
          (#p:perm)
          (#v:erased a)
@@ -63,7 +101,8 @@ val read (#a:Type)
       (requires True)
       (ensures fun x -> x == Ghost.reveal v)
 
-/// Writes value [x] in the reference [r], as long as we have full ownership of [r]
+/// Writes value `x` in the reference `r`, as long as we have full
+/// ownership of `r`
 val write (#a:Type0)
           (#v:erased a)
           (r:ref a)
@@ -79,8 +118,8 @@ val free (#a:Type0)
   : STT unit
     (pts_to r full_perm v) (fun _ -> emp)
 
-/// Splits the permission on reference [r] into two.
-/// This function is computationally irrelevant (it has effect SteelGhost)
+/// Splits the permission on reference [r] into two. This function is
+/// computationally irrelevant (it has effect SteelGhost)
 val share (#a:Type0)
           (#uses:_)
           (#p:perm)
@@ -90,8 +129,8 @@ val share (#a:Type0)
       (pts_to r p v)
       (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
-/// Combines permissions on reference [r].
-/// This function is computationally irrelevant (it has effect SteelGhost)
+/// Combines permissions on reference [r]. This function is
+/// computationally irrelevant (it has effect SteelGhost)
 val gather (#a:Type0)
            (#uses:_) 
            (#p0 p1:perm)
@@ -104,6 +143,9 @@ val gather (#a:Type0)
       (ensures fun _ -> v0 == v1)
 
 /// Atomic compare and swap on references.
+/// 
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
 val cas (#t:eqtype)
         (#uses:inames)
         (r:ref t)

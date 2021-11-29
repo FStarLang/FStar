@@ -16,6 +16,7 @@
 
 module Steel.ST.SpinLock
 open Steel.ST.Util
+open Steel.ST.Coercions
 module L = Steel.SpinLock
 /// A Steel library to share resources between threads through locks.
 

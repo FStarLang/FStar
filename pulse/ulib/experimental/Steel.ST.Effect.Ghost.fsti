@@ -15,7 +15,10 @@
 *)
 
 module Steel.ST.Effect.Ghost
-
+(** This module instantiates Steel.ST.Effect.AtomicAndGhost
+    providing the STGhost effect, a non-selector variant of
+    SteelGhost *)
+#push-options "--warn_error -330" //we intentionally use polymonads
 open Steel.Memory
 module T = FStar.Tactics
 include Steel.Effect.Common
@@ -43,16 +46,12 @@ effect {
          if_then_else = STAG.if_then_else }
 }
 
+(* NB: Definining it this way led to universe errors *)
 // [@@ erasable; ite_soundness_by ite_attr]
 // total
 // reflectable
 // new_effect STGhostBase = STAG.STAGCommon
 
-/// The two user-facing effects, corresponding to not yet framed (SteelGhost)
-/// and already framed (SteelGhostF) computations.
-/// In the ICFP21 paper, this is modeled by the |- and |-_F modalities.
-/// Both effects are instantiated with the UnObservable bit, indicating that they
-/// model ghost computations, which can be freely composed with each other
 effect STGhost (a:Type)
                   (opened:inames)
                   (pre:pre_t)
@@ -61,6 +60,9 @@ effect STGhost (a:Type)
                   (ens:a -> Type0)
   = STGhostBase a false opened Unobservable pre post req ens
 
+/// This is an internal variant of the STGhost, for computations that
+/// have not been framed.  It's unlikely that a client will want to
+/// use this directly.
 effect STGhostF (a:Type)
                 (opened:inames)
                 (pre:pre_t)
@@ -77,9 +79,10 @@ effect STGhostT (a:Type) (opened:inames) (pre:pre_t) (post:post_t a) =
 
 (***** Lift relations *****)
 
-/// Any Steel ghost computation can always be lifted to an atomic computation if needed.
-/// Note that because SteelGhost is marked as erasble, the F* typechecker will throw an error
-/// if this lift is applied to a ghost computation with an informative return value
+/// Any STGhost ghost computation can always be lifted to an atomic
+/// computation if needed.  Note that because SteelGhost is marked as
+/// erasble, the F* typechecker will throw an error if this lift is
+/// applied to a ghost computation with an informative return value
 val lift_ghost_atomic
     (a:Type)
     (opened:inames)
@@ -93,10 +96,29 @@ val lift_ghost_atomic
 
 sub_effect STGhostBase ~> STA.STAtomicBase = lift_ghost_atomic
 
-[@@warn_on_use "as_atomic_action is a trusted primitive"]
+/// Adding an action as a ghost primitive: use wisely
+[@@warn_on_use "as_atomic_ghost_action is a trusted primitive"]
 val as_atomic_action_ghost (#a:Type u#a)
                            (#opened_invariants:inames)
                            (#fp:slprop)
                            (#fp': a -> slprop)
                            (f:action_except a opened_invariants fp fp')
   : STGhostT a opened_invariants (to_vprop fp) (fun x -> to_vprop (fp' x))
+
+/// A low-level utility to derive information from vprop validity
+val extract_fact (#opened:inames)
+                 (p:vprop)
+                 (fact:prop)
+                 (l:(m:mem) -> Lemma
+                                (requires interp (hp_of p) m)
+                                (ensures fact))
+  : STGhost unit opened p (fun _ -> p) True (fun _ -> fact)
+
+/// A utility to admit the proof of the continuation of program
+[@@warn_on_use "uses an axiom"]
+val admit_ (#a:Type)
+          (#opened:inames)
+          (#p:pre_t)
+          (#q:post_t a)
+          (_:unit)
+  : STGhostF a opened p q True (fun _ -> False)
