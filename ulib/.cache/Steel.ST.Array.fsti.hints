@@ -1,0 +1,85 @@
+[
+  "‚T’°∂\u0010[xh‹ö\u0005˝He?",
+  [
+    [
+      "Steel.ST.Array.larray",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "985ffd8eeb1cc3fb8923bac5e17cccc7"
+    ],
+    [
+      "Steel.ST.Array.alloc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_Prims.nat",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "875b5d1db3ebe2ce5e544726675d1d10"
+    ],
+    [
+      "Steel.ST.Array.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9e62e8347e45c5a797a19e1e649b5fd6"
+      ],
+      0,
+      "05c711afbb8bc9175aef1f936163926b"
+    ],
+    [
+      "Steel.ST.Array.write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9e62e8347e45c5a797a19e1e649b5fd6"
+      ],
+      0,
+      "40e820a0876eb934ca1ee83c5357d6f9"
+    ],
+    [
+      "Steel.ST.Array.memcpy",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2d2709d6a79e461f5330426420f9db75"
+    ],
+    [
+      "Steel.ST.Array.compare",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2d18a9ef3d18d0a257cb73f63e606da7"
+    ]
+  ]
+]
