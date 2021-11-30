@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.FramingTestSuite
+module SteelFramingTestSuite
 
 open Steel.Memory
 open Steel.Effect

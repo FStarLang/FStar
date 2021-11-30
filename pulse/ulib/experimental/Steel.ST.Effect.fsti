@@ -32,8 +32,8 @@ val repr (a:Type)
          (framed:bool)
          (pre:pre_t)
          (post:post_t a)
-         (req:st_req_t)
-         (ens:st_ens_t a)
+         (req:pure_pre)
+         (ens:pure_post a)
   : Type u#2
 
 val return_ (a:Type)
@@ -43,17 +43,17 @@ val return_ (a:Type)
 
 unfold
 let bind_req (a:Type)
-             (req_f: st_req_t)
-             (ens_f: st_ens_t a)
+             (req_f: pure_pre)
+             (ens_f: pure_post a)
              (pr:a -> prop)
-             (req_g: a -> st_req_t)
+             (req_g: a -> pure_pre)
   = req_f /\ (forall (x:a). ens_f x ==> pr x /\ req_g x)
 
 
 unfold
 let bind_ens (a:Type) (b:Type)
-             (ens_f: st_ens_t a)
-             (ens_g: a -> st_ens_t b)
+             (ens_f: pure_post a)
+             (ens_g: a -> pure_post b)
   = fun (y:b) -> exists (x:a). ens_f x /\ ens_g x y
 
 val bind (a:Type) (b:Type)
@@ -61,12 +61,12 @@ val bind (a:Type) (b:Type)
   (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:st_req_t)
-  (#[@@@ framing_implicit] ens_f:st_ens_t a)
+  (#[@@@ framing_implicit] req_f:pure_pre)
+  (#[@@@ framing_implicit] ens_f:pure_post a)
   (#[@@@ framing_implicit] pre_g:a -> pre_t)
   (#[@@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@@ framing_implicit] req_g:a -> st_req_t)
-  (#[@@@ framing_implicit] ens_g:(a -> st_ens_t b))
+  (#[@@@ framing_implicit] req_g:a -> pure_pre)
+  (#[@@@ framing_implicit] ens_g:(a -> pure_post b))
   (#[@@@ framing_implicit] frame_f:vprop)
   (#[@@@ framing_implicit] frame_g:a -> vprop)
   (#[@@@ framing_implicit] post:post_t b)
@@ -93,12 +93,12 @@ val subcomp (a:Type)
   (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:st_req_t)
-  (#[@@@ framing_implicit] ens_f:st_ens_t a)
+  (#[@@@ framing_implicit] req_f:pure_pre)
+  (#[@@@ framing_implicit] ens_f:pure_post a)
   (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_g:post_t a)
-  (#[@@@ framing_implicit] req_g:st_req_t)
-  (#[@@@ framing_implicit] ens_g:st_ens_t a)
+  (#[@@@ framing_implicit] req_g:pure_pre)
+  (#[@@@ framing_implicit] ens_g:pure_post a)
   (#[@@@ framing_implicit] frame:vprop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
@@ -111,8 +111,8 @@ val subcomp (a:Type)
 
 /// Logical precondition for the if_then_else combinator
 unfold
-let if_then_else_req (p:Type0) (req_then req_else:st_req_t)
-  : st_req_t
+let if_then_else_req (p:Type0) (req_then req_else:pure_pre)
+  : pure_pre
   =  (p ==> req_then) /\
      ((~ p) ==> req_else)
 
@@ -120,8 +120,8 @@ let if_then_else_req (p:Type0) (req_then req_else:st_req_t)
 unfold
 let if_then_else_ens (a:Type)
                      (p:Type0)
-                     (ens_then ens_else : st_ens_t a)
-  : st_ens_t a
+                     (ens_then ens_else : pure_post a)
+  : pure_post a
   = fun (x:a) ->
       (p ==>  ens_then x) /\
       (~p ==> ens_else x)
@@ -133,10 +133,10 @@ let if_then_else (a:Type)
   (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a)
   (#[@@@ framing_implicit] post_g:post_t a)
-  (#[@@@ framing_implicit] req_then:st_req_t)
-  (#[@@@ framing_implicit] ens_then:st_ens_t a)
-  (#[@@@ framing_implicit] req_else:st_req_t)
-  (#[@@@ framing_implicit] ens_else:st_ens_t a)
+  (#[@@@ framing_implicit] req_then:pure_pre)
+  (#[@@@ framing_implicit] ens_then:pure_post a)
+  (#[@@@ framing_implicit] req_else:pure_pre)
+  (#[@@@ framing_implicit] ens_else:pure_post a)
   (#[@@@ framing_implicit] frame_f : vprop)
   (#[@@@ framing_implicit] frame_g : vprop)
   (#[@@@ framing_implicit] me1 : squash (maybe_emp framed_f frame_f))
@@ -159,7 +159,7 @@ let if_then_else (a:Type)
 reflectable
 effect {
   STBase
-    (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (req:st_req_t) (ens:st_ens_t a)
+    (a:Type) (framed:bool) (pre:pre_t) (post:post_t a) (req:pure_pre) (ens:pure_post a)
   with { repr = repr;
          return = return_;
          bind = bind;
@@ -167,9 +167,9 @@ effect {
          if_then_else = if_then_else }
 }
 
-effect ST (a:Type) (pre:pre_t) (post:post_t a) (req:st_req_t) (ens:st_ens_t a) =
+effect ST (a:Type) (pre:pre_t) (post:post_t a) (req:pure_pre) (ens:pure_post a) =
   STBase a false pre post req ens
-effect STF (a:Type) (pre:pre_t) (post:post_t a) (req:st_req_t) (ens:st_ens_t a) =
+effect STF (a:Type) (pre:pre_t) (post:post_t a) (req:pure_pre) (ens:pure_post a) =
   STBase a true pre post req ens
 
 
@@ -179,8 +179,8 @@ effect STF (a:Type) (pre:pre_t) (post:post_t a) (req:st_req_t) (ens:st_ens_t a) 
 unfold
 let bind_pure_st_req (#a:Type)
                      (wp:pure_wp a)
-                     (req:a -> st_req_t)
- : st_req_t
+                     (req:a -> pure_pre)
+ : pure_pre
  = wp req
 
 /// Logical postcondition of a Pure and a Steel composition.
@@ -190,8 +190,8 @@ unfold
 let bind_pure_st_ens (#a:Type)
                      (#b:Type)
                      (wp:pure_wp a)
-                     (ens: a -> st_ens_t b)
-    : st_ens_t b
+                     (ens: a -> pure_post b)
+    : pure_post b
     = fun (r:b) -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ ens x r)
 
 /// The composition combinator.
@@ -200,8 +200,8 @@ val bind_pure_st_ (a:Type) (b:Type)
                   (#framed:eqtype_as_type bool)
                   (#[@@@ framing_implicit] pre:pre_t)
                   (#[@@@ framing_implicit] post:post_t b)
-                  (#[@@@ framing_implicit] req:a -> st_req_t)
-                  (#[@@@ framing_implicit] ens:a -> st_ens_t b)
+                  (#[@@@ framing_implicit] req:a -> pure_pre)
+                  (#[@@@ framing_implicit] ens:a -> pure_post b)
                   (f:eqtype_as_type unit -> PURE a wp)
                   (g:(x:a -> repr b framed pre post (req x) (ens x)))
 : repr b

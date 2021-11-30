@@ -33,8 +33,8 @@ effect {
                (o:observability)
                (pre:pre_t)
                (post:post_t a)
-               (req:st_req_t)
-               (ens:st_ens_t a)
+               (req:pure_pre)
+               (ens:pure_post a)
   with { repr = STAG.repr;
          return = STAG.return_;
          bind = STAG.bind;
@@ -52,16 +52,16 @@ effect STAtomic (a:Type)
                 (opened:inames)
                 (pre:pre_t)
                 (post:post_t a)
-                (req:st_req_t)
-                (ens:st_ens_t a)
+                (req:pure_pre)
+                (ens:pure_post a)
   = STAtomicBase a false opened Observable pre post req ens
 
 effect STAtomicF (a:Type)
                  (opened:inames)
                  (pre:pre_t)
                  (post:post_t a)
-                 (req:st_req_t)
-                 (ens:st_ens_t a)
+                 (req:pure_pre)
+                 (ens:pure_post a)
   = STAtomicBase a true opened Observable pre post req ens
 
 (* Composing SteelAtomic and Pure computations *)

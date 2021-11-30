@@ -35,8 +35,8 @@ module STAG = Steel.ST.Effect.AtomicAndGhost
 val coerce_steel (#a:Type)
                  (#pre:pre_t)
                  (#post:post_t a)
-                 (#req:st_req_t)
-                 (#ens:st_ens_t a)
+                 (#req:pure_pre)
+                 (#ens:pure_post a)
                  ($f:unit -> SF.SteelBase a false pre post
                           (fun _ -> req)
                           (fun _ x _ -> ens x))
@@ -100,8 +100,8 @@ val lift_st_steel
       (#framed:eqtype_as_type bool)
       (#pre:pre_t)
       (#post:post_t a)
-      (#req:st_req_t)
-      (#ens:st_ens_t a)
+      (#req:pure_pre)
+      (#ens:pure_post a)
       (f:STF.repr a framed pre post req ens)
   : SF.repr a framed pre post (fun _ -> req) (fun _ x _ -> ens x)
 

@@ -38,8 +38,8 @@ module STF = Steel.ST.Effect
 /// respectively.
 ///
 /// NOTE: It is important that the [req] and [ens] indexes are
-/// annotated exactly as shown here, with the [st_req_t] and
-/// [st_ens_t] abbreviations. The tactic in Steel.Effect.Common relies
+/// annotated exactly as shown here, with the [pure_pre] and
+/// [pure_post] abbreviations. The tactic in Steel.Effect.Common relies
 /// on those names to distinguish between vprop and non-vprop goals.
 
 #set-options "--warn_error -330 --ide_id_info_off"  //turn off the experimental feature warning
@@ -51,8 +51,8 @@ val repr (a:Type u#a)               //result type
          (g:observability)          //is this a ghost computation?
          (pre:pre_t)                //expects vprop
          (post:post_t a)            //provides a -> vprop
-         (req:st_req_t)             //a prop refinement as a precondition
-         (ens:st_ens_t a)           //an (a -> prop) as a postcondition
+         (req:pure_pre)             //a prop refinement as a precondition
+         (ens:pure_post a)           //an (a -> prop) as a postcondition
   : Type u#(max a 2)
 
 /// Monadic return combinator for the Steel effect. It is parametric in the postcondition
@@ -77,12 +77,12 @@ val bind (a:Type) (b:Type)
          (#framed_g:eqtype_as_type bool)
          (#[@@@ framing_implicit] pre_f:pre_t)
          (#[@@@ framing_implicit] post_f:post_t a)
-         (#[@@@ framing_implicit] req_f:st_req_t)
-         (#[@@@ framing_implicit] ens_f:st_ens_t a)
+         (#[@@@ framing_implicit] req_f:pure_pre)
+         (#[@@@ framing_implicit] ens_f:pure_post a)
          (#[@@@ framing_implicit] pre_g:a -> pre_t)
          (#[@@@ framing_implicit] post_g:a -> post_t b)
-         (#[@@@ framing_implicit] req_g:a -> st_req_t)
-         (#[@@@ framing_implicit] ens_g:(a -> st_ens_t b))
+         (#[@@@ framing_implicit] req_g:a -> pure_pre)
+         (#[@@@ framing_implicit] ens_g:(a -> pure_post b))
          (#[@@@ framing_implicit] frame_f:vprop)
          (#[@@@ framing_implicit] frame_g:a -> vprop)
          (#[@@@ framing_implicit] post:post_t b)
@@ -119,12 +119,12 @@ val subcomp (a:Type)
             (#framed_g:eqtype_as_type bool)
             (#[@@@ framing_implicit] pre_f:pre_t)
             (#[@@@ framing_implicit] post_f:post_t a)
-            (#[@@@ framing_implicit] req_f:st_req_t)
-            (#[@@@ framing_implicit] ens_f:st_ens_t a)
+            (#[@@@ framing_implicit] req_f:pure_pre)
+            (#[@@@ framing_implicit] ens_f:pure_post a)
             (#[@@@ framing_implicit] pre_g:pre_t)
             (#[@@@ framing_implicit] post_g:post_t a)
-            (#[@@@ framing_implicit] req_g:st_req_t)
-            (#[@@@ framing_implicit] ens_g:st_ens_t a)
+            (#[@@@ framing_implicit] req_g:pure_pre)
+            (#[@@@ framing_implicit] ens_g:pure_post a)
             (#[@@@ framing_implicit] frame:vprop)
             (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
             (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
@@ -145,10 +145,10 @@ let if_then_else (a:Type)
                  (#[@@@ framing_implicit] pre_g:pre_t)
                  (#[@@@ framing_implicit] post_f:post_t a)
                  (#[@@@ framing_implicit] post_g:post_t a)
-                 (#[@@@ framing_implicit] req_then:st_req_t)
-                 (#[@@@ framing_implicit] ens_then:st_ens_t a)
-                 (#[@@@ framing_implicit] req_else:st_req_t)
-                 (#[@@@ framing_implicit] ens_else:st_ens_t a)
+                 (#[@@@ framing_implicit] req_then:pure_pre)
+                 (#[@@@ framing_implicit] ens_then:pure_post a)
+                 (#[@@@ framing_implicit] req_else:pure_pre)
+                 (#[@@@ framing_implicit] ens_else:pure_post a)
                  (#[@@@ framing_implicit] frame_f : vprop)
                  (#[@@@ framing_implicit] frame_g : vprop)
                  (#[@@@ framing_implicit] me1 : squash (maybe_emp framed_f frame_f))
@@ -179,8 +179,8 @@ effect {
              (o:observability)
              (pre:pre_t)
              (post:post_t a)
-             (req:st_req_t)
-             (ens:st_ens_t a)
+             (req:pure_pre)
+             (ens:pure_post a)
   with { repr = repr;
          return = return_;
          bind = bind;
@@ -198,8 +198,8 @@ val bind_pure_stag (a:Type) (b:Type)
                    (#framed:eqtype_as_type bool)
                    (#[@@@ framing_implicit] pre:pre_t)
                    (#[@@@ framing_implicit] post:post_t b)
-                   (#[@@@ framing_implicit] req:a -> st_req_t)
-                   (#[@@@ framing_implicit] ens:a -> st_ens_t b)
+                   (#[@@@ framing_implicit] req:a -> pure_pre)
+                   (#[@@@ framing_implicit] ens:a -> pure_post b)
                    (f:eqtype_as_type unit -> PURE a wp)
                    (g:(x:a -> repr b framed opened_invariants o pre post (req x) (ens x)))
 : repr b
@@ -218,7 +218,7 @@ val lift_atomic_st
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t)
   (#[@@@ framing_implicit] post:post_t a)
-  (#[@@@ framing_implicit] req:st_req_t)
-  (#[@@@ framing_implicit] ens:st_ens_t a)
+  (#[@@@ framing_implicit] req:pure_pre)
+  (#[@@@ framing_implicit] ens:pure_post a)
   (f:repr a framed Set.empty o pre post req ens)
   : Steel.ST.Effect.repr a framed pre post req ens
