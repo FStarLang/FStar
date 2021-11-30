@@ -37,8 +37,8 @@ effect {
              (o:observability)
              (pre:pre_t)
              (post:post_t a)
-             (req:Type0)
-             (ens:a -> Type0)
+             (req:st_req_t)
+             (ens:st_ens_t a)
   with { repr = STAG.repr;
          return = STAG.return_;
          bind = STAG.bind;
@@ -53,11 +53,11 @@ effect {
 // new_effect STGhostBase = STAG.STAGCommon
 
 effect STGhost (a:Type)
-                  (opened:inames)
-                  (pre:pre_t)
-                  (post:post_t a)
-                  (req:Type0)
-                  (ens:a -> Type0)
+               (opened:inames)
+               (pre:pre_t)
+               (post:post_t a)
+               (req:st_req_t)
+               (ens:st_ens_t a)
   = STGhostBase a false opened Unobservable pre post req ens
 
 /// This is an internal variant of the STGhost, for computations that
@@ -67,8 +67,8 @@ effect STGhostF (a:Type)
                 (opened:inames)
                 (pre:pre_t)
                 (post:post_t a)
-                (req:Type0)
-                (ens:a -> Type0)
+                (req:st_req_t)
+                (ens:st_ens_t a)
   = STGhostBase a true opened Unobservable pre post req ens
 
 polymonadic_bind (PURE, STGhostBase) |> STGhostBase = STAG.bind_pure_stag
@@ -89,8 +89,8 @@ val lift_ghost_atomic
     (#framed:eqtype_as_type bool)
     (#[@@@ framing_implicit] pre:pre_t)
     (#[@@@ framing_implicit] post:post_t a)
-    (#[@@@ framing_implicit] req:Type0)
-    (#[@@@ framing_implicit] ens:a -> Type0)
+    (#[@@@ framing_implicit] req:st_req_t)
+    (#[@@@ framing_implicit] ens:st_ens_t a)
     (f:STAG.repr a framed opened Unobservable pre post req ens)
   : STAG.repr a framed opened Unobservable pre post req ens
 

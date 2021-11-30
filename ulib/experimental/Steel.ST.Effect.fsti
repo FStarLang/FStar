@@ -112,7 +112,7 @@ val subcomp (a:Type)
 /// Logical precondition for the if_then_else combinator
 unfold
 let if_then_else_req (p:Type0) (req_then req_else:st_req_t)
-  : Type0
+  : st_req_t
   =  (p ==> req_then) /\
      ((~ p) ==> req_else)
 
@@ -180,7 +180,7 @@ unfold
 let bind_pure_st_req (#a:Type)
                      (wp:pure_wp a)
                      (req:a -> st_req_t)
- : Type0
+ : st_req_t
  = wp req
 
 /// Logical postcondition of a Pure and a Steel composition.

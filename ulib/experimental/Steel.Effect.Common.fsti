@@ -2237,7 +2237,9 @@ let typ_contains_req_ens (t:term) : Tac bool =
      term_eq name (`ens_t) ||
      term_eq name (`pure_wp) ||
      term_eq name (`st_req_t) ||
-     term_eq name (`st_ens_t)
+     term_eq name (`st_ens_t) ||
+     term_eq name (`pure_pre) ||
+     term_eq name (`pure_post)
   then true
   else false
 
@@ -2251,9 +2253,15 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | Comp (Eq t) _ _ ->
         if Some? t then
           let b = typ_contains_req_ens (Some?.v t) in
-          if b then slgoals, hd::loggoals
-          else hd::slgoals, loggoals
-        else hd::slgoals, loggoals
+          if b then (
+            slgoals, hd::loggoals
+          )
+          else (
+            hd::slgoals, loggoals
+          )
+        else (
+          hd::slgoals, loggoals
+        )
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
@@ -2292,6 +2300,14 @@ let rec norm_return_pre (l:list goal) : Tac unit =
   | [] -> ()
   | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
 
+let print_goal (g:goal) =
+  let t = goal_type g in
+  term_to_string t
+
+let print_goals (g:list goal) =
+  let strs = List.Tot.map print_goal g in
+  String.concat "\n" strs
+
 /// The entry point of the frame inference tactic:
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
@@ -2301,6 +2317,8 @@ let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
+  // print ("SL Goals: \n" ^ print_goals slgs);
+  // print ("Logical goals: \n" ^ print_goals loggs);
 
   // We first solve the slprops
   set_goals slgs;
