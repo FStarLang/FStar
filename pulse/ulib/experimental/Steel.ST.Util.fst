@@ -84,17 +84,11 @@ let with_invariant (#a:Type)
                    ($f:unit -> STAtomicT a (add_inv opened_invariants i)
                                           (p `star` fp)
                                           (fun x -> p `star` fp' x))
-  = coerce_atomic
-    (fun _ ->
-      SEA.with_invariant i
-        (lift_sta_steela
-          #a
-          #(add_inv opened_invariants i)
-          #(p `star` fp)
-          #(fun x -> p `star` fp' x)
-          #True
-          #(fun _ -> True)
-          f))
+  = let f
+      : unit -> SEA.SteelAtomicT a (add_inv opened_invariants i)
+                                  (p `star` fp)
+                                  (fun x -> p `star` fp' x) = f in
+    coerce_atomic (fun _ -> SEA.with_invariant i f)
 
 let with_invariant_g (#a:Type)
                      (#fp:vprop)
@@ -105,14 +99,8 @@ let with_invariant_g (#a:Type)
                      ($f:unit -> STGhostT a (add_inv opened_invariants i)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
-  = coerce_ghost
-    (fun _ ->
-       SEA.with_invariant_g i
-        (lift_stg_steelg
-          #a
-          #(add_inv opened_invariants i)
-          #(p `star` fp)
-          #(fun x -> p `star` fp' x)
-          #True
-          #(fun _ -> True)
-          f))
+  = let f
+      : unit -> SEA.SteelGhostT a (add_inv opened_invariants i)
+                                 (p `star` fp)
+                                 (fun x -> p `star` fp' x) = f in
+    coerce_ghost (fun _ -> SEA.with_invariant_g i f)

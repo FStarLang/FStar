@@ -107,9 +107,7 @@ val lift_st_steel
 
 sub_effect STF.STBase ~> SF.SteelBase = lift_st_steel
 
-
-/// A sub-effect from STGhost to SteelGhost
-val lift_stag_sa
+val lift_sta_sa
       (a:Type)
       (#framed:eqtype_as_type bool)
       (#o:inames)
@@ -121,28 +119,5 @@ val lift_stag_sa
       (f:STAG.repr a framed o obs pre post req ens)
   : SA.repr a framed o obs pre post (fun _ -> req) (fun _ x _ -> ens x)
 
-sub_effect STG.STGhostBase ~> SA.SteelGhostBase = lift_stag_sa
-
-/// Also a coercion for the same, in case it needs to be applied explicitly
-val lift_stg_steelg (#a:Type)
-                    (#o:inames)
-                    (#p:vprop)
-                    (#q:a -> vprop)
-                    (#pre:Type0)
-                    (#post: a -> Type0)
-                    (f:unit -> STG.STGhost a o p q pre post)
-                    (_:unit)
-  : SA.SteelGhost a o p q (fun _ -> pre) (fun _ x _ -> post x)
-
-(** At the moment, we are unable to define a sub-effect from STAtomic to SteelAtomic *)
-
-/// An explicit coercion from STAtomic to SteelAtomic
-val lift_sta_steela (#a:Type)
-                    (#o:inames)
-                    (#p:vprop)
-                    (#q:a -> vprop)
-                    (#pre:Type0)
-                    (#post: a -> Type0)
-                    (f:unit -> STA.STAtomic a o p q pre post)
-                    (_:unit)
-  : SA.SteelAtomic a o p q (fun _ -> pre) (fun _ x _ -> post x)
+sub_effect STA.STAtomicBase ~> SA.SteelAtomicBase = lift_sta_sa
+sub_effect STG.STGhostBase ~> SA.SteelGhostBase = lift_sta_sa
