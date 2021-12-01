@@ -19,8 +19,9 @@
 module Steel.Hashtbl
 
 open Steel.Memory
-open Steel.Effect
-open Steel.Effect.Atomic
+open Steel.ST.Effect
+open Steel.ST. Effect.Atomic
+open Steel.ST.Util
 
 module G = FStar.Ghost
 module Set = FStar.Set
@@ -41,34 +42,41 @@ module U32 = FStar.UInt32
 
 type u32 = U32.t
 
-/// A hash function is a total function that maps keys of type k to u32
-
 type hash_fn (k:eqtype) = k -> u32
 
-/// The hashtable type indexed by the key type, the value type, and the hash function
+type vp_t (k:eqtype) (v contents:Type0) = k -> v -> contents -> vprop
 
-val tbl (k:eqtype) (v:Type0) (h:hash_fn k) : Type0
+type finalizer_t
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  = x:k -> y:v -> STT unit (exists_ (vp x y)) (fun _ -> emp)
 
-/// Logical view of the hash table is a map
+val tbl
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (finalizer:finalizer_t vp)
+  : Type0
 
-type repr (k:eqtype) (v:Type0) = Map.t k v
+type repr (k:eqtype) (contents:Type0) = Map.t k contents
 
-let empty_repr (#k:eqtype) (#v:Type0) (x:v) : G.erased (repr k v) =
-  Map.restrict Set.empty (Map.const x)
+let empty_repr (#k:eqtype) (#contents:Type0) (x:contents)
+  : G.erased (repr k contents)
+  = Map.restrict Set.empty (Map.const x)
 
-/// The main separation logic assertion for the hashtable,
-///   saying that in the current heap, the tbl is a partial view of the map m
+val tperm
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#h:hash_fn k)
+  (#vp:vp_t k v contents)
+  (#finalizer:finalizer_t vp)
+  (t:tbl h vp finalizer)
+  (m:repr k contents)
+  (borrows:Set.set k)
+  : vprop
 
-val tpts_to (#k:eqtype) (#v:Type0) (#h:hash_fn k) (t:tbl k v h) (m:repr k v) : vprop
-
-
-/// create API
-///
-/// Takes an erased witness for the value type,
-///   returns an empty hashtable
-///
-/// n is a hint to the implementation for its internal memory allocation
-///   (roughly the number of keys that the client expects to be active at a given time)
 
 inline_for_extraction
 val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 0})
