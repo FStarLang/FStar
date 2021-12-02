@@ -19,8 +19,9 @@
 module Steel.Hashtbl
 
 open Steel.Memory
+open Steel.ST.Effect.Ghost
+open Steel.ST.Effect.Atomic
 open Steel.ST.Effect
-open Steel.ST. Effect.Atomic
 open Steel.ST.Util
 
 module G = FStar.Ghost
@@ -55,8 +56,8 @@ type finalizer_t
 val tbl
   (#k:eqtype)
   (#v #contents:Type0)
+  (#vp:vp_t k v contents)
   (h:hash_fn k)
-  (vp:vp_t k v contents)
   (finalizer:finalizer_t vp)
   : Type0
 
@@ -69,44 +70,81 @@ let empty_repr (#k:eqtype) (#contents:Type0) (x:contents)
 val tperm
   (#k:eqtype)
   (#v #contents:Type0)
-  (#h:hash_fn k)
   (#vp:vp_t k v contents)
+  (#h:hash_fn k)
   (#finalizer:finalizer_t vp)
-  (t:tbl h vp finalizer)
+  (t:tbl h finalizer)
   (m:repr k contents)
   (borrows:Set.set k)
   : vprop
 
-
 inline_for_extraction
-val create (#k:eqtype) (#v:Type0) (h:hash_fn k) (x:G.erased v) (n:u32{U32.v n > 0})
-  : SteelT (tbl k v h)
+val create
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (h:hash_fn k)
+  (finalizer:finalizer_t vp)
+  (n:u32{U32.v n > 0})
+  (x:G.erased contents)
+  : STT (tbl h finalizer)
       emp
-      (fun a -> tpts_to a (empty_repr (G.reveal x)))
-
-/// get API
-///
-/// It is a partial function,
-///   if it succeeds then the returned value is related to the logical map view of the table
+      (fun a -> tperm a (empty_repr (G.reveal x)) Set.empty)
 
 inline_for_extraction
-val get (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k)
-  : Steel (option v)
-      (tpts_to a m)
-      (fun _ -> tpts_to a m)
-      (fun _ -> True)
-      (fun _ r _ -> Some? r ==> r == Some (Map.sel m i))
-
-/// put API
+val get
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (repr k contents))
+  (#borrows:G.erased (Set.set k))
+  (a:tbl h finalizer)
+  (i:k)
+  : ST (option v)
+       (tperm a m borrows)
+       (fun r ->
+        match r with
+        | None -> tperm a m borrows
+        | Some x -> tperm a m (Set.add i borrows) `star` vp i x (Map.sel m i))
+       (requires not (Set.mem i borrows))
+       (ensures fun r -> Some? r ==> Map.contains m i)
 
 inline_for_extraction
-val put (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h) (i:k) (x:v)
-  : SteelT unit
-      (tpts_to a m)
-      (fun _ -> tpts_to a (Map.upd m i x))
+val put
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (repr k contents))
+  (#borrows:G.erased (Set.set k))
+  (a:tbl h finalizer)
+  (i:k)
+  (x:v)
+  (c:G.erased contents)
+  : STT unit
+        (tperm a m borrows `star` vp i x c)
+        (fun _ -> tperm a (Map.upd m i c) (Set.remove i borrows))
 
-
-/// free API
+val ghost_put (#opened:_)
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (repr k contents))
+  (#borrows:G.erased (Set.set k))
+  (a:tbl h finalizer)
+  (i:k)
+  (x:v)
+  (c:G.erased contents)
+  : STGhost unit opened
+            (tperm a m borrows `star` vp i x (G.reveal c))
+            (fun _ -> tperm a m (Set.remove i borrows))
+            (requires Set.mem i borrows /\ Map.sel m i == G.reveal c)
+            (ensures fun _ -> True)
 
 inline_for_extraction
 val free (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h)
