@@ -20,7 +20,7 @@ open FStar.FunctionalExtensionality
 
 type t k v = k ^-> option v
 
-let empty k v = on_dom k (fun _ -> None)
+let empty _ _ = on_dom _ (fun _ -> None)
 let sel x m = m x
 let upd x y m = on_dom _ (fun x1 -> if x1 = x then Some y else m x1)
 let remove x m = on_dom _ (fun x1 -> if x1 = x then None else m x1)
