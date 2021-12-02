@@ -25,8 +25,7 @@ open Steel.ST.Effect
 open Steel.ST.Util
 
 module G = FStar.Ghost
-module Set = FStar.Set
-module Map = FStar.Map
+module Map = FStar.PartialMap
 module U32 = FStar.UInt32
 
 /// This module provides a basic hashtable with no support for hash-collisions
@@ -63,10 +62,6 @@ val tbl
 
 type repr (k:eqtype) (contents:Type0) = Map.t k contents
 
-let empty_repr (#k:eqtype) (#contents:Type0) (x:contents)
-  : G.erased (repr k contents)
-  = Map.restrict Set.empty (Map.const x)
-
 val tperm
   (#k:eqtype)
   (#v #contents:Type0)
@@ -75,7 +70,7 @@ val tperm
   (#finalizer:finalizer_t vp)
   (t:tbl h finalizer)
   (m:repr k contents)
-  (borrows:Set.set k)
+  (borrows:Map.t k v)
   : vprop
 
 inline_for_extraction
@@ -86,10 +81,9 @@ val create
   (h:hash_fn k)
   (finalizer:finalizer_t vp)
   (n:u32{U32.v n > 0})
-  (x:G.erased contents)
   : STT (tbl h finalizer)
-      emp
-      (fun a -> tperm a (empty_repr (G.reveal x)) Set.empty)
+        emp
+        (fun a -> tperm a (Map.empty k contents) (Map.empty k v))
 
 inline_for_extraction
 val get
@@ -99,7 +93,7 @@ val get
   (#h:hash_fn k)
   (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
-  (#borrows:G.erased (Set.set k))
+  (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
   : ST (option v)
@@ -107,9 +101,14 @@ val get
        (fun r ->
         match r with
         | None -> tperm a m borrows
-        | Some x -> tperm a m (Set.add i borrows) `star` vp i x (Map.sel m i))
-       (requires not (Set.mem i borrows))
-       (ensures fun r -> Some? r ==> Map.contains m i)
+        | Some x ->
+          tperm a m (Map.upd i x borrows)
+            `star`
+          (match Map.sel i m with
+           | Some c -> vp i x c
+           | None -> emp))
+       (requires ~ (Map.contains i borrows))
+       (ensures fun r -> Some? r ==> Map.contains i m)
 
 inline_for_extraction
 val put
@@ -119,14 +118,14 @@ val put
   (#h:hash_fn k)
   (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
-  (#borrows:G.erased (Set.set k))
+  (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
   (x:v)
   (c:G.erased contents)
   : STT unit
         (tperm a m borrows `star` vp i x c)
-        (fun _ -> tperm a (Map.upd m i c) (Set.remove i borrows))
+        (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
 
 val ghost_put (#opened:_)
   (#k:eqtype)
@@ -135,14 +134,14 @@ val ghost_put (#opened:_)
   (#h:hash_fn k)
   (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
-  (#borrows:G.erased (Set.set k))
+  (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
   (x:v)
   (c:G.erased contents)
   : STGhost unit opened
             (tperm a m borrows `star` vp i x (G.reveal c))
-            (fun _ -> tperm a m (Set.remove i borrows))
+            (fun _ -> tperm a m (Map.remove i borrows))
             (requires Set.mem i borrows /\ Map.sel m i == G.reveal c)
             (ensures fun _ -> True)
 
