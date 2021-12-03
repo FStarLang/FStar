@@ -140,13 +140,20 @@ val ghost_put (#opened:_)
   (x:v)
   (c:G.erased contents)
   : STGhost unit opened
-            (tperm a m borrows `star` vp i x (G.reveal c))
+            (tperm a m borrows `star` vp i x c)
             (fun _ -> tperm a m (Map.remove i borrows))
-            (requires Set.mem i borrows /\ Map.sel m i == G.reveal c)
+            (requires Map.sel i borrows == Some x /\ Map.sel i m == Some (G.reveal c))
             (ensures fun _ -> True)
 
 inline_for_extraction
-val free (#k:eqtype) (#v:Type0) (#h:hash_fn k) (#m:G.erased (repr k v)) (a:tbl k v h)
-  : SteelT unit
-      (tpts_to a m)
-      (fun _ -> emp)
+val free
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (repr k contents))
+  (a:tbl h finalizer)
+  : STT unit
+        (tperm a m (Map.empty k v))
+        (fun _ -> emp)
