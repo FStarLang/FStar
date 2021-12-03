@@ -28,18 +28,6 @@ module G = FStar.Ghost
 module Map = FStar.PartialMap
 module U32 = FStar.UInt32
 
-/// This module provides a basic hashtable with no support for hash-collisions
-///
-/// In particular, if the table already contains a key k1 and the client invokes `put` API
-///   with another key k2 that has a hash-collision with k1, then k1 is removed from the table
-///
-/// The module also provides a logical view of the hashtable as a map
-///
-/// The logical map provides a hash-collision-free view of the table,
-///   in the example above, the map would contain both k1 and k2, with the mapping for k1 unchanged by the `put` operation on k2 (unless k1 == k2)
-///
-/// So in that sense, the concrete state maintains a partial view of the map
-
 type u32 = U32.t
 
 type hash_fn (k:eqtype) = k -> u32
@@ -85,6 +73,38 @@ val create
         emp
         (fun a -> tperm a (Map.empty k contents) (Map.empty k v))
 
+type result (k:eqtype) (v:Type) =
+  | Present : v -> result k v
+  | Absent
+  | Missing : k -> result k v
+
+unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
+  _:unit{Map.contains x m}
+
+let get_post 
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (m:G.erased (repr k contents))
+  (borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  : result k v -> vprop
+  = fun r ->
+    match r, Map.sel i m with
+    | Present x, Some c ->
+      tperm a m (Map.upd i x borrows)
+        `star`
+      vp i x c
+    | Present x, None -> pure False
+    | Missing j, _ ->
+      tperm a m borrows
+        `star`
+      pure (map_contains_prop j m)
+    | _ -> tperm a m borrows
+
 inline_for_extraction
 val get
   (#k:eqtype)
@@ -96,19 +116,11 @@ val get
   (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
-  : ST (option v)
+  : ST (result k v)
        (tperm a m borrows)
-       (fun r ->
-        match r with
-        | None -> tperm a m borrows
-        | Some x ->
-          tperm a m (Map.upd i x borrows)
-            `star`
-          (match Map.sel i m with
-           | Some c -> vp i x c
-           | None -> emp))
+       (get_post m borrows a i)
        (requires ~ (Map.contains i borrows))
-       (ensures fun r -> Some? r ==> Map.contains i m)
+       (ensures fun _ -> True)
 
 inline_for_extraction
 val put

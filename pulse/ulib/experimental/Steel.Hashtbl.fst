@@ -47,9 +47,9 @@ type tbl #k #v #contents (#vp:vp_t k v contents) (h:hash_fn k) (finalizer:finali
 let seq_props (#k:eqtype) (#v:Type0) (h:hash_fn k) (s:Seq.seq (option (k & v))) : prop =  
   0 < Seq.length s /\ UInt.size (Seq.length s) 32 /\
   
-  (forall (i:nat{i < Seq.length s}). Some? (Seq.index s i) ==> (let Some (x, _) = Seq.index s i in
-                                                         U32.v (h x) `UInt.mod` Seq.length s == i))
-
+  (forall (i:nat{i < Seq.length s}).
+     Some? (Seq.index s i) ==> (let Some (x, _) = Seq.index s i in
+                                U32.v (h x) `UInt.mod` Seq.length s == i))
 
 let seq_keys_distinct (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) : prop =
   forall (i j:(k:nat{k < Seq.length s})).{:pattern Seq.index s i; Seq.index s j}
@@ -60,23 +60,74 @@ let seq_props_implies_seq_keys_distinct (#k:eqtype) (#v:Type0) (h:hash_fn k) (s:
   : Lemma (requires seq_props h s) (ensures seq_keys_distinct s)
   = ()
 
-let rec seq_to_map (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v)))
-  : GTot (Map.t k v) (decreases Seq.length s)
-  = if Seq.length s = 0
-    then Map.empty k v
-    else let hd, tl = Seq.head s, Seq.tail s in
-         let m = seq_to_map tl in
-         match hd with
-         | None -> m
-         | Some (x, y) -> Map.upd x y m
+let store_and_repr_related
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  : prop
+  = forall (i:nat{i < Seq.length s}).
+      match Seq.index s i with
+      | None -> True
+      | Some (k, _) -> Map.contains k m
 
-let keys_in (#k:eqtype) (#v1 #v2:Type0) (m1:Map.t k v1) (m2:Map.t k v2) : prop =
-  let open FStar.PartialMap in
-  forall (x:k). contains x m1 ==> contains x m2
+let store_and_borrows_related
+  (#k:eqtype)
+  (#v:Type0)
+  (s:Seq.seq (option (k & v)))
+  (borrows:Map.t k v)
+  : prop
+  = forall (x:k). Map.contains x borrows ==>
+             (exists (i:nat{i < Seq.length s}) (y:v).
+                Seq.index s i == Some (x, y) /\
+                Map.sel x borrows == Some y)
 
-let submap_of (#k:eqtype) (#v:Type0) (m1 m2:Map.t k v) : prop =
-  let open FStar.PartialMap in
-  forall (x:k). contains x m1 ==> (contains x m2 /\ sel x m1 == sel x m2)
+assume val seq_map (#a #b:Type) (f:a -> b) (s:Seq.seq a) : Seq.seq b
+
+module CE = FStar.Algebra.CommMonoid.Equiv
+module SeqPerm = FStar.Seq.Permutation
+
+let star_eq : CE.equiv vprop =
+  CE.EQ equiv (fun _ -> admit ()) (fun _ _ -> admit ()) (fun _ _ _ -> admit ())
+
+let vprop_monoid : CE.cm vprop star_eq =
+  CE.CM emp star (fun _ -> admit ()) (fun _ _ _ -> admit ()) (fun _ _ -> admit ()) (fun _ _ _ _ -> admit ())
+
+let value_vprops_mapping_fn
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  : option (k & v) -> vprop
+  = fun e ->
+    match e with
+    | None -> emp
+    | Some (i, x) ->
+      (match Map.sel i m, Map.sel i borrows with
+       | None, _ -> pure False
+       | _, Some _ -> emp
+       | Some c, None -> vp i x c)
+
+let value_vprops_seq
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  : Seq.seq vprop
+  = seq_map (value_vprops_mapping_fn vp m borrows) s
+
+let value_vprops
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  : vprop
+  = SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m borrows)
 
 [@@__reduce__]
 let store_contents_pred
@@ -97,8 +148,10 @@ let store_contents_pred
     R.pts_to arr.g_borrows full_perm borrows
       `star`
     pure (seq_props h s /\
-          seq_to_map s `keys_in` m /\
-          borrows `submap_of` seq_to_map s)
+          store_and_repr_related s m /\
+          store_and_borrows_related s borrows)
+      `star`
+    value_vprops vp s m borrows
 
 [@@__reduce__]
 let tperm arr m borrows = exists_ (store_contents_pred arr m borrows)
