@@ -130,82 +130,136 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
 #pop-options
 
 
-module CM = FStar.Algebra.CommMonoid
+module CE = FStar.Algebra.CommMonoid.Equiv
 
-let elim_monoid_laws #a (m:CM.cm a)
+let elim_monoid_laws #a #eq (m:CE.cm a eq)
   : Lemma (
-          (forall x y. {:pattern m.mult x y}  m.mult x y == m.mult y x) /\
-          (forall x y z.{:pattern (m.mult x (m.mult y z))} m.mult x (m.mult y z) == m.mult (m.mult x y) z) /\
-          (forall x.{:pattern (m.mult x m.unit)} m.mult x m.unit == x)
+          (forall x y. {:pattern m.mult x y}  eq.eq (m.mult x y) (m.mult y x)) /\
+          (forall x y z.{:pattern (m.mult x (m.mult y z))} eq.eq (m.mult x (m.mult y z)) (m.mult (m.mult x y) z)) /\
+          (forall x.{:pattern (m.mult x m.unit)} eq.eq (m.mult x m.unit) x)
     )
-  = introduce forall x y. m.mult x y == m.mult y x
+  = introduce forall x y. eq.eq (m.mult x y) (m.mult y x)
     with ( m.commutativity x y );
 
-    introduce forall x y z. m.mult x (m.mult y z) == m.mult (m.mult x y) z
-    with ( m.associativity x y z );
+    introduce forall x y z. eq.eq (m.mult x (m.mult y z)) (m.mult (m.mult x y) z)
+    with ( m.associativity x y z;
+           eq.symmetry (m.mult (m.mult x y) z) (m.mult x (m.mult y z)) );
 
-    introduce forall x. m.mult x m.unit == x
-    with ( m.identity x )
+    introduce forall x. eq.eq (m.mult x m.unit) x
+    with ( CE.right_identity eq m x )
 
+let elim_eq_laws #a (eq:CE.equiv a)
+  : Lemma (
+          (forall x.{:pattern (x `eq.eq` x)} x `eq.eq` x) /\
+          (forall x y.{:pattern (x `eq.eq` y)} x `eq.eq` y ==> y `eq.eq` x) /\
+          (forall x y z.{:pattern eq.eq x y; eq.eq y z} (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z)
+          )
+  = introduce forall x. x `eq.eq` x
+    with (eq.reflexivity x);
+
+    introduce forall x y. x `eq.eq` y ==> y `eq.eq` x
+    with (introduce _ ==> _
+          with _. eq.symmetry x y);
+
+    introduce forall x y z. (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z
+    with (introduce _ ==> _
+          with _. eq.transitivity x y z)
+
+let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
+  : Lemma ((x `m.mult` (y `m.mult` z))
+             `eq.eq`
+           (y `m.mult` (x `m.mult` z)))
+  = elim_eq_laws eq;
+    elim_monoid_laws m;  
+    calc (eq.eq) {
+      x `m.mult` (y `m.mult` z);
+      (eq.eq) { m.commutativity x (y `m.mult` z) }
+      (y `m.mult` z) `m.mult` x;
+      (eq.eq) { m.associativity y z x }
+      y `m.mult` (z `m.mult` x);
+      (eq.eq) { m.congruence y (z `m.mult` x) y (x `m.mult` z) }
+      y `m.mult` (x `m.mult` z);
+    }
+  
 #push-options "--fuel 1 --ifuel 0 --z3rlimit_factor 2"
-let rec foldm_snoc_append #a (m:CM.cm a) (s1 s2: seq a)
+let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == m.mult (foldm_snoc m s1) (foldm_snoc m s2))
+    (ensures eq.eq (foldm_snoc m (append s1 s2))
+                   (m.mult (foldm_snoc m s1) (foldm_snoc m s2)))
     (decreases (Seq.length s2))
-  = elim_monoid_laws m;
+  = elim_eq_laws eq;
+    elim_monoid_laws m;
     if Seq.length s2 = 0
-    then (
-      assert (Seq.append s1 s2 `Seq.equal` s1);
-      assert (foldm_snoc m s2 == m.unit)
-    )
+    then assert (Seq.append s1 s2 `Seq.equal` s1)
     else (
       let s2', last = Seq.un_snoc s2 in
-      calc (==)
+      calc (eq.eq)
       {
         foldm_snoc m (append s1 s2);
-        (==) { assert (Seq.equal (append s1 s2)
-                                 (Seq.snoc (append s1 s2') last)) }
+        (eq.eq) { assert (Seq.equal (append s1 s2)
+                         (Seq.snoc (append s1 s2') last)) }
         foldm_snoc m (Seq.snoc (append s1 s2') last);
-        (==) { assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2')) }
+        (eq.eq) { assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2')) }
+        
         m.mult last (foldm_snoc m (append s1 s2'));
-        (==) { foldm_snoc_append m s1 s2' }
+        (eq.eq) { foldm_snoc_append m s1 s2';
+                  m.congruence last (foldm_snoc m (append s1 s2'))
+                               last (m.mult (foldm_snoc m s1) (foldm_snoc m s2')) }
         m.mult last (m.mult (foldm_snoc m s1) (foldm_snoc m s2'));
-        (==) { }
+        (eq.eq) { x_yz_to_y_xz m last (foldm_snoc m s1) (foldm_snoc m s2') }
         m.mult (foldm_snoc m s1) (m.mult last (foldm_snoc m s2'));
-        (==) { }
+        (eq.eq) { }
         m.mult (foldm_snoc m s1) (foldm_snoc m s2);
-      }
-    )
+      })
 
-let foldm_snoc_sym #a (m:CM.cm a) (s1 s2: seq a)
+let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == foldm_snoc m (append s2 s1))
-  = elim_monoid_laws m;
+    (ensures eq.eq (foldm_snoc m (append s1 s2)) (foldm_snoc m (append s2 s1)))
+  = elim_eq_laws eq;
+    elim_monoid_laws m;
     foldm_snoc_append m s1 s2;
     foldm_snoc_append m s2 s1
 
 #push-options "--fuel 2"
-let foldm_snoc_singleton (#a:_) (m:CM.cm a) (x:a)
-  : Lemma (foldm_snoc m (Seq.create 1 x) == x)
+let foldm_snoc_singleton (#a:_) #eq (m:CE.cm a eq) (x:a)
+  : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
   = elim_monoid_laws m
 #pop-options
 
 #push-options "--fuel 0"
-let foldm_snoc3 #a (m:CM.cm a) (s1:seq a) (x:a) (s2:seq a)
-  : Lemma (foldm_snoc m (Seq.append s1 (Seq.cons x s2)) ==
-           m.mult x (foldm_snoc m (Seq.append s1 s2)))
-  = calc (==)
+let foldm_snoc3 #a #eq (m:CE.cm a eq) (s1:seq a) (x:a) (s2:seq a)
+  : Lemma (eq.eq (foldm_snoc m (Seq.append s1 (Seq.cons x s2)))
+                 (m.mult x (foldm_snoc m (Seq.append s1 s2))))
+  = elim_eq_laws eq;
+    elim_monoid_laws m;
+    calc (eq.eq)
     {
       foldm_snoc m (Seq.append s1 (Seq.cons x s2));
-      (==) { foldm_snoc_append m s1 (Seq.cons x s2) }
+      (eq.eq) { foldm_snoc_append m s1 (Seq.cons x s2) }
       m.mult (foldm_snoc m s1) (foldm_snoc m (Seq.cons x s2));
-      (==) { foldm_snoc_append m (Seq.create 1 x) s2 }
+      (eq.eq) { foldm_snoc_append m (Seq.create 1 x) s2;
+                m.congruence (foldm_snoc m s1)
+                             (foldm_snoc m (Seq.cons x s2))
+                             (foldm_snoc m s1)
+                             (m.mult (foldm_snoc m (Seq.create 1 x)) (foldm_snoc m s2)) }
       m.mult (foldm_snoc m s1) (m.mult (foldm_snoc m (Seq.create 1 x)) (foldm_snoc m s2));
-      (==) { foldm_snoc_singleton m x }
+      (eq.eq) { foldm_snoc_singleton m x;
+                m.congruence (foldm_snoc m (Seq.create 1 x))
+                             (foldm_snoc m s2)
+                             x
+                             (foldm_snoc m s2);
+                m.congruence (foldm_snoc m s1)
+                             (m.mult (foldm_snoc m (Seq.create 1 x)) (foldm_snoc m s2))
+                             (foldm_snoc m s1)
+                             (m.mult x (foldm_snoc m s2)) }
       m.mult (foldm_snoc m s1) (m.mult x (foldm_snoc m s2));
-      (==) { elim_monoid_laws m }
+      (eq.eq) { x_yz_to_y_xz m (foldm_snoc m s1) x (foldm_snoc m s2) }
       m.mult x (m.mult (foldm_snoc m s1) (foldm_snoc m s2));
-      (==) { foldm_snoc_append m s1 s2 }
+      (eq.eq) { foldm_snoc_append m s1 s2;
+                m.congruence x
+                             (m.mult (foldm_snoc m s1) (foldm_snoc m s2))
+                             x
+                             (foldm_snoc m (Seq.append s1 s2)) }
       m.mult x (foldm_snoc m (Seq.append s1 s2));
     }
 #pop-options
@@ -254,15 +308,26 @@ let seqperm_len #a (s0 s1:seq a)
     (ensures Seq.length s0 == Seq.length s1)
   = reveal_is_permutation s0 s1 p
 
+let eq2_eq #a (eq:CE.equiv a) (x y:a)
+  : Lemma (requires x == y)
+          (ensures x `eq.eq` y)
+  = eq.reflexivity x
+
 (* The sequence indexing lemmas make this quite fiddly *)
-#push-options "--z3rlimit_factor 1 --fuel 1 --ifuel 0"
-let rec foldm_snoc_perm #a m s0 s1 p
+#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0"
+let rec foldm_snoc_perm #a #eq m s0 s1 p
   : Lemma
-    (ensures foldm_snoc m s0  == foldm_snoc m s1)
+    (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
     (decreases (Seq.length s0))
-  = seqperm_len s0 s1 p;
+  = //for getting calc chain to compose
+    introduce forall x y z. x `eq.eq` y /\ y `eq.eq` z ==> x `eq.eq` z
+    with (introduce _ ==> _
+          with _. eq.transitivity x y z);
+
+    seqperm_len s0 s1 p;
     if Seq.length s0 = 0 then (
-      assert (Seq.equal s0 s1)
+      assert (Seq.equal s0 s1);
+      eq2_eq eq (foldm_snoc m s0) (foldm_snoc m s1)
     )
     else (
       let n0 = Seq.length s0 - 1 in
@@ -273,19 +338,30 @@ let rec foldm_snoc_perm #a m s0 s1 p
       let p' : seqperm prefix s1' = shift_perm s0 s1 () p in
       assert (last == last');
       calc
-      (==)
+      (eq.eq)
       {
         foldm_snoc m s1;
-        (==) { assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix')) }
+        (eq.eq) { assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix'));
+                  eq2_eq eq (foldm_snoc m s1)
+                            (foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'))) }
         foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'));
-        (==) { foldm_snoc3 m prefix' last' suffix' }
+        (eq.eq) { foldm_snoc3 m prefix' last' suffix' }
         m.mult last' (foldm_snoc m (append prefix' suffix'));
-        (==) { assert (Seq.equal (append prefix' suffix') s1') }
+        (eq.eq) { assert (Seq.equal (append prefix' suffix') s1');
+                  eq2_eq eq (m.mult last' (foldm_snoc m (append prefix' suffix')))
+                            (m.mult last' (foldm_snoc m s1')) }
         m.mult last' (foldm_snoc m s1');
-        (==) { foldm_snoc_perm m prefix s1' p' }
+        (eq.eq) { foldm_snoc_perm m prefix s1' p';
+                  eq.symmetry (foldm_snoc m prefix) (foldm_snoc m s1');
+                  eq.reflexivity last';
+                  m.congruence last'
+                               (foldm_snoc m s1')
+                               last'
+                               (foldm_snoc m prefix) }
         m.mult last' (foldm_snoc m prefix);
-        (==) { }
+        (eq.eq) { eq2_eq eq (m.mult last' (foldm_snoc m prefix))
+                            (foldm_snoc m s0) }
         foldm_snoc m s0;
-      }
-    )
+      };
+      eq.symmetry (foldm_snoc m s1) (foldm_snoc m s0))
 #pop-options
