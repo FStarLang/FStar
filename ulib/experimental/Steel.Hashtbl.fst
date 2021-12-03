@@ -234,9 +234,9 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
        let vs1_idx = Seq.create 1 (Seq.index vs1 (U32.v idx)) in
        let vs1_suffix = Seq.slice vs1 (U32.v idx + 1) (Seq.length vs1) in
 
-       assert (Seq.equal vs1
-                         (Seq.append vs1_prefix
-                                     (Seq.append vs1_idx vs1_suffix)));
+       // assert (Seq.equal vs1
+       //                   (Seq.append vs1_prefix
+       //                               (Seq.append vs1_idx vs1_suffix)));
 
        SeqPerm.foldm_snoc_append vprop_monoid vs1_prefix
                                               (Seq.append vs1_idx vs1_suffix);
