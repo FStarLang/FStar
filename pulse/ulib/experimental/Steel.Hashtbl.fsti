@@ -78,8 +78,10 @@ type result (k:eqtype) (v:Type) =
   | Absent
   | Missing : k -> result k v
 
+#push-options "--admit_smt_queries true"
 unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
-  _:unit{Map.contains x m}
+  Map.contains x m
+#pop-options
 
 let get_post 
   (#k:eqtype)
