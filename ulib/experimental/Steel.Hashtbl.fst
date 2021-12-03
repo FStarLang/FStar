@@ -156,6 +156,136 @@ let store_contents_pred
 [@@__reduce__]
 let tperm arr m borrows = exists_ (store_contents_pred arr m borrows)
 
+
+assume val admit__ (#opened:_) (#a:Type) (#p:pre_t) (#q:post_t a) (_:unit)
+  : STAtomicF a opened p q True (fun _ -> False)
+
+let create #k #v #contents #vp h finalizer n = admit__ ()
+
+assume val rewrite_equiv (#opened:_) (p q:vprop)
+  : STGhost unit opened p (fun _ -> q) (requires equiv p q) (ensures fun _ -> True)
+
+assume val seq_map_len (#a #b:Type) (f:a -> b) (s:Seq.seq a)
+  : Lemma (ensures Seq.length (seq_map f s) == Seq.length s)
+          [SMTPat (Seq.length (seq_map f s))]
+
+let get #k #v #contents #vp #h #finalizer #m #borrows a i =
+  let s = elim_exists () in  
+  elim_pure (seq_props h s /\
+             store_and_repr_related s m /\
+             store_and_borrows_related s borrows);
+  A.pts_to_length a.store s;
+  let idx = h i `U32.rem` a.store_len in
+  let vopt = A.read a.store idx in
+  let r = match vopt with
+          | None -> Absent
+          | Some (i', x) ->
+            if i <> i' then Missing i'
+            else Present x in
+  (match vopt returns STT unit _ (fun _ -> get_post m borrows a i r) with
+   | None ->
+     intro_pure (seq_props h s /\
+                 store_and_repr_related s m /\
+                 store_and_borrows_related s borrows);
+     intro_exists (G.reveal s) (store_contents_pred a m borrows);
+     rewrite (tperm a m borrows) (get_post m borrows a i r)
+   | Some (i', x) ->
+     if i <> i'
+     then begin
+       intro_pure (map_contains_prop i' m);
+       intro_pure (seq_props h s /\
+                   store_and_repr_related s m /\
+                   store_and_borrows_related s borrows);
+       intro_exists (G.reveal s) (store_contents_pred a m borrows);
+       rewrite (tperm a m borrows
+                  `star`
+                pure (map_contains_prop i' m))
+               (get_post m borrows a i r)
+     end
+     else begin
+       let vs0 = value_vprops_seq vp s m borrows in
+       let vs0_prefix = Seq.slice vs0 0 (U32.v idx) in
+       let vs0_idx = Seq.create 1 (Seq.index vs0 (U32.v idx)) in
+       let vs0_suffix = Seq.slice vs0 (U32.v idx + 1) (Seq.length vs0) in
+       assert (Seq.equal vs0
+                         (Seq.append vs0_prefix
+                                     (Seq.append vs0_idx vs0_suffix)));
+       SeqPerm.foldm_snoc_append vprop_monoid vs0_prefix
+                                              (Seq.append vs0_idx vs0_suffix);
+       SeqPerm.foldm_snoc_append vprop_monoid vs0_idx vs0_prefix;
+       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs0)
+                     (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+                        `star`
+                      (SeqPerm.foldm_snoc vprop_monoid vs0_idx
+                         `star`
+                       SeqPerm.foldm_snoc vprop_monoid vs0_suffix)));
+
+       rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m borrows))
+                     (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+                        `star`
+                      (SeqPerm.foldm_snoc vprop_monoid vs0_idx
+                         `star`
+                       SeqPerm.foldm_snoc vprop_monoid vs0_suffix));
+
+       let upd_borrows = Map.upd i x borrows in
+
+       let vs1 = value_vprops_seq vp s m upd_borrows in
+       let vs1_prefix = Seq.slice vs1 0 (U32.v idx) in
+       let vs1_idx = Seq.create 1 (Seq.index vs1 (U32.v idx)) in
+       let vs1_suffix = Seq.slice vs1 (U32.v idx + 1) (Seq.length vs1) in
+
+       assert (Seq.equal vs1
+                         (Seq.append vs1_prefix
+                                     (Seq.append vs1_idx vs1_suffix)));
+
+       SeqPerm.foldm_snoc_append vprop_monoid vs1_prefix
+                                              (Seq.append vs1_idx vs1_suffix);
+       SeqPerm.foldm_snoc_append vprop_monoid vs1_idx vs1_prefix;
+       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs1)
+                     (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
+                        `star`
+                      (SeqPerm.foldm_snoc vprop_monoid vs1_idx
+                         `star`
+                       SeqPerm.foldm_snoc vprop_monoid vs1_suffix)));
+       assume (Seq.index vs1 (U32.v idx) == emp);
+       assume (SeqPerm.foldm_snoc vprop_monoid vs1_idx == emp);
+       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs1)
+                     (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
+                        `star`
+                      SeqPerm.foldm_snoc vprop_monoid vs1_suffix));
+
+       assume (Seq.equal vs0_prefix vs1_prefix /\
+               Seq.equal vs0_suffix vs1_suffix);
+
+       rewrite (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+                  `star`
+                SeqPerm.foldm_snoc vprop_monoid vs0_suffix)
+               (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
+                  `star`
+                SeqPerm.foldm_snoc vprop_monoid vs1_suffix);
+
+       rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
+                        `star`
+                      SeqPerm.foldm_snoc vprop_monoid vs1_suffix)
+                     (SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m (Map.upd i x borrows)));
+
+       let Some c = Map.sel i m in
+       assume (Seq.index vs0 (U32.v idx) == vp i x c);
+       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c));
+       rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c);
+       R.write a.g_borrows (Map.upd i x borrows);
+       intro_pure (seq_props h s /\
+                   store_and_repr_related s m /\
+                   store_and_borrows_related s (Map.upd i x borrows));
+       intro_exists (G.reveal s) (store_contents_pred a m (Map.upd i x borrows));
+       rewrite (tperm a m (Map.upd i x borrows)
+                  `star`
+                vp i x c)
+               (get_post m borrows a i r)
+     end);
+
+  return r
+
 let rec seq_to_map_create (k:eqtype) (v:Type0) (n:nat)
   : Lemma (Map.equal (seq_to_map (Seq.create n None))
                      (Map.empty k v))
