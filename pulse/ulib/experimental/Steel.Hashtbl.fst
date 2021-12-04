@@ -82,8 +82,6 @@ let store_and_borrows_related
                 Seq.index s i == Some (x, y) /\
                 Map.sel x borrows == Some y)
 
-assume val seq_map (#a #b:Type) (f:a -> b) (s:Seq.seq a) : Seq.seq b
-
 module CE = FStar.Algebra.CommMonoid.Equiv
 module SeqPerm = FStar.Seq.Permutation
 
@@ -118,7 +116,7 @@ let value_vprops_seq
   (m:repr k contents)
   (borrows:Map.t k v)
   : Seq.seq vprop
-  = seq_map (value_vprops_mapping_fn vp m borrows) s
+  = Seq.seq_map (value_vprops_mapping_fn vp m borrows) s
 
 [@@__reduce__]
 let value_vprops
@@ -167,20 +165,11 @@ let create #k #v #contents #vp h finalizer n = admit__ ()
 assume val rewrite_equiv (#opened:_) (p q:vprop)
   : STGhost unit opened p (fun _ -> q) (requires equiv p q) (ensures fun _ -> True)
 
-assume val seq_map_len (#a #b:Type) (f:a -> b) (s:Seq.seq a)
-  : Lemma (ensures Seq.length (seq_map f s) == Seq.length s)
-          [SMTPat (Seq.length (seq_map f s))]
-
-assume val star_equiv (p q r:vprop)
+let star_equiv (p q r:vprop)
   : Lemma (requires q `equiv` r)
           (ensures (p `star` q) `equiv` (p `star` r))
-
-assume val seq_map_index (#a #b:Type) (f:a -> b) (s:Seq.seq a) (i:nat{i < Seq.length s})
-  : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i))
-          [SMTPat (Seq.index (seq_map f s) i)]
-
-assume val foldm_snoc_singleton (#a:_) (#eq:_) (m:CE.cm a eq) (x:a)
-  : Lemma (eq.eq (SeqPerm.foldm_snoc m (Seq.create 1 x)) x)
+  = equiv_refl p;
+    star_congruence p q p r
 
 let value_vprop_seq_upd_borrows
   (#k:eqtype)
@@ -239,7 +228,15 @@ let foldm_snoc_split3 (s s1 s2 s3:Seq.seq vprop)
 let equiv_helper_q_emp (p q r:vprop)
   : Lemma (requires q `equiv` emp)
           (ensures (p `star` (q `star` r)) `equiv` (p `star` r))
-  = admit ()
+  = equiv_refl r;
+    star_congruence q r emp r;
+    equiv_refl p;
+    star_congruence p (q `star` r) p (emp `star` r);
+    cm_identity r;
+    star_congruence p (emp `star` r) p r;
+    equiv_trans (p `star` (q `star` r))
+                (p `star` (emp `star` r))
+                (p `star` r)
 
 #push-options "--warn_error -271"
 let get #k #v #contents #vp #h #finalizer #m #borrows a i =
@@ -312,7 +309,7 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
             `star`
           SeqPerm.foldm_snoc vprop_monoid vs0_suffix);
          (equiv) { assert (Seq.index vs1 (U32.v idx) == emp);
-                   foldm_snoc_singleton vprop_monoid emp;
+                   SeqPerm.foldm_snoc_singleton vprop_monoid emp;
                    equiv_helper_q_emp (SeqPerm.foldm_snoc vprop_monoid vs0_prefix)
                                       (SeqPerm.foldm_snoc vprop_monoid vs1_idx)
                                       (SeqPerm.foldm_snoc vprop_monoid vs0_suffix) }
@@ -330,7 +327,7 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
                      (value_vprops vp s m (Map.upd i x borrows));
        let Some c = Map.sel i m in
        assert (Seq.index vs0 (U32.v idx) == vp i x c);
-       foldm_snoc_singleton vprop_monoid (vp i x c);
+       SeqPerm.foldm_snoc_singleton vprop_monoid (vp i x c);
        assert (equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c));
        rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c);
        R.write a.g_borrows (Map.upd i x borrows);
