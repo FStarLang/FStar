@@ -175,10 +175,6 @@ assume val star_equiv (p q r:vprop)
   : Lemma (requires q `equiv` r)
           (ensures (p `star` q) `equiv` (p `star` r))
 
-assume val equiv_trans (p q r:vprop)
-  : Lemma (requires p `equiv` q /\ q `equiv` r)
-          (ensures p `equiv` r)
-
 assume val seq_map_index (#a #b:Type) (f:a -> b) (s:Seq.seq a) (i:nat{i < Seq.length s})
   : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i))
           [SMTPat (Seq.index (seq_map f s) i)]
@@ -206,10 +202,52 @@ let value_vprop_seq_upd_borrows
                               (Seq.slice s1 (idx+1) (Seq.length s))))
   = ()
 
-#set-options "--fuel 1 --ifuel 1 --z3rlimit 100 --using_facts_from '* -FStar.Tactics -FStar.Reflection -FStar.Seq.Properties.slice_slice'"
-//#restart-solver
-//#set-options "--log_queries"
+let seq_split3 (#a:Type) (s:Seq.seq a) (i:nat{i < Seq.length s})
+  : (s':(Seq.seq a & Seq.seq a & Seq.seq a){
+     let s1, s2, s3 = s' in
+     Seq.equal s (Seq.append s1 (Seq.append s2 s3))})
+  = Seq.slice s 0 i,
+    Seq.create 1 (Seq.index s i),
+    Seq.slice s (i+1) (Seq.length s)
+
+let foldm_snoc_split3 (s s1 s2 s3:Seq.seq vprop)
+  : Lemma (requires Seq.equal s (Seq.append s1 (Seq.append s2 s3)))
+          (ensures SeqPerm.foldm_snoc vprop_monoid s
+                     `equiv`
+                   (SeqPerm.foldm_snoc vprop_monoid s1
+                      `star`
+                    (SeqPerm.foldm_snoc vprop_monoid s2
+                       `star`
+                     SeqPerm.foldm_snoc vprop_monoid s3)))
+  = SeqPerm.foldm_snoc_append vprop_monoid s1 (Seq.append s2 s3);
+    SeqPerm.foldm_snoc_append vprop_monoid s2 s3;
+    star_equiv (SeqPerm.foldm_snoc vprop_monoid s1)
+               (SeqPerm.foldm_snoc vprop_monoid (Seq.append s2 s3))
+               (SeqPerm.foldm_snoc vprop_monoid s2
+                  `star`
+                SeqPerm.foldm_snoc vprop_monoid s3);
+    equiv_trans (SeqPerm.foldm_snoc vprop_monoid s)
+                (SeqPerm.foldm_snoc vprop_monoid s1
+                   `star`
+                 (SeqPerm.foldm_snoc vprop_monoid (Seq.append s2 s3)))
+                (SeqPerm.foldm_snoc vprop_monoid s1
+                   `star`
+                 (SeqPerm.foldm_snoc vprop_monoid s2
+                    `star`
+                  SeqPerm.foldm_snoc vprop_monoid s3))
+
+let equiv_helper_q_emp (p q r:vprop)
+  : Lemma (requires q `equiv` emp)
+          (ensures (p `star` (q `star` r)) `equiv` (p `star` r))
+  = admit ()
+
+#push-options "--warn_error -271"
 let get #k #v #contents #vp #h #finalizer #m #borrows a i =
+  let equiv_trans (p q r:vprop)
+    : Lemma (requires p `equiv` q /\ q `equiv` r)
+            (ensures p `equiv` r)
+            [SMTPat ()]
+    = equiv_trans p q r in
   let s = elim_exists () in  
   elim_pure (seq_props h s /\
              store_and_repr_related s m /\
@@ -244,35 +282,8 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
      end
      else begin
        let vs0 = value_vprops_seq vp s m borrows in
-       let vs0_prefix = Seq.slice vs0 0 (U32.v idx) in
-       let vs0_idx = Seq.create 1 (Seq.index vs0 (U32.v idx)) in
-       let vs0_suffix = Seq.slice vs0 (U32.v idx + 1) (Seq.length vs0) in
-       assert (Seq.equal vs0
-                         (Seq.append vs0_prefix
-                                     (Seq.append vs0_idx vs0_suffix)));
-       SeqPerm.foldm_snoc_append vprop_monoid vs0_prefix
-                                              (Seq.append vs0_idx vs0_suffix);
-       SeqPerm.foldm_snoc_append vprop_monoid vs0_idx vs0_suffix;
-       star_equiv (SeqPerm.foldm_snoc vprop_monoid vs0_prefix)
-                  (SeqPerm.foldm_snoc vprop_monoid (Seq.append vs0_idx vs0_suffix))
-                  (SeqPerm.foldm_snoc vprop_monoid vs0_idx
-                         `star`
-                   SeqPerm.foldm_snoc vprop_monoid vs0_suffix);
-       equiv_trans (SeqPerm.foldm_snoc vprop_monoid vs0)
-                   (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
-                      `star`
-                    (SeqPerm.foldm_snoc vprop_monoid (Seq.append vs0_idx vs0_suffix)))
-                   (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
-                      `star`
-                    (SeqPerm.foldm_snoc vprop_monoid vs0_idx
-                         `star`
-                     SeqPerm.foldm_snoc vprop_monoid vs0_suffix));
-       assert (equiv (SeqPerm.foldm_snoc vprop_monoid ((value_vprops_seq vp s m borrows)))
-                     (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
-                        `star`
-                      (SeqPerm.foldm_snoc vprop_monoid vs0_idx
-                         `star`
-                       SeqPerm.foldm_snoc vprop_monoid vs0_suffix)));
+       let vs0_prefix, vs0_idx, vs0_suffix = seq_split3 vs0 (U32.v idx) in
+       foldm_snoc_split3 vs0 vs0_prefix vs0_idx vs0_suffix;
        rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m borrows))
                      (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
                         `star`
@@ -283,64 +294,40 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
        let upd_borrows = Map.upd i x borrows in
 
        let vs1 = value_vprops_seq vp s m upd_borrows in
-       let vs1_prefix = Seq.slice vs1 0 (U32.v idx) in
-       let vs1_idx = Seq.create 1 (Seq.index vs1 (U32.v idx)) in
-       let vs1_suffix = Seq.slice vs1 (U32.v idx + 1) (Seq.length vs1) in
-
-       assume (Seq.equal vs1
-                         (Seq.append vs1_prefix
-                                     (Seq.append vs1_idx vs1_suffix)));
-
-       SeqPerm.foldm_snoc_append vprop_monoid vs1_prefix
-                                              (Seq.append vs1_idx vs1_suffix);
-       SeqPerm.foldm_snoc_append vprop_monoid vs1_idx vs1_suffix;
-       star_equiv (SeqPerm.foldm_snoc vprop_monoid vs1_prefix)
-                  (SeqPerm.foldm_snoc vprop_monoid (Seq.append vs1_idx vs1_suffix))
-                  (SeqPerm.foldm_snoc vprop_monoid vs1_idx
-                         `star`
-                   SeqPerm.foldm_snoc vprop_monoid vs1_suffix);
-       equiv_trans (SeqPerm.foldm_snoc vprop_monoid vs1)
-                   (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                      `star`
-                    (SeqPerm.foldm_snoc vprop_monoid (Seq.append vs1_idx vs1_suffix)))
-                   (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                      `star`
-                    (SeqPerm.foldm_snoc vprop_monoid vs1_idx
-                         `star`
-                     SeqPerm.foldm_snoc vprop_monoid vs1_suffix));
-       assert (equiv (SeqPerm.foldm_snoc vprop_monoid vs1)
-                     (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                        `star`
-                      (SeqPerm.foldm_snoc vprop_monoid vs1_idx
-                         `star`
-                       SeqPerm.foldm_snoc vprop_monoid vs1_suffix)));
-       assert (Seq.index vs1 (U32.v idx) == emp);
-       foldm_snoc_singleton vprop_monoid emp;
-       assert (equiv (SeqPerm.foldm_snoc vprop_monoid vs1_idx) emp);
-       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs1)
-                     (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                        `star`
-                      SeqPerm.foldm_snoc vprop_monoid vs1_suffix));
-
-       value_vprop_seq_upd_borrows h vp s m borrows (U32.v idx);
-       assert (Seq.equal vs0_prefix vs1_prefix /\
-               Seq.equal vs0_suffix vs1_suffix);
-
-       rewrite (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
-                  `star`
-                SeqPerm.foldm_snoc vprop_monoid vs0_suffix)
-               (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                  `star`
-                SeqPerm.foldm_snoc vprop_monoid vs1_suffix);
-
-       assume (equiv (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                        `star`
-                      SeqPerm.foldm_snoc vprop_monoid vs1_suffix)
-                     (SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m (Map.upd i x borrows))));
-       rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs1_prefix
-                        `star`
-                      SeqPerm.foldm_snoc vprop_monoid vs1_suffix)
-                     (SeqPerm.foldm_snoc vprop_monoid (value_vprops_seq vp s m (Map.upd i x borrows)));
+       let vs1_prefix, vs1_idx, vs1_suffix = seq_split3 vs1 (U32.v idx) in
+  
+       calc (equiv) {
+         value_vprops vp s m upd_borrows;
+         (equiv) { foldm_snoc_split3 vs1 vs1_prefix vs1_idx vs1_suffix }
+         SeqPerm.foldm_snoc vprop_monoid vs1_prefix
+           `star`
+         (SeqPerm.foldm_snoc vprop_monoid vs1_idx
+            `star`
+          SeqPerm.foldm_snoc vprop_monoid vs1_suffix);
+         (equiv) { value_vprop_seq_upd_borrows h vp s m borrows (U32.v idx);
+                   Classical.forall_intro equiv_refl }
+         SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+           `star`
+         (SeqPerm.foldm_snoc vprop_monoid vs1_idx
+            `star`
+          SeqPerm.foldm_snoc vprop_monoid vs0_suffix);
+         (equiv) { assert (Seq.index vs1 (U32.v idx) == emp);
+                   foldm_snoc_singleton vprop_monoid emp;
+                   equiv_helper_q_emp (SeqPerm.foldm_snoc vprop_monoid vs0_prefix)
+                                      (SeqPerm.foldm_snoc vprop_monoid vs1_idx)
+                                      (SeqPerm.foldm_snoc vprop_monoid vs0_suffix) }
+         SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+           `star`
+         SeqPerm.foldm_snoc vprop_monoid vs0_suffix;
+       };
+       equiv_sym (value_vprops vp s m upd_borrows)
+                 (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+                    `star`
+                  SeqPerm.foldm_snoc vprop_monoid vs0_suffix);
+       rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs0_prefix
+                          `star`
+                      SeqPerm.foldm_snoc vprop_monoid vs0_suffix)
+                     (value_vprops vp s m (Map.upd i x borrows));
        let Some c = Map.sel i m in
        assert (Seq.index vs0 (U32.v idx) == vp i x c);
        foldm_snoc_singleton vprop_monoid (vp i x c);
@@ -358,6 +345,7 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
      end);
 
   return r
+#pop-options
 
 let rec seq_to_map_create (k:eqtype) (v:Type0) (n:nat)
   : Lemma (Map.equal (seq_to_map (Seq.create n None))
