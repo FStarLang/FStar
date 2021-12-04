@@ -755,3 +755,15 @@ let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
   = if length s = 0 then init
     else let s, last = un_snoc s in
          f last (foldr_snoc f s init)
+
+(****** Seq map ******)
+
+val seq_map (#a #b:Type) (f:a -> b) (s:Seq.seq a) : Seq.seq b
+
+val seq_map_len (#a #b:Type) (f:a -> b) (s:Seq.seq a)
+  : Lemma (ensures Seq.length (seq_map f s) == Seq.length s)
+          [SMTPat (Seq.length (seq_map f s))]
+
+val seq_map_index (#a #b:Type) (f:a -> b) (s:Seq.seq a) (i:nat{i < Seq.length s})
+  : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i))
+          [SMTPat (Seq.index (seq_map f s) i)]
