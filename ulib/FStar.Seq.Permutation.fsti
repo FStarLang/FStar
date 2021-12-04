@@ -72,6 +72,9 @@ module CE = FStar.Algebra.CommMonoid.Equiv
 let foldm_snoc (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:seq a) =
   foldr_snoc m.mult s m.unit
 
+val foldm_snoc_singleton (#a:_) (#eq:_) (m:CE.cm a eq) (x:a)
+  : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
+
 (* folding m over the concatenation of s1 and s2
    can be decomposed into a fold over s1 and a fold over s2 *)
 val foldm_snoc_append (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s1 s2: seq a)

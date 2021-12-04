@@ -165,6 +165,12 @@ let elim_eq_laws #a (eq:CE.equiv a)
     with (introduce _ ==> _
           with _. eq.transitivity x y z)
 
+#push-options "--fuel 2"
+let foldm_snoc_singleton (#a:_) #eq (m:CE.cm a eq) (x:a)
+  : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
+  = elim_monoid_laws m
+#pop-options
+
 let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
   : Lemma ((x `m.mult` (y `m.mult` z))
              `eq.eq`
@@ -219,12 +225,6 @@ let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
     elim_monoid_laws m;
     foldm_snoc_append m s1 s2;
     foldm_snoc_append m s2 s1
-
-#push-options "--fuel 2"
-let foldm_snoc_singleton (#a:_) #eq (m:CE.cm a eq) (x:a)
-  : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
-  = elim_monoid_laws m
-#pop-options
 
 #push-options "--fuel 0"
 let foldm_snoc3 #a #eq (m:CE.cm a eq) (s1:seq a) (x:a) (s2:seq a)
