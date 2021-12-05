@@ -160,10 +160,47 @@ let tperm arr m borrows = exists_ (store_contents_pred arr m borrows)
 assume val admit__ (#opened:_) (#a:Type) (#p:pre_t) (#q:post_t a) (_:unit)
   : STAtomicF a opened p q True (fun _ -> False)
 
-let create #k #v #contents #vp h finalizer n = admit__ ()
+assume val foldm_snoc_unit_seq (#a:Type) (#eq:_) (m:CE.cm a eq) (s:Seq.seq a)
+  : Lemma (requires forall (i:nat{i < Seq.length s}). Seq.index s i == m.unit)
+          (ensures eq.eq m.unit (SeqPerm.foldm_snoc m s))
 
 assume val rewrite_equiv (#opened:_) (p q:vprop)
-  : STGhost unit opened p (fun _ -> q) (requires equiv p q) (ensures fun _ -> True)
+  : STGhost unit opened p (fun _ -> q) (requires equiv p q \/ equiv q p) (ensures fun _ -> True)
+
+let create #k #v #contents #vp h finalizer n =
+  let store = A.alloc #(option (k & v)) None n in
+  let g_repr = R.alloc (G.hide (Map.empty k contents)) in
+  let g_borrows = R.alloc (G.hide (Map.empty k v)) in
+  let arr : tbl #k #v #contents #vp h finalizer = {
+    store_len = n;
+    store = store;
+    g_repr = g_repr;
+    g_borrows = g_borrows;
+    store_len_pf = () } in
+  rewrite (A.pts_to store (Seq.create #(option (k & v)) (U32.v n) None)
+             `star`
+           R.pts_to g_repr full_perm (Map.empty k contents)
+             `star`
+           R.pts_to g_borrows full_perm (Map.empty k v))
+          (A.pts_to arr.store (Seq.create #(option (k & v)) (U32.v n) None)
+             `star`
+           R.pts_to arr.g_repr full_perm (Map.empty k contents)
+             `star`
+           R.pts_to arr.g_borrows full_perm (Map.empty k v));
+  foldm_snoc_unit_seq
+    vprop_monoid
+    (value_vprops_seq vp (Seq.create #(option (k & v)) (U32.v n) None)
+                         (Map.empty k contents)
+                         (Map.empty k v));
+  rewrite_equiv emp (value_vprops vp (Seq.create #(option (k & v)) (U32.v n) None)
+                                     (Map.empty k contents)
+                                     (Map.empty k v));
+  intro_pure (seq_props h (Seq.create #(option (k & v)) (U32.v n) None) /\
+              store_and_repr_related (Seq.create #(option (k & v)) (U32.v n) None) (Map.empty k contents) /\
+              store_and_borrows_related (Seq.create #(option (k & v)) (U32.v n) None) (Map.empty k v));  
+  intro_exists (Seq.create #(option (k & v)) (U32.v n) None)
+               (store_contents_pred arr (Map.empty k contents) (Map.empty k v));
+  return arr
 
 let star_equiv (p q r:vprop)
   : Lemma (requires q `equiv` r)
@@ -257,7 +294,7 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
           | Some (i', x) ->
             if i <> i' then Missing i'
             else Present x in
-  (match vopt returns STT unit _ (fun _ -> get_post m borrows a i r) with
+  (match vopt returns STGhostT unit Set.empty _ (fun _ -> get_post m borrows a i r) with
    | None ->
      intro_pure (seq_props h s /\
                  store_and_repr_related s m /\
@@ -344,181 +381,162 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
   return r
 #pop-options
 
-let rec seq_to_map_create (k:eqtype) (v:Type0) (n:nat)
-  : Lemma (Map.equal (seq_to_map (Seq.create n None))
-                     (Map.empty k v))
-  = if n = 0 then ()
-    else begin
-      assert (Seq.equal #(option (k & v)) (Seq.tail (Seq.create n None))
-                                          (Seq.create (n-1) None));
-      seq_to_map_create k v (n-1)
-    end
+let put #k #v #contents #vp #h #finalizer #m #borrows a i x c = admit__ ()
 
-let rec seq_to_map_ith (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (i:nat{i < Seq.length s})
-  : Lemma
-      (requires
-        seq_keys_distinct s /\
-        Some? (Seq.index s i))
-      (ensures (let open Map in
-                let Some (x, y) = Seq.index s i in
-                let m = seq_to_map s in
-                contains x m /\
-                sel x m == Some y))
-      (decreases i)
-  = if i = 0 then () else seq_to_map_ith (Seq.tail s) (i-1)
-
-let rec seq_to_map_domain (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v))) (x:k)
-  : Lemma
-      (ensures
-        Map.contains x (seq_to_map s) ==>  //if x is in the seq_to_map map,
-        (exists (i:nat{i < Seq.length s}).
-           Some? (Seq.index s i) /\
-           fst (Some?.v (Seq.index s i)) == x))  //then it must be in the sequence
-      (decreases Seq.length s)
-  = if Seq.length s = 0 then ()
-    else seq_to_map_domain (Seq.tail s) x
-
-let rec seq_to_map_upd (#k:eqtype) (#v:Type0) (s:Seq.seq (option (k & v)))
+assume val value_vprops_split3
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:Map.t k contents)
+  (borrows:Map.t k v)
   (i:nat{i < Seq.length s})
-  (x:k) (y:v)
-  : Lemma
-      (requires
-        seq_keys_distinct s /\
-        seq_keys_distinct (Seq.upd s i (Some (x, y))))
-      (ensures
-        seq_to_map (Seq.upd s i (Some (x, y))) default_v `submap_of`
-        Map.upd (seq_to_map s default_v) x y)
-      (decreases i)
-  = let m = seq_to_map s default_v in
-    let s1 = Seq.upd s i (Some (x, y)) in
-    let m1 = seq_to_map s1 default_v in
+  : Lemma (let s1 = Seq.slice s 0 i in
+           let s2 = Seq.create 1 (Seq.index s i) in
+           let s3 = Seq.slice s (i+1) (Seq.length s) in
+           value_vprops vp s m borrows
+             `equiv`
+           (value_vprops vp s1 m borrows
+              `star`
+            value_vprops vp s2 m borrows
+              `star`
+            value_vprops vp s3 m borrows))
 
-    //To prove: m1 `submap_of` Map.upd m x y
+let value_vprop_seq_rem_borrows
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (idx:nat{idx < Seq.length s})
+  : Lemma (requires Some? (Seq.index s idx) /\
+                    seq_props h s)
+          (ensures (let Some (i, _) = Seq.index s idx in
+                    value_vprops vp (Seq.slice s 0 idx) m borrows ==
+                    value_vprops vp (Seq.slice s 0 idx) m (Map.remove i borrows) /\
+                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m borrows ==
+                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m (Map.remove  i borrows)))
+  = let Some (i, _) = Seq.index s idx in
+    assert (Seq.equal (value_vprops_seq vp (Seq.slice s 0 idx) m borrows)
+                      (value_vprops_seq vp (Seq.slice s 0 idx) m (Map.remove i borrows)));
+    assert (Seq.equal (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m borrows)
+                      (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m (Map.remove i borrows)))
 
-    if i = 0 then begin
-      let m_tl = seq_to_map (Seq.tail s) default_v in
-      match Seq.head s with
-      | None ->
-        assert (m == m_tl);
-        assert (m1 == Map.upd m_tl x y);
-        assert (m1 == Map.upd m x y)  //and submap_of is reflexive
-      | Some (x', y') ->
-        assert (m == Map.upd m_tl x' y');
-        assert (m1 == Map.upd m_tl x y);
-        //
-        //We need to prove:
-        //  Map.upd m_tl x y `submap_of` Map.upd (Map.upd m_tl x' y') x y
-        //
-        //Note that this would not be the case if m_tl `Map.contains` x'
-        //  since if it does, then it could be the case that m_tl[x'] = y'',
-        //  whereas its mapping on the right hand side is y'
-        //
-        //But we are in luck, we can prove that x' \notin m_tl
-        //
-        //And we prove it by appealing to the fact that a key in the seq_to_map map
-        //  must be present in the sequence
-        //
-        //Conversely, if a key is not in the sequence, then it is not in the map
-        //
-        seq_to_map_domain (Seq.tail s) default_v x';
-        assert (m1 `submap_of` Map.upd m x y)
+let ghost_put #_ #k #v #contents #vp #h #finalizer #m #borrows a i x c =
+  let s = elim_exists () in
+  A.pts_to_length a.store s;
+  let idx = h i `U32.rem` a.store_len in
+  elim_pure (seq_props h s /\
+             store_and_repr_related s m /\
+             store_and_borrows_related s borrows);
+  value_vprops_split3 vp s m borrows (U32.v idx);
+  rewrite_equiv (value_vprops vp s m borrows)
+                (value_vprops vp (Seq.slice s 0 (U32.v idx)) m borrows
+                   `star`
+                 value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows
+                   `star`
+                 value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m borrows);
+  SeqPerm.foldm_snoc_singleton vprop_monoid emp;
+  rewrite_equiv (value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows) emp;
+  value_vprop_seq_rem_borrows h vp s m borrows (U32.v idx);
+  rewrite (value_vprops vp (Seq.slice s 0 (U32.v idx)) m borrows
+             `star`
+           value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m borrows)
+          (value_vprops vp (Seq.slice s 0 (U32.v idx)) m (Map.remove i borrows)
+             `star`
+           value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m (Map.remove i borrows));
+  SeqPerm.foldm_snoc_singleton vprop_monoid (vp i x c);
+  rewrite_equiv (vp i x c)
+                (value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m (Map.remove i borrows));
+  value_vprops_split3 vp s m (Map.remove i borrows) (U32.v idx);
+  rewrite_equiv (value_vprops vp (Seq.slice s 0 (U32.v idx)) m (Map.remove i borrows)
+                   `star`
+                 value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m (Map.remove i borrows)
+                   `star`
+                 value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m (Map.remove i borrows))
+                (value_vprops vp s m (Map.remove i borrows));
+  R.write a.g_borrows (Map.remove i borrows);
+  intro_pure (seq_props h s /\
+              store_and_repr_related s m /\
+              store_and_borrows_related s (Map.remove i borrows));
+  intro_exists (G.reveal s) (store_contents_pred a m (Map.remove i borrows))
+
+assume val foldm_snoc_empty (#a:_) (#eq:_) (m:CE.cm a eq)
+  : Lemma (SeqPerm.foldm_snoc m Seq.empty == m.unit)
+
+let rec finalize_values
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#s:G.erased (Seq.seq (option (k & v))))
+  (#m:G.erased (repr k contents))
+  (n:U32.t)
+  (a:tbl h finalizer)
+  (i:U32.t{U32.v n = Seq.length s /\ U32.v i <= U32.v n})
+  (s_ind:G.erased (Seq.seq (option (k & v))))
+  : ST unit (A.pts_to a.store s
+               `star`
+             value_vprops vp s_ind m (Map.empty k v))
+            (fun _ -> A.pts_to a.store s)
+            (requires store_and_repr_related s m /\
+                      Seq.length s == Seq.length s_ind /\
+                      (forall (j:nat{j < U32.v i}). Seq.index s_ind j == None) /\
+                      (forall (j:nat{U32.v i <= j /\ j < Seq.length s}).
+                         Seq.index s_ind j == Seq.index s j))
+            (ensures fun _ -> True)
+                        
+  = A.pts_to_length a.store s;
+    if i = n
+    then begin
+      foldm_snoc_unit_seq vprop_monoid (value_vprops_seq vp s_ind m (Map.empty k v));
+      rewrite_equiv (value_vprops vp s_ind m (Map.empty k v)) emp
     end
     else begin
-      seq_to_map_upd (Seq.tail s) default_v (i-1) x y;
-      //Induction hypothesis
-      assert (seq_to_map (Seq.upd (Seq.tail s) (i-1) (Some (x, y))) default_v `submap_of`
-              Map.upd (seq_to_map (Seq.tail s) default_v) x y);
-      match Seq.head s with
+      let vopt = A.read a.store i in
+      match vopt with
       | None ->
-        assert (m == seq_to_map (Seq.tail s) default_v);
-        assert (m1 == seq_to_map (Seq.upd (Seq.tail s) (i-1) (Some (x, y))) default_v);
-        assert (m1 `submap_of` Map.upd m x y)  //directly from Induction hypothesis
-      | Some (x', y') ->
-        assert (m == Map.upd (seq_to_map (Seq.tail s) default_v) x' y');
-        assert (m1 == Map.upd (seq_to_map (Seq.upd (Seq.tail s) (i-1) (Some (x, y))) default_v) x' y');
-        //
-        //Apply Map.upd (...) x' y' to both the sides of `submap_of` in the Induction hypothesis
-        //
-        assert (Map.upd (seq_to_map (Seq.upd (Seq.tail s) (i-1) (Some (x, y))) default_v) x' y' `submap_of`
-                Map.upd (Map.upd (seq_to_map (Seq.tail s) default_v) x y) x' y');
-        //
-        //i.e.
-        //
-        assert (m1 `submap_of` Map.upd (Map.upd (seq_to_map (Seq.tail s) default_v) x y) x' y');
-
-        //
-        //We want the right side to be Map.upd (Map.upd (seq_to_map (Seq.tail s) default_v) x' y') x y
-        //
-        //We get there by proving that x' =!= x, and then the two updates can be commuted
-        //
-        //To get that x' =!= x, we appeal to the fact that
-        //  in the updated sequence the keys are distinct and i =!= 0
-        //
-
-        assert (Seq.index (Seq.upd s i (Some (x, y))) 0 == Some (x', y'));
-        assert (Seq.index (Seq.upd s i (Some (x, y))) i == Some (x, y));
-        assert (x =!= x');
-        assert (Map.equal (Map.upd (Map.upd (seq_to_map (Seq.tail s) default_v) x y) x' y')
-                          (Map.upd (Map.upd (seq_to_map (Seq.tail s) default_v) x' y') x y))        
+        finalize_values n a (U32.add i 1ul) s_ind
+      | Some (i', x) ->
+        value_vprops_split3 vp s_ind m (Map.empty k v) (U32.v i);
+        rewrite_equiv (value_vprops vp s_ind m (Map.empty k v))
+                      (value_vprops vp (Seq.slice s_ind 0 (U32.v i)) m (Map.empty k v)
+                         `star`
+                       value_vprops vp (Seq.create 1 (Seq.index s_ind (U32.v i))) m   (Map.empty k v)
+                         `star`
+                       value_vprops vp (Seq.slice s_ind (U32.v i+1) (Seq.length s_ind)) m (Map.empty k v));
+        SeqPerm.foldm_snoc_singleton vprop_monoid (vp i' x (Some?.v (Map.sel i' m)));
+        rewrite_equiv (value_vprops vp (Seq.create 1 (Seq.index s_ind (U32.v i))) m   (Map.empty k v))
+                      (vp i' x (Some?.v (Map.sel i' m)));
+        intro_exists (Some?.v (Map.sel i' m)) (vp i' x);
+        finalizer i' x;
+        SeqPerm.foldm_snoc_singleton vprop_monoid emp;
+        rewrite_equiv emp (value_vprops vp (Seq.create 1 (Seq.index (Seq.upd s_ind (U32.v i) None) (U32.v i))) m (Map.empty k v));
+        rewrite (value_vprops vp (Seq.slice s_ind 0 (U32.v i)) m (Map.empty k v))
+                (value_vprops vp (Seq.slice (Seq.upd s_ind (U32.v i) None) 0 (U32.v i)) m (Map.empty k v));
+        rewrite (value_vprops vp (Seq.slice s_ind (U32.v i+1) (Seq.length s_ind)) m (Map.empty k v))
+                (value_vprops vp (Seq.slice (Seq.upd s_ind (U32.v i) None) (U32.v i+1) (Seq.length s_ind)) m (Map.empty k v));
+        value_vprops_split3 vp (Seq.upd s_ind (U32.v i) None) m (Map.empty k v) (U32.v i);
+        rewrite_equiv (value_vprops vp (Seq.slice (Seq.upd s_ind (U32.v i) None) 0 (U32.v i)) m (Map.empty k v)
+                         `star`
+                       value_vprops vp (Seq.create 1 (Seq.index (Seq.upd s_ind (U32.v i) None) (U32.v i))) m   (Map.empty k v)
+                         `star`
+                       value_vprops vp (Seq.slice (Seq.upd s_ind (U32.v i) None) (U32.v i+1) (Seq.length s_ind)) m (Map.empty k v))
+                      (value_vprops vp (Seq.upd s_ind (U32.v i) None) m (Map.empty k v));
+        finalize_values n a (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
     end
 
-
-/// The main stateful API
-
-let create #k #v h x n =
-  let store = A.malloc None n in
-  let g_ref = ghost_alloc_pt (empty_repr (G.reveal x)) in
-  let arr = {
-    store_len = n;
-    store = store;
-    g_repr = g_ref;
-    default_v = x;
-    store_len_pf = () } in
-  let s = A.intro_varray_pts_to arr.store in
-  seq_to_map_create k (U32.v n) (G.reveal x);
-  intro_pure (seq_props h s /\ submap_of (seq_to_map s arr.default_v) (empty_repr (G.reveal x)));
-  assert_spinoff (ghost_pts_to g_ref full_perm (empty_repr (G.reveal x)) ==
-                  ghost_pts_to arr.g_repr full_perm (empty_repr (G.reveal x)));
-  change_equal_slprop (ghost_pts_to g_ref full_perm (empty_repr (G.reveal x)))
-                      (ghost_pts_to arr.g_repr full_perm (empty_repr (G.reveal x)));
-  intro_exists (G.reveal s) (store_contents_pred arr (empty_repr (G.reveal x)));
-  return arr
-
-let get #k #v #h #m a i =
-  let s = witness_exists () in
-  A.elim_varray_pts_to a.store s;
-  elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
-  let vopt = A.index a.store (h i `U32.rem` a.store_len) in
-  let r =
-    match vopt with
-    | None -> return None
-    | Some (i', v) ->
-      if i = i'
-      then begin
-        seq_to_map_ith s a.default_v (U32.v (h i `U32.rem` a.store_len));
-        return (Some v)
-      end
-      else return None in
-  let s = A.intro_varray_pts_to a.store in
-  intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
-  intro_exists (G.reveal s) (store_contents_pred a m);
-  return r
-
-let put #k #v #h #m a i x =
-  let s = witness_exists () in
-  A.elim_varray_pts_to a.store s;
-  elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m);
-  A.upd a.store (h i `U32.rem` a.store_len) (Some (i, x));
-  ghost_write_pt a.g_repr (Map.upd m i x);
-  assert (seq_props #k #v h (Seq.upd s (U32.v (h i `U32.rem` a.store_len)) (Some (i, x))));
-  seq_to_map_upd #k #v s a.default_v (U32.v (h i `U32.rem` a.store_len)) i x;
-  let s = A.intro_varray_pts_to a.store in
-  intro_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` Map.upd m i x);
-  intro_exists (G.reveal s) (store_contents_pred a (Map.upd m i x))
-
-let free #k #v #h #m a =
-  let s = witness_exists () in
-  A.elim_varray_pts_to a.store s;
-  ghost_free_pt a.g_repr;
+let free #k #v #contents #vp #h #finalizer #m a =
+  let s = elim_exists () in
+  elim_pure (seq_props h s /\
+             store_and_repr_related s m /\
+             store_and_borrows_related s (Map.empty k v));
+  A.pts_to_length a.store s;
+  finalize_values a.store_len a 0ul s;
+  intro_exists (G.reveal s) (A.pts_to a.store);
   A.free a.store;
-  elim_pure (seq_props h s /\ seq_to_map s a.default_v `submap_of` m)
+  R.free a.g_repr;
+  R.free a.g_borrows
