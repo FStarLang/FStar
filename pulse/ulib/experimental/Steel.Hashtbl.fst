@@ -30,19 +30,32 @@ module G = FStar.Ghost
 module Seq = FStar.Seq
 module Map = FStar.PartialMap
 module U32 = FStar.UInt32
-module R = Steel.ST.GhostReference
+module R = Steel.ST.Reference
+module GR = Steel.ST.GhostReference
 module A = Steel.ST.Array
 
 #set-options "--ide_id_info_off --print_implicits"
 
-
+assume val bv_t (n:U32.t) : Type0
+assume val bv_is_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n) : bool
+assume val bv_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
+  : Pure (bv_t n)
+         (requires True)
+         (ensures fun r -> bv_is_set i r /\
+                        (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
+assume val bv_unset (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
+  : Pure (bv_t n)
+         (requires True)
+         (ensures fun r -> (~ (bv_is_set i r)) /\
+                        (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
 
 noeq
 type tbl #k #v #contents (#vp:vp_t k v contents) (h:hash_fn k) (finalizer:finalizer_t vp) = {
   store_len    : n:u32{U32.v n > 0};
   store        : A.array (option (k & v));
-  g_repr       : R.ref (Map.t k contents);
-  g_borrows    : R.ref (Map.t k v);
+  bv_borrows   : R.ref (bv_t store_len);
+  g_repr       : GR.ref (Map.t k contents);
+  g_borrows    : GR.ref (Map.t k v);
   store_len_pf : squash (A.length store == U32.v store_len);
 }
 
@@ -73,16 +86,32 @@ let store_and_repr_related
       | None -> True
       | Some (k, _) -> Map.contains k m
 
-let store_and_borrows_related
+// let store_and_borrows_related
+//   (#k:eqtype)
+//   (#v:Type0)
+//   (s:Seq.seq (option (k & v)))
+//   (borrows:Map.t k v)
+//   : prop
+//   = forall (x:k). Map.contains x borrows ==>
+//              (exists (i:nat{i < Seq.length s}) (y:v).
+//                 Seq.index s i == Some (x, y) /\
+//                 Map.sel x borrows == Some y)
+
+let store_and_bv_and_borrows_related
   (#k:eqtype)
   (#v:Type0)
+  (#n:U32.t)
+  (bv:bv_t n)
   (s:Seq.seq (option (k & v)))
   (borrows:Map.t k v)
   : prop
-  = forall (x:k). Map.contains x borrows ==>
-             (exists (i:nat{i < Seq.length s}) (y:v).
-                Seq.index s i == Some (x, y) /\
-                Map.sel x borrows == Some y)
+  = forall (i:nat{i < Seq.length s /\ i < U32.v n}).
+      match Seq.index s i with
+      | None -> ~ (bv_is_set (U32.uint_to_t i) bv)
+      | Some (x, y) ->
+        if bv_is_set (U32.uint_to_t i) bv
+        then Map.sel x borrows == Some y
+        else ~ (Map.contains x borrows)
 
 module CE = FStar.Algebra.CommMonoid.Equiv
 module SeqPerm = FStar.Seq.Permutation
@@ -145,9 +174,9 @@ let store_contents_pred
   = fun s ->
     A.pts_to arr.store s
       `star`
-    R.pts_to arr.g_repr full_perm m
+    GR.pts_to arr.g_repr full_perm m
       `star`
-    R.pts_to arr.g_borrows full_perm borrows
+    GR.pts_to arr.g_borrows full_perm borrows
       `star`
     pure (seq_props h s /\
           store_and_repr_related s m /\
@@ -171,8 +200,8 @@ assume val rewrite_equiv (#opened:_) (p q:vprop)
 
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
-  let g_repr = R.alloc (G.hide (Map.empty k contents)) in
-  let g_borrows = R.alloc (G.hide (Map.empty k v)) in
+  let g_repr = GR.alloc (G.hide (Map.empty k contents)) in
+  let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
   let arr : tbl #k #v #contents #vp h finalizer = {
     store_len = n;
     store = store;
@@ -181,14 +210,14 @@ let create #k #v #contents #vp h finalizer n =
     store_len_pf = () } in
   rewrite (A.pts_to store (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           R.pts_to g_repr full_perm (Map.empty k contents)
+           GR.pts_to g_repr full_perm (Map.empty k contents)
              `star`
-           R.pts_to g_borrows full_perm (Map.empty k v))
+           GR.pts_to g_borrows full_perm (Map.empty k v))
           (A.pts_to arr.store (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           R.pts_to arr.g_repr full_perm (Map.empty k contents)
+           GR.pts_to arr.g_repr full_perm (Map.empty k contents)
              `star`
-           R.pts_to arr.g_borrows full_perm (Map.empty k v));
+           GR.pts_to arr.g_borrows full_perm (Map.empty k v));
   foldm_snoc_unit_seq
     vprop_monoid
     (value_vprops_seq vp (Seq.create #(option (k & v)) (U32.v n) None)
@@ -369,7 +398,7 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
        SeqPerm.foldm_snoc_singleton vprop_monoid (vp i x c);
        assert (equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c));
        rewrite_equiv (SeqPerm.foldm_snoc vprop_monoid vs0_idx) (vp i x c);
-       R.write a.g_borrows (Map.upd i x borrows);
+       GR.write a.g_borrows (Map.upd i x borrows);
        intro_pure (seq_props h s /\
                    store_and_repr_related s m /\
                    store_and_borrows_related s (Map.upd i x borrows));
@@ -459,7 +488,7 @@ let ghost_put #_ #k #v #contents #vp #h #finalizer #m #borrows a i x c =
                    `star`
                  value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m (Map.remove i borrows))
                 (value_vprops vp s m (Map.remove i borrows));
-  R.write a.g_borrows (Map.remove i borrows);
+  GR.write a.g_borrows (Map.remove i borrows);
   intro_pure (seq_props h s /\
               store_and_repr_related s m /\
               store_and_borrows_related s (Map.remove i borrows));
@@ -540,5 +569,5 @@ let free #k #v #contents #vp #h #finalizer #m a =
   finalize_values a.store_len a 0ul s;
   intro_exists (G.reveal s) (A.pts_to a.store);
   A.free a.store;
-  R.free a.g_repr;
-  R.free a.g_borrows
+  GR.free a.g_repr;
+  GR.free a.g_borrows
