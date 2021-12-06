@@ -30,7 +30,7 @@ let rec strSort x = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
-  | String_sort -> "FString"
+  | String_sort -> if Options.smtencoding_encode_string() then "String" else "FString"
   | Fuel_sort -> "Fuel"
   | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
@@ -211,6 +211,8 @@ let op_to_string = function
   | BvToNat -> "bv2int"
   | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
+  | StrLen -> "str.len"
+  | StrCat -> "str.++"
   | Var s -> s
 
 let weightToSmt = function
@@ -262,6 +264,7 @@ let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (string_of_int i) r
+let mkString s r    = mk (String s) r
 let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
 let mkFreeV x r     = mk (FreeV x) r
@@ -339,6 +342,8 @@ let mkITE (t1, t2, t3) r =
     | _, App(TrueOp, _) -> mkImp(t1, t2) r
     | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
   end
+let mkStrLen t r = mkApp'(StrLen, [t]) r
+let mkStrCat = mk_bin_op StrCat
 let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
@@ -391,7 +396,9 @@ let check_pattern_ok (t:term) : option term =
                 | BvUext _
                 | NatToBv _
                 | BvToNat
-                | ITE -> false
+                | ITE
+                | StrLen
+                | StrCat -> false
             in
             if not head_ok then Some t
             else aux_l terms
@@ -669,6 +676,9 @@ let termToSmt
         | Integer i -> i
         | Real r -> r
         | String s ->
+          if Options.smtencoding_encode_string ()
+          then BU.format1 "\"%s\"" s
+          else
           let id_opt = BU.smap_try_find string_cache s in
           (match id_opt with
            | Some id -> id
@@ -814,6 +824,7 @@ and mkPrelude z3options =
   let basic = z3options ^
                 "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
+                (declare-fun String_constr_id (String) Int)\n\
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
@@ -1035,7 +1046,9 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
-let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
+let mk_String_const s r =
+  if Options.smtencoding_encode_string () then mkString s r
+  else mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
