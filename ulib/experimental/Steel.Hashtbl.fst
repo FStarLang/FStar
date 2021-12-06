@@ -504,7 +504,7 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
           | None -> Put_success
           | Some (i', x') ->
             if bv_is_set idx bv
-            then Put_collision_borrowed i' x' (Some?.v (Map.sel i' m))
+            then Put_collision_borrowed i' x' (G.hide (Some?.v (Map.sel i' m)))
             else Put_success in
   (match vopt returns STT unit _ (fun _ -> put_post m borrows a i x c r) with
    | None ->
@@ -565,7 +565,19 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
 
      rewrite (tperm a (Map.upd i (G.reveal c) m) borrows)
              (put_post m borrows a i x c r)
-   | _ -> admit_ ());
+   | Some (i', x') ->
+     if bv_is_set idx bv
+     then begin
+       intro_pure (pure_invariant a m borrows bv s);
+       intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
+       intro_exists bv (store_contents_pred a m borrows);
+       intro_pure (Map.sel i' borrows == Some x' /\
+                   Map.sel i' m == Some (G.reveal (G.hide (Some?.v (Map.sel i' m)))));
+       assert (put_post m borrows a i x c r ==
+               tperm a m borrows `star` pure (Map.sel i' borrows == Some x' /\ Map.sel i' m == Some (G.reveal (G.hide (Some?.v (Map.sel i' m))))));
+       rewrite (tperm a m borrows `star` pure (Map.sel i' borrows == Some x' /\ Map.sel i' m == Some (G.reveal (G.hide (Some?.v (Map.sel i' m)))))) (put_post m borrows a i x c r)
+     end
+     else admit_ ());
   return r
 
 let value_vprop_seq_rem_borrows
