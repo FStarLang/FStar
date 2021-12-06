@@ -3803,8 +3803,10 @@ let (is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
           (match fv.FStar_Syntax_Syntax.fv_delta with
            | FStar_Syntax_Syntax.Delta_equational_at_level uu___1 -> true
            | uu___1 -> false) ||
-            (fv_has_attr env1 fv
-               FStar_Parser_Const.smt_theory_symbol_attr_lid)
+            (FStar_Compiler_Util.for_some
+               (FStar_Ident.lid_equals
+                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
+               interpreted_symbols)
       | uu___1 -> false
 let (is_irreducible : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
