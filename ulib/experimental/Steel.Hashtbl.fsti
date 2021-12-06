@@ -73,10 +73,10 @@ val create
         emp
         (fun a -> tperm a (Map.empty k contents) (Map.empty k v))
 
-type result (k:eqtype) (v:Type) =
-  | Present : v -> result k v
+type get_result (k:eqtype) (v:Type) =
+  | Present : v -> get_result k v
   | Absent
-  | Missing : k -> result k v
+  | Missing : k -> get_result k v
 
 unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
   Map.contains x m == true
@@ -91,7 +91,7 @@ let get_post
   (borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
-  : result k v -> vprop
+  : get_result k v -> vprop
   = fun r ->
     match r, Map.sel i m with
     | Present x, Some c ->
@@ -116,11 +116,39 @@ val get
   (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
-  : ST (result k v)
+  : ST (get_result k v)
        (tperm a m borrows)
        (get_post m borrows a i)
        (requires ~ (Map.contains i borrows))
        (ensures fun _ -> True)
+
+noeq
+type put_result (k:eqtype) (v contents:Type0) =
+  | Put_success : put_result k v contents
+  | Put_collision_borrowed : i:k -> x:v -> c:G.erased contents -> put_result k v contents
+
+let put_post
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (m:G.erased (repr k contents))
+  (borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  (x:v)
+  (c:G.erased contents)
+  : put_result k v contents -> vprop
+  = fun r ->
+    match r with
+    | Put_success ->
+      tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows)
+    | Put_collision_borrowed i' x' c' ->
+      tperm a m borrows
+        `star`
+      pure (Map.sel i' borrows == Some x' /\
+            Map.sel i' m == Some (G.reveal c'))
 
 inline_for_extraction
 val put
@@ -135,9 +163,9 @@ val put
   (i:k)
   (x:v)
   (c:G.erased contents)
-  : STT unit
+  : STT (put_result k v contents)
         (tperm a m borrows `star` vp i x c)
-        (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
+        (put_post m borrows a i x c)
 
 val ghost_put (#opened:_)
   (#k:eqtype)
