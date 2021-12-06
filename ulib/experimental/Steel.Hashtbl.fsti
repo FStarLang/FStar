@@ -147,6 +147,8 @@ let put_post
     | Put_collision_borrowed i' x' c' ->
       tperm a m borrows
         `star`
+      vp i x c
+        `star`
       pure (Map.sel i' borrows == Some x' /\
             Map.sel i' m == Some (G.reveal c'))
 
