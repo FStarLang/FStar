@@ -187,7 +187,7 @@ allow us to:
    *introducing* a refinement type.
 
 2. make use of a term that has a refinement type, e.g., given ``x :
-   even`` we would like to be write ``x + 1``, treating ``x`` as an
+   even`` we would like to be able to write ``x + 1``, treating ``x`` as an
    ``int`` to add ``1`` to it. This is sometimes called *eliminating*
    a refinement type.
 
@@ -257,7 +257,7 @@ Functions
 
 To start writing interesting programs, we need a way to define
 functions. In the core of F*, functions behave like functions in
-math. In other words, they are defined on their entire domain (i.e.,
+maths. In other words, they are defined on their entire domain (i.e.,
 they are total functions and always return a result) and their only
 observable behavior is the result they return (i.e., they don't have
 any side effect, like looping forever, or printing a message etc.).
@@ -270,7 +270,7 @@ simply a *lambda*. The syntax is largely inherited from OCaml, and
 this `OCaml tutorial
 <https://ocaml.org/learn/tutorials/basics.html#Defining-a-function>`_
 provides more details for those unfamiliar with the language. We'll
-assume a basic familiarity with OCaml-like syntax.x
+assume a basic familiarity with OCaml-like syntax.
 
 Lambda terms
 ............
@@ -330,7 +330,7 @@ the ``let rec`` syntax, as shown below.
    :end-before: SNIPPET_END: factorial
 
 This syntax defines a function names ``factorial`` with a single
-parameter ``n:nat``, returning a ``nat``. The definiton of factorial
+parameter ``n:nat``, returning a ``nat``. The definition of factorial
 is allowed to use the ``factorial`` recursively—as we'll see in a
 later chapter, ensuring that the recursion is well-founded (i.e., all
 recursive calls terminate) is key to F*'s soundness. However, in this
@@ -501,7 +501,7 @@ In response ``fstar`` should output::
 This means that F* attempted to verify the module named ``Sample``. In
 doing so, it generated a some "verification conditions", or proof
 obligations, necessary to prove that the module is type correct, and
-that is dischared, or proved, all of them successfully.
+that is discharged, or proved, all of them successfully.
 
 **F\* in emacs**
 
@@ -588,7 +588,7 @@ F* is happy.
 Sometimes, it is convenient to provide a type signature independently
 of a definition. Below, the ``val incr4`` provides only the signature
 and the subsequent ``let incr4`` provides the definition—F* checks
-that the definitions is compatible with the signature.
+that the definition is compatible with the signature.
 
 .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
@@ -617,7 +617,7 @@ Provide an implementation of the following signature::
 
   val max (x:int) (y:int) : int
 
-There are many possible implemenations that satisfy this signature,
+There are many possible implementations that satisfy this signature,
 including trivial ones like::
 
   let max x y = 0
@@ -664,7 +664,7 @@ Can you write down some more types for factorial?
 Fibonacci
 .........
 
-Here's a doubly recursive function
+Here's a doubly recursive function::
 
   .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar

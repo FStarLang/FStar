@@ -50,7 +50,7 @@ it out in detail:
 * The return type of ``factorial_is_positive`` is a refinement of
   unit, namely ``u:unit{factorial x > 0}``.  That says that the
   function always returns ``()``, but, additionally, when
-  ``factorial_is_postive x`` returns (which it always does, since it
+  ``factorial_is_positive x`` returns (which it always does, since it
   is a total function) it is safe to conclude that ``factorial x >
   0``.
 
@@ -361,7 +361,7 @@ function.  It's possible to *specify* this property in the type of
 
 .. note::
 
-   A subtle point: the refinemnt on ``reverse`` above uses a
+   A subtle point: the refinement on ``reverse`` above uses a
    :ref:`propositional equality
    <Part1_ch2_propositional_equality>`. That's because equality on
    lists of arbitrary types is not decidable, e.g., consider ``list
@@ -439,7 +439,7 @@ previous non-tail-recursive implementation, i.e.,
 
 .. code-block:: fstar
 
-   val rev_is_ok (#a:_) (l:list a) Lemma (rev [] l == reverse l)
+   val rev_is_ok (#a:_) (l:list a) : Lemma (rev [] l == reverse l)
 
 .. container:: toggle
 
@@ -475,7 +475,7 @@ previous non-tail-recursive implementation, i.e.,
        then 1
        else slow_fib (n - 1) + slow_fib (n - 2)
 
-   val fib_is_ok (n:nat) : Lemma (fibonacci n = slow_fib b)
+   val fib_is_ok (n:nat) : Lemma (fibonacci n = slow_fib n)
 
 .. container:: toggle
 

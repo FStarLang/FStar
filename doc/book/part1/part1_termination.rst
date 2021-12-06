@@ -4,7 +4,7 @@ Proofs of termination
 =====================
 
 It's absolutely crucial to the soundness of F*'s core logic that all
-functions terminate. Otherwise, one could non-terminating write
+functions terminate. Otherwise, one could write non-terminating 
 functions like this::
 
   let rec loop (x:unit) : False = loop x
@@ -138,7 +138,7 @@ and everything checks out.
 Lexicographic orderings
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-F* also provides a convenience to enhane the well-founded ordering
+F* also provides a convenience to enhance the well-founded ordering
 ``<<`` to lexicographic combinations of ``<<``. That is, given two
 lists of terms ``v₁, ..., vₙ`` and ``u₁, ..., uₙ``, F* accepts that
 the following lexicographic ordering::
@@ -227,7 +227,7 @@ That is, the default decreases clause for ``ackermann`` is exactly
 needn't write it.
 
 On the other hand, it you were to flip the order of arguments to
-``ackermann``, then the default choise of the measure would not be
+``ackermann``, then the default choice of the measure would not be
 correct—so, you'll have to write it explicitly, as shown below.
 
 .. literalinclude:: ../code/Part1.Termination.fst
@@ -277,7 +277,7 @@ usual.
    again with a smaller argument. You can convince F* of this by
    writing the decreases clauses shown, i.e., when ``bar`` calls
    ``foo``, ``l`` doesn't change, but the second component of the
-   lexicographic rdering does decrease, i.e., ``0 << 1``.
+   lexicographic ordering does decrease, i.e., ``0 << 1``.
 
 
 The termination check, precisely
