@@ -351,6 +351,18 @@ let is_BitVector_primitive head args =
 
     | _ -> false
 
+
+let is_String_primitive head args =
+    match head.n, args with
+    | _ when not (Options.smtencoding_encode_string ()) -> false
+    | Tm_fvar fv, [_;_] ->
+      S.fv_eq_lid fv Const.prims_strcat_lid
+      || S.fv_eq_lid fv Const.prims_op_Hat_lid
+    | Tm_fvar fv, [_] ->
+      (S.fv_eq_lid fv Const.string_strlen_lid
+      || S.fv_eq_lid fv Const.string_length_lid)
+    | _ -> false
+
 let rec encode_const c env =
   Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
@@ -582,6 +594,44 @@ and encode_arith_term env head args_e =
         BU.must
     in
     op arg_tms, sz_decls @ decls
+
+and encode_String_term env head args_e =
+    let arg_tms, decls = encode_args args_e env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary_string arg_tms =
+        Term.unboxString (List.hd arg_tms)
+    in
+    let binary_string_string arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxString (List.hd (List.tl arg_tms))
+    in
+    let binary_string_int arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxInt    (List.hd (List.tl arg_tms))
+    in
+    let mk_int : ('a -> term) -> (list term -> 'a) -> list term -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
+    in
+    let mk_string : ('a -> term) -> (list term -> 'a) -> list term -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxString
+    in
+    let strlen = mk_int    Util.mkStrLen unary_string in
+    let strcat = mk_string Util.mkStrCat binary_string_string in
+    let ops =
+        [(Const.string_length_lid, strlen);
+         (Const.string_strlen_lid, strlen);
+         (Const.prims_strcat_lid, strcat);
+         (Const.prims_op_Hat_lid, strcat)]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, decls
 
 and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
     let env = {env with encoding_quantifier=true} in
@@ -1018,6 +1068,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
 
+        | _ when is_String_primitive head args_e ->
+            encode_String_term env head args_e
+
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
             when (not env.encoding_quantifier)
@@ -1043,7 +1096,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
            | Some l
              when l |> Env.norm_eff_name env.tcenv
                     |> Env.is_layered_effect env.tcenv -> fallback ()
-           | _ ->             
+           | _ ->
             let e0 = TcUtil.norm_reify env.tcenv []
               (U.mk_reify (args_e |> List.hd |> fst) lopt) in
             if !dbg_SMTEncodingReify
