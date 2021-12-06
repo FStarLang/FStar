@@ -1101,7 +1101,8 @@ let is_interpreted =
         | Tm_fvar fv ->
             (match fv.fv_delta with
              | Delta_equational_at_level _ -> true
-             | _ -> false)
+             | _ -> false) ||
+            (fv_has_attr env fv Const.smt_theory_symbol_attr_lid)
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
