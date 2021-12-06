@@ -195,6 +195,7 @@ val should_verify               : string  -> bool (* Should check this module wi
 val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit    -> bool
+val smtencoding_encode_string   : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool
 val smtencoding_nl_arith_wrapped: unit    -> bool
 val smtencoding_nl_arith_native : unit    -> bool
