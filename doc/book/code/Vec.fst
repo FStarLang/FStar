@@ -1,10 +1,46 @@
 module Vec
 
 //SNIPPET_START: vec
-type vec a : nat -> Type =
+type vec (a:Type) : nat -> Type =
   | Nil : vec a 0
   | Cons : #n:nat -> hd:a -> tl:vec a n -> vec a (n + 1)
 //SNIPPET_END: vec
+
+[@@unifier_hint_injective]
+let vec' (a:Type) (n:nat) = vec a n
+
+//SNIPPET_START: long_get
+let rec get #a #n (i:nat{i < n}) (v:vec a n)
+  : a
+  = match v with
+    | Nil -> false_elim()
+    | Cons hd tl ->
+      if i = 0 then hd
+      else get (i - 1) tl
+//SNIPPET_END: long_get
+
+#push-options "--print_implicits --print_full_names"
+
+
+
+[@@expect_failure] //duplicate_name
+//SNIPPET_START: get
+let rec get #a #n (i:nat{i < n}) (v:vec a n)
+  : a
+  = let Cons hd tl = v in
+    if i = 0 then hd
+    else get (i - 1) tl
+//SNIPPET_END: get
+
+//SNIPPET_START: split_at
+let rec split_at #a #n (i:nat{i <= n}) (v:vec a n)
+  : vec a i & vec a (n - i)
+  = if i = 0
+    then Nil, v
+    else let Cons hd tl = v in
+         let l, r = split_at (i - 1) tl in
+         Cons hd l, r
+//SNIPPET_END: split_at
 
 //SNIPPET_START: append
 let rec append #a #n #m (v1:vec a n) (v2:vec a m)
@@ -22,13 +58,33 @@ let rec reverse #a #n (v:vec a n)
     | Cons hd tl -> append (reverse tl) (Cons hd Nil)
 //SNIPPET_END: reverse
 
-//SNIPPET_START: get
-let rec get #a #n (i:nat{i < n}) (v:vec a n)
-  : a
-  = let Cons hd tl = v in
-    if i = 0 then hd
-    else get (i - 1) tl
-//SNIPPET_END: get
+
+//SNIPPET_START: split_at_tail
+let split_at_tail #a #n (i:nat{i <= n}) (v:vec a n)
+  : vec a i & vec a (n - i)
+  = let rec aux (j:nat{j <= i})
+                (v:vec a (n - (i - j)))
+                (out:vec a (i - j))
+      : vec a i & vec a (n - i)
+      = if j = 0
+        then reverse out, v
+        else let Cons hd tl = v in
+             aux (j - 1) tl (Cons hd out)
+    in
+    aux i v Nil
+//SNIPPET_END: split_at_tail
+
+//SNIPPET_START: foldr
+let rec foldr #a #n #acc
+              (f:a -> acc -> acc)
+              (v:vec a n)
+              (init:acc)
+  : acc
+  = match v with
+    | Nil -> init
+    | Cons hd tl ->
+      f hd (foldr f tl init)
+//SNIPPET_END: foldr
 
 open FStar.Mul
 
@@ -67,6 +123,7 @@ let lem #a #b (f:a -> b) : (a ==> b) =
   let x : squash (a ==> b) = () in
   FStar.Squash.join_squash x
 
+open FStar.Tactics
 let implies_intro () : Tac binder =
   apply (`lem);
   intro()

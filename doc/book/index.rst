@@ -65,6 +65,16 @@ no background in formal proofs. Even if you are familiar with program
 proofs and dependent types, it will be useful to quickly go through
 this part, since some elements are quite specific to F*.
 
+Part 2: Programming and Proving with Inductive Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We turn next to inductive type definitions, the main mechanism by
+which a user can define new data types. F*'s indexed inductive types
+allow one to capture useful properties of data structures, and
+dependently types functions over these indexed types can to respect
+several kinds of invariants.
+
+
 Part 2: Dependently Typed Functional Programming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -220,3 +230,4 @@ Part 10: Steel: A Concurrent Separation Logic Embedded in F*
 
    intro
    part1/part1
+   part2/part2
