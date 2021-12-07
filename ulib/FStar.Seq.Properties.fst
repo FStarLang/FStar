@@ -644,4 +644,7 @@ let rec seq_map_index #a #b f s i
     else if i = 0
     then ()
     else seq_map_index f (tail s) (i-1)
-  
+
+let seq_map_append #a #b f s1 s2 =
+  assert (Seq.equal (seq_map f (Seq.append s1 s2))
+                    (Seq.append (seq_map f s1) (seq_map f s2)))

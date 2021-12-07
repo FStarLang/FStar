@@ -208,7 +208,7 @@ let rewrite_equiv (#opened:_) (p q:vprop)
 
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
-  let bv_borrows = BV.create n in
+  let bv_borrows = BV.alloc n in
   let g_repr = GR.alloc (G.hide (Map.empty k contents)) in
   let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
   let arr : tbl #k #v #contents #vp h finalizer = {
