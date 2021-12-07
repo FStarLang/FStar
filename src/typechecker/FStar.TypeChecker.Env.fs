@@ -1101,8 +1101,8 @@ let is_interpreted =
         | Tm_fvar fv ->
             (match fv.fv_delta with
              | Delta_equational_at_level _ -> true
-             | _ -> false)
-            //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+             | _ -> false) ||
+            BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
 let is_irreducible env l =
