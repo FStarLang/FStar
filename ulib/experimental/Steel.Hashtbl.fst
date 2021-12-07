@@ -105,19 +105,19 @@ let store_and_bv_and_borrows_related
         then Map.sel x borrows == Some y
         else ~ (Map.contains x borrows)
 
-let store_and_borrows_related
-  (#k:eqtype)
-  (#v:Type0)
-  (#n:U32.t)
-  (bv:bv_t n)
-  (s:Seq.seq (option (k & v)))
-  (borrows:Map.t k v)
-  : Lemma (requires store_and_bv_and_borrows_related bv s borrows)
-          (ensures forall (x:k). Map.contains x borrows ==>
-                            (exists (i:nat{i < Seq.length s}) (y:v).
-                            Seq.index s i == Some (x, y) /\
-                            Map.sel x borrows == Some y))
-  = admit ()
+// let store_and_borrows_related
+//   (#k:eqtype)
+//   (#v:Type0)
+//   (#n:U32.t)
+//   (bv:bv_t n)
+//   (s:Seq.seq (option (k & v)))
+//   (borrows:Map.t k v)
+//   : Lemma (requires store_and_bv_and_borrows_related bv s borrows)
+//           (ensures forall (x:k). Map.contains x borrows ==>
+//                             (exists (i:nat{i < Seq.length s}) (y:v).
+//                             Seq.index s i == Some (x, y) /\
+//                             Map.sel x borrows == Some y))
+//   = admit ()
 
 // let test_store_and_borrows_related
 //   (#k:eqtype)
@@ -243,8 +243,11 @@ assume val foldm_snoc_unit_seq (#a:Type) (#eq:_) (m:CE.cm a eq) (s:Seq.seq a)
   : Lemma (requires forall (i:nat{i < Seq.length s}). Seq.index s i == m.unit)
           (ensures eq.eq m.unit (SeqPerm.foldm_snoc m s))
 
-assume val rewrite_equiv (#opened:_) (p q:vprop)
-  : STGhost unit opened p (fun _ -> q) (requires equiv p q \/ equiv q p) (ensures fun _ -> True)
+let rewrite_equiv (#opened:_) (p q:vprop)
+  : STGhost unit opened p (fun _ -> q)
+      (requires equiv p q \/ equiv q p)
+      (ensures fun _ -> True)
+  = admit_ ()
 
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
@@ -297,36 +300,6 @@ let create #k #v #contents #vp h finalizer n =
                (store_contents_pred arr (Map.empty k contents) (Map.empty k v));
   return arr
 
-let star_equiv (p q r:vprop)
-  : Lemma (requires q `equiv` r)
-          (ensures (p `star` q) `equiv` (p `star` r))
-  = equiv_refl p;
-    star_congruence p q p r
-
-let value_vprop_seq_upd_borrows
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (h:hash_fn k)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  : Lemma (requires Some? (Seq.index s idx) /\
-                    seq_props h s)
-          (ensures (let Some (i, x) = Seq.index s idx in
-                    let upd_borrows = Map.upd i x borrows in
-                    value_vprops vp (Seq.slice s 0 idx) m borrows ==
-                    value_vprops vp (Seq.slice s 0 idx) m upd_borrows /\
-                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m borrows ==
-                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m upd_borrows))
-  = let Some (i, x) = Seq.index s idx in
-    let upd_borrows = Map.upd i x borrows in
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s 0 idx) m borrows)
-                      (value_vprops_seq vp (Seq.slice s 0 idx) m upd_borrows));
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m borrows)
-                      (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m upd_borrows))
-
 let value_vprop_seq_upd_seq_and_repr
   (#k:eqtype)
   (#v #contents:Type0)
@@ -351,57 +324,6 @@ let value_vprop_seq_upd_seq_and_repr
                       (value_vprops_seq vp (Seq.slice s1 0 idx) m1 borrows));
     assert (Seq.equal (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m borrows)
                       (value_vprops_seq vp (Seq.slice s1 (idx+1) (Seq.length s1)) m1 borrows))
-
-let value_vprop_seq_upd_seq_and_repr_and_borrows
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (h:hash_fn k)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  (x:k) (y:v) (c:G.erased contents)
-  : Lemma (requires Some? (Seq.index s idx) /\
-                    seq_props h s /\
-                    seq_props h (Seq.upd s idx (Some (x, y))))
-          (ensures (let Some (x', y') = Seq.index s idx in
-                    let s1 = Seq.upd s idx (Some (x, y)) in
-                    let m1 = Map.upd x (G.reveal c) m in
-                    let borrows1 = Map.remove x' borrows in
-                    value_vprops vp (Seq.slice s 0 idx) m borrows ==
-                    value_vprops vp (Seq.slice s1 0 idx) m1 borrows1 /\
-                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m borrows ==
-                    value_vprops vp (Seq.slice s1 (idx+1) (Seq.length s1)) m1 borrows1))
-  = let Some (x', y') = Seq.index s idx in
-    let s1 = Seq.upd s idx (Some (x, y)) in
-    let m1 = Map.upd x (G.reveal c) m in
-    let borrows1 = Map.remove x' borrows in
-    assert (Seq.index s1 idx == Some (x, y));
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s 0 idx) m borrows)
-                      (value_vprops_seq vp (Seq.slice s1 0 idx) m1 borrows1));
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m borrows)
-                      (value_vprops_seq vp (Seq.slice s1 (idx+1) (Seq.length s1)) m1 borrows1))
-
-let value_vprops_split3
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:Map.t k contents)
-  (borrows:Map.t k v)
-  (i:nat{i < Seq.length s})
-  : Lemma (let s1 = Seq.slice s 0 i in
-           let s2 = Seq.create 1 (Seq.index s i) in
-           let s3 = Seq.slice s (i+1) (Seq.length s) in
-           value_vprops vp s m borrows
-             `equiv`
-           (value_vprops vp s1 m borrows
-              `star`
-            value_vprops vp s2 m borrows
-              `star`
-            value_vprops vp s3 m borrows))
-  = admit ()
 
 // let seq_split3 (#a:Type) (s:Seq.seq a) (i:nat{i < Seq.length s})
 //   : (s':(Seq.seq a & Seq.seq a & Seq.seq a){
@@ -435,7 +357,210 @@ let value_vprops_split3
 //                 (p `star` (emp `star` r))
 //                 (p `star` r)
 
-#push-options "--ifuel 2 --fuel 0 --z3rlimit_factor 2"
+let seq_until (#a:Type) (s:Seq.seq a) (idx:nat{idx < Seq.length s})
+  : Seq.seq a
+  = Seq.slice s 0 idx
+
+let seq_at (#a:Type) (s:Seq.seq a) (idx:nat{idx < Seq.length s})
+  : Seq.seq a
+  = Seq.create 1 (Seq.index s idx)
+
+let seq_from (#a:Type) (s:Seq.seq a) (idx:nat{idx < Seq.length s})
+  : Seq.seq a
+  = Seq.slice s (idx + 1) (Seq.length s)
+
+let value_vprops_split3
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:Map.t k contents)
+  (borrows:Map.t k v)
+  (i:nat{i < Seq.length s})
+  : Lemma (value_vprops vp s m borrows
+             `equiv`
+           (value_vprops vp (seq_until s i) m borrows
+              `star`
+            value_vprops vp (seq_at s i) m borrows
+              `star`
+            value_vprops vp (seq_from s i) m borrows))
+  = admit ()
+
+let value_vprop_seq_upd_borrows
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (idx:nat{idx < Seq.length s})
+  : Lemma (requires Some? (Seq.index s idx) /\
+                    seq_props h s)
+          (ensures (let Some (i, x) = Seq.index s idx in
+                    let upd_borrows = Map.upd i x borrows in
+                    value_vprops vp (seq_until s idx) m borrows ==
+                    value_vprops vp (seq_until s idx) m upd_borrows /\
+                    value_vprops vp (seq_from s idx) m borrows ==
+                    value_vprops vp (seq_from s idx) m upd_borrows))
+  = let Some (i, x) = Seq.index s idx in
+    let upd_borrows = Map.upd i x borrows in
+    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
+                      (value_vprops_seq vp (seq_until s idx) m upd_borrows));
+    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
+                      (value_vprops_seq vp (seq_from s idx) m upd_borrows))
+
+let value_vprop_seq_upd_seq_and_repr_and_borrows
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (idx:nat{idx < Seq.length s})
+  (x:k) (y:v) (c:G.erased contents)
+  : Lemma (requires Some? (Seq.index s idx) /\
+                    seq_props h s /\
+                    seq_props h (Seq.upd s idx (Some (x, y))))
+          (ensures (let Some (x', y') = Seq.index s idx in
+                    let s1 = Seq.upd s idx (Some (x, y)) in
+                    let m1 = Map.upd x (G.reveal c) m in
+                    let borrows1 = Map.remove x' borrows in
+                    value_vprops vp (seq_until s idx) m borrows ==
+                    value_vprops vp (seq_until s1 idx) m1 borrows1 /\
+                    value_vprops vp (seq_from s idx) m borrows ==
+                    value_vprops vp (seq_from s1 idx) m1 borrows1))
+  = let Some (x', y') = Seq.index s idx in
+    let s1 = Seq.upd s idx (Some (x, y)) in
+    let m1 = Map.upd x (G.reveal c) m in
+    let borrows1 = Map.remove x' borrows in
+    assert (Seq.index s1 idx == Some (x, y));
+    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
+                      (value_vprops_seq vp (seq_until s1 idx) m1 borrows1));
+    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
+                      (value_vprops_seq vp (seq_from s1 idx) m1 borrows1))
+
+let unpack_value_vprops (#opened:_)
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:Map.t k contents)
+  (borrows:Map.t k v)
+  (idx:U32.t{U32.v idx < Seq.length s})
+  (p:vprop)
+  : STGhost unit opened
+      (value_vprops vp s m borrows)
+      (fun _ ->
+       value_vprops vp (seq_until s (U32.v idx)) m borrows
+         `star`
+       p
+         `star`
+       value_vprops vp (seq_from s (U32.v idx)) m borrows)
+      (requires Seq.index (value_vprops_seq vp s m borrows) (U32.v idx) == p)
+      (ensures fun _ -> True)
+  = value_vprops_split3 vp s m borrows (U32.v idx);
+    rewrite_equiv _
+      (value_vprops vp (seq_until s (U32.v idx)) m borrows
+         `star`
+       value_vprops vp (seq_at s (U32.v idx)) m borrows
+         `star`
+       value_vprops vp (seq_from s (U32.v idx)) m borrows);
+    SeqPerm.foldm_snoc_singleton vprop_monoid p;
+    assert (Seq.equal (value_vprops_seq vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows)
+                      (Seq.create 1 p));
+    rewrite_equiv (value_vprops vp (seq_at s (U32.v idx)) m borrows) p
+
+let rewrite_value_vprops_prefix_and_suffix (#opened:_)
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s1 s2:Seq.seq (option (k & v)))
+  (m1 m2:Map.t k contents)
+  (borrows1 borrows2:Map.t k v)
+  (idx:U32.t{Seq.length s1 == Seq.length s2 /\ U32.v idx < Seq.length s1})
+  : STGhost unit opened
+      (value_vprops vp (seq_until s1 (U32.v idx)) m1 borrows1
+         `star`
+       value_vprops vp (seq_from s1 (U32.v idx)) m1 borrows1)
+      (fun _ ->
+       value_vprops vp (seq_until s2 (U32.v idx)) m2 borrows2
+         `star`
+       value_vprops vp (seq_from s2 (U32.v idx)) m2 borrows2)
+      (requires value_vprops vp (seq_until s1 (U32.v idx)) m1 borrows1 ==
+                value_vprops vp (seq_until s2 (U32.v idx)) m2 borrows2 /\
+                value_vprops vp (seq_from s1 (U32.v idx)) m1 borrows1 ==
+                value_vprops vp (seq_from s2 (U32.v idx)) m2 borrows2)
+      (ensures fun _ -> True)
+  = rewrite
+      (value_vprops vp (seq_until s1 (U32.v idx)) m1 borrows1
+         `star`
+       value_vprops vp (seq_from s1 (U32.v idx)) m1 borrows1)
+      (value_vprops vp (seq_until s2 (U32.v idx)) m2 borrows2
+         `star`
+       value_vprops vp (seq_from s2 (U32.v idx)) m2 borrows2)
+
+let pack_value_vprops (#opened:_)
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:Map.t k contents)
+  (borrows:Map.t k v)
+  (idx:U32.t{U32.v idx < Seq.length s})
+  (p:vprop)
+  : STGhost unit opened
+      (value_vprops vp (seq_until s (U32.v idx)) m borrows
+         `star`
+       p
+         `star`
+       value_vprops vp (seq_from s (U32.v idx)) m borrows)
+      (fun _ -> value_vprops vp s m borrows)
+      (requires Seq.index (value_vprops_seq vp s m borrows) (U32.v idx) == p)
+      (ensures fun _ -> True)
+  = SeqPerm.foldm_snoc_singleton vprop_monoid p;
+    assert (Seq.equal (value_vprops_seq vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows)
+                      (Seq.create 1 p));
+    rewrite_equiv p (value_vprops vp (seq_at s (U32.v idx)) m borrows);
+    value_vprops_split3 vp s m borrows (U32.v idx);
+    rewrite_equiv
+      (value_vprops vp (seq_until s (U32.v idx)) m borrows
+         `star`
+       value_vprops vp (seq_at s (U32.v idx)) m borrows
+         `star`
+       value_vprops vp (seq_from s (U32.v idx)) m borrows)
+      (value_vprops vp s m borrows)
+
+let pack_tperm (#opened:_)
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (a:tbl h finalizer)
+  (bv:bv_t a.store_len)
+  : STGhost unit opened
+      (A.pts_to a.store s
+         `star`
+       GR.pts_to a.g_repr full_perm m
+         `star`
+       GR.pts_to a.g_borrows full_perm borrows
+         `star`
+       value_vprops vp s m borrows
+         `star`
+       R.pts_to a.bv_borrows full_perm bv)
+      (fun _ -> tperm a m borrows)
+      (requires pure_invariant a m borrows bv s)
+      (ensures fun _ -> True)
+  = intro_pure (pure_invariant a m borrows bv s);
+    intro_exists s (store_contents_pred_seq a m borrows bv);
+    intro_exists bv (store_contents_pred a m borrows)
+
+#push-options "--ifuel 2 --fuel 0"
 let get #k #v #contents #vp #h #finalizer #m #borrows a i =
   let bv = elim_exists () in
   let s = elim_exists () in
@@ -467,52 +592,21 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
                (get_post m borrows a i r)
      end
      else begin
-       value_vprops_split3 vp s m borrows (U32.v idx);
-       rewrite_equiv (value_vprops vp s m borrows)
-                     (value_vprops vp (Seq.slice s 0 (U32.v idx)) m borrows
-                        `star`
-                      value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows
-                        `star`
-                      value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m borrows);
-       
-       SeqPerm.foldm_snoc_singleton vprop_monoid (vp i x (Some?.v (Map.sel i m)));
-       assert (Seq.index (value_vprops_seq vp s m borrows) (U32.v idx) == vp i x (Some?.v (Map.sel i m)));
-       assert (Seq.equal (value_vprops_seq vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows)
-                         (Seq.create 1 (vp i x (Some?.v (Map.sel i m)))));
-       rewrite_equiv (value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m borrows) (vp i x (Some?.v (Map.sel i m)));
+       unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
 
        value_vprop_seq_upd_borrows h vp s m borrows (U32.v idx);
- 
-       rewrite (value_vprops vp (Seq.slice s 0 (U32.v idx)) m borrows
-                  `star`
-                value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m borrows)
-               (value_vprops vp (Seq.slice s 0 (U32.v idx)) m (Map.upd i x borrows)
-                  `star`
-                value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m (Map.upd i x borrows));
+       rewrite_value_vprops_prefix_and_suffix vp s s m m
+         borrows (Map.upd i x borrows) idx;
 
-       SeqPerm.foldm_snoc_singleton vprop_monoid emp;
-       assert (Seq.index (value_vprops_seq vp s m (Map.upd i x borrows)) (U32.v idx) == emp);
-       assert (Seq.equal (value_vprops_seq vp (Seq.create 1 (Seq.index s (U32.v idx))) m (Map.upd i x borrows))
-                         (Seq.create 1 emp));
-       rewrite_equiv emp (value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m (Map.upd i x borrows));
-
-       value_vprops_split3 vp s m (Map.upd i x borrows) (U32.v idx);
-       rewrite_equiv
-         (value_vprops vp (Seq.slice s 0 (U32.v idx)) m (Map.upd i x borrows)
-            `star`
-          value_vprops vp (Seq.create 1 (Seq.index s (U32.v idx))) m (Map.upd i x borrows)
-            `star`
-          value_vprops vp (Seq.slice s (U32.v idx+1) (Seq.length s)) m (Map.upd i x borrows))
-         (value_vprops vp s m (Map.upd i x borrows));
+       pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
 
        let bv : bv_t a.store_len = R.read a.bv_borrows in
        R.write a.bv_borrows (bv_set idx bv);
 
        GR.write a.g_borrows (Map.upd i x borrows);
 
-       intro_pure (pure_invariant a m (Map.upd i x borrows) (bv_set idx bv) s);
-       intro_exists (G.reveal s) (store_contents_pred_seq a m (Map.upd i x borrows) (bv_set idx bv));
-       intro_exists (bv_set idx bv) (store_contents_pred a m (Map.upd i x borrows));
+       pack_tperm s m (Map.upd i x borrows) a (bv_set idx bv);
+
        rewrite (tperm a m (Map.upd i x borrows)
                  `star`
                 vp i x (Some?.v (Map.sel i m)))
@@ -527,14 +621,39 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
   A.pts_to_length a.store s;
   let idx = h i `U32.rem` a.store_len in
   let vopt = A.read a.store idx in
-  let bv = R.read a.bv_borrows in
-  let r = match vopt with
-          | None -> Put_success
-          | Some (i', x') ->
-            if bv_is_set idx bv
-            then Put_collision_borrowed i' x' (G.hide (Some?.v (Map.sel i' m)))
-            else Put_success in
-  (match vopt returns STT unit _ (fun _ -> put_post m borrows a i x c r) with
+
+  (match vopt returns STT unit _ (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows)) with
+   | None ->
+     A.write a.store idx (Some (i, x));
+     GR.write a.g_repr (Map.upd i (G.reveal c) m);
+     GR.write a.g_borrows (Map.remove i borrows);
+     admit ();
+     unpack_value_vprops vp s m borrows idx emp;
+
+     value_vprop_seq_upd_seq_and_repr_and_borrows h vp s m borrows (U32.v idx) i x c;
+     rewrite_value_vprops_prefix_and_suffix vp
+       s (Seq.upd s (U32.v idx) (Some (i, x)))
+       m (Map.upd i (G.reveal c) m)
+       borrows (Map.remove i borrows)
+       idx;
+
+     pack_value_vprops vp
+       (Seq.upd s (U32.v idx) (Some (i, x)))
+       (Map.upd i (G.reveal c) m)
+       (Map.remove i borrows)
+       idx
+       (vp i x c);
+
+     pack_tperm
+       (Seq.upd s (U32.v idx) (Some (i, x)))
+       (Map.upd i (G.reveal c) m)
+       (Map.remove i borrows)
+       a
+       bv
+   | Some (i', x') -> admit_ ())
+
+#set-options "--print_implicits"
+
    | None ->
      A.write a.store idx (Some (i, x));
      GR.write a.g_repr (Map.upd i (G.reveal c) m);
