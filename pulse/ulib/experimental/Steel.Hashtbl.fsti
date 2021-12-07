@@ -122,36 +122,6 @@ val get
        (requires ~ (Map.contains i borrows))
        (ensures fun _ -> True)
 
-noeq
-type put_result (k:eqtype) (v contents:Type0) =
-  | Put_success : put_result k v contents
-  | Put_collision_borrowed : i:k -> x:v -> c:G.erased contents -> put_result k v contents
-
-let put_post
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (m:G.erased (repr k contents))
-  (borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
-  (i:k)
-  (x:v)
-  (c:G.erased contents)
-  : put_result k v contents -> vprop
-  = fun r ->
-    match r with
-    | Put_success ->
-      tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows)
-    | Put_collision_borrowed i' x' c' ->
-      tperm a m borrows
-        `star`
-      vp i x c
-        `star`
-      pure (Map.sel i' borrows == Some x' /\
-            Map.sel i' m == Some (G.reveal c'))
-
 inline_for_extraction
 val put
   (#k:eqtype)
@@ -165,9 +135,9 @@ val put
   (i:k)
   (x:v)
   (c:G.erased contents)
-  : STT (put_result k v contents)
+  : STT unit
         (tperm a m borrows `star` vp i x c)
-        (put_post m borrows a i x c)
+        (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
 
 val ghost_put (#opened:_)
   (#k:eqtype)
