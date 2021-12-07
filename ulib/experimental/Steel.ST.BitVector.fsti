@@ -37,7 +37,7 @@ val pts_to_length (#opened:_) (#n:U32.t) (bv:bv_t n) (s:repr)
       (requires True)
       (ensures fun _ -> Seq.length s == U32.v n)
 
-val create (n:U32.t{U32.v n > 0})
+val alloc (n:U32.t{U32.v n > 0})
   : STT (bv_t n) emp (fun r -> pts_to r (Seq.create (U32.v n) false))
 
 val bv_is_set
