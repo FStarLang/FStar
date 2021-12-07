@@ -68,3 +68,9 @@ val bv_unset
   : STT unit
        (pts_to bv s)
        (fun _ -> pts_to bv (Seq.upd s (U32.v i) false))
+
+val free
+  (#n:U32.t)
+  (#s:G.erased repr)
+  (bv:bv_t n)
+  : STT unit (pts_to bv s) (fun _ -> emp)

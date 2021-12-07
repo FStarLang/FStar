@@ -35,22 +35,6 @@ module GR = Steel.ST.GhostReference
 module A = Steel.ST.Array
 module BV = Steel.ST.BitVector
 
-// assume val bv_t (n:U32.t) : Type0
-// assume val bv_is_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n) : bool
-// assume val bv_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
-//   : Pure (bv_t n)
-//          (requires True)
-//          (ensures fun r -> bv_is_set i r /\
-//                         (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
-// assume val bv_unset (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
-//   : Pure (bv_t n)
-//          (requires True)
-//          (ensures fun r -> (~ (bv_is_set i r)) /\
-//                         (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
-// assume val bv_init (n:U32.t) : bv_t n
-// assume val bv_init_all_unset (n:U32.t)
-//   : Lemma (forall (i:U32.t{U32.v i < U32.v n}). ~ (bv_is_set i (bv_init n)))
-
 noeq
 type tbl #k #v #contents (#vp:vp_t k v contents) (h:hash_fn k) (finalizer:finalizer_t vp) = {
   store_len    : n:u32{U32.v n > 0};
@@ -505,8 +489,6 @@ let pack_tperm (#opened:_)
     intro_exists s (store_contents_pred_seq a m borrows bv);
     intro_exists bv (store_contents_pred a m borrows)
 
-assume val admit__ (#opened:_) (#a:Type) (#p:vprop) (#q:post_t a) (_:unit) : STAtomicF a opened p q (True) (fun _ -> False)
-
 let get #k #v #contents #vp #h #finalizer #m #borrows a i =
   let bv = elim_exists () in
   let s = elim_exists () in
@@ -526,50 +508,48 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
      intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
      intro_exists (G.reveal bv) (store_contents_pred a m borrows);
      rewrite (tperm a m borrows) (get_post m borrows a i r)
-   | Some (i', x) -> admit_ ()); return r
-     // if i <> i'
-     // then begin
-     //   intro_pure (map_contains_prop i' m);
-     //   intro_pure (pure_invariant a m borrows bv s);
-     //   intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
-     //   intro_exists (G.reveal bv) (store_contents_pred a m borrows);
-     //   rewrite (tperm a m borrows
-     //              `star`
-     //            pure (map_contains_prop i' m))
-     //           (get_post m borrows a i r)
-     // end
-     // else begin
-     //   unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
+   | Some (i', x) ->
+     if i <> i'
+     then begin
+       intro_pure (map_contains_prop i' m);
+       intro_pure (pure_invariant a m borrows bv s);
+       intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
+       intro_exists (G.reveal bv) (store_contents_pred a m borrows);
+       rewrite (tperm a m borrows
+                  `star`
+                pure (map_contains_prop i' m))
+               (get_post m borrows a i r)
+     end
+     else begin
+       unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
 
-     //   value_vprops_prefix_suffix_get h vp s m borrows (U32.v idx);
-     //   rewrite_value_vprops_prefix_and_suffix vp s s m m
-     //     borrows (Map.upd i x borrows) idx;
+       value_vprops_prefix_suffix_get h vp s m borrows (U32.v idx);
+       rewrite_value_vprops_prefix_and_suffix vp s s m m
+         borrows (Map.upd i x borrows) idx;
 
-     //   pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
+       pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
 
-     //   //let bv : bv_t a.store_len = R.read a.bv_borrows in
-     //   //R.write a.bv_borrows (bv_set idx bv);
-     //   BV.bv_set a.bv_borrows idx;
+       BV.bv_set a.bv_borrows idx;
 
-     //   GR.write a.g_borrows (Map.upd i x borrows);
+       GR.write a.g_borrows (Map.upd i x borrows);
 
-     //   pack_tperm s m (Map.upd i x borrows) a (Seq.upd bv (U32.v idx) true);
+       pack_tperm s m (Map.upd i x borrows) a (Seq.upd bv (U32.v idx) true);
 
-     //   rewrite (tperm a m (Map.upd i x borrows)
-     //             `star`
-     //            vp i x (Some?.v (Map.sel i m)))
-     //           (get_post m borrows a i r)
-     // end);
-     // return r
+       rewrite (tperm a m (Map.upd i x borrows)
+                 `star`
+                vp i x (Some?.v (Map.sel i m)))
+               (get_post m borrows a i r)
+     end);
+     return r
 
 let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
   let bv = elim_exists () in
   let s = elim_exists () in
   elim_pure (pure_invariant a m borrows bv s);
   A.pts_to_length a.store s;
+  BV.pts_to_length a.bv_borrows bv;
   let idx = h i `U32.rem` a.store_len in
   let vopt = A.read a.store idx in
-  let bv = R.read a.bv_borrows in
 
   A.write a.store idx (Some (i, x));
   GR.write a.g_repr (Map.upd i (G.reveal c) m);
@@ -600,10 +580,10 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
        a
        bv
    | Some (i', x') ->
-     let bv = R.read a.bv_borrows in
-     if bv_is_set idx bv
+     let b = BV.bv_is_set a.bv_borrows idx in
+     if b
      then begin
-       R.write a.bv_borrows (bv_unset idx bv);
+       BV.bv_unset a.bv_borrows idx;
        
        unpack_value_vprops vp s m borrows idx emp;
 
@@ -626,7 +606,7 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
          (Map.upd i (G.reveal c) m)
          (Map.remove i borrows)
          a
-         (bv_unset idx bv)
+         (Seq.upd bv (U32.v idx) false)
      end
      else begin
        unpack_value_vprops vp s m borrows idx (vp i' x' (Some?.v (Map.sel i' m)));
@@ -663,15 +643,17 @@ let rec finalize_values
   (#finalizer:finalizer_t vp)
   (#s:G.erased (Seq.seq (option (k & v))))
   (#m:G.erased (repr k contents))
+  (#bv:G.erased BV.repr)
   (a:tbl h finalizer)
-  (bv:bv_t a.store_len)
   (borrows:G.erased (Map.t k v))
   (i:U32.t{U32.v a.store_len = Seq.length s /\ U32.v i <= U32.v a.store_len})
   (s_ind:G.erased (Seq.seq (option (k & v))))
   : ST unit (A.pts_to a.store s
                `star`
+             BV.pts_to a.bv_borrows bv
+               `star`
              value_vprops vp s_ind m borrows)
-            (fun _ -> A.pts_to a.store s)
+            (fun _ -> A.pts_to a.store s `star` BV.pts_to a.bv_borrows bv)
             (requires store_and_repr_related s m /\
                       store_and_bv_and_borrows_related bv s borrows /\
                       Seq.length s == Seq.length s_ind /\
@@ -681,6 +663,7 @@ let rec finalize_values
             (ensures fun _ -> True)
                         
   = A.pts_to_length a.store s;
+    BV.pts_to_length a.bv_borrows bv;
     if i = a.store_len
     then begin
       SeqPerm.foldm_snoc_unit_seq vprop_monoid (value_vprops_seq vp s_ind m borrows);
@@ -689,9 +672,10 @@ let rec finalize_values
     else begin
       let vopt = A.read a.store i in
       match vopt with
-      | None -> finalize_values a bv borrows (U32.add i 1ul) s_ind
+      | None -> finalize_values a borrows (U32.add i 1ul) s_ind
       | Some (i', x) ->
-        if bv_is_set i bv
+        let b = BV.bv_is_set a.bv_borrows i in
+        if b
         then begin
           unpack_value_vprops vp s_ind m borrows i emp;
 
@@ -700,7 +684,7 @@ let rec finalize_values
             m m borrows borrows i;
 
           pack_value_vprops vp (Seq.upd s_ind (U32.v i) None) m borrows i emp;
-          finalize_values a bv borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
+          finalize_values a borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
         end
         else begin
           unpack_value_vprops vp s_ind m borrows i (vp i' x (Some?.v (Map.sel i' m)));
@@ -713,7 +697,7 @@ let rec finalize_values
             m m borrows borrows i;
 
           pack_value_vprops vp (Seq.upd s_ind (U32.v i) None) m borrows i emp;
-          finalize_values a bv borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
+          finalize_values a borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
         end
     end
 
@@ -722,10 +706,9 @@ let free #k #v #contents #vp #h #finalizer m borrows a =
   let s = elim_exists () in
   elim_pure (pure_invariant a m borrows bv s);
   A.pts_to_length a.store s;
-  let bv = R.read a.bv_borrows in
-  finalize_values a bv borrows 0ul s;
+  finalize_values a borrows 0ul s;
   intro_exists (G.reveal s) (A.pts_to a.store);
   A.free a.store;
-  R.free a.bv_borrows;
+  BV.free a.bv_borrows;
   GR.free a.g_repr;
   GR.free a.g_borrows
