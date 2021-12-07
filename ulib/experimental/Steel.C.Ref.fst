@@ -527,6 +527,8 @@ let pts_to_view_or_null_prop_null
     (fun x y -> x == y)
     (fun _ -> ())
 
+#push-options "--z3rlimit 16"
+#restart-solver
 let pts_to_view_or_null_prop_not_null
   (#inames: _)
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
@@ -562,6 +564,7 @@ let pts_to_view_or_null_prop_not_null
     (pts_to_view_or_null r vw)
     (fun x y -> x == y)
     (fun _ -> ())
+#pop-options
 
 let pts_to_view_or_null_prop
   (#inames: _)
