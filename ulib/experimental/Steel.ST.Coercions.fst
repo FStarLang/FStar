@@ -160,7 +160,6 @@ let lift_st_steel
   : SF.repr a framed pre post (fun _ -> req) (fun _ x _ -> ens x)
   = f
 
-
 let lift_sta_sa
       (a:Type)
       (#framed:eqtype_as_type bool)
@@ -173,54 +172,3 @@ let lift_sta_sa
       (f:STAG.repr a framed o obs pre post req ens)
   : SA.repr a framed o obs pre post (fun _ -> req) (fun _ x _ -> ens x)
   = f
-
-
-let lift_stag_sa
-      (a:Type)
-      (#framed:eqtype_as_type bool)
-      (#o:inames)
-      (#obs:eqtype_as_type observability)
-      (#pre:pre_t)
-      (#post:post_t a)
-      (#req:Type0)
-      (#ens:a -> Type0)
-      (f:STAG.repr a framed o obs pre post req ens)
-  : SA.repr a framed o obs pre post (fun _ -> req) (fun _ x _ -> ens x)
-  = f
-
-let lift_stg_steelg (#a:Type)
-                     #o #p
-                     (#q:a -> vprop)
-                     (#pre:Type0)
-                     (#post: a -> Type0)
-                     (f:unit -> STGhost a o p q pre post)
-                     (_:unit)
-  : SA.SteelGhost a o p q (fun _ -> pre) (fun _ x _ -> post x)
-  = f()
-
-(* I would like to define this, but I cannot
-   because of an effect ordering constraint *)
-// sub_effect STA.STAtomicBase ~> SA.SteelAtomicBase = lift_sta_sa
-
-(* So, instead, I assume a reification of STAtomicBase *)
-assume
-val reify_st_atomic_base(#a:Type)
-                        (#framed:eqtype_as_type bool)
-                        (#obs:eqtype_as_type observability)
-                        (#o:inames)
-                        (#p:vprop)
-                        (#q:a -> vprop)
-                        (#pre:Type0)
-                        (#post: a -> Type0)
-                        ($f:unit -> STA.STAtomicBase a framed o obs p q pre post)
-  : STAG.repr a framed o obs p q pre post
-
-let lift_sta_steela (#a:Type)
-                     #o #p
-                     (#q:a -> vprop)
-                     (#pre:Type0)
-                     (#post: a -> Type0)
-                     (f:unit -> STA.STAtomic a o p q pre post)
-                     (_:unit)
-  : SA.SteelAtomic a o p q (fun _ -> pre) (fun _ x _ -> post x)
-  = SA.SteelAtomicBase?.reflect (reify_st_atomic_base f)

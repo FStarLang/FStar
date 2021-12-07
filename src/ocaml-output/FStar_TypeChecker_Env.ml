@@ -4726,102 +4726,72 @@ let (update_effect_lattice :
                     FStar_Errors.raise_error uu___2 uu___3
                   else ()));
           (let joins =
+             let ubs = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
+             let add_ub i j k ik jk =
+               let key =
+                 let uu___1 = FStar_Ident.string_of_lid i in
+                 let uu___2 =
+                   let uu___3 = FStar_Ident.string_of_lid j in
+                   Prims.op_Hat ":" uu___3 in
+                 Prims.op_Hat uu___1 uu___2 in
+               let v =
+                 let uu___1 = FStar_Compiler_Util.smap_try_find ubs key in
+                 match uu___1 with
+                 | FStar_Pervasives_Native.Some ubs1 -> (i, j, k, ik, jk) ::
+                     ubs1
+                 | FStar_Pervasives_Native.None -> [(i, j, k, ik, jk)] in
+               FStar_Compiler_Util.smap_add ubs key v in
              FStar_Compiler_Effect.op_Bar_Greater ms
-               (FStar_Compiler_List.collect
+               (FStar_Compiler_List.iter
                   (fun i ->
                      FStar_Compiler_Effect.op_Bar_Greater ms
-                       (FStar_Compiler_List.collect
+                       (FStar_Compiler_List.iter
                           (fun j ->
-                             let k_opt =
-                               let uu___1 = FStar_Ident.lid_equals i j in
-                               if uu___1
-                               then
-                                 FStar_Pervasives_Native.Some
-                                   (i, (id_edge i), (id_edge i))
-                               else
-                                 FStar_Compiler_Effect.op_Bar_Greater ms
-                                   (FStar_Compiler_List.fold_left
-                                      (fun bopt ->
-                                         fun k ->
-                                           let uu___3 =
-                                             let uu___4 =
-                                               find_edge order (i, k) in
-                                             let uu___5 =
-                                               find_edge order (j, k) in
-                                             (uu___4, uu___5) in
-                                           match uu___3 with
-                                           | (FStar_Pervasives_Native.Some
-                                              ik,
-                                              FStar_Pervasives_Native.Some
-                                              jk) ->
-                                               (match bopt with
-                                                | FStar_Pervasives_Native.None
-                                                    ->
-                                                    FStar_Pervasives_Native.Some
-                                                      (k, ik, jk)
-                                                | FStar_Pervasives_Native.Some
-                                                    (ub, uu___4, uu___5) ->
-                                                    let uu___6 =
-                                                      let uu___7 =
-                                                        let uu___8 =
-                                                          find_edge order
-                                                            (k, ub) in
-                                                        FStar_Compiler_Util.is_some
-                                                          uu___8 in
-                                                      let uu___8 =
-                                                        let uu___9 =
-                                                          find_edge order
-                                                            (ub, k) in
-                                                        FStar_Compiler_Util.is_some
-                                                          uu___9 in
-                                                      (uu___7, uu___8) in
-                                                    (match uu___6 with
-                                                     | (true, true) ->
-                                                         let uu___7 =
-                                                           let uu___8 =
-                                                             FStar_Ident.lid_equals
-                                                               k ub in
-                                                           Prims.op_Negation
-                                                             uu___8 in
-                                                         if uu___7
-                                                         then
-                                                           failwith
-                                                             "Impossible! Should have already detected the cycle in the effect ordering"
-                                                         else bopt
-                                                     | (false, false) ->
-                                                         let uu___7 =
-                                                           let uu___8 =
-                                                             let uu___9 =
-                                                               FStar_Ident.string_of_lid
-                                                                 i in
-                                                             let uu___10 =
-                                                               FStar_Ident.string_of_lid
-                                                                 j in
-                                                             let uu___11 =
-                                                               FStar_Ident.string_of_lid
-                                                                 k in
-                                                             let uu___12 =
-                                                               FStar_Ident.string_of_lid
-                                                                 ub in
-                                                             FStar_Compiler_Util.format4
-                                                               "Uncomparable upper bounds! i=%s, j=%s, k=%s, ub=%s\n"
-                                                               uu___9 uu___10
-                                                               uu___11
-                                                               uu___12 in
-                                                           (FStar_Errors.Fatal_Effects_Ordering_Coherence,
-                                                             uu___8) in
-                                                         FStar_Errors.raise_error
-                                                           uu___7 env1.range
-                                                     | (true, false) ->
-                                                         FStar_Pervasives_Native.Some
-                                                           (k, ik, jk)
-                                                     | (false, true) -> bopt))
-                                           | uu___4 -> bopt)
-                                      FStar_Pervasives_Native.None) in
-                             match k_opt with
-                             | FStar_Pervasives_Native.None -> []
-                             | FStar_Pervasives_Native.Some (k, e1, e2) ->
-                                 [(i, j, k, (e1.mlift), (e2.mlift))])))) in
+                             let uu___2 = FStar_Ident.lid_equals i j in
+                             if uu___2
+                             then ()
+                             else
+                               FStar_Compiler_Effect.op_Bar_Greater ms
+                                 (FStar_Compiler_List.iter
+                                    (fun k ->
+                                       let uu___4 =
+                                         let uu___5 = find_edge order (i, k) in
+                                         let uu___6 = find_edge order (j, k) in
+                                         (uu___5, uu___6) in
+                                       match uu___4 with
+                                       | (FStar_Pervasives_Native.Some ik,
+                                          FStar_Pervasives_Native.Some jk) ->
+                                           add_ub i j k ik.mlift jk.mlift
+                                       | uu___5 -> ()))))));
+             FStar_Compiler_Util.smap_fold ubs
+               (fun s ->
+                  fun l ->
+                    fun joins1 ->
+                      let lubs =
+                        FStar_Compiler_List.filter
+                          (fun uu___2 ->
+                             match uu___2 with
+                             | (i, j, k, ik, jk) ->
+                                 FStar_Compiler_List.for_all
+                                   (fun uu___3 ->
+                                      match uu___3 with
+                                      | (uu___4, uu___5, k', uu___6, uu___7)
+                                          ->
+                                          let uu___8 =
+                                            find_edge order (k, k') in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___8
+                                            FStar_Compiler_Util.is_some) l) l in
+                      if (FStar_Compiler_List.length lubs) <> Prims.int_one
+                      then
+                        let uu___2 =
+                          let uu___3 =
+                            FStar_Compiler_Util.format1
+                              "Effects %s have incomparable upper bounds" s in
+                          (FStar_Errors.Fatal_Effects_Ordering_Coherence,
+                            uu___3) in
+                        FStar_Errors.raise_error uu___2 env1.range
+                      else FStar_Compiler_List.op_At lubs joins1) [] in
            let effects1 =
              let uu___1 = env1.effects in
              {

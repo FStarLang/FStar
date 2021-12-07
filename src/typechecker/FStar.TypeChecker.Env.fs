@@ -1538,38 +1538,46 @@ let update_effect_lattice env src tgt st_mlift =
   // that's ok, as long as it is unique in the new graph
   //
   let joins =
-    ms |> List.collect (fun i ->
-    ms |> List.collect (fun j ->
-    let k_opt =
-      if Ident.lid_equals i j then Some (i, id_edge i, id_edge i)
-      else
-        ms |> List.fold_left (fun bopt k ->
-        match find_edge order (i, k), find_edge order (j, k) with
-        | Some ik, Some jk ->
-          begin match bopt with
-          (* we don't have a current candidate as the upper bound; so we may as well use k *)
-          | None -> Some (k, ik, jk)
-          | Some (ub, _, _) ->
-            begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
-                  | true, true ->
-                    if not (Ident.lid_equals k ub)
-                    then failwith "Impossible! Should have already detected the cycle in the effect ordering"
-                    else bopt
-                  | false, false ->
-                    raise_error (Errors.Fatal_Effects_Ordering_Coherence, BU.format4
-                      "Uncomparable upper bounds! i=%s, j=%s, k=%s, ub=%s\n"
-                      (Ident.string_of_lid i)
-                      (Ident.string_of_lid j)
-                      (Ident.string_of_lid k)
-                      (Ident.string_of_lid ub)) env.range
-                  | true, false -> Some (k, ik, jk) //k is less than ub
-                  | false, true -> bopt
-                end
-            end
-          | _ -> bopt) None in
-    match k_opt with
-    | None -> []
-    | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
+    //
+    //A map where we populate all upper bounds for each pair of effects
+    //
+    let ubs : smap<list<(lident * lident * lident * mlift * mlift)>> =
+      BU.smap_create 10 in
+    let add_ub i j k ik jk =
+      let key = string_of_lid i ^ ":" ^ string_of_lid j in
+      let v =
+        match smap_try_find ubs key with
+        | Some ubs -> (i, j, k, ik, jk)::ubs
+        | None -> [i, j, k, ik, jk] in
+        
+      smap_add ubs key v in
+
+    //Populate ubs
+    ms |> List.iter (fun i ->
+      ms |> List.iter (fun j ->
+        if lid_equals i j then ()
+        else ms |> List.iter (fun k ->
+               match find_edge order (i, k), find_edge order (j, k) with
+               | Some ik, Some jk -> add_ub i j k ik.mlift jk.mlift
+               | _ -> ())));
+
+    //
+    //Fold over the map
+    //
+    //For each pair of effects (i.e. key in the ubs map),
+    //  make sure there is a unique lub
+    //
+    smap_fold ubs (fun s l joins ->
+      //Filter entries that have an edge to every other entry
+      let lubs = List.filter (fun (i, j, k, ik, jk) ->
+        List.for_all (fun (_, _, k', _, _) ->
+          find_edge order (k, k') |> is_some) l) l in
+      //Make sure there is only one such entry
+      if List.length lubs <> 1
+      then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
+                        BU.format1 "Effects %s have incomparable upper bounds" s) 
+                       env.range
+      else lubs@joins) [] in
 
   let effects = {env.effects with order=order; joins=joins} in
   {env with effects=effects}

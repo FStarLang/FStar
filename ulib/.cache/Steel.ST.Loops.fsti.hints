@@ -1,0 +1,27 @@
+[
+  "\u007fÑ/ëÆ¼#æ«³ÝêÇ2ùŒ",
+  [
+    [
+      "Steel.ST.Loops.for_loop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Steel.ST.Loops.u32_between", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2eec29014a998085381126097e78648e",
+        "refinement_interpretation_Tm_refine_3e157271fe2d868289a379893198d747",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v"
+      ],
+      0,
+      "1e675f74e1636854dda0ff376aa63a9d"
+    ]
+  ]
+]
