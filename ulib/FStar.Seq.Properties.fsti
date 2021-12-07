@@ -767,3 +767,8 @@ val seq_map_len (#a #b:Type) (f:a -> b) (s:Seq.seq a)
 val seq_map_index (#a #b:Type) (f:a -> b) (s:Seq.seq a) (i:nat{i < Seq.length s})
   : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i))
           [SMTPat (Seq.index (seq_map f s) i)]
+
+val seq_map_append (#a #b:Type) (f:a -> b) (s1 s2:Seq.seq a)
+  : Lemma (ensures (seq_map f (Seq.append s1 s2) ==
+                    Seq.append (seq_map f s1) (seq_map f s2)))
+          [SMTPat (seq_map f (Seq.append s1 s2))]

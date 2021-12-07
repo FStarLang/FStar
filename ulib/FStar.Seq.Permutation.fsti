@@ -72,6 +72,10 @@ module CE = FStar.Algebra.CommMonoid.Equiv
 let foldm_snoc (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:seq a) =
   foldr_snoc m.mult s m.unit
 
+val foldm_snoc_unit_seq (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:Seq.seq a)
+  : Lemma (requires Seq.equal s (Seq.create (Seq.length s) m.unit))
+          (ensures eq.eq (foldm_snoc m s) m.unit)
+
 val foldm_snoc_singleton (#a:_) (#eq:_) (m:CE.cm a eq) (x:a)
   : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
 

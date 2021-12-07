@@ -148,22 +148,16 @@ let elim_monoid_laws #a #eq (m:CE.cm a eq)
     introduce forall x. eq.eq (m.mult x m.unit) x
     with ( CE.right_identity eq m x )
 
-let elim_eq_laws #a (eq:CE.equiv a)
-  : Lemma (
-          (forall x.{:pattern (x `eq.eq` x)} x `eq.eq` x) /\
-          (forall x y.{:pattern (x `eq.eq` y)} x `eq.eq` y ==> y `eq.eq` x) /\
-          (forall x y z.{:pattern eq.eq x y; eq.eq y z} (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z)
-          )
-  = introduce forall x. x `eq.eq` x
-    with (eq.reflexivity x);
-
-    introduce forall x y. x `eq.eq` y ==> y `eq.eq` x
-    with (introduce _ ==> _
-          with _. eq.symmetry x y);
-
-    introduce forall x y z. (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z
-    with (introduce _ ==> _
-          with _. eq.transitivity x y z)
+let rec foldm_snoc_unit_seq (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:Seq.seq a)
+  : Lemma (requires Seq.equal s (Seq.create (Seq.length s) m.unit))
+          (ensures eq.eq (foldm_snoc m s) m.unit)
+          (decreases Seq.length s)
+  = CE.elim_eq_laws eq;
+    elim_monoid_laws m;
+    if Seq.length s = 0
+    then ()
+    else let s_tl, _ = un_snoc s in
+         foldm_snoc_unit_seq m s_tl
 
 #push-options "--fuel 2"
 let foldm_snoc_singleton (#a:_) #eq (m:CE.cm a eq) (x:a)
@@ -175,7 +169,7 @@ let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
   : Lemma ((x `m.mult` (y `m.mult` z))
              `eq.eq`
            (y `m.mult` (x `m.mult` z)))
-  = elim_eq_laws eq;
+  = CE.elim_eq_laws eq;
     elim_monoid_laws m;  
     calc (eq.eq) {
       x `m.mult` (y `m.mult` z);
@@ -193,7 +187,7 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
     (ensures eq.eq (foldm_snoc m (append s1 s2))
                    (m.mult (foldm_snoc m s1) (foldm_snoc m s2)))
     (decreases (Seq.length s2))
-  = elim_eq_laws eq;
+  = CE.elim_eq_laws eq;
     elim_monoid_laws m;
     if Seq.length s2 = 0
     then assert (Seq.append s1 s2 `Seq.equal` s1)
@@ -221,7 +215,7 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
 let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
     (ensures eq.eq (foldm_snoc m (append s1 s2)) (foldm_snoc m (append s2 s1)))
-  = elim_eq_laws eq;
+  = CE.elim_eq_laws eq;
     elim_monoid_laws m;
     foldm_snoc_append m s1 s2;
     foldm_snoc_append m s2 s1
@@ -230,7 +224,7 @@ let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
 let foldm_snoc3 #a #eq (m:CE.cm a eq) (s1:seq a) (x:a) (s2:seq a)
   : Lemma (eq.eq (foldm_snoc m (Seq.append s1 (Seq.cons x s2)))
                  (m.mult x (foldm_snoc m (Seq.append s1 s2))))
-  = elim_eq_laws eq;
+  = CE.elim_eq_laws eq;
     elim_monoid_laws m;
     calc (eq.eq)
     {
@@ -320,10 +314,7 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
     (decreases (Seq.length s0))
   = //for getting calc chain to compose
-    introduce forall x y z. x `eq.eq` y /\ y `eq.eq` z ==> x `eq.eq` z
-    with (introduce _ ==> _
-          with _. eq.transitivity x y z);
-
+    CE.elim_eq_laws eq;
     seqperm_len s0 s1 p;
     if Seq.length s0 = 0 then (
       assert (Seq.equal s0 s1);

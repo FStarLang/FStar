@@ -33,30 +33,29 @@ module U32 = FStar.UInt32
 module R = Steel.ST.Reference
 module GR = Steel.ST.GhostReference
 module A = Steel.ST.Array
+module BV = Steel.ST.BitVector
 
-#set-options "--ide_id_info_off --print_implicits"
-
-assume val bv_t (n:U32.t) : Type0
-assume val bv_is_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n) : bool
-assume val bv_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
-  : Pure (bv_t n)
-         (requires True)
-         (ensures fun r -> bv_is_set i r /\
-                        (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
-assume val bv_unset (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
-  : Pure (bv_t n)
-         (requires True)
-         (ensures fun r -> (~ (bv_is_set i r)) /\
-                        (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
-assume val bv_init (n:U32.t) : bv_t n
-assume val bv_init_all_unset (n:U32.t)
-  : Lemma (forall (i:U32.t{U32.v i < U32.v n}). ~ (bv_is_set i (bv_init n)))
+// assume val bv_t (n:U32.t) : Type0
+// assume val bv_is_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n) : bool
+// assume val bv_set (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
+//   : Pure (bv_t n)
+//          (requires True)
+//          (ensures fun r -> bv_is_set i r /\
+//                         (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
+// assume val bv_unset (#n:U32.t) (i:U32.t{U32.v i < U32.v n}) (bv:bv_t n)
+//   : Pure (bv_t n)
+//          (requires True)
+//          (ensures fun r -> (~ (bv_is_set i r)) /\
+//                         (forall (j:U32.t{U32.v j < U32.v n}). j =!= i ==> bv_is_set j r == bv_is_set j bv))
+// assume val bv_init (n:U32.t) : bv_t n
+// assume val bv_init_all_unset (n:U32.t)
+//   : Lemma (forall (i:U32.t{U32.v i < U32.v n}). ~ (bv_is_set i (bv_init n)))
 
 noeq
 type tbl #k #v #contents (#vp:vp_t k v contents) (h:hash_fn k) (finalizer:finalizer_t vp) = {
   store_len    : n:u32{U32.v n > 0};
   store        : A.array (option (k & v));
-  bv_borrows   : R.ref (bv_t store_len);
+  bv_borrows   : BV.bv_t store_len;
   g_repr       : GR.ref (Map.t k contents);
   g_borrows    : GR.ref (Map.t k v);
   store_len_pf : squash (A.length store == U32.v store_len);
@@ -92,27 +91,22 @@ let store_and_repr_related
 let store_and_bv_and_borrows_related
   (#k:eqtype)
   (#v:Type0)
-  (#n:U32.t)
-  (bv:bv_t n)
+  (bv:BV.repr)
   (s:Seq.seq (option (k & v)))
   (borrows:Map.t k v)
   : prop
-  = forall (i:nat{i < Seq.length s /\ i < U32.v n}).
+  = forall (i:nat{i < Seq.length s /\ i < Seq.length bv}).
       match Seq.index s i with
-      | None -> ~ (bv_is_set (U32.uint_to_t i) bv)
+      | None -> ~ (Seq.index bv i)
       | Some (x, y) ->
-        if bv_is_set (U32.uint_to_t i) bv
+        if Seq.index bv i
         then Map.sel x borrows == Some y
         else ~ (Map.contains x borrows)
 
 module CE = FStar.Algebra.CommMonoid.Equiv
 module SeqPerm = FStar.Seq.Permutation
 
-let star_eq : CE.equiv vprop =
-  CE.EQ equiv (fun _ -> admit ()) (fun _ _ -> admit ()) (fun _ _ _ -> admit ())
-
-let vprop_monoid : CE.cm vprop star_eq =
-  CE.CM emp star (fun _ -> admit ()) (fun _ _ _ -> admit ()) (fun _ _ -> admit ()) (fun _ _ _ _ -> admit ())
+let vprop_monoid : CE.cm vprop Steel.Effect.Common.req = Steel.Effect.Common.rm
 
 let value_vprops_mapping_fn
   (#k:eqtype)
@@ -161,13 +155,12 @@ let pure_invariant
   (arr:tbl h finalizer)
   (m:repr k contents)
   (borrows:Map.t k v)
-  (bv:bv_t arr.store_len)
+  (bv:BV.repr)
   (s:Seq.seq (option (k & v)))
   : prop
   = seq_props h s /\
     store_and_repr_related s m /\
     store_and_bv_and_borrows_related bv s borrows
-
 
 [@@__reduce__]
 let store_contents_pred_seq
@@ -179,7 +172,7 @@ let store_contents_pred_seq
   (arr:tbl h finalizer)
   (m:repr k contents)
   (borrows:Map.t k v)
-  (bv:bv_t arr.store_len)
+  (bv:BV.repr)
   : Seq.seq (option (k & v)) -> vprop
   = fun s ->
     A.pts_to arr.store s
@@ -202,31 +195,36 @@ let store_contents_pred
   (arr:tbl h finalizer)
   (m:repr k contents)
   (borrows:Map.t k v)
-  : bv_t arr.store_len -> vprop
+  : BV.repr -> vprop
   = fun bv ->
-    R.pts_to arr.bv_borrows full_perm bv
+    BV.pts_to arr.bv_borrows bv
       `star`
     exists_ (store_contents_pred_seq arr m borrows bv)
 
 [@@__reduce__]
 let tperm arr m borrows = exists_ (store_contents_pred arr m borrows)
 
-assume val admit__ (#opened:_) (#a:Type) (#p:pre_t) (#q:post_t a) (_:unit)
-  : STAtomicF a opened p q True (fun _ -> False)
-
-assume val foldm_snoc_unit_seq (#a:Type) (#eq:_) (m:CE.cm a eq) (s:Seq.seq a)
-  : Lemma (requires forall (i:nat{i < Seq.length s}). Seq.index s i == m.unit)
-          (ensures eq.eq m.unit (SeqPerm.foldm_snoc m s))
+let elim_equiv_laws ()
+  : Lemma (
+          (forall x. x `equiv` x) /\
+          (forall x y. x `equiv` y ==> y `equiv` x) /\
+          (forall x y z. (x `equiv` y /\ y `equiv` z) ==> x `equiv` z)
+          )
+  = let open Steel.Effect.Common in
+    assert (req.eq == equiv);
+    CE.elim_eq_laws req
 
 let rewrite_equiv (#opened:_) (p q:vprop)
   : STGhost unit opened p (fun _ -> q)
       (requires equiv p q \/ equiv q p)
       (ensures fun _ -> True)
-  = admit_ ()
+  = elim_equiv_laws ();
+    reveal_equiv p q;
+    weaken p q (fun _ -> ())
 
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
-  let bv_borrows = R.alloc (bv_init n) in
+  let bv_borrows = BV.create n in
   let g_repr = GR.alloc (G.hide (Map.empty k contents)) in
   let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
   let arr : tbl #k #v #contents #vp h finalizer = {
@@ -239,20 +237,20 @@ let create #k #v #contents #vp h finalizer n =
   
   rewrite (A.pts_to store (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           R.pts_to bv_borrows full_perm (bv_init n)
+           BV.pts_to bv_borrows (Seq.create (U32.v n) false)
              `star`
            GR.pts_to g_repr full_perm (Map.empty k contents)
              `star`
            GR.pts_to g_borrows full_perm (Map.empty k v))
           (A.pts_to arr.store (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           R.pts_to arr.bv_borrows full_perm (bv_init arr.store_len)
+           BV.pts_to arr.bv_borrows (Seq.create (U32.v n) false)
              `star`
            GR.pts_to arr.g_repr full_perm (Map.empty k contents)
              `star`
            GR.pts_to arr.g_borrows full_perm (Map.empty k v));
 
-  foldm_snoc_unit_seq
+  SeqPerm.foldm_snoc_unit_seq
     vprop_monoid
     (value_vprops_seq vp (Seq.create (U32.v n) None)
                          (Map.empty k contents)
@@ -261,76 +259,18 @@ let create #k #v #contents #vp h finalizer n =
                                      (Map.empty k contents)
                                      (Map.empty k v));
 
-  bv_init_all_unset arr.store_len;
   intro_pure (pure_invariant
     arr
     (Map.empty k contents)
     (Map.empty k v)
-    (bv_init arr.store_len)
+    (Seq.create (U32.v n) false)
     (Seq.create (U32.v n) None));
   
   intro_exists (Seq.create (U32.v n) None)
-               (store_contents_pred_seq arr (Map.empty k contents) (Map.empty k v) (bv_init arr.store_len));
-  intro_exists (bv_init arr.store_len)
+               (store_contents_pred_seq arr (Map.empty k contents) (Map.empty k v) (Seq.create (U32.v n) false));
+  intro_exists (Seq.create (U32.v n) false)
                (store_contents_pred arr (Map.empty k contents) (Map.empty k v));
   return arr
-
-let value_vprop_seq_upd_seq_and_repr
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (h:hash_fn k)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  (x:k) (y:v) (c:G.erased contents)
-  : Lemma (requires seq_props h (Seq.upd s idx (Some (x, y))))
-          (ensures (let s1 = Seq.upd s idx (Some (x, y)) in
-                    let m1 = Map.upd x (G.reveal c) m in
-                    value_vprops vp (Seq.slice s 0 idx) m borrows ==
-                    value_vprops vp (Seq.slice s1 0 idx) m1 borrows /\
-                    value_vprops vp (Seq.slice s (idx+1) (Seq.length s)) m borrows ==
-                    value_vprops vp (Seq.slice s1 (idx+1) (Seq.length s1)) m1 borrows))
-  = let s1 = Seq.upd s idx (Some (x, y)) in
-    let m1 = Map.upd x (G.reveal c) m in
-    assert (Seq.index s1 idx == Some (x, y));
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s 0 idx) m borrows)
-                      (value_vprops_seq vp (Seq.slice s1 0 idx) m1 borrows));
-    assert (Seq.equal (value_vprops_seq vp (Seq.slice s (idx+1) (Seq.length s)) m borrows)
-                      (value_vprops_seq vp (Seq.slice s1 (idx+1) (Seq.length s1)) m1 borrows))
-
-// let seq_split3 (#a:Type) (s:Seq.seq a) (i:nat{i < Seq.length s})
-//   : (s':(Seq.seq a & Seq.seq a & Seq.seq a){
-//      let s1, s2, s3 = s' in
-//      Seq.equal s (Seq.append s1 (Seq.append s2 s3))})
-//   = Seq.slice s 0 i,
-//     Seq.create 1 (Seq.index s i),
-//     Seq.slice s (i+1) (Seq.length s)
-
-// let foldm_snoc_split3 (s s1 s2 s3:Seq.seq vprop)
-//   : Lemma (requires Seq.equal s (Seq.append s1 (Seq.append s2 s3)))
-//           (ensures SeqPerm.foldm_snoc vprop_monoid s
-//                      `equiv`
-//                    (SeqPerm.foldm_snoc vprop_monoid s1
-//                       `star`
-//                     (SeqPerm.foldm_snoc vprop_monoid s2
-//                        `star`
-//                      SeqPerm.foldm_snoc vprop_monoid s3)))
-//   = 
-
-// let equiv_helper_q_emp (p q r:vprop)
-//   : Lemma (requires q `equiv` emp)
-//           (ensures (p `star` (q `star` r)) `equiv` (p `star` r))
-//   = equiv_refl r;
-//     star_congruence q r emp r;
-//     equiv_refl p;
-//     star_congruence p (q `star` r) p (emp `star` r);
-//     cm_identity r;
-//     star_congruence p (emp `star` r) p r;
-//     equiv_trans (p `star` (q `star` r))
-//                 (p `star` (emp `star` r))
-//                 (p `star` r)
 
 let seq_until (#a:Type) (s:Seq.seq a) (idx:nat{idx < Seq.length s})
   : Seq.seq a
@@ -359,7 +299,40 @@ let value_vprops_split3
             value_vprops vp (seq_at s i) m borrows
               `star`
             value_vprops vp (seq_from s i) m borrows))
-  = admit ()
+  = elim_equiv_laws ();
+    Classical.forall_intro_3 star_associative;
+
+    assert (Seq.equal s (Seq.append (seq_until s i)
+                                    (Seq.append (seq_at s i) (seq_from s i))));
+    let vps s = value_vprops_seq vp s m borrows in
+    
+    calc (equiv) {
+      value_vprops vp s m borrows;
+      (equiv) { }
+      value_vprops vp (Seq.append (seq_until s i)
+                                  (Seq.append (seq_at s i) (seq_from s i))) m borrows;
+      (equiv) { SeqPerm.foldm_snoc_append vprop_monoid
+                  (vps (seq_until s i))
+                  (Seq.append
+                     (vps (seq_at s i))
+                     (vps (seq_from s i))) }
+      value_vprops vp (seq_until s i) m borrows
+        `star`
+      value_vprops vp (Seq.append (seq_at s i) (seq_from s i)) m borrows;
+      (equiv) { SeqPerm.foldm_snoc_append vprop_monoid
+                  (vps (seq_at s i))
+                  (vps (seq_from s i));
+                star_congruence
+                  (value_vprops vp (seq_until s i) m borrows)
+                  (value_vprops vp (Seq.append (seq_at s i) (seq_from s i)) m borrows)
+                  (value_vprops vp (seq_until s i) m borrows)
+                  (value_vprops vp (seq_at s i) m borrows `star` value_vprops vp (seq_from s i) m borrows) }
+      value_vprops vp (seq_until s i) m borrows
+        `star`
+      (value_vprops vp (seq_at s i) m borrows
+         `star`
+       value_vprops vp (seq_from s i) m borrows);
+    }
 
 let value_vprops_prefix_suffix_get
   (#k:eqtype)
@@ -384,37 +357,6 @@ let value_vprops_prefix_suffix_get
                       (value_vprops_seq vp (seq_until s idx) m upd_borrows));
     assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
                       (value_vprops_seq vp (seq_from s idx) m upd_borrows))
-
-let value_vprop_seq_upd_seq_and_repr_and_borrows
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (h:hash_fn k)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  (x:k) (y:v) (c:G.erased contents)
-  (x':k)
-  : Lemma (requires (forall (i:nat{i < Seq.length s}).
-                       Some? (Seq.index s i) ==> fst (Some?.v (Seq.index s i)) =!= x') /\
-                    seq_props h s /\
-                    seq_props h (Seq.upd s idx (Some (x, y))))
-          (ensures (let s1 = Seq.upd s idx (Some (x, y)) in
-                    let m1 = Map.upd x (G.reveal c) m in
-                    let borrows1 = Map.remove x' borrows in
-                    value_vprops vp (seq_until s idx) m borrows ==
-                    value_vprops vp (seq_until s1 idx) m1 borrows1 /\
-                    value_vprops vp (seq_from s idx) m borrows ==
-                    value_vprops vp (seq_from s1 idx) m1 borrows1))
-  = let s1 = Seq.upd s idx (Some (x, y)) in
-    let m1 = Map.upd x (G.reveal c) m in
-    let borrows1 = Map.remove x' borrows in
-    assert (Seq.index s1 idx == Some (x, y));
-    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
-                      (value_vprops_seq vp (seq_until s1 idx) m1 borrows1));
-    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
-                      (value_vprops_seq vp (seq_from s1 idx) m1 borrows1))
 
 let value_vprops_prefix_suffix_put
   (#k:eqtype)
@@ -545,7 +487,7 @@ let pack_tperm (#opened:_)
   (m:repr k contents)
   (borrows:Map.t k v)
   (a:tbl h finalizer)
-  (bv:bv_t a.store_len)
+  (bv:BV.repr)
   : STGhost unit opened
       (A.pts_to a.store s
          `star`
@@ -555,7 +497,7 @@ let pack_tperm (#opened:_)
          `star`
        value_vprops vp s m borrows
          `star`
-       R.pts_to a.bv_borrows full_perm bv)
+       BV.pts_to a.bv_borrows bv)
       (fun _ -> tperm a m borrows)
       (requires pure_invariant a m borrows bv s)
       (ensures fun _ -> True)
@@ -563,12 +505,14 @@ let pack_tperm (#opened:_)
     intro_exists s (store_contents_pred_seq a m borrows bv);
     intro_exists bv (store_contents_pred a m borrows)
 
-#push-options "--ifuel 2 --fuel 0"
+assume val admit__ (#opened:_) (#a:Type) (#p:vprop) (#q:post_t a) (_:unit) : STAtomicF a opened p q (True) (fun _ -> False)
+
 let get #k #v #contents #vp #h #finalizer #m #borrows a i =
   let bv = elim_exists () in
   let s = elim_exists () in
   elim_pure (pure_invariant a m borrows bv s);
   A.pts_to_length a.store s;
+  BV.pts_to_length a.bv_borrows bv;
   let idx = h i `U32.rem` a.store_len in
   let vopt = A.read a.store idx in
   let r = match vopt with
@@ -576,46 +520,47 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
           | Some (i', x) ->
             if i <> i' then Missing i'
             else Present x in
-  (match vopt returns STT unit _ (fun _ -> get_post m borrows a i r) with
+  (match vopt with
    | None ->
      intro_pure (pure_invariant a m borrows bv s);
      intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
      intro_exists (G.reveal bv) (store_contents_pred a m borrows);
      rewrite (tperm a m borrows) (get_post m borrows a i r)
-   | Some (i', x) ->
-     if i <> i'
-     then begin
-       intro_pure (map_contains_prop i' m);
-       intro_pure (pure_invariant a m borrows bv s);
-       intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
-       intro_exists (G.reveal bv) (store_contents_pred a m borrows);
-       rewrite (tperm a m borrows
-                  `star`
-                pure (map_contains_prop i' m))
-               (get_post m borrows a i r)
-     end
-     else begin
-       unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
+   | Some (i', x) -> admit_ ()); return r
+     // if i <> i'
+     // then begin
+     //   intro_pure (map_contains_prop i' m);
+     //   intro_pure (pure_invariant a m borrows bv s);
+     //   intro_exists (G.reveal s) (store_contents_pred_seq a m borrows bv);
+     //   intro_exists (G.reveal bv) (store_contents_pred a m borrows);
+     //   rewrite (tperm a m borrows
+     //              `star`
+     //            pure (map_contains_prop i' m))
+     //           (get_post m borrows a i r)
+     // end
+     // else begin
+     //   unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
 
-       value_vprops_prefix_suffix_get h vp s m borrows (U32.v idx);
-       rewrite_value_vprops_prefix_and_suffix vp s s m m
-         borrows (Map.upd i x borrows) idx;
+     //   value_vprops_prefix_suffix_get h vp s m borrows (U32.v idx);
+     //   rewrite_value_vprops_prefix_and_suffix vp s s m m
+     //     borrows (Map.upd i x borrows) idx;
 
-       pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
+     //   pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
 
-       let bv : bv_t a.store_len = R.read a.bv_borrows in
-       R.write a.bv_borrows (bv_set idx bv);
+     //   //let bv : bv_t a.store_len = R.read a.bv_borrows in
+     //   //R.write a.bv_borrows (bv_set idx bv);
+     //   BV.bv_set a.bv_borrows idx;
 
-       GR.write a.g_borrows (Map.upd i x borrows);
+     //   GR.write a.g_borrows (Map.upd i x borrows);
 
-       pack_tperm s m (Map.upd i x borrows) a (bv_set idx bv);
+     //   pack_tperm s m (Map.upd i x borrows) a (Seq.upd bv (U32.v idx) true);
 
-       rewrite (tperm a m (Map.upd i x borrows)
-                 `star`
-                vp i x (Some?.v (Map.sel i m)))
-               (get_post m borrows a i r)
-     end);
-     return r
+     //   rewrite (tperm a m (Map.upd i x borrows)
+     //             `star`
+     //            vp i x (Some?.v (Map.sel i m)))
+     //           (get_post m borrows a i r)
+     // end);
+     // return r
 
 let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
   let bv = elim_exists () in
@@ -710,9 +655,6 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
          bv
      end)
 
-assume val foldm_snoc_empty (#a:_) (#eq:_) (m:CE.cm a eq)
-  : Lemma (SeqPerm.foldm_snoc m Seq.empty == m.unit)
-
 let rec finalize_values
   (#k:eqtype)
   (#v #contents:Type0)
@@ -741,7 +683,7 @@ let rec finalize_values
   = A.pts_to_length a.store s;
     if i = a.store_len
     then begin
-      foldm_snoc_unit_seq vprop_monoid (value_vprops_seq vp s_ind m borrows);
+      SeqPerm.foldm_snoc_unit_seq vprop_monoid (value_vprops_seq vp s_ind m borrows);
       rewrite_equiv (value_vprops vp s_ind m borrows) emp
     end
     else begin
