@@ -1,0 +1,32 @@
+[
+  "ÏØ(û\u0005+ëx°\u001e\u0016\u0017kc:o",
+  [
+    [
+      "Steel.ST.SpinLock.new_lock",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.SpinLock.protects" ],
+      0,
+      "7848c6d1412226fb8250e1dce7c7e480"
+    ],
+    [
+      "Steel.ST.SpinLock.acquire_t",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.SpinLock.protects" ],
+      0,
+      "c6d448277ea00c24a1186d72d6692de7"
+    ],
+    [
+      "Steel.ST.SpinLock.release_t",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.SpinLock.protects" ],
+      0,
+      "4f06d2b8529fdcb8a9c43a08b17b9deb"
+    ]
+  ]
+]

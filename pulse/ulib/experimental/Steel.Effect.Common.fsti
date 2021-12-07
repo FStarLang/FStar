@@ -39,6 +39,7 @@ irreducible let ite_attr : unit = ()
 
 // Needed to avoid some logical vs prop issues during unification with no subtyping
 [@@__steel_reduce__]
+unfold
 let true_p : prop = True
 
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
@@ -2230,7 +2231,12 @@ let rec resolve_tac_logical () : Tac unit =
 /// Determining whether the type represented by term [t] corresponds to one of the logical (requires/ensures) goals
 let typ_contains_req_ens (t:term) : Tac bool =
   let name, _ = collect_app t in
-  if term_eq name (`req_t) || term_eq name (`ens_t) || term_eq name (`pure_wp) then true
+  if term_eq name (`req_t) ||
+     term_eq name (`ens_t) ||
+     term_eq name (`pure_wp) ||
+     term_eq name (`pure_pre) ||
+     term_eq name (`pure_post)
+  then true
   else false
 
 /// Splits goals between separation logic goals (slgoals) and requires/ensures goals (loggoals)
@@ -2243,9 +2249,15 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | Comp (Eq t) _ _ ->
         if Some? t then
           let b = typ_contains_req_ens (Some?.v t) in
-          if b then slgoals, hd::loggoals
-          else hd::slgoals, loggoals
-        else hd::slgoals, loggoals
+          if b then (
+            slgoals, hd::loggoals
+          )
+          else (
+            hd::slgoals, loggoals
+          )
+        else (
+          hd::slgoals, loggoals
+        )
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
@@ -2284,6 +2296,14 @@ let rec norm_return_pre (l:list goal) : Tac unit =
   | [] -> ()
   | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
 
+let print_goal (g:goal) =
+  let t = goal_type g in
+  term_to_string t
+
+let print_goals (g:list goal) =
+  let strs = List.Tot.map print_goal g in
+  String.concat "\n" strs
+
 /// The entry point of the frame inference tactic:
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
@@ -2293,6 +2313,8 @@ let init_resolve_tac () : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
+  // print ("SL Goals: \n" ^ print_goals slgs);
+  // print ("Logical goals: \n" ^ print_goals loggs);
 
   // We first solve the slprops
   set_goals slgs;
@@ -2386,3 +2408,45 @@ let ite_soundness_tac () : Tac unit =
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
 let vc_norm () : Tac unit = norm normal_steps; trefl()
+
+////////////////////////////////////////////////////////////////////////////////
+//Common datatypes for the atomic & ghost effects
+////////////////////////////////////////////////////////////////////////////////
+
+/// A datatype indicating whether a computation is ghost (unobservable) or not
+type observability : eqtype =
+  | Observable
+  | Unobservable
+
+(* Helpers to handle observability inside atomic computations *)
+
+unfold
+let obs_at_most_one (o1 o2:observability) =
+  o1=Unobservable || o2=Unobservable
+
+unfold
+let join_obs (o1:observability) (o2:observability) =
+  if o1 = Observable || o2 = Observable
+  then Observable
+  else Unobservable
+
+(* Lifting invariants to vprops *)
+
+///  This operator asserts that the logical content of invariant [i] is the separation logic
+///  predicate [p]
+noextract
+let ( >--> ) (i:iname) (p:vprop) : prop = i >--> (hp_of p)
+
+/// [i : inv p] is an invariant whose content is [p]
+let inv (p:vprop) = i:Ghost.erased iname{reveal i >--> p}
+
+/// Ghost check to determing whether invariant [i] belongs to the set of opened invariants [e]
+let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
+
+/// Adding invariant [i] to the set of opened invariants [e]
+noextract
+let add_inv (#p:vprop) (e:inames) (i:inv p) : inames =
+  Set.union (Set.singleton (reveal i)) (reveal e)
+
+noextract
+let set_add i o : inames = Set.union (Set.singleton i) o

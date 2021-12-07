@@ -1,0 +1,62 @@
+[
+  "ðíW\u007fñþ™ªNH#2\u001e\u0005Ùº",
+  [
+    [
+      "Steel.ST.Coercions.coerce_steel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "18dea3bdc48c4942920dc6150b11229a"
+    ],
+    [
+      "Steel.ST.Coercions.coerce_atomic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equality_tok_Steel.Effect.Common.Observable@tok",
+        "equality_tok_Steel.Effect.Common.Unobservable@tok",
+        "fuel_guarded_inversion_Steel.Effect.Common.observability",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "19d3b751f9239500499b44531ed953ec"
+    ],
+    [
+      "Steel.ST.Coercions.coerce_atomicF",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equality_tok_Steel.Effect.Common.Observable@tok",
+        "equality_tok_Steel.Effect.Common.Unobservable@tok",
+        "fuel_guarded_inversion_Steel.Effect.Common.observability",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "5add7b3f117253ffd62a3c306993bb31"
+    ],
+    [
+      "Steel.ST.Coercions.lift_stg_steelg",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d32233779981ac98a351ba73e834625f"
+    ],
+    [
+      "Steel.ST.Coercions.lift_sta_steela",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a3f41f7542c0a53380601750e6194a64"
+    ]
+  ]
+]

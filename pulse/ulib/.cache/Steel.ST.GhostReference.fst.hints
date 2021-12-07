@@ -1,0 +1,23 @@
+[
+  ";°áË_ÉòhDò\u000f\u0012c•ï«",
+  [
+    [
+      "Steel.ST.GhostReference.pts_to_injective_eq",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "687fcaca6820214026b5bf1a83065012"
+    ],
+    [
+      "Steel.ST.GhostReference.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6bd6bbca4753239a275eb7ea584e80e3"
+    ]
+  ]
+]
