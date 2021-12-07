@@ -199,6 +199,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph
 
 type decl' =
   | TopLevelModule of lid

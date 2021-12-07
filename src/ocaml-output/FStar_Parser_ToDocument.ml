@@ -1296,6 +1296,7 @@ and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
         FStar_Pprint.op_Hat_Hat uu___1 uu___2
     | FStar_Parser_AST.PopOptions -> str "#pop-options"
     | FStar_Parser_AST.RestartSolver -> str "#restart-solver"
+    | FStar_Parser_AST.PrintEffectsGraph -> str "#print-effects-graph"
     | FStar_Parser_AST.LightOff ->
         (FStar_Compiler_Effect.op_Colon_Equals should_print_fs_typ_app true;
          str "#light \"off\"")

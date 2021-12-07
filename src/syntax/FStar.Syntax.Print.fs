@@ -756,6 +756,7 @@ let pragma_to_string (p:pragma) : string =
   | PushOptions None      -> "#push-options"
   | PushOptions (Some s)  -> U.format1 "#push-options \"%s\"" s
   | RestartSolver         -> "#restart-solver"
+  | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"
 
 let rec sigelt_to_string (x: sigelt) =

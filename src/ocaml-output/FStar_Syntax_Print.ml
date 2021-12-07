@@ -1502,6 +1502,7 @@ let (pragma_to_string : FStar_Syntax_Syntax.pragma -> Prims.string) =
     | FStar_Syntax_Syntax.PushOptions (FStar_Pervasives_Native.Some s) ->
         FStar_Compiler_Util.format1 "#push-options \"%s\"" s
     | FStar_Syntax_Syntax.RestartSolver -> "#restart-solver"
+    | FStar_Syntax_Syntax.PrintEffectsGraph -> "#print-effects-graph"
     | FStar_Syntax_Syntax.PopOptions -> "#pop-options"
 let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
   fun x ->

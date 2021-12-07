@@ -3737,6 +3737,12 @@ let (add_sigelt_to_env :
                     ((env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                        ();
                      env1)
+              | FStar_Syntax_Syntax.Sig_pragma
+                  (FStar_Syntax_Syntax.PrintEffectsGraph) ->
+                  ((let uu___3 =
+                      FStar_TypeChecker_Env.print_effects_graph env1 in
+                    FStar_Compiler_Util.write_file "effects.graph" uu___3);
+                   env1)
               | FStar_Syntax_Syntax.Sig_new_effect ne ->
                   let env2 =
                     FStar_TypeChecker_Env.push_new_effect env1
@@ -3925,7 +3931,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___840 : unit) =
+let (uu___843 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

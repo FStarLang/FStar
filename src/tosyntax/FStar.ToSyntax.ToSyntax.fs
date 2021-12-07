@@ -152,6 +152,7 @@ let trans_pragma = function
   | AST.PushOptions sopt -> S.PushOptions sopt
   | AST.PopOptions -> S.PopOptions
   | AST.RestartSolver -> S.RestartSolver
+  | AST.PrintEffectsGraph -> S.PrintEffectsGraph
   | AST.LightOff -> S.LightOff
 
 let as_imp = function

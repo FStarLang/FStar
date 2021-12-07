@@ -861,6 +861,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         env
       end
 
+    | Sig_pragma PrintEffectsGraph ->
+      BU.write_file "effects.graph" (Env.print_effects_graph env);
+      env
+
     | Sig_new_effect ne ->
       let env = Env.push_new_effect env (ne, se.sigquals) in
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env

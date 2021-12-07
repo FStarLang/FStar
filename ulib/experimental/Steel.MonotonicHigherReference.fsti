@@ -95,3 +95,26 @@ val recall (#inames: _) (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a)
                (fun _ -> pts_to r q v)
                (requires fun _ -> witnessed r fact)
                (ensures fun _ _ _ -> fact v)
+
+/// Monotonic references are also equipped with the usual fractional permission discipline
+/// So, you can split a reference into two read-only shares
+val share (#inames:_)
+          (#a:Type)
+          (#p:Preorder.preorder a)
+          (r:ref a p)
+          (f:perm)
+          (v:Ghost.erased a)
+  : SteelGhostT unit inames
+    (pts_to r f v)
+    (fun _ -> pts_to r (half_perm f) v `star` pts_to r (half_perm f) v)
+
+/// And you can gather back the shares
+val gather (#inames:_)
+           (#a:Type)
+           (#p:Preorder.preorder a)
+           (r:ref a p)
+           (f g:perm)
+           (v:Ghost.erased a)
+  : SteelGhostT unit inames
+    (pts_to r f v `star` pts_to r g v)
+    (fun _ -> pts_to r (sum_perm f g) v)

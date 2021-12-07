@@ -153,6 +153,7 @@ let none_to_empty_list x =
 %token POLYMONADIC_SUBCOMP
 %token PRAGMALIGHT
 %token PRAGMA_POP_OPTIONS
+%token PRAGMA_PRINT_EFFECTS_GRAPH
 %token PRAGMA_PUSH_OPTIONS
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_RESTART_SOLVER
@@ -648,6 +649,9 @@ pragma:
 | PRAGMA_RESTART_SOLVER
     {let _1 = () in
       ( RestartSolver )}
+| PRAGMA_PRINT_EFFECTS_GRAPH
+    {let _1 = () in
+      ( PrintEffectsGraph )}
 
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
