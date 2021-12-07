@@ -139,24 +139,6 @@ val put
         (tperm a m borrows `star` vp i x c)
         (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
 
-val ghost_put (#opened:_)
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (#m:G.erased (repr k contents))
-  (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
-  (i:k)
-  (x:v)
-  (c:G.erased contents)
-  : STGhost unit opened
-            (tperm a m borrows `star` vp i x c)
-            (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
-            (requires Map.sel i borrows == Some x)
-            (ensures fun _ -> True)
-
 inline_for_extraction
 val free
   (#k:eqtype)
