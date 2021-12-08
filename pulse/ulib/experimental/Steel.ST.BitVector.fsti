@@ -16,6 +16,10 @@
    Authors: Aseem Rastogi
 *)
 
+/// A bitvector implementation
+///
+/// It presents logical view of the bitvector as a sequence of booleans
+
 module Steel.ST.BitVector
 
 open Steel.ST.Effect.Ghost
@@ -24,11 +28,19 @@ open Steel.ST.Effect
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 
+/// The bitvector of size n
+
 val bv_t (n:U32.t) : Type0
+
+/// Logical representation as a sequence of bool
 
 type repr = Seq.seq bool
 
+/// The pts_to assertion, bv pts_to s
+
 val pts_to (#n:U32.t) (bv:bv_t n) (s:repr) : vprop
+
+/// A stateful lemma that related the length of the vector to the length of its repr
 
 val pts_to_length (#opened:_) (#n:U32.t) (bv:bv_t n) (s:repr)
   : STGhost unit opened
@@ -37,8 +49,12 @@ val pts_to_length (#opened:_) (#n:U32.t) (bv:bv_t n) (s:repr)
       (requires True)
       (ensures fun _ -> Seq.length s == U32.v n)
 
+/// `alloc`, initially all the bits are unset
+
 val alloc (n:U32.t{U32.v n > 0})
   : STT (bv_t n) emp (fun r -> pts_to r (Seq.create (U32.v n) false))
+
+/// Returns whether ith bit in the bitvector is set
 
 val bv_is_set
   (#n:U32.t)
@@ -51,6 +67,8 @@ val bv_is_set
        (requires True)
        (ensures fun b -> b == Seq.index s (U32.v i))
 
+/// Sets the its bit in the bitvector
+
 val bv_set
   (#n:U32.t)
   (#s:G.erased repr)
@@ -60,6 +78,8 @@ val bv_set
        (pts_to bv s)
        (fun _ -> pts_to bv (Seq.upd s (U32.v i) true))
 
+/// Unsets the its bit in the bitvector
+
 val bv_unset
   (#n:U32.t)
   (#s:G.erased repr)
@@ -68,6 +88,8 @@ val bv_unset
   : STT unit
        (pts_to bv s)
        (fun _ -> pts_to bv (Seq.upd s (U32.v i) false))
+
+/// `free`
 
 val free
   (#n:U32.t)
