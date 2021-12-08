@@ -31,6 +31,8 @@ include Steel.ST.Effect
 include Steel.ST.Effect.Atomic
 include Steel.ST.Effect.Ghost
 
+module T = FStar.Tactics
+
 /// Weaken a vprop from [p] to [q]
 /// of every memory validating [p] also validates [q]
 val weaken (#opened:inames)
@@ -44,6 +46,24 @@ val weaken (#opened:inames)
 val rewrite (#opened:inames)
             (p q: vprop)
   : STGhost unit opened p (fun _ -> q) (p == q) (fun _ -> True)
+
+/// Rewrite p to q, proving their equivalence using the framing tactic
+/// Most places, this rewriting kicks in automatically in the framework,
+///   but sometimes it is useful to explicitly rewrite, while farming AC reasoning
+///   to the tactic
+val rewrite_with_tactic (#opened:_) (p q:vprop)
+  : STGhost unit opened
+      p
+      (fun _ -> q)
+      (requires T.with_tactic init_resolve_tac (squash (p `equiv` q)))
+      (ensures fun _ -> True)
+
+/// This rewrite is useful when you have equiv predicate in the logical context
+/// Internally implemented using `weaken`
+val rewrite_equiv (#opened:_) (p q:vprop)
+  : STGhost unit opened p (fun _ -> q)
+      (requires equiv p q \/ equiv q p)
+      (ensures fun _ -> True)
 
 /// A noop operator, occasionally useful for forcing framing of a
 /// subsequent computation

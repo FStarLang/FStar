@@ -24,10 +24,19 @@ module STAG = Steel.ST.Effect.AtomicAndGhost
 open Steel.ST.Coercions
 
 let weaken #o p q l =
-    coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
+  coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
 
 let rewrite #o p q =
-    weaken p q (fun _ -> ()); ()
+  weaken p q (fun _ -> ()); ()
+
+let rewrite_with_tactic #opened p q =
+  weaken p q (fun _ -> reveal_equiv p q)
+
+let rewrite_equiv #opened p q =
+  FStar.Algebra.CommMonoid.Equiv.elim_eq_laws Steel.Effect.Common.req;
+  assert (Steel.Effect.Common.req.eq == equiv);
+  reveal_equiv p q;
+  weaken p q (fun _ -> ())
 
 let noop #o _ = rewrite #o emp emp
 
