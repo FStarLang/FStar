@@ -198,6 +198,16 @@ let elim_equiv_laws ()
     assert (req.eq == equiv);
     CE.elim_eq_laws req
 
+module T = FStar.Tactics
+
+let rewrite_with_tactic (#opened:_) (p q:vprop)
+  : STGhost unit opened
+      p
+      (fun _ -> q)
+      (requires T.with_tactic init_resolve_tac (squash (p `equiv` q)))
+      (ensures fun _ -> True)
+  = weaken p q (fun _ -> reveal_equiv p q)
+
 let rewrite_equiv (#opened:_) (p q:vprop)
   : STGhost unit opened p (fun _ -> q)
       (requires equiv p q \/ equiv q p)
@@ -369,6 +379,31 @@ let value_vprops_prefix_suffix_put
                       (value_vprops_seq vp (seq_until s1 idx) m1 borrows1));
     assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
                       (value_vprops_seq vp (seq_from s1 idx) m1 borrows1))
+
+let value_vprops_prefix_suffix_with_key
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (idx:nat{idx < Seq.length s})
+  (c:G.erased contents)
+  : Lemma (requires Some? (Seq.index s idx) /\
+                    seq_props h s)
+          (ensures (let Some (i, _) = Seq.index s idx in
+                    let m1 = Map.upd i (G.reveal c) m in
+                    value_vprops vp (seq_until s idx) m borrows ==
+                    value_vprops vp (seq_until s idx) m1 borrows /\
+                    value_vprops vp (seq_from s idx) m borrows ==
+                    value_vprops vp (seq_from s idx) m1 borrows))
+  = let Some (i, _) = Seq.index s idx in
+    let m1 = Map.upd i (G.reveal c) m in
+    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
+                      (value_vprops_seq vp (seq_until s idx) m1 borrows));
+    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
+                      (value_vprops_seq vp (seq_from s idx) m1 borrows))
 
 let unpack_value_vprops (#opened:_)
   (#k:eqtype)
@@ -634,6 +669,69 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
          a
          bv
      end)
+
+assume val admit__ (#opened:_) (#a:Type) (#p:vprop) (#q:post_t a) (_:unit)
+  : STAtomicF a opened p q (True) (fun _ -> False)
+
+#set-options "--print_implicits"
+
+let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f =
+  let bv = elim_exists () in
+  let s = elim_exists () in
+  elim_pure (pure_invariant a m borrows bv s);
+  A.pts_to_length a.store s;
+  BV.pts_to_length a.bv_borrows bv;
+
+  let idx = h i `U32.rem` a.store_len in
+  let vopt = A.read a.store idx in
+
+  match vopt returns STT (get_result k (G.erased contents)) _ (with_key_post m borrows a i f_pre f_post) with
+  | None ->
+    pack_tperm s m borrows a bv;
+    rewrite_with_tactic
+      (f_pre `star` tperm a m borrows)
+      (tperm a m borrows `star` f_pre);
+    let r = Absent in
+    rewrite (tperm a m borrows `star` f_pre) (with_key_post m borrows a i f_pre f_post r);
+    return r
+  | Some (i', x) ->
+    if i' = i then begin
+      unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
+
+      let c = f i x (Some?.v (Map.sel i m)) in
+
+      value_vprops_prefix_suffix_with_key h vp s m borrows (U32.v idx) c;
+      rewrite_value_vprops_prefix_and_suffix vp s s
+        m (Map.upd i (G.reveal c) m)
+        borrows borrows idx;
+
+      pack_value_vprops vp s (Map.upd i (G.reveal c) m) borrows idx (vp i x (G.reveal c));
+
+      GR.write a.g_repr (Map.upd i (G.reveal c) m);
+      pack_tperm s (Map.upd i (G.reveal c) m) borrows a bv;
+      rewrite_with_tactic
+        (f_post c `star` tperm a (Map.upd i (G.reveal c) m) borrows)
+        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post c);
+      let r = Present c in
+      rewrite
+        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post c)
+        (with_key_post m borrows a i f_pre f_post r);
+      return r
+    end
+    else begin
+      intro_pure (map_contains_prop i' m);
+      pack_tperm s m borrows a bv;
+      rewrite_with_tactic
+        (f_pre `star` (pure (map_contains_prop i' m) `star` tperm a m borrows))
+        (tperm a m borrows `star` f_pre `star` pure (map_contains_prop i' m));
+      let r = Missing i' in
+      rewrite
+        (tperm a m borrows `star` f_pre `star` pure (map_contains_prop i' m))
+        (with_key_post m borrows a i f_pre f_post r);
+      return r
+    end
+
+#set-options "--print_implicits"
 
 let rec finalize_values
   (#k:eqtype)

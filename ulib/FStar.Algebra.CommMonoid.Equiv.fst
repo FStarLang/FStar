@@ -58,6 +58,8 @@ type cm (a:Type) (eq:equiv a) =
     congruence:(x:a -> y:a -> z:a -> w:a -> Lemma (requires (x `EQ?.eq eq` z /\ y `EQ?.eq eq` w)) (ensures ((mult x y) `EQ?.eq eq` (mult z w)))) ->
     cm a eq
 
+
+
 // temporarily fixing the universe of this lemma to u#1 because 
 // otherwise tactics for LowStar.Resource canonicalization fails
 // by picking up an incorrect universe u#0 for resource type

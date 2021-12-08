@@ -139,6 +139,57 @@ val put
         (tperm a m borrows `star` vp i x c)
         (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
 
+let with_key_post
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (m:G.erased (repr k contents))
+  (borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  (f_pre:vprop)
+  (f_post:G.erased contents -> vprop)
+  : get_result k (G.erased contents) -> vprop
+  = fun r ->
+    match r with
+    | Present c ->
+      tperm a (Map.upd i (G.reveal c) m) borrows
+        `star`
+      f_post c
+    | Absent ->
+      tperm a m borrows
+        `star`
+      f_pre
+    | Missing j ->
+      tperm a m borrows
+        `star`
+      f_pre
+        `star`
+      pure (map_contains_prop j m)
+
+inline_for_extraction
+val with_key
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (repr k contents))
+  (#borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  (#f_pre:vprop) (#f_post:G.erased contents -> vprop)
+  ($f:(i:k -> x:v -> c:G.erased contents -> STT (G.erased contents)
+                                             (f_pre `star` vp i x c)
+                                             (fun r -> f_post r `star` vp i x r)))
+  : ST (get_result k (G.erased contents))
+       (tperm a m borrows `star` f_pre)
+       (with_key_post m borrows a i f_pre f_post)
+       (requires ~ (Map.contains i borrows))
+       (ensures fun _ -> True)
+
 inline_for_extraction
 val free
   (#k:eqtype)
