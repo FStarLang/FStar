@@ -1,5 +1,5 @@
 [
-  "\"’»ÿ‰€¢ÇÀŒœ°Q\\\n∂",
+  "—=ªª\"®ê≠´Í‚€–ü+\u001f",
   [
     [
       "Steel.ST.Util.rewrite",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ea7c062fc50fc0c47770117adbeffd22"
+      "ee3ff7c6321ec9eace2940bb4f8b9fd6"
     ],
     [
       "Steel.ST.Util.slassert0",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "042b7f7d351602cee176c101d3b8e5e0"
+      "a0a2c83923e51450279f3292d2f619e9"
     ],
     [
       "Steel.ST.Util.extract_pure",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "302c18c37bc5646648a456f84c306e1a"
+      "3d77b5404376f94a189b9be9c62f2495"
     ],
     [
       "Steel.ST.Util.return0",
@@ -35,7 +35,25 @@
       1,
       [ "@query" ],
       0,
-      "a14e11fe31bb817c46289380e10239bd"
+      "1adecd6c55d84d22a63d4666e80a5a92"
+    ],
+    [
+      "Steel.ST.Util.with_invariant",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f94cd285b841e86d13050a7f96b0be21"
+    ],
+    [
+      "Steel.ST.Util.with_invariant_g",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5d948397e68f439c9501e49c1afc7d9b"
     ]
   ]
 ]
