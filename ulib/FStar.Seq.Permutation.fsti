@@ -29,7 +29,7 @@ open FStar.Seq
       permutation.
 
    2. Folding the multiplication of a commutative monoid over a
-      sequence and its permutation produces the same result
+      sequence and its permutation produces the equivalent results
 *)
 
 (* A bounded natural number *)
@@ -66,28 +66,40 @@ val permutation_from_equal_counts
 
 (** Now, some utilities related to commutative monoids and permutations *)
 
-module CM = FStar.Algebra.CommMonoid
+module CE = FStar.Algebra.CommMonoid.Equiv
 
 (* folding a m.mult over a sequence *)
-let foldm_snoc (#a:Type) (m:CM.cm a) (s:seq a) = foldr_snoc m.mult s m.unit
+let foldm_snoc (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:seq a) =
+  foldr_snoc m.mult s m.unit
+
+(* folding over a sequence of units is unit *)
+val foldm_snoc_unit_seq (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s:Seq.seq a)
+  : Lemma (requires Seq.equal s (Seq.create (Seq.length s) m.unit))
+          (ensures eq.eq (foldm_snoc m s) m.unit)
+
+(* folding over a singleton sequence is the sequence element *)
+val foldm_snoc_singleton (#a:_) (#eq:_) (m:CE.cm a eq) (x:a)
+  : Lemma (eq.eq (foldm_snoc m (Seq.create 1 x)) x)
 
 (* folding m over the concatenation of s1 and s2
    can be decomposed into a fold over s1 and a fold over s2 *)
-val foldm_snoc_append (#a:Type) (m:CM.cm a) (s1 s2: seq a)
+val foldm_snoc_append (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == m.mult (foldm_snoc m s1) (foldm_snoc m s2))
+    (ensures eq.eq (foldm_snoc m (append s1 s2))
+                   (m.mult (foldm_snoc m s1) (foldm_snoc m s2)))
 
 (* folds over concatenated lists can is symmetric *)
-val foldm_snoc_sym (#a:Type) (m:CM.cm a) (s1 s2: seq a)
+val foldm_snoc_sym (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
-    (ensures foldm_snoc m (append s1 s2) == foldm_snoc m (append s2 s1))
+    (ensures eq.eq (foldm_snoc m (append s1 s2))
+                   (foldm_snoc m (append s2 s1)))
 
 (* And, finally, if s0 and s1 are permutations, 
    then folding m over them is identical *)
-val foldm_snoc_perm (#a:_)
-               (m:CM.cm a)
+val foldm_snoc_perm (#a:_) (#eq:_)
+               (m:CE.cm a eq)
                (s0:seq a)
                (s1:seq a)
                (p:seqperm s0 s1)
   : Lemma
-    (ensures foldm_snoc m s0  == foldm_snoc m s1)
+    (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
