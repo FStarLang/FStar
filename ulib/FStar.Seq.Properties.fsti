@@ -758,17 +758,17 @@ let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
 
 (****** Seq map ******)
 
-val seq_map (#a #b:Type) (f:a -> b) (s:Seq.seq a) : Seq.seq b
+val seq_map (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) : Tot (Seq.seq b)
 
-val seq_map_len (#a #b:Type) (f:a -> b) (s:Seq.seq a)
+val seq_map_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
   : Lemma (ensures Seq.length (seq_map f s) == Seq.length s)
           [SMTPat (Seq.length (seq_map f s))]
 
-val seq_map_index (#a #b:Type) (f:a -> b) (s:Seq.seq a) (i:nat{i < Seq.length s})
+val seq_map_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
   : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i))
           [SMTPat (Seq.index (seq_map f s) i)]
 
-val seq_map_append (#a #b:Type) (f:a -> b) (s1 s2:Seq.seq a)
+val seq_map_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
   : Lemma (ensures (seq_map f (Seq.append s1 s2) ==
                     Seq.append (seq_map f s1) (seq_map f s2)))
           [SMTPat (seq_map f (Seq.append s1 s2))]
