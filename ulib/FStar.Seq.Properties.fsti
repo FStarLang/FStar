@@ -762,13 +762,10 @@ val map_seq (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) : Tot (Seq.seq b)
 
 val map_seq_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
   : Lemma (ensures Seq.length (map_seq f s) == Seq.length s)
-          [SMTPat (Seq.length (map_seq f s))]
 
 val map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
   : Lemma (ensures Seq.index (map_seq f s) i == f (Seq.index s i))
-          [SMTPat (Seq.index (map_seq f s) i)]
 
 val map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
   : Lemma (ensures (map_seq f (Seq.append s1 s2) ==
                     Seq.append (map_seq f s1) (map_seq f s2)))
-          [SMTPat (map_seq f (Seq.append s1 s2))]
