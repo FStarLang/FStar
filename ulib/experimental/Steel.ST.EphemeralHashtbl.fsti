@@ -16,7 +16,7 @@
    Authors: Aseem Rastogi
 *)
 
-module Steel.ST.Hashtbl
+module Steel.ST.EphemeralHashtbl
 
 open Steel.Memory
 open Steel.ST.Effect.Ghost
@@ -236,19 +236,20 @@ let with_key_post
   (a:tbl h finalizer)
   (i:k)
   (f_pre:vprop)
-  (f_post:G.erased contents -> vprop)
+  (f_post:contents -> contents -> vprop)
   : get_result k (G.erased contents) -> vprop
   = fun r ->
-    match r with
-    | Present c ->
-      tperm a (Map.upd i (G.reveal c) m) borrows
+    match r, Map.sel i m with
+    | Present r, Some c ->
+      tperm a (Map.upd i (G.reveal r) m) borrows
         `star`
-      f_post c
-    | Absent ->
+      f_post c (G.reveal r)
+    | Present r, None -> pure False
+    | Absent, _ ->
       tperm a m borrows
         `star`
       f_pre
-    | Missing j ->
+    | Missing j, _ ->
       tperm a m borrows
         `star`
       f_pre
@@ -266,10 +267,10 @@ val with_key
   (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
-  (#f_pre:vprop) (#f_post:G.erased contents -> vprop)
-  ($f:(i:k -> x:v -> c:G.erased contents -> STT (G.erased contents)
-                                             (f_pre `star` vp i x c)
-                                             (fun r -> f_post r `star` vp i x r)))
+  (#f_pre:vprop) (#f_post:contents -> contents -> vprop)
+  ($f:(x:v -> c:G.erased contents -> STT (G.erased contents)
+                                       (f_pre `star` vp i x c)
+                                       (fun r -> f_post c r `star` vp i x r)))
   : ST (get_result k (G.erased contents))
        (tperm a m borrows `star` f_pre)
        (with_key_post m borrows a i f_pre f_post)
