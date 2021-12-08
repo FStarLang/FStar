@@ -625,26 +625,26 @@ let lemma_seq_sortwith_correctness #_ f s
 
 (****** Seq map ******)
 
-let rec seq_map #a #b f s : Tot (Seq.seq b) (decreases Seq.length s) =
+let rec map_seq #a #b f s : Tot (Seq.seq b) (decreases Seq.length s) =
   if Seq.length s = 0
   then Seq.empty
   else let hd, tl = head s, tail s in
-       cons (f hd) (seq_map f tl)
+       cons (f hd) (map_seq f tl)
 
-let rec seq_map_len #a #b f s
-  : Lemma (ensures Seq.length (seq_map f s) == Seq.length s) (decreases Seq.length s)
+let rec map_seq_len #a #b f s
+  : Lemma (ensures Seq.length (map_seq f s) == Seq.length s) (decreases Seq.length s)
   = if Seq.length s = 0
     then ()
-    else seq_map_len f (tail s)
+    else map_seq_len f (tail s)
 
-let rec seq_map_index #a #b f s i
-  : Lemma (ensures Seq.index (seq_map f s) i == f (Seq.index s i)) (decreases Seq.length s)
+let rec map_seq_index #a #b f s i
+  : Lemma (ensures Seq.index (map_seq f s) i == f (Seq.index s i)) (decreases Seq.length s)
   = if Seq.length s = 0
     then ()
     else if i = 0
     then ()
-    else seq_map_index f (tail s) (i-1)
+    else map_seq_index f (tail s) (i-1)
 
-let seq_map_append #a #b f s1 s2 =
-  assert (Seq.equal (seq_map f (Seq.append s1 s2))
-                    (Seq.append (seq_map f s1) (seq_map f s2)))
+let map_seq_append #a #b f s1 s2 =
+  assert (Seq.equal (map_seq f (Seq.append s1 s2))
+                    (Seq.append (map_seq f s1) (map_seq f s2)))

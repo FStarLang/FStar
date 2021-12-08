@@ -117,7 +117,7 @@ let value_vprops_seq
   (m:repr k contents)
   (borrows:Map.t k v)
   : Seq.seq vprop
-  = Seq.seq_map (value_vprops_mapping_fn vp m borrows) s
+  = Seq.map_seq (value_vprops_mapping_fn vp m borrows) s
 
 [@@__reduce__]
 let value_vprops
