@@ -198,24 +198,6 @@ let elim_equiv_laws ()
     assert (req.eq == equiv);
     CE.elim_eq_laws req
 
-module T = FStar.Tactics
-
-let rewrite_with_tactic (#opened:_) (p q:vprop)
-  : STGhost unit opened
-      p
-      (fun _ -> q)
-      (requires T.with_tactic init_resolve_tac (squash (p `equiv` q)))
-      (ensures fun _ -> True)
-  = weaken p q (fun _ -> reveal_equiv p q)
-
-let rewrite_equiv (#opened:_) (p q:vprop)
-  : STGhost unit opened p (fun _ -> q)
-      (requires equiv p q \/ equiv q p)
-      (ensures fun _ -> True)
-  = elim_equiv_laws ();
-    reveal_equiv p q;
-    weaken p q (fun _ -> ())
-
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
   let bv_borrows = BV.alloc n in
@@ -670,11 +652,6 @@ let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
          bv
      end)
 
-assume val admit__ (#opened:_) (#a:Type) (#p:vprop) (#q:post_t a) (_:unit)
-  : STAtomicF a opened p q (True) (fun _ -> False)
-
-#set-options "--print_implicits"
-
 let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f =
   let bv = elim_exists () in
   let s = elim_exists () in
@@ -730,8 +707,6 @@ let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f
         (with_key_post m borrows a i f_pre f_post r);
       return r
     end
-
-#set-options "--print_implicits"
 
 let rec finalize_values
   (#k:eqtype)
