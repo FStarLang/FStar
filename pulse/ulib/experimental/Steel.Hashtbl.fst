@@ -198,6 +198,22 @@ let elim_equiv_laws ()
     assert (req.eq == equiv);
     CE.elim_eq_laws req
 
+let map_seq_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
+  : Lemma (ensures Seq.length (Seq.map_seq f s) == Seq.length s)
+          [SMTPat (Seq.length (Seq.map_seq f s))]
+  = Seq.map_seq_len f s
+
+let map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
+  : Lemma (ensures Seq.index (Seq.map_seq f s) i == f (Seq.index s i))
+          [SMTPat (Seq.index (Seq.map_seq f s) i)]
+  = Seq.map_seq_index f s i
+
+let map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
+  : Lemma (ensures (Seq.map_seq f (Seq.append s1 s2) ==
+                    Seq.append (Seq.map_seq f s1) (Seq.map_seq f s2)))
+          [SMTPat (Seq.map_seq f (Seq.append s1 s2))]
+  = Seq.map_seq_append f s1 s2
+
 let create #k #v #contents #vp h finalizer n =
   let store = A.alloc #(option (k & v)) None n in
   let bv_borrows = BV.alloc n in
