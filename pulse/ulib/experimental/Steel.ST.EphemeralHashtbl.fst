@@ -16,7 +16,7 @@
    Authors: Aseem Rastogi
 *)
 
-module Steel.ST.Hashtbl
+module Steel.ST.EphemeralHashtbl
 
 open Steel.FractionalPermission
 open Steel.Memory
@@ -803,7 +803,7 @@ let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f
       //Pack with (vp i x c'), where f returns c'
       unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
 
-      let c = f i x (Some?.v (Map.sel i m)) in
+      let c = f x (Some?.v (Map.sel i m)) in
 
       value_vprops_prefix_suffix_with_key h vp s m borrows (U32.v idx) c;
       rewrite_value_vprops_prefix_and_suffix vp s s
@@ -815,11 +815,11 @@ let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f
       GR.write a.g_repr (Map.upd i (G.reveal c) m);
       pack_tperm s (Map.upd i (G.reveal c) m) borrows a bv;
       rewrite_with_tactic
-        (f_post c `star` tperm a (Map.upd i (G.reveal c) m) borrows)
-        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post c);
+        (f_post (Some?.v (Map.sel i m)) c `star` tperm a (Map.upd i (G.reveal c) m) borrows)
+        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post (Some?.v (Map.sel i m)) c);
       let r = Present c in
       rewrite
-        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post c)
+        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post (Some?.v (Map.sel i m)) c)
         (with_key_post m borrows a i f_pre f_post r);
       return r
     end
