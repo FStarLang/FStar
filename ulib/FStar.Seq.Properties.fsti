@@ -764,7 +764,7 @@ val map_seq_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
   : Lemma (ensures Seq.length (map_seq f s) == Seq.length s)
 
 val map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
-  : Lemma (ensures Seq.index (map_seq f s) i == f (Seq.index s i))
+  : Lemma (ensures (map_seq_len f s; Seq.index (map_seq f s) i == f (Seq.index s i)))
 
 val map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
   : Lemma (ensures (map_seq f (Seq.append s1 s2) ==
