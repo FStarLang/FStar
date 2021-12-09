@@ -1,5 +1,5 @@
 [
-  "—=ªª\"®ê≠´Í‚€–ü+\u001f",
+  "“ç\u0001s\tΩççòêQ\u0007\u0016∆±Õ",
   [
     [
       "Steel.ST.Util.rewrite",
@@ -8,7 +8,36 @@
       1,
       [ "@query" ],
       0,
-      "ee3ff7c6321ec9eace2940bb4f8b9fd6"
+      "9b52896690a6bee597b38def8ece22a2"
+    ],
+    [
+      "Steel.ST.Util.rewrite_with_tactic",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_Steel.Memory.reveal_equiv",
+        "typing_Steel.Effect.Common.hp_of"
+      ],
+      0,
+      "becd094602c37a6ebf7e7412639c8377"
+    ],
+    [
+      "Steel.ST.Util.rewrite_equiv",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Common.req",
+        "function_token_typing_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq",
+        "function_token_typing_Steel.Effect.Common.equiv",
+        "lemma_Steel.Memory.reveal_equiv",
+        "proj_equation_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "typing_Steel.Effect.Common.hp_of"
+      ],
+      0,
+      "2970b016a469da842baec14ddec67977"
     ],
     [
       "Steel.ST.Util.slassert0",
@@ -17,7 +46,7 @@
       1,
       [ "@query" ],
       0,
-      "a0a2c83923e51450279f3292d2f619e9"
+      "b26f8ed474b2d4a07ad4a2e085e4c666"
     ],
     [
       "Steel.ST.Util.extract_pure",
@@ -26,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "3d77b5404376f94a189b9be9c62f2495"
+      "ac6dcbb411974cc071919b32de7375c6"
     ],
     [
       "Steel.ST.Util.return0",
@@ -35,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "1adecd6c55d84d22a63d4666e80a5a92"
+      "6426ff97ffe419af16e3ffaa5058002e"
     ],
     [
       "Steel.ST.Util.with_invariant",
@@ -44,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "f94cd285b841e86d13050a7f96b0be21"
+      "642a9415bc4808ef870d382cec785bfb"
     ],
     [
       "Steel.ST.Util.with_invariant_g",
@@ -53,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "5d948397e68f439c9501e49c1afc7d9b"
+      "8eac257ad209bb0407492311687e37d0"
     ]
   ]
 ]
