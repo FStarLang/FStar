@@ -1,5 +1,5 @@
 [
-  "!ž:\u0018\u0018²ÎÄ¤1„ð\u0017`6»",
+  "Éfóë|\u0015‚€®kÏÞèª¦k",
   [
     [
       "FStar.Seq.Properties.lemma_append_inj_l",
@@ -1822,6 +1822,15 @@
       ],
       0,
       "d72ab79e8c877e54dd0a554fab3134e5"
+    ],
+    [
+      "FStar.Seq.Properties.map_seq_index",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fa3ff288b1b2bea94f5ca6f76baf5430"
     ]
   ]
 ]
