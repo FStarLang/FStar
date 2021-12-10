@@ -621,3 +621,37 @@ let lemma_seq_sortwith_correctness #_ f s
     lemma_seq_to_list_permutation s;  //seq_to_list is a permutation
     List.Tot.Properties.sortWith_permutation f l;  //List.sortWith is a permutation
     lemma_seq_of_list_permutation l'  //seq_of_list is a permutation
+
+
+(****** Seq map ******)
+
+let rec map_seq #a #b f s : Tot (Seq.seq b) (decreases Seq.length s) =
+  if Seq.length s = 0
+  then Seq.empty
+  else let hd, tl = head s, tail s in
+       cons (f hd) (map_seq f tl)
+
+let rec map_seq_len #a #b f s
+  : Lemma (ensures Seq.length (map_seq f s) == Seq.length s) (decreases Seq.length s)
+  = if Seq.length s = 0
+    then ()
+    else map_seq_len f (tail s)
+
+let rec map_seq_index #a #b f s i
+  : Lemma (ensures (map_seq_len f s; Seq.index (map_seq f s) i == f (Seq.index s i))) (decreases Seq.length s)
+  = map_seq_len f s;
+    if Seq.length s = 0
+    then ()
+    else if i = 0
+    then ()
+    else map_seq_index f (tail s) (i-1)
+
+let map_seq_append #a #b f s1 s2 =
+  map_seq_len f s1;
+  map_seq_len f s2;
+  map_seq_len f (Seq.append s1 s2);
+  Classical.forall_intro (map_seq_index f s1);
+  Classical.forall_intro (map_seq_index f s2);
+  Classical.forall_intro (map_seq_index f (Seq.append s1 s2));
+  assert (Seq.equal (map_seq f (Seq.append s1 s2))
+                    (Seq.append (map_seq f s1) (map_seq f s2)))

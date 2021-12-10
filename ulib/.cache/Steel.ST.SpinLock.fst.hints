@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.ST.SpinLock.protects" ],
       0,
-      "7848c6d1412226fb8250e1dce7c7e480"
+      "609f29630fe81215730acd5517ef5edf"
     ],
     [
       "Steel.ST.SpinLock.acquire_t",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Steel.ST.SpinLock.protects" ],
       0,
-      "c6d448277ea00c24a1186d72d6692de7"
+      "b8dd8bfe8629bab42ca5a2741c4f49dc"
     ],
     [
       "Steel.ST.SpinLock.release_t",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.ST.SpinLock.protects" ],
       0,
-      "4f06d2b8529fdcb8a9c43a08b17b9deb"
+      "5ceee5ba2dadf7f9297cffbb1d303898"
     ]
   ]
 ]

@@ -1,0 +1,91 @@
+[
+  "\u000fNQ\u007f¤Åe£h·B\u000e¯Ü\n.",
+  [
+    [
+      "Steel.ST.EphemeralHashtbl.get_result",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a38431f48002b47ea03660cff900821a"
+    ],
+    [
+      "Steel.ST.EphemeralHashtbl.__proj__Present__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_50d0dbbf10834f0b0bed020c51110903"
+      ],
+      0,
+      "5788d73f57433084cc38b933d55e07f5"
+    ],
+    [
+      "Steel.ST.EphemeralHashtbl.__proj__Missing__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ae87ddf626d409250f9d4391f208a13e"
+      ],
+      0,
+      "064213b8bc7e7347a56d9df4e5413c61"
+    ],
+    [
+      "Steel.ST.EphemeralHashtbl.map_contains_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.PartialMap.contains", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "cf5b34188c93d153b21e16e725d42036"
+    ],
+    [
+      "Steel.ST.EphemeralHashtbl.get_post",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.l_False", "equation_Prims.subtype_of",
+        "false_interp", "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a"
+      ],
+      0,
+      "35ae354bc300cb3f94a2196234473c77"
+    ],
+    [
+      "Steel.ST.EphemeralHashtbl.with_key_post",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Steel.ST.EphemeralHashtbl.Absent",
+        "disc_equation_Steel.ST.EphemeralHashtbl.Missing",
+        "disc_equation_Steel.ST.EphemeralHashtbl.Present",
+        "equation_Prims.l_False", "equation_Prims.subtype_of",
+        "equation_Steel.ST.EphemeralHashtbl.repr", "false_interp",
+        "fuel_guarded_inversion_Steel.ST.EphemeralHashtbl.get_result",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "typing_FStar.Ghost.reveal", "typing_FStar.PartialMap.sel",
+        "typing_Steel.ST.EphemeralHashtbl.repr"
+      ],
+      0,
+      "c9e4a616f40e7321723499d29735f5b7"
+    ]
+  ]
+]
