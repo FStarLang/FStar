@@ -54,9 +54,7 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
           match old_v with
           | Both _ z -> Both y z
     in
-    rewrite_slprop (pts_to r (First (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (First (Ghost.reveal x))))) (fun _ -> ());
-    upd_gen r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f;
-    rewrite_slprop (pts_to r (Ghost.reveal (Ghost.hide (First y)))) (pts_to r (First y)) (fun _ -> ())
+    upd_gen r (First #a #b x) (First #a #b y) f
 
 let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
   : SteelT unit
@@ -71,6 +69,4 @@ let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
           match old_v with
           | Both z _ -> Both z y
     in
-    rewrite_slprop (pts_to r (Second (Ghost.reveal x))) (pts_to r (Ghost.reveal (Ghost.hide (Second (Ghost.reveal x))))) (fun _ -> ());
-    upd_gen r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f;
-    rewrite_slprop (pts_to r (Ghost.reveal (Ghost.hide (Second y)))) (pts_to r (Second y)) (fun _ -> ())
+    upd_gen r (Second #a #b x) (Second #a #b y) f
