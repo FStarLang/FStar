@@ -20,7 +20,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "becd094602c37a6ebf7e7412639c8377"
+      "7952dbb35ea45077a7e268b546077ac7"
     ],
     [
       "Steel.ST.Util.rewrite_equiv",
@@ -37,7 +37,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "2970b016a469da842baec14ddec67977"
+      "6c719d63662f02d2b66ce717e1c169d5"
     ],
     [
       "Steel.ST.Util.slassert0",
