@@ -15,7 +15,7 @@
 
    Author: N. Swamy
 *)
-module FStar.FractionalAnchoredPreorder
+module Steel.FractionalAnchoredPreorder
 
 (** This module provides a partial commutative monoid (PCM) for use in
     the ghost state of a concurrent Steel program.
