@@ -39,14 +39,14 @@ type cancellable_lock (v:vprop) = {
   llock  : lock (lock_inv lref v)
 }
 
-[@__reduce__]
-let can_release #v c = pts_to c.lref full_perm true
-
 let new_cancellable_lock v =
   let r = alloc true in
   intro_exists true (lock_inv_pred r v);
   let l = new_lock (lock_inv r v) in
   return ({lref = r; llock = l})
+
+[@__reduce__]
+let can_release #v c = pts_to c.lref full_perm true
 
 let acquire #v c =
   acquire c.llock;
