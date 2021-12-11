@@ -1,0 +1,113 @@
+[
+  "Œ^Òj\u0010$¥ëV\f(Í(ž‚\u001a",
+  [
+    [
+      "Steel.GhostPCMReference.alloc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c6350c51d559006829731350bac0f14f"
+    ],
+    [
+      "Steel.GhostPCMReference.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_38139a80be7280e4f39fe8cad1b7e3bc"
+      ],
+      0,
+      "d1f7f53f67c05cbb9400b6a7156619e2"
+    ],
+    [
+      "Steel.GhostPCMReference.write",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "413622980aff2ad4ee337096575451d7"
+    ],
+    [
+      "Steel.GhostPCMReference.upd_gen",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "151bed3fe792e0ec88a8c59a71142b74"
+    ],
+    [
+      "Steel.GhostPCMReference.share",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "564637e09d72a912dac562eb586f2c64"
+    ],
+    [
+      "Steel.GhostPCMReference.share",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "059c13f7a33752e7dfd1bb0167522a9e"
+    ],
+    [
+      "Steel.GhostPCMReference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "56fc8c44220912eb9bc049f169a11f25"
+    ],
+    [
+      "Steel.GhostPCMReference.gather",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "13e8271f27ea034c976a6575fa023b27"
+    ],
+    [
+      "Steel.GhostPCMReference.witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.GhostPCMReference.witnessed",
+        "equation_Steel.Preorder.fact_valid_compat",
+        "fuel_guarded_inversion_FStar.PCM.pcm"
+      ],
+      0,
+      "eb4d6f29f2faa5e8cde7a3b1dfdbafc9"
+    ],
+    [
+      "Steel.GhostPCMReference.recall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.GhostPCMReference.witnessed",
+        "fuel_guarded_inversion_FStar.PCM.pcm"
+      ],
+      0,
+      "760d46ac4e72f8d3375d990f366594c8"
+    ]
+  ]
+]
