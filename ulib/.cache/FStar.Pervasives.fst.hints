@@ -567,6 +567,19 @@
       ],
       0,
       "466eed90a165a2f06fc8043d4e4f61b2"
+    ],
+    [
+      "FStar.Pervasives.coerce_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "500c06675708fe508c513fb4f2824f94"
     ]
   ]
 ]

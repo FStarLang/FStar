@@ -260,3 +260,16 @@ let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
 let extend_history (#a:Type u#a) (#q:preorder a) (h0:vhist q) (v:a{q (curval h0) v})
   : h1:vhist q{h1 `extends` h0}
   = v :: h0
+
+let property (a:Type)
+  = a -> prop
+
+let stable_property (#a:Type) (pcm:pcm a)
+  = fact:property a {
+       FStar.Preorder.stable fact (preorder_of_pcm pcm)
+    }
+
+let fact_valid_compat (#a:Type) (#pcm:pcm a)
+                      (fact:stable_property pcm)
+                      (v:a)
+  = forall z. compatible pcm v z ==> fact z

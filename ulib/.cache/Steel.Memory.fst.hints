@@ -15,7 +15,7 @@
         "projection_inverse_Steel.Memory.Mkmem_heap"
       ],
       0,
-      "0afc18cb9284199e1a463a15285aceac"
+      "728e7bd688ea56d0eb2090fc06482ab1"
     ],
     [
       "Steel.Memory.disjoint",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "50d2ac0b8ca35ef1e8c0fa74f9d67085"
+      "d81c5cd7bf3891b75346693977d81664"
     ],
     [
       "Steel.Memory.disjoint_sym",
@@ -44,7 +44,7 @@
         "typing_Steel.Memory.__proj__Mkmem__item__heap"
       ],
       0,
-      "a3cee03cd4e9cd241b6264ceeb7f40ca"
+      "86a8d7b8b61fec222e55c5e9b8840e3e"
     ],
     [
       "Steel.Memory.join",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_05e27cac11d5ba294d48e85e16d78292"
       ],
       0,
-      "9a7de494ee33688907c00fbb08c64354"
+      "69a9fb6479596bc420cde59e741bd615"
     ],
     [
       "Steel.Memory.join_commutative",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b7ee5de8873571ebe35aa61954b3265c"
+      "15754bd3ca5be74a14afddb179c00218"
     ],
     [
       "Steel.Memory.join_commutative",
@@ -103,7 +103,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "676102d4e45130f911d7e3a89e86a316"
+      "e0c12359b6bba45f64d99975678718bb"
     ],
     [
       "Steel.Memory.disjoint_join",
@@ -112,7 +112,7 @@
       0,
       [ "@query" ],
       0,
-      "450a4584a5b3ba2602cf04902304144b"
+      "9c584d99cf47878eb7d5038698c96e9d"
     ],
     [
       "Steel.Memory.disjoint_join",
@@ -153,7 +153,7 @@
         "typing_Tm_abs_717055a137465e3f34cd5c69f7278ff7"
       ],
       0,
-      "38fa0bb813238267e0a86bb7d8e72b19"
+      "cc532420390741544db5000f92b882ac"
     ],
     [
       "Steel.Memory.join_associative",
@@ -166,7 +166,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3a465667be50cfedb532bc4b0ecae70f"
+      "d06524c7ce7653a1ce07cf0c5823da35"
     ],
     [
       "Steel.Memory.join_associative",
@@ -192,7 +192,7 @@
         "typing_Steel.Memory.join", "typing_Steel.Memory.join_heap"
       ],
       0,
-      "23f3cdc501b2f43f46bc4abb97b1acb3"
+      "95be2bdbbe351476e58f91bdc4ad64d9"
     ],
     [
       "Steel.Memory.equiv",
@@ -206,7 +206,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5025d129ae2a7e1c0de697f235f18dad"
+      "52e54a57745a4c5ae88834be1356b51e"
     ],
     [
       "Steel.Memory.slprop_extensionality",
@@ -224,7 +224,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e5f86add362b391dd2d828173b7c6de2"
+      "4c649ee709d9327aaedf7b0883b8b161"
     ],
     [
       "Steel.Memory.reveal_equiv",
@@ -236,7 +236,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "eeae65809d1c8c016ba66889e25deb4b"
+      "d9a805829d6a68e9ac5b8a976ff22bdb"
     ],
     [
       "Steel.Memory.slimp",
@@ -250,7 +250,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f54f3e4fa982f2a6d178d3d87aac9faf"
+      "8f8d1b078fd9e5d8bd7c1cfe803c8a78"
     ],
     [
       "Steel.Memory.is_null",
@@ -259,7 +259,7 @@
       1,
       [ "@query", "equation_Steel.Memory.null" ],
       0,
-      "d531ded5c97c190dd8ff5754e53bbc45"
+      "c07590f87f5de7cf8f607b7925d62408"
     ],
     [
       "Steel.Memory.equiv_symmetric",
@@ -268,7 +268,7 @@
       0,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "38e6cec32f859ceb488a151d1e608ae3"
+      "0e8a709c59fb25765347d776d4c7dba6"
     ],
     [
       "Steel.Memory.equiv_heap_iff_equiv",
@@ -284,7 +284,7 @@
         "typing_Steel.Memory.mem_of_heap", "unit_typing"
       ],
       0,
-      "5afc898e7000f6da3fd8a336b17e87db"
+      "6fa308342450f7fa879206dbdfc17d8d"
     ],
     [
       "Steel.Memory.equiv_heap_iff_equiv_forall",
@@ -293,7 +293,7 @@
       1,
       [ "@query" ],
       0,
-      "03de628945160c59951a74260c41e5a0"
+      "5bfd554a1a9aa8e5fc63ff4274173480"
     ],
     [
       "Steel.Memory.equiv_extensional_on_star",
@@ -305,7 +305,7 @@
         "lemma_Steel.Memory.equiv_heap_iff_equiv", "typing_Steel.Memory.star"
       ],
       0,
-      "b7e5f6cc3771879f823ab3d79ab72803"
+      "b70f602c564098e12b5ce30f71635cfe"
     ],
     [
       "Steel.Memory.emp_unit",
@@ -318,7 +318,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "4c138cbe3de83e55e8de83d22834460a"
+      "65453f9608ab8c0728624cb8a87c4345"
     ],
     [
       "Steel.Memory.intro_emp",
@@ -330,7 +330,7 @@
         "equation_Steel.Memory.heap_of_mem", "equation_Steel.Memory.interp"
       ],
       0,
-      "b482a1fc6ff6dcc1789c68287b24f819"
+      "64257624f7e2bebeffd45f46c56edd72"
     ],
     [
       "Steel.Memory.pure_equiv",
@@ -342,7 +342,7 @@
         "lemma_Steel.Memory.equiv_heap_iff_equiv", "typing_Steel.Memory.pure"
       ],
       0,
-      "0dbc8f87c6a3f06d0458b0b842e94059"
+      "f26f4d969ec6adb322f9f449199165db"
     ],
     [
       "Steel.Memory.pure_interp",
@@ -354,7 +354,7 @@
         "equation_Steel.Memory.interp", "equation_Steel.Memory.pure"
       ],
       0,
-      "7c91ff126dc00cba8cfd145f5fe8e51f"
+      "5d0b3f94b5f4b699eb8fb5ed9690a2e5"
     ],
     [
       "Steel.Memory.pure_star_interp",
@@ -368,7 +368,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "bc3a42bbe4938b6927dab63baafa2cba"
+      "b3ec6797d4eb95059a26c97221187bbd"
     ],
     [
       "Steel.Memory.pts_to_compatible",
@@ -377,7 +377,7 @@
       1,
       [ "@query" ],
       0,
-      "e46d1555261d04d31e127c9921b31d75"
+      "75202553857b8ec33c55f28d93f01527"
     ],
     [
       "Steel.Memory.pts_to_compatible",
@@ -392,7 +392,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "6e612b35ca2d9c4705abbbb662397ec6"
+      "45a85d82cec7aedce50ec5cd3c1d2cd0"
     ],
     [
       "Steel.Memory.pts_to_compatible_equiv",
@@ -409,7 +409,7 @@
         "typing_Steel.Memory.pts_to", "typing_Steel.Memory.star"
       ],
       0,
-      "e150fbad8ff085a51a94652db00696ac"
+      "a2f4f19e3fe96ae888036984372afe72"
     ],
     [
       "Steel.Memory.pts_to_not_null",
@@ -424,7 +424,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "f6139de644d82a094ad53b1c6b4dc556"
+      "cd3298a6c4c7b7fa92d06f9d30dab2ab"
     ],
     [
       "Steel.Memory.intro_star",
@@ -436,7 +436,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "757affadd3f4ffe8de8378315d004876"
+      "c0f309ff2470b17e38848f7d88c28644"
     ],
     [
       "Steel.Memory.intro_star",
@@ -454,7 +454,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "19b4141c7e2552d4b9a887ec049c6026"
+      "fb5776ec7321a828c4157bd96fae852d"
     ],
     [
       "Steel.Memory.elim_star",
@@ -484,7 +484,7 @@
         "refinement_interpretation_Tm_refine_963b012b06d1d73d5d3ccd999d2f94ce"
       ],
       0,
-      "92dd0f010461c4aa13c7b9a467018369"
+      "6c879d1b53bce22f2f7a4ea0977ba82b"
     ],
     [
       "Steel.Memory.interp_star",
@@ -493,7 +493,7 @@
       1,
       [ "@query" ],
       0,
-      "823f41321383ef8838b0f334d08067dc"
+      "3dc2cc3f13f9e991d40180841756c69a"
     ],
     [
       "Steel.Memory.interp_star",
@@ -508,7 +508,7 @@
         "refinement_interpretation_Tm_refine_c9e1f9f4c6e019f6f57bb66f0dee9b17"
       ],
       0,
-      "2837e296db7832d628ae01b7e23b429f"
+      "bf2a8f4186824982734c039c959875cc"
     ],
     [
       "Steel.Memory.star_commutative",
@@ -520,7 +520,7 @@
         "lemma_Steel.Memory.equiv_heap_iff_equiv", "typing_Steel.Memory.star"
       ],
       0,
-      "ca1e294a895974f5fc56fd6fd4994426"
+      "7d5855284ada26b52e98ff1da8feb58e"
     ],
     [
       "Steel.Memory.star_associative",
@@ -532,7 +532,7 @@
         "lemma_Steel.Memory.equiv_heap_iff_equiv", "typing_Steel.Memory.star"
       ],
       0,
-      "b884b48490edf1d250a8242894ffbeaa"
+      "b2c2b80cf1e56b65c035a99a55c9f43d"
     ],
     [
       "Steel.Memory.star_congruence",
@@ -545,7 +545,7 @@
         "lemma_Steel.Memory.equiv_heap_iff_equiv", "typing_Steel.Heap.star"
       ],
       0,
-      "a5fe5cedb56cd514b69b224b1a2c5aaf"
+      "9722d81ebce8573d6006664a14daebfc"
     ],
     [
       "Steel.Memory.affine_star",
@@ -559,7 +559,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "6adc72b4fc96707e969cf170e6816480"
+      "6925ef5de1dcafdf2a596a8dbf172c65"
     ],
     [
       "Steel.Memory.iname",
@@ -573,7 +573,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7cb3f5cd7e6bd659f5a6cdf82380adf1"
+      "e640cc63643cc30de4aed8779d3f7132"
     ],
     [
       "Steel.Memory.lock_store_invariant",
@@ -599,7 +599,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "a695a23e8e4b03dd1092238c7ccbc7fd"
+      "34ed528ea4b88595fcb0814f47076acc"
     ],
     [
       "Steel.Memory.lock_i",
@@ -618,7 +618,7 @@
         "refinement_interpretation_Tm_refine_5e5faf9baa891750c12708114dbafd00"
       ],
       0,
-      "ee9eebf5767950312fe3d05879d0a773"
+      "6a51aa7f52cdba3fe9a7d46329ec4738"
     ],
     [
       "Steel.Memory.lock_store_evolves",
@@ -630,7 +630,7 @@
         "refinement_interpretation_Tm_refine_a6e2574e381d36c77dec02e90158b213"
       ],
       0,
-      "5712b41f0ede8c408cd90a5150c44e18"
+      "0f321a14f0ff6f65e374aa485b7a0d5b"
     ],
     [
       "Steel.Memory.lock_store_evolves",
@@ -650,7 +650,7 @@
         "refinement_interpretation_Tm_refine_a6e2574e381d36c77dec02e90158b213"
       ],
       0,
-      "9bc328c42c0910c440c62b7f18248d7a"
+      "b9cefd1e1de2247c89a2930f7371c47e"
     ],
     [
       "Steel.Memory.inames_in",
@@ -664,7 +664,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "66cffd30aad88d41a0b70ee9dad4b85b"
+      "82a67b4341de2a64555c0a503a0958ec"
     ],
     [
       "Steel.Memory.inames_ok_empty",
@@ -679,7 +679,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "9987b988d6b9c1cdda39e700345942d0"
+      "b52aa65dcb2029f2f681261c4abd3274"
     ],
     [
       "Steel.Memory.extend_lock_store",
@@ -727,7 +727,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "31900d61101daebc0abdf8e9cf3b1aa9"
+      "baeca2b5ac0a1214372ad47a1a012f05"
     ],
     [
       "Steel.Memory.move_invariant",
@@ -794,7 +794,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "20facc3b5a9fec45eae993d6b4fbfa63"
+      "5bbeaaeb22941c3d44d64ba13b460b13"
     ],
     [
       "Steel.Memory.core_mem_interp",
@@ -810,7 +810,7 @@
         "projection_inverse_Steel.Memory.Mkmem_heap"
       ],
       0,
-      "fc48bb713a1ddf1729f962d0551a8d8f"
+      "ce39284bdf65f5c6bacbf70c8b0a8c5f"
     ],
     [
       "Steel.Memory.interp_depends_only_on",
@@ -830,7 +830,7 @@
         "typing_Steel.Memory.__proj__Mkmem__item__heap"
       ],
       0,
-      "f06e87a1938befe4433130c3808fc801"
+      "b252e992c95f6998c1dabdd25e9a3edd"
     ],
     [
       "Steel.Memory.mem_prop_is_affine",
@@ -847,7 +847,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "4e5d803b6e77282bb41987075283ace5"
+      "40f475142d3aa864e5936afec2678f2f"
     ],
     [
       "Steel.Memory.a_mem_prop_as_a_heap_prop",
@@ -878,7 +878,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "def8821808dc80acc6f9172283d8f12c"
+      "835be252ccde35fc157703b252321a0e"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -887,7 +887,7 @@
       1,
       [ "@query" ],
       0,
-      "c5f8c6bba94446180313805c1cc43a96"
+      "c68025fdaeb59bbc2257ecfe52d685d9"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -912,7 +912,7 @@
         "typing_Steel.Memory.a_mem_prop_as_a_heap_prop"
       ],
       0,
-      "a923629255688744dcfb1b2ab927f680"
+      "dc255ff153e5dba367a596bc61ccc764"
     ],
     [
       "Steel.Memory.dep_hprop",
@@ -926,7 +926,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "999160c12f03347b09d1ef5bddfb6033"
+      "e8f5d24efac57a47581e85ed3cf37dad"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine0",
@@ -957,7 +957,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "fae09598e70cbfd50ff61f23f5a5226a"
+      "1723c9e5e071f959133c1605f6513fb1"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine1",
@@ -966,7 +966,7 @@
       1,
       [ "@query" ],
       0,
-      "9d15a9793005b163a3d93cb9a881c583"
+      "acffffa88d04ddce9c0f5cd197f2da0b"
     ],
     [
       "Steel.Memory.dep_hprop_is_affine",
@@ -978,7 +978,7 @@
         "token_correspondence_Steel.Memory.dep_hprop"
       ],
       0,
-      "601b0f183035f1f327e94b9c2e8ad441"
+      "2e38c17846a4de62d51f00690d2bec19"
     ],
     [
       "Steel.Memory.sdep",
@@ -987,7 +987,7 @@
       1,
       [ "@query" ],
       0,
-      "b631fe88b9cc438fd75df93ca73e70d6"
+      "252e7bf14731b89bec27c81e0a4b3831"
     ],
     [
       "Steel.Memory.dep_slprop_is_affine",
@@ -1004,7 +1004,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "c781e4fec7e2947b8e97ad3ab715f5e7"
+      "bbe88f7495d3702c61805705e79d0658"
     ],
     [
       "Steel.Memory.interp_sdep",
@@ -1045,7 +1045,7 @@
         "typing_Steel.Memory.mem_of_heap", "typing_Steel.Memory.mem_set_heap"
       ],
       0,
-      "2d9b592360b6bc1e19ca219cec49e4ac"
+      "2400b22790a9cfa7ac60977cabbfbe5e"
     ],
     [
       "Steel.Memory.h_exists_cong",
@@ -1060,7 +1060,7 @@
         "typing_Steel.Memory.h_exists"
       ],
       0,
-      "ef3c6f7367c6f82acd504b9c2f8ebbef"
+      "050e696266d332974d33d7b255d86c3a"
     ],
     [
       "Steel.Memory.intro_h_exists",
@@ -1073,7 +1073,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "9369822126ce3978959b584aff8e69c7"
+      "b6c3a855e4de1fe8509d21a748a650e8"
     ],
     [
       "Steel.Memory.elim_h_exists",
@@ -1086,7 +1086,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "ac871035f86838e119a7eac0a238ae2c"
+      "30e0a92844128842fadff871385b73e2"
     ],
     [
       "Steel.Memory.mem_evolves",
@@ -1099,7 +1099,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "109bb961f02c41b57821bb0d6498e290"
+      "103974330a3f32980e4633239104f41b"
     ],
     [
       "Steel.Memory.mem_evolves",
@@ -1130,7 +1130,7 @@
         "typing_Steel.Memory.lock_store_evolves"
       ],
       0,
-      "9a72c4430c4b35e249793a625cb92b9d"
+      "388c138278715c1e55153ee1e2ba51a4"
     ],
     [
       "Steel.Memory.action_except",
@@ -1147,7 +1147,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "61e526c8a856cbde25a7d56882c3b84a"
+      "49c35e152fbe4bd12d83a4a77f9a0a48"
     ],
     [
       "Steel.Memory.ac_reasoning_for_m_frame_preserving",
@@ -1160,7 +1160,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "e47711b4aa9f98728caf07e0eb9df6d0"
+      "b86843c88a6b20d7f3147976c1a9c110"
     ],
     [
       "Steel.Memory.is_frame_preserving",
@@ -1174,7 +1174,7 @@
         "refinement_interpretation_Tm_refine_deb237b0c4d319c8ca9c30634c46a898"
       ],
       0,
-      "72d673e7db154a7342e0bbfe30caaa69"
+      "2ede1b9e24982ee339b524ffb166fc0a"
     ],
     [
       "Steel.Memory.hheap_of_hmem",
@@ -1206,7 +1206,7 @@
         "typing_Steel.Memory.locks_invariant"
       ],
       0,
-      "8d5bd60619ba6634caa1d44eaa2472f0"
+      "4bc1bfcb050e683cf4f8474c9d320baf"
     ],
     [
       "Steel.Memory.hmem_of_hheap",
@@ -1253,7 +1253,7 @@
         "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star"
       ],
       0,
-      "5bb41927fd997426026c306ec1e054e7"
+      "0be6b4b9b58169e703c32bd7b2cbebed"
     ],
     [
       "Steel.Memory.as_hprop",
@@ -1280,7 +1280,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "d413a50988b4f5413542977eb1c10d81"
+      "e0cc735663597256eb453d3f05cecf52"
     ],
     [
       "Steel.Memory.mprop_preservation_of_hprop_preservation",
@@ -1299,7 +1299,7 @@
         "token_correspondence_Steel.Memory.as_hprop"
       ],
       0,
-      "479762a25a18c38eaaedccf5b2840747"
+      "467ee4bca503994f5c401d5d50263ead"
     ],
     [
       "Steel.Memory.lift_heap_action",
@@ -1356,7 +1356,7 @@
         "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star"
       ],
       0,
-      "44fb0121441c68bfae49c377b8cdbc11"
+      "e1b9551fd61d728cbe9f1586cbadafd7"
     ],
     [
       "Steel.Memory.frame_preserving_respects_preorder",
@@ -1381,7 +1381,7 @@
         "typing_Steel.Memory.__proj__Mkmem__item__heap"
       ],
       0,
-      "c194518f1dadc6dc345fce1ebaf5cb5c"
+      "4e0409ac4ff57cc4c92457da3eb38a7a"
     ],
     [
       "Steel.Memory.lift_tot_action_nf",
@@ -1403,7 +1403,7 @@
         "refinement_interpretation_Tm_refine_deb237b0c4d319c8ca9c30634c46a898"
       ],
       0,
-      "81d25e4e7e81fe44cb0906db3e20876e"
+      "70998fc3cce74a7c90fd1a707cdd2ace"
     ],
     [
       "Steel.Memory.lift_tot_action",
@@ -1421,7 +1421,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "761877aa6c3465539cd60d6c5cbd520f"
+      "4dd64505f21b58c46a8ef4bc0ce7f431"
     ],
     [
       "Steel.Memory.lift_heap_action_with_frame",
@@ -1477,7 +1477,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "bb654068d85d871e90b193098b5597c0"
+      "5b19507f1875042382406e0fa0ab0815"
     ],
     [
       "Steel.Memory.lift_tot_action_with_frame",
@@ -1501,7 +1501,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "59c6eaed28a9582b7748c614f23c8895"
+      "265109fc15ea6094d9d268a8ab77cda1"
     ],
     [
       "Steel.Memory.sel_action",
@@ -1513,7 +1513,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "f18e7221eecb01615290da288cc009e4"
+      "09eb615c6960340b17a327dcf0b73f77"
     ],
     [
       "Steel.Memory.upd_action",
@@ -1525,7 +1525,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "284a84052db55b7fd4ccf4ce7ea8eff0"
+      "c793f8348d6b9a7567284dd60e1eb3a7"
     ],
     [
       "Steel.Memory.free_action",
@@ -1537,7 +1537,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "80652cf76b8090bc10ebefe53cabbfe9"
+      "4921fdac35f1b60d498dac8a8de49045"
     ],
     [
       "Steel.Memory.split_action",
@@ -1549,7 +1549,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "69c540efea0f8515c3458f5cc086b119"
+      "aac72c4d68054067e19f6733f646c5b0"
     ],
     [
       "Steel.Memory.split_action",
@@ -1562,7 +1562,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "414bd9657d0874aec5e0ce81426784f1"
+      "e8e2fb6faa0df6367d2ff55a7fd395d2"
     ],
     [
       "Steel.Memory.gather_action",
@@ -1574,7 +1574,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "c734f860542ee8dc67c740265fe7283a"
+      "91a858b185389802fa8a05ba6514b30f"
     ],
     [
       "Steel.Memory.gather_action",
@@ -1588,7 +1588,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "15e53fbbb68857158a40c195cdec1dcb"
+      "891524dec38b085a22e13b411fe7bab1"
     ],
     [
       "Steel.Memory.weaken",
@@ -1600,7 +1600,7 @@
         "refinement_interpretation_Tm_refine_47a62d150952a9f041893d448e58053d"
       ],
       0,
-      "708b2ae9f171dfc4df071a407ef99cf0"
+      "3ec1488f342e77c853b04b8dc8a7bfa8"
     ],
     [
       "Steel.Memory.weaken_pure",
@@ -1609,7 +1609,7 @@
       1,
       [ "@query", "equation_Steel.Heap.stronger" ],
       0,
-      "201d836cd1cd8eb52736ff5fe3782a46"
+      "085c3cee6e429f774dcf61c78b8990b6"
     ],
     [
       "Steel.Memory.inc_ctr",
@@ -1646,7 +1646,7 @@
         "typing_Steel.Memory.__proj__Mkmem__item__heap"
       ],
       0,
-      "a9e8c33fb59bea68ed6de3a5a8a2eca3"
+      "409267e5e84760511093b84317b9c393"
     ],
     [
       "Steel.Memory.refined_pre_action_as_action",
@@ -1668,7 +1668,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "5aeb37c03c2380fecdeb82619d870a6b"
+      "607d61227b2c6b506a63f76ba8eb9cae"
     ],
     [
       "Steel.Memory.alloc_action",
@@ -1746,7 +1746,7 @@
         "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star"
       ],
       0,
-      "f42311006c0ce4420924c5e07bea3328"
+      "fa74acc52caed1f46bece6df120342e7"
     ],
     [
       "Steel.Memory.select_refine",
@@ -1755,7 +1755,7 @@
       1,
       [ "@query" ],
       0,
-      "05d9e16edbf0e47ea17c0fbac839cf11"
+      "eeaf6495a30a1dea4f6037b5ffe49995"
     ],
     [
       "Steel.Memory.select_refine",
@@ -1767,7 +1767,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "baca1dd8480769e47ff2c226d1844063"
+      "905fd66c49d31cfb15c96e597e4a8ce2"
     ],
     [
       "Steel.Memory.upd_gen",
@@ -1779,7 +1779,7 @@
         "fuel_guarded_inversion_FStar.PCM.pcm"
       ],
       0,
-      "30ebddbdb16a338b2744ebea0cd6a60b"
+      "c483ac9f80ea4425d6d58f8c7629c9ef"
     ],
     [
       "Steel.Memory.witnessed_ref",
@@ -1792,7 +1792,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "8554473d02d71a6c9b845573b5c80d7e"
+      "4b71c5fffe56c0a00659349c2a02a7ae"
     ],
     [
       "Steel.Memory.witnessed_ref_stability",
@@ -1816,7 +1816,7 @@
         "typing_Steel.Memory.heap_of_mem"
       ],
       0,
-      "19607cb8192546855169d7740e0dbb18"
+      "3de2d417a2879ec7c496eb25f6093c9e"
     ],
     [
       "Steel.Memory.rearrange_pqr_prq",
@@ -1825,7 +1825,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "561d1653cd98cbaef0d4e15a0b83411f"
+      "171debca6b8c145543cd04110df20a4a"
     ],
     [
       "Steel.Memory.preserves_frame_cong",
@@ -1838,7 +1838,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "a5658934bc69439233e9858e991a347f"
+      "65dae0939ab916c2fa76ffab834c66ff"
     ],
     [
       "Steel.Memory.pure_true_equiv",
@@ -1857,7 +1857,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "db19e43f47f3e53e481302e8846db70b"
+      "13fbdc6a5d952c1b81ad63c2a5e549a0"
     ],
     [
       "Steel.Memory.preserves_frame_star_pure",
@@ -1881,7 +1881,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "2c1fc4fc24be37c72e6d091afff3a99a"
+      "026b7d45b44b591902a431dc304352be"
     ],
     [
       "Steel.Memory.witness",
@@ -1923,7 +1923,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "1de1c6a82b1d8f41fab8341824084dd3"
+      "6e3337ef9a183dd6ea1cd71031446682"
     ],
     [
       "Steel.Memory.recall",
@@ -1961,7 +1961,7 @@
         "unit_typing"
       ],
       0,
-      "2e729338989c4a6077987fdabe3f67df"
+      "3714dd14ea7ec1ab63f1353ba2d359cb"
     ],
     [
       "Steel.Memory.iname_for_p_stable",
@@ -1991,7 +1991,7 @@
         "token_correspondence_Steel.Memory.iname_for_p"
       ],
       0,
-      "f0730c39926a6319037ba7032c92a0c9"
+      "54f5efa1749e2f36f1699aa5ee606eb0"
     ],
     [
       "Steel.Memory.hmem_with_inv_equiv",
@@ -2016,7 +2016,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "fb9aaa5dc66fa4b92b8218adcacd98c9"
+      "6a6135a95a0333e8df0bf38073e11357"
     ],
     [
       "Steel.Memory.new_invariant_tot_action",
@@ -2110,7 +2110,7 @@
         "typing_Steel.Memory.mem_evolves", "typing_Steel.Memory.star"
       ],
       0,
-      "941791689430dbdd88ca4d09514a9b21"
+      "a286be2e8320f76a8b97fd7833210e1f"
     ],
     [
       "Steel.Memory.new_invariant",
@@ -2152,7 +2152,7 @@
         "typing_Steel.Memory.hmem_with_inv_except", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1a99f200fa7815d44e9a5aa4e9e129dc"
+      "89cfb1d1e6a1a5179062e52d5dfbcd77"
     ],
     [
       "Steel.Memory.rearrange_invariant",
@@ -2168,7 +2168,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "6b51c41de0d4491c50c0bbbb237b6e71"
+      "46148be84ed725ea28a0bb69a2e073dc"
     ],
     [
       "Steel.Memory.preserves_frame_invariant",
@@ -2188,7 +2188,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "d64518f270fb8ec38e89906b5200a581"
+      "1b1cda50cc2273e6b8ef5a0f0e28fd6d"
     ],
     [
       "Steel.Memory.equiv_ext_right",
@@ -2197,7 +2197,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "bf7579d6737a3b408067fd368b6f1369"
+      "ee596c656a691a8bb69b9e31e6735639"
     ],
     [
       "Steel.Memory.with_inv_helper",
@@ -2208,7 +2208,7 @@
         "@query", "equation_Steel.Memory.equiv", "equation_Steel.Memory.star"
       ],
       0,
-      "040f50f5ab0dd18d29573cc03ccfa396"
+      "ca570f168e2a5876754f774a45f19597"
     ],
     [
       "Steel.Memory.with_invariant",
@@ -2271,7 +2271,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "d0e31e8e53627d12548f7c144c9e2d3f"
+      "52ec21a3c4eb0a888c3cd20a75f2cc5f"
     ],
     [
       "Steel.Memory.equiv_pqrs_p_qr_s",
@@ -2285,7 +2285,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fe249bb362f9e2d6660cb652a2bdfcf1"
+      "46bcfd22f591a2ef94377b91691c0f54"
     ],
     [
       "Steel.Memory.frame",
@@ -2306,7 +2306,7 @@
         "refinement_interpretation_Tm_refine_d13ff5e7a2dcec6ca4a9195f0dca7981"
       ],
       0,
-      "e34c26e23b9053b55cdd250181aace8d"
+      "ff9a47f7d776cc78e644982c10319ea8"
     ],
     [
       "Steel.Memory.frame",
@@ -2330,7 +2330,7 @@
         "refinement_interpretation_Tm_refine_e2245fc196de5b71293ba64ccf39fbac"
       ],
       0,
-      "ae55af65ae1aa180d0f0ba2ae365afd8"
+      "5e10e2e578e9195ad3e24bdb816dd872"
     ],
     [
       "Steel.Memory.change_slprop",
@@ -2344,7 +2344,7 @@
         "projection_inverse_Steel.Memory.Mkmem_heap"
       ],
       0,
-      "13849adc1a1b1c89be7d9bf32d20fd5b"
+      "2350716ae2fe0be0866c6c4d7b7e6bee"
     ],
     [
       "Steel.Memory.is_frame_monotonic",
@@ -2358,7 +2358,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "05a79755c8c668a54afe8bbf36e2bf25"
+      "d34028d1cea18e88e1511f433850de52"
     ],
     [
       "Steel.Memory.relate_frame_monotonic_1",
@@ -2373,7 +2373,7 @@
         "typing_Steel.Memory.__proj__Mkmem__item__heap"
       ],
       0,
-      "41b61bfb8cd59264be0a78b84d3a3c49"
+      "b71fe97a448456fe30f6c3ef3f79bb27"
     ],
     [
       "Steel.Memory.relate_frame_monotonic_2",
@@ -2391,7 +2391,7 @@
         "typing_Steel.Memory.mem_of_heap"
       ],
       0,
-      "165ea0760adeb29dd11472edb1093095"
+      "02eb28403d4fc557a91ad8496de2c34c"
     ],
     [
       "Steel.Memory.witness_h_exists",
@@ -2403,7 +2403,7 @@
         "refinement_interpretation_Tm_refine_a9fee0068994387e4e6ad1184cfd887d"
       ],
       0,
-      "4c6598699e05d5c4de52083ff15fb086"
+      "bb5b3cf37bdf5976371542b431a9e0a7"
     ],
     [
       "Steel.Memory.lift_h_exists",
@@ -2415,7 +2415,7 @@
         "equation_Steel.Memory.slprop"
       ],
       0,
-      "a6968af96becde526cccdea23db47dcd"
+      "5f7797bcb498630c91fb0cc29f9682d7"
     ],
     [
       "Steel.Memory.elim_pure",
@@ -2424,7 +2424,7 @@
       1,
       [ "@query", "equation_Steel.Memory.emp", "equation_Steel.Memory.pure" ],
       0,
-      "1bbbfcba8cf19a44626cac37b385e204"
+      "74956cc52d21d5cf7222a28085ea8513"
     ],
     [
       "Steel.Memory.pts_to_join",
@@ -2438,7 +2438,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "a74494e994da614115d0ed2c2978cc20"
+      "cdb2613c5bef39c58b0a25629e473546"
     ],
     [
       "Steel.Memory.pts_to_evolve",
@@ -2453,7 +2453,7 @@
         "fuel_guarded_inversion_Steel.Memory.mem"
       ],
       0,
-      "3b5baaac30bdc17dbca759d55091bda4"
+      "af28872dcfcc1f91d71e8cc80573d49d"
     ],
     [
       "Steel.Memory.id_elim_star",
@@ -2462,7 +2462,7 @@
       1,
       [ "@query" ],
       0,
-      "52a5ce5285d5f2f12d3e890a65d95725"
+      "b3dbc03c124544945d31d15739d5ab18"
     ],
     [
       "Steel.Memory.id_elim_star",
@@ -2485,7 +2485,7 @@
         "refinement_interpretation_Tm_refine_accbe928afe3bd35f89b44aa190dc70c"
       ],
       0,
-      "4765d7a916f574a10f4626e70446da35"
+      "805f5672465bea0bc46696bf562409f2"
     ],
     [
       "Steel.Memory.id_elim_exists",
@@ -2498,7 +2498,7 @@
         "refinement_interpretation_Tm_refine_2189d4a2649b143ab07e02954af8d46c"
       ],
       0,
-      "56a585d01ccafbb027edf0ee1192ce12"
+      "5954183949bc5f5d0f5595ddcb8c112f"
     ],
     [
       "Steel.Memory.slimp_star",
@@ -2513,7 +2513,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "32e19df975ce4baa4151852be74b407a"
+      "85afe394fe16e8417d5c54299a7d3d0a"
     ],
     [
       "Steel.Memory.elim_wi",
@@ -2527,7 +2527,7 @@
         "refinement_interpretation_Tm_refine_984817340650f84e8ca92a7803afdb66"
       ],
       0,
-      "cc7ba060e2b6f6e5c80078d503b6d17f"
+      "d3c7dee3aed32397b175a6cd19523064"
     ],
     [
       "Steel.Memory.witinv_framon",
@@ -2542,7 +2542,7 @@
         "lemma_Steel.Memory.affine_star_smt"
       ],
       0,
-      "64f9aa9124c4f5b16f8217f067ba7378"
+      "743c47a0b56289156fca03853b347ad4"
     ],
     [
       "Steel.Memory.star_is_frame_monotonic",
@@ -2562,7 +2562,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "35675d8b68f991d3335518a842d66937"
+      "ccb8922d882e6a8d4aa769ec314cc6f6"
     ],
     [
       "Steel.Memory.star_is_witinv_left",
@@ -2578,7 +2578,7 @@
         "lemma_Steel.Memory.affine_star_smt"
       ],
       0,
-      "c3eace3ce5b06e5ffb6fa7226064fd5e"
+      "5e9a1d9b88d75359f39a4cf87c84a847"
     ],
     [
       "Steel.Memory.star_is_witinv_right",
@@ -2594,7 +2594,7 @@
         "lemma_Steel.Memory.affine_star_smt"
       ],
       0,
-      "220e4219e0e498ba6921624cdf24ff5b"
+      "59d68decdbeaf234ad1ee00a59661125"
     ]
   ]
 ]

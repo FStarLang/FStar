@@ -1,5 +1,5 @@
 [
-  "¢›Aï*WTÚ\"56páY;å",
+  "\f—ð\u0003PÖ“‰!\u0001å‹Ý„Cð",
   [
     [
       "FStar.Pervasives.Lemma",
@@ -440,6 +440,19 @@
       ],
       0,
       "df4846776258718a11d2dacf4e2621cc"
+    ],
+    [
+      "FStar.Pervasives.coerce_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5418b35ab874c15de942c5b94238be37"
     ]
   ]
 ]
