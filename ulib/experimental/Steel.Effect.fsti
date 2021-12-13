@@ -300,7 +300,7 @@ val bind_pure_steel_ (a:Type) (b:Type)
     (bind_pure_steel__ens wp ens)
 
 /// A polymonadic composition between Pure computations (in the PURE effects) and Steel computations (in the SteelBase effect).
-/// Note that the SteelBase, PURE case is not handled here: In this case, a SteelBase return is automatically inserted by the F* typechecked
+/// Note that the SteelBase, PURE case is not handled here: In this case, a SteelBase return is automatically inserted by the F* typechecker
 polymonadic_bind (PURE, SteelBase) |> SteelBase = bind_pure_steel_
 
 /// A version of the Steel effect with trivial requires and ensures clauses
