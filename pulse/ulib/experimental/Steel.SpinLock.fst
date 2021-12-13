@@ -112,3 +112,17 @@ let release (#p:vprop) (l:lock p) =
   let i: inv (lockinv p r) = snd l in
   let b = with_invariant i (fun _ -> release_core r i) in
   drop (if b then emp else p)
+
+let s_lock p pred = lock (p `vrefine` pred)
+
+let new_s_lock p pred =
+  intro_vrefine p pred;
+  new_lock (p `vrefine` pred)
+
+let s_acquire #p #pred l =
+  acquire l;
+  elim_vrefine p pred
+
+let s_release #p #pred l =
+  intro_vrefine p pred;
+  release l
