@@ -284,10 +284,6 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         tcs, datas
 
 
-let debug_log (env:env_t) (msg : unit -> string) : unit =
-    if Env.debug env <| Options.Other "Positivity" then
-      BU.print_string ("Positivity::" ^ msg () ^ "\n")
-
 let datacon_typ (data:sigelt) :term =
   match data.sigel with
   | Sig_datacon (_, _, t, _, _, _) -> t
