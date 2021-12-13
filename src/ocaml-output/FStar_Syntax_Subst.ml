@@ -1441,46 +1441,48 @@ let (open_let_rec :
             lbs (Prims.int_zero, [], []) in
       match uu___ with
       | (n_let_recs, lbs1, let_rec_opening) ->
-          let lbs2 =
-            FStar_Compiler_Effect.op_Bar_Greater lbs1
-              (FStar_Compiler_List.map
-                 (fun lb ->
-                    let uu___1 =
-                      FStar_Compiler_List.fold_right
-                        (fun u ->
-                           fun uu___2 ->
-                             match uu___2 with
-                             | (i, us, out) ->
-                                 let u1 =
-                                   FStar_Syntax_Syntax.new_univ_name
-                                     FStar_Pervasives_Native.None in
-                                 ((i + Prims.int_one), (u1 :: us),
-                                   ((FStar_Syntax_Syntax.UN
-                                       (i, (FStar_Syntax_Syntax.U_name u1)))
-                                   :: out))) lb.FStar_Syntax_Syntax.lbunivs
-                        (n_let_recs, [], let_rec_opening) in
-                    match uu___1 with
-                    | (uu___2, us, u_let_rec_opening) ->
-                        let uu___3 =
-                          subst u_let_rec_opening
-                            lb.FStar_Syntax_Syntax.lbtyp in
-                        let uu___4 =
-                          subst u_let_rec_opening
-                            lb.FStar_Syntax_Syntax.lbdef in
-                        {
-                          FStar_Syntax_Syntax.lbname =
-                            (lb.FStar_Syntax_Syntax.lbname);
-                          FStar_Syntax_Syntax.lbunivs = us;
-                          FStar_Syntax_Syntax.lbtyp = uu___3;
-                          FStar_Syntax_Syntax.lbeff =
-                            (lb.FStar_Syntax_Syntax.lbeff);
-                          FStar_Syntax_Syntax.lbdef = uu___4;
-                          FStar_Syntax_Syntax.lbattrs =
-                            (lb.FStar_Syntax_Syntax.lbattrs);
-                          FStar_Syntax_Syntax.lbpos =
-                            (lb.FStar_Syntax_Syntax.lbpos)
-                        })) in
-          let t1 = subst let_rec_opening t in (lbs2, t1)
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Compiler_List.hd lbs1 in
+              uu___3.FStar_Syntax_Syntax.lbunivs in
+            FStar_Compiler_List.fold_right
+              (fun u ->
+                 fun uu___3 ->
+                   match uu___3 with
+                   | (i, us, out) ->
+                       let u1 =
+                         FStar_Syntax_Syntax.new_univ_name
+                           FStar_Pervasives_Native.None in
+                       ((i + Prims.int_one), (u1 :: us),
+                         ((FStar_Syntax_Syntax.UN
+                             (i, (FStar_Syntax_Syntax.U_name u1))) :: out)))
+              uu___2 (n_let_recs, [], let_rec_opening) in
+          (match uu___1 with
+           | (uu___2, us, u_let_rec_opening) ->
+               let lbs2 =
+                 FStar_Compiler_Effect.op_Bar_Greater lbs1
+                   (FStar_Compiler_List.map
+                      (fun lb ->
+                         let uu___3 =
+                           subst u_let_rec_opening
+                             lb.FStar_Syntax_Syntax.lbtyp in
+                         let uu___4 =
+                           subst u_let_rec_opening
+                             lb.FStar_Syntax_Syntax.lbdef in
+                         {
+                           FStar_Syntax_Syntax.lbname =
+                             (lb.FStar_Syntax_Syntax.lbname);
+                           FStar_Syntax_Syntax.lbunivs = us;
+                           FStar_Syntax_Syntax.lbtyp = uu___3;
+                           FStar_Syntax_Syntax.lbeff =
+                             (lb.FStar_Syntax_Syntax.lbeff);
+                           FStar_Syntax_Syntax.lbdef = uu___4;
+                           FStar_Syntax_Syntax.lbattrs =
+                             (lb.FStar_Syntax_Syntax.lbattrs);
+                           FStar_Syntax_Syntax.lbpos =
+                             (lb.FStar_Syntax_Syntax.lbpos)
+                         })) in
+               let t1 = subst let_rec_opening t in (lbs2, t1))
 let (close_let_rec :
   FStar_Syntax_Syntax.letbinding Prims.list ->
     FStar_Syntax_Syntax.term ->
@@ -1510,43 +1512,44 @@ let (close_let_rec :
                      ((i + Prims.int_one), uu___4)) lbs (Prims.int_zero, []) in
       match uu___ with
       | (n_let_recs, let_rec_closing) ->
-          let lbs1 =
-            FStar_Compiler_Effect.op_Bar_Greater lbs
-              (FStar_Compiler_List.map
-                 (fun lb ->
-                    let uu___1 =
-                      FStar_Compiler_List.fold_right
-                        (fun u ->
-                           fun uu___2 ->
-                             match uu___2 with
-                             | (i, out) ->
-                                 ((i + Prims.int_one),
-                                   ((FStar_Syntax_Syntax.UD (u, i)) :: out)))
-                        lb.FStar_Syntax_Syntax.lbunivs
-                        (n_let_recs, let_rec_closing) in
-                    match uu___1 with
-                    | (uu___2, u_let_rec_closing) ->
-                        let uu___3 =
-                          subst u_let_rec_closing
-                            lb.FStar_Syntax_Syntax.lbtyp in
-                        let uu___4 =
-                          subst u_let_rec_closing
-                            lb.FStar_Syntax_Syntax.lbdef in
-                        {
-                          FStar_Syntax_Syntax.lbname =
-                            (lb.FStar_Syntax_Syntax.lbname);
-                          FStar_Syntax_Syntax.lbunivs =
-                            (lb.FStar_Syntax_Syntax.lbunivs);
-                          FStar_Syntax_Syntax.lbtyp = uu___3;
-                          FStar_Syntax_Syntax.lbeff =
-                            (lb.FStar_Syntax_Syntax.lbeff);
-                          FStar_Syntax_Syntax.lbdef = uu___4;
-                          FStar_Syntax_Syntax.lbattrs =
-                            (lb.FStar_Syntax_Syntax.lbattrs);
-                          FStar_Syntax_Syntax.lbpos =
-                            (lb.FStar_Syntax_Syntax.lbpos)
-                        })) in
-          let t1 = subst let_rec_closing t in (lbs1, t1)
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Compiler_List.hd lbs in
+              uu___3.FStar_Syntax_Syntax.lbunivs in
+            FStar_Compiler_List.fold_right
+              (fun u ->
+                 fun uu___3 ->
+                   match uu___3 with
+                   | (i, out) ->
+                       ((i + Prims.int_one), ((FStar_Syntax_Syntax.UD (u, i))
+                         :: out))) uu___2 (n_let_recs, let_rec_closing) in
+          (match uu___1 with
+           | (uu___2, u_let_rec_closing) ->
+               let lbs1 =
+                 FStar_Compiler_Effect.op_Bar_Greater lbs
+                   (FStar_Compiler_List.map
+                      (fun lb ->
+                         let uu___3 =
+                           subst u_let_rec_closing
+                             lb.FStar_Syntax_Syntax.lbtyp in
+                         let uu___4 =
+                           subst u_let_rec_closing
+                             lb.FStar_Syntax_Syntax.lbdef in
+                         {
+                           FStar_Syntax_Syntax.lbname =
+                             (lb.FStar_Syntax_Syntax.lbname);
+                           FStar_Syntax_Syntax.lbunivs =
+                             (lb.FStar_Syntax_Syntax.lbunivs);
+                           FStar_Syntax_Syntax.lbtyp = uu___3;
+                           FStar_Syntax_Syntax.lbeff =
+                             (lb.FStar_Syntax_Syntax.lbeff);
+                           FStar_Syntax_Syntax.lbdef = uu___4;
+                           FStar_Syntax_Syntax.lbattrs =
+                             (lb.FStar_Syntax_Syntax.lbattrs);
+                           FStar_Syntax_Syntax.lbpos =
+                             (lb.FStar_Syntax_Syntax.lbpos)
+                         })) in
+               let t1 = subst let_rec_closing t in (lbs1, t1))
 let (close_tscheme :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.tscheme)

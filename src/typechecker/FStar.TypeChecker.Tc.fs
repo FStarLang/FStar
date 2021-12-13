@@ -392,6 +392,9 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
           (true, [], (if se.sigquals=[] then None else Some se.sigquals))
     in
 
+    (* Check that all the mutually recursive bindings mention the same universes *)
+    U.check_mutual_universes lbs';
+    
     let quals = match quals_opt with
       | None -> [Visible_default]
       | Some q ->
@@ -447,7 +450,8 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | _ -> 
+          | Tm_let ((true, lbs), _) -> 
+            U.check_mutual_universes lbs;
             //leave recursive lets as is; since the decreases clause from the ascription (if any)
             //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
             //if we drop the lbtyp here, we'll lose the decreases clause
@@ -494,6 +498,8 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     in
     let se, lbs = match r with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
+        U.check_mutual_universes (snd lbs);
+        
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
