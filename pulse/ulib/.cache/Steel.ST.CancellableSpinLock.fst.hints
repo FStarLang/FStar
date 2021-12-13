@@ -1,0 +1,31 @@
+[
+  "\u0003ze£ºÌﬁ—ûO¡@FH\u0001E",
+  [
+    [
+      "Steel.ST.CancellableSpinLock.__proj__Mkcancellable_lock__item__llock",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "proj_equation_Steel.ST.CancellableSpinLock.Mkcancellable_lock_lref",
+        "projection_inverse_Steel.ST.CancellableSpinLock.Mkcancellable_lock_lref"
+      ],
+      0,
+      "26464443e6e5dd69343c30ec4f9e1c7a"
+    ],
+    [
+      "Steel.ST.CancellableSpinLock.acquire",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.CancellableSpinLock.maybe_acquired",
+        "fuel_guarded_inversion_Steel.ST.CancellableSpinLock.cancellable_lock"
+      ],
+      0,
+      "06e7e39e67d642922a89f6d34f43e8a7"
+    ]
+  ]
+]
