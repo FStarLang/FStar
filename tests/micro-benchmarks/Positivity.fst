@@ -93,3 +93,24 @@ val t_t19 ([@@@ strictly_positive] a:Type0) : Type0
 let t_t19 a = a -> int
 
 let t_t19 a = list a
+
+(*
+ * This type should be rejected since f may be instantiated with an arrow
+ *   that could lead to proof of False, e.g.
+ *
+ * let f_false : Type0 -> Type0 = fun a -> (a -> squash False)
+ *
+ * let g : f_false (t_t20 f_false) =
+ *   fun x ->
+ *   match x with
+ *   | C201 h -> h x
+ *
+ * let r1 : squash False = g (C201 g)
+ *
+ *)
+
+[@@ expect_failure]
+noeq
+type t_t20 (f:Type0 -> Type0) =
+  | C201 : f (free f) -> free f
+
