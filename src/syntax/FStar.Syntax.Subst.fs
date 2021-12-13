@@ -689,16 +689,21 @@ let open_let_rec lbs (t:term) =
                         u, f, g, y
                   and for the body is
                         f, g
+
+         See FStar.Util.check_mutual_universes
+           - We maintain an invariant that all the letbindings
+             in a mutually recursive nest abstract over the
+             same sequence of universes
          *)
-    let lbs = lbs |> List.map (fun lb ->
-        let _, us, u_let_rec_opening =
-            List.fold_right
+    let _, us, u_let_rec_opening =
+        List.fold_right
              (fun u (i, us, out) ->
                   let u = Syntax.new_univ_name None in
                   i+1, u::us, UN(i, U_name u)::out)
-             lb.lbunivs
+             (List.hd lbs).lbunivs
              (n_let_recs, [], let_rec_opening)
-        in
+    in
+    let lbs = lbs |> List.map (fun lb ->
         {lb with lbunivs=us;
                  lbdef=subst u_let_rec_opening lb.lbdef;
                  lbtyp=subst u_let_rec_opening lb.lbtyp})
@@ -715,18 +720,19 @@ let close_let_rec lbs (t:term) =
                (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out)
                lbs
                (0, [])
-    in let lbs = lbs |> List.map (fun lb ->
-           let _, u_let_rec_closing =
-               List.fold_right
-                 (fun u (i, out) -> i+1, UD(u, i)::out)
-                 lb.lbunivs
-                 (n_let_recs, let_rec_closing)
-           in
+    in
+    let _, u_let_rec_closing =
+        List.fold_right
+          (fun u (i, out) -> i+1, UD(u, i)::out)
+          (List.hd lbs).lbunivs
+          (n_let_recs, let_rec_closing)
+    in
+    let lbs = lbs |> List.map (fun lb ->
            {lb with lbdef=subst u_let_rec_closing lb.lbdef;
                     lbtyp=subst u_let_rec_closing lb.lbtyp})
-       in
-       let t = subst let_rec_closing t in
-       lbs, t
+    in
+    let t = subst let_rec_closing t in
+    lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in

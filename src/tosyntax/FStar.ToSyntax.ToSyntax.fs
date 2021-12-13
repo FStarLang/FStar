@@ -599,6 +599,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     in
     let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
     let usubst = Subst.univ_var_closing all_lb_univs in
+    //This respects the invariant enforced by FStar.Syntax.Util.check_mutual_universes
     { s with sigel = Sig_let ((b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp })), lids) }
   | Sig_assume (lid, _, fml) ->
     let uvs = Free.univnames fml |> BU.set_elements in
