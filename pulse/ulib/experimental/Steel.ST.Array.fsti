@@ -16,16 +16,17 @@
 module Steel.ST.Array
 open FStar.Ghost
 open Steel.ST.Util
+open Steel.FractionalPermission
 open FStar.Seq
 module U32 = FStar.UInt32
 
-(** This module provides an array type, with only exclusive ownership
-    over the entire array.
+(** This module provides an array type, with fractional permissions based
+    ownership over the entire array.
 
     This is non-selector variant of the Steel.Array library.
     
-    A variant of it with fractional permissions and splitting
-    ownership over sub-arrays would be nice, but doesn't exist yet. *)
+    A variant of it with splitting ownership over sub-arrays would be nice,
+    but doesn't exist yet. *)
 
 /// Abstract datatype for a Steel array of type [t]
 val array (t:Type u#0) : Type u#0
@@ -53,15 +54,16 @@ let larray (t:Type) (n:nat) = a:array t{ length a = n }
 /// necessary.
 val pts_to (#t:Type)
            (a:array t)
+           (p:perm)
            ([@@@smt_fallback] s:seq t)
   : vprop
 
 /// This ghost function proves that an array always points to a
 /// sequence of the appropriate length
-val pts_to_length (#t:Type) (#o:inames) (a:array t) (s:seq t)
+val pts_to_length (#t:Type) (#o:inames) (#p:perm) (a:array t) (s:seq t)
   : STGhost unit o
-      (pts_to a s)
-      (fun _ -> pts_to a s)
+      (pts_to a p s)
+      (fun _ -> pts_to a p s)
       (requires True)
       (ensures fun _ -> Seq.length s == length a)
 
@@ -71,17 +73,17 @@ val alloc (#t:Type)
           (n:U32.t)
   : STT (larray t (U32.v n))
         emp
-        (fun r -> pts_to r (Seq.create (U32.v n) x))
+        (fun r -> pts_to r full_perm (Seq.create (U32.v n) x))
 
 /// Accesses index [i] in array [r], as long as [i] is in bounds and the array
 /// is currently valid in memory
-val read (#t:Type) 
+val read (#t:Type) (#p:perm)
          (a:array t)
          (#s:erased (seq t))
          (i:U32.t { U32.v i < Seq.length s })
   : ST t
-       (pts_to a s)
-       (fun _ -> pts_to a s)
+       (pts_to a p s)
+       (fun _ -> pts_to a p s)
        (requires True)
        (ensures fun v -> 
          v == Seq.index s (U32.v i))
@@ -94,31 +96,31 @@ val write (#t:Type)
           (i:U32.t { U32.v i < Seq.length s })
           (x:t)
   : STT unit
-       (pts_to a s)
-       (fun _ -> pts_to a (Seq.upd s (U32.v i) x))
+       (pts_to a full_perm s)
+       (fun _ -> pts_to a full_perm (Seq.upd s (U32.v i) x))
 
 /// Frees array [r], as long as it initially was a valid array in memory
 val free (#t:Type) (a:array t)
   : STT unit
-       (exists_ (pts_to a))
+       (exists_ (pts_to a full_perm))
        (fun _ -> emp)
 
 /// Copies the contents of a0 to a1
-val memcpy (#t:_)
+val memcpy (#t:_) (#p0:perm)
            (a0 a1:array t)
            (#s0 #s1:erased (seq t))
            (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
-    (pts_to a0 s0 `star` pts_to a1 s1)
-    (fun _ -> pts_to a0 s0  `star` pts_to a1 s0)
+    (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
+    (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
 
 /// Decides whether the contents of a0 and a1 are equal
-val compare (#t:eqtype)
+val compare (#t:eqtype) (#p0 #p1:perm)
             (a0 a1:array t)
             (#s0 #s1:erased (seq t))
             (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
   : ST bool
-    (pts_to a0 s0 `star` pts_to a1 s1)
-    (fun _ -> pts_to a0 s0 `star` pts_to a1 s1)
+    (pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
+    (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (requires True)
     (ensures fun b -> b <==> eq2 #(Seq.seq t) s0 s1)
