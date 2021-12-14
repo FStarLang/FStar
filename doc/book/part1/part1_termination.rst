@@ -192,6 +192,8 @@ There are three recursive calls to consider:
    first case, the first argument ``m - 1 << m``, and the second is
    irrelevant for termination.
 
+.. _Part1_termination_default_measures:
+
 Defaults measures
 ^^^^^^^^^^^^^^^^^
 

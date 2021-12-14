@@ -1,8 +1,98 @@
-Length-indexed vectors
-======================
+Length-indexed Lists
+====================
 
-Let's look again at the definition of the ``vec`` type, trying to make
-concretesome aspects of the formal definition above.
+To make concrete some aspects of the formal definitions above, we'll
+look at several variants of a parameterized list datatype augmented
+with indexes that carry information about the list's length.
+
+Even and Odd-lengthed Lists
+...........................
+
+Our first example is bit artifical, but helps illustrate a usage of
+mutually inductive types.
+
+Here, we're defining two types constructors called ``even`` and
+``odd``, (i.e, just :math:`T_1` and :math:`T_2` from our formal
+definition), both with a single parameter ``(a:Type)``, for the type
+of the lists' elements, and no indexes.
+
+All lists of type ``even a`` have an even number of elements---zero
+elements, using its first constructor ``ENil``, or using ``ECons``,
+one more than the number of elements in an ``odd a``, a list with an
+odd number of elements. Elements of the type ``odd a`` are constructed
+using the constructor ``OCons``, which adds a single element to an
+``even a`` list. The types are mutually inductive since their
+definitions reference each other.
+
+
+.. literalinclude:: ../code/Vec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: even_and_odd
+   :end-before: //SNIPPET_END: even_and_odd
+
+Although closely related, the types ``even a`` and ``odd a`` are from
+distinct inductive types. So, to compute, say, the length of one of
+these lists one generally write a pair of mutually recursive
+functions, like so:
+
+.. literalinclude:: ../code/Vec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: elength_and_olength
+   :end-before: //SNIPPET_END: elength_and_olength
+
+Note, we can prove that the length of an ``even a`` and ``odd a`` are
+really even and odd.
+
+Now, say, you wanted to map a function over an ``even a``, you'd have
+to write a pair of mutually recursive functions to map simultaneoulsy
+over them both. This can get tedious quickly. Instead of rolling out
+several mutually inductive but distinct types, one can instead use an
+*indexed* type to group related types in the same inductive family of
+types.
+
+The definition of ``even_or_odd_list`` below shows an inductive type
+with one parameter ``a``, for the type of lists elements, and a single
+boolean index, which indicates whether the list is even or odd. Note
+how the index varies in the types of the constructors, whereas the
+parameter stays the same in all instances.
+
+.. literalinclude:: ../code/Vec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: even_or_odd_list
+   :end-before: //SNIPPET_END: even_or_odd_list
+
+Now, we have a single family of types for both even and odd lists, and
+we can write a single function that abstracts over both even and odd
+lists, just by abstracting over the boolean index. For example,
+``eo_length`` computes the length of an ``even_or_odd_list``, with its
+type showing that it returns an even number with ``b`` is true and an
+odd number otherwise.
+
+.. literalinclude:: ../code/Vec.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: eo_length
+   :end-before: //SNIPPET_END: eo_length
+
+.. note::
+
+   Note, in ``eo_length`` we had to explicitly specify a decreases
+   clause to prove the function terminating. Why? Refer back to the
+   section on :ref:`default
+   measures<Part1_termination_default_measures>` to recall that by
+   default is the lexicographic ordering of all the arguments in
+   order. So, without the decreases clause, F* will try to prove that
+   the index argument ``b`` decreases on the recursive call, which it
+   does not.
+
+This is our first type with with both parameters and indices. But why
+stop at just indexing to distinguish even and odd-lengthed lists? We
+can index a list by its length itself.
+
+Vectors
+.......
+
+Let's look again at the definition of the ``vec`` type, first shown in
+:ref:`the introduction<Intro_Vec>`.
 
 .. literalinclude:: ../code/Vec.fst
    :language: fstar
@@ -13,7 +103,7 @@ Here, we're defining just a single type constructor called ``vec``
 (i.e, just :math:`T_1`), which a single parameter ``(a:Type)`` and one
 index ``nat``.
 
-``vec`` has to data constructors: ``Nil`` builds an instance of ``vec
+``vec`` has two data constructors: ``Nil`` builds an instance of ``vec
 a 0``, the empty vector; and ``Cons hd tl`` builds an instance of
 ``vec a (n + 1)`` from a head element ``hd:a`` and a tail ``tl : vec a
 n``. That is, the two constructors build different instances of
