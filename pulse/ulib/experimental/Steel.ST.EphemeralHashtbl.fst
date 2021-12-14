@@ -196,7 +196,7 @@ let store_contents_pred_seq
   (bv:BV.repr)
   : Seq.seq (option (k & v)) -> vprop
   = fun s ->
-    A.pts_to arr.store s
+    A.pts_to arr.store full_perm s
       `star`
     GR.pts_to arr.g_repr full_perm m
       `star`
@@ -218,7 +218,7 @@ let store_contents_pred
   (borrows:Map.t k v)
   : BV.repr -> vprop
   = fun bv ->
-    BV.pts_to arr.bv_borrows bv
+    BV.pts_to arr.bv_borrows full_perm bv
       `star`
     exists_ (store_contents_pred_seq arr m borrows bv)
 
@@ -262,7 +262,7 @@ let pack_tperm (#opened:_)
   (a:tbl h finalizer)
   (bv:BV.repr)
   : STGhost unit opened
-      (A.pts_to a.store s
+      (A.pts_to a.store full_perm s
          `star`
        GR.pts_to a.g_repr full_perm m
          `star`
@@ -270,7 +270,7 @@ let pack_tperm (#opened:_)
          `star`
        value_vprops vp s m borrows
          `star`
-       BV.pts_to a.bv_borrows bv)
+       BV.pts_to a.bv_borrows full_perm bv)
       (fun _ -> tperm a m borrows)
       (requires pure_invariant a m borrows bv s)
       (ensures fun _ -> True)
@@ -291,16 +291,16 @@ let create #k #v #contents #vp h finalizer n =
     g_borrows = g_borrows;
     store_len_pf = () } in
   
-  rewrite (A.pts_to store (Seq.create #(option (k & v)) (U32.v n) None)
+  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           BV.pts_to bv_borrows (Seq.create (U32.v n) false)
+           BV.pts_to bv_borrows _ (Seq.create (U32.v n) false)
              `star`
            GR.pts_to g_repr full_perm (Map.empty k contents)
              `star`
            GR.pts_to g_borrows full_perm (Map.empty k v))
-          (A.pts_to arr.store (Seq.create #(option (k & v)) (U32.v n) None)
+          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (U32.v n) None)
              `star`
-           BV.pts_to arr.bv_borrows (Seq.create (U32.v n) false)
+           BV.pts_to arr.bv_borrows _ (Seq.create (U32.v n) false)
              `star`
            GR.pts_to arr.g_repr full_perm (Map.empty k contents)
              `star`
@@ -857,12 +857,14 @@ let rec finalize_values
   (borrows:G.erased (Map.t k v))
   (i:U32.t{U32.v a.store_len = Seq.length s /\ U32.v i <= U32.v a.store_len})
   (s_ind:G.erased (Seq.seq (option (k & v))))
-  : ST unit (A.pts_to a.store s
+  : ST unit (A.pts_to a.store full_perm s
                `star`
-             BV.pts_to a.bv_borrows bv
+             BV.pts_to a.bv_borrows full_perm bv
                `star`
              value_vprops vp s_ind m borrows)
-            (fun _ -> A.pts_to a.store s `star` BV.pts_to a.bv_borrows bv)
+            (fun _ -> A.pts_to a.store full_perm s
+                     `star`
+                   BV.pts_to a.bv_borrows full_perm bv)
             (requires store_and_repr_related s m /\
                       store_and_bv_and_borrows_related bv s borrows /\
                       Seq.length s == Seq.length s_ind /\
@@ -918,7 +920,7 @@ let free #k #v #contents #vp #h #finalizer m borrows a =
   elim_pure (pure_invariant a m borrows bv s);
   A.pts_to_length a.store s;
   finalize_values a borrows 0ul s;
-  intro_exists (G.reveal s) (A.pts_to a.store);
+  intro_exists (G.reveal s) (A.pts_to a.store full_perm);
   A.free a.store;
   BV.free a.bv_borrows;
   GR.free a.g_repr;
