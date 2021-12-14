@@ -25,29 +25,31 @@ module AT = Steel.Effect.Atomic
 let array t = l:erased nat & ref (Seq.lseq t l)
 
 let length #t (x:array t) = dfst x
-let is_array r = ptr (dsnd r)
-let array_sel r = ptr_sel (dsnd r)
+let is_array r p = ptrp (dsnd r) p
+let array_sel r p = ptrp_sel (dsnd r) p
 
-let varray_pts_to (#t:Type) (a:array t) (x:Seq.lseq t (length a))
+let varray_pts_to (#t:Type) (a:array t) (p:perm) (x:Seq.lseq t (length a))
   : vprop
-  = Steel.Reference.pts_to (dsnd a) Steel.FractionalPermission.full_perm x
+  = Steel.Reference.pts_to (dsnd a) p x
 
 let intro_varray_pts_to (#t:_)
                         (#opened:inames)
+                        (#p:perm)
                         (a:array t)
-  = Steel.Reference.elim_vptr (dsnd a) Steel.FractionalPermission.full_perm
+  = Steel.Reference.elim_vptr (dsnd a) p
 
 let elim_varray_pts_to (#t:_)
                        (#opened:inames)
+                       (#p:perm)
                        (a:array t)
                        (c:elseq t (length a))
   : SteelGhost unit opened
-    (varray_pts_to a c)
-    (fun _ -> varray a)
+    (varray_pts_to a p c)
+    (fun _ -> varray a p)
     (requires fun _ -> True)
     (ensures fun _ _ h1 ->
-      asel a h1 == Ghost.reveal c)
-  = Steel.Reference.intro_vptr (dsnd a) Steel.FractionalPermission.full_perm c
+      asel a p h1 == Ghost.reveal c)
+  = Steel.Reference.intro_vptr (dsnd a) p c
 
 let malloc #a x n =
   let l : erased nat = hide (U32.v n) in
@@ -56,11 +58,11 @@ let malloc #a x n =
   let x : array a = (| l, p |) in
   Steel.Effect.Atomic.return x
 
-let index r i =
-  let s = read (dsnd r) in
+let index #t #p r i =
+  let s = readp (dsnd r) p in
   Seq.index s (U32.v i)
 
-let upd r i x =
+let upd #t r i x =
   let s = read (dsnd r) in
   let s' = Seq.upd s (U32.v i) x in
   write (dsnd r) s'
@@ -71,23 +73,22 @@ let free r = free (dsnd r)
 
 module AT = Steel.Effect.Atomic
 
-let read_pt (#t:_)
+let read_pt (#t:_) (#p:perm)
             (a:array t)
             (#r:elseq t (length a))
             (i:U32.t { U32.v i < length a })
   : Steel t
-    (varray_pts_to a r)
-    (fun _ -> varray_pts_to a r)
+    (varray_pts_to a p r)
+    (fun _ -> varray_pts_to a p r)
     (requires fun _ -> True)
     (ensures fun h0 v h1 ->
       v == Seq.index r (U32.v i))
   = elim_varray_pts_to a r;
     let x = index a i in
     let _ = intro_varray_pts_to a in
-    change_equal_slprop (varray_pts_to _ _)
-                         (varray_pts_to a r);
+    change_equal_slprop (varray_pts_to _ _ _)
+                        (varray_pts_to a p r);
     AT.return x
-
 
 let write_pt (#t:_)
             (a:array t)
@@ -95,13 +96,13 @@ let write_pt (#t:_)
             (i:U32.t { U32.v i < length a })
             (v:t)
   : SteelT unit
-    (varray_pts_to a r)
-    (fun _ -> varray_pts_to a (Seq.upd r (U32.v i) v))
+    (varray_pts_to a full_perm r)
+    (fun _ -> varray_pts_to a full_perm (Seq.upd r (U32.v i) v))
   = elim_varray_pts_to a r;
     let x = upd a i v in
     let _ = intro_varray_pts_to a in
-    AT.change_equal_slprop (varray_pts_to _ _)
-                           (varray_pts_to a _);
+    AT.change_equal_slprop (varray_pts_to _ _ _)
+                           (varray_pts_to a _ _);
     AT.return ()
 
 let prefix_copied #t #l0 #l1
@@ -125,18 +126,18 @@ let slice_lem (#t:_)
 
 module Loops = Steel.Loops
 
-let memcpy_pt (#t:_)
+let memcpy_pt (#t:_) (#p0:perm)
               (a0 a1:array t)
               (#e0:elseq t (length a0))
               (#e1:elseq t (length a1))
               (i:U32.t{ U32.v i == length a0 /\ length a0 == length a1 })
   : SteelT unit
-    (varray_pts_to a0 e0 `star` varray_pts_to a1 e1)
-    (fun _ -> varray_pts_to a0 e0 `star` varray_pts_to a1 (coerce e0))
+    (varray_pts_to a0 p0 e0 `star` varray_pts_to a1 full_perm e1)
+    (fun _ -> varray_pts_to a0 p0 e0 `star` varray_pts_to a1 full_perm (coerce e0))
   = let inv (j:Loops.nat_at_most i)
       : vprop
-      = varray_pts_to a0 e0 `star`
-        varray_pts_to a1 (prefix_copied e0 e1 j)
+      = varray_pts_to a0 p0 e0 `star`
+        varray_pts_to a1 full_perm (prefix_copied e0 e1 j)
     in
     let body (j:Loops.u32_between 0ul i)
       : SteelT unit
@@ -144,32 +145,32 @@ let memcpy_pt (#t:_)
         (fun _ -> inv (U32.v j + 1))
       = AT.change_equal_slprop
             (inv (U32.v j))
-            (varray_pts_to a0 e0 `star`
-             varray_pts_to a1 (prefix_copied e0 e1 (U32.v j)));
+            (varray_pts_to a0 p0 e0 `star`
+             varray_pts_to a1 full_perm (prefix_copied e0 e1 (U32.v j)));
         let z = read_pt a0 j in
         write_pt a1 j z;
         assert (Seq.upd (prefix_copied e0 e1 (U32.v j)) (U32.v j) z `Seq.equal`
                 prefix_copied e0 e1 (U32.v j + 1));
-        AT.change_equal_slprop (varray_pts_to a0 e0 `star` varray_pts_to a1 _)
+        AT.change_equal_slprop (varray_pts_to a0 _ e0 `star` varray_pts_to a1 _ _)
                                (inv (U32.v j + 1));
         AT.return ()
     in
     assert (prefix_copied e0 e1 0 `Seq.equal` e1);
-    AT.change_equal_slprop (varray_pts_to a1 _)
-                           (varray_pts_to a1 (prefix_copied e0 e1 (U32.v 0ul)));
-    AT.change_equal_slprop (varray_pts_to a0 e0 `star` varray_pts_to a1 _)
+    AT.change_equal_slprop (varray_pts_to a1 _ _)
+                           (varray_pts_to a1 full_perm (prefix_copied e0 e1 (U32.v 0ul)));
+    AT.change_equal_slprop (varray_pts_to a0 _ e0 `star` varray_pts_to a1 _ _)
                            (inv (U32.v 0ul));
     Loops.for_loop 0ul i inv body;
     AT.slassert (inv (U32.v i));
     AT.change_equal_slprop (inv (U32.v i))
-                           (varray_pts_to a0 e0 `star`
-                            varray_pts_to a1 (prefix_copied e0 e1 (U32.v i)));
+                           (varray_pts_to a0 p0 e0 `star`
+                            varray_pts_to a1 full_perm (prefix_copied e0 e1 (U32.v i)));
     slice_lem e0 e1;
-    AT.change_equal_slprop (varray_pts_to a1 (prefix_copied e0 e1 (U32.v i)))
-                           (varray_pts_to a1 (coerce e0));
+    AT.change_equal_slprop (varray_pts_to a1 _ (prefix_copied e0 e1 (U32.v i)))
+                           (varray_pts_to a1 _ (coerce e0));
     AT.return ()
 
-let memcpy #t a0 a1 i
+let memcpy #t #p0 a0 a1 i
   = let _ : squash (length a0 == length a1) = () in
     let _ = intro_varray_pts_to a0 in
     let _ = intro_varray_pts_to a1 in
@@ -195,15 +196,15 @@ let within_bounds (x:option U32.t) (l:U32.t) (b:Ghost.erased bool) : prop =
   if b then Some? x /\ U32.(Some?.v x <^ l)
   else None? x \/ U32.(Some?.v x >=^ l)
 
-let inv (#t:eqtype)
+let inv (#t:eqtype) (#p0 #p1:perm)
         (a0 a1:array t)
         (s0: elseq t (length a0))
         (s1: elseq t (length a1))
         (l:U32.t { length a0 > 0 /\ length a0 == length a1 /\ U32.v l == length a0})
         (ctr : R.ref (option U32.t))
         (b: Ghost.erased bool) =
-    varray_pts_to a0 s0 `star`
-    varray_pts_to a1 s1 `star`
+    varray_pts_to a0 p0 s0 `star`
+    varray_pts_to a1 p1 s1 `star`
     AT.h_exists (fun (x:option U32.t) ->
         R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
         pure (equal_up_to s0 s1 x) `star`
@@ -211,6 +212,7 @@ let inv (#t:eqtype)
 
 let elim_inv #o
         (#t:eqtype)
+        (#p0 #p1:perm)
         (a0 a1:array t)
         (#s0: elseq t (length a0))
         (#s1: elseq t (length a1))
@@ -221,24 +223,24 @@ let elim_inv #o
         (inv a0 a1 s0 s1 l ctr b)
         (fun x ->
           let open U32 in
-          varray_pts_to a0 s0 `star`
-          varray_pts_to a1 s1 `star`
+          varray_pts_to a0 p0 s0 `star`
+          varray_pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x) `star`
           pure (within_bounds x l b))
       = let open U32 in
         assert_spinoff
-          ((inv a0 a1 s0 s1 l ctr b) ==
-          (varray_pts_to a0 s0 `star`
-           varray_pts_to a1 s1 `star`
+          ((inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b) ==
+          (varray_pts_to a0 p0 s0 `star`
+           varray_pts_to a1 p1 s1 `star`
            AT.h_exists (fun (v:option U32.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v)  `star`
              pure (within_bounds v l b))));
         AT.change_equal_slprop
-          (inv a0 a1 s0 s1 l ctr b)
-          (varray_pts_to a0 s0 `star`
-           varray_pts_to a1 s1 `star`
+          (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b)
+          (varray_pts_to a0 p0 s0 `star`
+           varray_pts_to a1 p1 s1 `star`
            AT.h_exists (fun (v:option U32.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v) `star`
@@ -248,6 +250,7 @@ let elim_inv #o
 
 let intro_inv #o
               (#t:eqtype)
+              (#p0 #p1:perm)
               (a0 a1:array t)
               (#s0: elseq t (length a0))
               (#s1: elseq t (length a1))
@@ -257,8 +260,8 @@ let intro_inv #o
               (b:bool { within_bounds x l b })
     : AT.SteelGhostT unit o
          (let open U32 in
-          varray_pts_to a0 s0 `star`
-          varray_pts_to a1 s1 `star`
+          varray_pts_to a0 p0 s0 `star`
+          varray_pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x))
         (fun _ -> inv a0 a1 s0 s1 l ctr (Ghost.hide b))
@@ -269,24 +272,25 @@ let intro_inv #o
           pure (equal_up_to s0 s1 x) `star`
           pure (within_bounds x l (Ghost.hide b)));
       assert_norm
-          ((inv a0 a1 s0 s1 l ctr (Ghost.hide b)) ==
-          (varray_pts_to a0 s0 `star`
-           varray_pts_to a1 s1 `star`
+          ((inv #_ #p0 #p1 a0 a1 s0 s1 l ctr (Ghost.hide b)) ==
+          (varray_pts_to a0 p0 s0 `star`
+           varray_pts_to a1 p1 s1 `star`
            AT.h_exists (fun (v:option U32.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v)  `star`
              pure (within_bounds v l (Ghost.hide b)))));
         AT.change_equal_slprop
-          (varray_pts_to a0 s0 `star`
-           varray_pts_to a1 s1 `star`
+          (varray_pts_to a0 p0 s0 `star`
+           varray_pts_to a1 p1 s1 `star`
            AT.h_exists (fun (v:option U32.t) ->
              R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
              pure (equal_up_to s0 s1 v) `star`
              pure (within_bounds v l (Ghost.hide b))))
-          (inv a0 a1 s0 s1 l ctr (Ghost.hide b))
+          (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr (Ghost.hide b))
 
 let intro_exists_inv #o
               (#t:eqtype)
+              (#p0 #p1:perm)
               (a0 a1:array t)
               (#s0: elseq t (length a0))
               (#s1: elseq t (length a1))
@@ -295,20 +299,19 @@ let intro_exists_inv #o
               (x: Ghost.erased (option U32.t))
     : AT.SteelGhostT unit o
          (let open U32 in
-          varray_pts_to a0 s0 `star`
-          varray_pts_to a1 s1 `star`
+          varray_pts_to a0 p0 s0 `star`
+          varray_pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm x `star`
           pure (equal_up_to s0 s1 x))
-        (fun _ -> AT.h_exists (inv a0 a1 s0 s1 l ctr))
+        (fun _ -> AT.h_exists (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
     = let b : bool =
           match Ghost.reveal x with
           | None -> false
           | Some x -> U32.(x <^ l)
       in
       assert (within_bounds x l b);
-      intro_inv a0 a1 #s0 #s1 l ctr x b;
-      AT.intro_exists _ (inv a0 a1 s0 s1 l ctr)
-
+      intro_inv #_ #_ #p0 #p1 a0 a1 #s0 #s1 l ctr x b;
+      AT.intro_exists _ (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr)
 
 let witness_exists_erased
       (#a:Type)
@@ -381,6 +384,7 @@ let extend_equal_up_to_neg (#o:_)
 
 let init_inv #o
              (#t:eqtype)
+             (#p0 #p1:perm)
              (a0 a1:array t)
              (#s0: elseq t (length a0))
              (#s1: elseq t (length a1))
@@ -388,10 +392,10 @@ let init_inv #o
              (ctr : R.ref (option U32.t))
     : AT.SteelGhostT unit o
          (let open U32 in
-          varray_pts_to a0 s0 `star`
-          varray_pts_to a1 s1 `star`
+          varray_pts_to a0 p0 s0 `star`
+          varray_pts_to a1 p1 s1 `star`
           R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0ul))
-        (fun _ -> AT.h_exists (inv a0 a1 s0 s1 l ctr))
+        (fun _ -> AT.h_exists (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
     = AT.intro_pure (equal_up_to s0 s1 (Ghost.hide (Some 0ul)));
       AT.change_equal_slprop
         (R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0ul))
@@ -399,39 +403,40 @@ let init_inv #o
       intro_exists_inv a0 a1 l ctr (Ghost.hide (Some 0ul))
 
 let compare_pts (#t:eqtype)
+                (#p0 #p1:perm)
                 (a0 a1:array t)
                 (#s0: elseq t (length a0))
                 (#s1: elseq t (length a1))
                 (l:U32.t { length a0 > 0 /\ length a0 == length a1 /\ U32.v l == length a0})
   : Steel bool
-    (varray_pts_to a0 s0 `star` varray_pts_to a1 s1)
-    (fun _ -> varray_pts_to a0 s0 `star` varray_pts_to a1 s1)
+    (varray_pts_to a0 p0 s0 `star` varray_pts_to a1 p1 s1)
+    (fun _ -> varray_pts_to a0 p0 s0 `star` varray_pts_to a1 p1 s1)
     (requires fun _ -> True)
     (ensures fun h0 b h1 ->
       b = (Ghost.reveal s0 = Ghost.reveal s1))
   = let ctr = R.alloc_pt (Some 0ul) in
     let cond ()
       : SteelT bool
-        (AT.h_exists (inv a0 a1 s0 s1 l ctr))
-        (fun b -> inv a0 a1 s0 s1 l ctr (Ghost.hide b))
+        (AT.h_exists (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
+        (fun b -> inv #_ #p0 #p1 a0 a1 s0 s1 l ctr (Ghost.hide b))
       = let _b = witness_exists_erased () in
         let _ = elim_inv _ _ _ _ _ in
         let x = ref_read_pt ctr in
         AT.elim_pure (within_bounds _ _ _);
         match x with
         | None ->
-          intro_inv a0 a1 l ctr _ false;
+          intro_inv #_ #_ #p0 #p1 a0 a1 l ctr _ false;
           AT.return false
 
         | Some x ->
           let res = U32.(x <^ l) in
-          intro_inv a0 a1 l ctr _ res;
+          intro_inv #_ #_ #p0 #p1 a0 a1 l ctr _ res;
           AT.return res
     in
     let body ()
       : SteelT unit
-        (inv a0 a1 s0 s1 l ctr (Ghost.hide true))
-        (fun _ -> AT.h_exists (inv a0 a1 s0 s1 l ctr))
+        (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr (Ghost.hide true))
+        (fun _ -> AT.h_exists (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr))
       = let _i = elim_inv _ _ _ _ _ in
         AT.elim_pure (within_bounds _ _ _);
         let Some i = ref_read_pt ctr in
@@ -447,16 +452,16 @@ let compare_pts (#t:eqtype)
         then (
           R.write_pt ctr (Some U32.(i +^ 1ul));
           extend_equal_up_to l i;
-          intro_exists_inv a0 a1 l ctr (Ghost.hide (Some (U32.(i +^ 1ul))))
+          intro_exists_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide (Some (U32.(i +^ 1ul))))
         )
         else (
           R.write_pt ctr None;
           extend_equal_up_to_neg l i;
-          intro_exists_inv a0 a1 l ctr (Ghost.hide None)
+          intro_exists_inv #_ #_ #p0 #p1 a0 a1 l ctr (Ghost.hide None)
         )
     in
     init_inv a0 a1 l ctr;
-    Loops.while_loop (inv a0 a1 s0 s1 l ctr)
+    Loops.while_loop (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr)
                cond
                body;
     let _ = elim_inv _ _ _ _ _ in
@@ -469,20 +474,21 @@ let compare_pts (#t:eqtype)
     | Some _ -> AT.return true
 
 let compare (#t:eqtype)
+            (#p0 #p1:perm)
             (a0 a1:array t)
             (l:U32.t { length a0 == length a1 /\ U32.v l == length a0})
   : Steel bool
-    (varray a0 `star` varray a1)
-    (fun _ -> varray a0 `star` varray a1)
+    (varray a0 p0 `star` varray a1 p1)
+    (fun _ -> varray a0 p0 `star` varray a1 p1)
     (requires fun _ -> True)
     (ensures fun h0 b h1 ->
-      asel a0 h0 == asel a0 h1 /\
-      asel a1 h0 == asel a1 h1 /\
-      b = (asel a0 h1 = asel a1 h1))
+      asel a0 p0 h0 == asel a0 p0 h1 /\
+      asel a1 p1 h0 == asel a1 p1 h1 /\
+      b = (asel a0 p0 h1 = asel a1 p1 h1))
   = if l = 0ul
     then (
       let h = AT.get () in
-      assert (Seq.equal (asel a0 h) (asel a1 h));
+      assert (Seq.equal (asel a0 p0 h) (asel a1 p1 h));
       AT.return true
     )
     else (
