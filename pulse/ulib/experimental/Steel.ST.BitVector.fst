@@ -30,7 +30,7 @@ module A = Steel.ST.Array
 
 type bv_t n = a:A.array bool{A.length a == U32.v n}
 
-let pts_to bv s = A.pts_to bv s
+let pts_to bv p s = A.pts_to bv p s
 
 let pts_to_length bv s = A.pts_to_length bv s
 
@@ -43,5 +43,5 @@ let bv_set #_ #s bv i = A.write #_ bv #s i true
 let bv_unset #_ #s bv i = A.write #_ bv #s i false
 
 let free #n #s bv =
-  intro_exists (G.reveal s) (A.pts_to bv);
+  intro_exists (G.reveal s) (A.pts_to bv full_perm);
   A.free bv
