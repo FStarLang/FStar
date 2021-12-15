@@ -1,1 +1,32 @@
-[ "¢™ÔÖ’}\"\u0000$·Æ˜—\u0006\u0016Ú", [] ]
+[
+  "r^«t2…\u000bB­„\u0018ù\u000e\u0015Ö‡",
+  [
+    [
+      "Steel.SpinLock.new_s_lock",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
+      0,
+      "806a0b8dc05a0ab7700625d6647392a9"
+    ],
+    [
+      "Steel.SpinLock.s_acquire",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
+      0,
+      "e490b3eecb13cd5b6379308dc210f169"
+    ],
+    [
+      "Steel.SpinLock.s_release",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
+      0,
+      "b565d0b4d90d46f703201ac01f000a40"
+    ]
+  ]
+]
