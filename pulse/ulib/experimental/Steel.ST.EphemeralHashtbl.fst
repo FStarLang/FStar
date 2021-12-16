@@ -498,6 +498,31 @@ let value_vprops_prefix_suffix_with_key
     assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
                       (value_vprops_seq vp (seq_from s idx) m1 borrows))
 
+
+let value_vprops_prefix_suffix_remove
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (h:hash_fn k)
+  (vp:vp_t k v contents)
+  (s:Seq.seq (option (k & v)))
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (idx:nat{idx < Seq.length s})
+  : Lemma (requires Some? (Seq.index s idx) /\
+                    seq_props h s)
+          (ensures (let s1 = Seq.upd s idx None in
+                    value_vprops vp (seq_until s idx) m borrows ==
+                    value_vprops vp (seq_until s1 idx) m borrows /\
+                    value_vprops vp (seq_from s idx) m borrows ==
+                    value_vprops vp (seq_from s1 idx) m borrows))
+  = let s1 = Seq.upd s idx None in
+    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
+                      (value_vprops_seq vp (seq_until s1 idx) m borrows));
+    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
+                      (value_vprops_seq vp (seq_from s1 idx) m borrows))
+
+
+
 /// A common utility that we use in all APIs
 ///
 /// It first splits the value vprops intro (prefix, at i, suffix)
@@ -836,6 +861,99 @@ let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #f_pre #f_post $f
       return r
     end
 
+/// `remove`
+
+let remove #k #v #contents #vp #h #finalizer #m #borrows a i =
+  let bv = elim_exists () in
+  let s = elim_exists () in
+  elim_pure (pure_invariant a m borrows bv s);
+  A.pts_to_length a.store s;
+  BV.pts_to_length a.bv_borrows bv;
+  let idx = h i `U32.rem` a.store_len in
+
+  //
+  // We cannot simply write None in the store, since we may have to finalize the value
+  //
+
+  let vopt = A.read a.store idx in
+
+  match vopt returns STT bool _ (fun _ -> tperm a m borrows) with
+  | None ->  //the concrete store is already empty at the slot, nothing to do
+    pack_tperm s m borrows a bv;
+    return false
+  | Some (i', x) ->
+    if i' <> i  //the concrete store contains a different key at the slot, nothing to do
+    then begin
+      pack_tperm s m borrows a bv;
+      return false
+    end
+    else begin
+      A.write a.store idx None;
+      let b = BV.bv_is_set a.bv_borrows idx in
+      if b  //the key is found in the store, but is borrowed, can't call the finalizer
+      then begin
+        BV.bv_unset a.bv_borrows idx;
+
+        //
+        //Unpack with emp
+        //
+        //Pack with emp
+        //
+
+        unpack_value_vprops vp s m borrows idx emp;
+
+        value_vprops_prefix_suffix_remove h vp s m borrows (U32.v idx);
+        rewrite_value_vprops_prefix_and_suffix vp
+          s (Seq.upd s (U32.v idx) None)
+          m m
+          borrows borrows
+          idx;
+
+        pack_value_vprops vp
+          (Seq.upd s (U32.v idx) None)
+          m
+          borrows
+          idx
+          emp;
+
+        pack_tperm (Seq.upd s (U32.v idx) None) m borrows a (Seq.upd bv (U32.v idx) false);
+        return true
+
+      end
+      else begin  //the key is in the store, and is not borrowed
+
+        //
+        //Unpack with (vp i x c)
+        //
+        //Call the finalizer
+        //
+        //Pack with emp
+        //
+
+        unpack_value_vprops vp s m borrows idx (vp i' x (Some?.v (Map.sel i' m)));
+        intro_exists (Some?.v (Map.sel i' m)) (vp i' x);
+        finalizer i' x;
+
+        value_vprops_prefix_suffix_remove h vp s m borrows (U32.v idx);
+        rewrite_value_vprops_prefix_and_suffix vp
+          s (Seq.upd s (U32.v idx) None)
+          m m
+          borrows borrows
+          idx;
+
+        pack_value_vprops vp
+          (Seq.upd s (U32.v idx) None)
+          m
+          borrows
+          idx
+          emp;
+
+        pack_tperm (Seq.upd s (U32.v idx) None) m borrows a bv;
+
+        return true
+      end
+    end
+
 
 /// A utility function to iterate over the array and finalize the values
 ///
@@ -914,7 +1032,7 @@ let rec finalize_values
 
 /// `free`
 
-let free #k #v #contents #vp #h #finalizer m borrows a =
+let free #k #v #contents #vp #h #finalizer #m #borrows a =
   let bv = elim_exists () in
   let s = elim_exists () in
   elim_pure (pure_invariant a m borrows bv s);
