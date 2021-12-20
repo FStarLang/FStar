@@ -349,6 +349,7 @@ let is_String_primitive head args =
     | Tm_fvar fv, [_;_] ->
       S.fv_eq_lid fv Const.prims_strcat_lid
       || S.fv_eq_lid fv Const.prims_op_Hat_lid
+      || S.fv_eq_lid fv Const.string_index_lid
     | Tm_fvar fv, [_] ->
       (S.fv_eq_lid fv Const.string_strlen_lid
       || S.fv_eq_lid fv Const.string_length_lid)
@@ -581,11 +582,13 @@ and encode_String_term env head args_e =
     in
     let strlen = mk_int    mkStrLen unary_string in
     let strcat = mk_string mkStrCat binary_string_string in
+    let at     = mk_string mkStrAt  binary_string_int in
     let ops =
         [(Const.string_length_lid, strlen);
          (Const.string_strlen_lid, strlen);
          (Const.prims_strcat_lid, strcat);
-         (Const.prims_op_Hat_lid, strcat)]
+         (Const.prims_op_Hat_lid, strcat);
+         (Const.string_index_lid, at)]
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>

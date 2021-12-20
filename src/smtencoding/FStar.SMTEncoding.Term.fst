@@ -213,6 +213,7 @@ let op_to_string = function
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | StrLen -> "str.len"
   | StrCat -> "str.++"
+  | StrAt -> "str.at"
   | Var s -> s
 
 let weightToSmt = function
@@ -344,6 +345,7 @@ let mkITE (t1, t2, t3) r =
   end
 let mkStrLen t r = mkApp'(StrLen, [t]) r
 let mkStrCat = mk_bin_op StrCat
+let mkStrAt = mk_bin_op StrAt
 let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
@@ -398,7 +400,8 @@ let check_pattern_ok (t:term) : option term =
                 | BvToNat
                 | ITE
                 | StrLen
-                | StrCat -> false
+                | StrCat
+                | StrAt -> false
             in
             if not head_ok then Some t
             else aux_l terms

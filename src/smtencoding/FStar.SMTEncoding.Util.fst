@@ -85,6 +85,7 @@ let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkStrLen = norng mkStrLen
 let mkStrCat = norng mkStrCat
+let mkStrAt = norng mkStrAt
 let mkCases = norng mkCases
 
 let norng2 f = fun x y -> f x y Range.dummyRange
