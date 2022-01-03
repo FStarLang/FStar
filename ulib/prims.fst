@@ -77,7 +77,7 @@ type unit : eqtype
 (** [squash p] is a central type in F*---[squash p] is the proof
     irrelevant analog of [p] and is represented as a unit
     refinement. Squashed proofs are typically discharged using an SMT
-    solver, without expliciltly reconstructed any proof terms. As
+    solver, without any proof terms explicitly reconstructed. As
     such, one way to think of [squash p] is as the type of properties
     proven using classical axioms without building proof terms.
 
@@ -409,7 +409,7 @@ let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 
 unfold
 let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
 
-(** Trivial WP for PURE: Prove the WP with the trivial poscondition *)
+(** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
 let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
 
@@ -490,7 +490,7 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 
 (***** End trusted primitives *****)
 
-(** This point onwards, F* fully verifies all the definitions *)
+(** This point onward, F* fully verifies all the definitions *)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
@@ -502,7 +502,7 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -
 [@@ "tac_opaque"; smt_theory_symbol]
 type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 
-(** Primitive type of mathematical intgers, mapped to zarith in OCaml
+(** Primitive type of mathematical integers, mapped to zarith in OCaml
     extraction and to the SMT sort of integers *)
 assume new
 type int : eqtype 
