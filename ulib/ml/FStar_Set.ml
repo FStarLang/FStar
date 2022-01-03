@@ -11,3 +11,6 @@ let mem = BatSet.mem
  * We should fix it, adding the following in the meantime
  *)
 type ('A, 'B, 'C) equal = unit
+
+let as_set = BatSet.of_list
+let as_set' = BatSet.of_list
