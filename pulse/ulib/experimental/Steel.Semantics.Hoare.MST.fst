@@ -634,7 +634,9 @@ let step_ens
     let Step next_pre next_post next_lpre next_lpost _ = r in
     post_preserves_frame next_pre frame m0 m1 /\
     stronger_post post next_post /\
-    next_lpre (st.core m1) /\
+    next_lpre (st.core m1) /\  //we are writing it here explicitly,
+                              //but it is derivable from weaker_lpre
+                              //removing it is also fine for the proofs
     weaker_lpre lpre next_lpre m0 m1 /\
     stronger_lpost lpost next_lpost m0 m1
 
