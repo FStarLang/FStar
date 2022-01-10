@@ -2722,7 +2722,11 @@ let (mk_data_operations :
                                  FStar_Syntax_Subst.subst_binders
                                    univ_opening inductive_tps in
                                let typ01 =
-                                 FStar_Syntax_Subst.subst univ_opening typ0 in
+                                 let uu___5 =
+                                   FStar_Syntax_Subst.shift_subst
+                                     (FStar_Compiler_List.length
+                                        inductive_tps1) univ_opening in
+                                 FStar_Syntax_Subst.subst uu___5 typ0 in
                                let uu___5 =
                                  FStar_Syntax_Util.arrow_formals typ01 in
                                (match uu___5 with
