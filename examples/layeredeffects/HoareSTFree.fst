@@ -42,42 +42,44 @@ module HoareSTFree
 
 open FStar.Monotonic.Pure
 
-/// Fixing the type of the state to int, it should be possible to make it
-///   polymorphic in the state type as in the ParDiv development
 
-type pre = int -> Type0
-type post (a:Type) = int -> a -> int -> Type0
+/// type of pre and postconditions, parameteric in the state type
+
+type mpre (st:Type) = st -> Type0
+type mpost (st:Type) (a:Type) = st -> a -> st -> Type0
 
 /// The free monad would contain an Act node,
 ///   that has an atomic action, followed by a continuation k
 ///
 /// The following combinators are for the pre- and postcondition of
 ///   the Act node (derived from the action and k pre and post)
+///
+/// They are basically the bind hoare logic rule
 
 unfold
-let act_p (#a:Type) (a_p:pre) (a_q:post a) (k_p:a -> pre) : pre =
-  fun s0 -> a_p s0 /\ (forall (x:a) (s1:int). a_q s0 x s1 ==> k_p x s1)
+let act_p (#st:Type) (#a:Type) (a_p:mpre st) (a_q:mpost st a) (k_p:a -> mpre st) : mpre st =
+  fun s0 -> a_p s0 /\ (forall (x:a) (s1:st). a_q s0 x s1 ==> k_p x s1)
 
 unfold
-let act_q (#a:Type) (#b:Type) (a_q:post a) (k_q:a -> post b) : post b =
-  fun s0 y s2 -> exists (x:a) (s1:int). a_q s0 x s1 /\ k_q x s1 y s2
+let act_q (#st:Type) (#a:Type) (#b:Type) (a_q:mpost st a) (k_q:a -> mpost st b) : mpost st b =
+  fun s0 y s2 -> exists (x:a) (s1:st). a_q s0 x s1 /\ k_q x s1 y s2
 
 /// Logical guard for the rule of consequence, i.e. weakening
 ///   {p0} c {q0} to {p1} c {q1}
 
 unfold
-let weaken_ok (#a:Type) (p0:pre) (q0:post a) (p1:pre) (q1:post a) : Type0 =
-  (forall (s:int). p1 s ==> p0 s) /\
-  (forall (s0:int) (x:a) (s1:int). p1 s0 ==> q0 s0 x s1 ==> q1 s0 x s1)
+let weaken_ok (#st:Type) (#a:Type) (p0:mpre st) (q0:mpost st a) (p1:mpre st) (q1:mpost st a) : Type0 =
+  (forall (s:st). p1 s ==> p0 s) /\
+  (forall (s0:st) (x:a) (s1:st). p1 s0 ==> q0 s0 x s1 ==> q1 s0 x s1)
 
 
-/// Precondition of the strengthen node
+/// Precondition of the strengthen node (that strengthens precondition with a pure prop)
 
 unfold
-let strengthen_pre (p:pre) (phi:pure_pre) : pre =
+let strengthen_pre (#st:Type) (p:mpre st) (phi:pure_pre) : mpre st =
   fun s -> p s /\ phi
 
-/// A free monad for divergence and int state
+/// A free monad for divergence and state
 ///
 /// It can also be made total, by indexing with a nat that
 ///   counts number of actions in the tree
@@ -85,34 +87,43 @@ let strengthen_pre (p:pre) (phi:pure_pre) : pre =
 /// See https://fstar-lang.org/oplss2021/code/OPLSS2021.ParTot.fst
 
 noeq
-type m : a:Type -> p:pre -> q:post a -> Type =
+type m (st:Type u#s) : a:Type u#a -> p:mpre st -> q:mpost st a -> Type =
   | Ret:  //parametric on the postcondition q
-    #a:Type -> #q:post a ->
+    #a:Type -> #q:mpost st a ->
     x:a ->
-    m a (fun s0 -> q s0 x s0) q
+    m st a (fun s0 -> q s0 x s0) q
   | Act:
-    #a:Type -> #a_p:pre -> #a_q:post a ->
-    act:(s0:int -> Pure (a & int) (a_p s0) (fun (x, s1) -> a_q s0 x s1)) ->  //atomic action
-    #b:Type -> #k_p:(a -> pre) -> #k_q:(a -> post b) ->
-    k:(x:a -> Dv (m b (k_p x) (k_q x))) ->
-    m b (act_p a_p a_q k_p) (act_q a_q k_q)
+    #a:Type -> #a_p:mpre st -> #a_q:mpost st a ->
+    act:(s0:st -> Pure (a & st) (a_p s0) (fun (x, s1) -> a_q s0 x s1)) ->  //atomic action
+    #b:Type -> #k_p:(a -> mpre st) -> #k_q:(a -> mpost st b) ->
+    k:(x:a -> Dv (m st b (k_p x) (k_q x))) ->
+    m st b (act_p a_p a_q k_p) (act_q a_q k_q)
   | Weaken:
-    #a:Type -> #p0:pre -> #q0:post a -> #p1:pre -> #q1:post a ->
+    #a:Type -> #p0:mpre st -> #q0:mpost st a -> #p1:mpre st -> #q1:mpost st a ->
     #squash (weaken_ok p0 q0 p1 q1) ->
-    f:m a p0 q0 ->
-    m a p1 q1
+    f:m st a p0 q0 ->
+    m st a p1 q1
   | Strengthen:  //strengthening the precondition with phi
-    #a:Type -> #phi:pure_pre -> #p:pre -> #q:post a ->
-    f:(squash phi -> Dv (m a p q)) ->
-    m a (strengthen_pre p phi) q
+    #a:Type -> #phi:pure_pre -> #p:mpre st -> #q:mpost st a ->
+    f:(squash phi -> Dv (m st a p q)) ->
+    m st a (strengthen_pre p phi) q
 
 /// We first define the effect,
 ///   later we will give a semantic model and prove soundness of the logic
 ///   with a definitional interpreter
 
 /// Underlying represetation is a thunked tree
+///
+/// Our free monad is parametric in the state (and also its universe),
+///   for defining an effect we fix the state type
 
-type repr (a:Type) (p:pre) (q:post a) = unit -> Dv (m a p q)
+assume val st : Type u#1
+
+
+type pre = st -> Type0
+type post (a:Type) = st -> a -> st -> Type0
+
+type repr (a:Type) (p:pre) (q:post a) = unit -> Dv (m st a p q)
 
 /// return is simple, use the Ret node
 
@@ -134,15 +145,15 @@ let rec bind (a b:Type)
     let f = f () in
     match f with
     | Ret x -> Weaken (g x ())
-    | Act #c #a_p #a_q act #_ #_ #_ k ->
+    | Act #_ #c #a_p #a_q act #_ #_ #_ k ->
       let k' = fun (x:c) -> (bind _ _ _ _ _ _ (fun _ -> k x) g) () in
-      Weaken (Act #c #a_p #a_q act #b #_ #_ k')
+      Weaken (Act #_ #c #a_p #a_q act #b #_ #_ k')
     | Weaken f -> Weaken ((bind _ _ _ _ _ _ (fun _ -> f) g) ())
-    | Strengthen #_ #phi #p #q f ->
-      let f : squash phi -> Dv (m b (act_p p q g_p) (act_q q g_q)) =
+    | Strengthen #_ #_ #phi #p #q f ->
+      let f : squash phi -> Dv (m st b (act_p p q g_p) (act_q q g_q)) =
         fun _ -> (bind _ _ _ _ _ _ (fun _ -> f ()) g) () in
-      let f : m b (strengthen_pre (act_p p q g_p) phi) (act_q q g_q) =
-        Strengthen #_ #phi #_ #_ f in
+      let f : m st b (strengthen_pre (act_p p q g_p) phi) (act_q q g_q) =
+        Strengthen f in
       Weaken f
 
 /// subcomp simply wraps in a Weaken node
@@ -177,14 +188,14 @@ let lift_PURE_M (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
   : repr a (pure_p wp) (pure_q wp)
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun _ ->
-    let f : squash (as_requires wp) -> Dv (m a (fun s0 -> True) (pure_q wp)) =
+    let f : squash (as_requires wp) -> Dv (m st a (fun s0 -> True) (pure_q wp)) =
       fun _ ->
       let x = f () in
-      let t : m a (fun s0 -> s0 == s0 /\ as_ensures wp x) (pure_q wp) =
+      let t : m st a (fun s0 -> s0 == s0 /\ as_ensures wp x) (pure_q wp) =
         Ret x in
-      let t : m a (fun _ -> True) (pure_q wp) = Weaken t in
+      let t : m st a (fun _ -> True) (pure_q wp) = Weaken t in
       t in
-    let t : m a (strengthen_pre (fun _ -> True) (as_requires wp)) (pure_q wp) =
+    let t : m st a (strengthen_pre (fun _ -> True) (as_requires wp)) (pure_q wp) =
       Strengthen f in
     Weaken t
 
@@ -196,11 +207,16 @@ sub_effect PURE ~> M = lift_PURE_M
 assume val p : prop
 assume val q : prop
 
-assume val f : squash p -> M unit (fun _ -> True) (fun _ _ s1 -> squash q /\ s1 > 2)
-assume val g : unit -> Pure unit True (fun _ -> squash p)
-assume val h : unit -> M unit (fun s0 -> squash q /\ s0 > 0) (fun _ _ s1 -> s1 > 2)
+assume val st_p : st -> prop
+assume val st_q : st -> prop
 
-let test () : M unit (fun _ -> True) (fun _ _ s1 -> s1 > 0) =
+assume ST_axiom: forall s. st_p s ==> st_q s
+
+assume val f : squash p -> M unit (fun _ -> True) (fun _ _ s1 -> squash q /\ st_p s1)
+assume val g : unit -> Pure unit True (fun _ -> squash p)
+assume val h : unit -> M unit (fun s0 -> squash q /\ st_q s0) (fun _ _ s1 -> st_p s1)
+
+let test () : M unit (fun _ -> True) (fun _ _ s1 -> st_q s1) =
   g ();
   f ();
   h ()
@@ -215,28 +231,28 @@ let test () : M unit (fun _ -> True) (fun _ _ s1 -> s1 > 0) =
 /// step_result is the result of taking a single step
 
 noeq
-type step_result (a:Type) =
-  | Step: #p:pre -> #q:post a -> m a p q -> step_result a
+type step_result (st:Type) (a:Type) =
+  | Step: #p:mpre st -> #q:mpost st a -> m st a p q -> step_result st a
 
 /// As computations take step,
 ///   their preconditions become weaker,
 ///   while the postconditions become stronger
 
 unfold
-let weaker_p (p0 p1:pre) (s0 s1:int) = p0 s0 ==> p1 s1
+let weaker_p (#st:Type) (p0 p1:mpre st) (s0 s1:st) = p0 s0 ==> p1 s1
 
 unfold
-let stronger_q (#a:Type) (q0 q1:post a) (s0 s1:int) =
-  forall (x:a) (s_final:int). q1 s1 x s_final ==> q0 s0 x s_final
+let stronger_q (#st:Type) (#a:Type) (q0 q1:mpost st a) (s0 s1:st) =
+  forall (x:a) (s_final:st). q1 s1 x s_final ==> q0 s0 x s_final
 
 /// The single-step function
 
-let step (#a:Type) (#p:pre) (#q:post a) (f:m a p q)
-  : s0:int ->
-    Div (step_result a & int)
+let step (#st:Type) (#a:Type) (#p:mpre st) (#q:mpost st a) (f:m st a p q)
+  : s0:st ->
+    Div (step_result st a & st)
         (requires p s0)
         (ensures fun (r, s1) ->
-                 let Step #_ #p_next #q_next g = r in
+                 let Step #_ #_ #p_next #q_next g = r in
                  weaker_p p p_next s0 s1 /\
                  stronger_q q q_next s0 s1)
   = fun s0 ->
@@ -251,10 +267,10 @@ let step (#a:Type) (#p:pre) (#q:post a) (f:m a p q)
 
 /// Wrapper around step, notice the spec of the Div effect
 
-let rec run (#a:Type) (#p:pre) (#q:post a) (f:m a p q)
-  : s0:int ->
-    Div (a & int) (requires p s0)
-                (ensures fun (x, s1) -> q s0 x s1)
+let rec run (#st:Type) (#a:Type) (#p:mpre st) (#q:mpost st a) (f:m st a p q)
+  : s0:st ->
+    Div (a & st) (requires p s0)
+                 (ensures fun (x, s1) -> q s0 x s1)
   = fun s0 ->
     match f with
     | Ret x -> x, s0
