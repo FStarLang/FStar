@@ -1029,7 +1029,9 @@ let mk_data_operations iquals attrs env tcs se =
     in
 
     let inductive_tps = SS.subst_binders univ_opening inductive_tps in
-    let typ0 = SS.subst univ_opening typ0 in
+    let typ0 = SS.subst  //shift the universe substitution by number of type parameters
+      (SS.shift_subst (List.length inductive_tps) univ_opening)
+      typ0 in
     let indices, _ = U.arrow_formals typ0 in
 
     let refine_domain =
