@@ -70,19 +70,6 @@ let weaken_ok (#a:Type) (p0:pre) (q0:post a) (p1:pre) (q1:post a) : Type0 =
   (forall (s:int). p1 s ==> p0 s) /\
   (forall (s0:int) (x:a) (s1:int). p1 s0 ==> q0 s0 x s1 ==> q1 s0 x s1)
 
-/// An atomic action is a pure function in the state passing style,
-///   whose wp is derived as follows
-
-#push-options "--warn_error -271"
-unfold
-let act_pure_wp (#a:Type) (a_p:pre) (a_q:post a) (s0:int) : pure_wp (a & int) =
-  let aux (a:Type) (wp:pure_wp' a)
-    : Lemma (requires is_monotonic wp)
-            (ensures pure_wp_monotonic a wp)
-            [SMTPat ()]
-    = intro_pure_wp_monotonicity wp in
-  fun p -> a_p s0 /\ (forall (x:a) (s1:int). a_q s0 x s1 ==> p (x, s1))
-#pop-options
 
 /// Precondition of the strengthen node
 
@@ -105,7 +92,7 @@ type m : a:Type -> p:pre -> q:post a -> Type =
     m a (fun s0 -> q s0 x s0) q
   | Act:
     #a:Type -> #a_p:pre -> #a_q:post a ->
-    act:(s0:int -> PURE (a & int) (act_pure_wp a_p a_q s0)) ->  //atomic action
+    act:(s0:int -> Pure (a & int) (a_p s0) (fun (x, s1) -> a_q s0 x s1)) ->  //atomic action
     #b:Type -> #k_p:(a -> pre) -> #k_q:(a -> post b) ->
     k:(x:a -> Dv (m b (k_p x) (k_q x))) ->
     m b (act_p a_p a_q k_p) (act_q a_q k_q)
