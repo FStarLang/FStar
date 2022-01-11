@@ -46,7 +46,7 @@ effect {
          if_then_else = STAG.if_then_else }
 }
 
-(* NB: Definining it this way led to universe errors *)
+(* NB: Defining it this way led to universe errors *)
 // [@@ erasable; ite_soundness_by ite_attr]
 // total
 // reflectable

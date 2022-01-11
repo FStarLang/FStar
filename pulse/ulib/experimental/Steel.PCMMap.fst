@@ -191,7 +191,7 @@ let compatible_pointwise #a #k
         with (Map.sel frame k)
         and ()))
 
-/// A very specfic lemma for use in lifting frame-preserving updates
+/// A very specific lemma for use in lifting frame-preserving updates
 ///
 /// If two maps are compatible, then updating them at a key with
 /// values that are compatible produces compatible maps

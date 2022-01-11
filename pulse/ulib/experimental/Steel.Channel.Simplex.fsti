@@ -21,7 +21,7 @@ open Steel.Effect
 
 /// This library provides a model of unidirectional, protocol-indexed channels.
 /// One party is allowed to send messages on the channel, while the other is allowed
-/// to receive messages on the smae channel.
+/// to receive messages on the same channel.
 /// Protocols are specified using the structure in Steel.Channel.Protocol
 
 
