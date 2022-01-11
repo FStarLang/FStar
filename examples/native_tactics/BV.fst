@@ -205,7 +205,7 @@ let to_bv_tac ()  =
   arith_to_bv_tac ();
   arith_to_bv_tac ()
 
-/// U64.t is isomporphic to uint_t 64
+/// U64.t is isomorphic to uint_t 64
 /// These next few lemmas use this isomorphism to lift bitwise operations on
 /// U64.t to the corresponding operations on uint_t 64
 
@@ -218,7 +218,7 @@ let v64_eq (x y: U64.t) : Lemma
 
 /// v (logand x y) = U64.logand (v x) (v y)
 ///    -- Note, this is written with an explicit instantiation of the type
-///       of `==` (i.e., eq2) since, F* by default, picks only a provablye equivalent
+///       of `==` (i.e., eq2) since, F* by default, picks only a provably equivalent
 ///       type, not a definitionally equal one, which leads to some inefficiencies in tactics
 ///       where these lemmas are applied repeatedly
 let unfold_logand64 (x y: U64.t) : Lemma

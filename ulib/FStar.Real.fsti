@@ -20,7 +20,7 @@ module FStar.Real
   Real number constants can be specific in floating point format with
   an 'R' suffix, e.g., 1.0R
 
-  All these operations are mapped to the correspondings primitives
+  All these operations are mapped to the corresponding primitives
   in Z3's theory of real arithmetic.
 *)
 

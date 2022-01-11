@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module RSA (* trustedd implementation of RSA-OAEP *) 
+module RSA (* trusted implementation of RSA-OAEP *)
 open Array
 
 assume type pkey

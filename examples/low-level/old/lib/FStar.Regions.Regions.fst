@@ -156,7 +156,7 @@ val writeRegionStackSameIds : #a:Type -> r:(lref a) -> ms:(regionStack)
 let writeRegionStackSameIds r ms s v = updateRegionSameIds (writeInRegion r v) s ms
 
 
-(* Updating one the regions perserves the well-formedness of the region stack. *)
+(* Updating one the regions preserves the well-formedness of the region stack. *)
 val writeRegionStackWellFormed : #a:Type -> r:(lref a)
   -> ms:(regionStack)
   -> s:rid -> v:a
@@ -412,7 +412,7 @@ match (regionOf r) with
 
 
 (* AA: The location of an [lref] (say r) is [regionOf r], and is independent of
-   the currrent state of the memory. So the absolute location of a reference is
+   the current state of the memory. So the absolute location of a reference is
    by definition preserved by all memory operations.
 
    However, in most correctness proofs, what matters is the relative position

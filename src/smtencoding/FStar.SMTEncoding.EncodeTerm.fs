@@ -695,7 +695,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              //cf. Bug #1750
              //We need to distinguish pure and ghost functions in the encoding
              //both in hash consing, producing different type constructors for them.
-             //Tot functions get an additional predicate IsTotFun in their intepretation
+             //Tot functions get an additional predicate IsTotFun in their interpretation
              let t_interp =
                  mkForall t.pos
                           ([[app]],

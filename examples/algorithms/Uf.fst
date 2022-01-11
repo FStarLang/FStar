@@ -72,7 +72,7 @@ let funcaccessible_from_markov (#a:eqtype) (h:heap) (u:uf a)
   in build_witness n0 u
 
 
-(** An strenghening of recall : any reference reachable through
+(** An strengthening of recall : any reference reachable through
     some heap h from some reference contained in h is also in h **)
 (* TODO : prove it using Danel's monotonic predicates *)
 assume val recall_reachable : #a:Type -> #a2:Type -> #b:Type -> h:heap -> r:ref a -> f:(a2 -> Tot (ref b)) ->

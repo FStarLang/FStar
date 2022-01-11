@@ -45,7 +45,7 @@ module B = LowStar.Buffer
 /// As a result, when we reach the extraction, we have no choice but to pass `()` for these arguments
 ///
 /// This becomes a problem if some index is crucial to determine the type of the terms,
-///   parametic state is one such example
+///   parametric state is one such example
 ///
 /// Specifically, if we have `let lift ... (state:Type0) ... : mrepr a state = e`
 ///

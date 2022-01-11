@@ -92,7 +92,7 @@ let raise_cps_type = a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p (None, h0 + 
 //although we don't have syntax for that yet ...
 reifiable reflectable new_effect {
   StateExn : a:Type -> wp:wp a -> Effect
-  with //repr is new; it's the reprentation of ST as a value type
+  with //repr is new; it's the representation of ST as a value type
       repr         = repr
       //bind_wp is exactly as it is currently
       //produced by the *-translation of bind above

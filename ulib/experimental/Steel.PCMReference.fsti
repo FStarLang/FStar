@@ -70,7 +70,7 @@ val alloc (#a:Type)
           (requires fun _ -> compatible pcm x x /\ pcm.refine x)
           (ensures fun _ _ _ -> True)
 
-/// Frees reference [r], as long as we have exclusing ownership of [r]
+/// Frees reference [r], as long as we have excluding ownership of [r]
 /// according to the governing PCM.
 /// Freeing here sets the value to the unit value of the PCM, one can manually
 /// call `drop` from Steel.Effect.Atomic to forget it entirely from the context

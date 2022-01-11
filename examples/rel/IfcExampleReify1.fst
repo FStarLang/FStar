@@ -75,7 +75,7 @@ let c1_5_ni () =
   assign_com env (AOp Minus (AVar c) (AInt 1)) c
 
 (* c1_4 cannot be shown to be non-interferent by typing since it contains an
-   explicict flow from z (High) to x (Low)
+   explicit flow from z (High) to x (Low)
    However, the sequence of c1_3 and c1_4 is fine, since in c1_3 we overwrite 
    z with the low value (y+7). 
    We can hence prove non-interference by relying on SMT.
