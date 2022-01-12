@@ -15,12 +15,13 @@ define new types.
 
    part2_inductive_type_families
    part2_vectors
+   part2_merkle
 
 ..
   Vectors for basics
     - But vectors are too simple, we can do them with just refined lists
 
-  Red-black trees to capture more interesting invariants of a type
+  Merkle trees to capture more interesting invariants of a type
 
   Higher-order inductive types: infinitely branching trees
     - Free monads and computation trees

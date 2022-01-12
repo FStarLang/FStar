@@ -55,10 +55,6 @@ let rec get #a #n (i:nat{i < n}) (v:vec a n)
       else get (i - 1) tl
 //SNIPPET_END: long_get
 
-#push-options "--print_implicits --print_full_names"
-
-
-
 [@@expect_failure] //duplicate_name
 //SNIPPET_START: get
 let rec get #a #n (i:nat{i < n}) (v:vec a n)
