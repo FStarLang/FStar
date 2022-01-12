@@ -75,11 +75,12 @@ security.
 Preliminaries
 .............
 
-We'll model the data items and the hashes we store in our tree as
+We'll model the resources and the hashes we store in our tree as
 strings of characters. F* standard library ``FStar.String`` provides
 some utilities to work with strings.
 
 In the code listing below, we define the following
+
   * ``lstring n``, the type of strings of length ``n``. Like the
     ``vec`` type, ``lstring`` is a length-indexed type; unlike
     ``vector`` it is defined using a refinement type rather than an
@@ -94,7 +95,7 @@ In the code listing below, we define the following
     describing the length in characters of a ``hash`` function. The F*
     keyword ``assume`` allows you to assume the existence of a symbol
     at a given type. Use it with care, since you can trivially prove
-    anything by including an ``assume _ : False``.
+    anything by including an ``assume nonsense : False``.
 
   * The type of resources we store in the tree will just be
     ``resource``, an alias for ``string``.
@@ -121,14 +122,21 @@ Internal nodes of the tree are constructed using ``N left right``,
 where both the ``left`` and ``right`` trees have the same height
 ``n``, producing a tree of height ``n + 1``. More interestingly, the
 hash associated with ``N left right`` is ``hash (concat hl hr)``, the
-hash of the concatenation of hashes of the left and right subtrees,
-respectively.
+hash of the concatenation of hashes of the left and right subtrees.
 
 
 .. literalinclude:: ../code/MerkleTree.fst
    :language: fstar
    :start-after: //SNIPPET_START: mtree
    :end-before: //SNIPPET_END: mtree
+
+In our previous examples like vectors, the index of the type
+abstracts, or summarizes, some property of the type, e.g., the
+length. This is also the case with ``mtree``, where the first index is
+an abstraction summarizing only the height of the tree; the, second
+index, being a cryptographic hash, summarizes the entire contents of
+the tree.
+
 
 Accessing an element in the tree
 ................................
@@ -190,7 +198,7 @@ In the cryptographic literature, this function is sometimes calles
 *the prover*. A ``RES r ri hs`` is a claimed proof of the membership
 of ``r`` in the tree at the location specified by ``ri``.
 
-Going back to our motivating scenarios, artifacts distributed by our
+Going back to our motivating scenario, artifacts distributed by our
 content provider would be elements of the type
 ``resource_with_evidence n``, enabling clients to verify that a given
 artifact is authentic, as shown next.
@@ -213,17 +221,12 @@ tree.
 
 The main work is done by ``compute_root_hash``, shown below.
 
-In the first branch, we simply hash the resource itself.
+   * In the first branch, we simply hash the resource itself.
 
-While in the second branch, we recompute the hash from the tail of the
-path, and then based on which direction was taken, we either
-concatenate sibling hash on the left or the right, and hash the
-result.
-
-Convince yourself of why this is type-correct---refer back to the
-description of :ref:`vectors<Part2_vectors>`, if needed. For example,
-why is it safe to call ``L.hd`` to access the first element of
-``hashes``?
+   * In the second branch, we recompute the hash from the tail of the
+     path, and then based on which direction was taken, we either
+     concatenate sibling hash on the left or the right, and hash the
+     result.
 
 .. literalinclude:: ../code/MerkleTree.fst
    :language: fstar
@@ -231,11 +234,18 @@ why is it safe to call ``L.hd`` to access the first element of
    :end-before: //SNIPPET_END: compute_root_hash
 
 
+Convince yourself of why this is type-correct---refer back to the
+description of :ref:`vectors<Part2_vectors>`, if needed. For example,
+why is it safe to call ``L.hd`` to access the first element of
+``hashes``?
+
+
 Correctness
 ...........
 
-Now, we can prove our main correctness theorem, namely that when
-``get_with_evidence`` returns a resource with verifiable evidence.
+Now, we can prove our main correctness theorem, namely that
+``get_with_evidence`` returns a resource with verifiable
+evidence.
 
 .. literalinclude:: ../code/MerkleTree.fst
    :language: fstar

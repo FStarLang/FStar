@@ -173,7 +173,7 @@ type hash_collision =
 
 (* 
  * If [verify] can be tricked into accepting the evidence of [p] when
- * [p.res] element is not actually present in the tree at [p.ri], then
+ * [p.res] is not actually present in the tree at [p.ri], then
  * we can exhibit a hash collision
  *)
 let rec security (#n:nat) (#h:hash_t)
