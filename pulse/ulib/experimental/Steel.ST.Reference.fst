@@ -130,3 +130,51 @@ let cas (#t:eqtype)
       (pts_to r full_perm v)
       (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
   = coerce_atomic (fun _ -> R.cas_pt #t #uses r v v_old v_new)
+
+let ptrp r p = R.ptrp r p
+let ptrp_sel r p = R.ptrp_sel r p
+
+module SA = Steel.Effect.Atomic
+
+let vptrp_intro'
+  (#inames: _)
+  (#a: Type) (r: ref a) (p: perm) (v: a)
+: SA.SteelGhostT unit inames
+    (pts_to r p v)
+    (fun _ -> vptrp r p `vrefine` C.equals v)
+=
+  R.intro_vptr r p v;
+  SA.change_slprop
+    (R.vptrp r p)
+    (vptrp r p)
+    v
+    v
+    (fun _ -> ());
+  SA.intro_vrefine (vptrp r p) (C.equals v)
+
+let vptrp_intro r p v =
+  coerce_ghost (fun _ -> vptrp_intro' r p v)
+
+let vptrp_elim'
+  (#inames: _)
+  (#a: Type) (r: ref a) (p: perm) (v: a)
+: SA.SteelGhostT unit inames
+    (vptrp r p `vrefine` C.equals v)
+    (fun _ -> pts_to r p v)
+=
+  SA.elim_vrefine (vptrp r p) (C.equals v);
+  SA.change_slprop
+    (vptrp r p)
+    (R.vptrp r p)
+    v
+    v
+    (fun _ -> ());
+  let v' = R.elim_vptr r p in
+  SA.change_slprop_rel
+    (R.pts_to r p v')
+    (R.pts_to r p v)
+    (fun _ _ -> True)
+    (fun _ -> ())
+
+let vptrp_elim r p v =
+  coerce_ghost (fun _ -> vptrp_elim' r p v)
