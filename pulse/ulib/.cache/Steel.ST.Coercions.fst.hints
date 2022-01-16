@@ -1,5 +1,5 @@
 [
-  "ðíW\u007fñþ™ªNH#2\u001e\u0005Ùº",
+  "èrÑ~N÷3ÒªÁY\rµŽ¡\u0006",
   [
     [
       "Steel.ST.Coercions.coerce_steel",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "18dea3bdc48c4942920dc6150b11229a"
+      "59d7791c7ca726282ae6d26cf89732b5"
     ],
     [
       "Steel.ST.Coercions.coerce_atomic",
@@ -23,7 +23,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "19d3b751f9239500499b44531ed953ec"
+      "5e8e353d5c1da6988a5e903de082eae6"
     ],
     [
       "Steel.ST.Coercions.coerce_atomicF",
@@ -38,25 +38,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5add7b3f117253ffd62a3c306993bb31"
-    ],
-    [
-      "Steel.ST.Coercions.lift_stg_steelg",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d32233779981ac98a351ba73e834625f"
-    ],
-    [
-      "Steel.ST.Coercions.lift_sta_steela",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a3f41f7542c0a53380601750e6194a64"
+      "059685b578292cd6cc0ec66d9c9031aa"
     ]
   ]
 ]
