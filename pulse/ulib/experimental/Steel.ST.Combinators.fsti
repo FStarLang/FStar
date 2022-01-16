@@ -134,3 +134,14 @@ val vdep_elim
 : STGhostT unit inames
     ((vtag `vdep` vpl) `vrefine` equals x)
     (fun _ -> (vtag `vrefine` equals (dfst x)) `star` (vpl (dfst x) `vrefine` equals (dsnd x)))
+
+val vrefine_equals_injective
+  (v: vprop)
+  (x1 x2: t_of v)
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (v `vrefine` equals x1)) m /\
+    interp (hp_of (v `vrefine` equals x2)) m
+  ))
+  (ensures (x1 == x2))

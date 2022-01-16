@@ -277,3 +277,16 @@ let vdep_elim
     ((vtag `vdep` vpl) `vrefine` equals x)
     (fun _ -> (vtag `vrefine` equals (dfst x)) `star` (vpl (dfst x) `vrefine` equals (dsnd x)))
 = C.coerce_ghost (fun _ -> vdep_elim' vtag vpl x)
+
+let vrefine_equals_injective
+  (v: vprop)
+  (x1 x2: t_of v)
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (v `vrefine` equals x1)) m /\
+    interp (hp_of (v `vrefine` equals x2)) m
+  ))
+  (ensures (x1 == x2))
+= interp_vrefine_hp v (equals x1) m;
+  interp_vrefine_hp v (equals x2) m
