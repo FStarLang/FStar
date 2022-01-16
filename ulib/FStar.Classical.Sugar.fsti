@@ -73,7 +73,7 @@ let implies_elim
         (p:Type)
         (q:Type)
         (_:squash (p ==> q))
-        (f:unit -> squash p)
+        (f:unit -> Tot (squash p))
   : squash q
   = f()
 
@@ -113,7 +113,7 @@ val exists_intro
         (a:Type)
         (p:a -> Type)
         (v:a)
-        (x: unit -> squash (p v))
+        (x: unit -> Tot (squash (p v)))
   : Tot (squash (exists x. p x))
 
 (** Introduce an implication
@@ -132,7 +132,7 @@ val implies_intro
 val or_intro_left
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:unit -> squash p)
+        (f:unit -> Tot (squash p))
   : Tot (squash (p \/ q()))
 
 (** Introduce an disjunction on the right
@@ -142,7 +142,7 @@ val or_intro_left
 val or_intro_right
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:squash (~p) -> squash (q()))
+        (f:squash (~p) -> Tot (squash (q())))
   : Tot (squash (p \/ q()))
 
 (** Introduce a conjunction
@@ -152,6 +152,6 @@ val or_intro_right
 val and_intro
         (p:Type)
         (q:squash p -> Type)
-        (left:unit -> squash p)
-        (right:squash p -> squash (q()))
+        (left:unit -> Tot (squash p))
+        (right:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))

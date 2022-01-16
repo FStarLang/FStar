@@ -899,20 +899,6 @@ let (generalize_and_inst_within :
                                                    failwith "Impossible"))
                                      data_types datas in
                              (tcs1, datas1))))))
-let (debug_log :
-  FStar_TypeChecker_Env.env_t -> (unit -> Prims.string) -> unit) =
-  fun env ->
-    fun msg ->
-      let uu___ =
-        FStar_Compiler_Effect.op_Less_Bar (FStar_TypeChecker_Env.debug env)
-          (FStar_Options.Other "Positivity") in
-      if uu___
-      then
-        let uu___1 =
-          let uu___2 = let uu___3 = msg () in Prims.op_Hat uu___3 "\n" in
-          Prims.op_Hat "Positivity::" uu___2 in
-        FStar_Compiler_Util.print_string uu___1
-      else ()
 let (datacon_typ : FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term) =
   fun data ->
     match data.FStar_Syntax_Syntax.sigel with
@@ -2736,7 +2722,11 @@ let (mk_data_operations :
                                  FStar_Syntax_Subst.subst_binders
                                    univ_opening inductive_tps in
                                let typ01 =
-                                 FStar_Syntax_Subst.subst univ_opening typ0 in
+                                 let uu___5 =
+                                   FStar_Syntax_Subst.shift_subst
+                                     (FStar_Compiler_List.length
+                                        inductive_tps1) univ_opening in
+                                 FStar_Syntax_Subst.subst uu___5 typ0 in
                                let uu___5 =
                                  FStar_Syntax_Util.arrow_formals typ01 in
                                (match uu___5 with

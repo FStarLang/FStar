@@ -4675,3 +4675,28 @@ let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
         FStar_Compiler_Util.for_some
           (is_fvar FStar_Parser_Const.erasable_attr)
           aq1.FStar_Syntax_Syntax.aqual_attributes
+let (check_mutual_universes :
+  FStar_Syntax_Syntax.letbinding Prims.list -> unit) =
+  fun lbs ->
+    let uu___ = lbs in
+    match uu___ with
+    | lb::lbs1 ->
+        let expected = lb.FStar_Syntax_Syntax.lbunivs in
+        let expected_len = FStar_Compiler_List.length expected in
+        FStar_Compiler_List.iter
+          (fun lb1 ->
+             let uu___1 =
+               ((FStar_Compiler_List.length lb1.FStar_Syntax_Syntax.lbunivs)
+                  <> expected_len)
+                 ||
+                 (let uu___2 =
+                    FStar_Compiler_List.forall2 FStar_Ident.ident_equals
+                      lb1.FStar_Syntax_Syntax.lbunivs expected in
+                  Prims.op_Negation uu___2) in
+             if uu___1
+             then
+               FStar_Errors.raise_error
+                 (FStar_Errors.Fatal_IncompatibleUniverse,
+                   "Mutually recursive definitions do not abstract over the same universes")
+                 lb1.FStar_Syntax_Syntax.lbpos
+             else ()) lbs1

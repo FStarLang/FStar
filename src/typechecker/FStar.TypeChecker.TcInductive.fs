@@ -284,10 +284,6 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         tcs, datas
 
 
-let debug_log (env:env_t) (msg : unit -> string) : unit =
-    if Env.debug env <| Options.Other "Positivity" then
-      BU.print_string ("Positivity::" ^ msg () ^ "\n")
-
 let datacon_typ (data:sigelt) :term =
   match data.sigel with
   | Sig_datacon (_, _, t, _, _, _) -> t
@@ -1033,7 +1029,9 @@ let mk_data_operations iquals attrs env tcs se =
     in
 
     let inductive_tps = SS.subst_binders univ_opening inductive_tps in
-    let typ0 = SS.subst univ_opening typ0 in
+    let typ0 = SS.subst  //shift the universe substitution by number of type parameters
+      (SS.shift_subst (List.length inductive_tps) univ_opening)
+      typ0 in
     let indices, _ = U.arrow_formals typ0 in
 
     let refine_domain =

@@ -14,7 +14,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "4347bf34f19dded5fb500038ab3d8fe9"
+      "3dcd87f60fb9f48f3d690ba8b3c159cb"
     ],
     [
       "Steel.Semantics.Instantiate.state_obeys_st_laws",
@@ -71,7 +71,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join"
       ],
       0,
-      "b12a1954e8ad4743a4a158740a628d90"
+      "eae5ed089a633e9edb34aad81b6665dd"
     ],
     [
       "Steel.Semantics.Instantiate.state_uses",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "5e02e6574efc528bb7f0f86a01ede446"
+      "8d51878504239a4e57d996d6cb7e29ff"
     ],
     [
       "Steel.Semantics.Instantiate.state_correspondence",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_83b7f74668e2de4073384eaaf24260ac"
       ],
       0,
-      "33bca666e5eae183d953ca7e1993d781"
+      "635fab02ec98c286cd98061cb50cc703"
     ],
     [
       "Steel.Semantics.Instantiate.state_correspondence",
@@ -141,7 +141,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core"
       ],
       0,
-      "322a987993a2ed2be93fbdc319510c08"
+      "70530a49c35aa69a0b5805f7720414e6"
     ]
   ]
 ]

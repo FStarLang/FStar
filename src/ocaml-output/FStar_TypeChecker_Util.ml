@@ -7521,7 +7521,11 @@ let rec (ty_strictly_positive_in_type :
                       FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
                         FStar_Compiler_Util.is_none in
                     if uu___4
-                    then true
+                    then
+                      (debug_positivity env
+                         (fun uu___6 ->
+                            "ty is an app node with head that is not an fv, returning false");
+                       false)
                     else
                       (let uu___6 =
                          FStar_Compiler_Effect.op_Bar_Greater fv_us_opt

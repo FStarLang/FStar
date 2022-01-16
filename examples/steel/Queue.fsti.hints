@@ -16,7 +16,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "5b316262db6837be93be53c7fb27342d"
+      "893a59a12ed4a5f47f61d872ea7c75ed"
     ],
     [
       "Queue.dequeue_post",
@@ -27,7 +27,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "f293221834d6cd9b334d11a1796a76ba"
+      "b3295781edafe474141bf340b23139c6"
     ]
   ]
 ]

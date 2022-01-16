@@ -26,6 +26,23 @@ type equiv (a:Type) =
     transitivity:(x:a -> y:a -> z:a -> Lemma (requires (x `eq` y /\ y `eq` z)) (ensures (x `eq` z))) ->
     equiv a
 
+let elim_eq_laws #a (eq:equiv a)
+  : Lemma (
+          (forall x.{:pattern (x `eq.eq` x)} x `eq.eq` x) /\
+          (forall x y.{:pattern (x `eq.eq` y)} x `eq.eq` y ==> y `eq.eq` x) /\
+          (forall x y z.{:pattern eq.eq x y; eq.eq y z} (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z)
+          )
+  = introduce forall x. x `eq.eq` x
+    with (eq.reflexivity x);
+
+    introduce forall x y. x `eq.eq` y ==> y `eq.eq` x
+    with (introduce _ ==> _
+          with _. eq.symmetry x y);
+
+    introduce forall x y z. (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z
+    with (introduce _ ==> _
+          with _. eq.transitivity x y z)
+
 let equality_equiv (a:Type) : equiv a =
   EQ (fun x y -> x == y) (fun x -> ()) (fun x y -> ()) (fun x y z -> ())
 
@@ -40,6 +57,8 @@ type cm (a:Type) (eq:equiv a) =
     commutativity:(x:a -> y:a -> Lemma ((x `mult` y) `EQ?.eq eq` (y `mult` x))) ->
     congruence:(x:a -> y:a -> z:a -> w:a -> Lemma (requires (x `EQ?.eq eq` z /\ y `EQ?.eq eq` w)) (ensures ((mult x y) `EQ?.eq eq` (mult z w)))) ->
     cm a eq
+
+
 
 // temporarily fixing the universe of this lemma to u#1 because 
 // otherwise tactics for LowStar.Resource canonicalization fails

@@ -1037,3 +1037,9 @@ val with_type (#t: Type) (e: t) : Tot t
     One of its uses is in types of layered effect combinators that
     are subjected to stricter typing discipline (no subtyping) *)
 unfold let eqtype_as_type (a:eqtype) : Type = a
+
+(** A coercion of the [x] from [a] to [b], when [a] is provably equal
+    to [b]. In most cases, F* will silently coerce from [a] to [b]
+    along a provable equality (as in the body of this
+    function). Occasionally, you may need to apply this explicitly *)
+let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x

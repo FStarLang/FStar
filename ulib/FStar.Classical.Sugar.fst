@@ -102,7 +102,7 @@ let exists_intro
         (a:Type)
         (p:a -> Type)
         (v:a)
-        (f: unit -> squash (p v))
+        (f: unit -> Tot (squash (p v)))
   : Tot (squash (exists x. p x))
   = exists_intro_simple a p v (f())
 
@@ -122,14 +122,14 @@ let implies_intro
 let or_intro_left
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:unit -> squash p)
+        (f:unit -> Tot (squash p))
   : Tot (squash (p \/ q()))
   = f()
 
 let or_intro_right
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:squash (~p) -> squash (q()))
+        (f:squash (~p) -> Tot (squash (q())))
   : Tot (squash (p \/ q()))
   = or_elim_simple p (~p)
                   (p \/ q())
@@ -140,7 +140,7 @@ let or_intro_right
 let and_intro
         (p:Type)
         (q:squash p -> Type)
-        (f:unit -> squash p)
-        (g:squash p -> squash (q()))
+        (f:unit -> Tot (squash p))
+        (g:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))
   = let _ = f() in g()

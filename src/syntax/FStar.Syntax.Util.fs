@@ -2360,3 +2360,18 @@ let aqual_is_erasable (aq:aqual) =
   match aq with
   | None -> false
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
+
+let check_mutual_universes (lbs:list<letbinding>)
+  : unit
+  = let lb::lbs = lbs in
+    let expected = lb.lbunivs in
+    let expected_len = List.length expected in
+    List.iter
+        (fun lb ->
+          if List.length lb.lbunivs <> expected_len
+          ||  not (List.forall2 Ident.ident_equals lb.lbunivs expected)
+          then FStar.Errors.raise_error
+                  (Errors.Fatal_IncompatibleUniverse,
+                   "Mutually recursive definitions do not abstract over the same universes")
+                  lb.lbpos)
+        lbs

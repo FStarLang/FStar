@@ -232,3 +232,4 @@ let frame_preserving_subframe (#a:Type u#a) (p:pcm a) (x y:a)
       p.comm frame (op p x subframe);
       p.comm (op p y subframe) frame);
     w
+

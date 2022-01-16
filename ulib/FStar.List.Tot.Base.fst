@@ -152,7 +152,7 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
-(** [mapi_init f n l] applies, for each [k], [f (n+k)] to the [k]-th
+(** [mapi_init f l n] applies, for each [k], [f (n+k)] to the [k]-th
 element of [l] and returns the list of results, in the order of the
 original elements in [l]. Requires, at type-checking time, [f] to be a
 pure total function. *)

@@ -3383,7 +3383,10 @@ let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:
      | Tm_app (t, args) ->  //the binder type is an application
        //get the head node fv
        let fv_us_opt = try_get_fv t in
-       if fv_us_opt |> is_none then true  //head is not an fv, ok
+       if fv_us_opt |> is_none then begin
+         debug_positivity env (fun () -> "ty is an app node with head that is not an fv, returning false");
+         false  //head is not an fv, ok
+       end
        else
          let fv, us = fv_us_opt |> must in
          //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
