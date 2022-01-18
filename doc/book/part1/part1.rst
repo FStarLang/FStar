@@ -43,6 +43,7 @@ functions and prove them correct.
 
    part1_getting_off_the_ground
    part1_polymorphism
+   part1_equality
    part1_prop_assertions
    part1_inductives
    part1_termination

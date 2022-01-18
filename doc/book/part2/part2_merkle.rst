@@ -133,7 +133,7 @@ hash of the concatenation of hashes of the left and right subtrees.
 In our previous examples like vectors, the index of the type
 abstracts, or summarizes, some property of the type, e.g., the
 length. This is also the case with ``mtree``, where the first index is
-an abstraction summarizing only the height of the tree; the, second
+an abstraction summarizing only the height of the tree; the second
 index, being a cryptographic hash, summarizes the entire contents of
 the tree.
 
@@ -181,7 +181,7 @@ The evidence contains the resource identifier and the hashes of
 sibling nodes along the path from root to that item.
 
 First, we define ``resource_with_evidence n``, an indexed type that
-carries packages a ``res:resource`` with its ``rid:resource_id`` and
+packages a ``res:resource`` with its ``rid:resource_id`` and
 ``hashes:list hash_t``---both ``rid`` and ``hashes`` have the same
 length, which is the index of the constructed type.
 

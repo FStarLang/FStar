@@ -16,6 +16,7 @@ define new types.
    part2_inductive_type_families
    part2_vectors
    part2_merkle
+   part2_equality
 
 ..
   Vectors for basics
