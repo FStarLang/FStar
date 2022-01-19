@@ -2237,6 +2237,28 @@ and try_solve_without_smt_or_else
       UF.rollback tx;
       else_solve env wl (p,s)
 
+and try_solve_then_or_else
+        (env:Env.env)
+        (wl:worklist)
+        (try_solve: Env.env -> worklist -> solution)
+        (then_solve: Env.env -> worklist -> solution)
+        (else_solve: Env.env -> worklist -> solution)
+    : solution =
+    let empty_wl =
+      {wl with defer_ok=false;
+               attempting=[];
+               wl_deferred=[];
+               wl_implicits=[]} in
+    let tx = UF.new_transaction () in
+    match try_solve env empty_wl with
+    | Success (_, defer_to_tac, imps) ->
+      UF.commit tx;
+      let wl = extend_wl wl [] defer_to_tac imps in
+      then_solve env wl
+    | Failed (p, s) ->
+      UF.rollback tx;
+      else_solve env wl
+
 and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
     solve_t' env (compress_tprob wl.tcenv problem) wl
@@ -2645,8 +2667,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              ([], wl)
                    in
                    if debug env <| Options.Other "Rel"
-                   then BU.print1
-                            "Adding subproblems for arguments: %s"
+                   then BU.print2
+                            "Adding subproblems for arguments (smtok=%s): %s"
+                            (string_of_bool wl.smt_ok)
                             (Print.list_to_string (prob_to_string env) subprobs);
                    if Options.defensive ()
                    then List.iter (def_check_prob "solve_t' subprobs") subprobs;
@@ -3356,20 +3379,42 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
-           && no_free_uvars t1 // and neither term has any free variables
+         then (
+           let solve_with_smt () =
+             let guard, wl =
+                 if equal t1 t2
+                 then None, wl
+                 else let g, wl = mk_eq2 wl env orig t1 t2 in
+                      Some g, wl
+             in
+             solve env (solve_prob orig guard [] wl)
+           in
+           if no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
-         then if not wl.smt_ok
-              then if equal t1 t2
-                   then solve env (solve_prob orig None [] wl)
-                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
-              else let guard, wl =
-                       if equal t1 t2
-                       then None, wl
-                       else let g, wl = mk_eq2 wl env orig t1 t2 in
-                            Some g, wl
-                   in
-                   solve env (solve_prob orig guard [] wl)
-         else rigid_rigid_delta env problem wl head1 head2 t1 t2
+           then
+             if not wl.smt_ok
+             then if equal t1 t2
+                  then solve env (solve_prob orig None [] wl)
+                  else rigid_rigid_delta env problem wl head1 head2 t1 t2
+             else solve_with_smt()
+           else if not wl.smt_ok
+           then rigid_rigid_delta env problem wl head1 head2 t1 t2
+           else (
+            try_solve_then_or_else
+              env
+              wl
+              (*try*)
+              (fun env wl_empty -> rigid_rigid_delta env problem wl_empty head1 head2 t1 t2)
+              (*then*)
+              (fun env wl -> solve env wl)
+              (*else*)
+              (fun _ _ -> solve_with_smt())
+            )
+         )
+         else (
+             rigid_rigid_delta env problem wl head1 head2 t1 t2
+         )
+
 
       | Tm_let _, Tm_let _ ->
          // For now, just unify if they syntactically match
