@@ -817,8 +817,12 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
-                  if quals |> List.contains Logic || is_logical
+                  let is_smt_theory_symbol =
+                      let fv = FStar.Compiler.Util.right lbn in
+                      Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
+                  in
+                  if not is_smt_theory_symbol
+                  && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
                 in

@@ -2879,35 +2879,25 @@ let (encode_top_level_let :
                                                                 -> true
                                                             | uu___17 ->
                                                                 false in
-                                                          let is_prims =
-                                                            let uu___16 =
-                                                              let uu___17 =
-                                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                                  lbn
-                                                                  FStar_Compiler_Util.right in
-                                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                                uu___17
-                                                                FStar_Syntax_Syntax.lid_of_fv in
-                                                            FStar_Compiler_Effect.op_Bar_Greater
-                                                              uu___16
-                                                              (fun lid ->
-                                                                 let uu___17
-                                                                   =
-                                                                   let uu___18
-                                                                    =
-                                                                    FStar_Ident.ns_of_lid
-                                                                    lid in
-                                                                   FStar_Ident.lid_of_ids
-                                                                    uu___18 in
-                                                                 FStar_Ident.lid_equals
-                                                                   uu___17
-                                                                   FStar_Parser_Const.prims_lid) in
+                                                          let is_smt_theory_symbol
+                                                            =
+                                                            let fv =
+                                                              FStar_Compiler_Util.right
+                                                                lbn in
+                                                            FStar_TypeChecker_Env.fv_has_attr
+                                                              env2.FStar_SMTEncoding_Env.tcenv
+                                                              fv
+                                                              FStar_Parser_Const.smt_theory_symbol_attr_lid in
                                                           let uu___16 =
-                                                            (FStar_Compiler_Effect.op_Bar_Greater
-                                                               quals
-                                                               (FStar_Compiler_List.contains
-                                                                  FStar_Syntax_Syntax.Logic))
-                                                              || is_logical in
+                                                            (Prims.op_Negation
+                                                               is_smt_theory_symbol)
+                                                              &&
+                                                              ((FStar_Compiler_Effect.op_Bar_Greater
+                                                                  quals
+                                                                  (FStar_Compiler_List.contains
+                                                                    FStar_Syntax_Syntax.Logic))
+                                                                 ||
+                                                                 is_logical) in
                                                           if uu___16
                                                           then
                                                             let uu___17 =
