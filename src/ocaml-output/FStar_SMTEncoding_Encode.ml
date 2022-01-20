@@ -1259,37 +1259,6 @@ let (primitive_type_axioms :
           "eq2-interp") in
       FStar_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
-  let mk_eq3_interp env eq3 tt =
-    let aa =
-      FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort) in
-    let bb =
-      FStar_SMTEncoding_Term.mk_fv ("b", FStar_SMTEncoding_Term.Term_sort) in
-    let xx1 =
-      FStar_SMTEncoding_Term.mk_fv ("x", FStar_SMTEncoding_Term.Term_sort) in
-    let yy1 =
-      FStar_SMTEncoding_Term.mk_fv ("y", FStar_SMTEncoding_Term.Term_sort) in
-    let a = FStar_SMTEncoding_Util.mkFreeV aa in
-    let b = FStar_SMTEncoding_Util.mkFreeV bb in
-    let x1 = FStar_SMTEncoding_Util.mkFreeV xx1 in
-    let y1 = FStar_SMTEncoding_Util.mkFreeV yy1 in
-    let eq3_x_y = FStar_SMTEncoding_Util.mkApp (eq3, [a; b; x1; y1]) in
-    let valid = FStar_SMTEncoding_Util.mkApp ("Valid", [eq3_x_y]) in
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStar_TypeChecker_Env.get_range env in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 =
-                let uu___7 = FStar_SMTEncoding_Util.mkEq (x1, y1) in
-                (uu___7, valid) in
-              FStar_SMTEncoding_Util.mkIff uu___6 in
-            ([[eq3_x_y]], [aa; bb; xx1; yy1], uu___5) in
-          FStar_SMTEncoding_Term.mkForall uu___3 uu___4 in
-        (uu___2, (FStar_Pervasives_Native.Some "Eq3 interpretation"),
-          "eq3-interp") in
-      FStar_SMTEncoding_Util.mkAssume uu___1 in
-    [uu___] in
   let mk_imp_interp env imp tt =
     let aa =
       FStar_SMTEncoding_Term.mk_fv ("a", FStar_SMTEncoding_Term.Term_sort) in
@@ -1448,7 +1417,6 @@ let (primitive_type_axioms :
     (FStar_Parser_Const.and_lid, mk_and_interp);
     (FStar_Parser_Const.or_lid, mk_or_interp);
     (FStar_Parser_Const.eq2_lid, mk_eq2_interp);
-    (FStar_Parser_Const.eq3_lid, mk_eq3_interp);
     (FStar_Parser_Const.imp_lid, mk_imp_interp);
     (FStar_Parser_Const.iff_lid, mk_iff_interp);
     (FStar_Parser_Const.not_lid, mk_not_interp);

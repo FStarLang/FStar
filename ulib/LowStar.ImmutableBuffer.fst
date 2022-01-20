@@ -224,8 +224,8 @@ let recall_value (#a:Type0) (b:ibuffer a) (s:Ghost.erased (Seq.seq a))
  * After which it is easy to derive the contradiction, provided client has provided a witness for inhabitance
  *)
 let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuffer a) (b:LowStar.Buffer.buffer a)
-  : Lemma (~ (eq3 ib b))
-  = let aux () : Lemma (requires (eq3 ib b)) (ensures False)
+  : Lemma (~ (ib === b))
+  = let aux () : Lemma (requires (ib === b)) (ensures False)
       = //use injectivity to prove that all sequences of type a are equal
         mbuffer_injectivity_in_first_preorder ();
         assert (immutable_preorder a == LowStar.Buffer.trivial_preorder a);

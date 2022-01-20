@@ -153,19 +153,6 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
 [@@ "tac_opaque"; smt_theory_symbol]
 type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
-(** [h_equals] is the heterogeneous equality, allowing stating
-    equality among values of different types, but only allowing
-    reflexivity proofs at a given type, as with [equals]. *)
-type h_equals (#a: Type) (x: a) : #b: Type -> b -> Type = | HRefl : h_equals x x
-
-(** [eq3] is the squashed variant of [h_equals] *)
-[@@ "tac_opaque"; smt_theory_symbol]
-type eq3 (#a: Type) (#b: Type) (x: a) (y: b) : logical = squash (h_equals x y)
-
-(** We typically write [eq3] as a infix, binary [===] *)
-unfold
-let op_Equals_Equals_Equals (#a #b: Type) (x: a) (y: b) = eq3 x y
-
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
     occasionally, one may have to write [b2t] explicitly *)
@@ -204,6 +191,9 @@ type l_iff (p: logical) (q: logical) : logical = (p ==> q) /\ (q ==> p)
 (** squashed negation, prefix unary [~] *)
 [@@ smt_theory_symbol]
 type l_not (p: logical) : logical = l_imp p False
+
+(** [===] heteregeneous equality *)
+let ( === ) (#a #b: Type) (x: a) (y: b) = a == b /\ x == y
 
 (** l_ITE is a weak form of if-then-else at the level of
     logical formulae. It's not much used.
@@ -737,4 +727,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 39
+let __cache_version_number__ = 40

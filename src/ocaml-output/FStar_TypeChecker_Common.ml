@@ -1349,45 +1349,15 @@ let (simplify :
                                        | uu___25 -> tm
                                      else
                                        (let uu___26 =
-                                          FStar_Syntax_Syntax.fv_eq_lid fv
-                                            FStar_Parser_Const.eq3_lid in
-                                        if uu___26
-                                        then
-                                          match args with
-                                          | (t1, uu___27)::(t2, uu___28)::
-                                              (a1, uu___29)::(a2, uu___30)::[]
-                                              ->
-                                              let uu___31 =
-                                                let uu___32 =
-                                                  FStar_Syntax_Util.eq_tm t1
-                                                    t2 in
-                                                let uu___33 =
-                                                  FStar_Syntax_Util.eq_tm a1
-                                                    a2 in
-                                                FStar_Syntax_Util.eq_inj
-                                                  uu___32 uu___33 in
-                                              (match uu___31 with
-                                               | FStar_Syntax_Util.Equal ->
-                                                   w FStar_Syntax_Util.t_true
-                                               | FStar_Syntax_Util.NotEqual
-                                                   ->
-                                                   w
-                                                     FStar_Syntax_Util.t_false
-                                               | uu___32 -> tm)
-                                          | uu___27 -> tm
-                                        else
-                                          (let uu___28 =
-                                             FStar_Syntax_Util.is_auto_squash
-                                               tm in
-                                           match uu___28 with
-                                           | FStar_Pervasives_Native.Some
-                                               (FStar_Syntax_Syntax.U_zero,
-                                                t)
-                                               when
-                                               FStar_Syntax_Util.is_sub_singleton
-                                                 t
-                                               -> t
-                                           | uu___29 -> tm)))))))))))
+                                          FStar_Syntax_Util.is_auto_squash tm in
+                                        match uu___26 with
+                                        | FStar_Pervasives_Native.Some
+                                            (FStar_Syntax_Syntax.U_zero, t)
+                                            when
+                                            FStar_Syntax_Util.is_sub_singleton
+                                              t
+                                            -> t
+                                        | uu___27 -> tm))))))))))
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
@@ -1727,45 +1697,15 @@ let (simplify :
                                        | uu___22 -> tm
                                      else
                                        (let uu___23 =
-                                          FStar_Syntax_Syntax.fv_eq_lid fv
-                                            FStar_Parser_Const.eq3_lid in
-                                        if uu___23
-                                        then
-                                          match args with
-                                          | (t1, uu___24)::(t2, uu___25)::
-                                              (a1, uu___26)::(a2, uu___27)::[]
-                                              ->
-                                              let uu___28 =
-                                                let uu___29 =
-                                                  FStar_Syntax_Util.eq_tm t1
-                                                    t2 in
-                                                let uu___30 =
-                                                  FStar_Syntax_Util.eq_tm a1
-                                                    a2 in
-                                                FStar_Syntax_Util.eq_inj
-                                                  uu___29 uu___30 in
-                                              (match uu___28 with
-                                               | FStar_Syntax_Util.Equal ->
-                                                   w FStar_Syntax_Util.t_true
-                                               | FStar_Syntax_Util.NotEqual
-                                                   ->
-                                                   w
-                                                     FStar_Syntax_Util.t_false
-                                               | uu___29 -> tm)
-                                          | uu___24 -> tm
-                                        else
-                                          (let uu___25 =
-                                             FStar_Syntax_Util.is_auto_squash
-                                               tm in
-                                           match uu___25 with
-                                           | FStar_Pervasives_Native.Some
-                                               (FStar_Syntax_Syntax.U_zero,
-                                                t)
-                                               when
-                                               FStar_Syntax_Util.is_sub_singleton
-                                                 t
-                                               -> t
-                                           | uu___26 -> tm)))))))))))
+                                          FStar_Syntax_Util.is_auto_squash tm in
+                                        match uu___23 with
+                                        | FStar_Pervasives_Native.Some
+                                            (FStar_Syntax_Syntax.U_zero, t)
+                                            when
+                                            FStar_Syntax_Util.is_sub_singleton
+                                              t
+                                            -> t
+                                        | uu___24 -> tm))))))))))
       | FStar_Syntax_Syntax.Tm_refine (bv, t) ->
           let uu___1 = simp_t t in
           (match uu___1 with

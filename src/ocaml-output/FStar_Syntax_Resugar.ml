@@ -319,7 +319,6 @@ let rec (resugar_term_as_op :
       (FStar_Parser_Const.iff_lid, "<==>");
       (FStar_Parser_Const.precedes_lid, "<<");
       (FStar_Parser_Const.eq2_lid, "==");
-      (FStar_Parser_Const.eq3_lid, "===");
       (FStar_Parser_Const.forall_lid, "forall");
       (FStar_Parser_Const.exists_lid, "exists");
       (FStar_Parser_Const.salloc_lid, "alloc");

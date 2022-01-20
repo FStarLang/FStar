@@ -228,10 +228,6 @@ let (destruct_eq' :
         (FStar_Ident.lid_equals l FStar_Parser_Const.eq2_lid) ||
           (FStar_Ident.lid_equals l FStar_Parser_Const.c_eq2_lid)
         -> FStar_Pervasives_Native.Some (e1, e2)
-    | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn
-        (l, uu___1::uu___2::(e1, uu___3)::(e2, uu___4)::[])) when
-        FStar_Ident.lid_equals l FStar_Parser_Const.eq3_lid ->
-        FStar_Pervasives_Native.Some (e1, e2)
     | uu___1 ->
         let uu___2 = FStar_Syntax_Util.unb2t typ in
         (match uu___2 with
