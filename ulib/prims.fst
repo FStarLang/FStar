@@ -192,9 +192,6 @@ type l_iff (p: logical) (q: logical) : logical = (p ==> q) /\ (q ==> p)
 [@@ smt_theory_symbol]
 type l_not (p: logical) : logical = l_imp p False
 
-(** [===] heteregeneous equality *)
-let ( === ) (#a #b: Type) (x: a) (y: b) = a == b /\ x == y
-
 (** l_ITE is a weak form of if-then-else at the level of
     logical formulae. It's not much used.
 
@@ -481,6 +478,9 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 (***** End trusted primitives *****)
 
 (** This point onward, F* fully verifies all the definitions *)
+
+(** [===] heterogeneous equality *)
+let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)

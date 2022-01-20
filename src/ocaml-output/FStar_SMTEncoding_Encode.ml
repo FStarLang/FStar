@@ -2903,15 +2903,11 @@ let (encode_top_level_let :
                                                                    uu___17
                                                                    FStar_Parser_Const.prims_lid) in
                                                           let uu___16 =
-                                                            (Prims.op_Negation
-                                                               is_prims)
-                                                              &&
-                                                              ((FStar_Compiler_Effect.op_Bar_Greater
-                                                                  quals
-                                                                  (FStar_Compiler_List.contains
-                                                                    FStar_Syntax_Syntax.Logic))
-                                                                 ||
-                                                                 is_logical) in
+                                                            (FStar_Compiler_Effect.op_Bar_Greater
+                                                               quals
+                                                               (FStar_Compiler_List.contains
+                                                                  FStar_Syntax_Syntax.Logic))
+                                                              || is_logical in
                                                           if uu___16
                                                           then
                                                             let uu___17 =

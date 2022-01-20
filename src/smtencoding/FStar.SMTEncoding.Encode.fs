@@ -818,7 +818,7 @@ let encode_top_level_let :
                     | _ -> false
                   in
                   let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
-                  if not is_prims && (quals |> List.contains Logic || is_logical)
+                  if quals |> List.contains Logic || is_logical
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
                 in
