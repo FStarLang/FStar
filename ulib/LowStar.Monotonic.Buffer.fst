@@ -205,6 +205,13 @@ let lemma_equal_instances_implies_equal_types (a:Type) (b:Type) (s1:Seq.seq a) (
   : Lemma (requires s1 === s2)
           (ensures a == b)
   = Seq.lemma_equal_instances_implies_equal_types ()
+
+let s_lemma_equal_instances_implies_equal_types (_:unit)
+  : Lemma (forall (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b).
+          {:pattern (has_type s1 (Seq.seq a));
+                    (has_type s2 (Seq.seq b)) }
+          s1 === s2 ==> a == b)
+  = Seq.lemma_equal_instances_implies_equal_types()
   
 let live_same_addresses_equal_types_and_preorders'
   (#a1 #a2: Type0)
@@ -1326,8 +1333,7 @@ let g_upd_seq_as_seq #a #_ #_ b s h =
     // prove modifies_1_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
-    admit();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_modifies b h h'
   end
 
@@ -1336,8 +1342,7 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
     // prove modifies_1_from_to_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
-    admit();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 
