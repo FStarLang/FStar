@@ -2418,7 +2418,7 @@ let ite_soundness_tac () : Tac unit =
 /// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
 /// This tactic is executed after frame inference, and just before sending the query to the SMT
 /// As such, it is a good place to add debugging features to inspect SMT queries when needed
-let vc_norm () : Tac unit = norm normal_steps; trefl(); dump_all false "here"
+let vc_norm () : Tac unit = norm normal_steps; trefl()
 
 ////////////////////////////////////////////////////////////////////////////////
 //Common datatypes for the atomic & ghost effects
