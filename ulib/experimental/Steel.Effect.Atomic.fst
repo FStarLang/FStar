@@ -32,10 +32,11 @@ let req_to_act_req (#pre:vprop) (req:req_t pre) : mprop (hp_of pre) =
 unfold
 let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
-let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (#req:req_t pre) (ens:ens_t pre req a post)
 : mprop2 (hp_of pre) (to_post post)
-= fun m0 x m1 -> interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\
-    ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
+= fun m0 x m1 ->
+    interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\
+    req (mk_rmem pre m0) /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
 
 let repr a framed opened f pre post req ens =
   action_except_full a opened (hp_of pre) (to_post post)
@@ -58,7 +59,7 @@ val frame00 (#a:Type)
           (#pre:pre_t)
           (#post:post_t a)
           (#req:req_t pre)
-          (#ens:ens_t pre a post)
+          (#ens:ens_t pre req a post)
           ($f:repr a framed opened obs pre post req ens)
           (frame:vprop)
   : repr a
@@ -121,7 +122,7 @@ let frame00 #a #framed #opened #obs #pre #post #req #ens f frame =
 unfold
 let bind_req_opaque (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t)
   (#pr:a -> prop)
   (req_g:(x:a -> req_t (pre_g x)))
@@ -140,15 +141,16 @@ let bind_req_opaque (#a:Type)
 unfold
 let bind_ens_opaque (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (#pr:a -> prop)
-  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#req_g:(x:a -> req_t (pre_g x)))
+  (ens_g:(x:a -> ens_t (pre_g x) (req_g x) b (post_g x)))
   (frame_f:vprop) (frame_g:a -> vprop)
   (post:post_t b)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (p1:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-: ens_t (pre_f `star` frame_f) b post
+: ens_t (pre_f `star` frame_f) (bind_req req_f ens_f req_g frame_f frame_g p1) b post
 = fun m0 y m2 ->
   req_f (focus_rmem m0 pre_f) /\
   (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
@@ -170,9 +172,9 @@ val bind_opaque (a:Type) (b:Type)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
-  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) (req_g x) b (post_g x)))
   (#frame_f:vprop) (#frame_g:a -> vprop)
   (#post:post_t b)
   (# _ : squash (maybe_emp framed_f frame_f))
@@ -271,7 +273,7 @@ let bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_
     y
 
 let norm_repr (#a:Type) (#framed:bool) (#opened:inames) (#obs:observability)
- (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+ (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre req a post)
  (f:repr a framed opened obs pre post req ens)
  : repr a framed opened obs pre post (fun h -> norm_opaque (req h)) (fun h0 x h1 -> norm_opaque (ens h0 x h1))
  = f
@@ -286,10 +288,14 @@ val subcomp_opaque (a:Type)
   (o2:eqtype_as_type observability)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
-  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
-  (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] pre_f:pre_t)
+  (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f)
+  (#[@@@ framing_implicit] ens_f:ens_t pre_f req_f a post_f)
+  (#[@@@ framing_implicit] pre_g:pre_t)
+  (#[@@@ framing_implicit] post_g:post_t a)
+  (#[@@@ framing_implicit] req_g:req_t pre_g)
+  (#[@@@ framing_implicit] ens_g:ens_t pre_g req_g a post_g)
   (#[@@@ framing_implicit] frame:vprop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
@@ -507,12 +513,12 @@ let change_slprop_rel_with_cond0 (#opened:inames) (p q:vprop)
 let change_slprop_rel_with_cond p q cond rel proof
   = SteelGhost?.reflect (change_slprop_rel_with_cond0 p q cond rel proof)
 
-let extract_info0 (#opened:inames) (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+let extract_info0 (#opened:inames) (p:vprop) (vp:erased (t_of p)) (fact:prop)
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures fact)
   ) : repr unit false opened Unobservable p (fun _ -> p)
-      (fun h -> h p == reveal vp)
+      (fun h ->  h p == reveal vp)
       (fun h0 _ h1 -> frame_equalities p h0 h1 /\ fact)
   = fun frame ->
       let m0:full_mem = NMSTTotal.get () in
