@@ -230,7 +230,7 @@ let as_steelk_repr' (a:Type) (pre:pre_t) (post:post_t a) (f:unit -> SteelT a pre
 
 
 let triv_pre (req:vprop) : req_t req = fun _ -> True
-let triv_post (#a:Type) (req:vprop) (ens:post_t a) : ens_t req a ens = fun _ _ _ -> True
+let triv_post (#a:Type) (req:vprop) (ens:post_t a) : ens_t req (triv_pre req) a ens = fun _ _ _ -> True
 
 let as_steelk_repr (a:Type) (pre:pre_t) (post:post_t a)
   (f:repr a false pre post (triv_pre pre) (triv_post pre post))// unit -> SteelT a pre post)
