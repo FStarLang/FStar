@@ -260,7 +260,7 @@ val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
 
 type req_t (pre:pre_t) = rmem pre -> Type0
 type ens_t (pre:pre_t) (req:req_t pre) (a:Type) (post:post_t a) =
-  (h0:rmem pre{req h0}) -> (x:a) -> rmem (post x) -> Type0
+  (h0:rmem pre{normal (req h0)}) -> (x:a) -> rmem (post x) -> Type0
 
 (* Empty assertion *)
 val emp : vprop

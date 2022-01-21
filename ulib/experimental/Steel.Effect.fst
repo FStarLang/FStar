@@ -298,6 +298,7 @@ let bind_ens_opaque (#a:Type) (#b:Type)
     frame_opaque frame_f (focus_rmem m0 frame_f) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) frame_f) /\
     frame_opaque (frame_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (frame_g x)) (focus_rmem m2 (frame_g x)) /\
     ens_f (focus_rmem m0 pre_f) x (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (post_f x)) /\
+    (req_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) /\
     (ens_g x) (focus_rmem (mk_rmem (post_f x `star` frame_f) h1) (pre_g x)) y (focus_rmem m2 (post_g x y))))
 
 val bind_opaque (a:Type) (b:Type)
