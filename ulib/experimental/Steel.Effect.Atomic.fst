@@ -643,7 +643,7 @@ let new_invariant #uses p =
  *)
 assume val reify_steel_atomic_comp
   (#a:Type) (#framed:bool) (#opened_invariants:inames) (#g:observability)
-  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre req a post)
   ($f:unit -> SteelAtomicBase a framed opened_invariants g pre post req ens)
   : repr a framed opened_invariants g pre post req ens
 
@@ -655,7 +655,7 @@ let with_invariant #a #fp #fp' #opened #p i f =
 
 assume val reify_steel_ghost_comp
   (#a:Type) (#framed:bool) (#opened_invariants:inames)
-  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre req a post)
   ($f:unit -> SteelGhostBase a framed opened_invariants Unobservable pre post req ens)
   : repr a framed opened_invariants Unobservable pre post req ens
 
