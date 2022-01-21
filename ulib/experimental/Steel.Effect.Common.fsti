@@ -259,8 +259,8 @@ val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
 (* Logical pre and postconditions can only access the restricted view of the heap *)
 
 type req_t (pre:pre_t) = rmem pre -> Type0
-type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
-  rmem pre -> (x:a) -> rmem (post x) -> Type0
+type ens_t (pre:pre_t) (req:req_t pre) (a:Type) (post:post_t a) =
+  (h0:rmem pre{req h0}) -> (x:a) -> rmem (post x) -> Type0
 
 (* Empty assertion *)
 val emp : vprop

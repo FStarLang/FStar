@@ -61,12 +61,12 @@ unfold
 let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
 [@@ __steel_reduce__]
-let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (#req:req_t pre) (ens:ens_t pre req a post)
 : Sem.l_post #state #a (hp_of pre) (to_post post)
 = rmem_depends_only_on pre;
   rmem_depends_only_on_post post;
   fun m0 x m1 ->
-    interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
+    interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\ req (mk_rmem pre m0) /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
 
 let reveal_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0}) (r':vprop{r0 `can_be_split` r'})
   : Lemma (
@@ -151,7 +151,7 @@ let can_be_split_3_interp p1 p2 q r m =
   Mem.star_associative p2 q r;
   slimp_star p1 p2 (q `Mem.star` r) (q `Mem.star` r)
 
-let repr (a:Type) (_:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+let repr (a:Type) (_:bool) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre req a post) =
   Sem.action_t #state #a (hp_of pre) (to_post post)
     ((req_to_act_req req))
     ((ens_to_act_ens ens))
@@ -209,7 +209,7 @@ val frame00 (#a:Type)
           (#pre:pre_t)
           (#post:post_t a)
           (#req:req_t pre)
-          (#ens:ens_t pre a post)
+          (#ens:ens_t pre req a post)
           ($f:repr a framed pre post req ens)
           (frame:vprop)
   : repr a
@@ -249,14 +249,14 @@ let frame00 #a #framed #pre #post #req #ens f frame =
 #pop-options
 
 let norm_repr (#a:Type) (#framed:bool)
- (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+ (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre req a post)
  (f:repr a framed pre post req ens) : repr a framed pre post (fun h -> norm_opaque (req h)) (fun h0 x h1 -> norm_opaque (ens h0 x h1))
  = f
 
 unfold
 let bind_req_opaque (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t)
   (#pr:a -> prop)
   (req_g:(x:a -> req_t (pre_g x)))
@@ -275,15 +275,16 @@ let bind_req_opaque (#a:Type)
 unfold
 let bind_ens_opaque (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (#pr:a -> prop)
-  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#req_g:(x:a -> req_t (pre_g x)))
+  (ens_g:(x:a -> ens_t (pre_g x) (req_g x) b (post_g x)))
   (frame_f:vprop) (frame_g:a -> vprop)
   (post:post_t b)
-  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (p1:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-: ens_t (pre_f `star` frame_f) b post
+: ens_t (pre_f `star` frame_f) (bind_req req_f ens_f req_g frame_f frame_g p1) b post
 = fun m0 y m2 ->
   req_f (focus_rmem m0 pre_f) /\
   (exists (x:a) (h1:hmem (post_f x `star` frame_f)).
@@ -302,9 +303,9 @@ val bind_opaque (a:Type) (b:Type)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f req_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
-  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) (req_g x) b (post_g x)))
   (#frame_f:vprop) (#frame_g:a -> vprop)
   (#post:post_t b)
   (# _ : squash (maybe_emp framed_f frame_f))
@@ -408,8 +409,8 @@ let bind a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #re
 
 unfold
 let subcomp_pre_opaque (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g req_g a post_g)
   (#frame:vprop)
   (_:squash (can_be_split pre_g (pre_f `star` frame)))
   (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
@@ -434,9 +435,9 @@ val subcomp_opaque (a:Type)
   (#framed_f:eqtype_as_type bool)
   (#framed_g:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f req_f a post_f)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
-  (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g req_g a post_g)
   (#[@@@ framing_implicit] frame:vprop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
@@ -491,8 +492,8 @@ let lemma_norm_opaque (p:Type) : Lemma (requires norm_opaque p) (ensures p) = ()
 
 (** Need to manually remove the rewrite_with_tactic marker here *)
 let lemma_subcomp_pre_opaque_aux1 (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g req_g a post_g)
   (#frame:vprop)
   (p1:squash (can_be_split pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
@@ -535,8 +536,8 @@ let lemma_subcomp_pre_opaque_aux1 (#a:Type)
 #push-options "--no_tactics"
 
 let lemma_subcomp_pre_opaque_aux2 (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g req_g a post_g)
   (#frame:vprop)
   (p1:squash (can_be_split pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
@@ -580,8 +581,8 @@ let lemma_subcomp_pre_opaque_aux2 (#a:Type)
   ))
 
 let lemma_subcomp_pre_opaque (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f req_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g req_g a post_g)
   (#frame:vprop)
   (p1:squash (can_be_split pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
@@ -617,15 +618,16 @@ let bind_div_steel_req (#a:Type) (wp:pure_wp a)
 unfold
 let bind_div_steel_ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
-  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
-: ens_t pre_g b post_g
+  (#pre_g:pre_t) (#post_g:post_t b) (#req_g:a -> req_t pre_g)
+  (ens_g:(x:a -> ens_t pre_g (req_g x) b post_g))
+: ens_t pre_g (bind_div_steel_req wp req_g) b post_g
 = fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
 
 #push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
 let bind_div_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (framed:eqtype_as_type bool)
-  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:(x:a -> ens_t pre_g (req_g x) b post_g))
   (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b framed pre_g post_g (req_g x) (ens_g x)))
 : repr b framed pre_g post_g
     (bind_div_steel_req wp req_g)
@@ -655,7 +657,7 @@ let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
  *     But for now assuming a (Dv) function
  *)
 assume val reify_steel_comp
-  (#a:Type) (#framed:bool) (#pre:vprop) (#post:a -> vprop) (#req:req_t pre) (#ens:ens_t pre a post)
+  (#a:Type) (#framed:bool) (#pre:vprop) (#post:a -> vprop) (#req:req_t pre) (#ens:ens_t pre req a post)
   ($f:unit -> SteelBase a framed pre post req ens)
   : Dv (repr a framed pre post req ens)
 
