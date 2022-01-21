@@ -285,7 +285,7 @@ unfold
 let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (#req:a -> req_t pre)
-  (ens:(x:a) -> ens_t pre (req x) b post)
+  (ens:(x:a -> ens_t pre (req x) b post))
 : ens_t pre (bind_pure_steel__req wp req) b post
 = fun m0 r m1 -> (as_requires wp /\ (exists (x:a). as_ensures wp x /\ (req x) m0 /\ ((ens x) m0 r m1)))
 
@@ -294,7 +294,8 @@ val bind_pure_steel_ (a:Type) (b:Type)
   (#[@@@ framing_implicit] wp:pure_wp a)
   (#framed:eqtype_as_type bool)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:(x:a) -> ens_t pre (req x) b post)
+  (#[@@@ framing_implicit] req:a -> req_t pre)
+  (#[@@@ framing_implicit] ens:(x:a) -> ens_t pre (req x) b post)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b framed pre post (req x) (ens x)))
 : repr b
     framed

@@ -66,7 +66,8 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (#req:req_t pre) (ens
 = rmem_depends_only_on pre;
   rmem_depends_only_on_post post;
   fun m0 x m1 ->
-    interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\ req (mk_rmem pre m0) /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
+    interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\
+    req (mk_rmem pre m0) /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
 
 let reveal_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0}) (r':vprop{r0 `can_be_split` r'})
   : Lemma (
