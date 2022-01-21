@@ -39,12 +39,14 @@ let weaken_repr a framed
                 (pre:pre_t)
                 (post:post_t a)
                 (req req':req_t pre)
-                (ens ens':ens_t pre a post)
+                (ens:ens_t pre req a post)
+                (ens':ens_t pre req' a post)
                 (f:Steel.Effect.repr a framed pre post req ens)
                 (_:squash (forall (h0:hmem pre).
                             req' (mk_rmem _ h0) ==>
                             req (mk_rmem _ h0)))
                 (_:squash (forall (h0:hmem pre) x (h1:hmem (post x)).
+                            req' (mk_rmem _ h0) ==>
                             ens (mk_rmem _ h0)
                                 x
                                 (mk_rmem _ h1) ==>
