@@ -103,6 +103,8 @@ undecidable. But, when using propositions, one can define things that
 cannot be defined in ``bool``, including quantified formulae, as we'll
 see next.
 
+.. _Part1_prop_connectives:
+
 Propositional connectives
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -238,6 +240,16 @@ We've shown you how to form new propositions by building them from
 existing propositions using the connectives. But, what about the basic
 propositions themselves?
 
+
+Falsehood
+.........
+
+The proposition ``False`` is always invalid.
+
+Truth
+.....
+
+The proposition ``True`` is always valid.
 
 .. _Part1_ch2_propositional_equality:
 

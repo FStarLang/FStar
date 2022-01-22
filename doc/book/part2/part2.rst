@@ -17,6 +17,7 @@ define new types.
    part2_vectors
    part2_merkle
    part2_equality
+   part2_logical_connectives
 
 ..
   Vectors for basics

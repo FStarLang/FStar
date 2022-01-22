@@ -1,11 +1,13 @@
 Equality Types
 ==============
 
-In an :ref:`early section <Part1_equality>` we learned that F* supports at
-least two kinds of equality. In this section, we look in detail at
-definitional equality, propositional equality, extensional equality of
-functions, and decidable equality. These topics are fairly technical,
-but are core features of the language.
+In an :ref:`early section <Part1_equality>` we learned that F*
+supports at least two kinds of equality. In this section, we look in
+detail at definitional equality, propositional equality, extensional
+equality of functions, and decidable equality. These topics are fairly
+technical, but are core features of the language and their treatment
+in F* makes essential use of an indexed inductive type, ``equals #t x
+y``, a proposition asserting the equality of ``x:t`` and ``y:t``.
 
 Depending on your level of comfort with functional programming and
 dependent types, you may want to skip or just skim this chapter on a

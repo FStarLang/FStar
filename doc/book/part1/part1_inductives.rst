@@ -131,6 +131,8 @@ The refinement on the argument allows F* to prove that the
 ``Three_of_three`` case in the pattern is not required, since that
 branch would be unreachable anyway.
 
+.. _Part1_tuples:
+
 Tuples
 ^^^^^^
 
