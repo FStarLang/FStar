@@ -1,3 +1,5 @@
+.. _Part2_connectives:
+
 Constructive & Classical Connectives
 ====================================
 
@@ -14,13 +16,15 @@ Every logical connective comes in two flavors. First, in its most
 primitive form, it is defined as an inductive or arrow type, giving a
 constructive interpretation to the connective. Second, and more
 commonly used in F*, is a *squashed*, or proof-irrelevant, variant of
-the same connective---the squashed variant is a classical rather than
-constructive and its proofs are typically derived using the SMT
-solver. Each connective has an *introduction* principle (which
-describes how to build proofs of that connective) and an *elimination*
-principle (which descibres how to use a proof of that connective to
-build other proofs). Examples uses of introduction and elimination
-principles for all the connectives can be found in `ClassicalSugar.fst
+the same connective---the squashed variant is classical rather than
+constructive and its proofs are typically derived by writing partial
+proof terms with the SMT filling in the missing parts.
+
+Each connective has an *introduction* principle (which describes how
+to build proofs of that connective) and an *elimination* principle
+(which describes how to use a proof of that connective to build other
+proofs). Examples uses of introduction and elimination principles for
+all the connectives can be found in `ClassicalSugar.fst
 <https://github.com/FStarLang/FStar/blob/master/tests/micro-benchmarks/ClassicalSugar.fst>`_
 
 All these types are defined in ``Prims``, the very first module in all
@@ -583,7 +587,7 @@ is, in the examples above ``x:t`` is implicitly in scope for the proof
 term, while ``pf_p: squash p``.
 
 Exercise
-........
+++++++++
 
 In a :ref:`previous exercise <Part2_merkle_insert>`, we defined a
 function to insert an element in a Merkle tree and had it return a new

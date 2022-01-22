@@ -1,3 +1,5 @@
+.. _Part2_merkle:
+
 Merkle Trees
 ============
 
@@ -352,11 +354,6 @@ the new hash along with the updated tree.
     let F* infer the calls to the hash functions.
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
 
 
 Summary and Further Reading

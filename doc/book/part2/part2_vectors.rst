@@ -1,3 +1,5 @@
+.. _Part2_vectors:
+
 Length-indexed Lists
 ====================
 
@@ -87,8 +89,6 @@ odd number otherwise.
 This is our first type with with both parameters and indices. But why
 stop at just indexing to distinguish even and odd-lengthed lists? We
 can index a list by its length itself.
-
-.. _Part2_vectors:
 
 Vectors
 .......

@@ -1,4 +1,4 @@
-.. _Part1_ch4:
+.. _Part1_termination:
 
 Proofs of termination
 =====================
