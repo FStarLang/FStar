@@ -371,6 +371,8 @@ equals x y`` and ``equals x y -> leq x y``.
 
 --------------------------------------------------------------------------------
 
+.. _Part2_equality_qualifiers:
+
 Decidable equality and equality qualifiers
 ..........................................
 

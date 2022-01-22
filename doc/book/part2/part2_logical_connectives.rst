@@ -508,6 +508,8 @@ Its desugaring may be illuminating:
               v0
               ())
 
+.. _Part2_connectives_exists:
+
 Existential Quantification
 ..........................
 
