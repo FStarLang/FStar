@@ -581,3 +581,31 @@ scope in the ``with`` line, which additionally binds a name for a
 proof term corresponding to the body of the existential formula. That
 is, in the examples above ``x:t`` is implicitly in scope for the proof
 term, while ``pf_p: squash p``.
+
+Exercise
+........
+
+In a :ref:`previous exercise <Part2_merkle_insert>`, we defined a
+function to insert an element in a Merkle tree and had it return a new
+root hash and updated Merkle tree. Our solution had the following
+signature:
+
+.. literalinclude:: ../code/MerkleTree.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: update_hint
+   :end-before: //SNIPPET_END: update_hint
+
+Revise the solution so that it instead returns a dependent
+pair. ``dtuple2`` is already defined in ``Prims``, so you don't have
+to define it again.
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: ../code/MerkleTree.fst
+       :language: fstar
+       :start-after: //SNIPPET_START: update
+       :end-before: //SNIPPET_END: update

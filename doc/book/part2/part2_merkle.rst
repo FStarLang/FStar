@@ -311,6 +311,8 @@ We look at its cases in detail:
        the concatenations are unequal, although their hashes are, by
        assumption, equal.
 
+.. _Part2_merkle_insert:
+
 Exercise
 ........
 
