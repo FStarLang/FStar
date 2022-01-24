@@ -3,12 +3,12 @@ module SteelNotNull
 open Steel.Effect
 open Steel.Reference
 
-let main () : SteelT UInt32.t emp (fun _ -> emp) =
+let main () : SteelT Int32.t emp (fun _ -> emp) =
   let r = malloc 0ul in
   if is_null r then (
     free r;
-    1ul
+    1l
   ) else (
     free r;
-    0ul
+    0l
   )

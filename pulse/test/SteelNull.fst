@@ -1,11 +1,12 @@
 module SteelNull
 
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
 
-let main () =
+let main () : SteelT Int32.t emp (fun _ -> emp) =
   let r = null #UInt32.t in
   if is_null r then
-    0ul
+    return 0l
   else
-    1ul
+    return 1l
