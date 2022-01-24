@@ -12,18 +12,20 @@ let (__proj__Mkvops_t__item__next_minor :
   fun projectee ->
     match projectee with | { next_major; next_minor;_} -> next_minor
 let (vops : vops_t) =
-  let major = FStar_Util.mk_ref Prims.int_zero in
-  let minor = FStar_Util.mk_ref Prims.int_zero in
+  let major = FStar_Compiler_Util.mk_ref Prims.int_zero in
+  let minor = FStar_Compiler_Util.mk_ref Prims.int_zero in
   let next_major uu___ =
-    FStar_ST.op_Colon_Equals minor Prims.int_zero;
-    (let uu___2 = FStar_Util.incr major; FStar_ST.op_Bang major in
+    FStar_Compiler_Effect.op_Colon_Equals minor Prims.int_zero;
+    (let uu___2 =
+       FStar_Compiler_Util.incr major; FStar_Compiler_Effect.op_Bang major in
      {
        FStar_Syntax_Syntax.major = uu___2;
        FStar_Syntax_Syntax.minor = Prims.int_zero
      }) in
   let next_minor uu___ =
-    let uu___1 = FStar_ST.op_Bang major in
-    let uu___2 = FStar_Util.incr minor; FStar_ST.op_Bang minor in
+    let uu___1 = FStar_Compiler_Effect.op_Bang major in
+    let uu___2 =
+      FStar_Compiler_Util.incr minor; FStar_Compiler_Effect.op_Bang minor in
     { FStar_Syntax_Syntax.major = uu___1; FStar_Syntax_Syntax.minor = uu___2
     } in
   { next_major; next_minor }
@@ -60,40 +62,39 @@ let (empty : FStar_Syntax_Syntax.version -> uf) =
     { term_graph = uu___; univ_graph = uu___1; version = v; ro = false }
 let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
   fun v ->
-    let uu___ = FStar_Util.string_of_int v.FStar_Syntax_Syntax.major in
-    let uu___1 = FStar_Util.string_of_int v.FStar_Syntax_Syntax.minor in
-    FStar_Util.format2 "%s.%s" uu___ uu___1
-let (state : uf FStar_ST.ref) =
+    let uu___ = FStar_Compiler_Util.string_of_int v.FStar_Syntax_Syntax.major in
+    let uu___1 =
+      FStar_Compiler_Util.string_of_int v.FStar_Syntax_Syntax.minor in
+    FStar_Compiler_Util.format2 "%s.%s" uu___ uu___1
+let (state : uf FStar_Compiler_Effect.ref) =
   let uu___ = let uu___1 = vops.next_major () in empty uu___1 in
-  FStar_Util.mk_ref uu___
+  FStar_Compiler_Util.mk_ref uu___
 type tx =
   | TX of uf 
 let (uu___is_TX : tx -> Prims.bool) = fun projectee -> true
 let (__proj__TX__item___0 : tx -> uf) =
   fun projectee -> match projectee with | TX _0 -> _0
-let (get : unit -> uf) = fun uu___ -> FStar_ST.op_Bang state
+let (get : unit -> uf) = fun uu___ -> FStar_Compiler_Effect.op_Bang state
 let (set_ro : unit -> unit) =
   fun uu___ ->
     let s = get () in
-    FStar_ST.op_Colon_Equals state
-      (let uu___1 = s in
-       {
-         term_graph = (uu___1.term_graph);
-         univ_graph = (uu___1.univ_graph);
-         version = (uu___1.version);
-         ro = true
-       })
+    FStar_Compiler_Effect.op_Colon_Equals state
+      {
+        term_graph = (s.term_graph);
+        univ_graph = (s.univ_graph);
+        version = (s.version);
+        ro = true
+      }
 let (set_rw : unit -> unit) =
   fun uu___ ->
     let s = get () in
-    FStar_ST.op_Colon_Equals state
-      (let uu___1 = s in
-       {
-         term_graph = (uu___1.term_graph);
-         univ_graph = (uu___1.univ_graph);
-         version = (uu___1.version);
-         ro = false
-       })
+    FStar_Compiler_Effect.op_Colon_Equals state
+      {
+        term_graph = (s.term_graph);
+        univ_graph = (s.univ_graph);
+        version = (s.version);
+        ro = false
+      }
 let with_uf_enabled : 'a . (unit -> 'a) -> 'a =
   fun f ->
     let s = get () in
@@ -105,7 +106,7 @@ let with_uf_enabled : 'a . (unit -> 'a) -> 'a =
        then f ()
        else
          (try (fun uu___3 -> match () with | () -> f ()) ()
-          with | uu___3 -> (restore (); FStar_Exn.raise uu___3)) in
+          with | uu___3 -> (restore (); FStar_Compiler_Effect.raise uu___3)) in
      restore (); r)
 let (fail_if_ro : unit -> unit) =
   fun uu___ ->
@@ -115,10 +116,10 @@ let (fail_if_ro : unit -> unit) =
       FStar_Errors.raise_error
         (FStar_Errors.Fatal_BadUvar,
           "Internal error: UF graph was in read-only mode")
-        FStar_Range.dummyRange
+        FStar_Compiler_Range.dummyRange
     else ()
 let (set : uf -> unit) =
-  fun u -> fail_if_ro (); FStar_ST.op_Colon_Equals state u
+  fun u -> fail_if_ro (); FStar_Compiler_Effect.op_Colon_Equals state u
 let (reset : unit -> unit) =
   fun uu___ ->
     fail_if_ro ();
@@ -149,7 +150,8 @@ let (new_transaction : unit -> tx) =
 let (commit : tx -> unit) = fun tx1 -> ()
 let (rollback : tx -> unit) =
   fun uu___ -> match uu___ with | TX uf1 -> set uf1
-let update_in_tx : 'a . 'a FStar_ST.ref -> 'a -> unit = fun r -> fun x -> ()
+let update_in_tx : 'a . 'a FStar_Compiler_Effect.ref -> 'a -> unit =
+  fun r -> fun x -> ()
 let (get_term_graph : unit -> tgraph) =
   fun uu___ -> let uu___1 = get () in uu___1.term_graph
 let (get_version : unit -> FStar_Syntax_Syntax.version) =
@@ -167,8 +169,8 @@ let (set_term_graph : tgraph -> unit) =
     set uu___
 let (chk_v_t :
   (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version * FStar_Range.range)
-    ->
+    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
+    FStar_Compiler_Range.range) ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
       FStar_Unionfind.p_uvar)
   =
@@ -180,7 +182,8 @@ let (chk_v_t :
             let uu___2 =
               let uu___3 = get_term_graph () in
               FStar_Unionfind.puf_id uu___3 u1 in
-            FStar_All.pipe_right uu___2 FStar_Util.string_of_int in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              FStar_Compiler_Util.string_of_int in
           Prims.op_Hat "?" uu___1 in
         let expected = get_version () in
         if
@@ -195,7 +198,7 @@ let (chk_v_t :
                let uu___4 = uvar_to_string u in
                let uu___5 = version_to_string expected in
                let uu___6 = version_to_string v in
-               FStar_Util.format3
+               FStar_Compiler_Util.format3
                  "Internal error: incompatible version for term unification variable %s: current version is %s; got version %s"
                  uu___4 uu___5 uu___6 in
              (FStar_Errors.Fatal_BadUvar, uu___3) in
@@ -204,7 +207,7 @@ let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u ->
     let uu___ = get_term_graph () in
     let uu___1 = chk_v_t u in FStar_Unionfind.puf_id uu___ uu___1
-let (fresh : FStar_Range.range -> FStar_Syntax_Syntax.uvar) =
+let (fresh : FStar_Compiler_Range.range -> FStar_Syntax_Syntax.uvar) =
   fun rng ->
     fail_if_ro ();
     (let uu___1 =
@@ -248,8 +251,8 @@ let (get_univ_graph : unit -> ugraph) =
   fun uu___ -> let uu___1 = get () in uu___1.univ_graph
 let (chk_v_u :
   (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version * FStar_Range.range)
-    ->
+    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
+    FStar_Compiler_Range.range) ->
     FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
       FStar_Unionfind.p_uvar)
   =
@@ -261,7 +264,8 @@ let (chk_v_u :
             let uu___2 =
               let uu___3 = get_univ_graph () in
               FStar_Unionfind.puf_id uu___3 u1 in
-            FStar_All.pipe_right uu___2 FStar_Util.string_of_int in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              FStar_Compiler_Util.string_of_int in
           Prims.op_Hat "?" uu___1 in
         let expected = get_version () in
         if
@@ -276,7 +280,7 @@ let (chk_v_u :
                let uu___4 = uvar_to_string u in
                let uu___5 = version_to_string expected in
                let uu___6 = version_to_string v in
-               FStar_Util.format3
+               FStar_Compiler_Util.format3
                  "Internal error: incompatible version for universe unification variable %s: current version is %s; got version %s"
                  uu___4 uu___5 uu___6 in
              (FStar_Errors.Fatal_BadUvar, uu___3) in
@@ -296,7 +300,8 @@ let (univ_uvar_id : FStar_Syntax_Syntax.universe_uvar -> Prims.int) =
   fun u ->
     let uu___ = get_univ_graph () in
     let uu___1 = chk_v_u u in FStar_Unionfind.puf_id uu___ uu___1
-let (univ_fresh : FStar_Range.range -> FStar_Syntax_Syntax.universe_uvar) =
+let (univ_fresh :
+  FStar_Compiler_Range.range -> FStar_Syntax_Syntax.universe_uvar) =
   fun rng ->
     fail_if_ro ();
     (let uu___1 =

@@ -67,10 +67,6 @@ val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 (** Like [catch t], but will not discard unionfind effects on failure. *)
 val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
-(** [trivial] will discharge the goal if it's exactly [True] after
-doing normalization and simplification of it. *)
-val trivial  : unit -> Tac unit
-
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].

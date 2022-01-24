@@ -19,19 +19,20 @@
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
 open FStar.Pprint
-open FStar.Range
+open FStar.Compiler.Range
 
 module C = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 
 
@@ -48,7 +49,7 @@ let maybe_unthunk t =
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
-// VD: copied over from NBE, should both probably go in FStar.List
+// VD: copied over from NBE, should both probably go in FStar.Compiler.List
 let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
   let rec aux (l:list<'a>) (acc:list<'b>) =
     match l with
@@ -761,6 +762,7 @@ and p_pragma = function
   | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
   | PopOptions -> str "#pop-options"
   | RestartSolver -> str "#restart-solver"
+  | PrintEffectsGraph -> str "#print-effects-graph"
   | LightOff ->
       should_print_fs_typ_app := true ;
       str "#light \"off\""
@@ -1136,6 +1138,8 @@ and p_binders_list (is_atomic: bool) (bs: list<binder>): list<document> = List.m
 
 and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow break1 (p_binders_list is_atomic bs)
 
+and p_binders_sep (bs: list<binder>): document = separate_map space (fun x -> x) (p_binders_list true bs)
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1281,7 +1285,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
-          in 
+          in
           (match ret_opt with
            | None ->
              group (
@@ -1308,9 +1312,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "match")
                             ((p_noSeqTermAndComment false false e) ^/+^ (str "returns" ^/+^ p_tmIff ret))
                             (str "with")))
-        
+
       ^/^
-       
+
       separate_map_last hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
       paren_if ps (
@@ -1376,6 +1380,97 @@ and p_noSeqTerm' ps pb e = match e.tm with
          (nest 2 <| hardline
                     ^^ p_noSeqTermAndComment false false init ^^ str ";" ^^ hardline
                     ^^ separate_map_last hardline p_calcStep steps)
+
+  | IntroForall (xs, p, e) ->
+    let p = p_noSeqTermAndComment false false p in
+    let e = p_noSeqTermAndComment false false e in
+    let xs = p_binders_sep xs in
+    str "introduce forall" ^^ space ^^ xs ^^ space ^^ str "." ^^ space ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ e
+
+  | IntroExists(xs, p, vs, e) ->
+    let p = p_noSeqTermAndComment false false p in
+    let e = p_noSeqTermAndComment false false e in
+    let xs = p_binders_sep xs in
+    str "introduce" ^^ space ^^ str "exists" ^^ space ^^ xs ^^ str "." ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ (separate_map space p_atomicTerm vs) ^^ hardline ^^
+    str "and" ^^ space ^^ e
+
+  | IntroImplies(p, q, x, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    let x = p_binders_sep [x] in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ x ^^ str "." ^^ space ^^ e
+
+  | IntroOr(b, p, q, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "\/" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ (if b then str "Left" else str "Right") ^^ space ^^ e
+
+  | IntroAnd(p, q, e1, e2) ->
+    let p = p_tmFormula p in
+    let q = p_tmTuple q in
+    let e1 = p_noSeqTermAndComment false false e1 in
+    let e2 = p_noSeqTermAndComment false false e2 in
+    str "introduce" ^^ space ^^
+    p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ e1 ^^ hardline ^^
+    str "and" ^^ space ^^ e2
+
+  | ElimForall(xs, p, vs) ->
+    let xs = p_binders_sep xs in
+    let p = p_noSeqTermAndComment false false p in
+    let vs = separate_map space p_atomicTerm vs in
+    str "eliminate" ^^ space ^^ str "forall" ^^ space ^^ xs ^^ str "." ^^ space ^^ p ^^ hardline ^^
+    str "with" ^^ space ^^ vs
+
+  | ElimExists (bs, p, q, b, e) ->
+    let head = str "eliminate exists" ^^ space ^^ p_binders_sep bs ^^ str "." in
+    let p = p_noSeqTermAndComment false false p in
+    let q = p_noSeqTermAndComment false false q in
+    let e = p_noSeqTermAndComment false false e in
+      head ^^ hardline ^^
+      p ^^ hardline ^^
+      str "returns" ^^ space ^^ q ^^ hardline ^^
+      str "with" ^^ space ^^ (p_binders_sep [b]) ^^ str "." ^^ hardline ^^
+      e
+
+  | ElimImplies(p, q, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let e = p_noSeqTermAndComment false false e in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
+    str "with" ^^ space ^^ e
+
+  | ElimOr(p, q, r, x, e1, y, e2) ->
+    let p = p_tmFormula p in
+    let q = p_tmFormula q in
+    let r = p_noSeqTermAndComment false false r in
+    let x = p_binders_sep [x] in
+    let e1 = p_noSeqTermAndComment false false e1 in
+    let y = p_binders_sep [y] in
+    let e2 = p_noSeqTermAndComment false false e2 in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "\\/" ^^ space ^^ q ^^ hardline ^^
+    str "returns" ^^ space ^^ r ^^ hardline ^^
+    str "with" ^^ space ^^ x ^^ space ^^ str "." ^^ space ^^ e1 ^^ hardline ^^
+    str "and" ^^ space ^^ y ^^ space ^^ str "." ^^ space ^^ e2
+
+  | ElimAnd(p, q, r, x, y, e) ->
+    let p = p_tmFormula p in
+    let q = p_tmTuple q in
+    let r = p_noSeqTermAndComment false false r in
+    let xy = p_binders_sep [x; y] in
+    let e = p_noSeqTermAndComment false false e in
+    str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
+    str "returns" ^^ space ^^ r ^^ hardline ^^
+    str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
+
   | _ -> p_typ ps pb e
 
 and p_dec_wf ps pb rel e =
@@ -1946,6 +2041,7 @@ and p_projectionLHS e = match e.tm with
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
+  | ElimExists _
     -> soft_parens_with_nesting (p_term false false e)
   | LexList l -> group (str "%" ^^ p_term_list false false l)
   | WFOrder (rel, e) ->
@@ -2027,7 +2123,7 @@ let modul_to_document (m:modul) =
   in  should_print_fs_typ_app := false ;
   res
 
-let comments_to_document (comments : list<(string * FStar.Range.range)>) =
+let comments_to_document (comments : list<(string * FStar.Compiler.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

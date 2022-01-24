@@ -17,11 +17,11 @@
 module FStar.TypeChecker.Common
 open Prims
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -29,7 +29,7 @@ module S = FStar.Syntax.Syntax
 module Print = FStar.Syntax.Print
 module U = FStar.Syntax.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module PC = FStar.Parser.Const
 
 (* relations on types, kinds, etc. *)
@@ -167,7 +167,7 @@ let id_info_table_empty =
       id_info_db = BU.psmap_empty ();
       id_info_buffer = [] }
 
-open FStar.Range
+open FStar.Compiler.Range
 
 let print_identifier_info info =
   BU.format3 "id info { %s, %s : %s}"
@@ -347,7 +347,7 @@ let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
       cflags = cflags;
-      comp_thunk = FStar.Util.mk_ref (Inl comp_thunk) }
+      comp_thunk = FStar.Compiler.Util.mk_ref (Inl comp_thunk) }
 
 let lcomp_comp lc =
     match !(lc.comp_thunk) with
@@ -473,7 +473,7 @@ let simplify (debug:bool) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, _, br::brs) ->
+        | Tm_match (_, _, br::brs, _) ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None
@@ -578,7 +578,7 @@ let simplify (debug:bool) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
@@ -600,7 +600,7 @@ let simplify (debug:bool) (tm:term) : term =
                    | _ -> tm
              end
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some (Implicit _)); (t, _)] ->
+           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with

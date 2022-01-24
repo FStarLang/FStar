@@ -16,16 +16,15 @@
 #light "off"
 module FStar.TypeChecker.Tc
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -41,7 +40,7 @@ module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module Gen = FStar.TypeChecker.Generalize
@@ -122,7 +121,7 @@ let tc_inductive' env ses quals attrs lids =
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = TcInductive.check_positivity ty env in
+         let b = TcUtil.check_positivity env ty in
          if not b then
            let lid, r =
              match ty.sigel with
@@ -141,7 +140,7 @@ let tc_inductive' env ses quals attrs lids =
             | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
             | _ -> failwith "Impossible"
          in
-         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+         if lid_equals ty_lid PC.exn_lid && not (TcUtil.check_exn_positivity env data_lid) then
             Errors.log_issue d.sigrng
                      (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                         ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
@@ -386,13 +385,16 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, [], lb.lbpos),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid(), tval, def, [], lb.lbpos),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
           (true, [], (if se.sigquals=[] then None else Some se.sigquals))
     in
 
+    (* Check that all the mutually recursive bindings mention the same universes *)
+    U.check_mutual_universes lbs';
+    
     let quals = match quals_opt with
       | None -> [Visible_default]
       | Some q ->
@@ -448,7 +450,8 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | _ -> 
+          | Tm_let ((true, lbs), _) -> 
+            U.check_mutual_universes lbs;
             //leave recursive lets as is; since the decreases clause from the ascription (if any)
             //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
             //if we drop the lbtyp here, we'll lose the decreases clause
@@ -495,6 +498,8 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
     in
     let se, lbs = match r with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
+        U.check_mutual_universes (snd lbs);
+        
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
@@ -861,6 +866,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         env.solver.refresh ();
         env
       end
+
+    | Sig_pragma PrintEffectsGraph ->
+      BU.write_file "effects.graph" (Env.print_effects_graph env);
+      env
 
     | Sig_new_effect ne ->
       let env = Env.push_new_effect env (ne, se.sigquals) in

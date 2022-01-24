@@ -1,8 +1,9 @@
 #light "off"
 module FStar.TypeChecker.Cfg
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.String
 open FStar.Const
 open FStar.Char
@@ -13,7 +14,7 @@ open FStar.TypeChecker.Env
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
@@ -50,7 +51,7 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
-     for_extraction:bool
+     for_extraction:bool;
 }
 
 let steps_to_string f =
@@ -147,7 +148,7 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
-    for_extraction = false
+    for_extraction = false;
 }
 
 let fstep_add_one s fs =
@@ -170,7 +171,11 @@ let fstep_add_one s fs =
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
-    | UnfoldQual  strs -> { fs with unfold_qual  = Some strs }
+    | UnfoldQual  strs ->
+      let fs = { fs with unfold_qual  = Some strs } in
+      if List.contains "pure_subterms_within_computations" strs
+      then {fs with pure_subterms_within_computations = true}
+      else fs
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
@@ -189,7 +194,7 @@ let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
 type psc = {
-     psc_range:FStar.Range.range;
+     psc_range:FStar.Compiler.Range.range;
      psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
 
@@ -208,6 +213,7 @@ type debug_switches = {
     norm_delayed     : bool;
     print_normalized : bool;
     debug_nbe        : bool;
+    erase_erasable_args: bool
 }
 
 let no_debug_switches = {
@@ -221,6 +227,7 @@ let no_debug_switches = {
     norm_delayed     = false;
     print_normalized = false;
     debug_nbe        = false;
+    erase_erasable_args = false;
 }
 
 type primitive_step = {
@@ -311,7 +318,12 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char in
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
     let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
-    let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
+    let arg_as_bounded_int (a, _) : option<(fv * Z.t * option<S.meta_source_info>)> =
+        let (a, m) =
+            (match (SS.compress a).n with
+             | Tm_meta(t, Meta_desugared m) -> (t, Some m)
+             | _ -> (a, None)) in
+        let a = U.unmeta_safe a in
         let hd, args = U.head_and_args_full a in
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
@@ -320,7 +332,7 @@ let built_in_primitive_steps : prim_step_set =
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
-                Some (fv1, Z.big_int_of_string i)
+                Some (fv1, Z.big_int_of_string i, m)
             | _ ->
                 None
             end
@@ -387,7 +399,7 @@ let built_in_primitive_steps : prim_step_set =
            :  (arg -> option<'a>)
            -> (arg -> option<'b>)
            -> (Range.range -> 'c -> term)
-           -> (Range.range -> 'a -> 'b -> 'c)
+           -> (Range.range -> 'a -> 'b -> option<'c>)
            -> psc
            -> EMB.norm_cb
            -> args
@@ -397,7 +409,10 @@ let built_in_primitive_steps : prim_step_set =
                  | [a;b] ->
                     begin
                     match as_a a, as_b b with
-                    | Some a, Some b -> Some (embed_c res.psc_range (f res.psc_range a b))
+                    | Some a, Some b ->
+                      (match f res.psc_range a b with
+                       | Some c -> Some (embed_c res.psc_range c)
+                       | _ -> None)
                     | _ -> None
                     end
                  | _ -> None
@@ -512,9 +527,9 @@ let built_in_primitive_steps : prim_step_set =
               arg_as_int to_line,
               arg_as_int to_col with
         | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
-          let r = FStar.Range.mk_range fn
-                              (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                              (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+          let r = FStar.Compiler.Range.mk_range fn
+                              (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                              (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
           Some (embed_simple EMB.e_range psc.psc_range r)
         | _ -> None
         end
@@ -598,6 +613,11 @@ let built_in_primitive_steps : prim_step_set =
       let c = embed_simple EMB.e_int r n in
       let int_to_t = S.fv_to_tm int_to_t in
       S.mk_Tm_app int_to_t [S.as_arg c] r
+    in
+    let with_meta_ds r t (m:option<meta_source_info>) =
+      match m with
+      | None -> t
+      | Some m -> S.mk (Tm_meta(t, Meta_desugared m)) r
     in
     let basic_ops
       //this type annotation has to be on a single line for it to parse
@@ -715,12 +735,12 @@ let built_in_primitive_steps : prim_step_set =
                    arg_as_int
                    arg_as_char
                    (embed_simple EMB.e_string)
-                   (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y),
+                   (fun r (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)),
              NBETerm.mixed_binary_op
                    NBETerm.arg_as_int
                    NBETerm.arg_as_char
                    (NBETerm.embed NBETerm.e_string bogus_cbs)
-                   (fun (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
+                   (fun (x:BigInt.t) (y:char) -> Some (FStar.String.make (BigInt.to_int_fs x) y)));
          (PC.string_split_lid,
              2,
              0,
@@ -812,37 +832,52 @@ let built_in_primitive_steps : prim_step_set =
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.add_big_int x y)) m) ,
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.add_big_int x y)));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (Z.add_big_int x y)) m));
              (PC.p2l ["FStar"; m; "sub"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.sub_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.sub_big_int x y)));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (Z.sub_big_int x y)) m));
              (PC.p2l ["FStar"; m; "mul"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.mult_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mult_big_int x y)));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (Z.mult_big_int x y)) m));
               (PC.p2l ["FStar"; m; "v"],
                   1,
                   0,
                   unary_op
                     arg_as_bounded_int
-                    (fun r (int_to_t, x) -> embed_simple EMB.e_int r x),
+                    (fun r (int_to_t, x, m) ->
+                      with_meta_ds r (embed_simple EMB.e_int r x) m),
                   NBETerm.unary_op
                     NBETerm.arg_as_bounded_int
-                    (fun (int_to_t, x) -> NBETerm.embed NBETerm.e_int bogus_cbs x))])
+                    (fun (int_to_t, x, m) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.embed NBETerm.e_int bogus_cbs x) m))])
         in
         let div_mod_unsigned =
           bounded_unsigned_int_types
@@ -852,19 +887,27 @@ let built_in_primitive_steps : prim_step_set =
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.div_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.div_big_int x y)));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (Z.div_big_int x y)) m));
              (PC.p2l ["FStar"; m; "rem"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.mod_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)))
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                     (NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)) m))
             ])
         in
         let mask m =
@@ -885,62 +928,120 @@ let built_in_primitive_steps : prim_step_set =
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logor_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                      with_meta_ds r
+                        (int_as_bounded r int_to_t (Z.logor_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logor_big_int x y));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                      NBETerm.with_meta_ds
+                        (NBETerm.int_as_bounded int_to_t (Z.logor_big_int x y)) m);
               PC.p2l ["FStar"; m; "logand"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logand_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                      with_meta_ds r
+                        (int_as_bounded r int_to_t (Z.logand_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int x y));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                      NBETerm.with_meta_ds
+                        (NBETerm.int_as_bounded int_to_t (Z.logand_big_int x y)) m);
               PC.p2l ["FStar"; m; "logxor"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logxor_big_int x y)),
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (Z.logxor_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logxor_big_int x y));
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                       NBETerm.with_meta_ds
+                         (NBETerm.int_as_bounded int_to_t (Z.logxor_big_int x y)) m);
               PC.p2l ["FStar"; m; "lognot"],
                  1,
                  0,
                  unary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m))),
+                   (fun r (int_to_t, x, d) ->
+                    with_meta_ds r
+                      (int_as_bounded r int_to_t
+                        (Z.logand_big_int (Z.lognot_big_int x) (mask m))) d),
                  NBETerm.unary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m)));
+                   (fun (int_to_t, x, d) ->
+                    NBETerm.with_meta_ds
+                      (NBETerm.int_as_bounded int_to_t
+                        (Z.logand_big_int (Z.lognot_big_int x) (mask m))) d);
               PC.p2l ["FStar"; m; "shift_left"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))),
+                   (fun r (int_to_t, x, d) (_, y, _) ->
+                    with_meta_ds r
+                    (int_as_bounded r int_to_t
+                      (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))) d),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m)));
+                   (fun (int_to_t, x, d) (_, y, _) ->
+                    NBETerm.with_meta_ds
+                    (NBETerm.int_as_bounded int_to_t
+                      (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))) d);
               PC.p2l ["FStar"; m; "shift_right"],
                  2,
                  0,
                  binary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.shift_right_big_int x y)),
+                   (fun r (int_to_t, x, d) (_, y, _) ->
+                    with_meta_ds r
+                    (int_as_bounded r int_to_t (Z.shift_right_big_int x y)) d),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y));
+                   (fun (int_to_t, x, d) (_, y, _) ->
+                    NBETerm.with_meta_ds
+                    (NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y)) d);
             ])
         in
        add_sub_mul_v
        @ div_mod_unsigned
        @ bitwise
     in
-    let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
+    let reveal_hide =
+      (* unconditionally reduce reveal #t' (hide #t x) to x *)
+            PC.reveal,
+            2,
+            1,
+            mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              let head, args = U.head_and_args x  in
+              if U.is_fvar PC.hide head
+              then match args with
+                   | [_t; (body, _)] -> Some body
+                   | _ -> None
+              else None)
+            (fun r body -> body)
+            (fun r _t body -> Some body),
+            NBETerm.mixed_binary_op
+            (fun x -> Some x)
+            (fun (x, _) ->
+              match NBETerm.nbe_t_of_t x with
+              | NBETerm.FV (fv, _, [(_t, _); (body, _)])
+                when fv_eq_lid fv PC.hide ->
+                Some body
+              | _ -> None)
+            (fun body -> body)
+            (fun _t body -> Some body)
+    in
+    let strong_steps =
+      List.map (as_primitive_step true)
+               (basic_ops@bounded_arith_ops@[reveal_hide])
+    in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
 
@@ -1089,7 +1190,16 @@ let config' psteps s e =
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
-             ; debug_nbe = Env.debug e (Options.Other "NBE")}
+             ; debug_nbe = Env.debug e (Options.Other "NBE")
+             ; erase_erasable_args =
+               (let b = Env.debug e (Options.Other "UNSOUND_EraseErasableArgs") in
+                if b
+                then Errors.log_issue
+                        (Env.get_range e)
+                        (Errors.Warning_WarnOnUse,
+                         "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
+                b)
+             }
             else no_debug_switches
       ;
      steps = steps;
@@ -1116,3 +1226,32 @@ let should_reduce_local_let cfg lb =
     then true //Or, 2. it's pure and we either not extracting, or it's marked @inline_let
     else U.is_ghost_effect n && //Or, 3. it's ghost and we're not extracting
          not (cfg.steps.pure_subterms_within_computations)
+
+let translate_norm_step = function
+    | EMB.Zeta ->    [Zeta]
+    | EMB.ZetaFull -> [ZetaFull]
+    | EMB.Iota ->    [Iota]
+    | EMB.Delta ->   [UnfoldUntil delta_constant]
+    | EMB.Simpl ->   [Simplify]
+    | EMB.Weak ->    [Weak]
+    | EMB.HNF  ->    [HNF]
+    | EMB.Primops -> [Primops]
+    | EMB.Reify ->   [Reify]
+    | EMB.UnfoldOnly names ->
+        [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | EMB.UnfoldFully names ->
+        [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
+    | EMB.UnfoldAttr names ->
+        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
+    | EMB.UnfoldQual names ->
+        [UnfoldUntil delta_constant; UnfoldQual names]
+    | EMB.NBE -> [NBE]
+    | EMB.Unmeta -> [Unmeta]
+
+let translate_norm_steps s =
+    let s = List.concatMap translate_norm_step s in
+    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let s = Beta::s in
+    let s = add_exclude s Zeta in
+    let s = add_exclude s Iota in
+    s

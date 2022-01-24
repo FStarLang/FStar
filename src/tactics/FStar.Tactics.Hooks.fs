@@ -2,9 +2,11 @@
 module FStar.Tactics.Hooks
 
 open FStar
-open FStar.All
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
@@ -13,8 +15,8 @@ open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Tactics.Interpreter
 
-module BU      = FStar.Util
-module Range   = FStar.Range
+module BU      = FStar.Compiler.Util
+module Range   = FStar.Compiler.Range
 module Err     = FStar.Errors
 module O       = FStar.Options
 module PC      = FStar.Parser.Const
@@ -79,6 +81,10 @@ let flip p = match p with
     | Neg -> Pos
     | Both -> Both
 
+let getprop (e:Env.env) (t:term) : option<term> =
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
+    U.un_squash tn
+
 let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
@@ -114,6 +120,34 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         | Neg ->
             Simplified (assertion, [])
         end
+
+    // rewrite_with_tactic marker
+    | Tm_fvar fv, [(tactic, None); (typ, Some ({ aqual_implicit = true } )); (tm, None)]
+            when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
+
+        // Create a new uvar that must be equal to the initial term
+        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Allow_untyped None in
+
+        let u = e.universe_of e typ in
+        // eq2 is squashed already, so it's in Type0
+        let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+        let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
+
+        // Ensure that rewriting did not leave goals
+        let _ =
+          match gs with
+          | [] -> ()
+          | _ ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos
+        in
+
+        // abort if the uvar was not solved
+        let g_imp = TcRel.resolve_implicits_tac e g_imp in
+        report_implicits tm.pos g_imp.implicits;
+
+        // If the rewriting succeeded, we return the generated uvar, which is now
+        // a synthesized term
+        Simplified (uvtm, [])
 
     | _ ->
         Unchanged t
@@ -220,8 +254,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-        | Tm_match (sc, asc_opt, brs) ->  //AR: not traversing the return annotation
-            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs))
+        | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs, lopt))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in
@@ -242,10 +276,6 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         let rp = f pol e ({ t with n = tp }) in
         let (_, p', gs') = explode rp in
         Dual ({t with n = tn}, p', gs@gs')
-
-let getprop (e:Env.env) (t:term) : option<term> =
-    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
-    U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->

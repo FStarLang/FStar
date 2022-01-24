@@ -17,19 +17,19 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 
 module Errors     = FStar.Errors
-module U          = FStar.Util
+module U          = FStar.Compiler.Util
 module A          = FStar.Parser.AST
 module Resugar    = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
@@ -125,7 +125,7 @@ let filter_imp aq =
    | Some (Meta _) -> false
    | _ -> true
 let filter_imp_args args =
-  args |> List.filter (fun a -> a |> snd |> filter_imp)
+  args |> List.filter (function (_, None) -> true | (_, Some a) -> not a.aqual_implicit)
 let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
@@ -340,8 +340,14 @@ and term_to_string x =
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
         U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
-      | Tm_match(head, asc_opt, branches) ->
-        U.format3 "(match %s %swith\n\t| %s)"
+      | Tm_match(head, asc_opt, branches, lc) ->
+        let lc_str =
+          match lc with
+          | Some lc when (Options.print_implicits ()) ->
+            U.format1 " (residual_comp:%s)"
+              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
+          | _ -> "" in
+        U.format4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
           (match asc_opt with
            | None -> ""
@@ -354,6 +360,7 @@ and term_to_string x =
                 | None -> ""
                 | Some tac -> U.format1 " by %s" (term_to_string tac)))
           (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
+          lc_str
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
         then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
@@ -445,7 +452,7 @@ and attrs_to_string = function
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and aqual_to_string' s = function
+and bqual_to_string' s = function
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
@@ -453,9 +460,10 @@ and aqual_to_string' s = function
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-and imp_to_string s aq =
-    aqual_to_string' s aq
-
+and aqual_to_string' s = function
+  | Some ({aqual_implicit=true}) -> "#" ^ s
+  | _ -> s
+  
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
     match Resugar.resugar_binder b Range.dummyRange with
@@ -468,8 +476,8 @@ and binder_to_string' is_arrow b =
     if is_null_binder b
     then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
     else if not is_arrow && not (Options.print_bound_var_types())
-    then imp_to_string (attrs ^ nm_to_string b.binder_bv) b.binder_qual
-    else imp_to_string (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
+    then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
+    else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
 
 and binder_to_string b =  binder_to_string' false b
 
@@ -485,7 +493,7 @@ and binders_to_string sep bs =
     else bs |> List.map binder_to_string |> String.concat sep
 
 and arg_to_string = function
-   | a, imp -> imp_to_string (term_to_string a) imp
+   | a,  imp -> aqual_to_string' (term_to_string a) imp
 
 and args_to_string args =
     let args =
@@ -532,7 +540,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name C.effect_ML_lid
+                  && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
@@ -596,6 +604,7 @@ and metadata_to_string = function
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
 let aqual_to_string aq = aqual_to_string' "" aq
+let bqual_to_string bq = bqual_to_string' "" bq
 
 let comp_to_string' env c =
   if Options.ugly ()
@@ -612,7 +621,7 @@ let term_to_string' env x =
        Pp.pretty_string (float_of_string "1.0") 100 d
 
 let binder_to_json env b =
-    let n = JsonStr (imp_to_string (nm_to_string b.binder_bv) b.binder_qual) in
+    let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
     let t = JsonStr (term_to_string' env b.binder_bv.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
@@ -747,6 +756,7 @@ let pragma_to_string (p:pragma) : string =
   | PushOptions None      -> "#push-options"
   | PushOptions (Some s)  -> U.format1 "#push-options \"%s\"" s
   | RestartSolver         -> "#restart-solver"
+  | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"
 
 let rec sigelt_to_string (x: sigelt) =

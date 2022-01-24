@@ -1,0 +1,44 @@
+[
+  "èrÑ~N÷3ÒªÁY\rµŽ¡\u0006",
+  [
+    [
+      "Steel.ST.Coercions.coerce_steel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59d7791c7ca726282ae6d26cf89732b5"
+    ],
+    [
+      "Steel.ST.Coercions.coerce_atomic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equality_tok_Steel.Effect.Common.Observable@tok",
+        "equality_tok_Steel.Effect.Common.Unobservable@tok",
+        "fuel_guarded_inversion_Steel.Effect.Common.observability",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "5e8e353d5c1da6988a5e903de082eae6"
+    ],
+    [
+      "Steel.ST.Coercions.coerce_atomicF",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equality_tok_Steel.Effect.Common.Observable@tok",
+        "equality_tok_Steel.Effect.Common.Unobservable@tok",
+        "fuel_guarded_inversion_Steel.Effect.Common.observability",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "059685b578292cd6cc0ec66d9c9031aa"
+    ]
+  ]
+]

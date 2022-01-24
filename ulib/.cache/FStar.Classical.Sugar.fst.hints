@@ -1,0 +1,245 @@
+[
+  "‡T´³í¬õ»O\n°>aQXð",
+  [
+    [
+      "FStar.Classical.Sugar.forall_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash",
+        "l_quant_interp_b318409532d0e00e9125f72f3b997468",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "73e6a66acf41611edeae4d5822dfead5"
+    ],
+    [
+      "FStar.Classical.Sugar.implies_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "472b46c46aa0eb6495aee836f8d5d6e0"
+    ],
+    [
+      "FStar.Classical.Sugar.or_elim_simple",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7f4c369783a61abe5705695796b59e1d"
+    ],
+    [
+      "FStar.Classical.Sugar.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "ed73841b970361f920ab6bc9426b70db"
+    ],
+    [
+      "FStar.Classical.Sugar.or_elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "246e200cb2876dbe832cbc0622273435"
+    ],
+    [
+      "FStar.Classical.Sugar.or_elim",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "02204a43439ec1f6d8131c3f84aa8fec"
+    ],
+    [
+      "FStar.Classical.Sugar.and_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "edf866b71942806b0cea726276a8a71d"
+    ],
+    [
+      "FStar.Classical.Sugar.and_elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "6ed1eb1e4bbfe7f7a7520ce6b5011753"
+    ],
+    [
+      "FStar.Classical.Sugar.and_elim",
+      3,
+      2,
+      1,
+      [ "@query", "l_and-interp" ],
+      0,
+      "3bbc2fd117f7abd4bba6faddc86e1573"
+    ],
+    [
+      "FStar.Classical.Sugar.exists_intro_simple",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "91e0427785ad0b2e01a3445144e88a40"
+    ],
+    [
+      "FStar.Classical.Sugar.implies_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c5dd5ab3f37c2daa93a4459b02e7d554"
+    ],
+    [
+      "FStar.Classical.Sugar.implies_intro",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "03f3b5ef3983c90aedd8b00533368eaf"
+    ],
+    [
+      "FStar.Classical.Sugar.implies_intro",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4a6fb015b7887c1c1a515a96b11136f0"
+    ],
+    [
+      "FStar.Classical.Sugar.or_intro_left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "69f24a54aac73b7c994e6bfeaad55ba2"
+    ],
+    [
+      "FStar.Classical.Sugar.or_intro_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "3dc2bb5449f0385f6bbe5e01c78c9ff0"
+    ],
+    [
+      "FStar.Classical.Sugar.or_intro_right",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "30515fb2f8cf45401d559c58710bd947"
+    ],
+    [
+      "FStar.Classical.Sugar.or_intro_right",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "74e836e52333142bcccd36c6ab926559"
+    ],
+    [
+      "FStar.Classical.Sugar.and_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d11d9d3451979b6d1254bfa0530d01d5"
+    ],
+    [
+      "FStar.Classical.Sugar.and_intro",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d171833dd7c8e5e3844569b5dd2a9477"
+    ],
+    [
+      "FStar.Classical.Sugar.and_intro",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "280f55d8f87ca3da7ca103b9a4376fbe"
+    ]
+  ]
+]

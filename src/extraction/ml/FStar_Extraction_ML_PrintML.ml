@@ -92,7 +92,8 @@ let mk_top_mllb (e: mlexpr): mllb =
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
-let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
+let fstar_compiler_effect_try_with_ident = path_to_ident (["FStar"; "Compiler"; "Effect"], "try_with")
+let fstar_all_try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -105,6 +106,16 @@ let min_of_int_const = Z.of_int (-65536)
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
+  let stdint_module (s:FStar_Const.signedness) (w:FStar_Const.width) : string =
+    let sign = match s with
+      | FStar_Const.Signed -> "Int"
+      | FStar_Const.Unsigned -> "Uint" in
+    let with_w ws = BatString.concat "" ["Stdint."; sign; ws] in
+    match w with
+    | FStar_Const.Int8 -> with_w "8"
+    | FStar_Const.Int16 -> with_w "16"
+    | FStar_Const.Int32 -> with_w "32"
+    | FStar_Const.Int64 -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with
@@ -114,6 +125,20 @@ let build_constant (c: mlconstant): Parsetree.constant =
             BatString.concat v ["(Prims.of_int ("; "))"]
         | x ->
             BatString.concat v ["(Prims.parse_int \""; "\")"] in
+      Const.integer s
+  (* Special case for UInt8, as it's realized as OCaml built-in int type *)
+  | MLC_Int (v, Some (FStar_Const.Unsigned, FStar_Const.Int8)) ->
+      Const.integer v
+  | MLC_Int (v, Some (s, w)) ->
+      let s = match Z.of_string v with
+        | x when x = Z.zero ->
+            BatString.concat "" [stdint_module s w; ".zero"]
+        | x when x = Z.one ->
+            BatString.concat "" [stdint_module s w; ".one"]
+        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
+            BatString.concat "" ["("; stdint_module s w; ".of_int ("; v; "))"]
+        | x ->
+            BatString.concat "" ["("; stdint_module s w; ".of_string \""; v; "\")"] in
       Const.integer s
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
@@ -290,7 +315,8 @@ let rec build_expr (e: mlexpr): expression =
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when (x = try_with_ident) ->
+  | Pexp_ident x when (x = fstar_all_try_with_ident ||
+                       x = fstar_compiler_effect_try_with_ident) ->
     (* resugar FStar_All.try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
@@ -505,7 +531,7 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      (* Use the old printer for F# extraction *)
      let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStar_Util.write_file
+         FStar_Compiler_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc

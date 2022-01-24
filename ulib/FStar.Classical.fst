@@ -71,7 +71,7 @@ let impl_intro_gen #p #q f =
   move_requires g ()
 
 (*** Universal quantification *)
-let get_forall #a p = 
+let get_forall #a p =
   assert_norm ((forall (x: a). p x) == squash ((x: a -> GTot (p x))));
   get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
 
@@ -152,15 +152,15 @@ let exists_intro #a p witness = ()
 let exists_intro_not_all_not (#a:Type) (#p:a -> Type)
                              ($f: (x:a -> Lemma (~(p x))) -> Lemma False)
   : Lemma (exists x. p x)
-  = let open FStar.Squash in 
+  = let open FStar.Squash in
     let aux ()
         : Lemma (requires (forall x. ~(p x)))
                 (ensures False)
                 [SMTPat ()]
-        = bind_squash 
+        = bind_squash
            (get_proof (forall x. ~ (p x)))
            (fun (g: (forall x. ~ (p x))) ->
-             bind_squash #(x:a -> GTot (~(p x))) #c_False g 
+             bind_squash #(x:a -> GTot (~(p x))) #c_False g
              (fun (h:(x:a -> GTot (~(p x)))) -> f h))
     in
     ()
@@ -184,4 +184,3 @@ let or_elim #l #r #goal hl hr =
   impl_intro_gen #r #(fun _ -> goal ()) hr
 
 let excluded_middle (p: Type) = ()
-

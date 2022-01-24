@@ -489,6 +489,7 @@ let rec d_whl_terminates
         (requires (fst (f' fuel2 s1') == true))
         (ensures (terminates_on f' s0'))
       = let fuel3 = fuel1 + fuel2 + 1 in
+        reified_computation_elim fc' fuel1 fuel3 s0';
         assert (fc' fuel3 s0' == fc' fuel1 s0');
         assert (f' fuel3 s0' == f' (fuel3 - 1) s1')
       in

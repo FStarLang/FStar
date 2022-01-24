@@ -77,7 +77,7 @@ type unit : eqtype
 (** [squash p] is a central type in F*---[squash p] is the proof
     irrelevant analog of [p] and is represented as a unit
     refinement. Squashed proofs are typically discharged using an SMT
-    solver, without expliciltly reconstructed any proof terms. As
+    solver, without any proof terms explicitly reconstructed. As
     such, one way to think of [squash p] is as the type of properties
     proven using classical axioms without building proof terms.
 
@@ -226,6 +226,34 @@ type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p =
 assume
 type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
+(** The type of primitive strings of characters; See FStar.String *)
+assume new
+type string : eqtype 
+
+(** This attribute can be added to the declaration or definition of
+    any top-level symbol. It causes F* to report a warning on any
+    use of that symbol, printing the [msg] argument.
+    
+    This is used, for instance to:
+    
+    - tag every escape hatch, e.g., [assume], [admit], etc
+
+    Reports for uses of symbols tagged with this attribute
+    are controlled using the `--report_assumes` option
+    and warning number 334. 
+    
+    See tests/micro-benchmarks/WarnOnUse.fst
+ *)
+assume
+val warn_on_use (msg: string) : Tot unit
+
+(** The [deprecated "s"] attribute: "s" is an alternative function
+    that should be printed in the warning it can be omitted if the use
+    case has no such function *)
+assume
+val deprecated (s: string) : Tot unit
+
+
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to
     (the encoding of) [t].
@@ -239,6 +267,8 @@ type precedes : #a: Type -> #b: Type -> a -> b -> Type0
     Note, unless you have a really good reason, you probably don't
     want to use this [has_type] predicate. F*'s type theory certainly
     does not internalize its own typing judgment *)
+[@@deprecated "'has_type' is intended for internal use and debugging purposes only; \
+                do not rely on it for your proofs"]
 assume
 type has_type : #a: Type -> a -> Type -> Type0 
 
@@ -247,9 +277,11 @@ type has_type : #a: Type -> a -> Type -> Type0
 [@@ "tac_opaque"; smt_theory_symbol]
 type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot (p x))
 
+#push-options "--warn_error -288" 
 (** [p1 `subtype_of` p2] when every element of [p1] is also an element
     of [p2]. *)
 let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
+#pop-options
 
 (** The type of squashed types.
 
@@ -270,10 +302,6 @@ type prop = a: Type0{a `subtype_of` unit}
    internally, set_range_of is not an identity function.  *)
 assume new
 type range : Type0 
-
-(** The type of primitive strings of characters; See FStar.String *)
-assume new
-type string : eqtype 
 
 (**** The PURE effect *)
 
@@ -381,7 +409,7 @@ let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 
 unfold
 let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
 
-(** Trivial WP for PURE: Prove the WP with the trivial poscondition *)
+(** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
 let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
 
@@ -462,7 +490,7 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 
 (***** End trusted primitives *****)
 
-(** This point onwards, F* fully verifies all the definitions *)
+(** This point onward, F* fully verifies all the definitions *)
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
@@ -474,7 +502,7 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -
 [@@ "tac_opaque"; smt_theory_symbol]
 type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 
-(** Primitive type of mathematical intgers, mapped to zarith in OCaml
+(** Primitive type of mathematical integers, mapped to zarith in OCaml
     extraction and to the SMT sort of integers *)
 assume new
 type int : eqtype 
@@ -576,28 +604,6 @@ type exn : Type0
 assume new
 type array : Type -> Type0 
 
-(** The [deprecated "s"] attribute: "s" is an alternative function
-    that should be printed in the warning it can be omitted if the use
-    case has no such function *)
-irreducible
-let deprecated (s: string) : unit = ()
-
-(** This attribute can be added to the declaration or definition of
-    any top-level symbol. It causes F* to report a warning on any
-    use of that symbol, printing the [msg] argument.
-    
-    This is used, for instance to:
-    
-    - tag every escape hatch, e.g., [assume], [admit], etc
-
-    Reports for uses of symbols tagged with this attribute
-    are controlled using the `--report_assumes` option
-    and warning number 334. 
-    
-    See tests/micro-benchmarks/WarnOnUse.fst
- *)
-irreducible
-let warn_on_use (msg: string) : unit = ()
 
 (** String concatenation and its abbreviation as [^].  TODO, both
     should be removed in favor of what is present in FStar.String *)
@@ -731,4 +737,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 36
+let __cache_version_number__ = 39

@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Ident
 
-open FStar.Range
+open FStar.Compiler.Range
 
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)

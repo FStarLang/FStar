@@ -24,20 +24,20 @@
 module FStar.Parser.Dep
 
 open FStar.Pervasives
-open FStar.ST   //for ref
-open FStar.All  //for failwith
-
+open FStar.Compiler.Effect   //for ref, failwith etc
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
 
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let profile f c = Profiling.profile f None c
 
@@ -884,10 +884,7 @@ let collect_one
             ()
         | Const c ->
             collect_constant c
-        | Op (s, ts) ->
-            if Ident.string_of_id s = "@" then
-              (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
-              collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
+        | Op (_, ts) ->
             List.iter collect_term ts
         | Tvar _
         | AST.Uvar _ ->
@@ -945,9 +942,14 @@ let collect_one
             collect_term tac
         | Record (t, idterms) ->
             iter_opt t collect_term;
-            List.iter (fun (_, t) -> collect_term t) idterms
-        | Project (t, _) ->
-            collect_term t
+            List.iter 
+              (fun (fn, t) -> 
+                collect_fieldname fn;
+                collect_term t)
+              idterms
+        | Project (t, f) ->
+            collect_term t;
+            collect_fieldname f
         | Product (binders, t) ->
           collect_binders binders;
           collect_term t
@@ -997,6 +999,78 @@ let collect_one
                 collect_term next) steps
             end
 
+        | IntroForall (bs, p, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term p;
+          collect_term e
+          
+        | IntroExists(bs, t, vs, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term t;
+          List.iter collect_term vs;
+          collect_term e
+
+        | IntroImplies(p, q, x, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_binder x;
+          collect_term e
+          
+        | IntroOr(b, p, q, r) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r
+          
+        | IntroAnd(p, q, r, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r;
+          collect_term e          
+
+        | ElimForall(bs, p, vs) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           List.iter collect_term vs
+            
+        | ElimExists(bs, p, q, b, e) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           collect_term q;
+           collect_binder b;
+           collect_term e
+
+        | ElimImplies(p, q, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_term e
+
+        | ElimAnd(p, q, r, x, y, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;          
+          collect_binder x;
+          collect_binder y;
+          collect_term e
+
+        | ElimOr(p, q, r, x, e, y, e') -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;
+          collect_binder x;
+          collect_binder y;
+          collect_term e;
+          collect_term e'          
+
       and collect_patterns ps =
         List.iter collect_pattern ps
 
@@ -1040,6 +1114,10 @@ let collect_one
         collect_pattern pat;
         iter_opt t1 collect_term;
         collect_term t2
+
+      and collect_fieldname fn =
+          if nsstr fn <> ""
+          then add_to_parsing_data (P_dep (false, lid_of_ids (ns_of_lid fn)))
 
       in
       let ast, _ = Driver.parse_file filename in
@@ -1691,11 +1769,11 @@ let print_full (deps:deps) : unit =
                       List.filter
                         (fun df ->
                            lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
-                           && Options.should_extract (lowercase_module_name df))
+                           && Options.should_extract (lowercase_module_name df) Options.OCaml)
                   in
                   extracted_fst_files |> List.map output_cmx_file
               in
-              if Options.should_extract (lowercase_module_name file_name)
+              if Options.should_extract (lowercase_module_name file_name) Options.OCaml
               then
                 let cmx_files = String.concat "\\\n\t" cmx_files in
                 print_entry
@@ -1740,7 +1818,7 @@ let print_full (deps:deps) : unit =
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname
+                       if Options.should_extract mname Options.OCaml
                        then BU.smap_add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
@@ -1749,7 +1827,8 @@ let print_full (deps:deps) : unit =
         keys
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       BU.smap_add krml_file_map mname (output_krml_file fst_file));
+                       if Options.should_extract mname Options.Kremlin
+                       then BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
     let print_all tag files =
@@ -1761,7 +1840,7 @@ let print_full (deps:deps) : unit =
     all_fsti_files
     |> List.iter
       (fun fsti ->
-          let mn = lowercase_module_name fsti in
+         let mn = lowercase_module_name fsti in
          let range_of_file fsti =
            let r = Range.set_file_of_range Range.dummyRange fsti in
            Range.set_use_range r (Range.def_range r)

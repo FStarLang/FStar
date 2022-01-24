@@ -529,6 +529,13 @@ val select_refine (#a:_) (#p:_)
             (fun v -> pts_to r (f v))
 
 
+(** Updating a ref cell for a user-defined PCM *)
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
+  : action (pts_to r x)
+           unit
+           (fun _ -> pts_to r y)
+
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
@@ -540,13 +547,6 @@ val upd_action
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-
-(** Updating a ref cell for a user-defined PCM *)
-val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
-                   (f:FStar.PCM.frame_preserving_upd p x y)
-  : action (pts_to r x)
-           unit
-           (fun _ -> pts_to r y)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action

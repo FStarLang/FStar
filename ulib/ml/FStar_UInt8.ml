@@ -33,7 +33,7 @@ let logxor (a:uint8) (b:uint8) : uint8 = a lxor b
 let logor  (a:uint8) (b:uint8) : uint8 = a lor b
 let lognot (a:uint8) : uint8 = lnot a
        
-let int_to_uint8 (x:Prims.int) : uint8 = int_of_string (Prims.to_string x) % 256
+let int_to_uint8 (x:Prims.int) : uint8 = Z.to_int x % 256
 
 let shift_right (a:uint8) (b:Stdint.Uint32.t) : uint8 = a lsr (Stdint.Uint32.to_int b)
 let shift_left  (a:uint8) (b:Stdint.Uint32.t) : uint8 = (a lsl (Stdint.Uint32.to_int b)) land 255

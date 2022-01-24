@@ -1,6 +1,8 @@
 #light "off"
 module FStar.Reflection.Interpreter
-
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
@@ -8,12 +10,12 @@ open FStar.Reflection.Basic
 module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
-module Range = FStar.Range
-open FStar.List
+module Range = FStar.Compiler.Range
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module E = FStar.Reflection.Embeddings
 module NRE = FStar.Reflection.NBEEmbeddings
 module Ident = FStar.Ident
@@ -143,6 +145,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_sigelt"           pack_sigelt           E.e_sigelt_view     E.e_sigelt
                                 pack_sigelt           NRE.e_sigelt_view   NRE.e_sigelt;
 
+    mk1 "inspect_lb"            inspect_lb            E.e_letbinding      E.e_lb_view
+                                inspect_lb            NRE.e_letbinding    NRE.e_lb_view;
+
+    mk1 "pack_lb"               pack_lb               E.e_lb_view         E.e_letbinding
+                                pack_lb               NRE.e_lb_view       NRE.e_letbinding;
+
     mk1 "inspect_bv"            inspect_bv            E.e_bv              E.e_bv_view
                                 inspect_bv            NRE.e_bv            NRE.e_bv_view;
 
@@ -175,6 +183,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
 
     mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
                                 subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;
+
+    mk2 "close_term"            close_term            E.e_binder          E.e_term           E.e_term
+                                close_term            NRE.e_binder        NRE.e_term         NRE.e_term;
 
     mk2 "compare_bv"            compare_bv            E.e_bv              E.e_bv             E.e_order
                                 compare_bv            NRE.e_bv            NRE.e_bv           NRE.e_order;

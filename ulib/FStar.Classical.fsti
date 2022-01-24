@@ -319,6 +319,7 @@ val ghost_lemma
       ($_: (x: a -> Lemma (requires p x) (ensures (q x ()))))
     : Lemma (forall (x: a). p x ==> q x ())
 
+
 (**** Existential quantification *)
 
 (** The most basic way to introduce a squashed existential quantifier
@@ -371,6 +372,7 @@ val exists_elim
       (_: (x: a{p x} -> GTot (squash goal)))
     : Lemma goal
 
+
 (*** Disjunction *)
 
 (** Eliminating [l \/ r] into a [goal] whose well-formedness depends on
@@ -384,4 +386,3 @@ val or_elim
 
 (** The law of excluded middle: squashed types are classical *)
 val excluded_middle (p: Type) : Lemma (requires (True)) (ensures (p \/ ~p))
-

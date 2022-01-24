@@ -1,7 +1,7 @@
 #light "off"
 
 module FStar.Order
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 type order = | Lt | Eq | Gt
 
 // Some derived checks

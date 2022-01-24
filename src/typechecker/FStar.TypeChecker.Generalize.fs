@@ -17,14 +17,16 @@
 module FStar.TypeChecker.Generalize
 
 open FStar
-open FStar.All
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
-module BU    = FStar.Util
+module BU    = FStar.Compiler.Util
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
 module Free  = FStar.Syntax.Free
@@ -58,10 +60,10 @@ let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
             u_name) in
          u_names
 
-let gather_free_univnames env t : list<univ_name> =
+let gather_free_univnames env t : BU.set<univ_name> =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = BU.set_difference tm_univnames ctx_univnames |> BU.set_elements in
+    let univnames = BU.set_difference tm_univnames ctx_univnames in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
     //     (Print.set_to_string Ident.string_of_id ctx_univnames)
@@ -84,7 +86,7 @@ let check_universe_generalization
 let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
-    let univnames = gather_free_univnames env t in
+    let univnames = BU.set_elements (gather_free_univnames env t) in
     if Env.debug env <| Options.Other "Gen"
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
     let univs = Free.univs t in
@@ -180,7 +182,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
+     let gen_types (uvs:list<ctx_uvar>) : list<(bv * bqual)> =
          let fail rng k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
@@ -219,7 +221,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
            U.set_uvar u.ctx_uvar_head t;
             //t clearly has a free variable; this is the one place we break the
             //invariant of a uvar always being resolved to a term well-typed in its given context
-           a, Some S.imp_tag)
+           a, S.as_bqual_implicit true)
      in
 
      let gen_univs = gen_univs env univs in
@@ -266,7 +268,15 @@ let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbnam
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  let univnames_lecs = List.map (fun (l, t, c) -> gather_free_univnames env t) lecs in
+  let univnames_lecs = 
+    let empty = BU.as_set [] order_univ_name in
+    List.fold_left
+      (fun out (l, t, c) -> 
+          BU.set_union out (gather_free_univnames env t))
+      empty
+      lecs
+  in
+  let univnames_lecs = BU.set_elements univnames_lecs in
   let generalized_lecs =
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
@@ -282,9 +292,8 @@ let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbnam
                                           (Print.binders_to_string ", " gvs));
             luecs
    in
-   List.map2 (fun univnames (l,generalized_univs, t, c, gvs) ->
-              (l, check_universe_generalization univnames generalized_univs t, t, c, gvs))
-             univnames_lecs
+   List.map (fun (l,generalized_univs, t, c, gvs) ->
+              (l, check_universe_generalization univnames_lecs generalized_univs t, t, c, gvs))
              generalized_lecs
 
 let generalize env is_rec lecs = 

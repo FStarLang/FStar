@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module UF = FStar.Syntax.Unionfind
 module N = FStar.TypeChecker.Normalize
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Const = FStar.Parser.Const
@@ -600,16 +600,26 @@ let declare_top_level_let env x t t_norm =
       fvb, [], env
 
 
-let encode_top_level_val uninterpreted env lid t quals =
-    let tt = norm_before_encoding env t in
-//        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-//        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n"
-//            (Print.lid_to_string lid)
-//            (Print.term_to_string t)
-//            (Print.term_to_string tt);
-    let decls, env = encode_free_var uninterpreted env lid t tt quals in
+let encode_top_level_val uninterpreted env fv t quals =
+    let tt =
+      if FStar.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
+      then norm_with_steps //no primops for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
+                [Env.Eager_unfolding;
+                 Env.Simplify;
+                 Env.AllowUnboundUniverses;
+                 Env.EraseUniverses;
+                 Env.Exclude Env.Zeta]
+                 env.tcenv t
+      else norm_before_encoding env t
+    in
+    // if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
+    //        (Print.fv_to_string fv)
+    //        (Print.term_to_string t)
+    //        (Print.term_to_string tt);
+    let decls, env = encode_free_var uninterpreted env fv t tt quals in
     if U.is_smt_lemma t
-    then decls@encode_smt_lemma env lid tt, env
+    then decls@encode_smt_lemma env fv tt, env
     else decls, env
 
 let encode_top_level_vals env bindings quals =
@@ -807,7 +817,7 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
+                  let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
@@ -890,8 +900,8 @@ let encode_top_level_let :
             in
             let binder_decls = binder_decls @ guard_decls in
             let decl_g = Term.DeclFun(g, Fuel_sort::List.map fv_sort (fst (BU.first_N fvb.smt_arity vars)), Term_sort, Some "Fuel-instrumented function name") in
-            let env0 = push_zfuel_name env0 fvb.fvar_lid g in
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let env0 = push_zfuel_name env0 fvb.fvar_lid g gtok in
             let vars_tm = List.map mkFreeV vars in
             let rng = (FStar.Syntax.Util.range_of_lbname lbn) in
             let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
@@ -1164,11 +1174,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let x = mkFreeV xx in
        let b2t_x = mkApp("Prims.b2t", [x]) in
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
+       let bool_ty = lookup_free_var env (withsort Const.bool_lid) in
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
                                 Some "b2t def",
-                                "b2t_def")] in
+                                "b2t_def");
+                    Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
+                                           mkImp(mk_HasType x bool_ty,
+                                                 mk_HasType b2t_x mk_Term_type)),
+                                Some "b2t typing",
+                                "b2t_typing")] in
        decls |> mk_decls_trivial, env
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
@@ -1482,7 +1498,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       in
                       (env, xv::arg_vars, eqns, i + 1))
                     (env', [], [], 0)
-                    (FStar.List.zip args encoded_args)
+                    (FStar.Compiler.List.zip args encoded_args)
               in
               let arg_vars = List.rev arg_vars in
               let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in

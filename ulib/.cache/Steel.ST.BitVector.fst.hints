@@ -1,0 +1,134 @@
+[
+  "êN¬≥{‹Lßüñ/\u0016Ó™z…",
+  [
+    [
+      "Steel.ST.BitVector.bv_t",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f14f10fd14ee78a6e1dfa9aac58a15d9"
+    ],
+    [
+      "Steel.ST.BitVector.pts_to_length",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "12fc9320d440bb09c8a9feb6b281ea2d"
+    ],
+    [
+      "Steel.ST.BitVector.pts_to_length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.bv_t",
+        "refinement_interpretation_Tm_refine_6137d072aabd8f36861f0934645eca7b"
+      ],
+      0,
+      "067ec2d40318e72ac05a191b3c1c5cea"
+    ],
+    [
+      "Steel.ST.BitVector.alloc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9e7f68c38e43484e77069094f4fd88d3"
+      ],
+      0,
+      "4662d751b0a6905d587a933f0b208fb7"
+    ],
+    [
+      "Steel.ST.BitVector.alloc",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "89122449e61531ba05a2d554f2ab9369"
+    ],
+    [
+      "Steel.ST.BitVector.bv_is_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+      ],
+      0,
+      "c641c73d5df037bc08a996dc4e05af27"
+    ],
+    [
+      "Steel.ST.BitVector.bv_is_set",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.repr",
+        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+      ],
+      0,
+      "36b1977aa7b21fce3bdb551b534741ed"
+    ],
+    [
+      "Steel.ST.BitVector.bv_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+      ],
+      0,
+      "74ec9274b3012b56026f556648f70337"
+    ],
+    [
+      "Steel.ST.BitVector.bv_set",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.BitVector.repr" ],
+      0,
+      "ba3027c00bdb534af42dbb2335eb45fd"
+    ],
+    [
+      "Steel.ST.BitVector.bv_unset",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
+      ],
+      0,
+      "5cf4acee40fbec3929b0981a94c1866a"
+    ],
+    [
+      "Steel.ST.BitVector.bv_unset",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.BitVector.repr" ],
+      0,
+      "3b7b4a69a34d7da7cce1d524a5d9571e"
+    ]
+  ]
+]

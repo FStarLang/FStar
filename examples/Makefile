@@ -5,7 +5,7 @@ include Makefile.include
 # These examples are excluded since the binary package can't verify
 # them.
 
-ALL_EXAMPLE_DIRS_NO_KREMLIN=\
+ALL_EXAMPLE_DIRS :=\
 data_structures \
 algorithms \
 crypto \
@@ -24,8 +24,6 @@ typeclasses \
 low-mitls-experiments \
 seplogic \
 csl \
-hello \
-extraction \
 demos \
 indexed_effects \
 doublylinkedlist \
@@ -33,16 +31,25 @@ regional \
 generic \
 calc \
 steel \
+steel_tutorial \
 layeredeffects \
-misc
+misc \
+sequence
+
+HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+
+ifdef HAS_OCAML
+ALL_EXAMPLE_DIRS+=\
+  hello \
+  extraction \
+
+endif
 
 ifdef KREMLIN_HOME
-ALL_EXAMPLE_DIRS=\
+ALL_EXAMPLE_DIRS+=\
   kv_parsing \
   miniparse \
-  $(ALL_EXAMPLE_DIRS_NO_KREMLIN)
-else
-ALL_EXAMPLE_DIRS=$(ALL_EXAMPLE_DIRS_NO_KREMLIN)
+
 endif
 
 # low-level \  ... NS: removing from CI for this branch

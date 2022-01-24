@@ -17,10 +17,10 @@
 
 module FStar.TypeChecker.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
@@ -46,7 +46,7 @@ val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * term * b
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation of implicits
-val maybe_implicit_with_meta_or_attr: aqual -> list<attribute> -> bool
+val maybe_implicit_with_meta_or_attr: bqual -> list<attribute> -> bool
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 
 //operations on computation types
@@ -155,3 +155,18 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 (* update the env functions *)
 val update_env_sub_eff : env -> sub_eff -> Range.range -> env
 val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env
+
+val try_lookup_record_type : env -> lident -> option<DsEnv.record_or_dc>
+val find_record_or_dc_from_typ : env -> option<typ> -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc * lident * fv
+val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
+val make_record_fields_in_order : env -> unresolved_constructor -> option<either<typ,typ>> ->
+                                DsEnv.record_or_dc ->
+                                list<(lident * 'a)> ->
+                                not_found:(ident -> option<'a>) ->
+                                Range.range ->
+                                list<'a>
+
+
+val check_positivity: env -> sigelt -> bool
+val name_strictly_positive_in_type: env -> bv -> term -> bool
+val check_exn_positivity: env -> lident -> bool

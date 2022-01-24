@@ -17,11 +17,11 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax

@@ -6,14 +6,14 @@ open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 
-assume val p (#n:int) (n2:int) : slprop
-assume val q (#n:int) (#n':int) (n2:int) : slprop
+assume val p (#n:int) (n2:int) : vprop
+assume val q (#n:int) (#n':int) (n2:int) : vprop
 
 assume val palloc (#n:int) (n2:int) : SteelT unit emp (fun _ -> p #n n2)
 assume val pwrite (#n:int) (#oldn:int) (newn:int) : SteelT unit (p #n oldn) (fun _ -> p #n newn)
 
 assume val ref : Type0
-assume val ptr (_:ref) : slprop u#1
+assume val ptr (_:ref) : vprop
 
 assume val alloc (x:int)  : SteelT ref emp (fun y -> ptr y)
 assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
@@ -67,14 +67,14 @@ let test_dep_frame () : SteelT ref emp (fun r -> ptr r)
     return r
 
 assume val reference (a:Type0) : Type0
-assume val pts_to (#a:Type0) (r:reference a) (p:perm) (v:erased a) : slprop u#1
+assume val pts_to (#a:Type0) (r:reference a) (p:perm) (v:erased a) : vprop
 assume val rread (#a:Type) (#p:perm) (#v:erased a) (r:reference a) : SteelT (x:a{x == Ghost.reveal v}) (pts_to r p v) (fun _ -> pts_to r p v)
 assume val rwrite (#a:Type) (#v:erased a) (r:reference a) (v':a) : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm (Ghost.hide v'))
 
 assume val rwrite_alt (#a:Type) (#v:erased a) (r:reference a) (v'':erased a) (v':a{v'==Ghost.reveal v''})
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm v'')
 
-assume val r : slprop
+assume val r : vprop
 
 let read_write (#a:Type) (r0:reference a) (v0:erased a)
   : SteelT unit (pts_to r0 full_perm v0 `star` r)
@@ -92,7 +92,7 @@ let swap (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
     rwrite_alt r1 v0 u0
 
 assume
-val rewrite_eq (#a:Type) (p:erased a -> slprop) (v0:erased a) (v1:erased a{v0 == v1})
+val rewrite_eq (#a:Type) (p:erased a -> vprop) (v0:erased a) (v1:erased a{v0 == v1})
   : SteelT unit (p v0) (fun _ -> p v1)
 
 let swap2 (#a:Type) (r0 r1:reference a) (v0 v1:erased a)

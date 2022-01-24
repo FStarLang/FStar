@@ -13,6 +13,24 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Tactics
+  * Mutually recursive let bindings are now supported in the reflected syntax, using the
+    same constructor (`Tv_Let`) as before (https://github.com/FStarLang/FStar/pull/2291.
+    Inspection of a let binding now usually looks like this:
+    ```
+    match inspect_sigelt se with
+    | Sg_Let r lbs ->
+      let lbv = lookup_lb_view lbs (inspect_fv fv) in
+      lbv.lb_def
+    ```
+    Where `lookup_lb_view` looks for a `name` in a list of let bindings, returning the corresponding let binding view. In turn, packing a let binding usually takes the form:
+    ```
+     let lbv = {lb_fv=fv;lb_us=us;lb_typ=ty;lb_def=def} in
+     let lb = pack_lb lbv in
+     let se = pack_sigelt (Sg_Let false [lb]) in
+     ...
+    ```
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
@@ -25,17 +43,17 @@ Guidelines for the changelog:
 
 ## Core typechecker
   * F* now supports accessibility predicates based termination proofs. When writing a recursive function
-    
+
     ```
     let rec x_i : Tot t = ...
     ```
-    
+
     The decreases metric may be specified as:
-    
+
     ```
     let rec x_i : Tot t (decreses {:well-founded rel e}) = ...
     ```
-    
+
     where `rel` is a well-founded relation and `e` is an expression that decreases according to the relation in the recursive calls. See [this PR](https://github.com/FStarLang/FStar/pull/2307) for more details.
 
   * Since 2686888aab7e8fa7059b61c161ad7a2f867ee1f8, F* no longer
@@ -176,6 +194,25 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * Type-based disambiguation for projectors and record
+     constructors. You can now write:
+
+     ```
+     type t = { f : bool }
+     type s = { f : bool }
+     let test1 (x:t) (y:s) = x.f && y.f
+     let test2 (x:t) : s = { f = x.f }
+     ```
+
+     Where types are used to disambiguate the field names of `t` and
+     `s`. See tests/micro-benchmarks/RecordFieldDisambiguation.fst for
+     more examples.
+
+   * `eliminate` and `introduce` are now keywords. They are used to
+     implement sugar for manipulating classical logic connectives, as
+     documented here:
+     https://github.com/FStarLang/FStar/wiki/Sugar-for-manipulating-connectives-in-classical-logic
 
    * Record opening syntax: Inspired in part by Agda's records as
      modules, you can now write
@@ -345,6 +382,13 @@ Guidelines for the changelog:
      expected output location, we raise Warning 321.
 
 ## Command line options
+
+   * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
+     The behavior of the --extract option was changed so that it no
+     longer treats the OCaml and Kremlin targets
+     differently. Previously, when used with --dep full, F* would
+     disregard the --extract setting when emitting the
+     `ALL_KRML_FILES` variable.
 
    * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
      options take lists of namespaces as arguments

@@ -16,9 +16,9 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Errors
 
 type filename = string
@@ -151,7 +151,7 @@ let parse fn =
               | _ -> failwith "Impossible"
               else Inl modul
            | _ -> fileOrFragment in
-           let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+           let non_polymorphic_nil : list<string * FStar.Compiler.Range.range> = [] in
            ASTFragment (frags, non_polymorphic_nil)
            end
       | Fragment _ ->

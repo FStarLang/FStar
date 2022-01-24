@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module DeltaDepth
-
+open FStar.List.Tot
 open FStar.Tactics
 
 #set-options "--ugly"

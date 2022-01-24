@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all benchmark extra install-fstarlib install-fstar-tactics rebuild clean_checked clean_ocaml clean fstardoc
 
 FSTAR_HOME=..
 
@@ -40,7 +40,7 @@ fstartaclib.mgen: fstarlib.mgen
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=tactics_ml/extracted \
 	    CODEGEN=Plugin \
-	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES) +Steel.Effect.Common +Steel.SelEffect.Common +FStar.InteractiveHelpers'" \
+	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES) +Steel.Effect.Common +FStar.InteractiveHelpers'" \
 	    $(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
@@ -50,17 +50,18 @@ fstartaclib.mgen: fstarlib.mgen
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################
 
+FSTAR_BIN := $(realpath $(FSTAR_HOME)/bin)
 ifeq ($(OS),Windows_NT)
   OCAMLPATH_SEP=;
+  FSTAR_BIN := $(shell cygpath -m $(FSTAR_BIN))
 else
   OCAMLPATH_SEP=:
 endif
 
-# relative path to build directory, which is ulib/ml/_build
-OCAMLPATH:="../../../bin/$(OCAMLPATH_SEP)$(OCAMLPATH)"
+OCAMLPATH:=$(FSTAR_BIN)$(OCAMLPATH_SEP)$(OCAMLPATH)
 
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
-OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
+OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 # relative to ulib
 DIRS_WITH_FSTARLIB_ML_FILES = ml experimental/ml ml/extracted
@@ -142,29 +143,25 @@ $(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
 	$(Q)rm -rf $(TACLIB_DIR)
 	$(Q)mv $(TACLIB_DIR)_new $(TACLIB_DIR)
 
-clean:
+clean_checked:
+	$(Q)rm -f *.checked .cache/*.checked .depend
+
+clean: clean_checked clean_ocaml
 	@echo "[CLEAN     ulib/]"
-	$(Q)rm -f .depend .depend.extract
+	$(Q)rm -f .depend.extract
 	$(Q)rm -f *.mgen
-	$(Q)rm -f *.checked *.checked.lax .cache/*.checked .cache/*.checked.lax
+	$(Q)rm -f *.checked.lax .cache/*.checked.lax
 	$(Q)rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
-	$(Q)rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
-	$(Q)rm -f $(FSTARLIB_DIR)/*.cm[aiox]
-	$(Q)rm -f $(FSTARLIB_DIR)/*.cmx[as]
-	$(Q)rm -f $(TACLIB_DIR)/*.cm[aiox]
-	$(Q)rm -f $(TACLIB_DIR)/*.cmx[as]
-	$(Q)rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 clean_ocaml:
-	rm -f *.mgen
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
-	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
-	rm -f $(FSTARLIB_DIR)/*.cmx[as]
-	rm -f $(TACLIB_DIR)/*.cm[aiox]
-	rm -f $(TACLIB_DIR)/*.cmx[as]
+	rm -rf $(FSTARLIB_DIR)
+	rm -rf $(TACLIB_DIR)
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
-rebuild: clean_ocaml install-fstarlib install-fstar-tactics
+rebuild: clean_ocaml
+	+$(MAKE) install-fstarlib
+	+$(MAKE) install-fstar-tactics
 
 DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \

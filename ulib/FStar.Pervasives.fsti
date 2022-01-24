@@ -257,6 +257,15 @@ val delta_attr (s: list string) : Tot norm_step
   *)
 val delta_qualifier (s: list string) : Tot norm_step
 
+(**
+    This step removes the some internal meta nodes during normalization
+
+    In most cases you shouldn't need to use this step explicitly
+
+   *)
+val unmeta : norm_step
+
+
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
 val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
@@ -957,6 +966,36 @@ val commute_nested_matches : unit
   *)
 val noextract_to (backend:string) : Tot unit
 
+
+(** This attribute decorates a let binding, e.g.,
+
+    [@@normalize_for_extraction steps]
+    let f = e
+
+    The effect is that prior to extraction, F* will first reduce [e]
+    using the normalization [steps], and then proceed to extract it as
+    usual.
+
+    Almost the same behavior can be achieved by using a
+    [postprocess_for_extraction_with t] attribute, which runs tactic
+    [t] on the goal [e == ?u] and extracts the solution to [?u] in
+    place of [e]. However, using a tactic to postprocess a term is
+    more general than needed for some cases.
+
+    In particular, if we intend to only normalize [e] before
+    extraction (rather than applying some other form of equational
+    reasoning), then using [normalize_for_extraction] can be more
+    efficient, for the following reason:
+
+    Since we are reducing [e] just before extraction, F* can enable an
+    otherwise non-user-facing normalization feature that allows all
+    arguments marked [@@@erasable] to be erased to [()]---these terms
+    will anyway be extracted to [()] so erasing them during
+    normalization is a useful optimization.
+  *)
+val normalize_for_extraction (steps:list norm_step) : Tot unit
+
+
 (** A layered effect definition may optionally be annoated with
     (ite_soundness_by t) attribute, where t is another attribute
     When so, the implicits and the smt guard generated when
@@ -967,6 +1006,16 @@ val noextract_to (backend:string) : Tot unit
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
 val ite_soundness_by : unit
+
+(** A binder in a definition/declaration may optionally be annotated as strictly_positive
+    When the let definition is used in a data constructor type in an inductive
+    definition, this annotation is used to check the positivity of the inductive
+
+    Further F* checks that the binder is actually positive in the let definition
+
+    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
+  *)
+val strictly_positive : unit
 
 
 (** Pure and ghost inner let bindings are now always inlined during
@@ -988,3 +1037,9 @@ val with_type (#t: Type) (e: t) : Tot t
     One of its uses is in types of layered effect combinators that
     are subjected to stricter typing discipline (no subtyping) *)
 unfold let eqtype_as_type (a:eqtype) : Type = a
+
+(** A coercion of the [x] from [a] to [b], when [a] is provably equal
+    to [b]. In most cases, F* will silently coerce from [a] to [b]
+    along a provable equality (as in the body of this
+    function). Occasionally, you may need to apply this explicitly *)
+let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x

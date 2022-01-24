@@ -44,7 +44,7 @@ $(FSYACC) $(FSLEX): nuget-restore
 
 # All the files that need to be pre-processed
 
-ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
+ALL_BOOT=$(addprefix boot/FStar., Compiler.Util.fsti \
 			          Compiler.Bytes.fsti String.fsti	\
 			          BigInt.fsti Pprint.fsti		\
 			          Parser.Parse.fsti			\
@@ -121,7 +121,7 @@ rebuild:
 	+$(MAKE) ocaml
 	+$(MAKE) -C ../ulib clean_ocaml
 	+$(MAKE) -C ocaml-output
-	+$(MAKE) -C ../ulib install-fstarlib install-fstar-tactics
+	+$(MAKE) -C ../ulib rebuild
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------

@@ -18,11 +18,11 @@
 
 module FStar.TypeChecker.Util
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -34,18 +34,19 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 type lcomp_with_binder = option<bv> * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
+module UF = FStar.Syntax.Unionfind
 
 //Reporting errors
 let report env errs =
@@ -415,7 +416,8 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
-        vars, (te, as_implicit i) in
+        vars, (te, S.as_aqual_implicit i)
+    in
     match pat.v with
     | Pat_constant c ->
         [], mk (Tm_constant c)
@@ -681,7 +683,22 @@ let close_wp_comp env bvs (c:comp) =
             let u_res_t, res_t, wp = destruct_wp_comp c in
             let md = Env.get_effect_decl env c.effect_name in
             let wp = close_wp u_res_t md res_t bvs wp in
-            mk_comp md u_res_t c.result_typ wp c.flags
+            (*
+             * AR: a note re. comp flags:
+             *     earlier this code was setting the flags of the closed computation as c.flags
+             *
+             *     cf. #2352, when this code was called from
+             *       weaken_result_typ -> bind -> maybe_capture_unit_refinement,
+             *     the input comp was Tot had RETURN flag set, which means the closed comp also had RETURN
+             *
+             *     so when this closed computation was later `bind` with another comp,
+             *       we simply dropped the it (see code path in bind under U.is_trivial_wp)
+             *     thereby losing the captured refinement
+             *
+             *     in general, comp flags need some cleanup
+             *)
+            mk_comp md u_res_t c.result_typ wp
+              (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
 let close_wp_lcomp env bvs (lc:lcomp) =
@@ -1960,7 +1977,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, _, branches), _ ->
+    | Tm_match (_, _, branches, _), _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe
@@ -2250,8 +2267,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
-                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
-                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
+                              let req = mk_Tm_app as_req [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
+                              let ens = mk_Tm_app as_ens [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                   end
@@ -2330,7 +2347,7 @@ let maybe_instantiate (env:Env.env) e t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -2369,8 +2386,9 @@ let maybe_instantiate (env:Env.env) e t =
                         BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
+                      let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                      (v, aq)::args, bs, subst, Env.conj_guard g g'
 
                   | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
                     when maybe_implicit_with_meta_or_attr qual attrs ->
@@ -2390,8 +2408,9 @@ let maybe_instantiate (env:Env.env) e t =
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
+                      let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+                      (v, aq)::args, bs, subst, Env.conj_guard g g'
 
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
@@ -2851,7 +2870,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
-          let is_args = List.map2 (fun i ({binder_qual=aqual}) -> (i, aqual)) is bs in
+          let is_args = List.map2 (fun i b -> (i, U.aqual_of_binder b)) is bs in
           S.mk_Tm_app
             repr
             (S.as_arg a_tm::is_args)
@@ -3083,3 +3102,536 @@ let update_env_sub_eff env sub r =
 let update_env_polymonadic_bind env m n p ty =
   Env.add_polymonadic_bind env m n p
     (fun env c1 bv_opt c2 flags r -> mk_indexed_bind env m n p ty c1 bv_opt c2 flags r)
+
+(*** Utilities for type-based record
+     disambiguation ***)
+
+
+(*
+   For singleton inductive types named `typename`,
+   it looks up the name of the constructor,
+   and the field names of that constructor
+ *)
+let try_lookup_record_type env (typename:lident)
+  : option<DsEnv.record_or_dc>
+  = try
+      match Env.datacons_of_typ env typename with
+      | _, [dc] ->
+        let se = Env.lookup_sigelt env dc in
+        (match se with
+         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
+           let formals, c = U.arrow_formals t in
+           if nparms < List.length formals
+           then let _, fields = List.splitAt nparms formals in //remove params
+                let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
+                let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
+                let is_rec = Env.is_record env typename in
+                let r : DsEnv.record_or_dc =
+                  {
+                    typename = typename;
+                    constrname = Ident.ident_of_lid dc;
+                    parms = [];
+                    fields = fields;
+                    is_private = false;
+                    is_record = is_rec
+                  }
+                in
+                Some r
+
+           else (
+             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+               (string_of_int nparms)
+               (Print.term_to_string t)
+               (Print.binders_to_string ", " formals);
+             None
+           )
+         | _ ->
+           BU.print1 "Could not find %s\n" (string_of_lid dc);
+           None)
+      | _, dcs ->
+        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
+        None
+    with
+    | _ -> None
+
+(*
+   If ToSyntax guessed `uc`
+   and the typechecker decided that type `t: option<typ>` was the type
+   to be used for disambiguation, then if
+
+    - t is None, the uc is used
+    - otherwise t overrides uc
+ *)
+let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
+    let default_rdc () =
+      match uc.uc_typename with
+      | None ->
+        let f = List.hd uc.uc_fields in
+        raise_error (Errors.Fatal_IdentifierNotFound,
+                     BU.format1 "Field name %s could not be resolved"
+                                (string_of_lid f))
+                     (range_of_lid f)
+      | Some tn ->
+        match try_lookup_record_type env tn with
+        | Some rdc -> rdc
+        | None ->
+          raise_error (Errors.Fatal_NameNotFound,
+                       BU.format1 "Record name %s not found" (string_of_lid tn))
+                      (range_of_lid tn)
+    in
+    let rdc : DsEnv.record_or_dc =
+      match t with
+      | None -> default_rdc()
+      | Some t ->
+        let thead, _ = U.head_and_args (U.unmeta (N.unfold_whnf env t)) in
+        match (SS.compress (U.un_uinst thead)).n with
+        | Tm_fvar type_name ->
+          begin
+          match try_lookup_record_type env type_name.fv_name.v with
+          | None -> default_rdc ()
+          | Some r -> r
+          end
+        | _ -> default_rdc()
+    in
+    let constrname =
+          let name = lid_of_ids (ns_of_lid rdc.typename @ [rdc.constrname]) in
+          Ident.set_lid_range name rng
+    in
+    let constructor =
+        let qual =
+          if rdc.is_record
+            then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
+          else None
+        in
+        S.lid_as_fv constrname delta_constant qual
+    in
+    rdc, constrname, constructor
+
+
+(* Check if a user provided `field_name` in a constructor or projector
+   matches `field` in `rdc`.
+
+   The main subtlety is that if `field_name` is unqualified, then it only
+   has to match `field`.
+
+   Otherwise, its namespace also has to match the module name of `rdc`.
+
+   This ensures that if the user wrote a qualified field name, then it
+   has to resolve to a field in the unambiguous module reference in
+   the qualifier.
+*)
+let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) =
+    Ident.ident_equals field (Ident.ident_of_lid field_name) &&
+    (if ns_of_lid field_name <> []
+     then nsstr field_name = nsstr rdc.typename
+     else true)
+
+(*
+  The field assignments of a record constructor can be given out of
+  order.
+
+  Given that we've committed to `rdc` as the record constructor, if
+  the user's field assignments are `fas`, then we order the alphas
+  by the order in which they appear in `rdc`.
+
+  If a particular field cannot be found, then we call not_found, which
+  an provide a default.
+
+  We raise errors if fields are not found and no default exists, or if
+  redundant fields are present.
+*)
+let make_record_fields_in_order env uc topt
+       (rdc : DsEnv.record_or_dc)
+       (fas : list<(lident * 'a)>)
+       (not_found:ident -> option<'a>)
+       (rng : Range.range)
+  : list<'a>
+  = let debug () =
+      let print_rdc (rdc:DsEnv.record_or_dc) =
+        BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
+          (string_of_lid rdc.typename)
+          (string_of_id rdc.constrname)
+          (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
+      in
+      let print_fas fas =
+        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
+      in
+      let print_topt topt =
+        match topt with
+        | None ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
+        | Some (Inl t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+        | Some (Inr t) ->
+          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
+          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+      in
+      BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+          (match uc.uc_typename with None -> "none" | Some tn -> string_of_lid tn)
+          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (print_topt topt)
+          (print_rdc rdc)
+          (print_fas fas)
+    in
+    let rest, as_rev =
+      List.fold_left
+        (fun (fields, as_rev) (field_name, _) ->
+           let matching, rest =
+             List.partition
+               (fun (fn, _) -> field_name_matches fn rdc field_name)
+               fields
+           in
+           match matching with
+           | [(_, a)] ->
+             rest, a::as_rev
+
+           | [] -> (
+             match not_found field_name with
+             | None ->
+//               debug();
+               raise_error
+                 (Errors.Fatal_MissingFieldInRecord,
+                   BU.format2 "Field %s of record type %s is missing"
+                     (string_of_id field_name)
+                     (string_of_lid rdc.typename))
+                 rng
+             | Some a ->
+               rest, a::as_rev
+             )
+
+           | _ ->
+//             debug();
+             raise_error
+               (Errors.Fatal_MissingFieldInRecord,
+                BU.format2 "Field %s of record type %s is given multiple assignments"
+                  (string_of_id field_name)
+                  (string_of_lid rdc.typename))
+               rng)
+        (fas, [])
+        rdc.fields
+    in
+    let _ =
+      match rest with
+      | [] -> ()
+      | (f, _)::_ ->
+//        debug();
+        raise_error
+          (Errors.Fatal_MissingFieldInRecord,
+            BU.format2 "Field %s is redundant for type %s"
+                       (string_of_lid f)
+                       (string_of_lid rdc.typename))
+          rng
+    in
+    List.rev as_rev
+
+
+(****** Positivity checking ******)
+
+//return true if ty occurs in the term
+let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Compiler.Util.set_mem ty_lid (Free.fvars t)
+
+//this function is called during the positivity check, when we have a binder type that is a Tm_app, and t is the head node of Tm_app
+//it tries to get fvar from this t, since the type is already normalized, other cases should have been handled
+let rec try_get_fv (t:term) :option<(fv * universes)> =
+  match (SS.compress t).n with
+  | Tm_name _ -> None  //names are ok, e.g. some parameter or binder
+  | Tm_fvar fv -> Some (fv, [])
+  | Tm_uinst (t, us) ->
+    (match (SS.compress t).n with
+     | Tm_fvar fv -> Some (fv, us)
+     | _ -> failwith "try_get_fv: Node is a Tm_uinst, but Tm_uinst is not an fvar")
+  | Tm_ascribed (t, _, _) -> try_get_fv t
+  | _ ->
+    failwith ("try_get_fv: did not expect t to be a : " ^ (Print.tag_of_term t))
+
+type unfolded_memo_elt = list<(lident * args)>
+type unfolded_memo_t = ref<unfolded_memo_elt>
+
+//check if ilid applied to args has already been unfolded
+//in the memo table we only keep the type parameters, not indexes, but the passed args also contain indexes
+//so, once we have confirmed that the ilid is same, we will split the args list before checking equality of each argument
+let already_unfolded (ilid:lident) (arrghs:args) (unfolded:unfolded_memo_t) (env:env_t) :bool =
+  List.existsML (fun (lid, l) ->
+    Ident.lid_equals lid ilid &&
+      (let args = fst (List.splitAt (List.length l) arrghs) in
+       List.fold_left2 (fun b a a' -> b && Rel.teq_nosmt_force env (fst a) (fst a')) true args l)
+  ) !unfolded
+
+let debug_positivity (env:env_t) (msg:unit -> string) : unit =
+  if Env.debug env <| Options.Other "Positivity"
+  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
+
+//check if ty_lid occurs strictly positively in some binder type btype
+let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
+  debug_positivity env (fun () -> "Checking strict positivity in type: " ^ (Print.term_to_string btype));
+  //normalize the type to unfold any type abbreviations
+  let btype = N.normalize
+    [Env.Beta;
+     Env.HNF;
+     Env.Weak;
+     Env.Iota;
+     Env.UnfoldUntil delta_constant;
+     Env.ForExtraction;
+     Env.Unascribe;
+     Env.AllowUnboundUniverses] env btype in
+  debug_positivity env (fun () -> "Checking strict positivity in type, after normalization: " ^ (Print.term_to_string btype));
+  not (ty_occurs_in ty_lid btype) ||  //true if ty does not occur in btype
+    (debug_positivity env (fun () -> "ty does occur in this type, pressing ahead");
+     match (SS.compress btype).n with
+     | Tm_app (t, args) ->  //the binder type is an application
+       //get the head node fv
+       let fv_us_opt = try_get_fv t in
+       if fv_us_opt |> is_none then begin
+         debug_positivity env (fun () -> "ty is an app node with head that is not an fv, returning false");
+         false  //head is not an fv, ok
+       end
+       else
+         let fv, us = fv_us_opt |> must in
+         //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
+         if Ident.lid_equals fv.fv_name.v ty_lid then
+           let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
+           List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
+           //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
+           //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
+         else
+           let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
+           ty_nested_positive_in_inductive env ty_lid fv.fv_name.v us args unfolded
+
+     | Tm_arrow (sbs, c) ->  //binder type is an arrow type
+       debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
+       let check_comp =
+         let c = Env.unfold_effect_abbrev env c |> mk_Comp in
+         U.is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
+       in
+       if not check_comp then
+         let _ = debug_positivity env (fun () -> "Checking strict positivity , the arrow is impure, so return true") in
+         true
+       else
+         let _ = debug_positivity env (fun () -> "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
+         List.for_all (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
+           (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+            ty_strictly_positive_in_type (push_binders env sbs) ty_lid return_type unfolded)
+     | Tm_fvar _
+     | Tm_uinst _ 
+     | Tm_type _ ->
+       debug_positivity env (fun () -> "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
+       true  //if it's just an fvar, should be fine
+     | Tm_refine (bv, _) ->
+       debug_positivity env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
+       ty_strictly_positive_in_type env ty_lid bv.sort unfolded
+     | Tm_match (_, _, branches, _) ->
+       debug_positivity env (fun () -> "Checking strict positivity in an Tm_match, recur in the branches)");
+       List.for_all (fun (p, _, t) ->
+         let bs = List.map mk_binder (pat_bvs p) in
+         let bs, t = SS.open_term bs t in
+         ty_strictly_positive_in_type (push_binders env bs) ty_lid t unfolded 
+       ) branches
+     | Tm_ascribed (t, _, _) ->
+       debug_positivity env (fun () -> "Checking strict positivity in an Tm_ascribed, recur)");
+       ty_strictly_positive_in_type env ty_lid t unfolded
+     | _ ->
+       debug_positivity env (fun () -> "Checking strict positivity, unexpected tag: " ^ (Print.tag_of_term btype) ^ " and term: " ^ (Print.term_to_string btype));
+       false)  //remaining cases, will handle as they come up
+
+//some binder of some data constructor is an application of ilid to the args
+//ilid may not be an inductive, in which case we simply return false
+//us are the universes that the inductive ilid's data constructors can be instantiated with if needed, these us come from the application of ilid that called this function
+and ty_nested_positive_in_inductive env (ty_lid:lident) (ilid:lident) (us:universes) (args:args) (unfolded:unfolded_memo_t) : bool =
+  debug_positivity env (fun () -> "Checking nested positivity in the inductive " ^ (string_of_lid ilid) ^ " applied to arguments: " ^ (Print.args_to_string args));
+  let b, idatas = datacons_of_typ env ilid in
+
+  (*
+   * Two special cases:
+   *   -- If ilid is marked with an escape hatch "assume_strictly_positive"
+   *   -- If ilid's corresponding binder is marked "strictly_positive", note this is checked by F*
+   *)
+  if not b then begin
+    if Env.fv_has_attr
+         env
+         (S.lid_as_fv ilid delta_constant None)
+         FStar.Parser.Const.assume_strictly_positive_attr_lid
+    then (debug_positivity env (fun () -> BU.format1
+                                         "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
+                                         (Ident.string_of_lid ilid));
+          true)
+
+    else match Env.try_lookup_lid env ilid with
+         | Some ((_, t), _) ->
+           let bs, _ = U.arrow_formals t in
+           let rec aux (bs:binders) args : bool =
+             match bs, args with
+             | _, [] -> true
+             | [], _ ->
+               List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args
+             | b::bs, (arg, _)::args ->
+               ((not (ty_occurs_in ty_lid arg)) ||
+                U.has_attribute b.binder_attrs FStar.Parser.Const.binder_strictly_positive_attr) &&
+               aux bs args 
+           in
+           aux bs args
+         | None ->
+           debug_positivity env (fun () -> "Checking nested positivity, no attrs or type, return false");
+           false
+  end
+  //if ilid has already been unfolded with same arguments, return true
+  else
+    if already_unfolded ilid args unfolded env then
+      let _ = debug_positivity env (fun () -> "Checking nested positivity, we have already unfolded this inductive with these args") in
+      true
+    else
+      //TODO: is there a better way to get the number of binders of the inductive?
+      //note that num_ibs gives us only the type parameters, and not inductives, which is what we need since we will substitute them in the data constructor type
+      let num_ibs = Option.get (num_inductive_ty_params env ilid) in
+      debug_positivity env (fun () -> "Checking nested positivity, number of type parameters is " ^ (string_of_int num_ibs) ^ ", also adding to the memo table");
+      //update the memo table with the inductive name and the args, note we keep only the parameters and not indices
+      unfolded := !unfolded @ [ilid, fst (List.splitAt num_ibs args)];
+      List.for_all (fun d -> ty_nested_positive_in_dlid ty_lid d ilid us args num_ibs unfolded env) idatas
+
+//dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid
+//us are the universes, see the exaplanation on ty_nested_positive_in_inductive
+and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
+  debug_positivity env (fun () -> "Checking nested positivity in data constructor " ^ (string_of_lid dlid) ^ " of the inductive " ^ (string_of_lid ilid));
+  //get the type of the data constructor
+    let dt =
+    match Env.try_lookup_and_inst_lid env us dlid with
+    | Some (t, _) -> t
+    | None -> raise_error (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+               BU.format1 "Error looking up data constructor %s when checking positivity"
+                 (string_of_lid dlid)) (range_of_lid ty_lid) in
+
+  debug_positivity env (fun () -> "Checking nested positivity in the data constructor type: " ^ (Print.term_to_string dt));
+  
+  match (SS.compress dt).n with
+  | Tm_arrow (dbs, c) ->  //if the data construtor type is an arrow, we need to substitute the args for type parameters of ilid
+    //so ibs are the type parameters of inductive, that we would substitute with args, dbs are remaining binders of the data constructor
+    debug_positivity env (fun () -> "Checked nested positivity in Tm_arrow data constructor type");
+    let ibs, dbs = List.splitAt num_ibs dbs in
+    //open ibs
+    let ibs = SS.open_binders ibs in
+    //substitute the opening of ibs in dbs, and in c
+    let dbs = SS.subst_binders (SS.opening_of_binders ibs) dbs in
+    let c = SS.subst_comp (SS.opening_of_binders ibs) c in
+    //get the number of arguments that cover the type parameters num_ibs, these are what we will substitute, remaining ones are the indexes that we leave
+    let args, _ = List.splitAt num_ibs args in
+    //form the substitution, it's a name -> term substitution list
+    let subst = List.fold_left2 (fun subst ib arg -> subst @ [NT (ib.binder_bv, fst arg)]) [] ibs args in
+    //substitute into the dbs and the computation type c
+    let dbs = SS.subst_binders subst dbs in
+    let c = SS.subst_comp (SS.shift_subst (List.length dbs) subst) c in
+
+    debug_positivity env (fun () -> "Checking nested positivity in the unfolded data constructor binders as: " ^ (Print.binders_to_string "; " dbs) ^ ", and c: " ^ (Print.comp_to_string c));
+    ty_nested_positive_in_type ty_lid (Tm_arrow (dbs, c)) ilid num_ibs unfolded env
+  | _ ->
+    debug_positivity env (fun () -> "Checking nested positivity in the data constructor type that is not an arrow");
+    ty_nested_positive_in_type ty_lid (SS.compress dt).n ilid num_ibs unfolded env //in this case, we don't have anything to substitute, simply check
+
+//t is some data constructor type of ilid, after ilid type parameters have been substituted
+and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
+  match t with
+  | Tm_app (t, args) ->
+    //if it's an application node, it must be ilid directly
+    debug_positivity env (fun () -> "Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
+    let fv, _ = try_get_fv t |> must in
+    if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: in this case Coq manual says we should check for indexes
+    else failwith "Impossible, expected the type to be ilid"
+  | Tm_arrow (sbs, c) ->
+    //if it's an arrow type, we want to check that ty occurs strictly positive in the sort of every binder
+    //TODO: do something with c also?
+    debug_positivity env (fun () -> "Checking nested positivity in an Tm_arrow node, with binders as: " ^ (Print.binders_to_string "; " sbs));
+    let sbs = SS.open_binders sbs in
+    let b, _ =
+    List.fold_left (fun (r, env) b ->
+        if not r then r, env  //we have already seen a problematic binder
+        else ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded, push_binders env [b]
+    ) (true, env) sbs
+    in
+    b
+| _ -> failwith "Nested positive check, unhandled case"
+
+
+//ty_bs are the opended type parameters of the inductive, and ty_usubst is the universe substitution, again from the ty_lid type
+let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:universes) (unfolded:unfolded_memo_t) : bool =
+  //get the type of the data constructor
+  let dt =
+    match Env.try_lookup_and_inst_lid env us dlid with
+    | Some (t, _) -> t
+    | None -> raise_error (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+               BU.format1 "Error looking up data constructor %s when checking positivity"
+                 (string_of_lid dlid)) (range_of_lid ty_lid) in
+
+  debug_positivity env (fun () -> "Checking data constructor type: " ^ (Print.term_to_string dt));
+  
+  match (SS.compress dt).n with
+  | Tm_fvar _
+  | Tm_uinst _ ->
+    debug_positivity env (fun () -> "Data constructor type is simply an fvar/Tm_uinst, returning true");
+    true  //if the dataconstructor type is simply an fvar, should be an inductive with no params, no indexes, and no binders in data constructor type
+
+  | Tm_arrow (dbs, _) ->  //TODO: we should check the computation type is not of the form t (t a), but then typechecker already rejects this type
+    //filter out the inductive type parameters, dbs are the remaining binders
+    let dbs = snd (List.splitAt (List.length ty_bs) dbs) in
+    //open dbs with ty_bs opening
+    let dbs = SS.subst_binders (SS.opening_of_binders ty_bs) dbs in
+    //open dbs
+    let dbs = SS.open_binders dbs in
+    //check that ty occurs strictly positively in each binder sort
+    debug_positivity env (fun () -> "Data constructor type is an arrow type, so checking strict positivity in " ^ (string_of_int (List.length dbs)) ^ " binders");
+    let b, _ =
+      List.fold_left (fun (r, env) b ->
+        if not r then r, env  //if we have already found some binder that does not satisfy the condition, short circuit
+        else ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded, push_binders env [b]  //push the binder in the environment, we do some normalization, so might be better to keep env good
+      ) (true, env) dbs
+    in
+    b
+
+  | Tm_app (_, _) ->
+    debug_positivity env (fun () -> "Data constructor type is a Tm_app, so returning true");
+    true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
+
+  | _ -> failwith "Unexpected data constructor type when checking positivity"
+
+
+let check_positivity (env:env_t) (ty:sigelt) :bool =
+  //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
+  let unfolded_inductives = BU.mk_ref [] in
+
+  //ty_bs are the parameters of ty, it does not include the indexes (also indexes are not parameters of data constructor types, inductive type parameters are)
+  let ty_lid, ty_us, ty_bs =
+    match ty.sigel with
+    | Sig_inductive_typ (lid, us, bs, _, _, _) -> lid, us, bs
+    | _                                        -> failwith "Impossible!"
+  in
+
+  //open the universe variables, we will use these universe names for data constructors also later on
+  let ty_usubst, ty_us = SS.univ_var_opening ty_us in
+  //push the universe names in the env
+  let env = push_univ_vars env ty_us in
+  //also push the parameters
+  let env = push_binders env ty_bs in
+
+  //apply ty_usubst to ty_bs
+  let ty_bs = SS.subst_binders ty_usubst ty_bs in
+  let ty_bs = SS.open_binders ty_bs in
+
+  List.for_all (fun d ->
+    ty_positive_in_datacon
+      env
+      ty_lid
+      d
+      ty_bs
+      (List.map U_name ty_us)
+      unfolded_inductives) (snd (datacons_of_typ env ty_lid))
+
+let name_strictly_positive_in_type env bv t =
+  let fv_lid = lid_of_str "__fv_lid_for_positivity_checking__" in
+  let fv = S.tconst fv_lid in
+  let t = SS.subst [NT (bv, fv)] t in
+  ty_strictly_positive_in_type env fv_lid t (BU.mk_ref [])
+
+(* Special-casing the check for exceptions, the single open inductive type we handle. *)
+let check_exn_positivity (env:env_t) (data_ctor_lid:lid) : bool =
+  //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
+  let unfolded_inductives = BU.mk_ref [] in
+  ty_positive_in_datacon env C.exn_lid data_ctor_lid [] []  unfolded_inductives

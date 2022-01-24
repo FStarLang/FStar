@@ -37,67 +37,151 @@ type vcell (a: Type0) = {
   vcell_next : ccell_ptrvalue a;
 }
 
-(* FIXME:
-   1/ revise the permission system for individual references to forbid freeing just one field,
-      but without assuming that such references are "non-freeable forever."
-   2/ add a "cell-level freeable" permission to free the whole cell *)
+val ccell_is_lvalue_hp
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: Tot (slprop u#1)
 
-[@__reduce__] // to avoid manual unfoldings through change_slprop 
-let ccell (#a: Type0) (c: ccell_lvalue a) (p: perm) (v: Ghost.erased (vcell a)) : Tot slprop =
-  pts_to (ccell_data c) p v.vcell_data `star` pts_to (ccell_next c) p v.vcell_next
+val ccell_is_lvalue_sel
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: GTot (selector (ccell_lvalue a) (ccell_is_lvalue_hp c))
 
-let ccellp (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a))) : Tot slprop =
-  match ccell_ptrvalue_is_null c, Ghost.reveal v with
-  | false, Some v ->
-    let c : ccell_lvalue a = c in
-    ccell c p (Ghost.hide v)
-  | true, None -> emp
-  | _ -> pure False
 
-let ccellp_null_intro (#a: Type0) (c: ccell_ptrvalue a) (p: perm) : Steel unit
-  emp
-  (fun _ -> ccellp c p None)
-  (requires (fun _ -> ccell_ptrvalue_is_null c == true))
-  (ensures (fun _ _ _ -> True))
-= 
-  change_slprop emp (ccellp c p None) (fun _ -> ())
+[@@ __steel_reduce__]
+let ccell_is_lvalue'
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: GTot vprop'
+= {
+  hp = ccell_is_lvalue_hp c;
+  t = ccell_lvalue a;
+  sel = ccell_is_lvalue_sel c;
+}
 
-let ccellp_is_null
-  (#a: Type0) (c: ccell_ptrvalue a) (p: perm) (v: Ghost.erased (option (vcell a)))
-: Steel unit
-    (ccellp c p v)
-    (fun _ -> ccellp c p v)
-    (requires (fun _ -> True))
-    (ensures (fun _ _ _ -> ccell_ptrvalue_is_null c == None? (Ghost.reveal v)))
-=
-  change_slprop
-    (ccellp c p v)
-    (ccellp c p v `star` pure (ccell_ptrvalue_is_null c == None? (Ghost.reveal v)))
-    (fun m ->
-      pure_star_interp (ccellp c p v) (ccell_ptrvalue_is_null c == None? (Ghost.reveal v)) m;
-      emp_unit (ccellp c p v);
-      match ccell_ptrvalue_is_null c, Ghost.reveal v with
-      | false, Some _
-      | true, None
-        -> ()
-      | _ -> pure_interp False m
-    );
-  elim_pure (ccell_ptrvalue_is_null c == None? (Ghost.reveal v))
+[@@ __steel_reduce__ ]
+let ccell_is_lvalue (#a: Type0) (c: ccell_ptrvalue a) : Tot vprop =
+  VUnit (ccell_is_lvalue' c)
+
+val intro_ccell_is_lvalue
+  (#opened: _)
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: SteelGhost unit opened
+    emp
+    (fun _ -> ccell_is_lvalue c)
+    (fun _ -> ccell_ptrvalue_is_null c == false)
+    (fun _ res h' ->
+      ccell_ptrvalue_is_null c == false /\
+      (h' (ccell_is_lvalue c) <: ccell_ptrvalue a) == c
+    )
+
+val elim_ccell_is_lvalue
+  (#opened: _)
+  (#a: Type)
+  (c: ccell_ptrvalue a)
+: SteelGhost unit opened
+    (ccell_is_lvalue c)
+    (fun _ -> emp)
+    (fun _ -> True)
+    (fun h _ _ ->
+      (h (ccell_is_lvalue c) <: ccell_ptrvalue a) == c /\
+      ccell_ptrvalue_is_null c == false
+    )
+
+val ccell_hp
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: Tot (slprop u#1)
+
+val ccell_sel
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: GTot (selector (vcell a) (ccell_hp c))
+
+[@__steel_reduce__]
+let ccell'
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: GTot vprop'
+= {
+  hp = ccell_hp c;
+  t = vcell a;
+  sel = ccell_sel c;
+}
+
+[@__steel_reduce__]
+let ccell (#a: Type0) (c: ccell_ptrvalue a) : Tot vprop =
+  VUnit (ccell' c)
+
+val intro_ccell
+  (#opened: _)
+  (#a: Type0)
+  (c: ccell_lvalue a)
+: SteelGhost unit opened
+    (vptr (ccell_data c) `star` vptr (ccell_next c))
+    (fun _ -> ccell c)
+    (fun _ -> True)
+    (fun h res h' ->
+      h' (ccell c) == ({ vcell_data = h (vptr (ccell_data c)); vcell_next = h (vptr (ccell_next c))})
+    )
+
+// TODO: ccell_data and ccell_next should not be freeable
+val elim_ccell_ghost
+  (#opened: _)
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: SteelGhost (Ghost.erased (ccell_lvalue a)) opened
+    (ccell c)
+    (fun c' -> vptr (ccell_data c') `star` vptr (ccell_next c'))
+    (fun _ -> True)
+    (fun h c' h' ->
+      ccell_ptrvalue_is_null c == false /\
+      (c' <: ccell_ptrvalue a) == c /\
+      h (ccell c) == { vcell_data = h' (vptr (ccell_data c')); vcell_next = h' (vptr (ccell_next c')) }
+    )
+
+val elim_ccell
+  (#opened: _)
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: SteelAtomic (ccell_lvalue a) opened
+    (ccell c)
+    (fun c' -> vptr (ccell_data c') `star` vptr (ccell_next c'))
+    (fun _ -> True)
+    (fun h c' h' ->
+      ccell_ptrvalue_is_null c == false /\
+      (c' <: ccell_ptrvalue a) == c /\
+      h (ccell c) == { vcell_data = h' (vptr (ccell_data c')); vcell_next = h' (vptr (ccell_next c')) }
+    )
+
+val ccell_not_null
+  (#opened: _)
+  (#a: Type0)
+  (c: ccell_ptrvalue a)
+: SteelGhost (squash (ccell_ptrvalue_is_null c == false)) opened
+    (ccell c)
+    (fun _ -> ccell c)
+    (fun _ -> True)
+    (fun h _ h' ->
+      h' (ccell c) == h (ccell c)
+    )
 
 val alloc_cell
   (#a: Type0)
   (data: a)
   (next: ccell_ptrvalue a)
-: Steel (ccell_lvalue a & Ghost.erased (vcell a))
+: Steel (ccell_lvalue a)
     emp
-    (fun res -> ccell (fst res) full_perm (snd res))
+    (fun res -> ccell res)
     (requires (fun _ -> True))
-    (ensures (fun _ res _ -> Ghost.reveal (snd res) == ({ vcell_data = data; vcell_next = next; })))
+    (ensures (fun _ res h' ->
+      h' (ccell res) == ({ vcell_data = data; vcell_next = next; })
+    ))
 
 val free_cell
   (#a: Type0)
-  (c: ccell_lvalue a)
-  (v: Ghost.erased (vcell a))
+  (c: ccell_ptrvalue a) // could be ccell_lvalue, but ccell gives the right refinement
 : SteelT unit
-    (ccell c full_perm v)
+    (ccell c)
     (fun _ -> emp)

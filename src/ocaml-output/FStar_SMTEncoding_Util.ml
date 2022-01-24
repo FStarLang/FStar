@@ -17,12 +17,12 @@ let (mkAssume :
         FStar_SMTEncoding_Term.Assume uu___1
 let norng :
   'uuuuu 'uuuuu1 .
-    ('uuuuu -> FStar_Range.range -> 'uuuuu1) -> 'uuuuu -> 'uuuuu1
-  = fun f -> fun x -> f x FStar_Range.dummyRange
+    ('uuuuu -> FStar_Compiler_Range.range -> 'uuuuu1) -> 'uuuuu -> 'uuuuu1
+  = fun f -> fun x -> f x FStar_Compiler_Range.dummyRange
 let (mkTrue : FStar_SMTEncoding_Term.term) =
-  FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange
+  FStar_SMTEncoding_Term.mkTrue FStar_Compiler_Range.dummyRange
 let (mkFalse : FStar_SMTEncoding_Term.term) =
-  FStar_SMTEncoding_Term.mkFalse FStar_Range.dummyRange
+  FStar_SMTEncoding_Term.mkFalse FStar_Compiler_Range.dummyRange
 let (mkInteger : Prims.string -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkInteger
 let (mkInteger' : Prims.int -> FStar_SMTEncoding_Term.term) =
@@ -171,21 +171,24 @@ let (mkCases :
   norng FStar_SMTEncoding_Term.mkCases
 let norng2 :
   'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu -> 'uuuuu1 -> FStar_Range.range -> 'uuuuu2) ->
+    ('uuuuu -> 'uuuuu1 -> FStar_Compiler_Range.range -> 'uuuuu2) ->
       'uuuuu -> 'uuuuu1 -> 'uuuuu2
-  = fun f -> fun x -> fun y -> f x y FStar_Range.dummyRange
+  = fun f -> fun x -> fun y -> f x y FStar_Compiler_Range.dummyRange
 let norng3 :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
-    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> FStar_Range.range -> 'uuuuu3) ->
-      'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3
-  = fun f -> fun x -> fun y -> fun z -> f x y z FStar_Range.dummyRange
+    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> FStar_Compiler_Range.range -> 'uuuuu3)
+      -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3
+  =
+  fun f -> fun x -> fun y -> fun z -> f x y z FStar_Compiler_Range.dummyRange
 let norng4 :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 'uuuuu4 .
-    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> FStar_Range.range -> 'uuuuu4)
+    ('uuuuu ->
+       'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> FStar_Compiler_Range.range -> 'uuuuu4)
       -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> 'uuuuu4
   =
   fun f ->
-    fun x -> fun y -> fun z -> fun w -> f x y z w FStar_Range.dummyRange
+    fun x ->
+      fun y -> fun z -> fun w -> f x y z w FStar_Compiler_Range.dummyRange
 let (mk_Term_app :
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
@@ -218,9 +221,10 @@ let (is_smt_reifiable_effect :
       (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
         (let uu___ =
            let uu___1 =
-             FStar_All.pipe_right l1
+             FStar_Compiler_Effect.op_Bar_Greater l1
                (FStar_TypeChecker_Env.get_effect_decl en) in
-           FStar_All.pipe_right uu___1 FStar_Syntax_Util.is_layered in
+           FStar_Compiler_Effect.op_Bar_Greater uu___1
+             FStar_Syntax_Util.is_layered in
          Prims.op_Negation uu___)
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =

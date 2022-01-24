@@ -6,8 +6,8 @@
  *)
 
 let par
-  (preL:unit) (postL:unit) (lpreL:unit) (lpostL:unit) (f:unit -> unit)
-  (preR:unit) (postR:unit) (lpreR:unit) (lpostR:unit) (g:unit -> unit) =
+  (preL:unit) (postL:unit) (f:unit -> unit)
+  (preR:unit) (postR:unit) (g:unit -> unit) =
 
   let t1 = Thread.create f () in
   let t2 = Thread.create g () in

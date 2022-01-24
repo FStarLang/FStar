@@ -42,9 +42,17 @@ let mctr_pcm : pcm nat = {
 let increasing : preorder nat = fun (x y:nat) -> b2t (x <= y)
 
 (** Indeed, the [increasing] preorder is induced by the PCM *)
+#push-options "--warn_error -271"
 let mctr_induces_increases
   : squash (induces_preorder mctr_pcm increasing)
-  = ()
+  = let aux (x y:nat) (f:frame_preserving_upd mctr_pcm x y) (v:nat)
+      : Lemma (requires compatible mctr_pcm x v)
+              (ensures increasing v (f v))
+              [SMTPat ()]
+      = assert (composable mctr_pcm x v)
+    in
+    ()
+#pop-options
 
 (** Small test: two values compatible for the PCM preserve a stable fact for the preorder *)
 let test (x z:nat) (f:(nat -> prop){stable f increasing})

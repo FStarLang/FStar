@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.String
-
+open FStar.List.Tot
 (* String is a primitive type in F*.
 
    Most of the functions in this interface have a special status in
@@ -128,3 +128,21 @@ let index_list_of_string (s:string) (i : nat{i < length s}) :
   Lemma (List.Tot.index (list_of_string s) i == index s i) =
   index_string_of_list (list_of_string s) i;
   string_of_list_of_string s
+
+let concat_injective (s0 s0':string)
+                     (s1 s1':string)
+  : Lemma
+    (s0 ^ s1 == s0' ^ s1' /\
+     (length s0 == length s0' \/
+      length s1 == length s1') ==>
+     s0 == s0' /\ s1 == s1')
+  = list_of_concat s0 s1;
+    list_of_concat s0' s1';
+    append_injective (list_of_string s0)
+                     (list_of_string s0')
+                     (list_of_string s1)
+                     (list_of_string s1');
+    string_of_list_of_string s0;
+    string_of_list_of_string s0';
+    string_of_list_of_string s1;
+    string_of_list_of_string s1'

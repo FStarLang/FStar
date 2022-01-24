@@ -17,18 +17,18 @@
 #light "off"
 
 module FStar.Extraction.Kremlin
-open FStar.ST
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.BaseTypes
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 
 (** CHANGELOG
@@ -618,7 +618,9 @@ and translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.stackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmstackref" ||
-    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref"
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref" ||
+    Syntax.string_of_mlpath p = "Steel.Reference.ref" ||
+    Syntax.string_of_mlpath p = "Steel.Array.array"
     ->
       TBuf (translate_type env arg)
 
@@ -726,11 +728,13 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index"
+      || string_of_mlpath p = "Steel.Array.index" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
-    when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" ->
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang"
+       || string_of_mlpath p = "Steel.Reference.read" ->
       EBufRead (translate_expr env e, EConstant (UInt32, "0"))
 
   (* All the distinguished combinators that correspond to allocation, either on
@@ -766,7 +770,7 @@ and translate_expr env e: expr =
     *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ||
-         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn")->
+         (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn") ->
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
@@ -796,6 +800,10 @@ and translate_expr env e: expr =
          (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_drgn_mm") ->
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
+    when (string_of_mlpath p = "Steel.Reference.malloc") ->
+      EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
@@ -803,15 +811,24 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e0; e1 ])
+    when string_of_mlpath p = "Steel.Array.malloc" ->
+      EBufCreate (ManuallyManaged, translate_expr env e0, translate_expr env e1)
+
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
     when string_of_mlpath p = "LowStar.UninitializedBuffer.umalloc" ->
       EBufCreateNoInit (ManuallyManaged, translate_expr env elen)
 
   (* Only manually-managed references and buffers can be freed. *)
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.HyperStack.ST.rfree") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when
+      (string_of_mlpath p = "FStar.HyperStack.ST.rfree" || string_of_mlpath p = "Steel.Reference.free") ->
       EBufFree (translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree" || string_of_mlpath p = "LowStar.Monotonic.Buffer.free") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
+    when (string_of_mlpath p = "FStar.Buffer.rfree" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.free" ||
+          string_of_mlpath p = "Steel.Array.free") ->
       EBufFree (translate_expr env e2)
 
   (* Generic buffer operations. *)
@@ -835,10 +852,12 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
     || string_of_mlpath p = "LowStar.Monotonic.Buffer.upd'"
-    || string_of_mlpath p = "LowStar.UninitializedBuffer.uupd" ->
+    || string_of_mlpath p = "LowStar.UninitializedBuffer.uupd"
+    || string_of_mlpath p = "Steel.Array.upd" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
-    when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals"
+      || string_of_mlpath p = "Steel.Reference.write" ->
       EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
       EPushFrame
@@ -982,6 +1001,10 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
+    when string_of_mlpath p = "Steel.Effect.Atomic.return" ->
+    translate_expr env e
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 
@@ -1117,8 +1140,8 @@ and translate_constant c: expr =
       let c = EConstant (UInt32, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])
-  | MLC_Int (s, Some _) ->
-      failwith "impossible: machine integer not desugared to a function call"
+  | MLC_Int (s, Some (sg, wd)) ->
+      EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
   | MLC_Bytes _ ->

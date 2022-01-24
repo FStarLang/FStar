@@ -17,11 +17,11 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -36,7 +36,7 @@ type lcomp_with_binder = option<bv> * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
@@ -52,6 +52,11 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         else withinfo (Pat_var a) r
     in
     match p.v with
+    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _) ->
+      (* Unresolved constructors cannot be elaborated yet.
+         tc_pat has to resolve it first. *)
+      p
+
     | Pat_cons(fv, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name.v in
@@ -111,7 +116,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, true)::aux formals' pats
 
             | (_, imp) ->
-                (p, S.is_implicit imp)::aux formals' pats'
+                (p, S.is_bqual_implicit imp)::aux formals' pats'
             end
         in
         {p with v=Pat_cons(fv, aux f pats)}

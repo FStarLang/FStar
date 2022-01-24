@@ -2,7 +2,7 @@
 module FStar.Tactics.Hooks
 
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 
 module O   = FStar.Options
 module Env = FStar.TypeChecker.Env

@@ -1,8 +1,8 @@
 #light "off"
 module FStar.Interactive.CompletionTable
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 
 let string_compare s1 s2 =
   String.compare s1 s2
@@ -376,7 +376,7 @@ let empty : table =
 // completion of opens and includes, and these take full module paths.
 // Inclusions handling would have to be reinstated should we wish to also
 // complete partial names of unloaded (e.g. [open FStar // let x = List._] when
-// FStar.List isn't loaded).
+// FStar.Compiler.List isn't loaded).
 
 let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) : table =
   { tbl with tbl_lids = trie_insert tbl.tbl_lids host_query id c }
@@ -444,13 +444,13 @@ let first_import_of_path (path: path) : option<string> =
   | { imports = imports } :: _ -> List.last imports
 
 let alist_of_ns_info ns_info =
-  [("name", FStar.Util.JsonStr ns_info.ns_name);
-   ("loaded", FStar.Util.JsonBool ns_info.ns_loaded)]
+  [("name", FStar.Compiler.Util.JsonStr ns_info.ns_name);
+   ("loaded", FStar.Compiler.Util.JsonBool ns_info.ns_loaded)]
 
 let alist_of_mod_info mod_info =
-  [("name", FStar.Util.JsonStr mod_info.mod_name);
-   ("path", FStar.Util.JsonStr mod_info.mod_path);
-   ("loaded", FStar.Util.JsonBool mod_info.mod_loaded)]
+  [("name", FStar.Compiler.Util.JsonStr mod_info.mod_name);
+   ("path", FStar.Compiler.Util.JsonStr mod_info.mod_path);
+   ("loaded", FStar.Compiler.Util.JsonBool mod_info.mod_loaded)]
 
 type completion_result =
   { completion_match_length: int;

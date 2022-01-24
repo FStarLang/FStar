@@ -16,18 +16,19 @@
 #light "off"
 module FStar.Syntax.Syntax
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
 open FStar
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
@@ -55,6 +56,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
@@ -130,7 +132,8 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option<ascription> * list<branch>    (* match e (ret asc?) with b1 ... bn *)
+  | Tm_match      of term * option<ascription> * list<branch> * option<residual_comp>
+                                                                 (* (match e (returns asc?) with b1 ... bn) : (C | N)) *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -197,7 +200,7 @@ and arg = term * aqual                                           (* marks an exp
 and args = list<arg>
 and binder = {
   binder_bv    : bv;
-  binder_qual  : aqual;
+  binder_qual  : bqual;
   binder_attrs : list<attribute>
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
@@ -229,10 +232,18 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
   | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Unresolved_projector of option<fv>          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
+  | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
+and unresolved_constructor = {
+  uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
+  uc_typename: option<lident>;      // The constructed type, as determined by the ToSyntax's scoping rules
+  uc_fields : list<lident>  // The fields names as written in the source
+}
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -297,6 +308,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
+  | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t<term>
 
 and binding =
@@ -309,10 +321,15 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
-and arg_qualifier =
+and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term  //meta-argument that specifies a tactic term
+  | Meta of term     //meta-argument that specifies a tactic term
   | Equality
+and bqual = option<binder_qualifier>
+and arg_qualifier = {
+  aqual_implicit : bool;
+  aqual_attributes : list<attribute>
+}
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
@@ -404,7 +421,7 @@ type eff_decl = {
   mname       : lident;
 
   cattributes : list<cflag>;
-  
+
   univs       : univ_names;
   binders     : binders;
 
@@ -466,7 +483,7 @@ type sigelt' =
   | Sig_fail              of list<int>         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
                           * list<sigelt>       (* The sigelts to be checked *)
-  
+
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -530,7 +547,7 @@ let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open FStar.Range
+open FStar.Compiler.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
@@ -631,7 +648,7 @@ let mk_binder_with_attrs bv aqual attrs = {
 let mk_binder a = mk_binder_with_attrs a None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
-let iarg t : arg = t, Some imp_tag
+let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
 let is_null_binder (b:binder) = is_null_bv b.binder_bv
@@ -645,10 +662,11 @@ let freenames_of_binders (bs:binders) : freenames =
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
-let is_implicit = function Some (Implicit _) -> true | _ -> false
-let is_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
-let as_implicit = function true -> Some imp_tag | _ -> None
-
+let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
+let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
+let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
+let as_bqual_implicit = function true -> Some imp_tag | _ -> None
+let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
 let pat_bvs (p:pat) : list<bv> =
     let rec aux b p = match p.v with
         | Pat_dot_term _

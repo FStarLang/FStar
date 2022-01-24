@@ -1,9 +1,9 @@
 #light "off"
 module FStar.TypeChecker.Cfg
-open FStar.ST
-open FStar.All
-open FStar
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.String
 open FStar.Const
 open FStar.Char
@@ -17,7 +17,7 @@ open FStar.TypeChecker.Env
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module FC = FStar.Const
 module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
@@ -62,12 +62,12 @@ val fstep_add_one : step -> fsteps -> fsteps
 val to_fsteps : list<step> -> fsteps
 
 type psc = {
-     psc_range:FStar.Range.range;
+     psc_range:FStar.Compiler.Range.range;
      psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
 
 val null_psc : psc
-val psc_range : psc -> FStar.Range.range
+val psc_range : psc -> FStar.Compiler.Range.range
 val psc_subst : psc -> subst_t
 
 type primitive_step = {
@@ -92,6 +92,7 @@ type debug_switches = {
     norm_delayed     : bool;
     print_normalized : bool;
     debug_nbe        : bool;
+    erase_erasable_args: bool;
 }
 
 type cfg = {
@@ -137,3 +138,5 @@ val config': list<primitive_step> -> list<step> -> Env.env -> cfg
 val config: list<step> -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
+
+val translate_norm_steps: list<EMB.norm_step> -> list<Env.step>

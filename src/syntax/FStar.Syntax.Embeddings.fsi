@@ -1,16 +1,16 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Char
 open FStar.VConfig
 
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z = FStar.BigInt
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (* TODO: Find a better home for these *)
 type norm_step =
@@ -28,6 +28,7 @@ type norm_step =
     | UnfoldAttr  of list<string>
     | UnfoldQual  of list<string>
     | NBE
+    | Unmeta
 
 val steps_Simpl         : term
 val steps_Weak          : term
@@ -42,6 +43,7 @@ val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term
 val steps_NBE           : term
+val steps_Unmeta        : term
 
 (*
  * Unmbedding functions return an option because they might fail
@@ -57,7 +59,7 @@ exception Embedding_failure
 exception Unembedding_failure
 type shadow_term = option<Thunk.t<term>>
 
-type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we should warn on a failure
 
 type raw_embedder<'a>   = 'a -> embed_t

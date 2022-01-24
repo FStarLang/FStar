@@ -17,18 +17,19 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 
 open FStar
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 
 module Err = FStar.Errors
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 
 
@@ -238,10 +239,15 @@ let subst_flags' s flags =
         | DECREASES dec_order -> DECREASES (subst_dec_order' s dec_order)
         | f -> f)
 
-let subst_imp' s i =
+let subst_bqual' s i =
   match i with
   | Some (Meta t) -> Some (Meta (subst' s t))
   | _ -> i
+
+let subst_aqual' s (i:aqual) : aqual =
+  match i with
+  | None -> None
+  | Some a -> Some ({a with aqual_attributes = List.map (subst' s) a.aqual_attributes })
 
 let subst_comp_typ' s t =
   match s with
@@ -252,7 +258,7 @@ let subst_comp_typ' s t =
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, subst_imp' s imp) t.effect_args}
+            effect_args=List.map (fun (t, imp) -> subst' s t, subst_aqual' s imp) t.effect_args}
 
 let subst_comp' s t =
   match s with
@@ -282,7 +288,7 @@ let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
 let subst_binder' s b =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
-    (subst_imp' s b.binder_qual)
+    (subst_bqual' s b.binder_qual)
     (b.binder_attrs |> List.map (subst' s))
 
 
@@ -326,7 +332,7 @@ let subst_pat' s p : (pat * int) =
 
 let push_subst_lcomp s lopt = match lopt with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
+    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (subst' s)})
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
@@ -416,17 +422,17 @@ let rec push_subst s t =
         let phi = subst' (shift_subst' 1 s) phi in
         mk (Tm_refine(x, phi))
 
-    | Tm_match(t0, asc_opt, pats) ->
+    | Tm_match(t0, asc_opt, pats, lopt) ->
         let t0 = subst' s t0 in
         let pats = pats |> List.map (fun (pat, wopt, branch) ->
-        let pat, n = subst_pat' s pat in
-        let s = shift_subst' n s in
-        let wopt = match wopt with
+          let pat, n = subst_pat' s pat in
+          let s = shift_subst' n s in
+          let wopt = match wopt with
             | None -> None
             | Some w -> Some (subst' s w) in
-        let branch = subst' s branch in
-        (pat, wopt, branch)) in
-        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats))
+          let branch = subst' s branch in
+          (pat, wopt, branch)) in
+        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats, push_subst_lcomp s lopt))
 
     | Tm_let((is_rec, lbs), body) ->
         let n = List.length lbs in
@@ -514,7 +520,8 @@ and compress (t:term) =
 let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
-let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
+let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
+let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
 let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
 let closing_subst (bs:binders) =
@@ -524,7 +531,7 @@ let open_binders' bs =
         | [] -> [], o
         | b::bs' ->
           let x' = {freshen_bv b.binder_bv with sort=subst o b.binder_bv.sort} in
-          let imp = subst_imp o b.binder_qual in
+          let imp = subst_bqual o b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
@@ -588,7 +595,7 @@ let close_binders (bs:binders) : binders =
         | [] -> []
         | b::tl ->
           let x = {b.binder_bv with sort=subst s b.binder_bv.sort} in
-          let imp = subst_imp s b.binder_qual in
+          let imp = subst_bqual s b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
           (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
@@ -682,16 +689,21 @@ let open_let_rec lbs (t:term) =
                         u, f, g, y
                   and for the body is
                         f, g
+
+         See FStar.Util.check_mutual_universes
+           - We maintain an invariant that all the letbindings
+             in a mutually recursive nest abstract over the
+             same sequence of universes
          *)
-    let lbs = lbs |> List.map (fun lb ->
-        let _, us, u_let_rec_opening =
-            List.fold_right
+    let _, us, u_let_rec_opening =
+        List.fold_right
              (fun u (i, us, out) ->
                   let u = Syntax.new_univ_name None in
                   i+1, u::us, UN(i, U_name u)::out)
-             lb.lbunivs
+             (List.hd lbs).lbunivs
              (n_let_recs, [], let_rec_opening)
-        in
+    in
+    let lbs = lbs |> List.map (fun lb ->
         {lb with lbunivs=us;
                  lbdef=subst u_let_rec_opening lb.lbdef;
                  lbtyp=subst u_let_rec_opening lb.lbtyp})
@@ -708,18 +720,19 @@ let close_let_rec lbs (t:term) =
                (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out)
                lbs
                (0, [])
-    in let lbs = lbs |> List.map (fun lb ->
-           let _, u_let_rec_closing =
-               List.fold_right
-                 (fun u (i, out) -> i+1, UD(u, i)::out)
-                 lb.lbunivs
-                 (n_let_recs, let_rec_closing)
-           in
+    in
+    let _, u_let_rec_closing =
+        List.fold_right
+          (fun u (i, out) -> i+1, UD(u, i)::out)
+          (List.hd lbs).lbunivs
+          (n_let_recs, let_rec_closing)
+    in
+    let lbs = lbs |> List.map (fun lb ->
            {lb with lbdef=subst u_let_rec_closing lb.lbdef;
                     lbtyp=subst u_let_rec_closing lb.lbtyp})
-       in
-       let t = subst let_rec_closing t in
-       lbs, t
+    in
+    let t = subst let_rec_closing t in
+    lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in
@@ -813,12 +826,6 @@ let rec deep_compress (t:term) : term =
       deep_compress t
 
     | Tm_abs(bs, t, rc_opt) ->
-      let elim_rc (rc:residual_comp) : residual_comp = {
-        residual_effect = rc.residual_effect;
-        residual_typ    = map_opt rc.residual_typ deep_compress;
-        residual_flags  = deep_compress_cflags rc.residual_flags
-      }
-      in
       mk (Tm_abs (deep_compress_binders bs,
                   deep_compress t,
                   map_opt rc_opt elim_rc))
@@ -832,7 +839,7 @@ let rec deep_compress (t:term) : term =
     | Tm_app(t, args) ->
       mk (Tm_app(deep_compress t, deep_compress_args args))
 
-    | Tm_match(t, asc_opt, branches) ->
+    | Tm_match(t, asc_opt, branches, rc_opt) ->
       let rec elim_pat (p:pat) =
         match p.v with
         | Pat_var x ->
@@ -853,7 +860,7 @@ let rec deep_compress (t:term) : term =
            map_opt wopt deep_compress,
            deep_compress t)
       in
-      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches))
+      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches, map_opt rc_opt elim_rc))
 
     | Tm_ascribed(t, a, lopt) ->
       mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
@@ -894,6 +901,12 @@ and elim_ascription (tc, topt) =
    | Inl t -> Inl (deep_compress t)
    | Inr c -> Inr (deep_compress_comp c)),
   map_opt topt deep_compress
+
+and elim_rc (rc:residual_comp) : residual_comp = {
+  residual_effect = rc.residual_effect;
+  residual_typ    = map_opt rc.residual_typ deep_compress;
+  residual_flags  = deep_compress_cflags rc.residual_flags
+}
 
 and deep_compress_dec_order = function
   | Decreases_lex l -> Decreases_lex (l |> List.map deep_compress)
@@ -978,16 +991,23 @@ and deep_compress_args args =
             let q = deep_compress_aqual q in // this should be useless
             t, q) args
 
-and deep_compress_aqual (q:aqual) : aqual =
+and deep_compress_bqual (q:bqual) : bqual =
   match q with
   | Some (S.Meta t) ->
     Some (S.Meta (deep_compress t))
 
   | _ -> q
 
+and deep_compress_aqual (q:aqual) : aqual =
+  match q with
+  | Some a ->
+    Some ({a with aqual_attributes = List.map deep_compress a.aqual_attributes })
+
+  | _ -> q
+
 and deep_compress_binders bs =
     List.map (fun b ->
                 let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
-                let q = deep_compress_aqual b.binder_qual in
+                let q = deep_compress_bqual b.binder_qual in
                 let attrs = b.binder_attrs |> List.map deep_compress in
                 (S.mk_binder_with_attrs x q attrs)) bs

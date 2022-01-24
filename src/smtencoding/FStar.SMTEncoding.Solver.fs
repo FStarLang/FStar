@@ -17,19 +17,20 @@
 
 module FStar.SMTEncoding.Solver
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
@@ -40,7 +41,7 @@ module Err = FStar.Errors
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
 
-// The type definition is now in [FStar.Util], since it needs to be visible to
+// The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
 type z3_replay_result = either<Z3.unsat_core, error_labels>

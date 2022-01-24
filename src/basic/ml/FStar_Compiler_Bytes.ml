@@ -17,15 +17,15 @@ let zero_create n : bytes = BatArray.create n 0
 let sub ( b:bytes) s l = BatArray.sub b s l
 let set = BatArray.set
 let blit (a:bytes) b c d e = BatArray.blit a b c d e
-let string_as_unicode_bytes (s:string) = FStar_Util.unicode_of_string s
-let utf8_bytes_as_string (b:bytes) = FStar_Util.string_of_unicode b
-let unicode_bytes_as_string (b:bytes) = FStar_Util.string_of_unicode b
+let string_as_unicode_bytes (s:string) = FStar_Compiler_Util.unicode_of_string s
+let utf8_bytes_as_string (b:bytes) = FStar_Compiler_Util.string_of_unicode b
+let unicode_bytes_as_string (b:bytes) = FStar_Compiler_Util.string_of_unicode b
 let compare (b1:bytes) (b2:bytes) = compare b1 b2
 
 let to_intarray (b:bytes) = b
 let of_intarray (arr:int array) = arr
 
-let string_as_utf8_bytes (s:string) = FStar_Util.unicode_of_string s
+let string_as_utf8_bytes (s:string) = FStar_Compiler_Util.unicode_of_string s
 
 let append (b1: bytes) (b2:bytes) = BatArray.append b1 b2
 

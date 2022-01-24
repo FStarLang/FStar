@@ -16,16 +16,16 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding
-open FStar.Range
-module BU = FStar.Util
+open FStar.Compiler.Range
+module BU = FStar.Compiler.Util
 
 type label = error_label
 type labels = list<label>

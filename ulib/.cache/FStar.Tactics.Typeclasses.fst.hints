@@ -1,5 +1,5 @@
 [
-  " ╝\"&Y╩╓3Н├ЪЙQ°\"g",
+  " у\u0002Q\u001851<└аиўЎE\u0003¤",
   [
     [
       "FStar.Tactics.Typeclasses.first",
@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "767ad07b4acc0b382d5501e3629918ce"
+      "11e3ecc0719ae5a5d29b7b09726c3952"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_abs",
@@ -23,7 +23,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "ba3e4f0bb9659e10a0c0663858d12828"
+      "1af799d28f46117f3a15c3d8f42cd7cd"
     ],
     [
       "FStar.Tactics.Typeclasses.last",
@@ -35,7 +35,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "e75056bbbf4e2b76a9762ddba067ed4c"
+      "acc40dbe2deb4d3e8fb1560935755902"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_class",
@@ -46,14 +46,12 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed", "bool_inversion",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Tactics.Result.Success", "data_elim_Prims.Cons",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -87,7 +85,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.append",
+        "typing_FStar.List.Tot.Base.op_At",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Reflection.Builtins.explode_qn",
@@ -96,7 +94,7 @@
         "typing_Prims.strcat"
       ],
       0,
-      "f18eced5565cdd4efd5ae522d7069433"
+      "700d7b669a93d9b617acdb33bb58bf34"
     ]
   ]
 ]

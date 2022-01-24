@@ -21,12 +21,11 @@
 #light "off"
 module FStar.TypeChecker.Rel
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -38,7 +37,7 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 
 open FStar.Common
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -761,7 +760,7 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         in
 
         (* Solve the old variable *)
-        let args_sol = List.map (fun ({binder_bv=x;binder_qual=i}) -> S.bv_to_name x, i) dom_binders in
+        let args_sol = List.map U.arg_of_non_null_binder dom_binders in
         let sol = S.mk_Tm_app t_v args_sol t0.pos in
         U.set_uvar uv.ctx_uvar_head sol;
 
@@ -862,7 +861,9 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         args |>
         List.collect (fun (a, i) ->
             match (SS.compress a).n with
-            | Tm_name x -> [S.mk_binder_with_attrs x i []]
+            | Tm_name x ->
+              let q, attrs = U.bqual_and_attrs_of_aqual i in
+              [S.mk_binder_with_attrs x q attrs]
             | _ ->
               fail();
               [])
@@ -1034,7 +1035,8 @@ let pat_vars env ctx args : option<binders> =
           if name_exists_in_binders a seen
           ||  name_exists_in_binders a ctx
           then None
-          else aux ((S.mk_binder_with_attrs a i [])::seen) args
+          else let bq, attrs = U.bqual_and_attrs_of_aqual i in
+               aux ((S.mk_binder_with_attrs a bq attrs)::seen) args
         | _ -> None
     in
     aux [] args
@@ -1637,9 +1639,10 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
                         let subst = [NT(formal, S.bv_to_name x)] in
                         let formals = SS.subst_binders subst formals in
                         let t_res = SS.subst subst t_res in
+                        let q, _ = U.bqual_and_attrs_of_aqual a_imp in
                         aux ((S.mk_binder_with_attrs
                                ({x with sort=formal.sort})
-                               a_imp
+                               q
                                fml.binder_attrs) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
             aux (fml :: pat_binders) formals t_res args
@@ -2143,7 +2146,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
-              aux (bs@[S.mk_binder_with_attrs y imp attrs]) (bs_terms@[S.bv_to_name y, imp]) formals wl
+              let b = S.mk_binder_with_attrs y imp attrs in
+              aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
          in
          let _, occurs_ok, msg = occurs_check u_lhs arrow in
          if not occurs_ok
@@ -2182,7 +2186,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           env, Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (U.eq_aqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys when (U.eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -2233,6 +2237,28 @@ and try_solve_without_smt_or_else
       UF.rollback tx;
       else_solve env wl (p,s)
 
+and try_solve_then_or_else
+        (env:Env.env)
+        (wl:worklist)
+        (try_solve: Env.env -> worklist -> solution)
+        (then_solve: Env.env -> worklist -> solution)
+        (else_solve: Env.env -> worklist -> solution)
+    : solution =
+    let empty_wl =
+      {wl with defer_ok=false;
+               attempting=[];
+               wl_deferred=[];
+               wl_implicits=[]} in
+    let tx = UF.new_transaction () in
+    match try_solve env empty_wl with
+    | Success (_, defer_to_tac, imps) ->
+      UF.commit tx;
+      let wl = extend_wl wl [] defer_to_tac imps in
+      then_solve env wl
+    | Failed (p, s) ->
+      UF.rollback tx;
+      else_solve env wl
+
 and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
     solve_t' env (compress_tprob wl.tcenv problem) wl
@@ -2249,7 +2275,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     else
 
     let binders_as_bv_set (bs:binders) =
-        FStar.Util.as_set (List.map (fun b -> b.binder_bv) bs)
+        FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
                           Syntax.order_bv
     in
 
@@ -2279,6 +2305,16 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let bv_not_free_in_args x args =
               BU.for_all (bv_not_free_in_arg x) args
           in
+          let binder_matches_aqual b aq =
+            match b.binder_qual, aq with
+            | None, None -> true
+            | Some (Implicit _), Some a ->
+              a.aqual_implicit &&
+              U.eqlist (fun x y -> U.eq_tm x y = U.Equal)
+                       b.binder_attrs
+                       a.aqual_attributes
+            | _ -> false
+          in
           let rec remove_matching_prefix lhs_binders rhs_args =
             match lhs_binders, rhs_args with
             | [], _
@@ -2288,7 +2324,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               match (SS.compress t).n with
               | Tm_name x
                 when bv_eq b.binder_bv x
-                  && U.eq_aqual b.binder_qual aq = U.Equal
+                  && binder_matches_aqual b aq
                   && bv_not_free_in_args b.binder_bv rhs_tl ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
@@ -2631,8 +2667,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              ([], wl)
                    in
                    if debug env <| Options.Other "Rel"
-                   then BU.print1
-                            "Adding subproblems for arguments: %s"
+                   then BU.print2
+                            "Adding subproblems for arguments (smtok=%s): %s"
+                            (string_of_bool wl.smt_ok)
                             (Print.list_to_string (prob_to_string env) subprobs);
                    if Options.defensive ()
                    then List.iter (def_check_prob "solve_t' subprobs") subprobs;
@@ -2772,8 +2809,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
             match (s1, U.unmeta t1), (s2, U.unmeta t2) with
-            | (_, {n=Tm_match (scrutinee, _, branches)}), (s, t)
-            | (s, t), (_, {n=Tm_match(scrutinee, _, branches)}) ->
+            | (_, {n=Tm_match (scrutinee, _, branches, _)}), (s, t)
+            | (s, t), (_, {n=Tm_match(scrutinee, _, branches, _)}) ->
               if not (is_flex scrutinee)
               then begin
                 if Env.debug env <| Options.Other "Rel"
@@ -2867,7 +2904,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 //
                 let payload_of_hide_reveal h args =
                     match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some (Implicit _)); (t, _)]
+                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)]
                       when is_flex t ->
                       Some (u, ty, t)
                     | _ -> None
@@ -2905,25 +2942,25 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Some (Inl (u, ty, lhs)), None ->
                   // reveal / _
                   //add hide to both sides to simplify
-                  let rhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inl (u, ty, rhs)) ->
                   // _ / reveal
                   //add hide to both sides to simplify
-                  let lhs = mk_fv_app Const.hide u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app Const.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
                 | Some (Inr (u, ty, lhs)), None ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let rhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t2, None)] t2.pos in
+                  let rhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inr (u, ty, rhs)) ->
                   // hide / _
                   //add reveal to both sides to simplify
-                  let lhs = mk_fv_app Const.reveal u [(ty, Some (Implicit false)); (t1, None)] t1.pos in
+                  let lhs = mk_fv_app Const.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
             in
             begin
@@ -3240,7 +3277,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, _, brs1), Tm_match (s2, _, brs2) ->  //AR: note ignoring the return annotation
+      | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in
@@ -3325,9 +3362,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug env (Options.Other "Rel")
-             then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
-                                 (Print.term_to_string head1)
-                                 (Print.term_to_string head2)
+             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+               [(string_of_int problem.pid);
+                (string_of_bool wl.smt_ok);
+                (Print.term_to_string head1);
+                (string_of_bool (Env.is_interpreted env head1));
+                (string_of_bool (no_free_uvars t1));
+                (Print.term_to_string head2);
+                (string_of_bool (Env.is_interpreted env head2));
+                (string_of_bool (no_free_uvars t2))]
          in
          let equal t1 t2 =
             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
@@ -3336,20 +3379,42 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
-           && no_free_uvars t1 // and neither term has any free variables
+         then (
+           let solve_with_smt () =
+             let guard, wl =
+                 if equal t1 t2
+                 then None, wl
+                 else let g, wl = mk_eq2 wl env orig t1 t2 in
+                      Some g, wl
+             in
+             solve env (solve_prob orig guard [] wl)
+           in
+           if no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
-         then if not wl.smt_ok
-              then if equal t1 t2
-                   then solve env (solve_prob orig None [] wl)
-                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
-              else let guard, wl =
-                       if equal t1 t2
-                       then None, wl
-                       else let g, wl = mk_eq2 wl env orig t1 t2 in
-                            Some g, wl
-                   in
-                   solve env (solve_prob orig guard [] wl)
-         else rigid_rigid_delta env problem wl head1 head2 t1 t2
+           then
+             if not wl.smt_ok
+             then if equal t1 t2
+                  then solve env (solve_prob orig None [] wl)
+                  else rigid_rigid_delta env problem wl head1 head2 t1 t2
+             else solve_with_smt()
+           else if not wl.smt_ok
+           then rigid_rigid_delta env problem wl head1 head2 t1 t2
+           else (
+            try_solve_then_or_else
+              env
+              wl
+              (*try*)
+              (fun env wl_empty -> rigid_rigid_delta env problem wl_empty head1 head2 t1 t2)
+              (*then*)
+              (fun env wl -> solve env wl)
+              (*else*)
+              (fun _ _ -> solve_with_smt())
+            )
+         )
+         else (
+             rigid_rigid_delta env problem wl head1 head2 t1 t2
+         )
+
 
       | Tm_let _, Tm_let _ ->
          // For now, just unify if they syntactically match
@@ -3724,7 +3789,17 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                     (Print.comp_to_string c1)
                                     (rel_to_string problem.relation)
                                     (Print.comp_to_string c2) in
-         let c1, c2 = N.ghost_to_pure2 env (c1, c2) in
+
+         //AR: 10/18: try ghost to pure promotion only if effects are different
+
+         let c1, c2 =
+           let eff1, eff2 =
+             c1 |> U.comp_effect_name |> Env.norm_eff_name env,
+             c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+           if Ident.lid_equals eff1 eff2
+           then c1, c2
+           else N.ghost_to_pure2 env (c1, c2) in
+
          match c1.n, c2.n with
          | GTotal (t1, _), Total (t2, _) when (Env.non_informative env t2) ->
            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
@@ -4451,7 +4526,7 @@ let resolve_implicits' env is_tac g =
       else if unresolved ctx_u
       then begin match ctx_u.ctx_uvar_meta with
            | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-             let env : Env.env = FStar.Dyn.undyn env_dyn in
+             let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
              if Env.debug env (Options.Other "Tac") then
                BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
 

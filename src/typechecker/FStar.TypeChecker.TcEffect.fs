@@ -16,15 +16,14 @@
 #light "off"
 module FStar.TypeChecker.TcEffect
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Syntax
 open FStar.TypeChecker
 
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax
@@ -41,7 +40,7 @@ module N = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let dmff_cps_and_elaborate env ed =
   (* This is only an elaboration rule not a typechecking one *)
@@ -524,7 +523,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
 
-    let k = k |> N.remove_uvar_solutions env |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
+    let k = k |> N.remove_uvar_solutions env in
 
     let _check_valid_binders =
       match (SS.compress k).n with
@@ -669,25 +668,11 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   we create for subcomp are tagged with the argument of ite_soundness_by,
    *   and the smt guard is also put in a implicit tagged with this implicit
    *
-   * Through the usual tactics dispatching, Rel dispatched these to the tactic
+   * Through the usual tactics dispatching, Rel dispatches these to the tactic
    *   if one is in scope
    *)
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
-
-    (*
-     * In constructing the application nodes for subcomp and if_then_else,
-     *   we need to adjust the qualifiers
-     *
-     * Implicits remain implicits, but meta_attr or meta_arg just become implicits
-     *
-     * Don't think the boolean false below matters, but is perhaps safer (see Syntax.fsi)
-     *)
-    let binder_aq_to_arg_aq (aq, attrs) =
-      match aq, attrs with
-      | Some (Implicit _), _ -> aq
-      | Some (Meta _), _ -> Some (Implicit false)
-      | _ -> None in
 
     let ite_us, ite_t, _ = if_then_else in
 
@@ -704,7 +689,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let env =  Env.push_binders (Env.push_univ_vars env0 us) bs in
         env,
         S.mk_Tm_app ite_t
-          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
+          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, U.aqual_of_binder b))
           r |> N.normalize [Env.Beta] env,  //beta-reduce
         bs |> List.hd, f_b, g_b, (S.bv_to_name p_b.binder_bv)
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
@@ -1520,6 +1505,13 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
     then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
 
 let tc_lift env sub r =
+  if lid_equals sub.source sub.target
+  then raise_error (Fatal_UnexpectedEffect,
+                    BU.format1
+                      "Cannot define a lift with same source and target (%s)"
+                      (string_of_lid sub.source))
+                   r;
+
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     Gen.generalize_universes env (tc_check_trivial_guard env t k) in

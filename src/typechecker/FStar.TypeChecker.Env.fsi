@@ -16,14 +16,14 @@
 #light "off"
 module FStar.TypeChecker.Env
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module TcComm = FStar.TypeChecker.Common
 
@@ -107,12 +107,34 @@ and mlift = {
   mlift_term:option<(universe -> typ -> term -> term)>
 }
 
-(* Edge in the effect lattice *)
+(* 
+ * Edge in the effect lattice
+ *
+ * May have been computed by composing other "edges"
+ *)
 and edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
+  msource : lident;
+  mtarget : lident;
+  mlift   : mlift;
+  mpath   : list<lident>;  //this is just for debugging pusposes
+                           //e.g. it is used when printing the effects graph
+                           //it has no other role
+                           //the path is the list of nodes that the "edge" goes through
+                           //not including msource and mtarget
 }
+
+(*
+ * The effects graph
+ *
+ * Each of order, joins, polymonadic binds, subcomps, are lists,
+ *   that may have multiple entries for same nodes,
+ *   e.g. multiple edges between effects M and N
+ *
+ * We keep adding the latest ones to the head of the list,
+ *   which is then picked for application
+ *
+ * I.e. we don't remove when overriding
+ *)
 
 and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
@@ -128,7 +150,7 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment *)
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
-  gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
+  gamma_cache    :FStar.Compiler.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
@@ -177,6 +199,7 @@ and env = {
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 }
 
 and solver_depth_t = int * int * int
@@ -316,6 +339,10 @@ val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
 val exists_polymonadic_subcomp: env -> lident -> lident -> option<tscheme>
+
+//print the effects graph in dot format
+val print_effects_graph: env -> string
+
 val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
@@ -340,8 +367,8 @@ val bound_vars   : env -> list<bv>
 val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames    : env -> FStar.Util.set<univ_name>
+val univ_vars    : env -> FStar.Compiler.Util.set<universe_uvar>
+val univnames    : env -> FStar.Compiler.Util.set<univ_name>
 val lidents      : env -> list<lident>
 
 (* operations on monads *)

@@ -1,11 +1,11 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Pervasives
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.VConfig
 
 module Print = FStar.Syntax.Print
@@ -13,7 +13,7 @@ module S = FStar.Syntax.Syntax
 module C = FStar.Const
 module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
@@ -33,7 +33,7 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
     BU.map_opt s (Thunk.map f)
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
-type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
 
 type raw_embedder<'a>   = 'a -> embed_t
@@ -115,7 +115,7 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
-      else let a = FStar.Dyn.undyn b in
+      else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (Print.emb_typ_to_string et)
@@ -547,7 +547,7 @@ let e_list (ea:embedding<'a>) =
                 | Tm_fvar fv, _
                     when S.fv_eq_lid fv PC.nil_lid -> Some []
 
-                | Tm_fvar fv, [(_, Some (Implicit _)); (hd, None); (tl, None)]
+                | Tm_fvar fv, [(_, Some ({aqual_implicit=true})); (hd, None); (tl, None)]
                 | Tm_fvar fv, [(hd, None); (tl, None)]
                     when S.fv_eq_lid fv PC.cons_lid ->
                     BU.bind_opt (unembed ea hd w norm) (fun hd ->
@@ -582,6 +582,7 @@ type norm_step =
     | UnfoldAttr  of list<string>
     | UnfoldQual  of list<string>
     | NBE
+    | Unmeta
 
 (* the steps as terms *)
 let steps_Simpl         = tconst PC.steps_simpl
@@ -598,6 +599,7 @@ let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
 let steps_NBE           = tconst PC.steps_nbe
+let steps_Unmeta        = tconst PC.steps_unmeta
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -630,6 +632,8 @@ let e_norm_step =
                     steps_Iota
                 | NBE ->
                     steps_NBE
+                | Unmeta ->
+                    steps_Unmeta
                 | Reify ->
                     steps_Reify
                 | UnfoldOnly l ->
@@ -675,6 +679,8 @@ let e_norm_step =
                     Some Iota
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
                     Some NBE
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_unmeta ->
+                    Some Unmeta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
                     Some Reify
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->

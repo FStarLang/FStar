@@ -26,6 +26,7 @@ type norm_step =
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
   | UnfoldQual of Prims.string Prims.list 
+  | Unmeta 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
 let (uu___is_Weak : norm_step -> Prims.bool) =
@@ -66,6 +67,8 @@ let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
     match projectee with | UnfoldQual _0 -> true | uu___ -> false
 let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_Unmeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 let (simplify : norm_step) = Simpl
 let (weak : norm_step) = Weak
 let (hnf : norm_step) = HNF
@@ -84,6 +87,7 @@ let (delta_attr : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldAttr s
 let (delta_qualifier : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldAttr s
+let (unmeta : norm_step) = Unmeta
 let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
   fun uu___ -> fun uu___1 -> fun x -> x
 
@@ -281,6 +285,10 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 
 
+
+
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let with_type : 'uuuuu . 'uuuuu -> 'uuuuu = fun e -> e
 type 'a eqtype_as_type = 'a
+let coerce_eq : 'a 'b . unit -> 'a -> 'b =
+  fun uu___1 -> fun uu___ -> (fun uu___ -> fun x -> Obj.magic x) uu___1 uu___

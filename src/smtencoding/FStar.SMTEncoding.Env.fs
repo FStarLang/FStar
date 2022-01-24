@@ -17,11 +17,11 @@
 
 module FStar.SMTEncoding.Env
 open FStar.Pervasives
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -31,7 +31,7 @@ open FStar.Ident
 open FStar.SMTEncoding.Util
 
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
 exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-rec(s) and their locations
@@ -120,7 +120,7 @@ type fvar_binding = {
     smt_arity: int;
     smt_id:    string;
     smt_token: option<term>;
-    smt_fuel_partial_app:option<term>;
+    smt_fuel_partial_app:option<(term * term)>;
     fvb_thunked: bool
 }
 let fvb_to_string fvb =
@@ -128,11 +128,18 @@ let fvb_to_string fvb =
     | None -> "None"
     | Some s -> Term.print_smt_term s
   in
+  let term_pair_opt_to_string = function
+    | None -> "None"
+    | Some (s0, s1) ->
+      BU.format2 "(%s, %s)"
+        (Term.print_smt_term s0)
+        (Term.print_smt_term s1)
+  in
   BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
     (Ident.string_of_lid fvb.fvar_lid)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
-    (term_opt_to_string fvb.smt_fuel_partial_app)
+    (term_pair_opt_to_string fvb.smt_fuel_partial_app)
     (BU.string_of_bool fvb.fvb_thunked)
 
 let check_valid_fvb fvb =
@@ -275,10 +282,11 @@ let push_free_var env (x:lident) arity fname ftok =
     push_free_var_maybe_thunked env x arity fname ftok false
 let push_free_var_thunk env (x:lident) arity fname ftok =
     push_free_var_maybe_thunked env x arity fname ftok (arity=0)
-let push_zfuel_name env (x:lident) f =
+let push_zfuel_name env (x:lident) f ftok =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
-    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) false in
+    let t3' = mk_ApplyTF (mkApp(ftok, [])) (mkApp("ZFuel", [])) in
+    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some (t3, t3')) false in
     {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
@@ -298,7 +306,7 @@ let try_lookup_free_var env l =
       else
       begin
       match fvb.smt_fuel_partial_app with
-      | Some f when env.use_zfuel_name -> Some f
+      | Some (_, f) when env.use_zfuel_name -> Some f
       | _ ->
         begin
         match fvb.smt_token with
@@ -322,7 +330,7 @@ let lookup_free_var_name env a = lookup_lid env a.v
 let lookup_free_var_sym env a =
     let fvb = lookup_lid env a.v in
     match fvb.smt_fuel_partial_app with
-    | Some({tm=App(g, zf)})
+    | Some({tm=App(g, zf)}, _)
         when env.use_zfuel_name ->
       Inl g, zf, fvb.smt_arity + 1
     | _ ->

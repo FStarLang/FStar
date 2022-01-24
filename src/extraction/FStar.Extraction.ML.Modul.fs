@@ -16,10 +16,11 @@
 #light "off"
 module FStar.Extraction.ML.Modul
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
@@ -32,7 +33,7 @@ open FStar.Syntax
 module Term = FStar.Extraction.ML.Term
 module Print = FStar.Syntax.Print
 module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module UF = FStar.Syntax.Unionfind
@@ -43,13 +44,14 @@ module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
-module Env = FStar.TypeChecker.Env
+module EMB=FStar.Syntax.Embeddings
+module Cfg = FStar.TypeChecker.Cfg
 
 type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None, //NS delta: wrong
+    mk (Tm_app(S.fvar (PC.failwith_lid()) delta_constant None, //NS delta: wrong
                [ S.iarg t
                ; S.as_arg <|
                  mk (Tm_constant
@@ -71,7 +73,7 @@ let always_fail lid t =
         lbname=Inr (S.lid_as_fv lid delta_constant None);
         lbunivs=[];
         lbtyp=t;
-        lbeff=PC.effect_ML_lid;
+        lbeff=PC.effect_ML_lid();
         lbdef=imp;
         lbattrs=[];
         lbpos=imp.pos;
@@ -617,7 +619,6 @@ let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
       Option.get iface_opt,
       List.rev impls |> List.flatten
 
-module EMB=FStar.Syntax.Embeddings
 
 let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
   BU.for_some (function attr ->
@@ -769,7 +770,7 @@ let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
       if Options.debug_any()
-      then FStar.Util.measure_execution_time
+      then FStar.Compiler.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
@@ -982,25 +983,83 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let attrs, post_tau =
+          let maybe_postprocess_lbs lbs =
+            let post_tau =
               match U.extract_attr' PC.postprocess_extr_with attrs with
-              | None -> attrs, None
-              | Some (ats, (tau, None)::_) -> ats, Some tau
-              | Some (ats, args) ->
-                  Errors.log_issue se.sigrng (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ill-formed application of `postprocess_for_extraction_with`"));
-                  attrs, None
-          in
-          let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-              let lbdef = Env.postprocess (tcenv_of_uenv g) tau lb.lbtyp lb.lbdef in
+              | None -> None
+              | Some (_, (tau, None)::_) -> Some tau
+              | Some _ ->
+                  Errors.log_issue
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'postprocess_for_extraction_with'");
+                  None
+            in
+            let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+              let env = tcenv_of_uenv g in
+              let lbdef = 
+                Profiling.profile
+                     (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.post_process_for_extraction"
+              in
               { lb with lbdef = lbdef }
+            in
+            match post_tau with
+            | None -> lbs
+            | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
           in
-          let lbs = (fst lbs,
-                      (match post_tau with
-                       | Some tau -> List.map (postprocess_lb tau) (snd lbs)
-                       | None -> (snd lbs)))
+          let maybe_normalize_for_extraction lbs = 
+            let norm_steps =
+              match U.extract_attr' PC.normalize_for_extraction_lid attrs with
+              | None -> None
+              | Some (_, (steps, None)::_) ->
+                let steps = 
+                  //just normalizing the steps themselves, so that the user
+                  //does not have to write a literal at every use of the attribute
+                  N.normalize 
+                    [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
+                    (tcenv_of_uenv g)
+                    steps
+                in
+                begin
+                match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+                | Some steps -> 
+                  Some (Cfg.translate_norm_steps steps)
+                | _ -> 
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       BU.format1
+                         "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                         (Print.term_to_string steps));
+                  None
+                end
+              | Some _ ->
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'normalize_for_extraction'");
+                  None
+            in
+            let norm_one_lb steps lb =
+              let env = tcenv_of_uenv g in
+              let env = {env with erase_erasable_args=true} in
+              let lbd = 
+                Profiling.profile
+                     (fun () -> N.normalize steps env lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.normalize_for_extraction"
+              in
+              { lb with lbdef = lbd }
+            in
+            match norm_steps with
+            | None -> lbs
+            | Some steps ->
+              fst lbs, List.map (norm_one_lb steps) (snd lbs)
           in
           let ml_let, _, _ =
+            let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
             Term.term_as_mlexpr
                     g
                     (mk (Tm_let(lbs, U.exp_false_bool)) se.sigrng)
@@ -1112,7 +1171,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
             if Options.debug_module (string_of_lid m.name)
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 FStar.Util.measure_execution_time
+                 FStar.Compiler.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
             else extract_sig g se)
@@ -1129,7 +1188,12 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract (string_of_lid m.name)) then
+  let tgt = 
+    match Options.codegen() with
+    | None -> failwith "Impossible: We're in extract, codegen must be set!"
+    | Some t -> t
+  in
+  if not (Options.should_extract (string_of_lid m.name) tgt) then
     failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
 
   if Options.interactive() then g, None else begin
@@ -1137,12 +1201,12 @@ let extract (g:uenv) (m:modul) =
   let nm = string_of_lid m.name in
   let g, mllib =
     UF.with_uf_enabled (fun () ->
-      Errors.with_ctx ("While extracting module " ^ nm) (fun () ->
-        if Options.debug_any () then
-          let msg = BU.format1 "Extracting module %s" nm in
-          BU.measure_execution_time msg (fun () -> extract' g m)
-        else
-          extract' g m))
+      Errors.with_ctx ("While extracting module " ^ nm) 
+      (fun () ->
+        Profiling.profile
+          (fun () -> extract' g m)
+          (Some nm)
+          "FStar.Extraction.ML.Modul.extract"))
   in
   let g, mllib =
     match mllib with

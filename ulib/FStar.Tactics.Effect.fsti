@@ -113,6 +113,13 @@ let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
 
+(* This syntactic marker will generate a goal of the shape x == ?u for
+ * a new unification variable ?u, and run tactic [t] to solve this goal.
+ * If after running [t], the uvar was solved and only trivial goals remain
+ * in the proofstate, then `rewrite_with_tactic t x` will be replaced
+ * by the solution of ?u *)
+val rewrite_with_tactic (t:unit -> Tac unit) (#a:Type) (x:a) : a
+
 (* This will run the tactic in order to (try to) produce a term of type
  * t. Note that the type looks dangerous from a logical perspective. It
  * should not lead to any inconsistency, however, as any time this term
@@ -166,3 +173,6 @@ val postprocess_for_extraction_with (tau : unit -> Tac unit) : Tot unit
 val unfold_with_tactic (t:unit -> Tac unit) (p:Type)
   : Lemma (requires p)
           (ensures (with_tactic t p))
+
+val unfold_rewrite_with_tactic (t:unit -> Tac unit) (#a:Type) (p:a)
+  : Lemma (rewrite_with_tactic t p == p)

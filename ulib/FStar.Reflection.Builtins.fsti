@@ -44,6 +44,9 @@ val pack_fv        : name -> fv
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
+val inspect_lb     : letbinding -> lb_view
+val pack_lb        : lb_view -> letbinding
+
 val inspect_binder : binder -> bv * (aqualv * list term)
 val pack_binder    : bv -> aqualv -> list term -> binder
 
@@ -97,3 +100,6 @@ irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
 val subst : bv -> term -> term -> term
+
+
+val close_term : binder -> term -> term

@@ -17,20 +17,20 @@
 
 module FStar.TypeChecker.Err
 open FStar.Pervasives
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.Env
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 

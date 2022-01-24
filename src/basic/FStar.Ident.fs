@@ -2,11 +2,15 @@
 module FStar.Ident
 
 open Prims
-open FStar.Range
+open FStar.Compiler.Effect
+open FStar.Compiler.Range
+open FStar.Compiler.List
+module List = FStar.Compiler.List
+module Util = FStar.Compiler.Util
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;
-              idRange:Range.range}
+              idRange:range}
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type path = list<string>
@@ -25,7 +29,7 @@ type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
 
-let set_id_range r i = { i with idRange =r }
+let set_id_range r i = { i with idRange=r }
 
 let reserved_prefix = "uu___"
 let _gen =
